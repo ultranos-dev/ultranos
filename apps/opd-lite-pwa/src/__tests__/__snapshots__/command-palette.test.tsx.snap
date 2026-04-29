@@ -1,0 +1,371 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`] = `
+<div
+  aria-label="Command Palette"
+  aria-modal="true"
+  class="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+  role="dialog"
+>
+  <div
+    aria-hidden="true"
+    class="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+  />
+  <div
+    class="relative w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white/95 shadow-lg backdrop-blur-md"
+    cmdk-root=""
+    tabindex="-1"
+  >
+    <label
+      cmdk-label=""
+      for="radix-_r_3e_"
+      id="radix-_r_3d_"
+      style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
+    >
+      Clinical Command Palette
+    </label>
+    <input
+      aria-autocomplete="list"
+      aria-controls="radix-_r_3c_"
+      aria-expanded="true"
+      aria-labelledby="radix-_r_3d_"
+      autocomplete="off"
+      autocorrect="off"
+      class="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-neutral-900 outline-none placeholder:text-neutral-400"
+      cmdk-input=""
+      id="radix-_r_3e_"
+      placeholder="Search clinical actions..."
+      role="combobox"
+      spellcheck="false"
+      type="text"
+      value=""
+    />
+    <div
+      aria-label="Suggestions"
+      class="max-h-72 overflow-y-auto p-2"
+      cmdk-list=""
+      id="radix-_r_3c_"
+      role="listbox"
+      tabindex="-1"
+    >
+      <div
+        cmdk-list-sizer=""
+      >
+        <div
+          class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400"
+          cmdk-group=""
+          data-value="Clinical Sections"
+          role="presentation"
+        >
+          <div
+            aria-hidden="true"
+            cmdk-group-heading=""
+            id="radix-_r_3g_"
+          >
+            Clinical Sections
+          </div>
+          <div
+            aria-labelledby="radix-_r_3g_"
+            cmdk-group-items=""
+            role="group"
+          >
+            <div
+              aria-disabled="false"
+              aria-selected="true"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="true"
+              data-value="vitals"
+              id="radix-_r_3h_"
+              role="option"
+            >
+              <span>
+                Vitals
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                V
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="subjective"
+              id="radix-_r_3i_"
+              role="option"
+            >
+              <span>
+                Subjective
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                S
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="objective"
+              id="radix-_r_3j_"
+              role="option"
+            >
+              <span>
+                Objective
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                O
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="assessment"
+              id="radix-_r_3k_"
+              role="option"
+            >
+              <span>
+                Assessment
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                A
+              </kbd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-neutral-400"
+    >
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          ↑↓
+        </kbd>
+         Navigate
+      </span>
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          ↵
+        </kbd>
+         Select
+      </span>
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          Esc
+        </kbd>
+         Close
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`] = `
+<div
+  aria-label="Command Palette"
+  aria-modal="true"
+  class="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+  role="dialog"
+>
+  <div
+    aria-hidden="true"
+    class="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+  />
+  <div
+    class="relative w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white/95 shadow-lg backdrop-blur-md"
+    cmdk-root=""
+    tabindex="-1"
+  >
+    <label
+      cmdk-label=""
+      for="radix-_r_35_"
+      id="radix-_r_34_"
+      style="position: absolute; width: 1px; height: 1px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"
+    >
+      Clinical Command Palette
+    </label>
+    <input
+      aria-autocomplete="list"
+      aria-controls="radix-_r_33_"
+      aria-expanded="true"
+      aria-labelledby="radix-_r_34_"
+      autocomplete="off"
+      autocorrect="off"
+      class="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-neutral-900 outline-none placeholder:text-neutral-400"
+      cmdk-input=""
+      id="radix-_r_35_"
+      placeholder="Search clinical actions..."
+      role="combobox"
+      spellcheck="false"
+      type="text"
+      value=""
+    />
+    <div
+      aria-label="Suggestions"
+      class="max-h-72 overflow-y-auto p-2"
+      cmdk-list=""
+      id="radix-_r_33_"
+      role="listbox"
+      tabindex="-1"
+    >
+      <div
+        cmdk-list-sizer=""
+      >
+        <div
+          class="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400"
+          cmdk-group=""
+          data-value="Clinical Sections"
+          role="presentation"
+        >
+          <div
+            aria-hidden="true"
+            cmdk-group-heading=""
+            id="radix-_r_37_"
+          >
+            Clinical Sections
+          </div>
+          <div
+            aria-labelledby="radix-_r_37_"
+            cmdk-group-items=""
+            role="group"
+          >
+            <div
+              aria-disabled="false"
+              aria-selected="true"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="true"
+              data-value="vitals"
+              id="radix-_r_38_"
+              role="option"
+            >
+              <span>
+                Vitals
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                V
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="subjective"
+              id="radix-_r_39_"
+              role="option"
+            >
+              <span>
+                Subjective
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                S
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="objective"
+              id="radix-_r_3a_"
+              role="option"
+            >
+              <span>
+                Objective
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                O
+              </kbd>
+            </div>
+            <div
+              aria-disabled="false"
+              aria-selected="false"
+              class="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+              cmdk-item=""
+              data-disabled="false"
+              data-selected="false"
+              data-value="assessment"
+              id="radix-_r_3b_"
+              role="option"
+            >
+              <span>
+                Assessment
+              </span>
+              <kbd
+                class="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500"
+              >
+                A
+              </kbd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-neutral-400"
+    >
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          ↑↓
+        </kbd>
+         Navigate
+      </span>
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          ↵
+        </kbd>
+         Select
+      </span>
+      <span>
+        <kbd
+          class="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold"
+        >
+          Esc
+        </kbd>
+         Close
+      </span>
+    </div>
+  </div>
+</div>
+`;

@@ -1,0 +1,29 @@
+{
+  "name": "ultranos",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Ultranos mHealth Ecosystem — Hub-and-Spoke FHIR R4 Platform",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "hub:dev": "pnpm -F hub-api dev",
+    "hub:test": "pnpm -F hub-api test",
+    "db:migrate": "supabase db push"
+  },
+  "devDependencies": {
+    "@ultranos/config-eslint": "workspace:*",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "prettier": "^3.0.0",
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

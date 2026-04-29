@@ -1,0 +1,56 @@
+# generated: 2026-04-28T22:03:14.860887
+# last_updated: 2026-04-28T22:03:14.860887
+# project: Ultranos
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status: backlog, in-progress, done
+# Story Status: backlog, ready-for-dev, in-progress, review, done
+# Retrospective Status: optional, done
+#
+
+generated: '2026-04-28T22:03:14.860887'
+last_updated: '2026-04-28T23:00:00.000000'
+project: Ultranos
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+development_status:
+  epic-1: in-progress
+  1-1-monorepo-foundation-shared-contracts: ready-for-dev
+  1-2-hub-api-trpc-scaffolding: ready-for-dev
+  1-3-pwa-identity-verification-dexie-persistence: ready-for-dev
+  1-4-mobile-identity-verification-sqlcipher-persistence: backlog
+  1-5-rtl-global-context-mirroring: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-encounter-lifecycle-zustand-store: backlog
+  2-2-soap-note-entry-subjective-objective: backlog
+  2-3-vital-signs-charting: backlog
+  2-4-diagnosis-entry-icd-10-search: backlog
+  2-5-clinical-command-palette-ux-dr4: done
+  epic-2-retrospective: optional
+  epic-3: backlog
+  3-1-medication-search-prescription-entry: backlog
+  3-2-local-drug-drug-interaction-checker: backlog
+  3-3-cryptographically-signed-qr-generation: backlog
+  3-4-global-prescription-invalidation-check: backlog
+  epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-pharmacy-scan-load: backlog
+  4-2-medication-fulfillment-labeling: backlog
+  4-3-real-time-dispensing-sync: backlog
+  epic-4-retrospective: optional
+  epic-5: backlog
+  5-1-patient-profile-qr-identity: backlog
+  5-2-medical-history-timeline-low-literacy-ui: backlog
+  5-3-data-sharing-consent-management: backlog
+  epic-5-retrospective: optional
+  epic-6: backlog
+  6-1-role-based-access-control-rbac: backlog
+  6-2-immutable-cryptographic-audit-logging: backlog
+  6-3-global-sync-pulse-dashboard: backlog
+  epic-6-retrospective: optional

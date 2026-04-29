@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultranos · OPD Clinical Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* ── Brand ──────────────────────────────────── */
+    --lime:           #9fe870;   /* Wise Green — primary CTA, active nav */
+    --lime-hover:     #cdffad;   /* Pastel Green — button hover */
+    --lime-dark:      #163300;   /* Dark Green — text on lime surfaces */
+    --lime-tint:      rgba(211, 242, 192, 0.4);  /* Nav hover wash */
+    --lime-subtle:    rgba(159, 232, 112, 0.12); /* Selected bg */
+    --near-black:     #0e0f0c;
+    --warm-dark:      #454745;   /* Secondary text */
+    --gray:           #868685;   /* Tertiary / labels */
+    --surface:        #e8ebe6;   /* Borders, dividers */
+    --canvas:         #f4f5f2;   /* App canvas */
+    --positive:       #054d28;
+    --danger:         #d03238;
+    --danger-light:   #fde8e9;
+    --warning:        #ffd11a;
+    --warning-bg:     #fff7cc;
+    --warning-text:   #b38f00;
+
+    /* ── Easing (design.md §5) ──────────────────── */
+    /* Never use default CSS ease, ease-in, ease-out — too weak */
+    --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);   /* Entering elements, button feedback */
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* On-screen movement */
+    --ease-panel:  cubic-bezier(0.32, 0.72, 0, 1);   /* Panel slides, drawers */
+    --ease-subtle: cubic-bezier(0.25, 0.1, 0.25, 1); /* Hover/color shifts */
+
+    /* ── Shadows ────────────────────────────────── */
+    /* Clinical theme: ring-only on cards, elevation only for overlays */
+    --ring:           0 0 0 1px #e8ebe6;
+    --ring-selected:  0 0 0 1.5px rgba(14,15,12,0.20), 0 0 0 4px rgba(159,232,112,0.28);
+    --focus-ring:     0 0 0 2px #9fe870, 0 0 0 4px rgba(159,232,112,0.30);
+    --shadow-overlay: 0 24px 64px rgba(14,15,12,0.22), 0 0 0 1px rgba(14,15,12,0.10);
+    --shadow-panel:   -4px 0 16px rgba(14,15,12,0.08), -1px 0 0 #e8ebe6;
+
+    /* ── Layout ─────────────────────────────────── */
+    --header-h:   56px;
+    --sidebar-w:  220px;
+  }
+
+  /* ── RESET ─────────────────────────────────────── */
+  html, body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    font-feature-settings: "calt" 1;   /* Contextual alternates */
+    color: var(--near-black);
+    background: var(--canvas);
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── REDUCED MOTION ─────────────────────────────── */
+  /* Preserve opacity fades for state clarity; remove transform motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ── ICONS ──────────────────────────────────────── */
+  .icon    { display: inline-flex; width: 16px; height: 16px; flex-shrink: 0; vertical-align: middle; }
+  .icon-18 { width: 18px; height: 18px; }
+  .icon-20 { width: 20px; height: 20px; }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  /* White header, light border — design.md §4 */
+  .header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: #ffffff;
+    border-bottom: 1px solid var(--surface);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    z-index: 200;
+  }
+
+  .logo {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--near-black);
+    white-space: nowrap;
+    min-width: 120px;
+  }
+
+  /* Search trigger — opens command palette */
+  .search-trigger {
+    flex: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    height: 36px;
+    background: rgba(14,15,12,0.04);
+    border-radius: 9999px;
+    box-shadow: var(--ring);
+    cursor: pointer;
+    transition: background-color 120ms var(--ease-subtle), box-shadow 120ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .search-trigger:hover { background: rgba(14,15,12,0.06); }
+  }
+  .search-trigger:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+  .search-trigger-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray);
+    pointer-events: none;
+  }
+
+  .search-kbd {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(14,15,12,0.30);
+    background: rgba(14,15,12,0.05);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 220px;
+    justify-content: flex-end;
+  }
+
+  /* ── SYNC PILL ─────────────────────────────────── */
+  /* Explicit properties only — never transition: all */
+  .sync-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: default;
+    transition:
+      background-color 200ms var(--ease-subtle),
+      color            200ms var(--ease-subtle),
+      box-shadow       200ms var(--ease-subtle);
+    white-space: nowrap;
+  }
+  .sync-pill.idle    { background: transparent; color: transparent; }
+  .sync-pill.queued  { background: rgba(255,209,26,0.14); color: var(--warning-text); box-shadow: 0 0 0 1px rgba(255,209,26,0.35); }
+  .sync-pill.syncing { background: rgba(14,15,12,0.05); color: var(--warm-dark); box-shadow: var(--ring); }
+  .sync-pill.success { background: rgba(5,77,40,0.08); color: var(--positive); box-shadow: 0 0 0 1px rgba(5,77,40,0.20); }
+
+  .sync-spin { display: inline-flex; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 700ms linear infinite; display: inline-flex; }
+
+  /* ── USER MENU ─────────────────────────────────── */
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--near-black);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px 10px 5px 5px;
+    border-radius: 9999px;
+    transition: background-color 120ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .user-menu:hover { background: rgba(14,15,12,0.05); }
+  }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 9999px;
+    background: var(--lime);
+    color: var(--lime-dark);
+    font-size: 10px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── OFFLINE BANNER ─────────────────────────────── */
+  .offline-banner {
+    position: fixed;
+    top: var(--header-h);
+    left: 0; right: 0;
+    background: var(--warning);
+    color: var(--near-black);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px 10px calc(var(--sidebar-w) + 20px);
+    z-index: 190;
+    transform: translateY(-100%);
+    transition: transform 220ms var(--ease-panel);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .offline-banner.visible { transform: translateY(0); }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  /* Light sidebar per design.md — white + border-right */
+  .sidebar {
+    position: fixed;
+    top: var(--header-h);
+    left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: #ffffff;
+    border-right: 1px solid var(--surface);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    z-index: 150;
+  }
+
+  .nav-section { display: flex; flex-direction: column; }
+  .nav-divider { height: 1px; background: var(--surface); margin: 6px 12px; }
+
+  /* design.md nav: inactive = #454745, hover = lime-tint wash, active = lime pill */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    color: var(--warm-dark);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 9999px;
+    margin: 1px 8px;
+    user-select: none;
+    transition: background-color 150ms var(--ease-subtle), color 150ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .nav-item:hover { background: var(--lime-tint); color: var(--near-black); }
+  }
+  /* Active: Wise Green fill + Dark Green text (design.md §4) */
+  .nav-item.active {
+    background: var(--lime);
+    color: var(--lime-dark);
+    font-weight: 600;
+  }
+
+  .nav-icon { display: flex; align-items: center; width: 18px; justify-content: center; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--lime);
+    color: var(--lime-dark);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .nav-item.active .nav-badge {
+    background: var(--lime-dark);
+    color: var(--lime);
+  }
+
+  .nav-bottom { margin-top: auto; }
+
+  /* ── MAIN CONTENT ─────────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-w);
+    margin-top: var(--header-h);
+    padding: 32px 32px 80px;
+    min-height: calc(100vh - var(--header-h));
+    /* Asymmetric: panel enters slower (spatial grounding), exits faster (system responds) */
+    transition: margin-right 250ms var(--ease-panel);
+    background: var(--canvas);
+  }
+  .main.panel-open { margin-right: 440px; }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .page-title h1 {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -0.03em;  /* --letter-spacing-tight */
+    color: var(--near-black);
+    line-height: 1.1;
+  }
+  .page-title .date-label {
+    font-size: 13px;
+    font-weight: 400;    /* Weight 400 for labels (design.md §3) */
+    color: var(--gray);
+    margin-top: 3px;
+  }
+
+  /* ── STAT CHIPS ───────────────────────────────────── */
+  .stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; }
+
+  .stat-chip {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(14,15,12,0.06);
+    color: var(--warm-dark);
+  }
+  .stat-chip.accent { background: rgba(5,77,40,0.09); color: var(--positive); }
+
+  /* ── BUTTONS ──────────────────────────────────────── */
+  /*
+   * design.md §6 — Buttons:
+   * - Hover: scale(1.03) + Pastel Green (#cdffad), 160ms --ease-out
+   * - Active: scale(0.97), 100ms
+   * - Never transition:all, never default CSS easing
+   * - Gate hover behind @media (hover: hover) and (pointer: fine)
+   */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--lime);
+    color: var(--lime-dark);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    font-feature-settings: "calt" 1;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    outline: none;
+    transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover { background: var(--lime-hover); transform: scale(1.03); }
+  }
+  .btn-primary:active { transform: scale(0.97); transition-duration: 100ms; }
+  .btn-primary:focus-visible { box-shadow: var(--focus-ring); }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--danger);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    font-feature-settings: "calt" 1;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    outline: none;
+    transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-danger:hover { background: #b82329; transform: scale(1.03); }
+  }
+  .btn-danger:active { transform: scale(0.97); transition-duration: 100ms; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--warm-dark);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    font-feature-settings: "calt" 1;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    outline: none;
+    box-shadow: var(--ring);
+    transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-ghost:hover { background: rgba(14,15,12,0.05); transform: scale(1.03); }
+  }
+  .btn-ghost:active { transform: scale(0.97); transition-duration: 100ms; }
+
+  .btn-disabled { opacity: 0.38; cursor: not-allowed; pointer-events: none; }
+
+  /* ── PATIENT CARDS ────────────────────────────────── */
+  /* Stagger on load — lists look dead without it (design.md §5) */
+  @keyframes cardEnter {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .queue-grid { display: flex; flex-direction: column; gap: 10px; }
+
+  .patient-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    /* Clinical theme: 1px border, not elevation shadow (design.md §7) */
+    border: 1px solid var(--surface);
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    position: relative;
+    animation: cardEnter 300ms var(--ease-out) both;
+    transition: box-shadow 160ms var(--ease-out), border-color 160ms var(--ease-subtle);
+  }
+  /* Stagger delays — 50ms between siblings (design.md §5) */
+  .patient-card:nth-child(1) { animation-delay:   0ms; }
+  .patient-card:nth-child(2) { animation-delay:  50ms; }
+  .patient-card:nth-child(3) { animation-delay: 100ms; }
+  .patient-card:nth-child(4) { animation-delay: 150ms; }
+  .patient-card:nth-child(5) { animation-delay: 200ms; }
+
+  /* Hover: subtle lift shadow — not translateY (that's generic AI-slop) */
+  @media (hover: hover) and (pointer: fine) {
+    .patient-card:hover { box-shadow: 0 1px 3px rgba(14,15,12,0.05), var(--ring); }
+  }
+  .patient-card.selected { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(159,232,112,0.25); }
+
+  .patient-card.allergy-card {
+    background: #fff9f9;
+    border-left-color: var(--danger);
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .card-top-left { display: flex; flex-direction: column; gap: 3px; }
+
+  /* design.md §3: Patient name 22–26px weight 600, letter spacing -0.3px */
+  .patient-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--near-black);
+    letter-spacing: -0.01em;
+  }
+
+  .meta-row { display: flex; align-items: center; gap: 6px; }
+
+  /* design.md §3: Label = 12–14px weight 400, gray */
+  .meta-pill {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--gray);
+    background: rgba(14,15,12,0.05);
+    padding: 2px 7px;
+    border-radius: 9999px;
+  }
+
+  .patient-id {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--gray);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .allergy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--danger-light);
+    color: var(--danger);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px rgba(208,50,56,0.22);
+  }
+
+  /* Allergy: always first, always red, never collapsed (healthcare safety rule) */
+  .allergy-line {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* design.md §3: Body/description = 14–16px weight 400 */
+  .complaint-text {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--warm-dark);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    background: rgba(14,15,12,0.05);
+    color: var(--gray);
+  }
+  .status-badge.waiting   { background: rgba(255,209,26,0.12); color: var(--warning-text); }
+  .status-badge.in-progress { background: rgba(5,77,40,0.08); color: var(--positive); }
+
+  .view-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--warm-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 9999px;
+    transition: background-color 120ms var(--ease-subtle), color 120ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .view-link:hover { background: rgba(14,15,12,0.05); color: var(--near-black); }
+  }
+
+  /* ── SECTION DIVIDERS ─────────────────────────────── */
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; }
+  .section-divider-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray);
+    white-space: nowrap;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--surface); }
+
+  /* ── RX PANEL ─────────────────────────────────────── */
+  .rx-overlay {
+    position: fixed;
+    inset: 0;
+    top: var(--header-h);
+    background: rgba(14,15,12,0.38);
+    backdrop-filter: blur(3px);
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+  .rx-overlay.visible { opacity: 1; pointer-events: all; }
+
+  /*
+   * Panel enter: 250ms --ease-panel (spatial grounding)
+   * Panel exit: 180ms --ease-out (system responds quickly)
+   * design.md §5 asymmetric timing principle
+   */
+  .rx-panel {
+    position: fixed;
+    top: var(--header-h);
+    right: 0;
+    bottom: 0;
+    width: 440px;
+    background: #fff;
+    border-left: 1px solid var(--surface);
+    z-index: 310;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 250ms var(--ease-panel);
+    box-shadow: var(--shadow-panel);
+  }
+  .rx-panel.open { transform: translateX(0); }
+  /* Exit: override to faster --ease-out when panel closes */
+  .rx-panel:not(.open) { transition: transform 180ms var(--ease-out); }
+
+  .rx-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--surface);
+  }
+  .rx-title-area { display: flex; flex-direction: column; gap: 2px; }
+  .rx-title { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--near-black); }
+  .rx-subtitle { font-size: 12px; font-weight: 400; color: var(--gray); }
+
+  .close-btn {
+    width: 30px; height: 30px;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(14,15,12,0.05);
+    color: var(--warm-dark);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 120ms var(--ease-subtle), transform 160ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .close-btn:hover { background: rgba(14,15,12,0.08); color: var(--near-black); }
+  }
+  .close-btn:active { transform: scale(0.93); transition-duration: 80ms; }
+
+  .rx-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  /* design.md §3: Label = 12px weight 400, gray */
+  .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--surface);
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "calt" 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--near-black);
+    background: #fff;
+    outline: none;
+    transition: border-color 120ms var(--ease-subtle), box-shadow 120ms var(--ease-subtle);
+  }
+  .form-input:focus { border-color: transparent; box-shadow: var(--focus-ring); }
+
+  .form-select {
+    width: 100%;
+    padding: 10px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--surface);
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "calt" 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--near-black);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230e0f0c' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") no-repeat right 13px center;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    transition: border-color 120ms var(--ease-subtle), box-shadow 120ms var(--ease-subtle);
+  }
+  .form-select:focus { border-color: transparent; box-shadow: var(--focus-ring); }
+
+  /* Autocomplete — animate from scale(0.97)+opacity:0, never display:none toggle */
+  .autocomplete-box { position: relative; }
+  .autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: var(--shadow-overlay);
+    z-index: 50;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.97);
+    transform-origin: top center;
+    pointer-events: none;
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+  .autocomplete-dropdown.open { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+  .autocomplete-item {
+    padding: 9px 13px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--near-black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 80ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .autocomplete-item:hover { background: var(--lime-subtle); }
+  }
+  .drug-class-tag { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--gray); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ── STATE SWITCHER ───────────────────────────────── */
+  .state-switcher {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 10px 0 2px;
+    border-top: 1px solid var(--surface);
+  }
+  .state-tab {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(14,15,12,0.05);
+    color: var(--warm-dark);
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 120ms var(--ease-subtle), color 120ms var(--ease-subtle);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .state-tab:hover { background: rgba(14,15,12,0.08); }
+  }
+  .state-tab.active { background: var(--near-black); color: #fff; }
+
+  .state-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 6px;
+  }
+
+  /* ── INTERACTION STATES ──────────────────────────── */
+  .interaction-zone { border-radius: 10px; overflow: hidden; }
+  .istate { display: none; flex-direction: column; gap: 10px; }
+  .istate.active { display: flex; }
+
+  .check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 15px;
+    background: rgba(14,15,12,0.03);
+    border-radius: 10px;
+    color: var(--gray);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--surface);
+  }
+  .clear-row {
+    padding: 13px 15px;
+    background: rgba(5,77,40,0.05);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-left: 3px solid rgba(5,77,40,0.30);
+  }
+  .check-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--positive); }
+
+  .warn-band {
+    padding: 13px 15px;
+    background: var(--warning-bg);
+    border-radius: 10px;
+    border-left: 3px solid var(--warning);
+  }
+  .band-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .band-eyebrow.warn   { color: var(--warning-text); }
+  .band-eyebrow.danger { color: var(--danger); }
+  .band-drug  { font-size: 14px; font-weight: 700; color: var(--near-black); margin-bottom: 3px; letter-spacing: -0.01em; }
+  .band-reason { font-size: 12px; font-weight: 400; color: var(--warm-dark); line-height: 1.55; }
+  .band-reason.red { color: var(--danger); font-weight: 600; }
+
+  .danger-band {
+    padding: 13px 15px;
+    background: var(--danger-light);
+    border-radius: 10px;
+    border-left: 3px solid var(--danger);
+  }
+  .auth-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 700;
+    color: var(--danger);
+    cursor: pointer;
+    margin-top: 8px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .unavail-band {
+    padding: 13px 15px;
+    background: var(--warning-bg);
+    border-radius: 10px;
+    border: 1px solid rgba(255,209,26,0.35);
+    border-left: 3px solid var(--warning);
+  }
+  .unavail-body { font-size: 13px; font-weight: 600; color: var(--near-black); margin-bottom: 3px; }
+  .unavail-sub  { font-size: 12px; font-weight: 400; color: var(--warm-dark); line-height: 1.55; }
+
+  .override-field { display: flex; flex-direction: column; gap: 5px; }
+  .override-textarea {
+    width: 100%;
+    padding: 10px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--surface);
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "calt" 1;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--near-black);
+    resize: none;
+    outline: none;
+    height: 64px;
+    transition: border-color 120ms var(--ease-subtle), box-shadow 120ms var(--ease-subtle);
+  }
+  .override-textarea:focus { border-color: transparent; box-shadow: var(--focus-ring); }
+
+  .checkbox-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 13px;
+    background: rgba(14,15,12,0.03);
+    border-radius: 9px;
+    border: 1px solid var(--surface);
+    cursor: pointer;
+  }
+  .checkbox-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--near-black); margin-top: 1px; flex-shrink: 0; }
+  .checkbox-row label { font-size: 12px; font-weight: 500; color: var(--near-black); cursor: pointer; line-height: 1.5; }
+
+  /* ── RX FOOTER ────────────────────────────────────── */
+  .rx-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── COMMAND PALETTE ─────────────────────────────── */
+  /*
+   * Keyboard-initiated (Cmd+K) — NO animation. Ever.
+   * Emil/design.md: "Never animate keyboard-initiated actions."
+   * "Raycast has no open/close animation. That is the optimal experience."
+   */
+  .cmd-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,15,12,0.55);
+    backdrop-filter: blur(10px);
+    z-index: 500;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 72px;
+    visibility: hidden;
+    /* No transition — keyboard-initiated action */
+  }
+  .cmd-overlay.visible { visibility: visible; }
+
+  .cmd-card {
+    width: 560px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: var(--shadow-overlay);
+    overflow: hidden;
+    max-height: 520px;
+    display: flex;
+    flex-direction: column;
+    /* No transform animation — keyboard-initiated */
+  }
+
+  .cmd-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--surface);
+  }
+
+  #cmdInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "calt" 1;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--near-black);
+    background: transparent;
+  }
+  #cmdInput::placeholder { color: var(--gray); }
+
+  .cmd-results { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .cmd-group { margin-bottom: 2px; }
+  .cmd-group-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray);
+    padding: 9px 18px 3px;
+  }
+  .cmd-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 18px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: background-color 80ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cmd-item:hover { background: var(--lime-subtle); border-left-color: var(--lime); }
+  }
+  .cmd-item.focused { background: var(--lime-subtle); border-left-color: var(--lime); }
+
+  .cmd-item-icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    background: rgba(14,15,12,0.05);
+    border: 1px solid var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--warm-dark);
+  }
+
+  .cmd-item-text { flex: 1; }
+  .cmd-item-name { font-size: 13px; font-weight: 600; color: var(--near-black); }
+  .cmd-item-desc { font-size: 11px; font-weight: 400; color: var(--gray); margin-top: 1px; }
+  .cmd-item-meta { font-size: 11px; font-weight: 600; color: var(--gray); white-space: nowrap; }
+
+  .cmd-footer {
+    padding: 9px 18px;
+    border-top: 1px solid var(--surface);
+    display: flex; gap: 14px;
+  }
+  .cmd-hint { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; color: var(--gray); }
+  .kbd { background: rgba(14,15,12,0.05); border: 1px solid var(--surface); border-radius: 4px; padding: 2px 5px; font-size: 10px; font-weight: 700; color: var(--warm-dark); font-family: monospace; }
+
+  /* ── DEMO CONTROLS ────────────────────────────────── */
+  .demo-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 16px;
+    background: var(--near-black);
+    border-radius: 14px;
+    padding: 13px 15px;
+    z-index: 400;
+    box-shadow: 0 8px 24px rgba(14,15,12,0.20), var(--ring);
+    min-width: 205px;
+  }
+  .demo-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.30); margin-bottom: 10px; }
+  .demo-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+  .demo-row-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.60); }
+
+  .toggle {
+    width: 34px; height: 19px;
+    background: rgba(255,255,255,0.13);
+    border-radius: 9999px;
+    position: relative;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: background-color 160ms var(--ease-out);
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 15px; height: 15px;
+    border-radius: 9999px;
+    background: #fff;
+    transition: transform 160ms var(--ease-out);
+  }
+  .toggle.on { background: var(--lime); }
+  .toggle.on::after { transform: translateX(15px); }
+
+  .demo-btn {
+    width: 100%;
+    padding: 7px 11px;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.75);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    display: flex; align-items: center; gap: 7px;
+    margin-bottom: 4px;
+    transition: background-color 120ms var(--ease-subtle), transform 160ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .demo-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.03); }
+  }
+  .demo-btn:active { transform: scale(0.97); transition-duration: 80ms; }
+
+  .sync-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
+  .sync-btn {
+    padding: 5px 8px;
+    border-radius: 9999px;
+    border: none;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.65);
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 120ms var(--ease-subtle), transform 160ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sync-btn:hover { background: rgba(255,255,255,0.13); }
+  }
+  .sync-btn:active { transform: scale(0.97); transition-duration: 80ms; }
+
+  .demo-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; color: rgba(255,255,255,0.22); text-transform: uppercase; margin: 7px 0 4px; }
+
+  /* ── MISC ─────────────────────────────────────────── */
+  .watermark {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--gray);
+    letter-spacing: 0.04em;
+    opacity: 0.6;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 9999px; }
+</style>
+</head>
+<body>
+
+<!-- ══ SVG SPRITE ══ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+  </symbol>
+  <symbol id="icon-queue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/>
+    <rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>
+  </symbol>
+  <symbol id="icon-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
+  </symbol>
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <symbol id="icon-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.5 20.5L3.5 13.5a5 5 0 0 1 7.07-7.07l7 7a5 5 0 0 1-7.07 7.07z"/>
+    <line x1="8.5" y1="15.5" x2="15.5" y2="8.5"/>
+  </symbol>
+  <symbol id="icon-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 3h6M9 3v7L4 19a1 1 0 0 0 .894 1.447h14.212A1 1 0 0 0 20 19L15 10V3"/>
+    <line x1="6.5" y1="14" x2="17.5" y2="14"/>
+  </symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </symbol>
+  <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <symbol id="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+  </symbol>
+  <symbol id="icon-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <symbol id="icon-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+  </symbol>
+  <symbol id="icon-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+  <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </symbol>
+</svg>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="logo">ULTRANOS</div>
+
+  <div class="search-trigger" id="searchTrigger" role="button" tabindex="0" aria-label="Search — Command K">
+    <svg class="icon" style="color:var(--gray)"><use href="#icon-search"/></svg>
+    <span class="search-trigger-label">Search patients, medications, labs…</span>
+    <span class="search-kbd">⌘K</span>
+  </div>
+
+  <div class="header-right">
+    <div class="sync-pill idle" id="syncPill">
+      <span class="sync-spin" id="syncIcon">
+        <svg style="width:8px;height:8px;color:var(--gray)"><use href="#icon-dot"/></svg>
+      </span>
+      <span id="syncText"></span>
+    </div>
+
+    <div class="user-menu">
+      <div class="avatar">DA</div>
+      Dr. Amiri
+      <svg class="icon" style="width:12px;height:12px;color:var(--gray)"><use href="#icon-chevron-down"/></svg>
+    </div>
+  </div>
+</header>
+
+<!-- ══ OFFLINE BANNER ══ -->
+<div class="offline-banner" id="offlineBanner" role="alert">
+  <svg class="icon"><use href="#icon-warning"/></svg>
+  <span>You are offline. Queue loaded from local cache. All actions save locally and sync on reconnect.</span>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" aria-label="Main navigation">
+  <div class="nav-section">
+    <div class="nav-item active" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-queue"/></svg></span>
+      Queue
+      <span class="nav-badge" aria-label="10 patients">10</span>
+    </div>
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-person"/></svg></span>
+      Patients
+    </div>
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-clock"/></svg></span>
+      History
+    </div>
+    <div class="nav-divider" role="separator"></div>
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-pill"/></svg></span>
+      Rx Pending
+      <span class="nav-badge" aria-label="2 pending">2</span>
+    </div>
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-flask"/></svg></span>
+      Lab Refs
+    </div>
+    <div class="nav-divider" role="separator"></div>
+  </div>
+  <div class="nav-bottom nav-section">
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-settings"/></svg></span>
+      Settings
+    </div>
+    <div class="nav-item" role="menuitem">
+      <span class="nav-icon"><svg class="icon icon-18"><use href="#icon-logout"/></svg></span>
+      Sign Out
+    </div>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main class="main" id="mainContent">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Today's Queue</h1>
+      <div class="date-label">Mon 28 Apr 2026</div>
+    </div>
+    <button class="btn-primary" onclick="openRxPanel()">
+      <svg class="icon"><use href="#icon-plus"/></svg>
+      New Encounter
+    </button>
+  </div>
+
+  <div class="stats-row">
+    <span class="stat-chip">10 patients</span>
+    <span class="stat-chip accent">3 waiting</span>
+    <span class="stat-chip">2 in progress</span>
+  </div>
+
+  <div class="queue-grid" role="list">
+
+    <!-- ❶ Allergy card — always first per healthcare safety rules -->
+    <div class="patient-card allergy-card" id="card-1" role="listitem" onclick="selectCard('card-1')" tabindex="0">
+      <div class="card-top">
+        <div class="card-top-left">
+          <span class="patient-name">Fatima Hassan</span>
+          <div class="meta-row">
+            <span class="meta-pill">F · 34</span>
+            <span class="patient-id">PT-00291</span>
+          </div>
+        </div>
+        <span class="allergy-badge">
+          <svg style="width:10px;height:10px"><use href="#icon-warning"/></svg>
+          ALLERGY
+        </span>
+      </div>
+      <!-- Allergy: always red, always visible, never collapsed (CLAUDE.md safety rule) -->
+      <div class="allergy-line">
+        <svg class="icon" style="width:13px;height:13px"><use href="#icon-warning"/></svg>
+        Penicillin (PCN) — Severe · Anaphylaxis
+      </div>
+      <div class="complaint-text">Persistent cough · 3 days</div>
+      <div class="card-bottom">
+        <span class="status-badge waiting">Arrived 09:15</span>
+        <span class="view-link" onclick="event.stopPropagation(); openRxPanel()">
+          View Encounter
+          <svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- ❷ Ahmad Karimi -->
+    <div class="patient-card" id="card-2" role="listitem" onclick="selectCard('card-2')" tabindex="0">
+      <div class="card-top">
+        <div class="card-top-left">
+          <span class="patient-name">Ahmad Karimi</span>
+          <div class="meta-row">
+            <span class="meta-pill">M · 52</span>
+            <span class="patient-id">PT-00287</span>
+          </div>
+        </div>
+      </div>
+      <div class="complaint-text">Type 2 diabetes follow-up · HbA1c review</div>
+      <div class="card-bottom">
+        <span class="status-badge waiting">Waiting · 18 min</span>
+        <span class="view-link" onclick="event.stopPropagation(); openRxPanel()">
+          View Encounter <svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- ❸ Sara Nazari -->
+    <div class="patient-card" id="card-3" role="listitem" onclick="selectCard('card-3')" tabindex="0">
+      <div class="card-top">
+        <div class="card-top-left">
+          <span class="patient-name">Sara Nazari</span>
+          <div class="meta-row">
+            <span class="meta-pill">F · 29</span>
+            <span class="patient-id">PT-00302</span>
+          </div>
+        </div>
+        <span class="status-badge in-progress" style="align-self:flex-start">In Progress</span>
+      </div>
+      <div class="complaint-text">Prenatal check · 28 weeks · Blood pressure elevated</div>
+      <div class="card-bottom">
+        <span class="status-badge">Started 10:05</span>
+        <span class="view-link" onclick="event.stopPropagation(); openRxPanel()">
+          View Encounter <svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- ❹ Yusuf Osman -->
+    <div class="patient-card" id="card-4" role="listitem" onclick="selectCard('card-4')" tabindex="0">
+      <div class="card-top">
+        <div class="card-top-left">
+          <span class="patient-name">Yusuf Osman</span>
+          <div class="meta-row">
+            <span class="meta-pill">M · 67</span>
+            <span class="patient-id">PT-00278</span>
+          </div>
+        </div>
+      </div>
+      <div class="complaint-text">Chest pain · Shortness of breath · 1 day</div>
+      <div class="card-bottom">
+        <span class="status-badge">Scheduled 11:30</span>
+        <span class="view-link" onclick="event.stopPropagation(); openRxPanel()">
+          View Encounter <svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="section-divider" role="separator">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">Scheduled later today</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- ❺ Mina Rahimi -->
+    <div class="patient-card" id="card-5" role="listitem" onclick="selectCard('card-5')" tabindex="0" style="opacity:0.72">
+      <div class="card-top">
+        <div class="card-top-left">
+          <span class="patient-name">Mina Rahimi</span>
+          <div class="meta-row">
+            <span class="meta-pill">F · 41</span>
+            <span class="patient-id">PT-00315</span>
+          </div>
+        </div>
+      </div>
+      <div class="complaint-text">Hypertension review · Medication adjustment</div>
+      <div class="card-bottom">
+        <span class="status-badge">Scheduled 13:00</span>
+        <span class="view-link" onclick="event.stopPropagation(); openRxPanel()">
+          View Encounter <svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="watermark">Ultranos · OPD Clinical Dashboard · Hi-Fi Prototype v2.1</div>
+</main>
+
+<!-- ══ RX PANEL ══ -->
+<div class="rx-overlay" id="rxOverlay" onclick="closeRxPanel()"></div>
+<div class="rx-panel" id="rxPanel" role="dialog" aria-modal="true" aria-label="Add Prescription">
+  <div class="rx-header">
+    <div class="rx-title-area">
+      <span class="rx-title">Add Prescription</span>
+      <span class="rx-subtitle">Fatima Hassan · PT-00291</span>
+    </div>
+    <button class="close-btn" onclick="closeRxPanel()" aria-label="Close">
+      <svg class="icon"><use href="#icon-close"/></svg>
+    </button>
+  </div>
+
+  <div class="rx-body">
+    <div class="form-group">
+      <label class="form-label" for="drugInput">Drug Name</label>
+      <div class="autocomplete-box">
+        <input type="text" class="form-input" id="drugInput" placeholder="Type drug name…" autocomplete="off"
+          oninput="handleDrugInput(this.value)" onfocus="showAutocomplete()" onblur="hideAutocompleteDelayed()">
+        <div class="autocomplete-dropdown" id="autocompleteDropdown" role="listbox">
+          <div class="autocomplete-item" role="option" onclick="selectDrug('Azithromycin 250mg')">
+            <svg class="icon" style="color:var(--gray)"><use href="#icon-pill"/></svg>
+            Azithromycin 250mg<span class="drug-class-tag">Macrolide</span>
+          </div>
+          <div class="autocomplete-item" role="option" onclick="selectDrug('Azithromycin 500mg')">
+            <svg class="icon" style="color:var(--gray)"><use href="#icon-pill"/></svg>
+            Azithromycin 500mg<span class="drug-class-tag">Macrolide</span>
+          </div>
+          <div class="autocomplete-item" role="option" onclick="selectDrug('Amoxicillin 500mg')">
+            <svg class="icon" style="color:var(--gray)"><use href="#icon-pill"/></svg>
+            Amoxicillin 500mg<span class="drug-class-tag">Penicillin</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="dosageInput">Dosage</label>
+        <input type="text" class="form-input" id="dosageInput" placeholder="e.g. 500mg">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="freqSelect">Frequency</label>
+        <select class="form-select" id="freqSelect">
+          <option>Once daily</option><option>Twice daily</option>
+          <option>Three times</option><option>Every 8 hours</option>
+          <option>PRN (as needed)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="durationSelect">Duration</label>
+      <select class="form-select" id="durationSelect">
+        <option>3 days</option><option selected>5 days</option>
+        <option>7 days</option><option>14 days</option>
+        <option>30 days</option><option>Ongoing</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="instrTextarea">Instructions</label>
+      <textarea class="override-textarea" id="instrTextarea" placeholder="Take with food. Avoid direct sunlight…" style="height:52px"></textarea>
+    </div>
+
+    <div class="state-switcher" aria-label="Demo: interaction state">
+      <button class="state-tab active" onclick="setRxState('checking')">Checking</button>
+      <button class="state-tab" onclick="setRxState('clear')">Clear</button>
+      <button class="state-tab" onclick="setRxState('warning')">Warning</button>
+      <button class="state-tab" onclick="setRxState('contra')">Contra.</button>
+      <button class="state-tab" onclick="setRxState('allergy')">Allergy</button>
+      <button class="state-tab" onclick="setRxState('unavail')">Unavail.</button>
+    </div>
+
+    <div class="state-label">Drug Interaction Check</div>
+    <div class="interaction-zone">
+
+      <div class="istate istate-checking active" id="istate-checking" role="status">
+        <div class="check-row">
+          <svg class="icon spin"><use href="#icon-sync"/></svg>
+          Checking interactions against formulary database…
+        </div>
+      </div>
+
+      <div class="istate istate-clear" id="istate-clear" role="status">
+        <div class="clear-row">
+          <div class="check-item"><svg class="icon"><use href="#icon-check"/></svg> No drug interactions found</div>
+          <div class="check-item"><svg class="icon"><use href="#icon-check"/></svg> No allergy conflicts detected</div>
+          <div class="check-item"><svg class="icon"><use href="#icon-check"/></svg> Formulary check passed</div>
+        </div>
+      </div>
+
+      <div class="istate istate-warning" id="istate-warning" role="alert">
+        <div class="warn-band">
+          <div class="band-eyebrow warn"><svg class="icon" style="width:11px;height:11px"><use href="#icon-warning"/></svg> Moderate Interaction</div>
+          <div class="band-drug">Azithromycin × Metformin</div>
+          <div class="band-reason">May prolong QT interval. Monitor ECG. Use with caution in patients with cardiac history.</div>
+        </div>
+        <div class="override-field">
+          <label class="form-label" for="warnReason">Clinical reason (required to proceed)</label>
+          <textarea class="override-textarea" id="warnReason" placeholder="Enter clinical justification…" oninput="updateWarnBtn()"></textarea>
+        </div>
+      </div>
+
+      <div class="istate" id="istate-contra" role="alert">
+        <div class="danger-band">
+          <div class="band-eyebrow danger"><svg class="icon" style="width:11px;height:11px"><use href="#icon-ban"/></svg> Contraindicated</div>
+          <div class="band-drug">Azithromycin × Amiodarone</div>
+          <div class="band-reason red">Fatal arrhythmia risk. Both agents prolong QT — concurrent use may cause torsades de pointes.</div>
+        </div>
+        <div class="override-field">
+          <label class="form-label" for="contraReason">Override reason (required — will be audited)</label>
+          <textarea class="override-textarea" id="contraReason" placeholder="Specialist authorization reference / clinical justification…" oninput="updateContraBtn()"></textarea>
+        </div>
+      </div>
+
+      <div class="istate" id="istate-allergy" role="alert">
+        <div class="danger-band">
+          <div class="band-eyebrow danger"><svg class="icon" style="width:11px;height:11px"><use href="#icon-ban"/></svg> Allergy Match</div>
+          <div class="band-drug">Amoxicillin matches Penicillin allergy</div>
+          <div class="band-reason red">Severity: SEVERE · Reaction: Anaphylaxis · Documented 2024-03-12</div>
+          <a class="auth-link"><svg class="icon" style="width:12px;height:12px"><use href="#icon-arrow-right"/></svg> Request Specialist Authorization</a>
+        </div>
+      </div>
+
+      <div class="istate" id="istate-unavail" role="alert">
+        <div class="unavail-band">
+          <div class="band-eyebrow warn"><svg class="icon" style="width:11px;height:11px"><use href="#icon-warning"/></svg> Interaction Check Unavailable</div>
+          <div class="unavail-body">Unable to verify drug interactions at this time.</div>
+          <div class="unavail-sub">This does NOT mean no interactions exist. The check may have timed out or the formulary database is unreachable.</div>
+        </div>
+        <div class="checkbox-row" onclick="toggleUnavailCheck()">
+          <input type="checkbox" id="unavailCheck" onchange="updateUnavailBtn()">
+          <label for="unavailCheck">I have manually verified interactions and allergies for this prescription</label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="rx-footer">
+    <button class="btn-primary btn-disabled" id="btnChecking" style="width:100%;justify-content:center">
+      <svg class="icon spin"><use href="#icon-sync"/></svg> Checking…
+    </button>
+    <button class="btn-primary" id="btnClear" style="width:100%;justify-content:center;display:none">
+      <svg class="icon"><use href="#icon-check"/></svg> Add to Prescription
+    </button>
+    <button class="btn-primary btn-disabled" id="btnWarning" style="width:100%;justify-content:center;display:none">
+      <svg class="icon"><use href="#icon-warning"/></svg> Add with Override Note
+    </button>
+    <button class="btn-danger btn-disabled" id="btnContra" style="width:100%;justify-content:center;display:none">
+      <svg class="icon"><use href="#icon-ban"/></svg> Override &amp; Add
+    </button>
+    <div id="btnAllergyWrap" style="display:none;flex-direction:column;gap:8px;width:100%">
+      <button class="btn-primary btn-disabled" style="width:100%;justify-content:center">Cannot Prescribe — Allergy Block</button>
+      <div style="text-align:center;font-size:12px;font-weight:700;color:var(--danger);cursor:pointer;text-decoration:underline;text-underline-offset:2px">Request Specialist Authorization</div>
+    </div>
+    <button class="btn-primary btn-disabled" id="btnUnavail" style="width:100%;justify-content:center;display:none">
+      Add Prescription (Manual Verification)
+    </button>
+  </div>
+</div>
+
+<!-- ══ COMMAND PALETTE ══ -->
+<!-- Zero animation — Cmd+K is used hundreds of times/day -->
+<div class="cmd-overlay" id="cmdOverlay" onclick="closeCmdPaletteOutside(event)" role="dialog" aria-modal="true">
+  <div class="cmd-card" onclick="event.stopPropagation()">
+    <div class="cmd-input-wrap">
+      <svg class="icon icon-18" style="color:var(--gray);flex-shrink:0"><use href="#icon-search"/></svg>
+      <input type="text" id="cmdInput" placeholder="Search patients, medications, labs…" aria-label="Search" autocomplete="off">
+    </div>
+    <div class="cmd-results" id="cmdResults" role="listbox">
+      <div class="cmd-group">
+        <div class="cmd-group-label">Recent Patients</div>
+        <div class="cmd-item" role="option" data-idx="0" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-person"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">Fatima Hassan</div><div class="cmd-item-desc">F · 34 · PT-00291 · Last visit today</div></div>
+          <div class="cmd-item-meta">Open</div>
+        </div>
+        <div class="cmd-item" role="option" data-idx="1" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-person"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">Ahmad Karimi</div><div class="cmd-item-desc">M · 52 · PT-00287 · Diabetes follow-up</div></div>
+          <div class="cmd-item-meta">Open</div>
+        </div>
+        <div class="cmd-item" role="option" data-idx="2" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-person"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">Sara Nazari</div><div class="cmd-item-desc">F · 29 · PT-00302 · Prenatal 28w</div></div>
+          <div class="cmd-item-meta">Open</div>
+        </div>
+      </div>
+      <div class="cmd-group">
+        <div class="cmd-group-label">Medications</div>
+        <div class="cmd-item" role="option" data-idx="3" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-pill"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">Azithromycin 500mg</div><div class="cmd-item-desc">Macrolide antibiotic · Check interactions</div></div>
+          <div class="cmd-item-meta">Formulary</div>
+        </div>
+        <div class="cmd-item" role="option" data-idx="4" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-pill"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">Metformin 500mg</div><div class="cmd-item-desc">Biguanide · Antidiabetic · OD or BD</div></div>
+          <div class="cmd-item-meta">Formulary</div>
+        </div>
+      </div>
+      <div class="cmd-group">
+        <div class="cmd-group-label">Lab Orders</div>
+        <div class="cmd-item" role="option" data-idx="5" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-flask"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">CBC + Differential</div><div class="cmd-item-desc">Complete blood count · Results pending</div></div>
+          <div class="cmd-item-meta">Pending</div>
+        </div>
+        <div class="cmd-item" role="option" data-idx="6" onclick="closeCmdPalette()">
+          <div class="cmd-item-icon"><svg class="icon"><use href="#icon-flask"/></svg></div>
+          <div class="cmd-item-text"><div class="cmd-item-name">HbA1c</div><div class="cmd-item-desc">Ahmad Karimi · Ordered 10:02</div></div>
+          <div class="cmd-item-meta">In Lab</div>
+        </div>
+      </div>
+    </div>
+    <div class="cmd-footer">
+      <div class="cmd-hint"><span class="kbd">↑↓</span> navigate</div>
+      <div class="cmd-hint"><span class="kbd">↵</span> select</div>
+      <div class="cmd-hint"><span class="kbd">Esc</span> close</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DEMO CONTROLS ══ -->
+<div class="demo-panel" role="region" aria-label="Demo controls">
+  <div class="demo-label">Demo Controls</div>
+  <div class="demo-row">
+    <span class="demo-row-label">Offline Mode</span>
+    <button class="toggle" id="offlineToggle" onclick="toggleOffline()" aria-label="Toggle offline"></button>
+  </div>
+  <button class="demo-btn" onclick="openRxPanel()">
+    <svg class="icon" style="color:rgba(255,255,255,0.50)"><use href="#icon-pill"/></svg> Open Rx Panel
+  </button>
+  <button class="demo-btn" onclick="openCmdPalette()">
+    <svg class="icon" style="color:rgba(255,255,255,0.50)"><use href="#icon-search"/></svg> Open ⌘K
+  </button>
+  <div class="demo-section-label">Sync State</div>
+  <div class="sync-btns">
+    <button class="sync-btn" onclick="setSyncState('idle')">Idle</button>
+    <button class="sync-btn" onclick="setSyncState('queued')">Queued</button>
+    <button class="sync-btn" onclick="setSyncState('syncing')">Syncing</button>
+    <button class="sync-btn" onclick="setSyncState('success')">Success</button>
+  </div>
+</div>
+
+<script>
+// ── SYNC ──────────────────────────────────────────────
+let successTimer = null;
+let syncCycleTimer = null;
+
+function setSyncState(state) {
+  const pill = document.getElementById('syncPill');
+  const icon = document.getElementById('syncIcon');
+  const text = document.getElementById('syncText');
+  if (successTimer) { clearTimeout(successTimer); successTimer = null; }
+  pill.className = 'sync-pill ' + state;
+  if (state === 'idle') {
+    icon.innerHTML = '<svg style="width:8px;height:8px"><use href="#icon-dot"/></svg>';
+    icon.classList.remove('spin'); text.textContent = '';
+  } else if (state === 'queued') {
+    icon.innerHTML = '<svg class="icon" style="width:12px;height:12px"><use href="#icon-sync"/></svg>';
+    icon.classList.remove('spin'); text.textContent = '3 pending';
+  } else if (state === 'syncing') {
+    icon.innerHTML = '<svg class="icon" style="width:12px;height:12px"><use href="#icon-sync"/></svg>';
+    icon.classList.add('spin'); text.textContent = 'Syncing…';
+  } else if (state === 'success') {
+    icon.innerHTML = '<svg class="icon" style="width:12px;height:12px"><use href="#icon-check"/></svg>';
+    icon.classList.remove('spin'); text.textContent = 'Synced';
+    successTimer = setTimeout(() => setSyncState('idle'), 2600);
+  }
+}
+const syncSeq = ['idle','queued','syncing','success'];
+let syncIdx = 0;
+function startSyncCycle() {
+  syncCycleTimer = setInterval(() => {
+    syncIdx = (syncIdx + 1) % syncSeq.length;
+    setSyncState(syncSeq[syncIdx]);
+  }, 3200);
+}
+setSyncState('idle');
+startSyncCycle();
+
+// ── OFFLINE ───────────────────────────────────────────
+let offlineMode = false;
+function toggleOffline() {
+  offlineMode = !offlineMode;
+  document.getElementById('offlineBanner').classList.toggle('visible', offlineMode);
+  document.getElementById('offlineToggle').classList.toggle('on', offlineMode);
+}
+
+// ── CARD SELECTION ────────────────────────────────────
+function selectCard(id) {
+  document.querySelectorAll('.patient-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+}
+
+// ── RX PANEL ─────────────────────────────────────────
+let panelOpen = false;
+
+function openRxPanel() {
+  panelOpen = true;
+  document.getElementById('rxPanel').classList.add('open');
+  document.getElementById('rxOverlay').classList.add('visible');
+  document.getElementById('mainContent').classList.add('panel-open');
+}
+
+function closeRxPanel() {
+  panelOpen = false;
+  document.getElementById('rxPanel').classList.remove('open');
+  document.getElementById('rxOverlay').classList.remove('visible');
+  document.getElementById('mainContent').classList.remove('panel-open');
+}
+
+const RX_STATES = ['checking','clear','warning','contra','allergy','unavail'];
+function setRxState(state) {
+  document.querySelectorAll('.state-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', RX_STATES[i] === state);
+  });
+  RX_STATES.forEach(s => {
+    const el = document.getElementById('istate-' + s);
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById('istate-' + state);
+  if (target) target.classList.add('active');
+
+  ['btnChecking','btnClear','btnWarning','btnContra','btnAllergyWrap','btnUnavail'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  if (state === 'checking')     document.getElementById('btnChecking').style.display = 'flex';
+  else if (state === 'clear')   document.getElementById('btnClear').style.display = 'flex';
+  else if (state === 'warning') { document.getElementById('btnWarning').style.display = 'flex'; updateWarnBtn(); }
+  else if (state === 'contra')  { document.getElementById('btnContra').style.display = 'flex'; updateContraBtn(); }
+  else if (state === 'allergy') document.getElementById('btnAllergyWrap').style.display = 'flex';
+  else if (state === 'unavail') {
+    document.getElementById('btnUnavail').style.display = 'flex';
+    document.getElementById('unavailCheck').checked = false; updateUnavailBtn();
+  }
+}
+function updateWarnBtn() {
+  const ok = document.getElementById('warnReason').value.trim().length > 0;
+  document.getElementById('btnWarning').classList.toggle('btn-disabled', !ok);
+}
+function updateContraBtn() {
+  const ok = document.getElementById('contraReason').value.trim().length > 0;
+  document.getElementById('btnContra').classList.toggle('btn-disabled', !ok);
+}
+function toggleUnavailCheck() {
+  const cb = document.getElementById('unavailCheck');
+  cb.checked = !cb.checked; updateUnavailBtn();
+}
+function updateUnavailBtn() {
+  document.getElementById('btnUnavail').classList.toggle('btn-disabled', !document.getElementById('unavailCheck').checked);
+}
+setRxState('checking');
+
+// ── AUTOCOMPLETE ──────────────────────────────────────
+function showAutocomplete() { document.getElementById('autocompleteDropdown').classList.add('open'); }
+function hideAutocompleteDelayed() { setTimeout(() => document.getElementById('autocompleteDropdown').classList.remove('open'), 200); }
+function handleDrugInput(val) { document.getElementById('autocompleteDropdown').classList.toggle('open', val.length > 0); }
+function selectDrug(name) { document.getElementById('drugInput').value = name; document.getElementById('autocompleteDropdown').classList.remove('open'); }
+
+// ── COMMAND PALETTE ───────────────────────────────────
+// No animation — keyboard-initiated (used hundreds of times/day)
+let cmdOpen = false;
+let focusedIdx = -1;
+const CMD_COUNT = 7;
+
+function openCmdPalette() {
+  cmdOpen = true;
+  document.getElementById('cmdOverlay').classList.add('visible');
+  setTimeout(() => document.getElementById('cmdInput').focus(), 10);
+  focusedIdx = -1; updateCmdFocus();
+}
+function closeCmdPalette() {
+  cmdOpen = false;
+  document.getElementById('cmdOverlay').classList.remove('visible');
+  document.getElementById('cmdInput').value = '';
+  focusedIdx = -1; updateCmdFocus();
+}
+function closeCmdPaletteOutside(e) {
+  if (e.target === document.getElementById('cmdOverlay')) closeCmdPalette();
+}
+function updateCmdFocus() {
+  document.querySelectorAll('.cmd-item').forEach((item, i) => item.classList.toggle('focused', i === focusedIdx));
+}
+document.getElementById('cmdInput').addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowDown') { e.preventDefault(); focusedIdx = Math.min(focusedIdx + 1, CMD_COUNT - 1); updateCmdFocus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); focusedIdx = Math.max(focusedIdx - 1, 0); updateCmdFocus(); }
+  else if (e.key === 'Enter' && focusedIdx >= 0) closeCmdPalette();
+  else if (e.key === 'Escape') closeCmdPalette();
+});
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault(); cmdOpen ? closeCmdPalette() : openCmdPalette();
+  } else if (e.key === 'Escape') {
+    if (cmdOpen) { closeCmdPalette(); return; }
+    if (panelOpen) { closeRxPanel(); }
+  }
+});
+document.getElementById('searchTrigger').addEventListener('click', openCmdPalette);
+document.getElementById('searchTrigger').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCmdPalette(); }
+});
+</script>
+</body>
+</html>

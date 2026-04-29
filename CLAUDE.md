@@ -92,6 +92,7 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 - Check if a FHIR R4 resource exists for it at https://hl7.org/fhir/R4/resourcelist.html
 - Use the FHIR field names as the canonical source; add Ultranos extensions in a separate namespace
 - Types live in `packages/shared-types/src/fhir/`
+- **Meta fields:** Use FHIR R4 canonical `Meta` field names: `lastUpdated` (ISO 8601 instant), `versionId` (string). The `createdAt` field is an Ultranos extension and MUST live inside the `_ultranos` namespace, never in `meta`. Do NOT use `createdAt`/`updatedAt` in the `meta` object.
 
 ### RTL Support
 Arabic and Dari are RTL languages. Every UI component must work in both LTR and RTL.

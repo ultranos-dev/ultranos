@@ -1,0 +1,116 @@
+/*
+ * Ultranos Design Tokens
+ * Wise-inspired typography (Inter) and HSL color system.
+ * Import this file in any app to use the shared design tokens.
+ *
+ * Usage: @import '@ultranos/ui-kit/tokens.css';
+ */
+
+:root {
+  /* ── Typography ── */
+  --font-family-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Font sizes — modular scale (1.25 ratio) */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-md: 1.125rem;   /* 18px */
+  --font-size-lg: 1.25rem;    /* 20px */
+  --font-size-xl: 1.5rem;     /* 24px */
+  --font-size-2xl: 1.875rem;  /* 30px */
+  --font-size-3xl: 2.25rem;   /* 36px */
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* Letter spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+
+  /* ── Colors (HSL) — Wise-inspired palette ── */
+
+  /* Primary — Wise Green */
+  --color-primary-50: hsl(156, 62%, 96%);
+  --color-primary-100: hsl(156, 60%, 90%);
+  --color-primary-200: hsl(156, 55%, 78%);
+  --color-primary-300: hsl(156, 50%, 64%);
+  --color-primary-400: hsl(156, 48%, 50%);
+  --color-primary-500: hsl(156, 55%, 40%);
+  --color-primary-600: hsl(156, 58%, 32%);
+  --color-primary-700: hsl(156, 60%, 25%);
+  --color-primary-800: hsl(156, 62%, 18%);
+  --color-primary-900: hsl(156, 65%, 12%);
+
+  /* Neutral — warm grays */
+  --color-neutral-0: hsl(0, 0%, 100%);
+  --color-neutral-50: hsl(210, 20%, 98%);
+  --color-neutral-100: hsl(210, 16%, 94%);
+  --color-neutral-200: hsl(210, 12%, 87%);
+  --color-neutral-300: hsl(210, 10%, 73%);
+  --color-neutral-400: hsl(210, 8%, 55%);
+  --color-neutral-500: hsl(210, 8%, 42%);
+  --color-neutral-600: hsl(210, 10%, 33%);
+  --color-neutral-700: hsl(210, 12%, 25%);
+  --color-neutral-800: hsl(210, 14%, 17%);
+  --color-neutral-900: hsl(210, 16%, 10%);
+
+  /* Semantic — clinical alerts */
+  --color-danger: hsl(0, 72%, 51%);
+  --color-danger-light: hsl(0, 72%, 95%);
+  --color-danger-dark: hsl(0, 72%, 38%);
+
+  --color-warning: hsl(38, 92%, 50%);
+  --color-warning-light: hsl(38, 92%, 95%);
+  --color-warning-dark: hsl(38, 92%, 38%);
+
+  --color-success: hsl(142, 71%, 45%);
+  --color-success-light: hsl(142, 71%, 95%);
+  --color-success-dark: hsl(142, 71%, 32%);
+
+  --color-info: hsl(207, 90%, 54%);
+  --color-info-light: hsl(207, 90%, 95%);
+  --color-info-dark: hsl(207, 90%, 38%);
+
+  /* Allergy — highest prominence (per CLAUDE.md safety rules) */
+  --color-allergy: hsl(0, 84%, 44%);
+  --color-allergy-bg: hsl(0, 84%, 96%);
+  --color-allergy-border: hsl(0, 84%, 60%);
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* ── Border radius ── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.05);
+  --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.07);
+  --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.1);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}

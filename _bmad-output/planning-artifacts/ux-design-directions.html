@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultranos UX Design Directions (Wise-Inspired)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --near-black: #0e0f0c;
+            --wise-green: #9fe870;
+            --dark-green: #163300;
+            --light-mint: #e2f6d5;
+            --light-surface: #e8ebe6;
+            --gray: #868685;
+            --warm-dark: #454745;
+            --bg-cyan: rgba(56,200,255,0.10);
+            --ring-shadow: rgba(14,15,12,0.12) 0px 0px 0px 1px;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; margin: 0; padding: 40px; color: var(--near-black); }
+        h1 { text-align: center; margin-bottom: 40px; font-weight: 900; letter-spacing: -1px; }
+        .container { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+        
+        .device { 
+            width: 320px; height: 600px; background: white; border-radius: 40px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; 
+            border: 8px solid var(--near-black); position: relative; 
+        }
+        
+        .header { padding: 24px 20px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-weight: 900; font-size: 24px; line-height: 0.85; }
+        
+        .pill-button {
+            background: var(--wise-green); color: var(--dark-green);
+            padding: 8px 16px; border-radius: 9999px; font-weight: 600;
+            border: none; cursor: pointer; transition: transform 0.2s ease;
+        }
+        .pill-button:hover { transform: scale(1.05); }
+        .pill-button:active { transform: scale(0.95); }
+
+        /* Clinical Theme - Dense, High Contrast */
+        .clinical { background: #ffffff; }
+        .clinical .header { border-bottom: 1px solid var(--light-surface); }
+        .clinical .content { padding: 16px; }
+        .clinical .item { 
+            padding: 16px 12px; margin-bottom: 8px; border-radius: 16px;
+            box-shadow: var(--ring-shadow); font-weight: 600;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .clinical .sync-badge { 
+            background: var(--light-surface); font-size: 12px; padding: 4px 12px; 
+            border-radius: 9999px; font-weight: 600; color: var(--warm-dark);
+        }
+        .clinical .fab {
+            position: absolute; bottom: 24px; right: 24px; width: 56px; height: 56px;
+            background: var(--wise-green); color: var(--dark-green);
+            border-radius: 9999px; display: flex; align-items:center; justify-content:center;
+            font-size: 28px; font-weight: 900; cursor: pointer; transition: transform 0.2s;
+        }
+        .clinical .fab:hover { transform: scale(1.05); }
+
+        /* Fulfillment Theme - Action Oriented */
+        .fulfillment { background: var(--light-surface); }
+        .fulfillment .content { padding: 16px; }
+        .fulfillment .card { 
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; 
+            box-shadow: var(--ring-shadow); 
+        }
+        .fulfillment .card-title { font-weight: 900; font-size: 22px; margin-bottom: 4px; line-height: 1.1; }
+        
+        /* Consumer Theme - Welcoming */
+        .consumer { background: white; }
+        .consumer .header { background: var(--bg-cyan); padding-bottom: 32px; border-radius: 0 0 30px 30px; }
+        .consumer .content { padding: 24px; margin-top: -20px; }
+        .consumer .card { 
+            background: white; border-radius: 30px; padding: 24px; margin-bottom: 20px; 
+            box-shadow: var(--ring-shadow); text-align: center;
+        }
+        .consumer .mega-title { font-weight: 900; font-size: 40px; line-height: 0.85; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+    <h1>Ultranos Design Directions (Wise-Inspired)</h1>
+
+    <div class="container">
+        <!-- Clinical -->
+        <div class="device clinical">
+            <div class="header">
+                <div class="header-title">Aris.</div>
+                <div class="sync-badge">1 Sync</div>
+            </div>
+            <div class="content">
+                <div style="font-weight: 600; color: var(--gray); font-size: 14px; margin-bottom: 12px; letter-spacing: -0.1px;">TODAY'S QUEUE</div>
+                <div class="item">
+                    <div>John D.<br><span style="color:var(--gray);font-size:14px;font-weight:400;">10:00 AM</span></div>
+                    <div style="background: var(--light-mint); color: var(--dark-green); padding: 4px 8px; border-radius: 8px; font-size: 12px;">Rm 1</div>
+                </div>
+                <div class="item">
+                    <div>Mary S.<br><span style="color:var(--gray);font-size:14px;font-weight:400;">10:15 AM</span></div>
+                    <div style="background: var(--light-mint); color: var(--dark-green); padding: 4px 8px; border-radius: 8px; font-size: 12px;">Rm 2</div>
+                </div>
+                <div class="fab">+</div>
+            </div>
+        </div>
+
+        <!-- Fulfillment -->
+        <div class="device fulfillment">
+            <div class="header">
+                <div class="header-title">Orders.</div>
+                <div style="font-weight: 600; font-size: 14px; color: var(--warm-dark);">Online</div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="card-title">RX-84920</div>
+                    <div style="font-size: 16px; color: var(--warm-dark); margin-bottom: 16px; font-weight: 600;">Amoxicillin 500mg</div>
+                    <button class="pill-button" style="width: 100%;">Mark Dispensed</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">LAB-1102</div>
+                    <div style="font-size: 16px; color: var(--warm-dark); margin-bottom: 16px; font-weight: 600;">Blood Count</div>
+                    <button class="pill-button" style="width: 100%; background: var(--light-mint); color: var(--near-black);">Start Test</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumer -->
+        <div class="device consumer">
+            <div class="header">
+                <div class="header-title">Hi Mateo.</div>
+            </div>
+            <div class="content">
+                <div class="card">
+                    <div class="mega-title">Good<br>News.</div>
+                    <div style="font-size: 16px; color: var(--warm-dark); margin-bottom: 24px; font-weight: 600;">Your test results are in.</div>
+                    <button class="pill-button" style="font-size: 18px; padding: 12px 24px;">View Results</button>
+                </div>
+                <div class="card" style="opacity: 0.8; box-shadow: none; border: 1px solid var(--light-surface);">
+                    <div style="font-weight: 900; font-size: 24px; margin-bottom: 8px;">Next Appt.</div>
+                    <div style="font-size: 16px; color: var(--gray); font-weight: 600;">Oct 12, 10:00 AM</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

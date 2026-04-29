@@ -1,0 +1,36 @@
+
+## Implementation Patterns & Consistency Rules
+
+### Pattern Categories Defined
+**Critical Conflict Points Identified:** 4 key areas where AI agents could make diverging choices (Naming, Formatting, Structure, Communication).
+
+### Naming Patterns
+
+**Database Naming Conventions (Supabase/PostgreSQL):**
+- **Tables and Columns:** MUST use strictly `snake_case` (e.g., `patient_records`, `encounter_id`). No `camelCase` at the database level.
+- **Indexes:** MUST follow the pattern `idx_[table]_[column]` (e.g., `idx_patients_national_id`).
+
+**Code Naming Conventions (React / Next.js / Expo):**
+- **Components & Files:** MUST use `PascalCase` for React components and their filenames (e.g., `OptimisticButton.tsx`, `PatientCard.tsx`).
+- **Utility Functions:** MUST use `camelCase` (e.g., `formatFhirDate.ts`).
+- **Types/Interfaces:** MUST use `PascalCase` and preferably be prefixed or clearly named without an `I` (e.g., `PatientResource`, not `IPatient`).
+
+### Format Patterns
+
+**Data Exchange Formats (Dates & Enums):**
+- **Dates/Times:** MUST be transmitted and stored as UTC **ISO 8601 Strings** (e.g., `2024-04-28T12:00:00Z`). Epoch timestamps are forbidden to maintain strict FHIR R4 compatibility.
+- **Enums/Status Codes:** MUST use uppercase snake string literals instead of numbers (e.g., `STATUS_ACTIVE`, `PRESCRIPTION_FULFILLED`) for database readability and debugging.
+
+### Communication Patterns
+
+**Sync Engine Action Naming:**
+- **Namespacing:** Offline actions queued into Dexie/SQLite MUST use the `domain:action` namespace format. Example: `{ action: "encounter:prescribe_medication", payload: {...}, hlc: "..." }`. This ensures robust routing in the backend API layer.
+
+**State Management Patterns (Zustand):**
+- **Store Structure:** Every domain-specific Zustand store MUST include a standard `syncStatus` object (`{ isPending: boolean, isError: boolean, lastSyncedAt: string }`). This ensures the "Global Sync Pulse" UI component functions identically across all features.
+
+### Enforcement Guidelines
+**All AI Agents MUST:**
+- Apply `snake_case` mapping when writing to Supabase, but use `camelCase` in the TypeScript UI logic.
+- Ensure all `DateTime` UI components explicitly parse UTC ISO strings before displaying localized time.
+- Implement a route-level Error Boundary that triggers the "Stale Data / Offline Mode" high-contrast yellow banner on failures, strictly avoiding blank crash screens.

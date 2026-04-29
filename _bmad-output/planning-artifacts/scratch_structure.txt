@@ -1,0 +1,54 @@
+
+## Project Structure & Boundaries
+
+### Complete Project Directory Structure
+
+```text
+ultranos/
+├── apps/
+│   ├── hub-api/                 # Node.js tRPC Server (Existing Hub)
+│   │   ├── src/api/root.ts      # tRPC router entry
+│   │   └── src/services/        # Safety gates, FHIR validation & Audit verification
+│   ├── opd-lite-pwa/            # Next.js Desktop App (Clinicians)
+│   │   ├── src/app/             # App Router pages
+│   │   ├── src/store/           # Zustand Stores (Optimistic UI State)
+│   │   └── src/lib/db.ts        # Dexie.js (Offline Persistence)
+│   ├── opd-lite-mobile/         # Expo Android App (Clinicians)
+│   │   ├── src/screens/         # Native layouts
+│   │   ├── src/store/           # Zustand Stores (Mobile UI State)
+│   │   └── src/lib/db.ts        # Expo SQLite/SQLCipher (Encrypted Persistence)
+│   └── pharmacy-pos/            # Next.js App (Pharmacists)
+├── packages/
+│   ├── sync-engine/             # Shared HLC & Append-only ledger logic
+│   ├── ui-kit/                  # Wise-inspired design tokens & React components
+│   ├── shared-types/            # FHIR R4 TS Definitions & Schemas
+│   ├── audit-logger/            # Cryptographic hashing & audit trail logic
+│   └── config-typescript/       # Shared tsconfig configurations
+├── supabase/
+│   ├── migrations/              # FHIR-compliant SQL migrations
+│   └── functions/               # Cloud Edge AI functions (Generative SOAP, etc.)
+├── turbo.json                   # Monorepo task orchestration
+└── pnpm-workspace.yaml          # PNPM monorepo definition
+```
+
+### Architectural Boundaries
+
+**API Boundaries:**
+- The **Hub API** is the sole validator for the ecosystem. All sync queues from edge clients must pass through tRPC endpoints for clinical safety and audit-log integrity checks.
+- Direct database access via Supabase Client is restricted to read-only non-sensitive metadata.
+
+**Component & State Boundaries:**
+- **Zustand** is the mandatory state management layer for all interactive apps.
+- UI state and Persistence state are decoupled: The UI reads from Zustand, while the `sync-engine` package coordinates writes between Zustand and the local database (`Dexie`/`SQLite`).
+
+**Data Boundaries:**
+- **Local-First:** Edge clients operate on local data first. The Sync Engine manages eventual consistency using Hybrid Logical Clocks (HLC).
+- **PHI Isolation:** Personal Health Information is stored only in the `opd-lite` clients (encrypted) and the central Hub. No PHI should reside in shared browser storage across different users.
+
+### Requirements to Structure Mapping
+
+- **Offline Consultation:** `apps/opd-lite-*` + `packages/sync-engine`.
+- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-pos` (Read/Verify).
+- **Clinical Safety Gates:** `apps/hub-api/src/services/safety`.
+- **Wise Visual Design:** `packages/ui-kit`.
+- **Regulatory Audit:** `packages/audit-logger`.

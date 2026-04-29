@@ -1,0 +1,113 @@
+// ============================================================
+// ULTRANOS — SHARED ENUMS
+// All ENUM types used across the platform. Source of truth.
+// ============================================================
+
+export enum UserRole {
+  DOCTOR = 'DOCTOR',
+  PHARMACIST = 'PHARMACIST',
+  LAB_TECH = 'LAB_TECH',
+  PATIENT = 'PATIENT',
+  GUARDIAN = 'GUARDIAN',
+  SYSTEM = 'SYSTEM',
+  ADMIN = 'ADMIN',
+}
+
+export enum AuditAction {
+  READ = 'READ',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE_REQUEST = 'DELETE_REQUEST',
+  CONSENT_GRANT = 'CONSENT_GRANT',
+  CONSENT_REVOKE = 'CONSENT_REVOKE',
+  SYNC = 'SYNC',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  MFA_FAIL = 'MFA_FAIL',
+  BREAK_GLASS = 'BREAK_GLASS',
+  EXPORT = 'EXPORT',
+}
+
+export enum AuditResourceType {
+  PATIENT = 'PATIENT',
+  PRESCRIPTION = 'PRESCRIPTION',
+  LAB_RESULT = 'LAB_RESULT',
+  CLINICAL_NOTE = 'CLINICAL_NOTE',
+  OBSERVATION = 'OBSERVATION',
+  ENCOUNTER = 'ENCOUNTER',
+  CONSENT = 'CONSENT',
+  USER_ACCOUNT = 'USER_ACCOUNT',
+}
+
+export enum AuditOutcome {
+  SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE',
+  DENIED = 'DENIED',
+}
+
+export enum KycStatus {
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  REVOKED = 'REVOKED',
+}
+
+export enum ConsentPurpose {
+  TREATMENT = 'TREATMENT',
+  ANALYTICS = 'ANALYTICS',
+  AI_PROCESSING = 'AI_PROCESSING',
+  RESEARCH = 'RESEARCH',
+  THIRD_PARTY_SHARE = 'THIRD_PARTY_SHARE',
+}
+
+export enum ConsentScope {
+  PRESCRIPTIONS = 'PRESCRIPTIONS',
+  LABS = 'LABS',
+  VITALS = 'VITALS',
+  CLINICAL_NOTES = 'CLINICAL_NOTES',
+  FULL_RECORD = 'FULL_RECORD',
+}
+
+export enum ConsentStatus {
+  ACTIVE = 'ACTIVE',
+  WITHDRAWN = 'WITHDRAWN',
+  EXPIRED = 'EXPIRED',
+  SUPERSEDED = 'SUPERSEDED',
+}
+
+export enum GrantorRole {
+  SELF = 'SELF',
+  GUARDIAN = 'GUARDIAN',
+  EMERGENCY_OVERRIDE = 'EMERGENCY_OVERRIDE',
+}
+
+export enum DrugInteractionSeverity {
+  CONTRAINDICATED = 'CONTRAINDICATED',
+  ALLERGY_MATCH = 'ALLERGY_MATCH',
+  MAJOR = 'MAJOR',
+  MODERATE = 'MODERATE',
+  MINOR = 'MINOR',
+  NONE = 'NONE',
+}
+
+export enum PrescriptionStatus {
+  ACTIVE = 'ACTIVE',
+  DISPENSED = 'DISPENSED',
+  PARTIALLY_DISPENSED = 'PARTIALLY_DISPENSED',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum SyncTier {
+  TIER_1_SAFETY_CRITICAL = 1,
+  TIER_2_CLINICAL = 2,
+  TIER_3_OPERATIONAL = 3,
+  TIER_4_QUEUE_EVENTS = 4,
+}
+
+export enum AdministrativeGender {
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
+  UNKNOWN = 'unknown',
+}

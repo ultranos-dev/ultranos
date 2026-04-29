@@ -1,0 +1,18 @@
+
+## Privacy, Localization & Offline Security
+
+### Data Privacy & PHI Minimization
+- **PWA Persistence Policy:** In strict adherence to PRD v3.0, the Desktop PWA MUST NOT persist unencrypted PHI on disk. 
+- **Key-in-Memory Strategy:** The encryption key for the local Dexie.js store must reside only in RAM. Upon session termination (logout or tab close), the key is wiped, rendering the local IndexedDB data inaccessible.
+- **Mobile Retention:** The Expo Android app is permitted to retain an encrypted cache for up to 90 days or 1,000 records (as per PRD), utilizing **SQLCipher** with a key protected by the device's Biometric/Hardware keystore.
+
+### Localization & RTL Patterns
+- **Web Framework:** **`next-intl`** will be used for all Next.js applications to handle routing and translations.
+- **Mobile Framework:** **`expo-localization`** combined with **`i18next`** will handle native localization.
+- **Mirroring Rule:** The UI-kit must support a global `dir` context. When the language is set to Arabic or Dari, the entire layout must mirror (RTL) at the framework level, not just text alignment.
+
+### Offline Authentication
+- **Mechanism:** Encrypted JWT Persistence.
+- **PWA Implementation:** The Supabase session token is stored in `sessionStorage` (wiped on tab close) to prevent persistent access on shared clinician computers.
+- **Mobile Implementation:** The token is stored in **Expo SecureStore**, allowing clinicians to re-authenticate offline via biometrics/PIN if the token has not expired.
+- **Validation:** The `sync-engine` must verify the local token signature before allowing any offline clinical actions to be queued.

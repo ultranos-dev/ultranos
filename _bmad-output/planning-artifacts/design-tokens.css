@@ -1,0 +1,1377 @@
+/**
+ * =============================================================================
+ * ULTRANOS HEALTHCARE PLATFORM — DESIGN TOKENS
+ * =============================================================================
+ * Project:  Ultranos Ecosystem
+ * Version:  1.0.0
+ * Date:     2026-04-28
+ * Author:   Ultranos Design System
+ *
+ * Usage:
+ *   Import this file once at the root of each app:
+ *     @import '@ultranos/ui-kit/tokens/design-tokens.css';
+ *
+ *   Apply a theme by setting the data-theme attribute on <html> or a container:
+ *     <html data-theme="clinical">
+ *     <html data-theme="fulfillment">
+ *     <html data-theme="consumer">
+ *
+ *   Apply RTL by setting the dir attribute:
+ *     <html dir="rtl" data-theme="clinical">
+ *
+ *   All tokens are consumed as CSS custom properties:
+ *     color: var(--color-accent);
+ *     border-radius: var(--radius-card-sm);
+ *
+ * Sections:
+ *   1.  Global Tokens        — Brand, semantic, neutral, typography, spacing,
+ *                              radius, shadows, motion, z-index, layout
+ *   2.  Clinical Theme       — GP / OPD Desktop & Android [data-theme="clinical"]
+ *   3.  Fulfillment Theme    — Pharmacy POS & Lab Portal [data-theme="fulfillment"]
+ *   4.  Consumer Theme       — Health Passport patient app [data-theme="consumer"]
+ *   5.  RTL Support          — [dir="rtl"] directional overrides
+ *   6.  Component Tokens     — Button, Card, Input, Sync Indicator,
+ *                              Allergy Panel, Drug Interaction Check,
+ *                              Prescription Journey Tracker
+ * =============================================================================
+ */
+
+
+/* =============================================================================
+   1. GLOBAL TOKENS
+   Base-layer tokens that are theme-agnostic. Every theme builds on top of these.
+   ============================================================================= */
+
+:root {
+
+  /* ---------------------------------------------------------------------------
+     1.1 Brand Colors (raw palette — prefer semantic aliases in components)
+     --------------------------------------------------------------------------- */
+
+  --brand-lime:              #9fe870;   /* Primary brand accent */
+  --brand-dark-green:        #163300;   /* Text colour on lime surfaces */
+  --brand-near-black:        #0e0f0c;   /* Near-black background */
+  --brand-light-surface:     #e8ebe6;   /* Light warm-grey surface */
+  --brand-positive-green:    #054d28;   /* Deep positive / success green */
+  --brand-white:             #ffffff;
+  --brand-off-white:         #f4f5f2;   /* Warm canvas — matches design.md §4 */
+  --brand-pastel-green:      #cdffad;   /* Button hover state — Pastel Green */
+
+  /* Extended brand palette */
+  --brand-lime-light:        #c7f4a0;   /* Tint for hover / hover states */
+  --brand-lime-dark:         #7ac44e;   /* Shade for pressed states */
+  --brand-green-mid:         #1f5200;   /* Mid-range dark green */
+  --brand-teal:              #0d7d6e;   /* Consumer teal accent */
+  --brand-teal-light:        #b2e4de;   /* Consumer teal tint */
+  --brand-teal-dark:         #085a4f;   /* Consumer teal deep */
+
+  /* ---------------------------------------------------------------------------
+     1.2 Semantic Colors
+     --------------------------------------------------------------------------- */
+
+  /* Danger / Critical */
+  --color-danger:            #d03238;
+  --color-danger-light:      #fde8e9;
+  --color-danger-dark:       #9a171c;
+  --color-danger-border:     #f5a3a6;
+
+  /* Warning */
+  --color-warning:           #ffd11a;
+  --color-warning-light:     #fff7cc;
+  --color-warning-dark:      #b38f00;
+  --color-warning-border:    #ffe066;
+
+  /* Success / Positive */
+  --color-success:           #054d28;
+  --color-success-light:     #d6f0e1;
+  --color-success-dark:      #023018;
+  --color-success-border:    #7ecda0;
+
+  /* Info */
+  --color-info:              #1a5fa8;
+  --color-info-light:        #dceeff;
+  --color-info-dark:         #0f3d6e;
+  --color-info-border:       #7ab8f5;
+
+  /* Allergy (highest-priority clinical flag — always distinct from generic danger) */
+  --color-allergy:           #d03238;   /* Same hue as danger but semantically namespaced */
+  --color-allergy-bg:        #fde8e9;
+  --color-allergy-border:    #f5a3a6;
+  --color-allergy-text:      #7a0f13;
+
+  /* Drug interaction severity */
+  --color-drug-contraindicated:      #d03238;
+  --color-drug-contraindicated-bg:   #fde8e9;
+  --color-drug-major:                #e05c00;
+  --color-drug-major-bg:             #fdeede;
+  --color-drug-moderate:             #ffd11a;
+  --color-drug-moderate-bg:          #fff7cc;
+  --color-drug-minor:                #1a5fa8;
+  --color-drug-minor-bg:             #dceeff;
+  --color-drug-check-unavailable:    #6b5900;   /* Darker amber for unavailable state */
+  --color-drug-check-unavailable-bg: #fff3cc;
+
+  /* ---------------------------------------------------------------------------
+     1.3 Neutral Palette
+     --------------------------------------------------------------------------- */
+
+  --neutral-0:    #ffffff;
+  --neutral-50:   #f7f9f5;
+  --neutral-100:  #eef1eb;
+  --neutral-200:  #e0e4db;
+  --neutral-300:  #c8cec2;
+  --neutral-400:  #a3aba0;   /* Placeholder text */
+  --neutral-500:  #7a8276;
+  --neutral-600:  #535a4f;
+  --neutral-700:  #3a4037;
+  --neutral-800:  #252a22;
+  --neutral-900:  #0e0f0c;   /* Near-black */
+  --neutral-950:  #090a08;
+
+  /* ---------------------------------------------------------------------------
+     1.4 Typography Scale
+     --------------------------------------------------------------------------- */
+
+  /* Font families */
+  --font-family-display:  'Inter', 'Noto Kufi Arabic', system-ui, -apple-system, sans-serif;
+  --font-family-body:     'Inter', 'Noto Naskh Arabic', system-ui, -apple-system, sans-serif;
+  --font-family-mono:     'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Font weights */
+  --font-weight-display:  900;   /* Headings, hero text */
+  --font-weight-bold:     700;
+  --font-weight-semibold: 600;   /* Body default */
+  --font-weight-medium:   500;
+  --font-weight-regular:  400;
+
+  /* Font sizes — fluid-ready, rem-based */
+  --font-size-2xs:  0.625rem;   /*  10px */
+  --font-size-xs:   0.75rem;    /*  12px */
+  --font-size-sm:   0.875rem;   /*  14px */
+  --font-size-md:   1rem;       /*  16px */
+  --font-size-lg:   1.125rem;   /*  18px */
+  --font-size-xl:   1.25rem;    /*  20px */
+  --font-size-2xl:  1.5rem;     /*  24px */
+  --font-size-3xl:  1.875rem;   /*  30px */
+  --font-size-4xl:  2.25rem;    /*  36px */
+  --font-size-5xl:  3rem;       /*  48px */
+  --font-size-6xl:  3.75rem;    /*  60px */
+
+  /* Line heights */
+  --line-height-tight:   1.15;
+  --line-height-snug:    1.3;
+  --line-height-normal:  1.5;
+  --line-height-relaxed: 1.65;
+  --line-height-loose:   2;
+
+  /* Letter spacing */
+  --letter-spacing-tight:   -0.03em;
+  --letter-spacing-snug:    -0.01em;
+  --letter-spacing-normal:   0em;
+  --letter-spacing-wide:     0.03em;
+  --letter-spacing-wider:    0.06em;
+  --letter-spacing-widest:   0.12em;
+
+  /* ---------------------------------------------------------------------------
+     1.5 Spacing Scale (4px base unit)
+     --------------------------------------------------------------------------- */
+
+  --space-0:    0px;
+  --space-px:   1px;
+  --space-0-5:  2px;
+  --space-1:    4px;
+  --space-1-5:  6px;
+  --space-2:    8px;
+  --space-2-5:  10px;
+  --space-3:    12px;
+  --space-3-5:  14px;
+  --space-4:    16px;
+  --space-5:    20px;
+  --space-6:    24px;
+  --space-7:    28px;
+  --space-8:    32px;
+  --space-9:    36px;
+  --space-10:   40px;
+  --space-11:   44px;
+  --space-12:   48px;
+  --space-14:   56px;
+  --space-16:   64px;
+  --space-20:   80px;
+  --space-24:   96px;
+  --space-28:   112px;
+  --space-32:   128px;
+  --space-40:   160px;
+  --space-48:   192px;
+  --space-56:   224px;
+  --space-64:   256px;
+
+  /* ---------------------------------------------------------------------------
+     1.6 Border Radius
+     --------------------------------------------------------------------------- */
+
+  --radius-none:   0px;
+  --radius-xs:     4px;
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;      /* Card small */
+  --radius-xl:     20px;
+  --radius-2xl:    24px;
+  --radius-3xl:    30px;      /* Card large lower bound */
+  --radius-4xl:    40px;      /* Card large upper bound */
+  --radius-pill:   9999px;    /* Fully rounded — badges, tags, chip buttons */
+  --radius-circle: 50%;       /* Avatars, icon buttons */
+
+  /* Semantic radius aliases */
+  --radius-card-sm:      var(--radius-lg);    /* 16px */
+  --radius-card-lg:      var(--radius-3xl);   /* 30px */
+  --radius-card-xl:      var(--radius-4xl);   /* 40px */
+  --radius-button:       var(--radius-pill);  /* 9999px — default buttons */
+  --radius-button-sm:    var(--radius-md);    /* 12px — compact / icon buttons */
+  --radius-input:        var(--radius-md);    /* 12px */
+  --radius-badge:        var(--radius-pill);
+  --radius-tooltip:      var(--radius-sm);
+  --radius-modal:        var(--radius-2xl);
+  --radius-panel:        var(--radius-lg);
+  --radius-avatar:       var(--radius-circle);
+  --radius-tag:          var(--radius-pill);
+
+  /* ---------------------------------------------------------------------------
+     1.7 Shadows
+     --------------------------------------------------------------------------- */
+
+  /* Elevation shadows */
+  --shadow-xs:   rgba(14,15,12,0.04) 0px 1px 2px;
+  --shadow-sm:   rgba(14,15,12,0.06) 0px 2px 4px, rgba(14,15,12,0.04) 0px 1px 2px;
+  --shadow-md:   rgba(14,15,12,0.08) 0px 4px 12px, rgba(14,15,12,0.04) 0px 2px 4px;
+  --shadow-lg:   rgba(14,15,12,0.10) 0px 8px 24px, rgba(14,15,12,0.06) 0px 4px 8px;
+  --shadow-xl:   rgba(14,15,12,0.12) 0px 16px 40px, rgba(14,15,12,0.08) 0px 8px 16px;
+  --shadow-2xl:  rgba(14,15,12,0.16) 0px 24px 56px, rgba(14,15,12,0.10) 0px 12px 24px;
+
+  /* Ring / outline shadow (1px border substitute) */
+  --shadow-ring:               rgba(14,15,12,0.12) 0px 0px 0px 1px;
+  --shadow-ring-accent:        rgba(159,232,112,0.5) 0px 0px 0px 3px;
+  --shadow-ring-danger:        rgba(208,50,56,0.4) 0px 0px 0px 3px;
+  --shadow-ring-warning:       rgba(255,209,26,0.5) 0px 0px 0px 3px;
+  --shadow-ring-info:          rgba(26,95,168,0.4) 0px 0px 0px 3px;
+
+  /* Focus / interactive states */
+  --shadow-focus-inset:        rgb(134,134,133) 0px 0px 0px 1px inset;
+  --shadow-focus-ring:         rgba(14,15,12,0.12) 0px 0px 0px 1px, rgba(159,232,112,0.6) 0px 0px 0px 4px;
+  --shadow-focus-danger:       rgba(208,50,56,0.12) 0px 0px 0px 1px, rgba(208,50,56,0.5) 0px 0px 0px 4px;
+
+  /* Card shadows */
+  --shadow-card:               var(--shadow-md);
+  --shadow-card-hover:         var(--shadow-lg);
+  --shadow-card-raised:        var(--shadow-xl);
+
+  /* Modal / overlay */
+  --shadow-modal:              rgba(14,15,12,0.24) 0px 24px 64px, rgba(14,15,12,0.16) 0px 8px 24px;
+
+  /* Sidebar / panel */
+  --shadow-sidebar:            rgba(14,15,12,0.12) 4px 0px 24px;
+  --shadow-panel:              rgba(14,15,12,0.10) -4px 0px 24px;
+
+  /* Inner / inset */
+  --shadow-inset-sm:           rgba(14,15,12,0.06) 0px 1px 4px inset;
+  --shadow-inset-md:           rgba(14,15,12,0.10) 0px 2px 8px inset;
+
+  /* ---------------------------------------------------------------------------
+     1.8 Motion / Easing
+     --------------------------------------------------------------------------- */
+
+  /* Durations */
+  --duration-instant:    0ms;
+  --duration-faster:     80ms;
+  --duration-fast:       120ms;
+  --duration-normal:     200ms;
+  --duration-moderate:   300ms;
+  --duration-slow:       400ms;
+  --duration-slower:     600ms;
+  --duration-slowest:    800ms;
+
+  /* Semantic duration aliases */
+  --duration-btn:        160ms;   /* Button hover/press — intentionally perceptible */
+  --duration-panel-in:   250ms;   /* Panel enter — slower for spatial grounding */
+  --duration-panel-out:  180ms;   /* Panel exit — faster, system responds quickly */
+  --duration-stagger:     50ms;   /* Per-sibling stagger for list card reveals */
+
+  /* Easing curves */
+  --ease-linear:         linear;
+  --ease-in:             cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:            cubic-bezier(0.23, 1, 0.32, 1);     /* Strong ease-out — primary motion curve */
+  --ease-in-out:         cubic-bezier(0.77, 0, 0.175, 1);    /* Strong ease-in-out — page transitions */
+  --ease-panel:          cubic-bezier(0.32, 0.72, 0, 1);     /* iOS drawer — side panels & sheets */
+  --ease-subtle:         cubic-bezier(0.25, 0.1, 0.25, 1);   /* Hover / color shifts — barely felt */
+  --ease-spring:         cubic-bezier(0.34, 1.56, 0.64, 1);  /* Avoid for UI — reserved for decorative only */
+  --ease-spring-gentle:  cubic-bezier(0.22, 1.0, 0.36, 1);
+  --ease-bounce:         cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  --ease-overshoot:      cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Composed transition presets — never use `all`; always list explicit properties */
+  --transition-base:         color var(--duration-normal) var(--ease-subtle),
+                             background-color var(--duration-normal) var(--ease-subtle),
+                             border-color var(--duration-normal) var(--ease-subtle);
+  --transition-colors:       color var(--duration-fast) var(--ease-out),
+                             background-color var(--duration-fast) var(--ease-out),
+                             border-color var(--duration-fast) var(--ease-out),
+                             box-shadow var(--duration-fast) var(--ease-out);
+  --transition-transform:    transform var(--duration-fast) var(--ease-out);
+  --transition-button:       transform var(--duration-btn) var(--ease-out),
+                             background-color var(--duration-btn) var(--ease-subtle);
+  --transition-fade:         opacity var(--duration-moderate) var(--ease-in-out);
+  --transition-slide:        transform var(--duration-panel-in) var(--ease-panel);
+  --transition-scale:        transform var(--duration-fast) var(--ease-out);
+  --transition-expand:       height var(--duration-moderate) var(--ease-out),
+                             opacity var(--duration-moderate) var(--ease-out);
+
+  /* Scale values for interactive states — 3% is felt, not seen; 5% draws conscious attention */
+  --scale-hover:   1.03;
+  --scale-active:  0.97;
+  --scale-pressed: 0.93;
+
+  /* ---------------------------------------------------------------------------
+     1.9 Z-Index Scale
+     --------------------------------------------------------------------------- */
+
+  --z-below:        -1;
+  --z-base:          0;
+  --z-raised:        10;
+  --z-dropdown:      100;
+  --z-sticky:        200;
+  --z-sidebar:       300;
+  --z-overlay:       400;
+  --z-modal:         500;
+  --z-popover:       600;
+  --z-toast:         700;
+  --z-tooltip:       800;
+  --z-top:           900;
+  --z-emergency:     9999;   /* Allergy alerts, critical drug warnings */
+
+  /* ---------------------------------------------------------------------------
+     1.10 Layout Constants
+     --------------------------------------------------------------------------- */
+
+  /* Sidebar */
+  --layout-sidebar-width:          220px;
+  --layout-sidebar-collapsed-width: 56px;
+
+  /* Header */
+  --layout-header-height:          56px;
+
+  /* Panel (detail / side panel) */
+  --layout-panel-width:            420px;
+  --layout-panel-width-sm:         320px;
+  --layout-panel-width-lg:         520px;
+
+  /* Content */
+  --layout-content-max-width:      1200px;
+  --layout-content-padding-x:      var(--space-6);
+  --layout-content-padding-y:      var(--space-6);
+
+  /* Breakpoints (for use in JS or @media fallback comments) */
+  --breakpoint-mobile:   576px;
+  --breakpoint-tablet:   768px;
+  --breakpoint-desktop:  992px;
+  --breakpoint-wide:     1440px;
+
+  /* Grid */
+  --grid-columns:        12;
+  --grid-gutter:         var(--space-6);
+  --grid-gutter-sm:      var(--space-4);
+
+  /* Touch targets (minimum 44px per WCAG 2.5.5) */
+  --touch-target-min:    44px;
+  --touch-target-md:     48px;
+  --touch-target-lg:     56px;
+
+  /* Scroll */
+  --scroll-padding-top:  calc(var(--layout-header-height) + var(--space-4));
+
+  /* ---------------------------------------------------------------------------
+     1.11 Opacity Scale
+     --------------------------------------------------------------------------- */
+
+  --opacity-0:     0;
+  --opacity-5:     0.05;
+  --opacity-10:    0.10;
+  --opacity-20:    0.20;
+  --opacity-30:    0.30;
+  --opacity-40:    0.40;
+  --opacity-50:    0.50;
+  --opacity-60:    0.60;
+  --opacity-70:    0.70;
+  --opacity-80:    0.80;
+  --opacity-90:    0.90;
+  --opacity-95:    0.95;
+  --opacity-100:   1;
+
+  /* ---------------------------------------------------------------------------
+     1.12 Border Widths
+     --------------------------------------------------------------------------- */
+
+  --border-width-none:   0px;
+  --border-width-thin:   1px;
+  --border-width-base:   1.5px;
+  --border-width-md:     2px;
+  --border-width-lg:     3px;
+  --border-width-xl:     4px;
+
+  /* ---------------------------------------------------------------------------
+     1.13 Icon Sizes
+     --------------------------------------------------------------------------- */
+
+  --icon-xs:   12px;
+  --icon-sm:   16px;
+  --icon-md:   20px;
+  --icon-lg:   24px;
+  --icon-xl:   32px;
+  --icon-2xl:  40px;
+
+} /* end :root */
+
+
+/* =============================================================================
+   2. CLINICAL THEME  [data-theme="clinical"]
+   GP / OPD Desktop PWA & OPD Android
+   Near Black sidebar/header, White content areas, Lime Green accent
+   ============================================================================= */
+
+[data-theme="clinical"] {
+
+  /* Core surfaces */
+  --color-bg-app:            #f4f5f2;   /* Warm canvas — app background */
+  --color-bg-sidebar:        #ffffff;   /* White — sidebar */
+  --color-bg-header:         #ffffff;   /* White — top header bar */
+  --color-bg-content:        #ffffff;   /* White — main content area */
+  --color-bg-content-alt:    #f4f5f2;   /* Warm canvas — secondary content */
+  --color-bg-elevated:       #ffffff;   /* White — cards, modals on content */
+  --color-bg-overlay:        rgba(14,15,12,0.72);  /* Dark overlay for modals */
+  --color-bg-input:          #f4f5f2;
+  --color-bg-input-focus:    #ffffff;
+  --color-bg-hover:          rgba(159,232,112,0.08);
+  --color-bg-active:         rgba(159,232,112,0.14);
+  --color-bg-selected:       rgba(159,232,112,0.18);
+  --color-bg-disabled:       #eef1eb;
+
+  /* Accent / interactive */
+  --color-accent:            #9fe870;   /* Brand Lime — primary CTA */
+  --color-accent-hover:      #cdffad;   /* Pastel Green — button hover (design.md §6) */
+  --color-accent-active:     #7ac44e;   /* Lime dark — pressed */
+  --color-interactive-hover: #cdffad;   /* Alias — Pastel Green hover state */
+  --color-accent-text:       #163300;   /* Dark Green — text ON lime bg */
+  --color-accent-subtle:     rgba(159,232,112,0.12);
+  --color-accent-border:     rgba(159,232,112,0.3);
+
+  /* Text */
+  --color-text-primary:      #0e0f0c;   /* On white content */
+  --color-text-secondary:    #535a4f;
+  --color-text-tertiary:     #7a8276;
+  --color-text-placeholder:  #a3aba0;
+  --color-text-disabled:     #c8cec2;
+  --color-text-inverse:      #ffffff;   /* On near-black sidebar/header */
+  --color-text-inverse-secondary: rgba(255,255,255,0.65);
+  --color-text-inverse-tertiary:  rgba(255,255,255,0.4);
+  --color-text-accent:       #163300;   /* Dark green on lime surfaces */
+  --color-text-on-accent:    #163300;
+  --color-text-link:         #1a5fa8;
+  --color-text-link-hover:   #0f3d6e;
+  --color-text-danger:       #d03238;
+  --color-text-warning:      #b38f00;
+  --color-text-success:      #054d28;
+
+  /* Borders */
+  --color-border:            #e0e4db;
+  --color-border-strong:     #c8cec2;
+  --color-border-subtle:     #eef1eb;
+  --color-border-accent:     rgba(159,232,112,0.4);
+  --color-border-danger:     #f5a3a6;
+  --color-border-sidebar:    rgba(255,255,255,0.08);  /* Subtle divider in dark sidebar */
+
+  /* Sidebar-specific — light sidebar with lime green active pills */
+  --color-sidebar-text:             #535a4f;   /* Warm mid-grey text on white sidebar */
+  --color-sidebar-text-active:      #163300;   /* Dark green on lime active pill */
+  --color-sidebar-text-hover:       #0e0f0c;
+  --color-sidebar-icon:             #7a8276;
+  --color-sidebar-icon-active:      #163300;
+  --color-sidebar-item-bg-hover:    rgba(211,242,192,0.4);   /* Lime tint */
+  --color-sidebar-item-bg-active:   #9fe870;                 /* Lime pill */
+  --color-sidebar-badge-bg:         #9fe870;
+  --color-sidebar-badge-text:       #163300;
+
+  /* Header-specific — white header with warm bottom border */
+  --color-header-text:        #0e0f0c;
+  --color-header-icon:        #535a4f;
+  --color-header-icon-hover:  #0e0f0c;
+  --color-header-border:      #e8ebe6;   /* 1px solid — subtle separator */
+
+  /* Sync indicator */
+  --color-sync-syncing:       #054d28;   /* Dark green on white sidebar */
+  --color-sync-pending:       #b38f00;   /* Warning dark — readable on white */
+  --color-sync-error:         #d03238;
+  --color-sync-offline:       #7a8276;
+  --color-sync-text:          #535a4f;   /* On white sidebar */
+
+  /* Inherit global semantic colours (danger, warning, success, allergy, drug severity) */
+  /* They are already defined in :root and apply unless overridden here */
+
+} /* end [data-theme="clinical"] */
+
+
+/* =============================================================================
+   3. FULFILLMENT THEME  [data-theme="fulfillment"]
+   Pharmacy POS & Lab Portal
+   Light warm-grey surfaces, Deep positive green sidebar/header
+   ============================================================================= */
+
+[data-theme="fulfillment"] {
+
+  /* Core surfaces */
+  --color-bg-app:            #e8ebe6;   /* Light Surface — app background */
+  --color-bg-sidebar:        #054d28;   /* Positive Green — sidebar */
+  --color-bg-header:         #054d28;   /* Positive Green — header */
+  --color-bg-content:        #e8ebe6;   /* Light Surface — main content */
+  --color-bg-content-alt:    #f0f3ee;   /* Lighter tint — secondary content */
+  --color-bg-elevated:       #ffffff;   /* White — cards, panels, modals */
+  --color-bg-overlay:        rgba(5,77,40,0.55);
+  --color-bg-input:          #ffffff;
+  --color-bg-input-focus:    #ffffff;
+  --color-bg-hover:          rgba(5,77,40,0.06);
+  --color-bg-active:         rgba(5,77,40,0.10);
+  --color-bg-selected:       rgba(5,77,40,0.14);
+  --color-bg-disabled:       #e0e4db;
+
+  /* Accent / interactive */
+  --color-accent:            #054d28;   /* Positive Green — primary CTA */
+  --color-accent-hover:      #1f5200;   /* Mid dark green — hover */
+  --color-accent-active:     #023018;   /* Deeper green — pressed */
+  --color-accent-text:       #ffffff;   /* White text ON green buttons */
+  --color-accent-subtle:     rgba(5,77,40,0.08);
+  --color-accent-border:     rgba(5,77,40,0.25);
+
+  /* Secondary accent (lime is used sparingly for highlights in fulfillment) */
+  --color-accent-secondary:        #9fe870;
+  --color-accent-secondary-text:   #163300;
+
+  /* Text */
+  --color-text-primary:      #0e0f0c;
+  --color-text-secondary:    #3a4037;
+  --color-text-tertiary:     #535a4f;
+  --color-text-placeholder:  #a3aba0;
+  --color-text-disabled:     #c8cec2;
+  --color-text-inverse:      #ffffff;
+  --color-text-inverse-secondary: rgba(255,255,255,0.70);
+  --color-text-inverse-tertiary:  rgba(255,255,255,0.45);
+  --color-text-accent:       #054d28;
+  --color-text-on-accent:    #ffffff;
+  --color-text-link:         #054d28;
+  --color-text-link-hover:   #1f5200;
+  --color-text-danger:       #d03238;
+  --color-text-warning:      #b38f00;
+  --color-text-success:      #054d28;
+
+  /* Borders */
+  --color-border:            #d0d5cc;
+  --color-border-strong:     #b8bfb3;
+  --color-border-subtle:     #e0e4db;
+  --color-border-accent:     rgba(5,77,40,0.3);
+  --color-border-danger:     #f5a3a6;
+  --color-border-sidebar:    rgba(255,255,255,0.10);
+
+  /* Sidebar-specific */
+  --color-sidebar-text:             rgba(255,255,255,0.75);
+  --color-sidebar-text-active:      #9fe870;
+  --color-sidebar-text-hover:       #ffffff;
+  --color-sidebar-icon:             rgba(255,255,255,0.60);
+  --color-sidebar-icon-active:      #9fe870;
+  --color-sidebar-item-bg-hover:    rgba(255,255,255,0.08);
+  --color-sidebar-item-bg-active:   rgba(159,232,112,0.15);
+  --color-sidebar-badge-bg:         #9fe870;
+  --color-sidebar-badge-text:       #163300;
+
+  /* Header-specific */
+  --color-header-text:        #ffffff;
+  --color-header-icon:        rgba(255,255,255,0.75);
+  --color-header-icon-hover:  #ffffff;
+  --color-header-border:      rgba(255,255,255,0.10);
+
+  /* Sync indicator */
+  --color-sync-syncing:       #9fe870;
+  --color-sync-pending:       #ffd11a;
+  --color-sync-error:         #d03238;
+  --color-sync-offline:       rgba(255,255,255,0.45);
+  --color-sync-text:          rgba(255,255,255,0.70);
+
+  /* Lab Portal data minimisation reminder token */
+  --color-lab-restricted-badge-bg:    #fde8e9;
+  --color-lab-restricted-badge-text:  #7a0f13;
+
+} /* end [data-theme="fulfillment"] */
+
+
+/* =============================================================================
+   4. CONSUMER THEME  [data-theme="consumer"]
+   Health Passport — Patient-facing iOS & Android app
+   Soft teal-tinted surfaces, warm welcoming palette, patient-friendly
+   ============================================================================= */
+
+[data-theme="consumer"] {
+
+  /* Core surfaces */
+  --color-bg-app:            #f0f8f6;   /* Soft teal-tinted app bg */
+  --color-bg-sidebar:        #085a4f;   /* Deep teal — nav / tab bar */
+  --color-bg-header:         #085a4f;   /* Deep teal — header */
+  --color-bg-content:        #f7faf9;   /* Near-white with teal hint */
+  --color-bg-content-alt:    #e8f4f1;   /* Teal tint — secondary surfaces */
+  --color-bg-elevated:       #ffffff;
+  --color-bg-overlay:        rgba(8,90,79,0.55);
+  --color-bg-input:          #ffffff;
+  --color-bg-input-focus:    #ffffff;
+  --color-bg-hover:          rgba(13,125,110,0.06);
+  --color-bg-active:         rgba(13,125,110,0.10);
+  --color-bg-selected:       rgba(13,125,110,0.14);
+  --color-bg-disabled:       #e0ece9;
+
+  /* Accent / interactive */
+  --color-accent:            #0d7d6e;   /* Teal — primary CTA */
+  --color-accent-hover:      #0a5f55;   /* Darker teal — hover */
+  --color-accent-active:     #085a4f;   /* Deep teal — pressed */
+  --color-accent-text:       #ffffff;
+  --color-accent-subtle:     rgba(13,125,110,0.08);
+  --color-accent-border:     rgba(13,125,110,0.25);
+
+  /* Secondary accent (warm / highlights) */
+  --color-accent-secondary:        #9fe870;   /* Lime retained as highlight */
+  --color-accent-secondary-text:   #163300;
+
+  /* Warm welcome tones */
+  --color-warm-orange:       #e86b20;   /* Friendly highlight for CTAs in onboarding */
+  --color-warm-orange-light: #fdf0e8;
+
+  /* Text */
+  --color-text-primary:      #0e1412;   /* Very dark teal-black */
+  --color-text-secondary:    #2e4a44;
+  --color-text-tertiary:     #5c7872;
+  --color-text-placeholder:  #9ab8b3;
+  --color-text-disabled:     #c0d6d2;
+  --color-text-inverse:      #ffffff;
+  --color-text-inverse-secondary: rgba(255,255,255,0.70);
+  --color-text-inverse-tertiary:  rgba(255,255,255,0.45);
+  --color-text-accent:       #0d7d6e;
+  --color-text-on-accent:    #ffffff;
+  --color-text-link:         #0d7d6e;
+  --color-text-link-hover:   #085a4f;
+  --color-text-danger:       #c42b30;   /* Slightly softer red for patient context */
+  --color-text-warning:      #9a7000;
+  --color-text-success:      #054d28;
+
+  /* Borders */
+  --color-border:            #c8dcd9;
+  --color-border-strong:     #a8c8c4;
+  --color-border-subtle:     #dceee9;
+  --color-border-accent:     rgba(13,125,110,0.28);
+  --color-border-danger:     #f5a3a6;
+  --color-border-sidebar:    rgba(255,255,255,0.10);
+
+  /* Navigation bar / tab bar */
+  --color-sidebar-text:             rgba(255,255,255,0.68);
+  --color-sidebar-text-active:      #b2e4de;   /* Teal tint highlight */
+  --color-sidebar-text-hover:       #ffffff;
+  --color-sidebar-icon:             rgba(255,255,255,0.55);
+  --color-sidebar-icon-active:      #b2e4de;
+  --color-sidebar-item-bg-hover:    rgba(255,255,255,0.08);
+  --color-sidebar-item-bg-active:   rgba(178,228,222,0.16);
+  --color-sidebar-badge-bg:         #9fe870;
+  --color-sidebar-badge-text:       #163300;
+
+  /* Header */
+  --color-header-text:        #ffffff;
+  --color-header-icon:        rgba(255,255,255,0.78);
+  --color-header-icon-hover:  #ffffff;
+  --color-header-border:      rgba(255,255,255,0.10);
+
+  /* Sync indicator */
+  --color-sync-syncing:       #b2e4de;
+  --color-sync-pending:       #ffd11a;
+  --color-sync-error:         #d03238;
+  --color-sync-offline:       rgba(255,255,255,0.45);
+  --color-sync-text:          rgba(255,255,255,0.68);
+
+  /* QR code scan area */
+  --color-qr-scan-border:     #0d7d6e;
+  --color-qr-scan-corner:     #9fe870;
+
+} /* end [data-theme="consumer"] */
+
+
+/* =============================================================================
+   5. RTL SUPPORT  [dir="rtl"]
+   Directional property overrides for Arabic (ar) and Dari (fa-AF)
+   Mirror layout structure; do NOT mirror medical icons (pill, stethoscope).
+   Use logical CSS in components; these overrides are for legacy/fallback usage.
+   ============================================================================= */
+
+[dir="rtl"] {
+
+  /* Text alignment defaults */
+  --text-align-start:  right;
+  --text-align-end:    left;
+
+  /* Sidebar position: LTR = left, RTL = right */
+  --layout-sidebar-direction:       rtl;
+  --layout-sidebar-placement:       right;
+  --layout-sidebar-shadow:          rgba(14,15,12,0.12) -4px 0px 24px;
+
+  /* Panel (detail panel) flips to left in RTL */
+  --layout-panel-placement:         left;
+  --layout-panel-shadow:            rgba(14,15,12,0.10) 4px 0px 24px;
+
+  /* Directional icon transforms:
+     Navigation arrows, chevrons, carets, back/forward must mirror.
+     Medical icons (pill, stethoscope, syringe, heart) must NOT be transformed.
+     Apply via class, not via universal rule. Reference var for JS logic: */
+  --icon-direction-multiplier:     -1;   /* Multiply scaleX by this for nav icons */
+
+  /* Scroll snap & carousel direction */
+  --scroll-direction:              rtl;
+
+  /* Input text direction */
+  --input-text-align:              right;
+
+  /* Tooltip / popover preferred placement offset */
+  --popover-offset-inline:         var(--space-3);
+
+  /* Breadcrumb separator (RTL reversal handled in component) */
+  --breadcrumb-separator-rotate:   180deg;
+
+  /* Progress bar fill direction */
+  --progress-fill-direction:       right;
+
+  /* Indentation for nested items */
+  --indent-inline-start:           0px;
+  --indent-inline-end:             var(--space-4);
+
+}
+
+/* RTL font optimization — Noto Kufi Arabic for display, Noto Naskh for body */
+[dir="rtl"] {
+  --font-family-display:  'Noto Kufi Arabic', 'Inter', system-ui, sans-serif;
+  --font-family-body:     'Noto Naskh Arabic', 'Inter', system-ui, sans-serif;
+  --line-height-normal:   1.7;   /* Arabic requires slightly more line height */
+  --line-height-relaxed:  1.85;
+  --letter-spacing-tight: 0em;   /* Avoid negative tracking in Arabic script */
+  --letter-spacing-snug:  0em;
+  --letter-spacing-normal: 0em;
+}
+
+
+/* =============================================================================
+   6. COMPONENT TOKENS
+   Per-component design tokens. Import alongside theme tokens.
+   Components must read from these tokens — never hardcode values.
+   ============================================================================= */
+
+
+/* ---------------------------------------------------------------------------
+   6.1 BUTTON
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Heights */
+  --btn-height-xs:   28px;
+  --btn-height-sm:   36px;
+  --btn-height-md:   44px;   /* Default — meets WCAG 2.5.5 minimum */
+  --btn-height-lg:   52px;
+  --btn-height-xl:   60px;
+
+  /* Padding (inline / horizontal) */
+  --btn-padding-x-xs:   var(--space-3);     /* 12px */
+  --btn-padding-x-sm:   var(--space-4);     /* 16px */
+  --btn-padding-x-md:   var(--space-6);     /* 24px */
+  --btn-padding-x-lg:   var(--space-8);     /* 32px */
+  --btn-padding-x-xl:   var(--space-10);    /* 40px */
+
+  /* Padding (block / vertical) — auto-centered via height, but explicit fallback */
+  --btn-padding-y-xs:   var(--space-1);
+  --btn-padding-y-sm:   var(--space-2);
+  --btn-padding-y-md:   var(--space-2-5);
+  --btn-padding-y-lg:   var(--space-3);
+  --btn-padding-y-xl:   var(--space-4);
+
+  /* Border radius */
+  --btn-radius:          var(--radius-pill);    /* 9999px — default pill shape */
+  --btn-radius-sm:       var(--radius-md);      /* 12px — compact variant */
+  --btn-radius-square:   var(--radius-sm);      /* 8px — icon grid buttons */
+
+  /* Border width */
+  --btn-border-width:    var(--border-width-md);  /* 2px */
+
+  /* Typography */
+  --btn-font-size-xs:    var(--font-size-xs);
+  --btn-font-size-sm:    var(--font-size-sm);
+  --btn-font-size-md:    var(--font-size-md);
+  --btn-font-size-lg:    var(--font-size-lg);
+  --btn-font-size-xl:    var(--font-size-xl);
+  --btn-font-weight:     var(--font-weight-semibold);
+  --btn-letter-spacing:  var(--letter-spacing-snug);
+
+  /* Icon gap */
+  --btn-icon-gap-sm:   var(--space-1-5);
+  --btn-icon-gap-md:   var(--space-2);
+  --btn-icon-gap-lg:   var(--space-2-5);
+
+  /* Transition */
+  --btn-transition:     var(--transition-button);
+
+  /* Scale transforms */
+  --btn-scale-hover:   var(--scale-hover);     /* 1.03 */
+  --btn-scale-active:  var(--scale-active);    /* 0.97 */
+  --btn-easing:        var(--ease-out);        /* cubic-bezier(0.23, 1, 0.32, 1) */
+  --btn-duration:      var(--duration-btn);    /* 160ms */
+
+  /* Primary button (uses theme accent) */
+  --btn-primary-bg:              var(--color-accent);
+  --btn-primary-bg-hover:        var(--color-accent-hover);
+  --btn-primary-bg-active:       var(--color-accent-active);
+  --btn-primary-text:            var(--color-accent-text);
+  --btn-primary-border:          transparent;
+  --btn-primary-shadow:          none;
+  --btn-primary-shadow-hover:    var(--shadow-md);
+
+  /* Secondary button */
+  --btn-secondary-bg:            transparent;
+  --btn-secondary-bg-hover:      var(--color-bg-hover);
+  --btn-secondary-bg-active:     var(--color-bg-active);
+  --btn-secondary-text:          var(--color-text-primary);
+  --btn-secondary-border:        var(--color-border-strong);
+  --btn-secondary-border-hover:  var(--color-border-accent);
+
+  /* Ghost button */
+  --btn-ghost-bg:                transparent;
+  --btn-ghost-bg-hover:          var(--color-bg-hover);
+  --btn-ghost-text:              var(--color-text-secondary);
+  --btn-ghost-text-hover:        var(--color-text-primary);
+  --btn-ghost-border:            transparent;
+
+  /* Danger button */
+  --btn-danger-bg:               var(--color-danger);
+  --btn-danger-bg-hover:         var(--color-danger-dark);
+  --btn-danger-text:             #ffffff;
+  --btn-danger-border:           transparent;
+  --btn-danger-shadow-hover:     var(--shadow-ring-danger);
+
+  /* Disabled state */
+  --btn-disabled-bg:             var(--color-bg-disabled);
+  --btn-disabled-text:           var(--color-text-disabled);
+  --btn-disabled-border:         transparent;
+  --btn-disabled-opacity:        1;   /* Use colour not opacity so it's accessible */
+
+  /* Focus ring */
+  --btn-focus-ring:              var(--shadow-focus-ring);
+  --btn-focus-ring-danger:       var(--shadow-focus-danger);
+
+  /* Loading spinner */
+  --btn-spinner-size:            18px;
+  --btn-spinner-border-width:    2px;
+
+} /* end button tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.2 CARD
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Border radius */
+  --card-radius-sm:    var(--radius-card-sm);   /* 16px */
+  --card-radius-md:    var(--radius-2xl);        /* 24px */
+  --card-radius-lg:    var(--radius-card-lg);    /* 30px */
+  --card-radius-xl:    var(--radius-card-xl);    /* 40px */
+
+  /* Padding */
+  --card-padding-xs:   var(--space-3);    /* 12px */
+  --card-padding-sm:   var(--space-4);    /* 16px */
+  --card-padding-md:   var(--space-6);    /* 24px */
+  --card-padding-lg:   var(--space-8);    /* 32px */
+  --card-padding-xl:   var(--space-10);   /* 40px */
+
+  /* Backgrounds */
+  --card-bg:           var(--color-bg-elevated);
+  --card-bg-alt:       var(--color-bg-content-alt);
+  --card-bg-hover:     var(--color-bg-elevated);
+
+  /* Borders */
+  --card-border-width: var(--border-width-thin);
+  --card-border-color: var(--color-border-subtle);
+  --card-border-hover: var(--color-border);
+
+  /* Shadows */
+  --card-shadow:           var(--shadow-card);
+  --card-shadow-hover:     var(--shadow-card-hover);
+  --card-shadow-raised:    var(--shadow-card-raised);
+  --card-shadow-flat:      var(--shadow-ring);     /* Ring-only, no elevation */
+
+  /* Transition — shadow deepening only on hover; no translateY (avoids perceived instability) */
+  --card-transition:       box-shadow var(--duration-normal) var(--ease-out),
+                           border-color var(--duration-normal) var(--ease-subtle);
+  --card-hover-transform:  none;   /* Never lift cards — shadow depth signals hover */
+
+  /* ---------------------------------------------------------------------------
+     Allergy Band — top coloured accent strip inside patient cards
+     Always rendered: never hidden, never behind a tab, always red
+     Height and z-index enforce visual dominance
+     --------------------------------------------------------------------------- */
+
+  --card-allergy-band-height:        6px;
+  --card-allergy-band-bg:            var(--color-allergy);        /* #d03238 */
+  --card-allergy-band-radius-top:    var(--card-radius-sm);       /* Match card top radius */
+  --card-allergy-band-z-index:       var(--z-raised);
+
+  /* Allergy card variant — full card styling when card IS the allergy item */
+  --card-allergy-bg:                 var(--color-allergy-bg);     /* #fde8e9 */
+  --card-allergy-border-color:       var(--color-allergy-border); /* #f5a3a6 */
+  --card-allergy-border-width:       var(--border-width-md);      /* 2px */
+  --card-allergy-text:               var(--color-allergy-text);   /* #7a0f13 */
+  --card-allergy-icon-color:         var(--color-allergy);        /* #d03238 */
+  --card-allergy-shadow:             var(--shadow-ring-danger);
+
+  /* Section header (inside card, for "Allergies" heading) */
+  --card-allergy-header-font-size:   var(--font-size-xs);
+  --card-allergy-header-font-weight: var(--font-weight-semibold);
+  --card-allergy-header-letter-spacing: var(--letter-spacing-wider);
+  --card-allergy-header-text-transform: uppercase;
+
+} /* end card tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.3 INPUT / FORM CONTROLS
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Heights */
+  --input-height-sm:   36px;
+  --input-height-md:   44px;   /* Default — WCAG touch target */
+  --input-height-lg:   52px;
+
+  /* Border radius */
+  --input-radius:      var(--radius-input);   /* 12px */
+  --input-radius-sm:   var(--radius-sm);      /* 8px */
+  --input-radius-lg:   var(--radius-lg);      /* 16px */
+
+  /* Padding */
+  --input-padding-x-sm:   var(--space-3);    /* 12px */
+  --input-padding-x-md:   var(--space-4);    /* 16px */
+  --input-padding-x-lg:   var(--space-5);    /* 20px */
+
+  /* Typography */
+  --input-font-size:       var(--font-size-md);
+  --input-font-weight:     var(--font-weight-regular);
+  --input-placeholder-opacity: 0.6;
+
+  /* Colors */
+  --input-bg:              var(--color-bg-input);
+  --input-bg-focus:        var(--color-bg-input-focus);
+  --input-bg-disabled:     var(--color-bg-disabled);
+  --input-bg-error:        var(--color-danger-light);
+  --input-text:            var(--color-text-primary);
+  --input-text-placeholder: var(--color-text-placeholder);
+  --input-text-disabled:   var(--color-text-disabled);
+
+  /* Borders */
+  --input-border-width:    var(--border-width-thin);
+  --input-border-color:    var(--color-border);
+  --input-border-hover:    var(--color-border-strong);
+  --input-border-focus:    var(--color-accent);
+  --input-border-error:    var(--color-danger);
+  --input-border-disabled: var(--color-border-subtle);
+
+  /* Shadows */
+  --input-shadow:          var(--shadow-xs);
+  --input-shadow-focus:    var(--shadow-focus-inset), var(--shadow-focus-ring);
+  --input-shadow-error:    var(--shadow-focus-danger);
+
+  /* Transition */
+  --input-transition:      border-color var(--duration-fast) var(--ease-out),
+                           box-shadow var(--duration-fast) var(--ease-out),
+                           background-color var(--duration-fast) var(--ease-out);
+
+  /* Label */
+  --input-label-font-size:    var(--font-size-sm);
+  --input-label-font-weight:  var(--font-weight-semibold);
+  --input-label-gap:          var(--space-1-5);   /* Gap between label and input */
+  --input-label-color:        var(--color-text-secondary);
+
+  /* Helper / error text */
+  --input-helper-font-size:   var(--font-size-xs);
+  --input-helper-color:       var(--color-text-tertiary);
+  --input-error-color:        var(--color-text-danger);
+  --input-helper-gap:         var(--space-1-5);
+
+  /* Icon inside input */
+  --input-icon-size:           var(--icon-md);    /* 20px */
+  --input-icon-padding-x:      var(--space-3);
+  --input-icon-color:          var(--color-text-tertiary);
+  --input-icon-color-focus:    var(--color-accent);
+
+  /* Textarea */
+  --textarea-min-height:       88px;
+  --textarea-padding-y:        var(--space-3);
+  --textarea-resize:           vertical;
+
+  /* Select */
+  --select-arrow-size:         var(--icon-sm);
+  --select-arrow-color:        var(--color-text-tertiary);
+
+  /* Checkbox / Radio */
+  --checkbox-size:             18px;
+  --checkbox-radius:           var(--radius-xs);   /* 4px */
+  --checkbox-border-width:     var(--border-width-md);
+  --checkbox-color:            var(--color-accent);
+  --checkbox-check-color:      var(--color-accent-text);
+  --radio-size:                18px;
+  --radio-dot-size:            8px;
+  --radio-color:               var(--color-accent);
+
+  /* Toggle / Switch */
+  --toggle-height:             24px;
+  --toggle-width:              44px;
+  --toggle-thumb-size:         18px;
+  --toggle-bg-off:             var(--color-border-strong);
+  --toggle-bg-on:              var(--color-accent);
+  --toggle-thumb-bg:           #ffffff;
+  --toggle-transition:         background-color var(--duration-fast) var(--ease-out),
+                               transform var(--duration-fast) var(--ease-out);
+
+} /* end input tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.4 SYNC INDICATOR
+   Status widget shown in sidebar/header for offline sync state.
+   Must always be visible — do not hide when offline, that defeats its purpose.
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Container */
+  --sync-indicator-height:          var(--btn-height-sm);    /* 36px */
+  --sync-indicator-padding-x:       var(--space-3);
+  --sync-indicator-padding-y:       var(--space-1-5);
+  --sync-indicator-radius:          var(--radius-pill);
+  --sync-indicator-gap:             var(--space-2);           /* Between icon and text */
+
+  /* Typography */
+  --sync-indicator-font-size:       var(--font-size-xs);
+  --sync-indicator-font-weight:     var(--font-weight-semibold);
+
+  /* Dot / pulse indicator */
+  --sync-dot-size:                  8px;
+  --sync-dot-radius:                var(--radius-circle);
+
+  /* State: syncing (active) */
+  --sync-state-syncing-dot-color:   var(--color-sync-syncing);
+  --sync-state-syncing-text:        var(--color-sync-text);
+  --sync-state-syncing-bg:          transparent;
+  --sync-state-syncing-pulse:       rgba(159,232,112,0.4);   /* Pulse ring color */
+
+  /* State: pending (queued offline changes) */
+  --sync-state-pending-dot-color:   var(--color-sync-pending);
+  --sync-state-pending-text:        var(--color-sync-text);
+  --sync-state-pending-bg:          transparent;
+
+  /* State: error */
+  --sync-state-error-dot-color:     var(--color-sync-error);
+  --sync-state-error-text:          var(--color-sync-text);
+  --sync-state-error-bg:            rgba(208,50,56,0.12);
+  --sync-state-error-border:        rgba(208,50,56,0.25);
+
+  /* State: offline / disconnected */
+  --sync-state-offline-dot-color:   var(--color-sync-offline);
+  --sync-state-offline-text:        var(--color-sync-text);
+  --sync-state-offline-bg:          transparent;
+
+  /* State: idle / synced */
+  --sync-state-idle-dot-color:      var(--color-sync-syncing);
+  --sync-state-idle-text:           var(--color-sync-text);
+
+  /* Animation */
+  --sync-pulse-duration:            1.4s;
+  --sync-pulse-easing:              ease-in-out;
+  --sync-spin-duration:             0.9s;
+
+  /* Queue count badge */
+  --sync-queue-badge-bg:            var(--color-sync-pending);
+  --sync-queue-badge-text:          #0e0f0c;
+  --sync-queue-badge-radius:        var(--radius-pill);
+  --sync-queue-badge-height:        18px;
+  --sync-queue-badge-font-size:     var(--font-size-2xs);
+  --sync-queue-badge-padding-x:     var(--space-1-5);
+
+} /* end sync indicator tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.5 ALLERGY PANEL
+   Highest-priority clinical display element. Must be:
+     - Rendered before any other patient clinical data
+     - Always visible (not collapsed, not behind a tab)
+     - Red (#d03238) background or border
+     - z-index above normal card content
+   These tokens are intentionally redundant with allergy semantic tokens
+   to make component code explicit about safety intent.
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Panel container */
+  --allergy-panel-bg:                 var(--color-allergy-bg);     /* #fde8e9 */
+  --allergy-panel-border-color:       var(--color-allergy);        /* #d03238 */
+  --allergy-panel-border-width:       var(--border-width-lg);      /* 3px */
+  --allergy-panel-border-style:       solid;
+  --allergy-panel-radius:             var(--radius-card-sm);       /* 16px */
+  --allergy-panel-padding:            var(--card-padding-md);      /* 24px */
+  --allergy-panel-shadow:             var(--shadow-ring-danger);
+  --allergy-panel-z-index:            var(--z-raised);             /* Always above peers */
+
+  /* Header row */
+  --allergy-panel-header-gap:         var(--space-2);
+  --allergy-panel-header-icon-size:   var(--icon-lg);              /* 24px */
+  --allergy-panel-header-icon-color:  var(--color-allergy);
+  --allergy-panel-header-font-size:   var(--font-size-xs);
+  --allergy-panel-header-font-weight: var(--font-weight-semibold);
+  --allergy-panel-header-letter-spacing: var(--letter-spacing-widest);
+  --allergy-panel-header-text-transform: uppercase;
+  --allergy-panel-header-color:       var(--color-allergy-text);
+
+  /* Individual allergy item chip */
+  --allergy-chip-bg:                  var(--color-allergy);
+  --allergy-chip-text:                #ffffff;
+  --allergy-chip-radius:              var(--radius-pill);
+  --allergy-chip-padding-x:           var(--space-3);
+  --allergy-chip-padding-y:           var(--space-1);
+  --allergy-chip-font-size:           var(--font-size-sm);
+  --allergy-chip-font-weight:         var(--font-weight-semibold);
+  --allergy-chip-gap:                 var(--space-1-5);             /* Between chips */
+
+  /* Severity indicator within chip */
+  --allergy-severity-critical-bg:     #9a171c;   /* Darker red for life-threatening */
+  --allergy-severity-moderate-bg:     var(--color-allergy);
+  --allergy-severity-mild-bg:         var(--color-danger-border);
+
+  /* Empty state (no known allergies — still render the panel, show NKDA) */
+  --allergy-empty-bg:                 #f7f9f5;
+  --allergy-empty-border-color:       var(--color-border);
+  --allergy-empty-text:               var(--color-text-secondary);
+  --allergy-empty-font-size:          var(--font-size-sm);
+
+  /* Unconfirmed / pending allergy — striped pattern fallback via gradient */
+  --allergy-unconfirmed-bg:           repeating-linear-gradient(
+                                        45deg,
+                                        var(--color-allergy-bg),
+                                        var(--color-allergy-bg) 6px,
+                                        #fff0f0 6px,
+                                        #fff0f0 12px
+                                      );
+  --allergy-unconfirmed-opacity:      0.85;
+
+  /* Panel minimum height — never less than one chip row */
+  --allergy-panel-min-height:         64px;
+
+} /* end allergy panel tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.6 DRUG INTERACTION CHECK
+   Displayed inline during prescription entry. Must never silently fail.
+   If check is unavailable, always show the "check unavailable" state.
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Container */
+  --drug-check-radius:               var(--radius-card-sm);       /* 16px */
+  --drug-check-padding:              var(--card-padding-sm);      /* 16px */
+  --drug-check-border-width:         var(--border-width-md);      /* 2px */
+  --drug-check-gap:                  var(--space-3);
+
+  /* Typography */
+  --drug-check-title-font-size:      var(--font-size-sm);
+  --drug-check-title-font-weight:    var(--font-weight-semibold);
+  --drug-check-body-font-size:       var(--font-size-sm);
+  --drug-check-meta-font-size:       var(--font-size-xs);
+
+  /* State: loading (check in progress) */
+  --drug-check-loading-bg:           var(--color-bg-content-alt);
+  --drug-check-loading-border:       var(--color-border);
+  --drug-check-loading-text:         var(--color-text-secondary);
+  --drug-check-loading-icon-color:   var(--color-text-tertiary);
+
+  /* State: contraindicated (BLOCKING — prescription must not proceed) */
+  --drug-check-contraindicated-bg:           var(--color-drug-contraindicated-bg);
+  --drug-check-contraindicated-border:       var(--color-drug-contraindicated);
+  --drug-check-contraindicated-title-color:  var(--color-allergy-text);
+  --drug-check-contraindicated-icon-color:   var(--color-drug-contraindicated);
+  --drug-check-contraindicated-icon-size:    var(--icon-lg);
+
+  /* State: allergy match (BLOCKING) */
+  --drug-check-allergy-bg:           var(--color-allergy-bg);
+  --drug-check-allergy-border:       var(--color-allergy);
+  --drug-check-allergy-title-color:  var(--color-allergy-text);
+  --drug-check-allergy-icon-color:   var(--color-allergy);
+
+  /* State: major interaction */
+  --drug-check-major-bg:             var(--color-drug-major-bg);
+  --drug-check-major-border:         var(--color-drug-major);
+  --drug-check-major-title-color:    #7a2800;
+  --drug-check-major-icon-color:     var(--color-drug-major);
+
+  /* State: moderate interaction */
+  --drug-check-moderate-bg:          var(--color-drug-moderate-bg);
+  --drug-check-moderate-border:      var(--color-drug-moderate);
+  --drug-check-moderate-title-color: var(--color-warning-dark);
+  --drug-check-moderate-icon-color:  var(--color-drug-moderate);
+
+  /* State: minor interaction */
+  --drug-check-minor-bg:             var(--color-drug-minor-bg);
+  --drug-check-minor-border:         var(--color-drug-minor);
+  --drug-check-minor-title-color:    var(--color-info-dark);
+  --drug-check-minor-icon-color:     var(--color-drug-minor);
+
+  /* State: clear (no interactions found) */
+  --drug-check-clear-bg:             var(--color-success-light);
+  --drug-check-clear-border:         var(--color-success-border);
+  --drug-check-clear-title-color:    var(--color-success-dark);
+  --drug-check-clear-icon-color:     var(--color-success);
+
+  /* State: UNAVAILABLE — must always show; never default to "clear" on failure */
+  --drug-check-unavailable-bg:            var(--color-drug-check-unavailable-bg);
+  --drug-check-unavailable-border:        var(--color-drug-check-unavailable);
+  --drug-check-unavailable-title-color:   var(--color-drug-check-unavailable);
+  --drug-check-unavailable-body-color:    var(--color-warning-dark);
+  --drug-check-unavailable-icon-color:    var(--color-drug-check-unavailable);
+  --drug-check-unavailable-icon-size:     var(--icon-lg);
+
+  /* Override reason modal / dialog */
+  --drug-check-override-reason-min-height: 80px;
+  --drug-check-override-input-border:      var(--color-warning);
+  --drug-check-override-submit-bg:         var(--color-warning);
+  --drug-check-override-submit-text:       #0e0f0c;
+
+  /* Severity badge (inside check panel) */
+  --drug-severity-badge-radius:            var(--radius-pill);
+  --drug-severity-badge-padding-x:         var(--space-2);
+  --drug-severity-badge-padding-y:         var(--space-0-5);
+  --drug-severity-badge-font-size:         var(--font-size-2xs);
+  --drug-severity-badge-font-weight:       var(--font-weight-semibold);
+  --drug-severity-badge-letter-spacing:    var(--letter-spacing-wide);
+  --drug-severity-badge-text-transform:    uppercase;
+
+} /* end drug interaction check tokens */
+
+
+/* ---------------------------------------------------------------------------
+   6.7 PRESCRIPTION JOURNEY TRACKER
+   Multi-step progress tracker: Written → Dispensed → Verified → Collected
+   Rendered in OPD, Pharmacy POS, and Health Passport (read-only).
+   --------------------------------------------------------------------------- */
+
+:root {
+
+  /* Container */
+  --rx-tracker-padding-x:            var(--space-6);
+  --rx-tracker-padding-y:            var(--space-5);
+  --rx-tracker-radius:               var(--radius-card-lg);     /* 30px */
+  --rx-tracker-bg:                   var(--color-bg-elevated);
+  --rx-tracker-shadow:               var(--shadow-card);
+
+  /* Step connector line */
+  --rx-tracker-line-height:          2px;
+  --rx-tracker-line-bg-inactive:     var(--color-border);
+  --rx-tracker-line-bg-active:       var(--color-accent);
+  --rx-tracker-line-bg-complete:     var(--color-success);
+  --rx-tracker-line-transition:      width var(--duration-slower) var(--ease-spring-gentle);
+
+  /* Step node (circle) */
+  --rx-step-size:                    36px;
+  --rx-step-radius:                  var(--radius-circle);
+  --rx-step-border-width:            var(--border-width-md);    /* 2px */
+
+  /* Step states */
+  --rx-step-bg-inactive:             var(--color-bg-content-alt);
+  --rx-step-border-inactive:         var(--color-border);
+  --rx-step-icon-color-inactive:     var(--color-text-tertiary);
+
+  --rx-step-bg-active:               var(--color-accent);
+  --rx-step-border-active:           var(--color-accent);
+  --rx-step-icon-color-active:       var(--color-accent-text);
+  --rx-step-shadow-active:           var(--shadow-ring-accent);
+
+  --rx-step-bg-complete:             var(--color-success);
+  --rx-step-border-complete:         var(--color-success);
+  --rx-step-icon-color-complete:     #ffffff;
+
+  --rx-step-bg-error:                var(--color-danger);
+  --rx-step-border-error:            var(--color-danger-dark);
+  --rx-step-icon-color-error:        #ffffff;
+  --rx-step-shadow-error:            var(--shadow-ring-danger);
+
+  /* Step label */
+  --rx-step-label-font-size:         var(--font-size-xs);
+  --rx-step-label-font-weight:       var(--font-weight-semibold);
+  --rx-step-label-color-inactive:    var(--color-text-tertiary);
+  --rx-step-label-color-active:      var(--color-text-primary);
+  --rx-step-label-color-complete:    var(--color-text-success);
+  --rx-step-label-gap:               var(--space-1-5);           /* Between node and label */
+
+  /* Step meta (timestamp, location) */
+  --rx-step-meta-font-size:          var(--font-size-2xs);
+  --rx-step-meta-color:              var(--color-text-tertiary);
+
+  /* Animation */
+  --rx-step-transition:              background-color var(--duration-normal) var(--ease-out),
+                                     border-color var(--duration-normal) var(--ease-out),
+                                     box-shadow var(--duration-normal) var(--ease-out);
+  --rx-step-appear-delay-unit:       80ms;   /* Each step staggers by this amount */
+
+  /* Overall status banner (above tracker) */
+  --rx-status-banner-padding:        var(--space-3) var(--space-4);
+  --rx-status-banner-radius:         var(--radius-md);
+  --rx-status-banner-font-size:      var(--font-size-sm);
+  --rx-status-banner-font-weight:    var(--font-weight-semibold);
+
+  --rx-status-written-bg:            var(--color-info-light);
+  --rx-status-written-text:          var(--color-info-dark);
+
+  --rx-status-dispensed-bg:          var(--color-warning-light);
+  --rx-status-dispensed-text:        var(--color-warning-dark);
+
+  --rx-status-verified-bg:           var(--color-success-light);
+  --rx-status-verified-text:         var(--color-success-dark);
+
+  --rx-status-collected-bg:          #dceeff;
+  --rx-status-collected-text:        var(--color-info-dark);
+
+  --rx-status-expired-bg:            var(--neutral-100);
+  --rx-status-expired-text:          var(--color-text-tertiary);
+
+  --rx-status-cancelled-bg:          var(--color-danger-light);
+  --rx-status-cancelled-text:        var(--color-danger-dark);
+
+  /* Compact / inline variant (for use in patient card previews) */
+  --rx-tracker-compact-step-size:    24px;
+  --rx-tracker-compact-line-height:  1.5px;
+  --rx-tracker-compact-label-font-size: var(--font-size-2xs);
+
+} /* end prescription journey tracker tokens */
+
+
+/* =============================================================================
+   END OF FILE
+   =============================================================================
+   Ultranos Design Tokens v1.0.0 — 2026-04-28
+   For issues: refer to packages/ui-kit/tokens/ or open a ticket in the
+   Ultranos monorepo under packages/ui-kit.
+   ============================================================================= */
