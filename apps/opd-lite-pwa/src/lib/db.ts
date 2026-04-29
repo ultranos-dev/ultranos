@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
+import type { LocalMedicationDispense } from './medication-dispense'
 
 /**
  * Local patient record type — mirrors FhirPatient for Dexie storage.
@@ -38,6 +39,38 @@ export interface InteractionAuditEntry {
   createdAt: string
 }
 
+export interface DispenseAuditEntry {
+  id: string
+  dispenseId: string
+  patientRef: string
+  medicationCode: string
+  medicationDisplay: string
+  pharmacistRef: string
+  action: 'created' | 'cancelled'
+  hlcTimestamp: string
+  createdAt: string
+}
+
+export interface SyncQueueEntry {
+  id: string
+  resourceType: string
+  resourceId: string
+  action: string
+  payload: string
+  status: 'pending' | 'in-flight' | 'failed'
+  hlcTimestamp: string
+  createdAt: string
+  retryCount: number
+  lastAttemptAt?: string
+}
+
+export interface PractitionerKeyEntry {
+  publicKey: string          // base64-encoded Ed25519 public key (primary key)
+  practitionerId: string
+  practitionerName: string
+  cachedAt: string           // ISO 8601 timestamp
+}
+
 class OpdLiteDatabase extends Dexie {
   patients!: EntityTable<LocalPatient, 'id'>
   encounters!: EntityTable<LocalEncounter, 'id'>
@@ -46,6 +79,10 @@ class OpdLiteDatabase extends Dexie {
   conditions!: EntityTable<LocalCondition, 'id'>
   medications!: EntityTable<LocalMedicationRequest, 'id'>
   interactionAuditLog!: EntityTable<InteractionAuditEntry, 'id'>
+  practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
+  dispenses!: EntityTable<LocalMedicationDispense, 'id'>
+  dispenseAuditLog!: EntityTable<DispenseAuditEntry, 'id'>
+  syncQueue!: EntityTable<SyncQueueEntry, 'id'>
 
   constructor() {
     super('opd-lite-pwa')
@@ -125,6 +162,94 @@ class OpdLiteDatabase extends Dexie {
         'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
       interactionAuditLog:
         'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+    })
+
+    this.version(8).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+    })
+
+    this.version(9).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      dispenses:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+    })
+
+    this.version(10).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      dispenses:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      dispenseAuditLog:
+        'id, dispenseId, patientRef, pharmacistRef, action, createdAt',
+    })
+
+    this.version(11).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      dispenses:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      dispenseAuditLog:
+        'id, dispenseId, patientRef, pharmacistRef, action, createdAt',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
     })
   }
 }

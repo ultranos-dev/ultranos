@@ -3,3 +3,23 @@
 @tailwind utilities;
 
 @import '@ultranos/ui-kit/tokens.css';
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-label,
+  .print-label * {
+    visibility: visible;
+  }
+  .print-label {
+    position: relative;
+    width: 100%;
+    border: 1px solid #000;
+    page-break-inside: avoid;
+    page-break-after: always;
+  }
+  .print-label:last-child {
+    page-break-after: auto;
+  }
+}

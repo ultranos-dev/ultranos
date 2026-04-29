@@ -111,6 +111,32 @@
 - **W1: `created_at` column not in `_ultranos` namespace** — `005_medication_requests.sql` has `created_at` as top-level column. CLAUDE.md requires `createdAt` in `_ultranos` namespace. Consistent naming convention gap across all migrations (D3, D10, etc.).
 - **W2: FHIR Meta field naming inconsistency** — `meta_last_updated` / `meta_version_id` in migration instead of FHIR canonical `lastUpdated` / `versionId`. DB-layer snake_case is reasonable but API responses don't map back to FHIR `meta` block. Consistent with existing tables.
 
+## Deferred from: code review of 4-2-medication-fulfillment-labeling (2026-04-29)
+
+- **D1: Drug interaction / allergy check before dispensing** — Pharmacy trusts prescriber-side checks (Epic 3). Full interaction re-check at dispensing requires MedicationStatement data (patient's full active med list) which doesn't exist yet. Consistent with 3-2 review D2. Revisit when MedicationStatement is implemented.
+- **W1: No duplicate-dispensing guard** — Same prescription can be dispensed multiple times via `createMedicationDispense` with no idempotency check against existing dispense records in IndexedDB. Needs design discussion: should deduplication live in the mapper, store, or DB constraint?
+- **W2: Dexie schema version repetition risk** — Each `version(N).stores()` call must redeclare all tables. Omitting a table in a future version silently drops it. Pre-existing pattern (D33).
+- **W3: `startReview` phase transition unused in UI** — `fulfillment-store.ts` defines `startReview()` transitioning to `'reviewing'` phase, but `FulfillmentChecklist.tsx` never invokes it or checks the phase. Dead code or incomplete feature.
+- **W4: `scannedAt` uses `new Date().toISOString()` instead of HLC** — Pre-existing pattern consistent with D62.
+- **W5: `whenHandedOver` and `meta.lastUpdated` use wall-clock time** — FHIR-facing timestamps in `medication-dispense.ts` use `new Date().toISOString()`, not HLC. Pre-existing pattern consistent with P6/D62.
+- **W6: `dir="auto"` may cause LTR/RTL layout inconsistency** — Direction determined by first strong character in content. Latin-script medication names force LTR container direction in otherwise RTL interfaces.
+
+## Deferred from: code review of 4-1-pharmacy-scan-load (2026-04-29)
+
+- **D60: Practitioner key cache has no TTL/staleness** — Revoked/suspended practitioner keys remain trusted in the local IndexedDB cache indefinitely. No expiry check on `cachedAt`. Architectural concern — needs key lifecycle management (revocation list sync or TTL-based revalidation).
+- **D61: `fetchAndCachePractitionerKey` overwrites cached data via `put`** — `db.practitionerKeys.put()` silently overwrites existing entries with no conflict detection or audit trail. If Hub returns different metadata for the same key (bug or compromise), local trust state changes with no record. Related to key lifecycle architecture.
+- **D63: No audit events emitted for PHI access in pharmacy scan/verify flow** — Neither verification, fraud detection, nor fulfillment load emit audit events. AuditLogger is server-side only (SupabaseClient + Node.js crypto). Consistent with D9/D23/D38/D56. Address in Story 6-2 when client-side audit infrastructure is built.
+- **D62: `new Date().toISOString()` used instead of HLC timestamps** — `fulfillment-store.ts:scannedAt` and `prescription-verify.ts:cachedAt` use wall-clock time. If these stores ever participate in sync, they'll need HLC. Consistent with D20/P6.
+
+## Deferred from: code review of 4-3-real-time-dispensing-sync (2026-04-29)
+
+- **W1: No retry/drain mechanism for sync queue** — `syncQueue` entries written by `enqueueForRetry()` are never processed. No background worker, service worker hook, or `online` event listener exists to drain the queue. Queued dispenses never reach the Hub.
+- **W2: SyncPulse doesn't reflect queued state after page refresh** — `SyncPulse` reads only in-memory Zustand `syncStatus`. After page refresh, shows green while `syncQueue` IndexedDB table may have pending entries.
+- **W3: Browser refresh mid-dispensing loses batch state** — In-memory fulfillment store resets on refresh. Partially-completed batch (some items persisted to IndexedDB, others not) has no resume mechanism. Pharmacist may re-scan and double-dispense.
+- **W4: No deduplication on sync queue** — `enqueueForRetry()` always generates a new UUID via `crypto.randomUUID()`. Same dispense can be queued multiple times if retry logic is added later.
+- **W5: Drug interaction check not enforced in recordDispense** — The existing `complete` mutation checks `interaction_check` before dispensing; `recordDispense` bypasses this. Pre-existing decision: pharmacy trusts prescriber-side checks (D1 from 4-2). Revisit when MedicationStatement is implemented.
+- **W6: Local audit doesn't log sync attempt or result** — `dispenseAuditService.ts` logs dispense creation but not the Hub sync attempt, failure, or queue-for-retry event. Consistent with D9/D23/D38. Address in Story 6-2.
+
 ## Deferred from: code review of 3-3-cryptographically-signed-qr-generation (2026-04-29)
 
 - **W1: Audit log failure silently swallowed** — Three catch blocks in encounter-dashboard.tsx swallow audit log errors with empty bodies. No client-side audit retry/queue exists. Consistent with D9/D23/D38. Address in Story 6-2 (immutable cryptographic audit logging).

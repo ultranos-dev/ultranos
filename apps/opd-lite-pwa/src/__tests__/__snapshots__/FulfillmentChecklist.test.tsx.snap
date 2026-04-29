@@ -1,0 +1,447 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="space-y-4"
+      dir="auto"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <div>
+          <h2
+            class="text-lg font-semibold text-neutral-800"
+          >
+            Fulfillment Checklist
+          </h2>
+          <p
+            class="text-sm text-neutral-500"
+          >
+            Prescribed by 
+            Dr. Ahmad
+          </p>
+        </div>
+        <div
+          class="flex gap-2"
+        >
+          <button
+            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            data-testid="select-all-btn"
+            type="button"
+          >
+            Select All
+          </button>
+          <button
+            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            data-testid="deselect-all-btn"
+            type="button"
+          >
+            Deselect All
+          </button>
+        </div>
+      </div>
+      <ul
+        class="space-y-3"
+        role="list"
+      >
+        <li
+          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+        >
+          <div
+            class="flex items-start gap-3"
+          >
+            <input
+              aria-label="Fulfill Amoxicillin"
+              checked=""
+              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              data-testid="fulfill-checkbox-rx-001"
+              type="checkbox"
+            />
+            <div
+              class="min-w-0 flex-1"
+            >
+              <p
+                class="font-medium text-neutral-800"
+              >
+                Amoxicillin 500mg Capsule
+              </p>
+              <p
+                class="text-sm text-neutral-600"
+              >
+                1
+                 
+                capsule
+                <span>
+                   · 
+                  3× daily
+                </span>
+                <span>
+                   · 
+                  7
+                   days
+                </span>
+              </p>
+              <div
+                class="mt-3 grid grid-cols-2 gap-3"
+              >
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="brand-rx-001"
+                  >
+                    Brand Name
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="brand-input-rx-001"
+                    id="brand-rx-001"
+                    placeholder="e.g. Amoxil"
+                    type="text"
+                    value=""
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="batch-rx-001"
+                  >
+                    Batch / Lot No. 
+                    <span
+                      class="text-neutral-400"
+                    >
+                      (Optional)
+                    </span>
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="batch-input-rx-001"
+                    id="batch-rx-001"
+                    placeholder="e.g. LOT-2026-04A"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li
+          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+        >
+          <div
+            class="flex items-start gap-3"
+          >
+            <input
+              aria-label="Fulfill Ibuprofen"
+              checked=""
+              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              data-testid="fulfill-checkbox-rx-002"
+              type="checkbox"
+            />
+            <div
+              class="min-w-0 flex-1"
+            >
+              <p
+                class="font-medium text-neutral-800"
+              >
+                Ibuprofen 400mg Tablet
+              </p>
+              <p
+                class="text-sm text-neutral-600"
+              >
+                1
+                 
+                tablet
+                <span>
+                   · 
+                  2× daily
+                </span>
+                <span>
+                   · 
+                  5
+                   days
+                </span>
+              </p>
+              <div
+                class="mt-3 grid grid-cols-2 gap-3"
+              >
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="brand-rx-002"
+                  >
+                    Brand Name
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="brand-input-rx-002"
+                    id="brand-rx-002"
+                    placeholder="e.g. Amoxil"
+                    type="text"
+                    value=""
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="batch-rx-002"
+                  >
+                    Batch / Lot No. 
+                    <span
+                      class="text-neutral-400"
+                    >
+                      (Optional)
+                    </span>
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="batch-input-rx-002"
+                    id="batch-rx-002"
+                    placeholder="e.g. LOT-2026-04A"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <button
+        class="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        data-testid="confirm-dispensing-btn"
+        type="button"
+      >
+        Confirm Dispensing
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="space-y-4"
+      dir="auto"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <div>
+          <h2
+            class="text-lg font-semibold text-neutral-800"
+          >
+            Fulfillment Checklist
+          </h2>
+          <p
+            class="text-sm text-neutral-500"
+          >
+            Prescribed by 
+            Dr. Ahmad
+          </p>
+        </div>
+        <div
+          class="flex gap-2"
+        >
+          <button
+            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            data-testid="select-all-btn"
+            type="button"
+          >
+            Select All
+          </button>
+          <button
+            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            data-testid="deselect-all-btn"
+            type="button"
+          >
+            Deselect All
+          </button>
+        </div>
+      </div>
+      <ul
+        class="space-y-3"
+        role="list"
+      >
+        <li
+          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+        >
+          <div
+            class="flex items-start gap-3"
+          >
+            <input
+              aria-label="Fulfill Amoxicillin"
+              checked=""
+              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              data-testid="fulfill-checkbox-rx-001"
+              type="checkbox"
+            />
+            <div
+              class="min-w-0 flex-1"
+            >
+              <p
+                class="font-medium text-neutral-800"
+              >
+                Amoxicillin 500mg Capsule
+              </p>
+              <p
+                class="text-sm text-neutral-600"
+              >
+                1
+                 
+                capsule
+                <span>
+                   · 
+                  3× daily
+                </span>
+                <span>
+                   · 
+                  7
+                   days
+                </span>
+              </p>
+              <div
+                class="mt-3 grid grid-cols-2 gap-3"
+              >
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="brand-rx-001"
+                  >
+                    Brand Name
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="brand-input-rx-001"
+                    id="brand-rx-001"
+                    placeholder="e.g. Amoxil"
+                    type="text"
+                    value=""
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="batch-rx-001"
+                  >
+                    Batch / Lot No. 
+                    <span
+                      class="text-neutral-400"
+                    >
+                      (Optional)
+                    </span>
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="batch-input-rx-001"
+                    id="batch-rx-001"
+                    placeholder="e.g. LOT-2026-04A"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li
+          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+        >
+          <div
+            class="flex items-start gap-3"
+          >
+            <input
+              aria-label="Fulfill Ibuprofen"
+              checked=""
+              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              data-testid="fulfill-checkbox-rx-002"
+              type="checkbox"
+            />
+            <div
+              class="min-w-0 flex-1"
+            >
+              <p
+                class="font-medium text-neutral-800"
+              >
+                Ibuprofen 400mg Tablet
+              </p>
+              <p
+                class="text-sm text-neutral-600"
+              >
+                1
+                 
+                tablet
+                <span>
+                   · 
+                  2× daily
+                </span>
+                <span>
+                   · 
+                  5
+                   days
+                </span>
+              </p>
+              <div
+                class="mt-3 grid grid-cols-2 gap-3"
+              >
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="brand-rx-002"
+                  >
+                    Brand Name
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="brand-input-rx-002"
+                    id="brand-rx-002"
+                    placeholder="e.g. Amoxil"
+                    type="text"
+                    value=""
+                  />
+                </div>
+                <div>
+                  <label
+                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    for="batch-rx-002"
+                  >
+                    Batch / Lot No. 
+                    <span
+                      class="text-neutral-400"
+                    >
+                      (Optional)
+                    </span>
+                  </label>
+                  <input
+                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    data-testid="batch-input-rx-002"
+                    id="batch-rx-002"
+                    placeholder="e.g. LOT-2026-04A"
+                    type="text"
+                    value=""
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <button
+        class="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        data-testid="confirm-dispensing-btn"
+        type="button"
+      >
+        Confirm Dispensing
+      </button>
+    </div>
+  </div>
+</div>
+`;

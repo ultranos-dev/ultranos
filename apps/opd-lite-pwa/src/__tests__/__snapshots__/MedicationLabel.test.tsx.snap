@@ -1,0 +1,281 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MedicationLabel > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="print-label rounded-lg border-2 border-neutral-300 p-4"
+      data-testid="medication-label"
+      dir="ltr"
+    >
+      <h3
+        class="text-xl font-bold text-neutral-900"
+        data-testid="label-med-name"
+      >
+        Amoxicillin 500mg Capsule
+      </h3>
+      <p
+        class="text-base text-neutral-600"
+        data-testid="label-brand-name"
+      >
+        Amoxil
+      </p>
+      <p
+        class="mt-2 text-lg font-semibold text-neutral-800"
+        data-testid="label-dosage"
+      >
+        1
+         
+        capsule
+      </p>
+      <div
+        aria-label="Dosage timing"
+        class="mt-3 flex items-center gap-4"
+        role="group"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="Morning"
+            class="h-8 w-8 text-amber-500"
+            data-testid="timing-icon-morning"
+            fill="currentColor"
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="5"
+            />
+            <path
+              d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            Morning
+          </span>
+        </div>
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="Noon"
+            class="h-8 w-8 text-orange-500"
+            data-testid="timing-icon-noon"
+            fill="none"
+            role="img"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"
+            />
+            <path
+              d="M7 2v20"
+            />
+            <path
+              d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            Noon
+          </span>
+        </div>
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="Night"
+            class="h-8 w-8 text-indigo-500"
+            data-testid="timing-icon-night"
+            fill="currentColor"
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            Night
+          </span>
+        </div>
+      </div>
+      <p
+        class="mt-3 text-base text-neutral-700"
+        data-testid="label-duration"
+      >
+        7
+         days
+      </p>
+      <p
+        class="mt-1 text-xs text-neutral-400"
+        data-testid="label-batch"
+      >
+        Lot: 
+        LOT-2026-04A
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`MedicationLabel > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="print-label rounded-lg border-2 border-neutral-300 p-4"
+      data-testid="medication-label"
+      dir="rtl"
+    >
+      <h3
+        class="text-xl font-bold text-neutral-900"
+        data-testid="label-med-name"
+      >
+        Amoxicillin 500mg Capsule
+      </h3>
+      <p
+        class="text-base text-neutral-600"
+        data-testid="label-brand-name"
+      >
+        Amoxil
+      </p>
+      <p
+        class="mt-2 text-lg font-semibold text-neutral-800"
+        data-testid="label-dosage"
+      >
+        1
+         
+        capsule
+      </p>
+      <div
+        aria-label="Dosage timing"
+        class="mt-3 flex items-center gap-4"
+        role="group"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="صباح"
+            class="h-8 w-8 text-amber-500"
+            data-testid="timing-icon-morning"
+            fill="currentColor"
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="5"
+            />
+            <path
+              d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-width="2"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            صباح
+          </span>
+        </div>
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="ظهر"
+            class="h-8 w-8 text-orange-500"
+            data-testid="timing-icon-noon"
+            fill="none"
+            role="img"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"
+            />
+            <path
+              d="M7 2v20"
+            />
+            <path
+              d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            ظهر
+          </span>
+        </div>
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <svg
+            aria-label="مساء"
+            class="h-8 w-8 text-indigo-500"
+            data-testid="timing-icon-night"
+            fill="currentColor"
+            role="img"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+            />
+          </svg>
+          <span
+            class="text-xs font-medium text-neutral-600"
+          >
+            مساء
+          </span>
+        </div>
+      </div>
+      <p
+        class="mt-3 text-base text-neutral-700"
+        data-testid="label-duration"
+      >
+        7
+         days
+      </p>
+      <p
+        class="mt-1 text-xs text-neutral-400"
+        data-testid="label-batch"
+      >
+        Lot: 
+        LOT-2026-04A
+      </p>
+    </div>
+  </div>
+</div>
+`;

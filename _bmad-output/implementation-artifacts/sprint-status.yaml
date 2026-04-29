@@ -1,5 +1,5 @@
-# generated: 2026-04-28T22:03:14.860887
-# last_updated: 2026-04-28T22:03:14.860887
+# generated: 2026-04-29T03:34:34.691026
+# last_updated: 2026-04-29T03:34:34.691026
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -12,8 +12,8 @@
 # Retrospective Status: optional, done
 #
 
-generated: '2026-04-28T22:03:14.860887'
-last_updated: '2026-04-29T03:25:00.000000'
+generated: '2026-04-29T03:34:34.691026'
+last_updated: '2026-04-29T20:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -31,18 +31,18 @@ development_status:
   2-2-soap-note-entry-subjective-objective: backlog
   2-3-vital-signs-charting: backlog
   2-4-diagnosis-entry-icd-10-search: backlog
-  2-5-clinical-command-palette-ux-dr4: done
+  2-5-clinical-command-palette-ux-dr4: backlog
   epic-2-retrospective: optional
   epic-3: backlog
-  3-1-medication-search-prescription-entry: done
-  3-2-local-drug-drug-interaction-checker: done
-  3-3-cryptographically-signed-qr-generation: done
-  3-4-global-prescription-invalidation-check: done
+  3-1-medication-search-prescription-entry: backlog
+  3-2-local-drug-drug-interaction-checker: backlog
+  3-3-cryptographically-signed-qr-generation: backlog
+  3-4-global-prescription-invalidation-check: backlog
   epic-3-retrospective: optional
   epic-4: backlog
-  4-1-pharmacy-scan-load: backlog
-  4-2-medication-fulfillment-labeling: backlog
-  4-3-real-time-dispensing-sync: backlog
+  4-1-pharmacy-scan-load: done
+  4-2-medication-fulfillment-labeling: done
+  4-3-real-time-dispensing-sync: done
   epic-4-retrospective: optional
   epic-5: backlog
   5-1-patient-profile-qr-identity: backlog
