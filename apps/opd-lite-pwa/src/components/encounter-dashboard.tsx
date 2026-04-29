@@ -14,6 +14,9 @@ import { useRouter } from 'next/navigation'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { useCommandPalette } from '@/hooks/use-command-palette'
+import { usePrescriptionStore } from '@/stores/prescription-store'
+import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
+import type { PrescriptionFormData } from '@/lib/prescription-config'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -89,6 +92,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     delay: 300,
   })
 
+  // Prescription state
+  const pendingPrescriptions = usePrescriptionStore((s) => s.pendingPrescriptions)
+  const addPrescription = usePrescriptionStore((s) => s.addPrescription)
+  const removePrescription = usePrescriptionStore((s) => s.removePrescription)
+  const loadPrescriptions = usePrescriptionStore((s) => s.loadPrescriptions)
+  const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
+
   // Load patient from Dexie on page refresh / direct nav
   useEffect(() => {
     if (!selectedPatient || selectedPatient.id !== patientId) {
@@ -117,7 +127,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     loadFromLedger(activeEncounter.id)
     initVitalsForEncounter(activeEncounter.id, patientId)
     loadVitals(activeEncounter.id)
-  }, [activeEncounter?.id, activeEncounter?.status, initForEncounter, loadFromLedger, initVitalsForEncounter, loadVitals, patientId])
+    loadPrescriptions(activeEncounter.id)
+  }, [activeEncounter?.id, activeEncounter?.status, initForEncounter, loadFromLedger, initVitalsForEncounter, loadVitals, loadPrescriptions])
 
   const handleSubjectiveChange = useCallback((value: string) => {
     setSubjective(value)
@@ -134,6 +145,25 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const handleSystolicChange = useCallback((v: string) => { setSystolic(v); triggerVitalsAutosave() }, [setSystolic, triggerVitalsAutosave])
   const handleDiastolicChange = useCallback((v: string) => { setDiastolic(v); triggerVitalsAutosave() }, [setDiastolic, triggerVitalsAutosave])
   const handleTemperatureChange = useCallback((v: string) => { setTemperature(v); triggerVitalsAutosave() }, [setTemperature, triggerVitalsAutosave])
+
+  const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
+    if (!activeEncounter) return
+    setPrescriptionError(null)
+    try {
+      await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF)
+    } catch (err) {
+      setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+    }
+  }, [activeEncounter, addPrescription, patientId])
+
+  const handleRemovePrescription = useCallback(async (id: string) => {
+    setPrescriptionError(null)
+    try {
+      await removePrescription(id)
+    } catch (err) {
+      setPrescriptionError(err instanceof Error ? err.message : 'Failed to cancel prescription')
+    }
+  }, [removePrescription])
 
   const handleStartEncounter = useCallback(async () => {
     await startEncounter(patientId, PRACTITIONER_REF)
@@ -300,6 +330,77 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             onSubjectiveChange={handleSubjectiveChange}
             onObjectiveChange={handleObjectiveChange}
           />
+        </section>
+      )}
+
+      {/* Prescriptions — visible only during active encounter */}
+      {isActive && (
+        <section
+          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          aria-label="Prescriptions"
+          data-section="prescriptions"
+          tabIndex={-1}
+        >
+          {/* Drug interaction check unavailable warning — CLAUDE.md safety rule #3 */}
+          <div
+            className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+            role="alert"
+          >
+            <p className="text-sm font-bold text-amber-800">
+              ⚠ Drug interaction check unavailable
+            </p>
+            <p className="text-xs text-amber-700">
+              Interaction checking is not yet available. Verify prescriptions manually before dispensing.
+            </p>
+          </div>
+
+          <PrescriptionEntry onSubmit={handleAddPrescription} />
+
+          {prescriptionError && (
+            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 ps-4 pe-4 py-3" role="alert">
+              <p className="text-sm font-semibold text-red-800">{prescriptionError}</p>
+            </div>
+          )}
+
+          {/* Pending prescriptions list */}
+          {pendingPrescriptions.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <h4 className="text-sm font-bold text-neutral-700">
+                Pending Prescriptions ({pendingPrescriptions.length})
+              </h4>
+              <ul className="space-y-2" aria-label="Pending prescriptions list">
+                {pendingPrescriptions.map((rx) => (
+                  <li
+                    key={rx.id}
+                    className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-3"
+                  >
+                    <div>
+                      <span className="font-semibold text-neutral-900">
+                        {rx.medicationCodeableConcept.text}
+                      </span>
+                      <span className="ms-2 me-2 text-neutral-300">|</span>
+                      <span className="text-sm text-neutral-600">
+                        {rx.dosageInstruction?.[0]?.text}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
+                        Pending Fulfillment
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePrescription(rx.id)}
+                        className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
+                        aria-label={`Cancel prescription for ${rx.medicationCodeableConcept.text}`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

@@ -73,3 +73,20 @@
 - **D48: `useCommandPalette` hook registers duplicate listeners if reused by multiple components** — use-command-palette.ts. Currently single consumer; lift to context/store if second consumer added.
 - **D49: Missing `Prescribe` command in command palette** — AC2 requires `>Prescribe` but Prescribe UI doesn't exist until Epic 3. Add to CLINICAL_COMMANDS when prescription section ships.
 - **D50: Palette not globally available / not in Navbar** — Spec locates trigger in Navbar.tsx but Navbar doesn't exist yet. All commands target EncounterDashboard sections. Globalize when Navbar is built and commands span multiple views.
+
+## Deferred from: code review of 3-1-medication-search-prescription-entry (2026-04-28)
+
+- **D51: PHI stored unencrypted in IndexedDB** — `medications` table written via `db.medications.put()` with no encryption wrapper. Systemic gap across all Dexie tables. Consistent with D10/D24/D26/D34/D37.
+- **D52: Hardcoded practitioner reference 'Practitioner/current-user'** — Pre-existing pattern in encounter-dashboard.tsx:41. Consistent with D29/D44.
+- **D53: Formulary uses internal codes (urn:ultranos:formulary/RX001) instead of standard terminology** — `medications_subset.json` uses internal system. Standard FHIR practice is RxNorm/SNOMED/ATC codes. Address when real formulary integration is built.
+- **D54: formatAge produces negative age for future birthDate** — Pre-existing code in encounter-dashboard.tsx:26-37. Consistent with D32.
+- **D55: No allergy display in prescription context** — CLAUDE.md requires allergies first/red/uncollapsed in clinician views. No allergy data schema exists yet. Consistent with D25/D31.
+- **D56: No audit events on prescription create, read, or cancel** — No client-side audit infrastructure exists. Consistent with D9/D23/D38.
+- **D57: No duplicate medication detection** — Same medication can be prescribed multiple times. Needs clinical workflow input; duplicates can be clinically valid.
+- **D58: clearPhiState does not clear IndexedDB medications table** — Systemic gap; no store clears its Dexie table on clearPhi. Solve at DB layer.
+- **D59: Search uses static JSON import instead of Dexie vocabulary store** — Functionally works for 100 items but won't scale. Formulary will grow to thousands; needs Dexie vocabulary table with indexed queries and runtime update support.
+
+## Deferred from: code review 2 of 3-1-medication-search-prescription-entry (2026-04-29)
+
+- **W3: No drug interaction test coverage** — CLAUDE.md requires tests for CONTRAINDICATED, ALLERGY_MATCH, override-with-reason, and "check unavailable" fallback. Blocked by Story 3.2 (drug interaction checker). Add tests when 3.2 ships.
+- **D2: Static "Interaction check unavailable" banner, not contextual per-prescription** — Story 3.2 will redesign interaction UX; static banner adequate until then. When 3.2 ships, review must enforce contextual per-medication interaction warnings.

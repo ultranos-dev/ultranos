@@ -213,4 +213,20 @@ describe('Encounter Dashboard', () => {
       expect(screen.getByText(/Started:/)).toBeDefined()
     })
   })
+
+  // P13: CLAUDE.md safety rule #3 — drug interaction check unavailable warning
+  it('should display "Drug interaction check unavailable" warning when prescriptions section is visible', async () => {
+    const patient = makePatient('patient-700', 'Test')
+    usePatientStore.setState({ selectedPatient: patient })
+
+    render(<EncounterDashboard patientId="patient-700" />)
+
+    fireEvent.click(screen.getByText('Start Encounter'))
+
+    await waitFor(() => {
+      const alert = screen.getByText(/drug interaction check unavailable/i)
+      expect(alert).toBeDefined()
+      expect(alert.closest('[role="alert"]')).toBeDefined()
+    })
+  })
 })

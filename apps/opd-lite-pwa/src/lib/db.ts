@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition } from '@ultranos/shared-types'
+import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
 
 /**
  * Local patient record type — mirrors FhirPatient for Dexie storage.
@@ -22,12 +22,15 @@ export type LocalObservation = FhirObservation
 
 export type LocalCondition = FhirCondition
 
+export type LocalMedicationRequest = FhirMedicationRequestZod
+
 class OpdLiteDatabase extends Dexie {
   patients!: EntityTable<LocalPatient, 'id'>
   encounters!: EntityTable<LocalEncounter, 'id'>
   soapLedger!: EntityTable<SoapLedgerEntry, 'id'>
   observations!: EntityTable<LocalObservation, 'id'>
   conditions!: EntityTable<LocalCondition, 'id'>
+  medications!: EntityTable<LocalMedicationRequest, 'id'>
 
   constructor() {
     super('opd-lite-pwa')
@@ -75,6 +78,21 @@ class OpdLiteDatabase extends Dexie {
         'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
       conditions:
         'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+    })
+
+    this.version(6).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
     })
   }
 }
