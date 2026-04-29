@@ -2,6 +2,12 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createHash } from 'crypto'
 import { createTRPCRouter, baseProcedure } from '../init'
+// NOTE: enforceConsentMiddleware is available for per-patient data endpoints.
+// The search endpoint returns identity data for verification (not clinical PHI),
+// so consent enforcement is applied at the individual patient data level, not search.
+// When per-patient clinical data endpoints are added to this router, apply:
+//   .use(enforceConsentMiddleware('Patient'))
+// See: apps/hub-api/src/trpc/middleware/enforceConsent.ts
 
 function sanitizeFilterValue(value: string): string {
   return value.replace(/[,.*()\\]/g, '')

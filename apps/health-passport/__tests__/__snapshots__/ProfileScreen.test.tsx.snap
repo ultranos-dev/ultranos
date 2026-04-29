@@ -1,0 +1,871 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL snapshot tests) 1`] = `
+<RCTScrollView
+  contentContainerStyle={
+    {
+      "gap": 24,
+      "paddingVertical": 24,
+    }
+  }
+  style={
+    {
+      "backgroundColor": "hsl(270, 20%, 98%)",
+      "flex": 1,
+      "paddingHorizontal": 20,
+    }
+  }
+  testID="profile-screen"
+>
+  <View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginBottom": 4,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 30%, 15%)",
+            "fontSize": 28,
+            "fontWeight": "700",
+          }
+        }
+      >
+        My Passport
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 13,
+          }
+        }
+      >
+        Your health identity card
+      </Text>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "gap": 20,
+          },
+        ]
+      }
+      testID="demographics-card"
+    >
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Name
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Name: Fatima Al-Rashid"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-name"
+          >
+            Fatima Al-Rashid
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Name (Local)
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Name (Local): فاطمة الرشيد"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-name-local"
+          >
+            فاطمة الرشيد
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Age
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Age: 36"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-age"
+          >
+            36
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Gender
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Gender: female"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-gender"
+          >
+            female
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          National ID
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="National ID: hidden"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-national-id"
+          >
+            784*************-8
+          </Text>
+          <View
+            accessibilityLabel="Show ID"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "hsl(270, 50%, 97%)",
+                "borderRadius": 8,
+                "minWidth": 48,
+                "paddingHorizontal": 12,
+                "paddingVertical": 6,
+              }
+            }
+            testID="toggle-national-id"
+          >
+            <Text
+              style={
+                {
+                  "color": "hsl(270, 48%, 38%)",
+                  "fontSize": 13,
+                  "fontWeight": "600",
+                }
+              }
+            >
+              Show
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "alignItems": "center",
+            "gap": 8,
+          },
+        ]
+      }
+      testID="qr-card"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        Your Medical ID
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+            },
+            {
+              "marginBottom": 8,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        Show this QR code to your healthcare provider
+      </Text>
+      <View
+        testID="patient-qr-code"
+      >
+        <Text>
+          550e8400-e29b-41d4-a716-446655440000
+        </Text>
+      </View>
+    </View>
+  </View>
+</RCTScrollView>
+`;
+
+exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL snapshot tests) 1`] = `
+<RCTScrollView
+  contentContainerStyle={
+    {
+      "gap": 24,
+      "paddingVertical": 24,
+    }
+  }
+  style={
+    {
+      "backgroundColor": "hsl(270, 20%, 98%)",
+      "flex": 1,
+      "paddingHorizontal": 20,
+    }
+  }
+  testID="profile-screen"
+>
+  <View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginBottom": 4,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 30%, 15%)",
+            "fontSize": 28,
+            "fontWeight": "700",
+          }
+        }
+      >
+        My Passport
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 13,
+          }
+        }
+      >
+        Your health identity card
+      </Text>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "gap": 20,
+          },
+        ]
+      }
+      testID="demographics-card"
+    >
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Name
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Name: Fatima Al-Rashid"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-name"
+          >
+            Fatima Al-Rashid
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Name (Local)
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Name (Local): فاطمة الرشيد"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-name-local"
+          >
+            فاطمة الرشيد
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Age
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Age: 36"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-age"
+          >
+            36
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          Gender
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="Gender: female"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-gender"
+          >
+            female
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+          }
+        }
+      >
+        <Text
+          accessibilityRole="text"
+          style={
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+              "fontWeight": "600",
+              "letterSpacing": 0.5,
+              "marginBottom": 4,
+              "textTransform": "uppercase",
+            }
+          }
+        >
+          National ID
+        </Text>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <Text
+            accessibilityLabel="National ID: hidden"
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+            testID="patient-national-id"
+          >
+            784*************-8
+          </Text>
+          <View
+            accessibilityLabel="Show ID"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "hsl(270, 50%, 97%)",
+                "borderRadius": 8,
+                "minWidth": 48,
+                "paddingHorizontal": 12,
+                "paddingVertical": 6,
+              }
+            }
+            testID="toggle-national-id"
+          >
+            <Text
+              style={
+                {
+                  "color": "hsl(270, 48%, 38%)",
+                  "fontSize": 13,
+                  "fontWeight": "600",
+                }
+              }
+            >
+              Show
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "alignItems": "center",
+            "gap": 8,
+          },
+        ]
+      }
+      testID="qr-card"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        Your Medical ID
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 8%, 60%)",
+              "fontSize": 13,
+            },
+            {
+              "marginBottom": 8,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        Show this QR code to your healthcare provider
+      </Text>
+      <View
+        testID="patient-qr-code"
+      >
+        <Text>
+          550e8400-e29b-41d4-a716-446655440000
+        </Text>
+      </View>
+    </View>
+  </View>
+</RCTScrollView>
+`;

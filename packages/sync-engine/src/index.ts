@@ -14,3 +14,9 @@ export {
 } from './crypto.js'
 
 export type { KeyPair } from './crypto.js'
+
+export {
+  SYNC_PRIORITY,
+  getSyncPriority,
+  compareSyncPriority,
+} from './sync-priority.js'

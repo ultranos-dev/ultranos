@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 
 /**
  * Maps internal prescription_status to the pharmacist-facing invalidation status.
@@ -90,6 +91,7 @@ export const medicationRouter = createTRPCRouter({
    * on the update prevents simultaneous double-dispense.
    */
   recordDispense: protectedProcedure
+    .use(enforceConsentMiddleware('MedicationRequest'))
     .input(
       z.object({
         dispenseId: z.string().uuid(),

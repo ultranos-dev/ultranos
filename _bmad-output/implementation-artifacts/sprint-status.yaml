@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-04-29T20:00:00.000000'
+last_updated: '2026-04-29T19:30:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -44,10 +44,10 @@ development_status:
   4-2-medication-fulfillment-labeling: done
   4-3-real-time-dispensing-sync: done
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-patient-profile-qr-identity: backlog
-  5-2-medical-history-timeline-low-literacy-ui: backlog
-  5-3-data-sharing-consent-management: backlog
+  epic-5: in-progress
+  5-1-patient-profile-qr-identity: done
+  5-2-medical-history-timeline-low-literacy-ui: in-progress
+  5-3-data-sharing-consent-management: in-progress
   epic-5-retrospective: optional
   epic-6: backlog
   6-1-role-based-access-control-rbac: backlog

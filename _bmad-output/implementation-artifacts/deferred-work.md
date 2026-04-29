@@ -142,3 +142,27 @@
 - **W1: Audit log failure silently swallowed** — Three catch blocks in encounter-dashboard.tsx swallow audit log errors with empty bodies. No client-side audit retry/queue exists. Consistent with D9/D23/D38. Address in Story 6-2 (immutable cryptographic audit logging).
 - **W2: Interaction check only against pending prescriptions** — `activeMedNames` built from `pendingPrescriptions` only, not patient's full active medication list. MedicationStatement data model doesn't exist yet. Consistent with 3-2 review D2. Critical clinical safety item — wire into interaction checker when MedicationStatement is implemented.
 - **W3: `asNeededBoolean` not in Zod DosageSchema** — `compress-prescription.ts:58` checks `d?.asNeededBoolean` but DosageSchema doesn't define it. Zod strips unknown keys, so PRN flag is always omitted from QR payload. Add `asNeededBoolean: z.boolean().optional()` to DosageSchema when PRN workflow is built.
+
+## Deferred from: code review of 5-1-patient-profile-qr-identity (2026-04-29)
+
+- **D64: No i18n/localization framework** — All Health Passport UI strings hardcoded in English. Broader i18n effort beyond this story's scope.
+- **D65: `birthYearOnly` field outside `_ultranos` namespace** — Type definition issue in shared-types. Not introduced by this change; address at shared-types level.
+- **D66: No dark mode variant in consumer theme** — Consumer theme has light-mode HSL only. Not in scope for Story 5.1.
+- **D67: `qrcode.react` not used for PWA as specified** — Only `react-native-qrcode-svg` used. Depends on PWA architecture decisions.
+- **D68: No QR render performance test (<100ms budget)** — Developer guardrail verification. Nice-to-have.
+- **D69: Mobile SQLCipher migration needed** — expo-secure-store has 2KB iOS limit. Create follow-up story to implement SQLCipher for Health Passport mobile storage.
+- **D70: ECDSA-P256 QR signing** — Requires `@ultranos/crypto` mobile infrastructure. Implement when crypto package supports mobile key generation/signing.
+
+## Deferred from: code review of 5-2-medical-history-timeline-low-literacy-ui (2026-04-29)
+
+- **D71: Memory store lifecycle not tied to session** — `offline-store.ts:15,131`. Module-level `Map` persists across patient switches on web. `wipeMemoryStore()` exists but isn't called on logout/patient switch. Pre-existing architecture concern consistent with D10/D58.
+- **D72: Medications never flagged as sensitive** — `fhir-humanizer.ts:215-228`. `humanizeMedication` always returns `isSensitive: false`. Antiretrovirals, psychiatric meds display with full names. Needs RxNorm-based sensitivity mapping with clinical input. Privacy gap.
+- **D73: SecureStore 2048-byte limit for medical history** — Already tracked as D69. Consolidate into SQLCipher migration story.
+
+## Deferred from: code review of 5-3-data-sharing-consent-management (2026-04-29)
+
+- **W1: consumerStyles import from @/theme/consumer unverified** — PrivacySettingsScreen.tsx imports `consumerStyles` from `@/theme/consumer`, a path not present in the diff. Likely a Story 5.2 dependency. Verify the import resolves when both stories are committed.
+- **W2: Hardcoded pixel values in StyleSheet instead of spacing tokens** — PrivacySettingsScreen.tsx styles use raw pixel values (`gap: 4`, `marginBottom: 12`, `paddingVertical: 12`) instead of `consumerSpacing` tokens consistently. RTL-safe but inconsistent with token-based design.
+- **W3: Module-level HLC with hardcoded nodeId 'health-passport'** — `useConsentSettings.ts:369` creates `new HybridLogicalClock('health-passport')` at module scope. All devices share the same nodeId, producing ambiguous HLC timestamps in multi-device sync scenarios. Architectural concern beyond this story; consistent with D20.
+- **D2: consent.sync has no authorization check** — Any authenticated user can forge consent for any patient via `consent.sync`. No `ctx.user.sub === input.grantorId` check. Defer to Story 6-1 (RBAC). Consistent with D12.
+- **D3: No emergency/break-glass bypass in consent enforcement** — `enforceConsentMiddleware` has no provision for emergency access. `GrantorRole.EMERGENCY_OVERRIDE` exists as an enum but is never checked. Needs dedicated spec-level design for emergency access model (audit trail, time-bounded override, abuse prevention).

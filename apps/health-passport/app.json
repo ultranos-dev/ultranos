@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Ultranos Health Passport",
+    "slug": "health-passport",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "health-passport",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

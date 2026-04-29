@@ -79,13 +79,13 @@ This is a healthcare system handling Protected Health Information (PHI). These r
 Every clinical workflow must complete without a network connection. When writing a new feature, ask: "Does this work if I pull the ethernet cable right now?" If not, redesign it.
 - Sync queue: `packages/sync-engine/` — durable, survives app restart
 - Events stamped with Hybrid Logical Clocks (HLC), not `Date.now()`
-- Priority sync order: allergies → prescriptions → lab notifications → notes → vitals → metadata
+- Priority sync order: allergies/consent → prescriptions → lab notifications → notes → vitals → metadata
 
 ### Encryption
 - **Hub DB:** AES-256-GCM field-level encryption on PHI columns (diagnosis, prescription content, notes). See `packages/crypto/src/field-encrypt.ts`
 - **Android local store:** SQLCipher. Key from Android Keystore. Never store the key in SharedPreferences or plaintext.
 - **Desktop PWA:** Web Crypto API AES-GCM wrapping IndexedDB. Encryption key lives in memory only — cleared on tab/browser close. Never use `localStorage` or `sessionStorage` for PHI.
-- **QR codes — Identity (Health Passport):** Contain `{ patient_id, issued_at, expiry, ECDSA-P256 signature }` — never raw PHI.
+- **QR codes — Identity (Health Passport):** Contain `{ pid, iat, exp, v, sig? }` (JWT-standard short names for QR compactness: `pid` = patient_id, `iat` = issued_at, `exp` = expiry, `sig` = ECDSA-P256 signature) — never raw PHI.
 - **QR codes — Prescription:** Contain `{ payload, sig, pub, issued_at, expiry }` where payload is a minified prescription bundle (medication codes, dosage, references — no demographics or clinical notes). Signed with Ed25519. Never raw PHI.
 
 ### FHIR R4 Alignment
@@ -115,7 +115,8 @@ When writing sync logic, use the correct tier:
 |------|--------|----------|
 | **Tier 1 — Safety-Critical** | Allergies, active meds, critical diagnoses | Append-only merge. Both versions kept. Conflict flag for physician review. Prescription generation blocked until resolved. |
 | **Tier 2 — Clinical** | Notes, lab results, vitals, historical prescriptions | Timestamp-based merge. Newer wins. Both versions kept as addenda. |
-| **Tier 3 — Operational** | Demographics, preferences, consent status | Last-Write-Wins. |
+| **Tier 3 — Operational** | Demographics, preferences | Last-Write-Wins. |
+| **Consent — High-Priority Sync** | Consent grants/withdrawals | Append-only ledger. Syncs at priority 1 (same as allergies) because consent changes affect data access enforcement at the Hub API layer. |
 | **Tier 4 — Queue Events** | Multi-device offline events for same patient | Chronological replay by HLC. Events within 60s conflict window → flagged regardless of tier. |
 
 ## Testing Requirements
@@ -126,6 +127,14 @@ When writing sync logic, use the correct tier:
 - RTL: snapshot tests for every patient-facing component in both LTR and RTL
 - Audit: every API endpoint that touches PHI must have a test asserting an audit event was emitted
 - Offline: integration tests that simulate network disconnection mid-operation and verify queue persistence
+
+## Decision Points
+
+When you encounter a decision point (ambiguous design choice, multiple valid approaches, or a tradeoff that requires human judgment), always:
+
+1. **Outline all viable options** with a short label (A, B, C...).
+2. **Highlight your recommendation** for each decision with clear reasoning — consider effort, risk, alignment with project constraints, and pragmatism.
+3. **Present to the user** before proceeding. Do not silently pick an option.
 
 ## When Compacting
 
