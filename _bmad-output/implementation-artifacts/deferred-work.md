@@ -90,3 +90,29 @@
 
 - **W3: No drug interaction test coverage** — CLAUDE.md requires tests for CONTRAINDICATED, ALLERGY_MATCH, override-with-reason, and "check unavailable" fallback. Blocked by Story 3.2 (drug interaction checker). Add tests when 3.2 ships.
 - **D2: Static "Interaction check unavailable" banner, not contextual per-prescription** — Story 3.2 will redesign interaction UX; static banner adequate until then. When 3.2 ships, review must enforce contextual per-medication interaction warnings.
+
+## Deferred from: code review of 3-2-local-drug-drug-interaction-checker (2026-04-29)
+
+- **W1: Audit log missing SHA-256 hash chaining** — CLAUDE.md Rule #6 requires append-only audit with SHA-256 hash chaining. `interactionAuditService.ts` does simple IndexedDB add with no hash computation. Architectural pattern not yet implemented anywhere in the project. Address in Story 6-2 (immutable cryptographic audit logging).
+- **W2: Stale `pendingPrescriptions` race condition on rapid adds** — `handleAddPrescription` captures `pendingPrescriptions` from React closure at render time. Two rapid adds may use stale medication list for the second check. Requires ref-based latest state or architectural change.
+- **W3: Dexie v7 repeats all existing store definitions / no migration rollback** — Version 7 stores block repeats all prior table definitions. Maintenance-prone pattern consistent with D33. Dexie doesn't support downgrades natively.
+- **W4: Canceled prescription deduplication logic fragile** — `loadPrescriptions` deduplicates by splitting on `:cancelled:`. Pre-existing in prescription-store.ts, not introduced by this change.
+- **W5: No test for "check unavailable" fallback path** — No test exercises the code path where `checkInteractions()` throws and the UNAVAILABLE flow is triggered. CLAUDE.md testing requirements list this as mandatory.
+- **D1: Override data stored in `_ultranos` instead of FHIR `detectedIssue`** — Spec says use FHIR `detectedIssue` field, but implementation uses `_ultranos` extension namespace. No sync layer or Hub consumer exists yet. Add FHIR DetectedIssue mapping when Hub sync is built.
+- **D2: Interaction check only runs against pending prescriptions, not patient's active medications** — AC #1 and Task 2 require checking against MedicationStatement (chronic meds). MedicationStatement data model doesn't exist yet. Wire into interaction checker when MedicationStatement is implemented. Critical clinical safety item.
+- **D4: Interaction check compares by display name, not medication code/ID** — Curated 100-med formulary has controlled names. Switch to code-based matching when formulary scales or external drug data is integrated.
+
+## Deferred from: code review of 3-4-global-prescription-invalidation-check (2026-04-29)
+
+- **D2: Offline mode completely blocks pharmacist** — No offline dispensing path exists. Pharmacist can only "Try Again" when Hub is unreachable. CLAUDE.md says every workflow must work offline. Requires sync-engine integration to queue local MedicationDispense records. Address in Epic 6.
+- **P2: No audit events on PHI access** — `getStatus` and `complete` endpoints access/modify prescription data without emitting audit events. `@ultranos/audit-logger` has no hub-api integration yet. Consistent with D5/D9/D23/D38. Address in Story 6-2.
+- **P3: QR signature never verified** — `parsePrescriptionIds` extracts IDs from QR payload without verifying Ed25519 signature. Forged QR codes accepted for status lookup. Ed25519 verify function not yet available in the codebase. Address in dedicated security hardening story.
+- **P6: `new Date()` used instead of HLC timestamps** — `dispensed_at` and `meta_last_updated` use wall-clock `new Date().toISOString()`. The `hlc_timestamp` column exists but is not populated. HLC generation is not wired to hub-api server-side. Address with sync-engine integration.
+- **W1: `created_at` column not in `_ultranos` namespace** — `005_medication_requests.sql` has `created_at` as top-level column. CLAUDE.md requires `createdAt` in `_ultranos` namespace. Consistent naming convention gap across all migrations (D3, D10, etc.).
+- **W2: FHIR Meta field naming inconsistency** — `meta_last_updated` / `meta_version_id` in migration instead of FHIR canonical `lastUpdated` / `versionId`. DB-layer snake_case is reasonable but API responses don't map back to FHIR `meta` block. Consistent with existing tables.
+
+## Deferred from: code review of 3-3-cryptographically-signed-qr-generation (2026-04-29)
+
+- **W1: Audit log failure silently swallowed** — Three catch blocks in encounter-dashboard.tsx swallow audit log errors with empty bodies. No client-side audit retry/queue exists. Consistent with D9/D23/D38. Address in Story 6-2 (immutable cryptographic audit logging).
+- **W2: Interaction check only against pending prescriptions** — `activeMedNames` built from `pendingPrescriptions` only, not patient's full active medication list. MedicationStatement data model doesn't exist yet. Consistent with 3-2 review D2. Critical clinical safety item — wire into interaction checker when MedicationStatement is implemented.
+- **W3: `asNeededBoolean` not in Zod DosageSchema** — `compress-prescription.ts:58` checks `d?.asNeededBoolean` but DosageSchema doesn't define it. Zod strips unknown keys, so PRN flag is always omitted from QR payload. Add `asNeededBoolean: z.boolean().optional()` to DosageSchema when PRN workflow is built.

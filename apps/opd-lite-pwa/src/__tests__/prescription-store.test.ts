@@ -80,6 +80,33 @@ describe('usePrescriptionStore', () => {
       await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
       expect(usePrescriptionStore.getState().isSaving).toBe(false)
     })
+
+    it('stores interaction check result when provided', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(
+        baseForm, encounterId, patientId, practitionerRef,
+        { interactionCheckResult: 'CLEAR' },
+      )
+      expect(result._ultranos.interactionCheckResult).toBe('CLEAR')
+      const saved = await db.medications.get(result.id)
+      expect(saved!._ultranos.interactionCheckResult).toBe('CLEAR')
+    })
+
+    it('stores BLOCKED result with override reason', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(
+        baseForm, encounterId, patientId, practitionerRef,
+        { interactionCheckResult: 'BLOCKED', interactionOverrideReason: 'Benefit outweighs risk' },
+      )
+      expect(result._ultranos.interactionCheckResult).toBe('BLOCKED')
+      expect(result._ultranos.interactionOverrideReason).toBe('Benefit outweighs risk')
+    })
+
+    it('defaults to UNAVAILABLE when no interaction context', async () => {
+      const store = usePrescriptionStore.getState()
+      const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
+      expect(result._ultranos.interactionCheckResult).toBe('UNAVAILABLE')
+    })
   })
 
   describe('removePrescription', () => {
@@ -90,13 +117,19 @@ describe('usePrescriptionStore', () => {
       expect(usePrescriptionStore.getState().pendingPrescriptions).toHaveLength(0)
     })
 
-    it('sets status to cancelled in Dexie (not deleted)', async () => {
+    it('creates a cancelled record in Dexie (append-only, original preserved)', async () => {
       const store = usePrescriptionStore.getState()
       const result = await store.addPrescription(baseForm, encounterId, patientId, practitionerRef)
       await usePrescriptionStore.getState().removePrescription(result.id)
-      const saved = await db.medications.get(result.id)
-      expect(saved).toBeDefined()
-      expect(saved!.status).toBe('cancelled')
+      // Original record preserved (Tier 1 append-only)
+      const original = await db.medications.get(result.id)
+      expect(original).toBeDefined()
+      expect(original!.status).toBe('active')
+      // New cancelled record created with suffixed ID
+      const allMeds = await db.medications.toArray()
+      const cancelled = allMeds.find((m) => m.id.startsWith(result.id) && m.status === 'cancelled')
+      expect(cancelled).toBeDefined()
+      expect(cancelled!.status).toBe('cancelled')
     })
 
     it('does nothing if prescription not found', async () => {

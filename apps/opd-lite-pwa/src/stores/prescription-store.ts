@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
-import { mapFormToMedicationRequest } from '@/lib/medication-request-mapper'
+import { mapFormToMedicationRequest, type InteractionContext } from '@/lib/medication-request-mapper'
 import { db } from '@/lib/db'
 
 interface PrescriptionState {
@@ -14,6 +14,7 @@ interface PrescriptionState {
     encounterId: string,
     patientId: string,
     practitionerRef: string,
+    interactionCtx?: InteractionContext,
   ) => Promise<FhirMedicationRequestZod>
 
   removePrescription: (medicationRequestId: string) => Promise<void>
@@ -36,7 +37,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
     pendingPrescriptions: [],
     isSaving: false,
 
-    addPrescription: async (form, encounterId, patientId, practitionerRef) => {
+    addPrescription: async (form, encounterId, patientId, practitionerRef, interactionCtx?) => {
       // P1+P3: Atomic check-and-set prevents race condition and ensures
       // isSaving is only true inside the try/finally boundary
       if (get().isSaving) {
@@ -51,7 +52,7 @@ export const usePrescriptionStore = create<PrescriptionState>()(
         encounterId,
         patientId,
         practitionerRef,
-      })
+      }, interactionCtx)
 
       set((state) => {
         state.isSaving = true

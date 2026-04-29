@@ -17,6 +17,11 @@ import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
+import { checkInteractions, type InteractionCheckSummary, type InteractionResult } from '@/services/interactionService'
+import { InteractionWarningModal } from '@/components/modals/InteractionWarningModal'
+import { logInteractionCheck } from '@/services/interactionAuditService'
+import { PrescriptionQR } from '@/components/clinical/PrescriptionQR'
+import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -98,6 +103,28 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const removePrescription = usePrescriptionStore((s) => s.removePrescription)
   const loadPrescriptions = usePrescriptionStore((s) => s.loadPrescriptions)
   const [prescriptionError, setPrescriptionError] = useState<string | null>(null)
+  const [signingKey, setSigningKey] = useState<Uint8Array | null>(null)
+  const [signingPublicKey, setSigningPublicKey] = useState<Uint8Array | null>(null)
+
+  // Interaction check state
+  const [interactionModal, setInteractionModal] = useState<{
+    open: boolean
+    interactions: InteractionResult[]
+    pendingForm: PrescriptionFormData | null
+    checkResult: InteractionCheckSummary | null
+  }>({ open: false, interactions: [], pendingForm: null, checkResult: null })
+
+  // Load signing key pair when encounter is active (RAM-only — never persisted)
+  useEffect(() => {
+    if (activeEncounter?.status === 'in-progress' && !signingKey) {
+      getSigningKey().then((sk) => {
+        setSigningKey(sk)
+        setSigningPublicKey(getPublicKey())
+      }).catch(() => {
+        // Key generation failure is non-fatal; QR will show error on use
+      })
+    }
+  }, [activeEncounter?.status, signingKey])
 
   // Load patient from Dexie on page refresh / direct nav
   useEffect(() => {
@@ -149,12 +176,110 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
     if (!activeEncounter) return
     setPrescriptionError(null)
+
+    // Safety gate: check interactions against active meds
+    const activeMedNames = pendingPrescriptions.map(
+      (rx) => rx.medicationCodeableConcept.coding[0]?.display ?? '',
+    ).filter(Boolean)
+
+    let checkResult: InteractionCheckSummary
     try {
-      await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF)
+      checkResult = checkInteractions(form.medicationDisplay, activeMedNames)
+    } catch {
+      // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
+      setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
+      try {
+        const rx = await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF, {
+          interactionCheckResult: 'UNAVAILABLE',
+        })
+        await logInteractionCheck({
+          encounterId: activeEncounter.id,
+          patientId,
+          medicationRequestId: rx.id,
+          medicationDisplay: form.medicationDisplay,
+          checkResult: 'UNAVAILABLE',
+          interactionsFound: 0,
+          practitionerRef: PRACTITIONER_REF,
+        })
+      } catch (err) {
+        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+      }
+      return
+    }
+
+    if (checkResult.result === 'BLOCKED') {
+      // Show modal — require clinician override with justification
+      setInteractionModal({
+        open: true,
+        interactions: checkResult.interactions,
+        pendingForm: form,
+        checkResult,
+      })
+      return
+    }
+
+    // CLEAR or WARNING — proceed (warnings shown inline on the prescription)
+    const interactionResult = checkResult.result === 'WARNING' ? 'WARNING' as const : 'CLEAR' as const
+    try {
+      const rx = await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF, {
+        interactionCheckResult: interactionResult,
+      })
+      try {
+        await logInteractionCheck({
+          encounterId: activeEncounter.id,
+          patientId,
+          medicationRequestId: rx.id,
+          medicationDisplay: form.medicationDisplay,
+          checkResult: interactionResult,
+          interactionsFound: checkResult.interactions.length,
+          practitionerRef: PRACTITIONER_REF,
+        })
+      } catch {
+        // Audit log failure must not block the prescription — log is best-effort locally
+      }
     } catch (err) {
       setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
     }
-  }, [activeEncounter, addPrescription, patientId])
+  }, [activeEncounter, addPrescription, patientId, pendingPrescriptions])
+
+  const handleInteractionOverride = useCallback(async (justification: string) => {
+    if (!activeEncounter || !interactionModal.pendingForm) return
+    const form = interactionModal.pendingForm
+    const interactionCount = interactionModal.interactions.length
+    setInteractionModal({ open: false, interactions: [], pendingForm: null, checkResult: null })
+    try {
+      const rx = await addPrescription(
+        form,
+        activeEncounter.id,
+        patientId,
+        PRACTITIONER_REF,
+        {
+          interactionCheckResult: 'BLOCKED',
+          interactionOverrideReason: justification,
+        },
+      )
+      try {
+        await logInteractionCheck({
+          encounterId: activeEncounter.id,
+          patientId,
+          medicationRequestId: rx.id,
+          medicationDisplay: form.medicationDisplay,
+          checkResult: 'BLOCKED',
+          interactionsFound: interactionCount,
+          overrideReason: justification,
+          practitionerRef: PRACTITIONER_REF,
+        })
+      } catch {
+        // Audit log failure must not block the prescription — log is best-effort locally
+      }
+    } catch (err) {
+      setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+    }
+  }, [activeEncounter, addPrescription, patientId, interactionModal.pendingForm, interactionModal.interactions.length])
+
+  const handleInteractionCancel = useCallback(() => {
+    setInteractionModal({ open: false, interactions: [], pendingForm: null, checkResult: null })
+  }, [])
 
   const handleRemovePrescription = useCallback(async (id: string) => {
     setPrescriptionError(null)
@@ -341,18 +466,39 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           data-section="prescriptions"
           tabIndex={-1}
         >
-          {/* Drug interaction check unavailable warning — CLAUDE.md safety rule #3 */}
-          <div
-            className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
-            role="alert"
-          >
-            <p className="text-sm font-bold text-amber-800">
-              ⚠ Drug interaction check unavailable
-            </p>
-            <p className="text-xs text-amber-700">
-              Interaction checking is not yet available. Verify prescriptions manually before dispensing.
-            </p>
-          </div>
+          {/* Drug interaction check status */}
+          {pendingPrescriptions.some((rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE') ? (
+            <div
+              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              role="alert"
+            >
+              <p className="text-sm font-bold text-amber-800">
+                ⚠ Drug interaction check partially unavailable
+              </p>
+              <p className="text-xs text-amber-700">
+                One or more prescriptions could not be checked for interactions. Verify manually before dispensing.
+              </p>
+            </div>
+          ) : (
+            <div
+              className="mb-4 rounded-lg border border-green-300 bg-green-50 ps-4 pe-4 py-3"
+              role="status"
+            >
+              <p className="text-sm font-bold text-green-800">
+                Drug interaction checking active
+              </p>
+              <p className="text-xs text-green-700">
+                New prescriptions are checked against active medications for known interactions.
+              </p>
+            </div>
+          )}
+
+          <InteractionWarningModal
+            open={interactionModal.open}
+            interactions={interactionModal.interactions}
+            onCancel={handleInteractionCancel}
+            onOverride={handleInteractionOverride}
+          />
 
           <PrescriptionEntry onSubmit={handleAddPrescription} />
 
@@ -384,6 +530,26 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
+                      {rx._ultranos.interactionCheckResult === 'WARNING' && (
+                        <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
+                          Interaction Warning
+                        </span>
+                      )}
+                      {rx._ultranos.interactionCheckResult === 'BLOCKED' && (
+                        <span className="rounded-full bg-red-100 ps-3 pe-3 py-1 text-xs font-bold text-red-700" title={rx._ultranos.interactionOverrideReason}>
+                          Override
+                        </span>
+                      )}
+                      {rx._ultranos.interactionCheckResult === 'CLEAR' && (
+                        <span className="rounded-full bg-green-100 ps-3 pe-3 py-1 text-xs font-bold text-green-700">
+                          Clear
+                        </span>
+                      )}
+                      {rx._ultranos.interactionCheckResult === 'UNAVAILABLE' && (
+                        <span className="rounded-full bg-neutral-100 ps-3 pe-3 py-1 text-xs font-bold text-neutral-500">
+                          Unchecked
+                        </span>
+                      )}
                       <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
                         Pending Fulfillment
                       </span>
@@ -399,6 +565,20 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                   </li>
                 ))}
               </ul>
+
+              {/* QR Code Generation — available when prescriptions exist and key is loaded */}
+              {signingKey && signingPublicKey && (
+                <div className="mt-6 border-t border-neutral-200 pt-6">
+                  <h4 className="mb-3 text-sm font-bold text-neutral-700">
+                    Digital Prescription
+                  </h4>
+                  <PrescriptionQR
+                    prescriptions={pendingPrescriptions}
+                    privateKey={signingKey}
+                    publicKey={signingPublicKey}
+                  />
+                </div>
+              )}
             </div>
           )}
         </section>

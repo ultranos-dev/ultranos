@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
@@ -22,7 +22,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amox')
-    const listbox = screen.getByRole('listbox', { name: /medication search results/i })
+    const listbox = await screen.findByRole('listbox', { name: /medication search results/i })
     const options = within(listbox).getAllByRole('option')
     expect(options.length).toBeGreaterThan(0)
   })
@@ -31,7 +31,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amoxicillin')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     const firstOption = within(listbox).getAllByRole('option')[0]
     expect(firstOption.textContent).toContain('Amoxicillin')
     expect(firstOption.textContent).toContain('500 mg')
@@ -42,7 +42,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amoxicillin')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     const firstOption = within(listbox).getAllByRole('option')[0]
     await user.click(firstOption)
 
@@ -56,7 +56,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Paracetamol')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
 
     const frequencySelect = screen.getByLabelText(/frequency/i)
@@ -73,7 +73,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amoxicillin')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
 
     await user.click(screen.getByRole('button', { name: /add prescription/i }))
@@ -91,7 +91,7 @@ describe('PrescriptionEntry', () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amoxicillin')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
     await user.click(screen.getByRole('button', { name: /add prescription/i }))
 
@@ -106,19 +106,23 @@ describe('PrescriptionEntry', () => {
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Amox')
 
+    await screen.findByRole('listbox')
+
     // Arrow down to first result, then Enter
     await user.keyboard('{ArrowDown}')
     await user.keyboard('{Enter}')
 
     // Medication should be selected — dosage form appears
-    expect(screen.getByLabelText(/dosage quantity/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByLabelText(/dosage quantity/i)).toBeInTheDocument()
+    })
   })
 
   it('clears medication selection with clear button', async () => {
     const { user } = setup()
     const input = screen.getByRole('combobox', { name: /search medications/i })
     await user.type(input, 'Metformin')
-    const listbox = screen.getByRole('listbox')
+    const listbox = await screen.findByRole('listbox')
     await user.click(within(listbox).getAllByRole('option')[0])
 
     // Clear button should be visible

@@ -10,9 +10,15 @@ interface MappingContext {
   practitionerRef: string
 }
 
+export interface InteractionContext {
+  interactionCheckResult: 'CLEAR' | 'WARNING' | 'BLOCKED' | 'UNAVAILABLE'
+  interactionOverrideReason?: string
+}
+
 export function mapFormToMedicationRequest(
   form: PrescriptionFormData,
   context: MappingContext,
+  interactionCtx?: InteractionContext,
 ): FhirMedicationRequestZod {
   if (!context.encounterId?.trim()) {
     throw new Error('encounterId is required')
@@ -109,7 +115,10 @@ export function mapFormToMedicationRequest(
       : undefined,
     _ultranos: {
       prescriptionStatus: PrescriptionStatus.ACTIVE,
-      interactionCheckResult: 'UNAVAILABLE',
+      interactionCheckResult: interactionCtx?.interactionCheckResult ?? 'UNAVAILABLE',
+      ...(interactionCtx?.interactionOverrideReason
+        ? { interactionOverrideReason: interactionCtx.interactionOverrideReason }
+        : {}),
       isOfflineCreated: true,
       hlcTimestamp: serializeHlc(ts),
       createdAt: nowIso,

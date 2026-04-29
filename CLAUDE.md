@@ -85,7 +85,8 @@ Every clinical workflow must complete without a network connection. When writing
 - **Hub DB:** AES-256-GCM field-level encryption on PHI columns (diagnosis, prescription content, notes). See `packages/crypto/src/field-encrypt.ts`
 - **Android local store:** SQLCipher. Key from Android Keystore. Never store the key in SharedPreferences or plaintext.
 - **Desktop PWA:** Web Crypto API AES-GCM wrapping IndexedDB. Encryption key lives in memory only — cleared on tab/browser close. Never use `localStorage` or `sessionStorage` for PHI.
-- **QR codes:** Contain `{ patient_id, issued_at, expiry, ECDSA-P256 signature }` — never raw PHI.
+- **QR codes — Identity (Health Passport):** Contain `{ patient_id, issued_at, expiry, ECDSA-P256 signature }` — never raw PHI.
+- **QR codes — Prescription:** Contain `{ payload, sig, pub, issued_at, expiry }` where payload is a minified prescription bundle (medication codes, dosage, references — no demographics or clinical notes). Signed with Ed25519. Never raw PHI.
 
 ### FHIR R4 Alignment
 All clinical data types in `packages/shared-types/` map to FHIR R4 resources. When creating a new clinical entity:

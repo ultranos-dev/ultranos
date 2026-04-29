@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-28T22:03:14.860887'
-last_updated: '2026-04-29T00:00:00.000000'
+last_updated: '2026-04-29T03:25:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -35,9 +35,9 @@ development_status:
   epic-2-retrospective: optional
   epic-3: backlog
   3-1-medication-search-prescription-entry: done
-  3-2-local-drug-drug-interaction-checker: backlog
-  3-3-cryptographically-signed-qr-generation: backlog
-  3-4-global-prescription-invalidation-check: backlog
+  3-2-local-drug-drug-interaction-checker: done
+  3-3-cryptographically-signed-qr-generation: done
+  3-4-global-prescription-invalidation-check: done
   epic-3-retrospective: optional
   epic-4: backlog
   4-1-pharmacy-scan-load: backlog

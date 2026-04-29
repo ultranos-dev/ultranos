@@ -103,9 +103,37 @@ describe('mapFormToMedicationRequest', () => {
     expect(result._ultranos.prescriptionStatus).toBe(PrescriptionStatus.ACTIVE)
   })
 
-  it('sets interactionCheckResult to UNAVAILABLE (drug check not yet integrated)', () => {
+  it('defaults interactionCheckResult to UNAVAILABLE when no interaction context', () => {
     const result = mapFormToMedicationRequest(baseForm, context)
     expect(result._ultranos.interactionCheckResult).toBe('UNAVAILABLE')
+  })
+
+  it('sets interactionCheckResult from interaction context when provided', () => {
+    const result = mapFormToMedicationRequest(baseForm, context, {
+      interactionCheckResult: 'CLEAR',
+    })
+    expect(result._ultranos.interactionCheckResult).toBe('CLEAR')
+  })
+
+  it('sets interactionCheckResult to BLOCKED and stores override reason', () => {
+    const result = mapFormToMedicationRequest(baseForm, context, {
+      interactionCheckResult: 'BLOCKED',
+      interactionOverrideReason: 'Clinician override: benefit outweighs risk',
+    })
+    expect(result._ultranos.interactionCheckResult).toBe('BLOCKED')
+    expect(result._ultranos.interactionOverrideReason).toBe(
+      'Clinician override: benefit outweighs risk',
+    )
+    // Must still validate against Zod (BLOCKED requires override reason)
+    const parsed = FhirMedicationRequestSchema.safeParse(result)
+    expect(parsed.success).toBe(true)
+  })
+
+  it('sets interactionCheckResult to WARNING', () => {
+    const result = mapFormToMedicationRequest(baseForm, context, {
+      interactionCheckResult: 'WARNING',
+    })
+    expect(result._ultranos.interactionCheckResult).toBe('WARNING')
   })
 
   it('sets isOfflineCreated to true', () => {

@@ -224,9 +224,9 @@ describe('Encounter Dashboard', () => {
     fireEvent.click(screen.getByText('Start Encounter'))
 
     await waitFor(() => {
-      const alert = screen.getByText(/drug interaction check unavailable/i)
-      expect(alert).toBeDefined()
-      expect(alert.closest('[role="alert"]')).toBeDefined()
+      const status = screen.getByText(/drug interaction checking active/i)
+      expect(status).toBeDefined()
+      expect(status.closest('[role="status"]')).toBeDefined()
     })
   })
 })
