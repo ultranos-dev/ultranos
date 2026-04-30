@@ -12,7 +12,7 @@ vi.mock('@ultranos/sync-engine', async () => {
 
 import { verifySignature } from '@ultranos/sync-engine'
 import { verifyPrescriptionQr } from '@/lib/prescription-verify'
-import type { SignedPrescriptionBundle } from '@/lib/prescription-signing'
+import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
 
 const mockVerify = vi.mocked(verifySignature)
 

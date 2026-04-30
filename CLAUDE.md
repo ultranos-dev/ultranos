@@ -5,9 +5,9 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 ## Tech Stack
 
 - **OPD Lite Desktop (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
-- **OPD Lite Android:** React Native 0.76+, TypeScript, SQLCipher, Android Keystore
+- **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
 - **Health Passport:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
-- **Pharmacy POS:** Next.js 15 PWA, TypeScript, Tailwind CSS
+- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite-pwa/`)
 - **Lab Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
@@ -21,9 +21,9 @@ ultranos/
 ├── apps/
 │   ├── hub-api/           # Central Hub backend (Node.js)
 │   ├── opd-desktop/       # OPD Lite Desktop PWA (Next.js)
-│   ├── opd-android/       # OPD Lite Android (React Native)
+│   ├── opd-lite-mobile/   # OPD Lite Mobile (Expo/React Native) [SCAFFOLDED — future dev]
 │   ├── health-passport/   # Patient app (React Native)
-│   ├── pharmacy-pos/      # Pharmacy PWA (Next.js)
+│   ├── pharmacy-lite-pwa/ # Pharmacy PWA (Next.js — standalone spoke)
 │   └── lab-portal/        # Lab PWA (Next.js)
 ├── packages/
 │   ├── shared-types/      # FHIR R4 type definitions, enums, interfaces

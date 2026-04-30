@@ -10,13 +10,16 @@ function getHubApiUrl(): string {
 
 /**
  * Returns the current auth token for Hub API calls.
- * TODO: Wire to real auth token storage when auth story ships.
+ * Token is provided by the caller (from auth session store).
  */
+let _authToken: string | null = null
+
+export function setDispenseSyncAuthToken(token: string | null): void {
+  _authToken = token
+}
+
 function getAuthToken(): string | null {
-  if (typeof window !== 'undefined') {
-    return (window as Record<string, unknown>).__hubAuthToken as string | null ?? null
-  }
-  return null
+  return _authToken
 }
 
 export interface DispenseSyncResult {
@@ -62,10 +65,13 @@ export async function syncDispenseToHub(
     const url = new URL(getHubApiUrl())
     url.pathname = url.pathname.replace(/\/$/, '') + '/medication.recordDispense'
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     const token = getAuthToken()
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+    if (!token) {
+      return { synced: false, queued: false, error: 'Authentication required for Hub sync' }
+    }
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     }
 
     const res = await fetch(url.toString(), {

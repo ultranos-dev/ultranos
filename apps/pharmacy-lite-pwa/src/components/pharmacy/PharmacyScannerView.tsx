@@ -101,6 +101,8 @@ export function PharmacyScannerView({
       // Extract pub key from QR
       const bundle = JSON.parse(rawQr) as { pub: string }
       await fetchAndCachePractitionerKey(bundle.pub, hubBaseUrl, authToken)
+      // Reset processingRef so the scanner can be used again after re-verification
+      processingRef.current = false
       // Re-verify now that key is cached
       handleVerify(rawQr)
     } catch {

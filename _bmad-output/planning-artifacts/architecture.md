@@ -33,7 +33,7 @@ Ultranos operates as a decentralized healthcare ecosystem. The core functional r
 **Scale & Complexity:**
 - **Primary domain:** Distributed Full-Stack (Offline-First Mobile/PWA + Cloud Hub)
 - **Complexity level:** Enterprise / High (SaMD Regulatory classification)
-- **Estimated architectural components:** 6 core nodes (Hub API, Sync Engine, OPD Android, OPD PWA, Health Passport, Pharmacy PWA)
+- **Estimated architectural components:** 6 core nodes (Hub API, Sync Engine, OPD Lite Mobile, OPD Lite PWA, Health Passport, Pharmacy Lite PWA)
 
 ### Technical Constraints & Dependencies
 
@@ -163,11 +163,16 @@ ultranos/
 │   │   │   ├── usePatientStore.ts
 │   │   │   └── useSyncStore.ts  # Handles "Global Sync Pulse" UI state
 │   │   └── src/lib/db.ts        # Dexie.js (Offline Persistence)
-│   ├── opd-lite-mobile/         # Expo Android App (Clinicians)
+│   ├── opd-lite-mobile/         # Expo Android App (Clinicians) [SCAFFOLDED — future development]
 │   │   ├── src/screens/         # Native layouts
 │   │   ├── src/store/           # <--- Zustand Store (Mobile Native UI)
 │   │   └── src/lib/db.ts        # Expo SQLite/SQLCipher (Encrypted Persistence)
-│   └── pharmacy-pos/            # Next.js App (Pharmacists)
+│   ├── pharmacy-lite-pwa/       # Next.js PWA (Pharmacists — standalone spoke)
+│   │   ├── src/app/             # App Router pages
+│   │   ├── src/components/pharmacy/  # Scanner, Fulfillment, Label, SyncPulse
+│   │   ├── src/stores/          # <--- Zustand Store (Pharmacy Fulfillment State)
+│   │   └── src/lib/             # Prescription verify, dispense sync, status client
+│   └── health-passport/         # Expo Mobile App (Patients)
 ├── packages/
 │   ├── sync-engine/             # Shared HLC & Append-only ledger logic
 │   ├── ui-kit/                  # Wise-inspired design tokens & React components
@@ -198,7 +203,7 @@ ultranos/
 ### Requirements to Structure Mapping
 
 - **Offline Consultation:** `apps/opd-lite-*` + `packages/sync-engine`.
-- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-pos` (Read/Verify).
+- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-lite-pwa` (Read/Verify).
 - **Clinical Safety Gates:** `apps/hub-api/src/services/safety`.
 - **Wise Visual Design:** `packages/ui-kit`.
 - **Regulatory Audit:** `packages/audit-logger`.

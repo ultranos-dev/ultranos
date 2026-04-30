@@ -105,7 +105,7 @@ Implement the prescribing lifecycle and clinical safety gates.
 **FRs covered:** FR6, FR7, FR8, FR10
 
 ### Epic 4: Pharmacy Operations
-Enable the pharmacist's fulfillment workflow.
+Enable the pharmacist's fulfillment workflow via the standalone `pharmacy-lite-pwa` spoke app.
 **FRs covered:** FR9
 
 ### Epic 5: Patient Health Passport & Consent
@@ -179,6 +179,19 @@ As a field GP, I want to verify patient identity on my mobile device so that I c
 - **When** a patient identity is verified offline
 - **Then** the record is stored in the local SQLite database encrypted with SQLCipher (NFR3)
 - **And** the clinician can view demographics and basic medical history without a network connection
+
+### Story 1.6: OPD-Lite Mobile Scaffold
+As a system architect, I want to scaffold the `apps/opd-lite-mobile/` Expo application shell, so that the mobile clinician spoke is acknowledged in the codebase and ready for future development.
+
+**Acceptance Criteria:**
+- **Given** the monorepo structure
+- **When** `apps/opd-lite-mobile/` is initialized
+- **Then** a valid Expo project exists with `@ultranos/opd-lite-mobile` package name
+- **And** it depends on shared packages (`shared-types`, `sync-engine`, `ui-kit`)
+- **And** a placeholder screen renders with "Coming Soon" branding
+- **And** a README documents the app's purpose, target user (field GPs), and deferred status
+
+> **Architecture Decision (2026-04-30):** `opd-lite-mobile` is scaffolded but not actively developed. It acknowledges the architecture's mobile clinician spoke. Active development deferred until field GP support is prioritized. See Story 1.4 for future activation requirements.
 
 ### Story 1.5: RTL Global Context & Mirroring
 As a multilingual clinician, I want the UI to mirror correctly for RTL languages so that I can work comfortably in Arabic or Dari.
@@ -311,6 +324,20 @@ As a pharmacist, I want my dispensing actions to be synchronized immediately so 
 - **Then** a high-priority sync pulse is sent to the Hub API
 - **And** the central `MedicationRequest` status is updated to `completed`
 - **And** the pharmacist receives a "Sync Successful" visual confirmation
+
+### Story 4.4: Pharmacy-Lite PWA Extraction
+As a system architect, I want to extract all pharmacy fulfillment functionality from `opd-lite-pwa` into a standalone `pharmacy-lite-pwa` application, so that pharmacists have an independently deployable spoke app that integrates with the ecosystem exclusively via `hub-api`.
+
+**Acceptance Criteria:**
+- **Given** the existing pharmacy components in `opd-lite-pwa`
+- **When** the extraction is complete
+- **Then** `apps/pharmacy-lite-pwa/` exists as a standalone Next.js 15 PWA (`@ultranos/pharmacy-lite-pwa`)
+- **And** all pharmacy fulfillment components, stores, services, and tests are located in the new app
+- **And** clinician-side prescription components remain in `opd-lite-pwa` unchanged
+- **And** the pharmacy app communicates with the Hub API via tRPC (no spoke-to-spoke dependencies)
+- **And** all existing pharmacy tests pass in the new location with zero regressions in `opd-lite-pwa`
+
+> **Architecture Decision (2026-04-30):** Pharmacy operations MUST be a standalone spoke app (`pharmacy-lite-pwa`), not embedded in the clinician PWA. Each spoke integrates via `hub-api` only. Online-only for now; offline pharmacy operations are a future enhancement.
 
 ## Epic 5: Patient Health Passport & Consent
 Build the patient-facing "Health Passport" mobile experience.

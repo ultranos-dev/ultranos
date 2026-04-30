@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
-import type { VerifiedPrescription } from '@/lib/prescription-verify'
 
 import { createMedicationDispense } from '@/lib/medication-dispense'
 import { db } from '@/lib/db'

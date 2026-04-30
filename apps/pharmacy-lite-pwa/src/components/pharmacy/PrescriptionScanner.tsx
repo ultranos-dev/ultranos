@@ -6,7 +6,7 @@ import {
   completePrescription,
   type PrescriptionStatusResult,
 } from '@/lib/prescription-status-client'
-import type { SignedPrescriptionBundle } from '@/lib/prescription-signing'
+import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
 
 export type ScanState =
   | { phase: 'idle' }
@@ -60,6 +60,12 @@ export function PrescriptionScanner({
   const scannerRef = useRef<HTMLDivElement>(null)
   const html5QrRef = useRef<unknown>(null)
 
+  // Ref to always access the latest handleQrData (avoids stale closure)
+  const handleQrDataRef = useRef(handleQrData)
+  useEffect(() => {
+    handleQrDataRef.current = handleQrData
+  }, [handleQrData])
+
   // Start camera scanner
   const startCameraScanner = useCallback(async () => {
     setScanState({ phase: 'scanning' })
@@ -75,7 +81,7 @@ export function PrescriptionScanner({
         (decodedText) => {
           scanner.stop().catch(() => {})
           html5QrRef.current = null
-          handleQrData(decodedText)
+          handleQrDataRef.current(decodedText)
         },
         () => {
           // Scan failure frame — expected, keep scanning
@@ -127,19 +133,31 @@ export function PrescriptionScanner({
       return
     }
 
-    // Check status of the first prescription (batch support deferred)
+    // Check status of ALL prescriptions in the bundle
     const id = prescriptionIds[0]!
     setScanState({ phase: 'checking', prescriptionId: id })
 
-    const additionalCount = prescriptionIds.length > 1 ? prescriptionIds.length - 1 : undefined
-
     try {
-      const result = await checkPrescriptionStatus(
-        id,
-        authToken,
-        AbortSignal.timeout(HUB_REQUEST_TIMEOUT_MS),
-      )
-      setScanState({ phase: 'result', result, additionalCount })
+      // Check each prescription's status — block if any is FULFILLED or VOIDED
+      const results: PrescriptionStatusResult[] = []
+      for (const rxId of prescriptionIds) {
+        const result = await checkPrescriptionStatus(
+          rxId,
+          authToken,
+          AbortSignal.timeout(HUB_REQUEST_TIMEOUT_MS),
+        )
+        results.push(result)
+      }
+
+      // If any prescription is not AVAILABLE, show the first blocking result
+      const blockedResult = results.find((r) => r.status !== 'AVAILABLE')
+      if (blockedResult) {
+        setScanState({ phase: 'result', result: blockedResult })
+      } else {
+        // All available — show the first result (UI shows the bundle context)
+        const additionalCount = prescriptionIds.length > 1 ? prescriptionIds.length - 1 : undefined
+        setScanState({ phase: 'result', result: results[0]!, additionalCount })
+      }
     } catch (err) {
       // AC 4: If offline, warn the pharmacist
       if (isOfflineError(err)) {

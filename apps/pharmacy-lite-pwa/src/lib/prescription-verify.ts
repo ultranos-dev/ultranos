@@ -1,5 +1,5 @@
 import { verifySignature } from '@ultranos/sync-engine'
-import type { SignedPrescriptionBundle } from './prescription-signing'
+import type { SignedPrescriptionBundle } from './prescription-types'
 import { db } from './db'
 
 export interface VerifiedPrescription {
@@ -69,12 +69,18 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
     return { status: 'expired', expiry: bundle.expiry }
   }
 
-  // Decode and verify Ed25519 signature
+  // Look up the clinician's public key in the trusted local cache FIRST
+  const practitioner = await lookupPractitionerByPublicKey(bundle.pub)
+  if (!practitioner) {
+    return { status: 'unknown_clinician', fallbackAvailable: typeof navigator !== 'undefined' && navigator.onLine }
+  }
+
+  // Decode and verify Ed25519 signature against the TRUSTED cached key
   let signature: Uint8Array
   let publicKey: Uint8Array
   try {
     signature = base64ToUint8(bundle.sig)
-    publicKey = base64ToUint8(bundle.pub)
+    publicKey = base64ToUint8(practitioner.publicKeyRaw)
   } catch {
     return { status: 'parse_error', message: 'Invalid base64 in signature or public key' }
   }
@@ -88,12 +94,6 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
 
   if (!isValid) {
     return { status: 'invalid_signature' }
-  }
-
-  // Look up the clinician's public key in local cache
-  const practitioner = await lookupPractitionerByPublicKey(bundle.pub)
-  if (!practitioner) {
-    return { status: 'unknown_clinician', fallbackAvailable: typeof navigator !== 'undefined' && navigator.onLine }
   }
 
   // Parse the verified payload
@@ -122,13 +122,22 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
   }
 }
 
+/** Maximum cache age for practitioner keys: 24 hours */
+const KEY_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
 async function lookupPractitionerByPublicKey(
   pubKeyBase64: string,
-): Promise<{ id: string; name: string } | null> {
+): Promise<{ id: string; name: string; publicKeyRaw: string } | null> {
   try {
-    const entry = await db.practitionerKeys.get({ publicKey: pubKeyBase64 })
+    const entry = await db.practitionerKeys.get(pubKeyBase64)
     if (entry) {
-      return { id: entry.practitionerId, name: entry.practitionerName }
+      // Check TTL — reject stale cached keys (revoked keys must not persist)
+      const cachedAge = Date.now() - new Date(entry.cachedAt).getTime()
+      if (cachedAge > KEY_CACHE_TTL_MS) {
+        await db.practitionerKeys.delete(pubKeyBase64)
+        return null
+      }
+      return { id: entry.practitionerId, name: entry.practitionerName, publicKeyRaw: entry.publicKey }
     }
     return null
   } catch {

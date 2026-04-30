@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-04-30T14:00:00.000000'
+last_updated: '2026-04-30T21:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -25,6 +25,7 @@ development_status:
   1-3-pwa-identity-verification-dexie-persistence: ready-for-dev
   1-4-mobile-identity-verification-sqlcipher-persistence: backlog
   1-5-rtl-global-context-mirroring: backlog
+  1-6-opd-lite-mobile-scaffold: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-encounter-lifecycle-zustand-store: backlog
@@ -43,6 +44,7 @@ development_status:
   4-1-pharmacy-scan-load: done
   4-2-medication-fulfillment-labeling: done
   4-3-real-time-dispensing-sync: done
+  4-4-pharmacy-lite-pwa-extraction: done
   epic-4-retrospective: optional
   epic-5: in-progress
   5-1-patient-profile-qr-identity: done

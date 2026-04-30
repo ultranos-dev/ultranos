@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Ultranos OPD Lite Mobile",
+    "slug": "opd-lite-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "opd-lite-mobile",
+    "platforms": ["android", "ios"]
+  }
+}

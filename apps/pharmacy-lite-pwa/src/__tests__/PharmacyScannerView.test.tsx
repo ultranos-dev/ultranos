@@ -29,7 +29,7 @@ vi.mock('@/stores/fulfillment-store', () => ({
 
 import { verifyPrescriptionQr, fetchAndCachePractitionerKey } from '@/lib/prescription-verify'
 import { PharmacyScannerView } from '@/components/pharmacy/PharmacyScannerView'
-import type { SignedPrescriptionBundle } from '@/lib/prescription-signing'
+import type { SignedPrescriptionBundle } from '@ultranos/shared-types'
 
 const mockVerifyQr = vi.mocked(verifyPrescriptionQr)
 const mockFetchKey = vi.mocked(fetchAndCachePractitionerKey)

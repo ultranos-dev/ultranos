@@ -1,6 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
-import type { LocalMedicationDispense } from './medication-dispense'
 import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
@@ -43,18 +42,6 @@ export interface InteractionAuditEntry {
   createdAt: string
 }
 
-export interface DispenseAuditEntry {
-  id: string
-  dispenseId: string
-  patientRef: string
-  medicationCode: string
-  medicationDisplay: string
-  pharmacistRef: string
-  action: 'created' | 'cancelled'
-  hlcTimestamp: string
-  createdAt: string
-}
-
 export interface SyncQueueEntry {
   id: string
   resourceType: string
@@ -84,8 +71,6 @@ class OpdLiteDatabase extends Dexie {
   medications!: EntityTable<LocalMedicationRequest, 'id'>
   interactionAuditLog!: EntityTable<InteractionAuditEntry, 'id'>
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
-  dispenses!: EntityTable<LocalMedicationDispense, 'id'>
-  dispenseAuditLog!: EntityTable<DispenseAuditEntry, 'id'>
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
 
   constructor() {
@@ -255,6 +240,31 @@ class OpdLiteDatabase extends Dexie {
       syncQueue:
         'id, resourceType, resourceId, status, createdAt',
     })
+
+    // v12: Remove pharmacy-specific tables (dispenses, dispenseAuditLog)
+    // Pharmacy fulfillment now lives in pharmacy-lite-pwa (Story 4.4)
+    this.version(12).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      dispenses: null,
+      dispenseAuditLog: null,
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+    })
   }
 }
 
@@ -325,16 +335,6 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
     ],
   },
   {
-    tableName: 'dispenses',
-    indexedFields: [
-      'id',
-      'status',
-      'subject.reference',
-      '_ultranos.hlcTimestamp',
-      'meta.lastUpdated',
-    ],
-  },
-  {
     tableName: 'interactionAuditLog',
     indexedFields: [
       'id',
@@ -342,17 +342,6 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
       'patientId',
       'medicationRequestId',
       'checkResult',
-      'createdAt',
-    ],
-  },
-  {
-    tableName: 'dispenseAuditLog',
-    indexedFields: [
-      'id',
-      'dispenseId',
-      'patientRef',
-      'pharmacistRef',
-      'action',
       'createdAt',
     ],
   },

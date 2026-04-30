@@ -1,17 +1,11 @@
-import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
+import type { FhirMedicationRequestZod, SignedPrescriptionBundle } from '@ultranos/shared-types'
 import { signPayload } from '@ultranos/sync-engine'
 import { compressPrescription } from './compress-prescription'
 
+export type { SignedPrescriptionBundle } from '@ultranos/shared-types'
+
 /** Default prescription expiry: 30 days in milliseconds */
 const DEFAULT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000
-
-export interface SignedPrescriptionBundle {
-  payload: string    // minified JSON of prescription data
-  sig: string        // base64-encoded Ed25519 signature
-  pub: string        // base64-encoded public key for verification
-  issued_at: string  // ISO 8601 timestamp
-  expiry: string     // ISO 8601 timestamp
-}
 
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = ''

@@ -160,11 +160,16 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         set((state) => {
           state.phase = 'completed'
         })
-      } catch {
+      } catch (err) {
         // Partial failure — some items may have been persisted locally.
-        // Phase transitions to completed so the UI isn't stuck.
+        // Transition to error-aware completed state so the pharmacist is warned.
         set((state) => {
           state.phase = 'completed'
+          state.syncStatus.lastSyncResult = {
+            synced: false,
+            queued: false,
+            error: err instanceof Error ? err.message : 'Dispensing failed — some items may not have been recorded. Check each medication before handing over.',
+          }
         })
       } finally {
         set((state) => {

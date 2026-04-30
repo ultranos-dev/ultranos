@@ -212,3 +212,17 @@
 - **W1: deletePassphrase() leaves DB file encrypted with lost key** — Exported utility in `mobile-key-service.ts` deletes the SecureStore passphrase without re-keying the SQLCipher database. Any caller using this for key rotation without first re-keying the DB will make all patient data permanently irrecoverable. Not called in current change; intended for future key rotation story.
 - **W2: No `requireAuthentication: true` on SecureStore for Android** — `WHEN_PASSCODE_SET_THIS_DEVICE_ONLY` is iOS-only. Android needs `requireAuthentication: true` on expo-secure-store to enforce hardware-backed biometric binding at the OS keystore level. Deferred because adding it changes SecureStore access patterns (every read triggers biometric prompt). Revisit when auth architecture is finalized.
 - **W3: isUnlocked hook state can diverge from actual DB singleton state** — `useDatabaseUnlock` tracks `isUnlocked` in React state, but the DB singleton is module-level. If another code path calls `closeDatabase()` directly (e.g., logout handler), the hook state is stale. Requires context provider or event-based sync pattern. Architectural concern, not a bug in current scope.
+
+## Deferred from: code review of 1-6-opd-lite-mobile-scaffold (2026-04-30)
+
+- **W1: RTL support absent in scaffold UI** — Scaffold placeholder uses hardcoded styles with no RTL consideration. Acceptable for placeholder; address when active development begins.
+- **W2: No SQLCipher configured** — CLAUDE.md requires SQLCipher for Android. Explicitly out of scope per story — scaffold only.
+- **W3: Hardcoded English strings** — No i18n infrastructure. Accept at scaffold stage; implement with active development.
+- **W4: No expo-status-bar** — Uses RN StatusBar directly instead of expo-status-bar. Replace when building real screens.
+- **W5: No app.json icon/splash/bundleId** — Minimal Expo config. Add assets when active development begins.
+
+## Deferred from: code review of 4-4-pharmacy-lite-pwa-extraction (2026-04-30)
+
+- **W1: `syncQueue` deduplication — no idempotency guard on retry** — `enqueueForRetry()` generates new UUID per call. Same dispense can be queued multiple times. Needs Hub-side dedup or local dedup guard. Pre-existing pattern from opd-lite-pwa (consistent with W4 from 4-3).
+- **W2: `fetchAndCachePractitionerKey` cache key mismatch (base64 normalization)** — Cache `put` uses `data.publicKey` (Hub response) as primary key, but lookup queries by `bundle.pub` (QR). Different base64 encodings (standard vs URL-safe, padding differences) could cause infinite fetch-and-cache loop. Requires Hub API response format investigation.
+- **W3: Non-standard Tailwind classes in FulfillmentChecklist** — `rounded-pill`, `bg-pill-green`, `text-pill-text` in FulfillmentChecklist.tsx:149. Not standard Tailwind; likely defined in shared UI kit theme. Pre-existing from opd-lite-pwa.

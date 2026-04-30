@@ -27,7 +27,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in LTR mode 1`]
         data-testid="label-dosage"
       >
         1
-         
+
         capsule
       </p>
       <div
@@ -132,7 +132,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in LTR mode 1`]
         class="mt-1 text-xs text-neutral-400"
         data-testid="label-batch"
       >
-        Lot: 
+        Lot:
         LOT-2026-04A
       </p>
     </div>
@@ -167,7 +167,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in RTL mode 1`]
         data-testid="label-dosage"
       >
         1
-         
+
         capsule
       </p>
       <div
@@ -272,7 +272,7 @@ exports[`MedicationLabel > RTL snapshot tests > matches snapshot in RTL mode 1`]
         class="mt-1 text-xs text-neutral-400"
         data-testid="label-batch"
       >
-        Lot: 
+        Lot:
         LOT-2026-04A
       </p>
     </div>

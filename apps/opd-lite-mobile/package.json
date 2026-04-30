@@ -1,0 +1,27 @@
+{
+  "name": "@ultranos/opd-lite-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'No tests — scaffold only'",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@ultranos/shared-types": "workspace:^",
+    "@ultranos/sync-engine": "workspace:^",
+    "@ultranos/ui-kit": "workspace:^",
+    "expo": "~52.0.0",
+    "react": "^19.0.0",
+    "react-native": "~0.76.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.4.0"
+  }
+}

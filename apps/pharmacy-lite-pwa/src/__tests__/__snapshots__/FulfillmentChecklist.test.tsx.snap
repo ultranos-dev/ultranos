@@ -21,7 +21,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
           <p
             class="text-sm text-neutral-500"
           >
-            Prescribed by 
+            Prescribed by
             Dr. Ahmad
           </p>
         </div>
@@ -73,14 +73,14 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 class="text-sm text-neutral-600"
               >
                 1
-                 
+
                 capsule
                 <span>
-                   · 
+                   ·
                   3× daily
                 </span>
                 <span>
-                   · 
+                   ·
                   7
                    days
                 </span>
@@ -109,7 +109,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                     class="mb-1 block text-xs font-medium text-neutral-600"
                     for="batch-rx-001"
                   >
-                    Batch / Lot No. 
+                    Batch / Lot No.
                     <span
                       class="text-neutral-400"
                     >
@@ -154,14 +154,14 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 class="text-sm text-neutral-600"
               >
                 1
-                 
+
                 tablet
                 <span>
-                   · 
+                   ·
                   2× daily
                 </span>
                 <span>
-                   · 
+                   ·
                   5
                    days
                 </span>
@@ -190,7 +190,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                     class="mb-1 block text-xs font-medium text-neutral-600"
                     for="batch-rx-002"
                   >
-                    Batch / Lot No. 
+                    Batch / Lot No.
                     <span
                       class="text-neutral-400"
                     >
@@ -244,7 +244,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
           <p
             class="text-sm text-neutral-500"
           >
-            Prescribed by 
+            Prescribed by
             Dr. Ahmad
           </p>
         </div>
@@ -296,14 +296,14 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 class="text-sm text-neutral-600"
               >
                 1
-                 
+
                 capsule
                 <span>
-                   · 
+                   ·
                   3× daily
                 </span>
                 <span>
-                   · 
+                   ·
                   7
                    days
                 </span>
@@ -332,7 +332,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                     class="mb-1 block text-xs font-medium text-neutral-600"
                     for="batch-rx-001"
                   >
-                    Batch / Lot No. 
+                    Batch / Lot No.
                     <span
                       class="text-neutral-400"
                     >
@@ -377,14 +377,14 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 class="text-sm text-neutral-600"
               >
                 1
-                 
+
                 tablet
                 <span>
-                   · 
+                   ·
                   2× daily
                 </span>
                 <span>
-                   · 
+                   ·
                   5
                    days
                 </span>
@@ -413,7 +413,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                     class="mb-1 block text-xs font-medium text-neutral-600"
                     for="batch-rx-002"
                   >
-                    Batch / Lot No. 
+                    Batch / Lot No.
                     <span
                       class="text-neutral-400"
                     >

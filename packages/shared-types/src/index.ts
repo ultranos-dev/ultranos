@@ -8,6 +8,9 @@ export * from './fhir/audit-event.js'
 // Shared FHIR R4 building-block schemas
 export * from './fhir/common.schema.js'
 
+// Prescription types
+export * from './prescription.js'
+
 // Clinical utilities
 export * from './utils/clinical.js'
 
