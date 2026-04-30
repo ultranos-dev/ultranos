@@ -139,6 +139,21 @@
 
 ## Deferred from: code review of 3-3-cryptographically-signed-qr-generation (2026-04-29)
 
+## Deferred from: code review of 7-1-pwa-dexie-encryption-key-in-memory (2026-04-29)
+
+- **D74: Patient names in cleartext as indexed fields** — `_ultranos.nameLocal` and `_ultranos.nameLatin` remain unencrypted in IndexedDB for Dexie query support. Hashing breaks fuzzy search. Create dedicated search-encryption story (encrypted Fuse.js or homomorphic approach).
+- **D75: Key derivation from JWT/PIN not implemented** — Current `generateSessionKey()` creates a random key. Page refresh = permanent local data loss. Accepted because sync engine will re-populate from Hub on re-auth. Implement PBKDF2 derivation from Supabase JWT or user PIN in a follow-up story.
+- **W1: `update()` read-modify-write not atomic** — Concurrent updates cause lost writes via read-decrypt-modify-encrypt-put outside a Dexie transaction. Pre-existing architectural limitation of proxy approach.
+- **W2: No guard preventing `_enc` as indexed field name** — If `_enc` is added to `indexedFields`, `setNestedValue` overwrites the ciphertext blob with cleartext. No current risk but no guard.
+- **W3: Key wipe mid-flight TOCTOU** — `wipe()` during async decrypt/encrypt operations leaves system in inconsistent state. Inherent to async Web Crypto + module singleton design.
+- **W4: `beforeunload` unreliable in mobile PWA** — Mobile browsers may not fire the event (tab crashes, OS kills). Key is GC'd on page destruction anyway, so no real security impact.
+- **W5: No key versioning or rotation mechanism** — No key-ID embedded in encrypted payloads. Key rotation makes old records permanently unreadable with generic errors. Related to JWT/PIN derivation decision.
+- **W6: Corrupted base64 throws untyped browser errors** — `decryptPayload` throws raw `DOMException` or `OperationError` on corrupted input. No domain-specific error wrapping.
+- **W7: `soapLedger.createdAt` not in indexed fields** — Encrypted into `_enc` blob. Future code assuming `createdAt` is queryable will get `undefined`.
+- **W8: Redundant encryption of indexed field values inside `_enc` blob** — Full record encrypted including indexed fields, which also exist in cleartext. Larger ciphertext, no security issue (AES-256-GCM resists known-plaintext attacks).
+
+## Deferred from: code review of 3-3-cryptographically-signed-qr-generation (2026-04-29)
+
 - **W1: Audit log failure silently swallowed** — Three catch blocks in encounter-dashboard.tsx swallow audit log errors with empty bodies. No client-side audit retry/queue exists. Consistent with D9/D23/D38. Address in Story 6-2 (immutable cryptographic audit logging).
 - **W2: Interaction check only against pending prescriptions** — `activeMedNames` built from `pendingPrescriptions` only, not patient's full active medication list. MedicationStatement data model doesn't exist yet. Consistent with 3-2 review D2. Critical clinical safety item — wire into interaction checker when MedicationStatement is implemented.
 - **W3: `asNeededBoolean` not in Zod DosageSchema** — `compress-prescription.ts:58` checks `d?.asNeededBoolean` but DosageSchema doesn't define it. Zod strips unknown keys, so PRN flag is always omitted from QR payload. Add `asNeededBoolean: z.boolean().optional()` to DosageSchema when PRN workflow is built.
@@ -166,3 +181,34 @@
 - **W3: Module-level HLC with hardcoded nodeId 'health-passport'** — `useConsentSettings.ts:369` creates `new HybridLogicalClock('health-passport')` at module scope. All devices share the same nodeId, producing ambiguous HLC timestamps in multi-device sync scenarios. Architectural concern beyond this story; consistent with D20.
 - **D2: consent.sync has no authorization check** — Any authenticated user can forge consent for any patient via `consent.sync`. No `ctx.user.sub === input.grantorId` check. Defer to Story 6-1 (RBAC). Consistent with D12.
 - **D3: No emergency/break-glass bypass in consent enforcement** — `enforceConsentMiddleware` has no provision for emergency access. `GrantorRole.EMERGENCY_OVERRIDE` exists as an enum but is never checked. Needs dedicated spec-level design for emergency access model (audit trail, time-bounded override, abuse prevention).
+
+## Deferred from: code review of 6-1-role-based-access-control-rbac (2026-04-29)
+
+- **W1: No audit logging of authorization failures** — Neither `enforceResourceAccess`, `roleRestrictedProcedure`, nor `protectedProcedure` emit audit events on denial. Spec guardrail defers to Epic 8 audit trail.
+- **W2: No audit on `medication.getStatus` (PHI read)** — Returns medication_display, dispensed_at without audit event. Pre-existing. Consistent with D5/D9/P2.
+- **W3: No audit on `medication.complete` (PHI write)** — Updates prescription status without audit event. Pre-existing. Consistent with D5/D9/P2.
+- **W4: No audit on `patient.search` (PHI read)** — Returns patient identity data without audit event. Pre-existing. Consistent with D9.
+- **W5: PostgREST injection via unsanitized `%`/`_` wildcards in patient.search** — `sanitizeFilterValue` strips `,.*()\\` but not SQL LIKE wildcards. Pre-existing in patient.ts.
+- **W6: `pharmacistRef` in `recordDispense` is client-supplied** — Should come from `ctx.user`; enables false attribution. Pre-existing in medication router.
+- **W7: `recordDispense` doesn't check drug interactions** — Prescription with `interaction_check === 'BLOCKED'` can be dispensed through `recordDispense`. CLAUDE.md rule #3. Pre-existing. Consistent with W5 from 4-3.
+- **W8: JWK cache never invalidated on key rotation** — Module-level `_cachedJwk` has no TTL. Key rotation requires process restart.
+- **W9: `recordDispense` creates dispense record before prescription validation** — Insert happens before prescription lookup; orphan records on non-existent prescriptions. Pre-existing.
+- **W10: `patientRef` in `recordDispense` not validated against prescription** — Client-supplied `patientRef` could differ from actual patient on prescription. Pre-existing.
+- **W11: Any user with MedicationRequest access can look up any prescription by ID** — No patient-scoping on `getStatus`. Pre-existing.
+
+## Deferred from: code review of 7-3-hub-api-field-level-encryption (2026-04-30)
+
+- **No audit events emitted for PHI decrypt/access** — Pre-existing gap across all routers. Consistent with D5/D9/D23/D38/P2. Address in Story 6-2 (audit infrastructure).
+- **No key rotation mechanism** — Spec explicitly says "for future key rotation." The `v1:` version prefix is in place. Implementation deferred by design.
+- **`getFieldEncryptionKeys()` has no authorization guard** — Master key is global, not scoped to clinician session. AC3 intent enforced at router level via `protectedProcedure` + RBAC. Architectural concern for future hardening.
+- **Blind index hashes unsanitized query input** — `hashNationalId(input.query)` uses the raw query while stored values may have been hashed from a different representation. Low risk with current usage patterns.
+- **No audit log on patient search** — `patient.search` returns identity data (names, birth dates, national ID hashes) but emits no audit event. Pre-existing gap across routers. Address in Story 6-2.
+- **Read-modify-write cycle could corrupt data via placeholder** — If decryption fails, `[Encrypted Content]` placeholder is returned. If the row is subsequently updated, original ciphertext is permanently destroyed. Needs update-path safeguards.
+- **Blind index brute-forceable for low-entropy national IDs** — Single HMAC-SHA256 with no iteration/stretching. National IDs have fixed-format numeric patterns. Consider HKDF or iterated construction for future hardening.
+- **Blanket catch in `decryptField` swallows tampered data without alerting** — AES-GCM auth tag verification failure silently returns placeholder. No logging or alerting. Needs audit infra (D5/D9).
+
+## Deferred from: code review of 7-2-mobile-sqlcipher-migration (2026-04-29)
+
+- **W1: deletePassphrase() leaves DB file encrypted with lost key** — Exported utility in `mobile-key-service.ts` deletes the SecureStore passphrase without re-keying the SQLCipher database. Any caller using this for key rotation without first re-keying the DB will make all patient data permanently irrecoverable. Not called in current change; intended for future key rotation story.
+- **W2: No `requireAuthentication: true` on SecureStore for Android** — `WHEN_PASSCODE_SET_THIS_DEVICE_ONLY` is iOS-only. Android needs `requireAuthentication: true` on expo-secure-store to enforce hardware-backed biometric binding at the OS keystore level. Deferred because adding it changes SecureStore access patterns (every read triggers biometric prompt). Revisit when auth architecture is finalized.
+- **W3: isUnlocked hook state can diverge from actual DB singleton state** — `useDatabaseUnlock` tracks `isUnlocked` in React state, but the DB singleton is module-level. If another code path calls `closeDatabase()` directly (e.g., logout handler), the hook state is stale. Requires context provider or event-based sync pattern. Architectural concern, not a bug in current scope.

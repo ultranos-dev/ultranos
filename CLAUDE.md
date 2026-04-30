@@ -140,6 +140,23 @@ When you encounter a decision point (ambiguous design choice, multiple valid app
 
 When compacting, always preserve: the full list of modified files, any failing test names and their error messages, which sync tier is relevant to the current work, and the current module being worked on (hub-api, opd-desktop, etc.).
 
+## Database Operations — Supabase MCP Required
+
+**All database operations MUST use the installed Supabase MCP tools.** Never write raw SQL in migration files manually, run `psql` commands, or use any other database client directly. Instead:
+
+- **Executing SQL:** Use `mcp__plugin_supabase_supabase__execute_sql` for all queries (SELECT, INSERT, UPDATE, DELETE, DDL).
+- **Migrations:** Use `mcp__plugin_supabase_supabase__apply_migration` to create and apply database migrations.
+- **Listing tables:** Use `mcp__plugin_supabase_supabase__list_tables` to inspect the current schema.
+- **Listing migrations:** Use `mcp__plugin_supabase_supabase__list_migrations` to review applied migrations.
+- **Extensions:** Use `mcp__plugin_supabase_supabase__list_extensions` to check available/enabled Postgres extensions.
+- **TypeScript types:** Use `mcp__plugin_supabase_supabase__generate_typescript_types` to regenerate types after schema changes.
+- **Edge Functions:** Use `mcp__plugin_supabase_supabase__deploy_edge_function` and related tools for serverless function management.
+- **Logs & debugging:** Use `mcp__plugin_supabase_supabase__get_logs` for production log inspection.
+- **Advisors:** Use `mcp__plugin_supabase_supabase__get_advisors` for performance and security recommendations.
+- **Branching:** Use Supabase branch tools (`create_branch`, `list_branches`, `merge_branch`, etc.) for database branching workflows.
+
+This ensures all schema changes are tracked, reversible, and consistent with the Supabase project state.
+
 ## Key Reference Files
 
 - Full PRD with all requirements: `ultranos_master_prd_v3.md`

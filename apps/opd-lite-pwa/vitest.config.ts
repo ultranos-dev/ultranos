@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@ultranos/crypto': path.resolve(__dirname, '../../packages/crypto/src/index.ts'),
       '@ultranos/sync-engine': path.resolve(__dirname, '../../packages/sync-engine/src/index.ts'),
       '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
     },

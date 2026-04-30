@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { checkConsent } from '../middleware/enforceConsent'
+import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
 
 /**
@@ -15,6 +16,7 @@ export const consentRouter = createTRPCRouter({
    * Appends to the consent ledger (append-only — no updates/deletes).
    */
   sync: protectedProcedure
+    .use(enforceResourceAccess('Consent'))
     .input(
       z.object({
         id: z.string().uuid(),
@@ -35,6 +37,23 @@ export const consentRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // D167: Verify grantor ID matches authenticated user to prevent impersonation.
+      // Only PATIENT, GUARDIAN, and ADMIN may grant consent.
+      const CONSENT_GRANTOR_ROLES = ['PATIENT', 'GUARDIAN', 'ADMIN']
+      if (!CONSENT_GRANTOR_ROLES.includes(ctx.user.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only patients, guardians, and administrators may grant consent',
+        })
+      }
+      // ADMIN may sync on behalf of patients (override).
+      if (ctx.user.role !== 'ADMIN' && input.grantorId !== ctx.user.sub) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Consent grantor must match the authenticated user',
+        })
+      }
+
       const now = new Date().toISOString()
 
       // Append-only insert — never update or delete consent records
@@ -95,6 +114,7 @@ export const consentRouter = createTRPCRouter({
    * Used by other routers/middleware to enforce data access.
    */
   check: protectedProcedure
+    .use(enforceResourceAccess('Consent'))
     .input(
       z.object({
         patientId: z.string().min(1),
@@ -107,7 +127,6 @@ export const consentRouter = createTRPCRouter({
         resourceType: input.resourceType,
       })
 
-      // TODO: Authorization check — defer to Story 6-1 (RBAC)
       const audit = new AuditLogger(ctx.supabase)
       await audit.emit({
         action: 'PHI_READ',

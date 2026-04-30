@@ -1,6 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
 import type { LocalMedicationDispense } from './medication-dispense'
+import {
+  applyEncryptionMiddleware,
+  type EncryptionTableConfig,
+} from './dexie-encryption-middleware'
 
 /**
  * Local patient record type — mirrors FhirPatient for Dexie storage.
@@ -254,4 +258,106 @@ class OpdLiteDatabase extends Dexie {
   }
 }
 
+/**
+ * PHI tables that require field-level encryption via AES-256-GCM.
+ * Indexed fields remain in cleartext for Dexie queries; all other
+ * fields are encrypted into a single `_enc` blob in IndexedDB.
+ *
+ * Non-PHI tables (syncQueue, practitionerKeys) are NOT encrypted —
+ * they contain operational data (opaque IDs, timestamps) rather than
+ * clinical content. Audit tables are encrypted because they contain
+ * medicationDisplay and patient references (clinical content).
+ */
+const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
+  {
+    tableName: 'patients',
+    indexedFields: [
+      'id',
+      '_ultranos.nameLocal',
+      '_ultranos.nationalIdHash',
+      '_ultranos.nameLatin',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'encounters',
+    indexedFields: [
+      'id',
+      'status',
+      'subject.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'soapLedger',
+    indexedFields: ['id', 'encounterId', 'hlcTimestamp'],
+  },
+  {
+    tableName: 'observations',
+    indexedFields: [
+      'id',
+      'encounter.reference',
+      'subject.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'conditions',
+    indexedFields: [
+      'id',
+      'encounter.reference',
+      'subject.reference',
+      '_ultranos.diagnosisRank',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'medications',
+    indexedFields: [
+      'id',
+      'status',
+      'subject.reference',
+      'encounter.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'dispenses',
+    indexedFields: [
+      'id',
+      'status',
+      'subject.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'interactionAuditLog',
+    indexedFields: [
+      'id',
+      'encounterId',
+      'patientId',
+      'medicationRequestId',
+      'checkResult',
+      'createdAt',
+    ],
+  },
+  {
+    tableName: 'dispenseAuditLog',
+    indexedFields: [
+      'id',
+      'dispenseId',
+      'patientRef',
+      'pharmacistRef',
+      'action',
+      'createdAt',
+    ],
+  },
+]
+
 export const db = new OpdLiteDatabase()
+
+applyEncryptionMiddleware(db, PHI_TABLE_CONFIGS)

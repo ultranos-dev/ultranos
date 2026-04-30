@@ -19,6 +19,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
+      "@ultranos/crypto": ["../../packages/crypto/src/index.ts"],
       "@ultranos/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"]
     }

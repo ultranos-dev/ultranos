@@ -1,7 +1,9 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { getSupabaseClient } from '@/lib/supabase'
+import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { UserRole } from '@ultranos/shared-types'
 
 /**
  * tRPC context — available to every procedure.
@@ -15,21 +17,29 @@ export interface TRPCContext {
 
 /**
  * Creates the tRPC context for each request.
- * JWT verification is a placeholder — will be wired to Supabase Auth in a later story.
+ * Verifies Supabase Auth JWT from Authorization header (RS256).
+ * Fail-Safe: if JWT is missing or invalid, user is null (No Access by default).
  */
 export const createTRPCContext = async (opts: {
   headers: Headers
 }): Promise<TRPCContext> => {
   const supabase = getSupabaseClient()
 
-  // Placeholder JWT verification — extract user from Authorization header
-  // Will be replaced with Supabase Auth JWT verification in a later story
   let user: TRPCContext['user'] = null
   const authHeader = opts.headers.get('authorization')
   if (authHeader?.startsWith('Bearer ')) {
-    // TODO: Verify JWT signature with Supabase Auth (story TBD)
-    // For now, just acknowledge the header exists
-    user = null
+    const token = authHeader.slice(7)
+    const jwk = getSupabaseJwk()
+    if (jwk) {
+      const payload = await verifySupabaseJwt(token, jwk)
+      if (payload?.sub) {
+        user = {
+          sub: payload.sub,
+          role: ((payload.role as string) ?? '').toUpperCase(),
+          sessionId: (payload.session_id as string) ?? '',
+        }
+      }
+    }
   }
 
   return { supabase, user, headers: opts.headers }
@@ -43,9 +53,12 @@ export const createTRPCRouter = t.router
 export const createCallerFactory = t.createCallerFactory
 export const baseProcedure = t.procedure
 
+/** Expose the tRPC instance for middleware composition in rbac.ts */
+export const tInstance = t
+
 /**
- * Protected procedure — requires a valid user in context.
- * Placeholder: will enforce real JWT verification once auth story is implemented.
+ * Protected procedure — requires a valid authenticated user in context.
+ * Fail-Safe: if no user, throws UNAUTHORIZED (No Access default).
  */
 export const protectedProcedure = t.procedure.use(async (opts) => {
   if (!opts.ctx.user) {

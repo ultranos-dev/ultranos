@@ -85,10 +85,10 @@ FR11: Epic 1 - Health Passport Profile
 FR12: Epic 5 - Patient Consent Management
 FR13: Epic 1 - Offline Data Capture
 FR14: Epic 1 - Hybrid Logical Clock Sync
-FR15: Epic 1 - Append-only Sync Ledger
+FR15: Epic 9 - Append-only Sync Ledger
 FR16: Epic 6 - Role-Based Access Control
-FR17: Epic 6 - Cryptographic Audit Logging
-FR18: Epic 1 - Multilingual/RTL UI
+FR17: Epic 8 - Cryptographic Audit Logging
+FR18: Epic 11 - Multilingual/RTL UI
 
 ## Epic List
 
@@ -114,7 +114,27 @@ Build the patient-facing "Health Passport" mobile experience.
 
 ### Epic 6: Trust, Audit & Access
 Finalize the ecosystem's administrative and compliance layer.
-**FRs covered:** FR16, FR17
+**FRs covered:** FR16
+
+### Epic 7: Security & Encryption Hardening
+Harden the ecosystem against data theft and unauthorized access.
+**FRs covered:** NFR3, AR8
+
+### Epic 8: Compliance & Immutable Auditing
+Ensure every clinical action is logged and verifiable.
+**FRs covered:** FR17
+
+### Epic 9: Sync Engine Integration & Resilience
+Transition from local-first to a globally synchronized, conflict-aware ecosystem.
+**FRs covered:** FR14, FR15
+
+### Epic 10: Clinical Safety & Terminology
+Upgrade decision support with full medication history and standardized terminology.
+**FRs covered:** FR7, FR10
+
+### Epic 11: Internationalization & UX Resilience
+Provide a world-class, accessible experience for all regional users.
+**FRs covered:** FR18, NFR7, NFR8
 
 ## Epic 1: Ecosystem Foundation & Identity
 Establish the Hub-and-Spoke connectivity, initialize the shared sync engine contracts, and enable the core "Patient Identity" workflow.
@@ -336,22 +356,139 @@ As a system administrator, I want to define user permissions so that only author
 - **Then** the tRPC middleware verifies the user's role (CLINICIAN, PHARMACIST, PATIENT)
 - **And** access is denied if the user lacks the required permission for the specific FHIR resource
 
-### Story 6.2: Immutable Cryptographic Audit Logging
-As a compliance officer, I want all medical record changes to be logged and signed so that the integrity of the ecosystem is preserved.
+## Epic 7: Security & Encryption Hardening
+Harden the ecosystem against data theft and unauthorized access.
+
+### Story 7.1: PWA Dexie Encryption (Key-in-Memory)
+As a patient, I want my local clinical data to be encrypted in the browser so that it remains private even if the device is lost or shared.
 
 **Acceptance Criteria:**
-- **Given** a clinical write action (e.g., Prescribing)
-- **When** the data is saved
-- **Then** a SHA-256 hash of the payload is generated via `packages/audit-logger`
-- **And** the log entry is hash-chained to the previous entry to prevent tamper detection
-- **And** the audit trail is persisted to the Hub central ledger
+- **Given** the PWA application
+- **When** data is written to Dexie
+- **Then** it is encrypted using AES-256-GCM via the Web Crypto API
+- **And** the encryption key resides only in RAM and is wiped on tab close or logout (AR8)
 
-### Story 6.3: Global Sync Pulse & Dashboard
-As a clinician, I want to see if my data has been safely backed up to the cloud so that I can work with confidence.
+### Story 7.2: Mobile SQLCipher Migration
+As a mobile clinician, I want my offline data to be stored in an encrypted database so that PHI is protected by hardware-backed security.
 
 **Acceptance Criteria:**
-- **Given** any Ultranos application
-- **When** there are pending actions in the local sync queue
-- **Then** the `GlobalSyncPulse` component displays a "Pending" (Yellow) status
-- **And** the pulse turns "Synced" (Green) once the background sync worker completes
-- **And** a dashboard view provides a summary of all pending edge actions
+- **Given** the Expo mobile application
+- **When** the local SQLite database is initialized
+- **Then** it uses SQLCipher with AES-256 encryption
+- **And** the key is retrieved from the device's secure keystore/biometric vault (NFR3)
+
+### Story 7.3: Hub API Field-Level Encryption
+As a data steward, I want sensitive clinical notes to be encrypted at rest in the central database so that Hub administrators cannot read patient PHI in plaintext.
+
+**Acceptance Criteria:**
+- **Given** a write operation to Supabase
+- **When** the field is marked as PHI (e.g., SOAP notes, diagnosis)
+- **Then** the Hub API encrypts the value before persistence
+- **And** only authorized clients can decrypt the value via the tRPC layer
+
+### Story 7.4: Practitioner Key Lifecycle Management
+As a security officer, I want practitioner public keys to have an expiration so that compromised or revoked keys cannot be used to forge prescriptions indefinitely.
+
+**Acceptance Criteria:**
+- **Given** a cached practitioner public key
+- **When** the cache age exceeds the TTL (e.g., 24 hours)
+- **Then** the client must re-verify the key status with the Hub API
+- **And** revoked keys are immediately purged from the local trust store
+
+## Epic 8: Compliance & Immutable Auditing
+Ensure every clinical action is logged and verifiable.
+
+### Story 8.1: Client-Side Audit Ledger
+As a compliance officer, I want clinical actions to be logged even when offline so that we have a complete record of who accessed which PHI.
+
+**Acceptance Criteria:**
+- **Given** an offline clinical action (e.g., viewing a patient chart)
+- **When** the action occurs
+- **Then** an audit event is queued in the local append-only ledger
+- **And** the event includes the user, timestamp, resource ID, and action type
+
+### Story 8.2: Immutable Hash-Chained Audit Logging
+As a regulatory auditor, I want the central audit trail to be tamper-proof so that I can verify the integrity of the medical record history.
+
+**Acceptance Criteria:**
+- **Given** a new audit log entry on the Hub
+- **When** it is persisted
+- **Then** its payload includes a SHA-256 hash of the previous log entry
+- **And** any attempt to modify a past log entry breaks the chain validation (FR17)
+
+## Epic 9: Sync Engine Integration & Resilience
+Transition from local-first to a globally synchronized, conflict-aware ecosystem.
+
+### Story 9.1: Tiered Conflict Resolution (HLC Integration)
+As a system architect, I want conflict resolution to be aware of clinical safety so that important updates are never lost during synchronization.
+
+**Acceptance Criteria:**
+- **Given** a sync conflict
+- **When** the resource is Tier 1 (Clinical), it uses Append-only resolution
+- **When** the resource is Tier 2 (Operational), it uses semantic merge or Last-Write-Wins based on HLC timestamps (FR14, FR15)
+
+### Story 9.2: Background Sync Worker & Retry Logic
+As a clinician, I want my data to sync automatically in the background so that I don't have to manually trigger a refresh.
+
+**Acceptance Criteria:**
+- **Given** pending local changes
+- **When** the device detects connectivity
+- **Then** a background worker (Service Worker or Native Task) drains the sync queue
+- **And** failing requests are retried with exponential backoff
+
+### Story 9.3: Global Sync Dashboard
+As a user, I want to see the detailed status of my background synchronization so that I know exactly which records are still pending.
+
+**Acceptance Criteria:**
+- **Given** the global sync pulse
+- **When** clicked
+- **Then** a dashboard displays a list of pending resources and their last attempted sync time
+
+## Epic 10: Clinical Safety & Terminology
+Upgrade decision support with full medication history and standardized terminology.
+
+### Story 10.1: MedicationStatement & Cross-Medication Interaction Checks
+As a clinician, I want to be warned of interactions against the patient's entire medication history so that I can ensure safety beyond the current visit.
+
+**Acceptance Criteria:**
+- **Given** a new prescription
+- **When** checked for interactions
+- **Then** it is compared against both `MedicationRequest` (pending) and `MedicationStatement` (active chronic meds) resources (FR7)
+
+### Story 10.2: Global Allergy Management & High-Visibility Banners
+As a clinician, I want patient allergies to be unavoidable in the UI so that I don't accidentally prescribe a contraindicated drug.
+
+**Acceptance Criteria:**
+- **Given** an active encounter
+- **When** the patient has documented allergies
+- **Then** a high-visibility red banner is displayed at the top of all clinical views and cannot be collapsed
+
+### Story 10.3: Terminology Service Migration (Dexie Vocabulary)
+As a system administrator, I want the formulary and ICD-10 search to be backed by a local database so that we can support thousands of records with zero latency.
+
+**Acceptance Criteria:**
+- **Given** a clinical search (medication or diagnosis)
+- **When** typed
+- **Then** results are queried from a dedicated Dexie vocabulary store
+- **And** the store can be updated incrementally from the Hub API without a full reload
+
+## Epic 11: Internationalization & UX Resilience
+Provide a world-class, accessible experience for all regional users.
+
+### Story 11.1: Global RTL & i18n Framework
+As a multilingual user, I want the entire application to respect RTL rules so that I can work natively in Arabic or Dari.
+
+**Acceptance Criteria:**
+- **Given** the application
+- **When** the locale is switched to Arabic/Dari
+- **Then** the layout mirrors (RTL) and all physical CSS properties are replaced by logical ones (e.g., padding-inline-start) (FR18)
+
+### Story 11.2: Resilience & Error Recovery
+As a user, I want the application to recover gracefully from storage errors so that I never lose data due to a browser quota issue.
+
+**Acceptance Criteria:**
+- **Given** a local storage error (e.g., IndexedDB failure)
+- **When** it occurs
+- **Then** a React Error Boundary catches the crash and offers a "Safe Mode" recovery path
+- **And** critical data is backed up to memory until storage is restored
+

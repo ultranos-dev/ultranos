@@ -13,6 +13,7 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
+    "@ultranos/crypto": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",

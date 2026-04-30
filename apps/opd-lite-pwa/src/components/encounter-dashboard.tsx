@@ -22,6 +22,7 @@ import { InteractionWarningModal } from '@/components/modals/InteractionWarningM
 import { logInteractionCheck } from '@/services/interactionAuditService'
 import { PrescriptionQR } from '@/components/clinical/PrescriptionQR'
 import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -42,10 +43,9 @@ function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
   return `${age}y`
 }
 
-// Placeholder — in production this comes from the auth session
-const PRACTITIONER_REF = 'Practitioner/current-user'
-
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
+  const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
+  const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette()
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
@@ -174,7 +174,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const handleTemperatureChange = useCallback((v: string) => { setTemperature(v); triggerVitalsAutosave() }, [setTemperature, triggerVitalsAutosave])
 
   const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
-    if (!activeEncounter) return
+    if (!activeEncounter || !practitionerRef) return
     setPrescriptionError(null)
 
     // Safety gate: check interactions against active meds
@@ -189,7 +189,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
       setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
       try {
-        const rx = await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF, {
+        const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
           interactionCheckResult: 'UNAVAILABLE',
         })
         await logInteractionCheck({
@@ -199,7 +199,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           medicationDisplay: form.medicationDisplay,
           checkResult: 'UNAVAILABLE',
           interactionsFound: 0,
-          practitionerRef: PRACTITIONER_REF,
+          practitionerRef: practitionerRef,
         })
       } catch (err) {
         setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
@@ -221,7 +221,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     // CLEAR or WARNING — proceed (warnings shown inline on the prescription)
     const interactionResult = checkResult.result === 'WARNING' ? 'WARNING' as const : 'CLEAR' as const
     try {
-      const rx = await addPrescription(form, activeEncounter.id, patientId, PRACTITIONER_REF, {
+      const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
         interactionCheckResult: interactionResult,
       })
       try {
@@ -232,7 +232,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           medicationDisplay: form.medicationDisplay,
           checkResult: interactionResult,
           interactionsFound: checkResult.interactions.length,
-          practitionerRef: PRACTITIONER_REF,
+          practitionerRef: practitionerRef,
         })
       } catch {
         // Audit log failure must not block the prescription — log is best-effort locally
@@ -240,7 +240,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     } catch (err) {
       setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
     }
-  }, [activeEncounter, addPrescription, patientId, pendingPrescriptions])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions])
 
   const handleInteractionOverride = useCallback(async (justification: string) => {
     if (!activeEncounter || !interactionModal.pendingForm) return
@@ -252,7 +252,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         form,
         activeEncounter.id,
         patientId,
-        PRACTITIONER_REF,
+        practitionerRef,
         {
           interactionCheckResult: 'BLOCKED',
           interactionOverrideReason: justification,
@@ -267,7 +267,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           checkResult: 'BLOCKED',
           interactionsFound: interactionCount,
           overrideReason: justification,
-          practitionerRef: PRACTITIONER_REF,
+          practitionerRef: practitionerRef,
         })
       } catch {
         // Audit log failure must not block the prescription — log is best-effort locally
@@ -275,7 +275,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     } catch (err) {
       setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
     }
-  }, [activeEncounter, addPrescription, patientId, interactionModal.pendingForm, interactionModal.interactions.length])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, interactionModal.pendingForm, interactionModal.interactions.length])
 
   const handleInteractionCancel = useCallback(() => {
     setInteractionModal({ open: false, interactions: [], pendingForm: null, checkResult: null })
@@ -291,8 +291,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   }, [removePrescription])
 
   const handleStartEncounter = useCallback(async () => {
-    await startEncounter(patientId, PRACTITIONER_REF)
-  }, [patientId, startEncounter])
+    if (!practitionerRef) return
+    await startEncounter(patientId, practitionerRef)
+  }, [patientId, practitionerRef, startEncounter])
 
   const handleEndEncounter = useCallback(async () => {
     flushAutosave()
@@ -401,7 +402,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             </p>
             <button
               onClick={handleStartEncounter}
-              disabled={isStarting}
+              disabled={isStarting || !isAuthenticated}
               className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
             >
               {isStarting ? 'Starting...' : 'Start Encounter'}

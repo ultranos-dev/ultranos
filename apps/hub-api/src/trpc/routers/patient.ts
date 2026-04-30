@@ -1,7 +1,9 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { createHash } from 'crypto'
-import { createTRPCRouter, baseProcedure } from '../init'
+import { createTRPCRouter, protectedProcedure } from '../init'
+import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import { generateBlindIndex } from '@ultranos/crypto/server'
+import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 // NOTE: enforceConsentMiddleware is available for per-patient data endpoints.
 // The search endpoint returns identity data for verification (not clinical PHI),
 // so consent enforcement is applied at the individual patient data level, not search.
@@ -10,11 +12,16 @@ import { createTRPCRouter, baseProcedure } from '../init'
 // See: apps/hub-api/src/trpc/middleware/enforceConsent.ts
 
 function sanitizeFilterValue(value: string): string {
-  return value.replace(/[,.*()\\]/g, '')
+  // Strip dangerous chars, then escape SQL ILIKE wildcards
+  return value
+    .replace(/[,.*()\\]/g, '')
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_')
 }
 
 function hashNationalId(rawId: string): string {
-  return createHash('sha256').update(rawId).digest('hex')
+  const { hmacKey } = getFieldEncryptionKeys()
+  return generateBlindIndex(rawId, hmacKey)
 }
 
 /**
@@ -22,7 +29,8 @@ function hashNationalId(rawId: string): string {
  * Provides patient search for spoke apps (OPD Lite PWA, etc.).
  */
 export const patientRouter = createTRPCRouter({
-  search: baseProcedure
+  search: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
     .input(
       z.object({
         query: z.string().min(1).max(200),
@@ -33,16 +41,33 @@ export const patientRouter = createTRPCRouter({
       // Uses Supabase RPC or direct query — returns FHIR-aligned patient records.
       // PHI safety: only returns data needed for identity verification.
       const sanitized = sanitizeFilterValue(input.query)
-      const idHash = hashNationalId(input.query)
+
+      if (!sanitized.replace(/\\[%_]/g, '').trim()) {
+        return { patients: [] }
+      }
+
+      // Build OR filter: always search by name, only add national ID hash
+      // lookup when the query looks like it could be an ID (alphanumeric).
+      // This avoids crashing name-only searches if encryption env vars are missing.
+      const nameFilters = `ultranos_name_local.ilike.%${sanitized}%,ultranos_name_latin.ilike.%${sanitized}%`
+      let orFilter = nameFilters
+
+      const looksLikeId = /^[a-zA-Z0-9-]+$/.test(input.query.trim())
+      if (looksLikeId) {
+        try {
+          const idHash = hashNationalId(input.query)
+          orFilter = `${nameFilters},ultranos_national_id_hash.eq.${idHash}`
+        } catch {
+          // Encryption keys not configured — skip national ID lookup
+        }
+      }
 
       const { data, error } = await ctx.supabase
         .from('patients')
         .select(
           'id, name, gender, birth_date, birth_year_only, identifier, meta_last_updated, meta_version_id, ultranos_name_local, ultranos_name_latin, ultranos_name_phonetic, ultranos_national_id_hash, ultranos_is_active, ultranos_created_at'
         )
-        .or(
-          `ultranos_name_local.ilike.%${sanitized}%,ultranos_name_latin.ilike.%${sanitized}%,ultranos_national_id_hash.eq.${idHash}`
-        )
+        .or(orFilter)
         .eq('ultranos_is_active', true)
         .limit(20)
 

@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-04-29T19:30:00.000000'
+last_updated: '2026-04-30T14:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -49,8 +49,30 @@ development_status:
   5-2-medical-history-timeline-low-literacy-ui: in-progress
   5-3-data-sharing-consent-management: in-progress
   epic-5-retrospective: optional
-  epic-6: backlog
-  6-1-role-based-access-control-rbac: backlog
-  6-2-immutable-cryptographic-audit-logging: backlog
-  6-3-global-sync-pulse-dashboard: backlog
+  epic-6: in-progress
+  6-1-role-based-access-control-rbac: in-progress
   epic-6-retrospective: optional
+  epic-7: in-progress
+  7-1-pwa-dexie-encryption-key-in-memory: done
+  7-2-mobile-sqlcipher-migration: done
+  7-3-hub-api-field-level-encryption: in-progress
+  7-4-practitioner-key-lifecycle-management: ready-for-dev
+  epic-7-retrospective: optional
+  epic-8: backlog
+  8-1-client-side-audit-ledger: backlog
+  8-2-immutable-hash-chained-audit-logging: backlog
+  epic-8-retrospective: optional
+  epic-9: backlog
+  9-1-tiered-conflict-resolution-hlc-integration: backlog
+  9-2-background-sync-worker-retry-logic: backlog
+  9-3-global-sync-dashboard: backlog
+  epic-9-retrospective: optional
+  epic-10: backlog
+  10-1-medicationstatement-cross-medication-interaction-checks: backlog
+  10-2-global-allergy-management-high-visibility-banners: backlog
+  10-3-terminology-service-migration-dexie-vocabulary: backlog
+  epic-10-retrospective: optional
+  epic-11: backlog
+  11-1-global-rtl-i18n-framework: backlog
+  11-2-resilience-error-recovery: backlog
+  epic-11-retrospective: optional

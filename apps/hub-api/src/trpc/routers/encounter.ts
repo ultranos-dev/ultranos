@@ -1,6 +1,8 @@
 import { createTRPCRouter } from '../init'
-// NOTE: When encounter data endpoints are added, apply consent enforcement:
-//   .use(enforceConsentMiddleware('Encounter'))
+// NOTE: When encounter data endpoints are added, apply:
+//   .use(enforceResourceAccess('Encounter'))  — RBAC (Story 6-1)
+//   .use(enforceConsentMiddleware('Encounter')) — Consent enforcement
+// See: apps/hub-api/src/trpc/middleware/enforceResourceAccess.ts
 // See: apps/hub-api/src/trpc/middleware/enforceConsent.ts
 
 /**

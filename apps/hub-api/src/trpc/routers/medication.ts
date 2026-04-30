@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
+import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 
 /**
  * Maps internal prescription_status to the pharmacist-facing invalidation status.
@@ -42,6 +43,7 @@ export const medicationRouter = createTRPCRouter({
    * Returns AVAILABLE, FULFILLED, or VOIDED.
    */
   getStatus: protectedProcedure
+    .use(enforceResourceAccess('MedicationRequest'))
     .input(GetStatusInputSchema)
     .query(async ({ ctx, input }) => {
       const lookupColumn = input.prescriptionId ? 'id' : 'qr_code_id'
@@ -91,6 +93,7 @@ export const medicationRouter = createTRPCRouter({
    * on the update prevents simultaneous double-dispense.
    */
   recordDispense: protectedProcedure
+    .use(enforceResourceAccess('MedicationDispense'))
     .use(enforceConsentMiddleware('MedicationRequest'))
     .input(
       z.object({
@@ -264,6 +267,7 @@ export const medicationRouter = createTRPCRouter({
    * Protected — requires authenticated pharmacist session.
    */
   complete: protectedProcedure
+    .use(enforceResourceAccess('MedicationDispense'))
     .input(
       z.object({
         prescriptionId: z.string().uuid(),

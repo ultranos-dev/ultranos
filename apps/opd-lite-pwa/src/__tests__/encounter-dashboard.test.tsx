@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { usePatientStore } from '@/stores/patient-store'
 import { useEncounterStore } from '@/stores/encounter-store'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { FhirPatient } from '@ultranos/shared-types'
@@ -43,6 +44,13 @@ function resetStores() {
   useEncounterStore.setState({
     activeEncounter: null,
     isStarting: false,
+  })
+  // Set up auth session so practitionerRef is available for encounter operations
+  useAuthSessionStore.getState().setSession({
+    userId: 'test-user',
+    practitionerId: 'Practitioner/test-practitioner',
+    role: 'clinician',
+    sessionId: 'test-session',
   })
 }
 

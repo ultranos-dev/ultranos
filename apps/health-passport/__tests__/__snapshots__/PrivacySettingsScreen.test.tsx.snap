@@ -1,0 +1,1117 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = `
+<RCTScrollView
+  contentContainerStyle={
+    {
+      "gap": 24,
+      "paddingVertical": 24,
+    }
+  }
+  style={
+    {
+      "backgroundColor": "hsl(270, 20%, 98%)",
+      "flex": 1,
+      "paddingHorizontal": 20,
+    }
+  }
+  testID="privacy-settings-screen"
+>
+  <View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginBottom": 4,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 30%, 15%)",
+            "fontSize": 28,
+            "fontWeight": "700",
+          }
+        }
+      >
+        Privacy Settings
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 13,
+          }
+        }
+      >
+        Control who can access your health data
+      </Text>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(270, 50%, 97%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+        ]
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 10%, 45%)",
+              "fontSize": 16,
+              "fontWeight": "400",
+              "lineHeight": 24,
+            },
+            {
+              "color": "hsl(270, 50%, 30%)",
+            },
+          ]
+        }
+      >
+        By default, your data is restricted. Toggle on to allow healthcare providers to view specific categories of your medical information.
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "backgroundColor": "hsl(0, 0%, 100%)",
+          "borderColor": "hsl(270, 15%, 88%)",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "elevation": 2,
+          "padding": 20,
+          "shadowColor": "#000",
+          "shadowOffset": {
+            "height": 2,
+            "width": 0,
+          },
+          "shadowOpacity": 0.06,
+          "shadowRadius": 8,
+        }
+      }
+      testID="consent-toggles-card"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "marginBottom": 12,
+            },
+          ]
+        }
+      >
+        Data Categories
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-FULL_RECORD"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Full Medical Record
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Allow access to your complete health history
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Full Medical Record: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-FULL_RECORD"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-PRESCRIPTIONS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Prescriptions
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Medication orders and dispensing history
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "color": "hsl(270, 8%, 60%)",
+                  "fontSize": 13,
+                },
+                {
+                  "color": "hsl(270, 8%, 60%)",
+                  "fontStyle": "italic",
+                },
+              ]
+            }
+            testID="consent-updated-PRESCRIPTIONS"
+          >
+            Last updated: 
+            Apr 28, 2026, 06:00 AM
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Prescriptions: Access granted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-PRESCRIPTIONS"
+          thumbTintColor="hsl(270, 45%, 48%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={true}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-LABS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Lab Results
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Laboratory tests and their results
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Lab Results: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-LABS"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-VITALS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Vital Signs
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Blood pressure, heart rate, temperature, etc.
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Vital Signs: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-VITALS"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-CLINICAL_NOTES"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Clinical Notes
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Doctor visit notes and assessments
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Clinical Notes: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-CLINICAL_NOTES"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+    </View>
+    <View
+      accessibilityLabel="Show consent history"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+          },
+        ]
+      }
+      testID="consent-history-toggle"
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 10%, 45%)",
+            "fontSize": 16,
+            "fontWeight": "400",
+            "lineHeight": 24,
+          }
+        }
+      >
+        Show
+         Consent History
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 14,
+          }
+        }
+      >
+        ▼
+      </Text>
+    </View>
+  </View>
+</RCTScrollView>
+`;
+
+exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = `
+<RCTScrollView
+  contentContainerStyle={
+    {
+      "gap": 24,
+      "paddingVertical": 24,
+    }
+  }
+  style={
+    {
+      "backgroundColor": "hsl(270, 20%, 98%)",
+      "flex": 1,
+      "paddingHorizontal": 20,
+    }
+  }
+  testID="privacy-settings-screen"
+>
+  <View>
+    <View
+      style={
+        {
+          "gap": 4,
+          "marginBottom": 4,
+        }
+      }
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 30%, 15%)",
+            "fontSize": 28,
+            "fontWeight": "700",
+          }
+        }
+      >
+        Privacy Settings
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 13,
+          }
+        }
+      >
+        Control who can access your health data
+      </Text>
+    </View>
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(270, 50%, 97%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+        ]
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 10%, 45%)",
+              "fontSize": 16,
+              "fontWeight": "400",
+              "lineHeight": 24,
+            },
+            {
+              "color": "hsl(270, 50%, 30%)",
+            },
+          ]
+        }
+      >
+        By default, your data is restricted. Toggle on to allow healthcare providers to view specific categories of your medical information.
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "backgroundColor": "hsl(0, 0%, 100%)",
+          "borderColor": "hsl(270, 15%, 88%)",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "elevation": 2,
+          "padding": 20,
+          "shadowColor": "#000",
+          "shadowOffset": {
+            "height": 2,
+            "width": 0,
+          },
+          "shadowOpacity": 0.06,
+          "shadowRadius": 8,
+        }
+      }
+      testID="consent-toggles-card"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "marginBottom": 12,
+            },
+          ]
+        }
+      >
+        Data Categories
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-FULL_RECORD"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Full Medical Record
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Allow access to your complete health history
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Full Medical Record: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-FULL_RECORD"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-PRESCRIPTIONS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Prescriptions
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Medication orders and dispensing history
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "color": "hsl(270, 8%, 60%)",
+                  "fontSize": 13,
+                },
+                {
+                  "color": "hsl(270, 8%, 60%)",
+                  "fontStyle": "italic",
+                },
+              ]
+            }
+            testID="consent-updated-PRESCRIPTIONS"
+          >
+            Last updated: 
+            Apr 28, 2026, 06:00 AM
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Prescriptions: Access granted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-PRESCRIPTIONS"
+          thumbTintColor="hsl(270, 45%, 48%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={true}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-LABS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Lab Results
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Laboratory tests and their results
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Lab Results: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-LABS"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-VITALS"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Vital Signs
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Blood pressure, heart rate, temperature, etc.
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Vital Signs: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-VITALS"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "borderBottomColor": "hsl(270, 15%, 88%)",
+            "borderBottomWidth": 1,
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+            "paddingVertical": 12,
+          }
+        }
+        testID="consent-row-CLINICAL_NOTES"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+              "gap": 2,
+              "marginEnd": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "hsl(270, 10%, 45%)",
+                "fontSize": 16,
+                "fontWeight": "400",
+                "lineHeight": 24,
+              }
+            }
+          >
+            Clinical Notes
+          </Text>
+          <Text
+            style={
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+              }
+            }
+          >
+            Doctor visit notes and assessments
+          </Text>
+        </View>
+        <RCTSwitch
+          accessibilityLabel="Clinical Notes: Access restricted"
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="hsl(270, 42%, 70%)"
+          style={
+            {
+              "height": 31,
+              "width": 51,
+            }
+          }
+          testID="consent-toggle-CLINICAL_NOTES"
+          thumbTintColor="hsl(270, 8%, 60%)"
+          tintColor="hsl(270, 15%, 88%)"
+          value={false}
+        />
+      </View>
+    </View>
+    <View
+      accessibilityLabel="Show consent history"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "minHeight": 48,
+          },
+        ]
+      }
+      testID="consent-history-toggle"
+    >
+      <Text
+        style={
+          {
+            "color": "hsl(270, 10%, 45%)",
+            "fontSize": 16,
+            "fontWeight": "400",
+            "lineHeight": 24,
+          }
+        }
+      >
+        Show
+         Consent History
+      </Text>
+      <Text
+        style={
+          {
+            "color": "hsl(270, 8%, 60%)",
+            "fontSize": 14,
+          }
+        }
+      >
+        ▼
+      </Text>
+    </View>
+  </View>
+</RCTScrollView>
+`;

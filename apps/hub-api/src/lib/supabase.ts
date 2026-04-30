@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { toSnakeCase, toCamelCase } from './case-transform'
+import { encryptRow, decryptRow, decryptRows } from './field-encryption'
 
 let _client: SupabaseClient | null = null
 
@@ -39,23 +40,48 @@ export function createSupabaseClient(
 }
 
 /**
- * Database helpers — apply camelCase↔snake_case at the Supabase query boundary.
- * Use these instead of raw supabase calls when reading/writing domain objects.
+ * Database helpers — apply camelCase↔snake_case and field-level encryption
+ * at the Supabase query boundary.
+ *
+ * Write path:  camelCase object → encrypt PHI fields → snake_case → DB insert
+ * Read path:   DB row (snake_case) → decrypt PHI fields → camelCase → TypeScript
  *
  * Architecture doc: "Apply snake_case mapping when writing to Supabase,
  * but use camelCase in the TypeScript UI logic."
  */
 export const db = {
-  /** Transform camelCase object to snake_case for DB insert/update. */
-  toRow<T extends Record<string, unknown>>(data: T): T {
-    return toSnakeCase(data)
+  /**
+   * Transform camelCase object to snake_case for DB insert/update.
+   * Encrypts configured PHI fields before the case transform.
+   */
+  toRow<T extends Record<string, unknown>>(data: T, encryptionKey?: string): T {
+    const snaked = toSnakeCase(data)
+    if (!encryptionKey) return snaked
+    return encryptRow(snaked, encryptionKey)
   },
-  /** Transform snake_case DB row to camelCase for TypeScript consumption. */
-  fromRow<T>(row: T): T {
+
+  /**
+   * Transform snake_case DB row to camelCase for TypeScript consumption.
+   * Decrypts configured PHI fields after the case transform boundary
+   * (decryption operates on snake_case field names before case transform).
+   */
+  fromRow<T>(row: T, encryptionKey?: string): T {
+    if (encryptionKey) {
+      const decrypted = decryptRow(row as Record<string, unknown>, encryptionKey)
+      return toCamelCase(decrypted as T)
+    }
     return toCamelCase(row)
   },
-  /** Transform an array of snake_case DB rows to camelCase. */
-  fromRows<T>(rows: T[]): T[] {
+
+  /**
+   * Transform an array of snake_case DB rows to camelCase.
+   * Decrypts configured PHI fields.
+   */
+  fromRows<T>(rows: T[], encryptionKey?: string): T[] {
+    if (encryptionKey) {
+      const decrypted = decryptRows(rows as Record<string, unknown>[], encryptionKey)
+      return decrypted.map(toCamelCase) as T[]
+    }
     return rows.map(toCamelCase)
   },
 }
