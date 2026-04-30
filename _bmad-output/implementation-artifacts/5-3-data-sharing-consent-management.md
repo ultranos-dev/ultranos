@@ -34,7 +34,7 @@ so that I have full control over who can view my personal health information (PH
 ## Tasks / Subtasks
 
 - [x] **Task 1: Consent Management UI** (AC: 1, 5)
-  - [x] Create `apps/health-passport/src/screens/PrivacySettingsScreen.tsx`.
+  - [x] Create `apps/patient-lite-mobile/src/screens/PrivacySettingsScreen.tsx`.
   - [x] Implement toggle switches for data categories.
   - [x] Add a "History of Consent" view showing when access was granted/revoked.
 - [x] **Task 2: FHIR Consent Generation** (AC: 2)
@@ -80,14 +80,14 @@ Key decisions:
 ## File List
 
 ### New Files
-- `apps/health-passport/src/lib/consent-mapper.ts` — FHIR Consent resource creation/withdrawal
-- `apps/health-passport/src/lib/consent-sync.ts` — High-priority sync queue for consent
-- `apps/health-passport/src/hooks/useConsentSettings.ts` — React hook for consent state management
-- `apps/health-passport/src/screens/PrivacySettingsScreen.tsx` — Privacy Settings UI with toggles + history
-- `apps/health-passport/__tests__/consent-mapper.test.ts` — ConsentMapper unit tests (8 tests)
-- `apps/health-passport/__tests__/useConsentSettings.test.ts` — Consent hook tests (8 tests)
-- `apps/health-passport/__tests__/PrivacySettingsScreen.test.tsx` — UI component tests (8 tests)
-- `apps/health-passport/__tests__/consent-sync.test.ts` — Sync queue tests (8 tests)
+- `apps/patient-lite-mobile/src/lib/consent-mapper.ts` — FHIR Consent resource creation/withdrawal
+- `apps/patient-lite-mobile/src/lib/consent-sync.ts` — High-priority sync queue for consent
+- `apps/patient-lite-mobile/src/hooks/useConsentSettings.ts` — React hook for consent state management
+- `apps/patient-lite-mobile/src/screens/PrivacySettingsScreen.tsx` — Privacy Settings UI with toggles + history
+- `apps/patient-lite-mobile/__tests__/consent-mapper.test.ts` — ConsentMapper unit tests (8 tests)
+- `apps/patient-lite-mobile/__tests__/useConsentSettings.test.ts` — Consent hook tests (8 tests)
+- `apps/patient-lite-mobile/__tests__/PrivacySettingsScreen.test.tsx` — UI component tests (8 tests)
+- `apps/patient-lite-mobile/__tests__/consent-sync.test.ts` — Sync queue tests (8 tests)
 - `apps/hub-api/src/trpc/middleware/enforceConsent.ts` — Consent enforcement middleware
 - `apps/hub-api/src/trpc/routers/consent.ts` — Consent domain router (sync + check)
 - `apps/hub-api/src/__tests__/enforce-consent.test.ts` — Enforcement middleware tests (12 tests)
@@ -96,7 +96,7 @@ Key decisions:
 - `packages/sync-engine/src/__tests__/sync-priority.test.ts` — Priority tests (10 tests)
 
 ### Modified Files
-- `apps/health-passport/src/lib/offline-store.ts` — Added consent storage (saveConsents/loadConsents)
+- `apps/patient-lite-mobile/src/lib/offline-store.ts` — Added consent storage (saveConsents/loadConsents)
 - `apps/hub-api/src/trpc/routers/_app.ts` — Added consent router to app router
 - `packages/sync-engine/src/index.ts` — Exported sync priority functions
 
@@ -130,7 +130,7 @@ Key decisions:
 
 - [x] [Review][Defer] **W1: consumerStyles import from @/theme/consumer unverified** — Import path not in diff; likely Story 5.2 dependency. [PrivacySettingsScreen.tsx:544] — deferred, cross-story dependency
 - [x] [Review][Defer] **W2: Hardcoded pixel values in StyleSheet instead of spacing tokens** — Inconsistent use of `consumerSpacing` tokens vs raw numbers. [PrivacySettingsScreen.tsx styles] — deferred, style consistency
-- [x] [Review][Defer] **W3: Module-level HLC with hardcoded nodeId 'health-passport'** — All devices share the same HLC nodeId, producing ambiguous timestamps in multi-device sync. Architectural concern beyond this story. [useConsentSettings.ts:369] — deferred, architecture
+- [x] [Review][Defer] **W3: Module-level HLC with hardcoded nodeId 'patient-lite-mobile'** — All devices share the same HLC nodeId, producing ambiguous timestamps in multi-device sync. Architectural concern beyond this story. [useConsentSettings.ts:369] — deferred, architecture
 
 ## Change Log
 

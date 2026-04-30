@@ -178,7 +178,7 @@
 
 - **W1: consumerStyles import from @/theme/consumer unverified** — PrivacySettingsScreen.tsx imports `consumerStyles` from `@/theme/consumer`, a path not present in the diff. Likely a Story 5.2 dependency. Verify the import resolves when both stories are committed.
 - **W2: Hardcoded pixel values in StyleSheet instead of spacing tokens** — PrivacySettingsScreen.tsx styles use raw pixel values (`gap: 4`, `marginBottom: 12`, `paddingVertical: 12`) instead of `consumerSpacing` tokens consistently. RTL-safe but inconsistent with token-based design.
-- **W3: Module-level HLC with hardcoded nodeId 'health-passport'** — `useConsentSettings.ts:369` creates `new HybridLogicalClock('health-passport')` at module scope. All devices share the same nodeId, producing ambiguous HLC timestamps in multi-device sync scenarios. Architectural concern beyond this story; consistent with D20.
+- **W3: Module-level HLC with hardcoded nodeId 'patient-lite-mobile'** — `useConsentSettings.ts:369` creates `new HybridLogicalClock('patient-lite-mobile')` at module scope. All devices share the same nodeId, producing ambiguous HLC timestamps in multi-device sync scenarios. Architectural concern beyond this story; consistent with D20.
 - **D2: consent.sync has no authorization check** — Any authenticated user can forge consent for any patient via `consent.sync`. No `ctx.user.sub === input.grantorId` check. Defer to Story 6-1 (RBAC). Consistent with D12.
 - **D3: No emergency/break-glass bypass in consent enforcement** — `enforceConsentMiddleware` has no provision for emergency access. `GrantorRole.EMERGENCY_OVERRIDE` exists as an enum but is never checked. Needs dedicated spec-level design for emergency access model (audit trail, time-bounded override, abuse prevention).
 
@@ -223,6 +223,6 @@
 
 ## Deferred from: code review of 4-4-pharmacy-lite-pwa-extraction (2026-04-30)
 
-- **W1: `syncQueue` deduplication — no idempotency guard on retry** — `enqueueForRetry()` generates new UUID per call. Same dispense can be queued multiple times. Needs Hub-side dedup or local dedup guard. Pre-existing pattern from opd-lite-pwa (consistent with W4 from 4-3).
+- **W1: `syncQueue` deduplication — no idempotency guard on retry** — `enqueueForRetry()` generates new UUID per call. Same dispense can be queued multiple times. Needs Hub-side dedup or local dedup guard. Pre-existing pattern from opd-lite (consistent with W4 from 4-3).
 - **W2: `fetchAndCachePractitionerKey` cache key mismatch (base64 normalization)** — Cache `put` uses `data.publicKey` (Hub response) as primary key, but lookup queries by `bundle.pub` (QR). Different base64 encodings (standard vs URL-safe, padding differences) could cause infinite fetch-and-cache loop. Requires Hub API response format investigation.
-- **W3: Non-standard Tailwind classes in FulfillmentChecklist** — `rounded-pill`, `bg-pill-green`, `text-pill-text` in FulfillmentChecklist.tsx:149. Not standard Tailwind; likely defined in shared UI kit theme. Pre-existing from opd-lite-pwa.
+- **W3: Non-standard Tailwind classes in FulfillmentChecklist** — `rounded-pill`, `bg-pill-green`, `text-pill-text` in FulfillmentChecklist.tsx:149. Not standard Tailwind; likely defined in shared UI kit theme. Pre-existing from opd-lite.

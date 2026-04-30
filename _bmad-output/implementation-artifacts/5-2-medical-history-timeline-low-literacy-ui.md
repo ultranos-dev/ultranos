@@ -32,7 +32,7 @@ so that I can understand my past treatments even if I have difficulty reading de
 ## Tasks / Subtasks
 
 - [x] **Task 1: Timeline Component Scaffolding** (AC: 1, 2)
-  - [x] Create `apps/health-passport/src/components/timeline/MedicalTimeline.tsx`.
+  - [x] Create `apps/patient-lite-mobile/src/components/timeline/MedicalTimeline.tsx`.
   - [x] Implement vertical connector line and date markers.
   - [x] Add `TimelineIcon` component with support for semantic category icons.
 - [x] **Task 2: Active Medications Highlight** (AC: 3)
@@ -76,16 +76,16 @@ so that I can understand my past treatments even if I have difficulty reading de
 
 ## File List
 
-- `apps/health-passport/src/components/timeline/MedicalTimeline.tsx` (new)
-- `apps/health-passport/src/components/timeline/TimelineIcon.tsx` (new)
-- `apps/health-passport/src/components/timeline/ActiveMedications.tsx` (new)
-- `apps/health-passport/src/screens/TimelineScreen.tsx` (new)
-- `apps/health-passport/src/hooks/useMedicalHistory.ts` (new)
-- `apps/health-passport/src/lib/fhir-humanizer.ts` (new)
-- `apps/health-passport/src/lib/offline-store.ts` (modified — added medical history storage)
-- `apps/health-passport/__tests__/MedicalTimeline.test.tsx` (new)
-- `apps/health-passport/__tests__/useMedicalHistory.test.ts` (new)
-- `apps/health-passport/__tests__/fhir-humanizer.test.ts` (new)
+- `apps/patient-lite-mobile/src/components/timeline/MedicalTimeline.tsx` (new)
+- `apps/patient-lite-mobile/src/components/timeline/TimelineIcon.tsx` (new)
+- `apps/patient-lite-mobile/src/components/timeline/ActiveMedications.tsx` (new)
+- `apps/patient-lite-mobile/src/screens/TimelineScreen.tsx` (new)
+- `apps/patient-lite-mobile/src/hooks/useMedicalHistory.ts` (new)
+- `apps/patient-lite-mobile/src/lib/fhir-humanizer.ts` (new)
+- `apps/patient-lite-mobile/src/lib/offline-store.ts` (modified — added medical history storage)
+- `apps/patient-lite-mobile/__tests__/MedicalTimeline.test.tsx` (new)
+- `apps/patient-lite-mobile/__tests__/useMedicalHistory.test.ts` (new)
+- `apps/patient-lite-mobile/__tests__/fhir-humanizer.test.ts` (new)
 
 ### Review Findings
 

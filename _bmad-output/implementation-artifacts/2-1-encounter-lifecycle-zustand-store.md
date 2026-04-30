@@ -89,15 +89,15 @@ All 5 acceptance criteria satisfied:
 5. Encounters persisted to Dexie IndexedDB via `db.encounters.put()`
 
 ## File List
-- `apps/opd-lite-pwa/package.json` — added immer, @ultranos/sync-engine deps
-- `apps/opd-lite-pwa/tsconfig.json` — no net change (path alias added then removed)
-- `apps/opd-lite-pwa/vitest.config.ts` — added sync-engine and shared-types resolve aliases
-- `apps/opd-lite-pwa/next.config.js` — added @ultranos/sync-engine to transpilePackages
-- `apps/opd-lite-pwa/src/lib/db.ts` — added encounters table (Dexie v2 schema)
-- `apps/opd-lite-pwa/src/stores/encounter-store.ts` — NEW: useEncounterStore
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` — updated with encounter lifecycle UI
-- `apps/opd-lite-pwa/src/__tests__/encounter-store.test.ts` — NEW: 22 unit tests
-- `apps/opd-lite-pwa/src/__tests__/encounter-dashboard.test.tsx` — updated: 14 tests (6 new)
+- `apps/opd-lite/package.json` — added immer, @ultranos/sync-engine deps
+- `apps/opd-lite/tsconfig.json` — no net change (path alias added then removed)
+- `apps/opd-lite/vitest.config.ts` — added sync-engine and shared-types resolve aliases
+- `apps/opd-lite/next.config.js` — added @ultranos/sync-engine to transpilePackages
+- `apps/opd-lite/src/lib/db.ts` — added encounters table (Dexie v2 schema)
+- `apps/opd-lite/src/stores/encounter-store.ts` — NEW: useEncounterStore
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` — updated with encounter lifecycle UI
+- `apps/opd-lite/src/__tests__/encounter-store.test.ts` — NEW: 22 unit tests
+- `apps/opd-lite/src/__tests__/encounter-dashboard.test.tsx` — updated: 14 tests (6 new)
 - `pnpm-lock.yaml` — updated with immer
 
 ## Change Log

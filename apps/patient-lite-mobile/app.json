@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Ultranos Patient Lite",
+    "slug": "patient-lite-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "patient-lite-mobile",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Ultranos Patient Lite to use Face ID for database unlock."
+        }
+      ]
+    ]
+  }
+}

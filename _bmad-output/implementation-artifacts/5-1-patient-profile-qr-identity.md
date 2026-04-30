@@ -35,7 +35,7 @@ so that I can show my medical ID to doctors even when I don't have internet acce
 ## Tasks / Subtasks
 
 - [x] **Task 1: Profile UI Implementation** (AC: 1, 4)
-  - [x] Create `apps/health-passport/src/screens/ProfileScreen.tsx` (or equivalent).
+  - [x] Create `apps/patient-lite-mobile/src/screens/ProfileScreen.tsx` (or equivalent).
   - [x] Apply Consumer Theme styling (Wise Display font for headers, soft cards).
   - [x] Implement sensitive data masking for National ID.
 - [x] **Task 2: QR Identity Generation** (AC: 2, 5)
@@ -57,7 +57,7 @@ so that I can show my medical ID to doctors even when I don't have internet acce
 
 ### Implementation Plan
 
-- Scaffolded the `apps/health-passport/` Expo React Native app from scratch
+- Scaffolded the `apps/patient-lite-mobile/` Expo React Native app from scratch
 - Added Consumer Theme tokens (warm purples/teals) to `@ultranos/ui-kit` package
 - Used `FhirPatient` type from `@ultranos/shared-types` for data model
 - QR payload follows CLAUDE.md safety rules: `{ pid, iat, exp, v }` — no raw PHI in QR codes (overrides story AC2 mention of "basic demographics")
@@ -81,27 +81,27 @@ so that I can show my medical ID to doctors even when I don't have internet acce
 ## File List
 
 ### New Files
-- `apps/health-passport/package.json`
-- `apps/health-passport/tsconfig.json`
-- `apps/health-passport/app.json`
-- `apps/health-passport/babel.config.js`
-- `apps/health-passport/jest.config.js`
-- `apps/health-passport/jest.setup.js`
-- `apps/health-passport/jest.resolver.js`
-- `apps/health-passport/index.ts`
-- `apps/health-passport/App.tsx`
-- `apps/health-passport/src/screens/ProfileScreen.tsx`
-- `apps/health-passport/src/components/PatientQRCode.tsx`
-- `apps/health-passport/src/hooks/usePatientProfile.ts`
-- `apps/health-passport/src/lib/offline-store.ts`
-- `apps/health-passport/src/theme/consumer.ts`
-- `apps/health-passport/__tests__/ProfileScreen.test.tsx`
-- `apps/health-passport/__tests__/PatientQRCode.test.tsx`
-- `apps/health-passport/__tests__/usePatientProfile.test.ts`
-- `apps/health-passport/__tests__/offline-store.test.ts`
+- `apps/patient-lite-mobile/package.json`
+- `apps/patient-lite-mobile/tsconfig.json`
+- `apps/patient-lite-mobile/app.json`
+- `apps/patient-lite-mobile/babel.config.js`
+- `apps/patient-lite-mobile/jest.config.js`
+- `apps/patient-lite-mobile/jest.setup.js`
+- `apps/patient-lite-mobile/jest.resolver.js`
+- `apps/patient-lite-mobile/index.ts`
+- `apps/patient-lite-mobile/App.tsx`
+- `apps/patient-lite-mobile/src/screens/ProfileScreen.tsx`
+- `apps/patient-lite-mobile/src/components/PatientQRCode.tsx`
+- `apps/patient-lite-mobile/src/hooks/usePatientProfile.ts`
+- `apps/patient-lite-mobile/src/lib/offline-store.ts`
+- `apps/patient-lite-mobile/src/theme/consumer.ts`
+- `apps/patient-lite-mobile/__tests__/ProfileScreen.test.tsx`
+- `apps/patient-lite-mobile/__tests__/PatientQRCode.test.tsx`
+- `apps/patient-lite-mobile/__tests__/usePatientProfile.test.ts`
+- `apps/patient-lite-mobile/__tests__/offline-store.test.ts`
 - `packages/ui-kit/src/consumer-theme.ts`
 
-- `apps/health-passport/src/lib/audit.ts`
+- `apps/patient-lite-mobile/src/lib/audit.ts`
 
 ### Modified Files
 - `packages/ui-kit/src/index.ts` (added consumer theme exports)

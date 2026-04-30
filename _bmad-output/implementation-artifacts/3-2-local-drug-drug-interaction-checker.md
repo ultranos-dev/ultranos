@@ -19,7 +19,7 @@ so that I can ensure patient safety even when disconnected from the Hub.
 ## Tasks / Subtasks
 
 - [x] **Task 1: Interaction Matrix Integration** (AC: 2)
-  - [x] Bundle a JSON interaction matrix (Drug A + Drug B = Severity) in `apps/opd-lite-pwa`.
+  - [x] Bundle a JSON interaction matrix (Drug A + Drug B = Severity) in `apps/opd-lite`.
   - [x] Create an `InteractionChecker` service to query this matrix.
 - [x] **Task 2: Safety Gate Logic** (AC: 1, 5)
   - [x] Implement a `checkInteractions` hook in the `PrescriptionEntry` flow.
@@ -39,8 +39,8 @@ so that I can ensure patient safety even when disconnected from the Hub.
 
 ### Project Structure Notes
 
-- Service: `apps/opd-lite-pwa/src/services/interactionService.ts`
-- Modal: `apps/opd-lite-pwa/src/components/modals/InteractionWarningModal.tsx`
+- Service: `apps/opd-lite/src/services/interactionService.ts`
+- Modal: `apps/opd-lite/src/components/modals/InteractionWarningModal.tsx`
 
 ### References
 
@@ -75,21 +75,21 @@ No blocking issues encountered.
 
 ### File List
 
-- apps/opd-lite-pwa/src/assets/vocab/interaction_matrix.json (NEW)
-- apps/opd-lite-pwa/src/services/interactionService.ts (NEW)
-- apps/opd-lite-pwa/src/services/interactionAuditService.ts (NEW)
-- apps/opd-lite-pwa/src/components/modals/InteractionWarningModal.tsx (NEW)
-- apps/opd-lite-pwa/src/lib/medication-request-mapper.ts (MODIFIED)
-- apps/opd-lite-pwa/src/lib/db.ts (MODIFIED)
-- apps/opd-lite-pwa/src/stores/prescription-store.ts (MODIFIED)
-- apps/opd-lite-pwa/src/components/encounter-dashboard.tsx (MODIFIED)
-- apps/opd-lite-pwa/src/__tests__/interaction-service.test.ts (NEW)
-- apps/opd-lite-pwa/src/__tests__/InteractionWarningModal.test.tsx (NEW)
-- apps/opd-lite-pwa/src/__tests__/interaction-audit.test.ts (NEW)
-- apps/opd-lite-pwa/src/__tests__/medication-request-mapper.test.ts (MODIFIED)
-- apps/opd-lite-pwa/src/__tests__/prescription-store.test.ts (MODIFIED)
-- apps/opd-lite-pwa/src/__tests__/encounter-dashboard.test.tsx (MODIFIED)
-- apps/opd-lite-pwa/src/__tests__/PrescriptionEntry.test.tsx (MODIFIED)
+- apps/opd-lite/src/assets/vocab/interaction_matrix.json (NEW)
+- apps/opd-lite/src/services/interactionService.ts (NEW)
+- apps/opd-lite/src/services/interactionAuditService.ts (NEW)
+- apps/opd-lite/src/components/modals/InteractionWarningModal.tsx (NEW)
+- apps/opd-lite/src/lib/medication-request-mapper.ts (MODIFIED)
+- apps/opd-lite/src/lib/db.ts (MODIFIED)
+- apps/opd-lite/src/stores/prescription-store.ts (MODIFIED)
+- apps/opd-lite/src/components/encounter-dashboard.tsx (MODIFIED)
+- apps/opd-lite/src/__tests__/interaction-service.test.ts (NEW)
+- apps/opd-lite/src/__tests__/InteractionWarningModal.test.tsx (NEW)
+- apps/opd-lite/src/__tests__/interaction-audit.test.ts (NEW)
+- apps/opd-lite/src/__tests__/medication-request-mapper.test.ts (MODIFIED)
+- apps/opd-lite/src/__tests__/prescription-store.test.ts (MODIFIED)
+- apps/opd-lite/src/__tests__/encounter-dashboard.test.tsx (MODIFIED)
+- apps/opd-lite/src/__tests__/PrescriptionEntry.test.tsx (MODIFIED)
 
 ### Review Findings
 

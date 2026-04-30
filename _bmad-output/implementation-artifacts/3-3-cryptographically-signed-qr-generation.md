@@ -38,7 +38,7 @@ so that they can fulfill it at any pharmacy with confidence in its authenticity.
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/clinical/PrescriptionQR.tsx`
+- Component: `apps/opd-lite/src/components/clinical/PrescriptionQR.tsx`
 - Crypto: `packages/sync-engine/src/crypto.ts`
 
 ### References
@@ -87,15 +87,15 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- apps/opd-lite-pwa/src/lib/compress-prescription.ts (new)
-- apps/opd-lite-pwa/src/lib/prescription-signing.ts (new)
-- apps/opd-lite-pwa/src/lib/signing-key-store.ts (new)
-- apps/opd-lite-pwa/src/components/clinical/PrescriptionQR.tsx (new)
-- apps/opd-lite-pwa/src/components/encounter-dashboard.tsx (modified)
-- apps/opd-lite-pwa/src/__tests__/compress-prescription.test.ts (new)
-- apps/opd-lite-pwa/src/__tests__/prescription-signing.test.ts (new)
-- apps/opd-lite-pwa/src/__tests__/PrescriptionQR.test.tsx (new)
-- apps/opd-lite-pwa/package.json (modified — added qrcode.react)
+- apps/opd-lite/src/lib/compress-prescription.ts (new)
+- apps/opd-lite/src/lib/prescription-signing.ts (new)
+- apps/opd-lite/src/lib/signing-key-store.ts (new)
+- apps/opd-lite/src/components/clinical/PrescriptionQR.tsx (new)
+- apps/opd-lite/src/components/encounter-dashboard.tsx (modified)
+- apps/opd-lite/src/__tests__/compress-prescription.test.ts (new)
+- apps/opd-lite/src/__tests__/prescription-signing.test.ts (new)
+- apps/opd-lite/src/__tests__/PrescriptionQR.test.tsx (new)
+- apps/opd-lite/package.json (modified — added qrcode.react)
 - packages/sync-engine/src/crypto.ts (new)
 - packages/sync-engine/src/index.ts (modified — exports crypto)
 - packages/sync-engine/src/__tests__/crypto.test.ts (new)

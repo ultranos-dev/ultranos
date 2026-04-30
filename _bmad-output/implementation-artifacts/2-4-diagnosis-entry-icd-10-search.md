@@ -40,8 +40,8 @@ so that I can provide a clinical assessment and track patient conditions accurat
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/clinical/DiagnosisSearch.tsx`
-- Data: `apps/opd-lite-pwa/src/assets/vocab/icd10_subset.json`
+- Component: `apps/opd-lite/src/components/clinical/DiagnosisSearch.tsx`
+- Data: `apps/opd-lite/src/assets/vocab/icd10_subset.json`
 
 ### References
 
@@ -100,14 +100,14 @@ Claude Opus 4.6 (1M context)
 - packages/shared-types/src/fhir/condition.schema.ts (new)
 - packages/shared-types/src/index.ts (modified — added condition export)
 - packages/shared-types/src/__tests__/condition.schema.test.ts (new)
-- apps/opd-lite-pwa/src/assets/vocab/icd10_subset.json (new)
-- apps/opd-lite-pwa/src/lib/vocab-search.ts (new)
-- apps/opd-lite-pwa/src/lib/condition-mapper.ts (new)
-- apps/opd-lite-pwa/src/lib/db.ts (modified — added conditions table v5)
-- apps/opd-lite-pwa/src/stores/diagnosis-store.ts (new)
-- apps/opd-lite-pwa/src/components/clinical/diagnosis-search.tsx (new)
-- apps/opd-lite-pwa/src/__tests__/vocab-search.test.ts (new)
-- apps/opd-lite-pwa/src/__tests__/condition-mapper.test.ts (new)
-- apps/opd-lite-pwa/src/__tests__/diagnosis-store.test.ts (new)
-- apps/opd-lite-pwa/src/__tests__/diagnosis-search.test.tsx (new)
-- apps/opd-lite-pwa/package.json (modified — added fuse.js dependency)
+- apps/opd-lite/src/assets/vocab/icd10_subset.json (new)
+- apps/opd-lite/src/lib/vocab-search.ts (new)
+- apps/opd-lite/src/lib/condition-mapper.ts (new)
+- apps/opd-lite/src/lib/db.ts (modified — added conditions table v5)
+- apps/opd-lite/src/stores/diagnosis-store.ts (new)
+- apps/opd-lite/src/components/clinical/diagnosis-search.tsx (new)
+- apps/opd-lite/src/__tests__/vocab-search.test.ts (new)
+- apps/opd-lite/src/__tests__/condition-mapper.test.ts (new)
+- apps/opd-lite/src/__tests__/diagnosis-store.test.ts (new)
+- apps/opd-lite/src/__tests__/diagnosis-search.test.tsx (new)
+- apps/opd-lite/package.json (modified — added fuse.js dependency)

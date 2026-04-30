@@ -9,7 +9,7 @@ ultranos/
 │   ├── hub-api/                 # Node.js tRPC Server (Existing Hub)
 │   │   ├── src/api/root.ts      # tRPC router entry
 │   │   └── src/services/        # Safety gates, FHIR validation & Audit verification
-│   ├── opd-lite-pwa/            # Next.js Desktop App (Clinicians)
+│   ├── opd-lite/                # Next.js Desktop App (Clinicians)
 │   │   ├── src/app/             # App Router pages
 │   │   ├── src/store/           # Zustand Stores (Optimistic UI State)
 │   │   └── src/lib/db.ts        # Dexie.js (Offline Persistence)
@@ -17,7 +17,7 @@ ultranos/
 │   │   ├── src/screens/         # Native layouts
 │   │   ├── src/store/           # Zustand Stores (Mobile UI State)
 │   │   └── src/lib/db.ts        # Expo SQLite/SQLCipher (Encrypted Persistence)
-│   └── pharmacy-pos/            # Next.js App (Pharmacists)
+│   └── pharmacy-lite/           # Next.js PWA (Pharmacists — standalone spoke)
 ├── packages/
 │   ├── sync-engine/             # Shared HLC & Append-only ledger logic
 │   ├── ui-kit/                  # Wise-inspired design tokens & React components
@@ -48,7 +48,7 @@ ultranos/
 ### Requirements to Structure Mapping
 
 - **Offline Consultation:** `apps/opd-lite-*` + `packages/sync-engine`.
-- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-pos` (Read/Verify).
+- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-lite` (Read/Verify).
 - **Clinical Safety Gates:** `apps/hub-api/src/services/safety`.
 - **Wise Visual Design:** `packages/ui-kit`.
 - **Regulatory Audit:** `packages/audit-logger`.

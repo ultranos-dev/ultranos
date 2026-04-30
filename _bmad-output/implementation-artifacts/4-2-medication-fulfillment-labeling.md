@@ -57,8 +57,8 @@ so that the patient receives the correct treatment and knows how to use it safel
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/pharmacy/FulfillmentChecklist.tsx`
-- Component: `apps/opd-lite-pwa/src/components/pharmacy/MedicationLabel.tsx`
+- Component: `apps/opd-lite/src/components/pharmacy/FulfillmentChecklist.tsx`
+- Component: `apps/opd-lite/src/components/pharmacy/MedicationLabel.tsx`
 
 ### References
 
@@ -86,12 +86,12 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- `apps/opd-lite-pwa/src/components/pharmacy/FulfillmentChecklist.tsx` (new)
-- `apps/opd-lite-pwa/src/components/pharmacy/MedicationLabel.tsx` (new)
-- `apps/opd-lite-pwa/src/lib/medication-dispense.ts` (new)
-- `apps/opd-lite-pwa/src/stores/fulfillment-store.ts` (modified — added brandName, batchLot, setBrandName, setBatchLot)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added dispenses table v9)
-- `apps/opd-lite-pwa/src/app/globals.css` (modified — added @media print rules)
-- `apps/opd-lite-pwa/src/__tests__/FulfillmentChecklist.test.tsx` (new — 15 tests)
-- `apps/opd-lite-pwa/src/__tests__/MedicationLabel.test.tsx` (new — 14 tests)
-- `apps/opd-lite-pwa/src/__tests__/medication-dispense.test.ts` (new — 16 tests)
+- `apps/opd-lite/src/components/pharmacy/FulfillmentChecklist.tsx` (new)
+- `apps/opd-lite/src/components/pharmacy/MedicationLabel.tsx` (new)
+- `apps/opd-lite/src/lib/medication-dispense.ts` (new)
+- `apps/opd-lite/src/stores/fulfillment-store.ts` (modified — added brandName, batchLot, setBrandName, setBatchLot)
+- `apps/opd-lite/src/lib/db.ts` (modified — added dispenses table v9)
+- `apps/opd-lite/src/app/globals.css` (modified — added @media print rules)
+- `apps/opd-lite/src/__tests__/FulfillmentChecklist.test.tsx` (new — 15 tests)
+- `apps/opd-lite/src/__tests__/MedicationLabel.test.tsx` (new — 14 tests)
+- `apps/opd-lite/src/__tests__/medication-dispense.test.ts` (new — 16 tests)

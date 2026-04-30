@@ -105,11 +105,11 @@ Implement the prescribing lifecycle and clinical safety gates.
 **FRs covered:** FR6, FR7, FR8, FR10
 
 ### Epic 4: Pharmacy Operations
-Enable the pharmacist's fulfillment workflow via the standalone `pharmacy-lite-pwa` spoke app.
+Enable the pharmacist's fulfillment workflow via the standalone `pharmacy-lite` spoke app.
 **FRs covered:** FR9
 
 ### Epic 5: Patient Health Passport & Consent
-Build the patient-facing "Health Passport" mobile experience.
+Build the patient-facing "Patient Lite Mobile" experience.
 **FRs covered:** FR12
 
 ### Epic 6: Trust, Audit & Access
@@ -326,21 +326,21 @@ As a pharmacist, I want my dispensing actions to be synchronized immediately so 
 - **And** the pharmacist receives a "Sync Successful" visual confirmation
 
 ### Story 4.4: Pharmacy-Lite PWA Extraction
-As a system architect, I want to extract all pharmacy fulfillment functionality from `opd-lite-pwa` into a standalone `pharmacy-lite-pwa` application, so that pharmacists have an independently deployable spoke app that integrates with the ecosystem exclusively via `hub-api`.
+As a system architect, I want to extract all pharmacy fulfillment functionality from `opd-lite` into a standalone `pharmacy-lite` application, so that pharmacists have an independently deployable spoke app that integrates with the ecosystem exclusively via `hub-api`.
 
 **Acceptance Criteria:**
-- **Given** the existing pharmacy components in `opd-lite-pwa`
+- **Given** the existing pharmacy components in `opd-lite`
 - **When** the extraction is complete
-- **Then** `apps/pharmacy-lite-pwa/` exists as a standalone Next.js 15 PWA (`@ultranos/pharmacy-lite-pwa`)
+- **Then** `apps/pharmacy-lite/` exists as a standalone Next.js 15 PWA (`@ultranos/pharmacy-lite`)
 - **And** all pharmacy fulfillment components, stores, services, and tests are located in the new app
-- **And** clinician-side prescription components remain in `opd-lite-pwa` unchanged
+- **And** clinician-side prescription components remain in `opd-lite` unchanged
 - **And** the pharmacy app communicates with the Hub API via tRPC (no spoke-to-spoke dependencies)
-- **And** all existing pharmacy tests pass in the new location with zero regressions in `opd-lite-pwa`
+- **And** all existing pharmacy tests pass in the new location with zero regressions in `opd-lite`
 
-> **Architecture Decision (2026-04-30):** Pharmacy operations MUST be a standalone spoke app (`pharmacy-lite-pwa`), not embedded in the clinician PWA. Each spoke integrates via `hub-api` only. Online-only for now; offline pharmacy operations are a future enhancement.
+> **Architecture Decision (2026-04-30):** Pharmacy operations MUST be a standalone spoke app (`pharmacy-lite`), not embedded in the clinician PWA. Each spoke integrates via `hub-api` only. Online-only for now; offline pharmacy operations are a future enhancement.
 
 ## Epic 5: Patient Health Passport & Consent
-Build the patient-facing "Health Passport" mobile experience.
+Build the patient-facing "Patient Lite Mobile" experience.
 
 ### Story 5.1: Patient Profile & QR Identity
 As a patient, I want to access my health passport so that I can show my medical ID to doctors.

@@ -37,7 +37,7 @@ so that my PHI remains secure even if someone gains access to my device's Indexe
   - [x] Create `generateSessionKey()` and `encryptPayload()` / `decryptPayload()` helpers.
 - [x] **Task 2: Dexie Encryption Middleware** (AC: 1)
   - [x] Implement a Dexie `creating`, `reading`, and `updating` middleware to handle transparent encryption.
-  - [x] Configure sensitive tables in `apps/opd-lite-pwa/src/lib/db.ts` to use the middleware.
+  - [x] Configure sensitive tables in `apps/opd-lite/src/lib/db.ts` to use the middleware.
 - [x] **Task 3: Key Lifecycle & Wiping** (AC: 4)
   - [x] Implement a memory-only `KeyStore` with a `wipe()` method.
   - [x] Hook into the browser `beforeunload` event and Supabase `onAuthStateChange` to trigger wipes.
@@ -78,21 +78,21 @@ All 4 tasks complete. 527 tests pass (517 PWA + 10 crypto package). Performance 
 - `packages/crypto/src/index.ts`
 - `packages/crypto/src/browser-crypto.ts`
 - `packages/crypto/src/__tests__/browser-crypto.test.ts`
-- `apps/opd-lite-pwa/src/lib/encryption-key-store.ts`
-- `apps/opd-lite-pwa/src/lib/dexie-encryption-middleware.ts`
-- `apps/opd-lite-pwa/src/lib/key-lifecycle-hooks.ts`
-- `apps/opd-lite-pwa/src/__tests__/encryption-key-store.test.ts`
-- `apps/opd-lite-pwa/src/__tests__/dexie-encryption-middleware.test.ts`
-- `apps/opd-lite-pwa/src/__tests__/key-lifecycle.test.ts`
-- `apps/opd-lite-pwa/src/__tests__/encryption-performance.test.ts`
+- `apps/opd-lite/src/lib/encryption-key-store.ts`
+- `apps/opd-lite/src/lib/dexie-encryption-middleware.ts`
+- `apps/opd-lite/src/lib/key-lifecycle-hooks.ts`
+- `apps/opd-lite/src/__tests__/encryption-key-store.test.ts`
+- `apps/opd-lite/src/__tests__/dexie-encryption-middleware.test.ts`
+- `apps/opd-lite/src/__tests__/key-lifecycle.test.ts`
+- `apps/opd-lite/src/__tests__/encryption-performance.test.ts`
 
 **Modified files:**
-- `apps/opd-lite-pwa/package.json` — added `@ultranos/crypto` dependency
-- `apps/opd-lite-pwa/tsconfig.json` — added `@ultranos/crypto` path alias
-- `apps/opd-lite-pwa/vitest.config.ts` — added `@ultranos/crypto` resolve alias
-- `apps/opd-lite-pwa/src/lib/db.ts` — integrated encryption middleware for PHI tables
-- `apps/opd-lite-pwa/src/__tests__/setup.ts` — added test encryption key provisioning
-- `apps/opd-lite-pwa/src/__tests__/encounter-dashboard.test.tsx` — fixed pre-existing auth session setup
+- `apps/opd-lite/package.json` — added `@ultranos/crypto` dependency
+- `apps/opd-lite/tsconfig.json` — added `@ultranos/crypto` path alias
+- `apps/opd-lite/vitest.config.ts` — added `@ultranos/crypto` resolve alias
+- `apps/opd-lite/src/lib/db.ts` — integrated encryption middleware for PHI tables
+- `apps/opd-lite/src/__tests__/setup.ts` — added test encryption key provisioning
+- `apps/opd-lite/src/__tests__/encounter-dashboard.test.tsx` — fixed pre-existing auth session setup
 - `pnpm-lock.yaml` — updated lockfile
 
 ## Context Links

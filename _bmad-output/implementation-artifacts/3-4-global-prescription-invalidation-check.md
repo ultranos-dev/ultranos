@@ -39,7 +39,7 @@ so that I can prevent double-fulfillment and medication fraud.
 ### Project Structure Notes
 
 - API: `apps/hub-api/src/server/trpc/routers/medication.ts`
-- Component: `apps/opd-lite-pwa/src/components/pharmacy/PrescriptionScanner.tsx`
+- Component: `apps/opd-lite/src/components/pharmacy/PrescriptionScanner.tsx`
 
 ### References
 
@@ -63,7 +63,7 @@ Claude Opus 4.6 (1M context)
 - **Task 3**: Implemented `StatusBanner` sub-component with green "Prescription Valid" banner for AVAILABLE and red "Already Fulfilled"/"Prescription Voided" banners for non-AVAILABLE. Dispense button is disabled and shows "Dispense Blocked" for non-AVAILABLE statuses.
 - **Task 4**: Implemented `complete` mutation as a `protectedProcedure` (requires auth). Verifies current status is ACTIVE before transitioning to DISPENSED/completed. Returns CONFLICT error for already-fulfilled prescriptions. Records `dispensed_at` and `dispensed_by` fields.
 - **AC 4 (offline safety)**: Network failures (TypeError/fetch errors) trigger a dedicated offline warning panel with amber styling, warning that "prescription status cannot be verified globally."
-- All 461 tests pass across hub-api (45), opd-lite-pwa (390), and sync-engine (26). Zero regressions.
+- All 461 tests pass across hub-api (45), opd-lite (390), and sync-engine (26). Zero regressions.
 
 ### File List
 
@@ -71,11 +71,11 @@ Claude Opus 4.6 (1M context)
 - `apps/hub-api/src/trpc/routers/medication.ts` (new)
 - `apps/hub-api/src/trpc/routers/_app.ts` (modified — added medicationRouter)
 - `apps/hub-api/src/__tests__/medication.test.ts` (new)
-- `apps/opd-lite-pwa/src/lib/prescription-status-client.ts` (new)
-- `apps/opd-lite-pwa/src/components/pharmacy/PrescriptionScanner.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/prescription-status-client.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/PrescriptionScanner.test.tsx` (new)
-- `apps/opd-lite-pwa/package.json` (modified — added html5-qrcode)
+- `apps/opd-lite/src/lib/prescription-status-client.ts` (new)
+- `apps/opd-lite/src/components/pharmacy/PrescriptionScanner.tsx` (new)
+- `apps/opd-lite/src/__tests__/prescription-status-client.test.ts` (new)
+- `apps/opd-lite/src/__tests__/PrescriptionScanner.test.tsx` (new)
+- `apps/opd-lite/package.json` (modified — added html5-qrcode)
 - `pnpm-lock.yaml` (modified)
 
 ### Review Findings

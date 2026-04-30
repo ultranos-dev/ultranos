@@ -49,7 +49,7 @@ The architecture specifies an Expo Android app for mobile clinicians (`opd-lite-
 
 - **This is a scaffold only.** Do not implement any clinical functionality, local database, or sync integration.
 - **Naming:** The directory is `opd-lite-mobile` (not `opd-android`) to leave room for potential iOS clinician use in the future.
-- **Expo SDK:** Use the same Expo SDK version as `apps/health-passport/` for consistency.
+- **Expo SDK:** Use the same Expo SDK version as `apps/patient-lite-mobile/` for consistency.
 - **No tests required** — there is no logic to test. A typecheck pass is sufficient.
 
 ### References
@@ -62,8 +62,8 @@ The architecture specifies an Expo Android app for mobile clinicians (`opd-lite-
 
 ### Implementation Plan
 
-Scaffolded `apps/opd-lite-mobile/` as a minimal Expo project matching `health-passport` patterns:
-- Used Expo SDK ~52.0.0 (same as health-passport) with React 19 + RN 0.76
+Scaffolded `apps/opd-lite-mobile/` as a minimal Expo project matching `patient-lite-mobile` patterns:
+- Used Expo SDK ~52.0.0 (same as patient-lite-mobile) with React 19 + RN 0.76
 - Structured project with the same tsconfig, babel, and entry point patterns
 - Workspace already covers `apps/*` glob — no changes needed to `pnpm-workspace.yaml`
 - Turbo.json uses task-level config (not per-app) — no changes needed
@@ -91,8 +91,8 @@ No tests required per story dev notes — no logic to test.
 ### Review Findings
 
 - [x] [Review][Decision] **DN1: No `test` script defined** — Resolved: added no-op `"test": "echo 'No tests — scaffold only'"` [package.json]
-- [x] [Review][Decision] **DN2: Package name convention inconsistency** — Resolved: accepted inconsistency. Scoped `@ultranos/` is the better convention; health-passport is the outlier. [package.json]
-- [x] [Review][Decision] **DN3: Workspace protocol mismatch** — Resolved: switched to `workspace:^` for consistency with health-passport. [package.json]
+- [x] [Review][Decision] **DN2: Package name convention inconsistency** — Resolved: accepted inconsistency. Scoped `@ultranos/` is the better convention; patient-lite-mobile is the outlier. [package.json]
+- [x] [Review][Decision] **DN3: Workspace protocol mismatch** — Resolved: switched to `workspace:^` for consistency with patient-lite-mobile. [package.json]
 - [x] [Review][Patch] **P1: Lint script targets nonexistent `src/` directory** — Fixed: changed target from `src` to `.` [package.json]
 - [x] [Review][Defer] W1: RTL support absent in scaffold UI — deferred, scaffold only with no clinical UI
 - [x] [Review][Defer] W2: No SQLCipher configured — deferred, explicitly out of scope per story

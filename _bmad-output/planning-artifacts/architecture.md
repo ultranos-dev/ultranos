@@ -33,7 +33,7 @@ Ultranos operates as a decentralized healthcare ecosystem. The core functional r
 **Scale & Complexity:**
 - **Primary domain:** Distributed Full-Stack (Offline-First Mobile/PWA + Cloud Hub)
 - **Complexity level:** Enterprise / High (SaMD Regulatory classification)
-- **Estimated architectural components:** 6 core nodes (Hub API, Sync Engine, OPD Lite Mobile, OPD Lite PWA, Health Passport, Pharmacy Lite PWA)
+- **Estimated architectural components:** 6 core nodes (Hub API, Sync Engine, OPD Lite Mobile, OPD Lite, Patient Lite Mobile, Pharmacy Lite)
 
 ### Technical Constraints & Dependencies
 
@@ -58,11 +58,11 @@ The project is already initialized as a **Turborepo Monorepo** using `pnpm` and 
 
 Given the existing Turborepo foundation, we will scaffold the individual applications using the following frameworks:
 
-**1. PWA Applications (OPD Lite Desktop, Pharmacy POS, Lab Portal)**
+**1. PWA Applications (OPD Lite, Pharmacy Lite, Lab Portal)**
 - **Framework:** Next.js (App Router)
 - **Rationale:** Native integration with Turborepo, excellent PWA support (`next-pwa`), and highly optimized for rich, dense web interfaces required by clinical users.
 
-**2. Mobile Native Applications (OPD Lite Android, Health Passport)**
+**2. Mobile Native Applications (OPD Lite Mobile, Patient Lite Mobile)**
 - **Framework:** Expo (React Native)
 - **Rationale:** Allows sharing of business logic and UI tokens with the Next.js web apps. Supports native module plugins for SQLCipher (required for AES-256 local encrypted PHI) and robust offline background sync tasks.
 
@@ -157,7 +157,7 @@ ultranos/
 │   ├── hub-api/                 # Node.js tRPC Server (Existing Hub)
 │   │   ├── src/api/root.ts      # tRPC router entry
 │   │   └── src/services/        # Safety gates, FHIR validation & Audit verification
-│   ├── opd-lite-pwa/            # Next.js Desktop App (Clinicians)
+│   ├── opd-lite/                # Next.js Desktop App (Clinicians)
 │   │   ├── src/app/             # App Router pages
 │   │   ├── src/store/           # <--- Zustand Store (Clinician UI State)
 │   │   │   ├── usePatientStore.ts
@@ -167,12 +167,12 @@ ultranos/
 │   │   ├── src/screens/         # Native layouts
 │   │   ├── src/store/           # <--- Zustand Store (Mobile Native UI)
 │   │   └── src/lib/db.ts        # Expo SQLite/SQLCipher (Encrypted Persistence)
-│   ├── pharmacy-lite-pwa/       # Next.js PWA (Pharmacists — standalone spoke)
+│   ├── pharmacy-lite/           # Next.js PWA (Pharmacists — standalone spoke)
 │   │   ├── src/app/             # App Router pages
 │   │   ├── src/components/pharmacy/  # Scanner, Fulfillment, Label, SyncPulse
 │   │   ├── src/stores/          # <--- Zustand Store (Pharmacy Fulfillment State)
 │   │   └── src/lib/             # Prescription verify, dispense sync, status client
-│   └── health-passport/         # Expo Mobile App (Patients)
+│   └── patient-lite-mobile/     # Expo Mobile App (Patients)
 ├── packages/
 │   ├── sync-engine/             # Shared HLC & Append-only ledger logic
 │   ├── ui-kit/                  # Wise-inspired design tokens & React components
@@ -203,7 +203,7 @@ ultranos/
 ### Requirements to Structure Mapping
 
 - **Offline Consultation:** `apps/opd-lite-*` + `packages/sync-engine`.
-- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-lite-pwa` (Read/Verify).
+- **E-Prescribing:** `apps/opd-lite-*` (Write) + `apps/pharmacy-lite` (Read/Verify).
 - **Clinical Safety Gates:** `apps/hub-api/src/services/safety`.
 - **Wise Visual Design:** `packages/ui-kit`.
 - **Regulatory Audit:** `packages/audit-logger`.

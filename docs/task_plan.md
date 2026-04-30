@@ -74,9 +74,9 @@
 4. `packages/sync-engine`
 5. `packages/drug-db`
 6. `apps/hub-api` — ✅ Scaffolded and Running
-7. `apps/opd-desktop`
-8. `apps/health-passport`
-9. `apps/pharmacy-pos`
+7. `apps/opd-lite`
+8. `apps/patient-lite-mobile`
+9. `apps/pharmacy-lite`
 10. `apps/lab-portal`
 11. `packages/ui-kit`
 

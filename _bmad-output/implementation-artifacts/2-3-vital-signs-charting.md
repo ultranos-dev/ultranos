@@ -57,7 +57,7 @@ so that I can monitor their physiological state and receive immediate feedback o
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/clinical/VitalsForm.tsx`
+- Component: `apps/opd-lite/src/components/clinical/VitalsForm.tsx`
 - Utils: `packages/shared-types/src/utils/clinical.ts`
 
 ### References
@@ -91,18 +91,18 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- `apps/opd-lite-pwa/src/components/clinical/vitals-form.tsx` (new)
-- `apps/opd-lite-pwa/src/lib/clinical-utils.ts` (new)
-- `apps/opd-lite-pwa/src/lib/vitals-config.ts` (new)
-- `apps/opd-lite-pwa/src/lib/vitals-fhir-mapper.ts` (new)
-- `apps/opd-lite-pwa/src/stores/vitals-store.ts` (new)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added v4 schema with observations table)
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` (modified — integrated VitalsForm)
-- `apps/opd-lite-pwa/src/__tests__/setup.ts` (modified — added jest-dom matchers)
+- `apps/opd-lite/src/components/clinical/vitals-form.tsx` (new)
+- `apps/opd-lite/src/lib/clinical-utils.ts` (new)
+- `apps/opd-lite/src/lib/vitals-config.ts` (new)
+- `apps/opd-lite/src/lib/vitals-fhir-mapper.ts` (new)
+- `apps/opd-lite/src/stores/vitals-store.ts` (new)
+- `apps/opd-lite/src/lib/db.ts` (modified — added v4 schema with observations table)
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` (modified — integrated VitalsForm)
+- `apps/opd-lite/src/__tests__/setup.ts` (modified — added jest-dom matchers)
 - `packages/shared-types/src/fhir/observation.schema.ts` (new)
 - `packages/shared-types/src/index.ts` (modified — exported observation schema)
-- `apps/opd-lite-pwa/src/__tests__/vitals-form.test.tsx` (new — 12 tests)
-- `apps/opd-lite-pwa/src/__tests__/clinical-utils.test.ts` (new — 9 tests)
-- `apps/opd-lite-pwa/src/__tests__/vitals-config.test.ts` (new — 13 tests)
-- `apps/opd-lite-pwa/src/__tests__/vitals-fhir-mapper.test.ts` (new — 12 tests)
-- `apps/opd-lite-pwa/src/__tests__/vitals-store.test.ts` (new — 13 tests)
+- `apps/opd-lite/src/__tests__/vitals-form.test.tsx` (new — 12 tests)
+- `apps/opd-lite/src/__tests__/clinical-utils.test.ts` (new — 9 tests)
+- `apps/opd-lite/src/__tests__/vitals-config.test.ts` (new — 13 tests)
+- `apps/opd-lite/src/__tests__/vitals-fhir-mapper.test.ts` (new — 12 tests)
+- `apps/opd-lite/src/__tests__/vitals-store.test.ts` (new — 13 tests)

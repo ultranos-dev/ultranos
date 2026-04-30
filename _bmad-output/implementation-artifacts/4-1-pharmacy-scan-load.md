@@ -19,7 +19,7 @@ so that I can be certain the prescription was issued by an authorized clinician 
 ## Tasks / Subtasks
 
 - [x] **Task 1: Pharmacy Scanner UI** (AC: 1)
-  - [x] Implement `apps/opd-lite-pwa/src/components/pharmacy/PharmacyScannerView.tsx`.
+  - [x] Implement `apps/opd-lite/src/components/pharmacy/PharmacyScannerView.tsx`.
   - [x] Integrate `html5-qrcode` or similar for cross-platform camera access.
 - [x] **Task 2: Cryptographic Verification** (AC: 2, 3, 5)
   - [x] Integrate `verifySignature` from `@ultranos/sync-engine/crypto`.
@@ -54,8 +54,8 @@ so that I can be certain the prescription was issued by an authorized clinician 
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/pharmacy/PharmacyScannerView.tsx`
-- Store: `apps/opd-lite-pwa/src/stores/fulfillment-store.ts`
+- Component: `apps/opd-lite/src/components/pharmacy/PharmacyScannerView.tsx`
+- Store: `apps/opd-lite/src/stores/fulfillment-store.ts`
 
 ### References
 
@@ -85,10 +85,10 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- `apps/opd-lite-pwa/src/components/pharmacy/PharmacyScannerView.tsx` (new)
-- `apps/opd-lite-pwa/src/lib/prescription-verify.ts` (new)
-- `apps/opd-lite-pwa/src/stores/fulfillment-store.ts` (new)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added `PractitionerKeyEntry` type and `practitionerKeys` table, DB v8)
-- `apps/opd-lite-pwa/src/__tests__/PharmacyScannerView.test.tsx` (new — 8 tests)
-- `apps/opd-lite-pwa/src/__tests__/prescription-verify.test.ts` (new — 9 tests)
-- `apps/opd-lite-pwa/src/__tests__/fulfillment-store.test.ts` (new — 9 tests)
+- `apps/opd-lite/src/components/pharmacy/PharmacyScannerView.tsx` (new)
+- `apps/opd-lite/src/lib/prescription-verify.ts` (new)
+- `apps/opd-lite/src/stores/fulfillment-store.ts` (new)
+- `apps/opd-lite/src/lib/db.ts` (modified — added `PractitionerKeyEntry` type and `practitionerKeys` table, DB v8)
+- `apps/opd-lite/src/__tests__/PharmacyScannerView.test.tsx` (new — 8 tests)
+- `apps/opd-lite/src/__tests__/prescription-verify.test.ts` (new — 9 tests)
+- `apps/opd-lite/src/__tests__/fulfillment-store.test.ts` (new — 9 tests)

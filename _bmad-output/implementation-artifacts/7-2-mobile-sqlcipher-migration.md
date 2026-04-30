@@ -34,7 +34,7 @@ so that I can safely store PHI in high-risk field environments.
 
 - [x] **Task 1: SQLCipher Integration** (AC: 1, 2)
   - [x] Update Expo project to include SQLCipher dependencies.
-  - [x] Implement `getEncryptedDbConnection()` helper in `apps/health-passport`.
+  - [x] Implement `getEncryptedDbConnection()` helper in `apps/patient-lite-mobile`.
 - [x] **Task 2: Biometric Key Unlocking** (AC: 3, 4)
   - [x] Create a `MobileKeyService` that wraps `expo-secure-store` and `expo-local-authentication`.
   - [x] Implement the "Unlock Database" flow on app startup.
@@ -52,7 +52,7 @@ so that I can safely store PHI in high-risk field environments.
 
 ### Implementation Plan
 
-- Target app: `apps/health-passport` (existing Expo/RN app) — not `apps/opd-mobile` (doesn't exist)
+- Target app: `apps/patient-lite-mobile` (existing Expo/RN app) — not `apps/opd-mobile` (doesn't exist)
 - D69/D73 deferred items drove this story: SecureStore 2KB limit for Health Passport
 - SQLCipher via `expo-sqlite` with PRAGMA key for AES-256 encryption
 - `MobileKeyService` wraps `expo-secure-store` (passphrase storage) + `expo-local-authentication` (biometric gate)
@@ -85,17 +85,17 @@ so that I can safely store PHI in high-risk field environments.
 
 ## File List
 
-- `apps/health-passport/package.json` — modified (added expo-sqlite, expo-local-authentication, expo-file-system deps)
-- `apps/health-passport/app.json` — modified (added expo-sqlite SQLCipher plugin, expo-local-authentication plugin)
-- `apps/health-passport/jest.setup.js` — modified (added global mocks for expo-local-authentication, expo-file-system, expo-sqlite)
-- `apps/health-passport/src/lib/encrypted-db.ts` — new (SQLCipher database connection singleton)
-- `apps/health-passport/src/lib/mobile-key-service.ts` — new (biometric key management)
-- `apps/health-passport/src/lib/migration.ts` — new (SecureStore → SQLCipher migration)
-- `apps/health-passport/src/hooks/use-database-unlock.ts` — new (unlock lifecycle hook)
-- `apps/health-passport/__tests__/encrypted-db.test.ts` — new (11 tests)
-- `apps/health-passport/__tests__/mobile-key-service.test.ts` — new (11 tests)
-- `apps/health-passport/__tests__/use-database-unlock.test.ts` — new (9 tests)
-- `apps/health-passport/__tests__/migration.test.ts` — new (7 tests)
+- `apps/patient-lite-mobile/package.json` — modified (added expo-sqlite, expo-local-authentication, expo-file-system deps)
+- `apps/patient-lite-mobile/app.json` — modified (added expo-sqlite SQLCipher plugin, expo-local-authentication plugin)
+- `apps/patient-lite-mobile/jest.setup.js` — modified (added global mocks for expo-local-authentication, expo-file-system, expo-sqlite)
+- `apps/patient-lite-mobile/src/lib/encrypted-db.ts` — new (SQLCipher database connection singleton)
+- `apps/patient-lite-mobile/src/lib/mobile-key-service.ts` — new (biometric key management)
+- `apps/patient-lite-mobile/src/lib/migration.ts` — new (SecureStore → SQLCipher migration)
+- `apps/patient-lite-mobile/src/hooks/use-database-unlock.ts` — new (unlock lifecycle hook)
+- `apps/patient-lite-mobile/__tests__/encrypted-db.test.ts` — new (11 tests)
+- `apps/patient-lite-mobile/__tests__/mobile-key-service.test.ts` — new (11 tests)
+- `apps/patient-lite-mobile/__tests__/use-database-unlock.test.ts` — new (9 tests)
+- `apps/patient-lite-mobile/__tests__/migration.test.ts` — new (7 tests)
 
 ### Review Findings
 
@@ -121,6 +121,6 @@ so that I can safely store PHI in high-risk field environments.
 ## Change Log
 
 - 2026-04-29: Story created by Antigravity.
-- 2026-04-29: Implementation started — target changed from `apps/opd-mobile` to `apps/health-passport` per user decision.
+- 2026-04-29: Implementation started — target changed from `apps/opd-mobile` to `apps/patient-lite-mobile` per user decision.
 - 2026-04-29: Implementation complete — all 3 tasks done, 38 tests passing, status → review.
 - 2026-04-29: Code review complete — 13 patches applied, 3 deferred, 8 dismissed. 42 tests passing. Status → done.

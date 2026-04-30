@@ -6,7 +6,7 @@ As a GP, I want to verify a patient's identity in the PWA so that I can begin a 
 ## Status: done
 
 ## Acceptance Criteria
-- [x] `apps/opd-lite-pwa` is initialized (Next.js).
+- [x] `apps/opd-lite` is initialized (Next.js).
 - [x] Dexie.js is configured for local persistence of Patient records.
 - [x] A "Patient Search" screen allows searching by Name or National ID.
 - [x] Search logic checks Local Cache (Dexie) first, then Hub API (tRPC).
@@ -24,7 +24,7 @@ As a GP, I want to verify a patient's identity in the PWA so that I can begin a 
 - **Performance:** Ensure Dexie indices are created for `identifier` and `name`.
 
 ## Dev Notes
-- **App name:** `opd-lite-pwa` per architecture.md (not `opd-desktop` from CLAUDE.md — architecture doc is canonical for naming)
+- **App name:** `opd-lite` per architecture.md (not `opd-desktop` from CLAUDE.md — architecture doc is canonical for naming)
 - **Framework:** Next.js 15 App Router with Tailwind CSS
 - **Local DB:** Dexie.js v4.x over IndexedDB — key-in-memory encryption strategy (key wiped on tab close)
 - **State:** Zustand v5 with mandatory `syncStatus` shape: `{ isPending, isError, lastSyncedAt }`
@@ -38,8 +38,8 @@ As a GP, I want to verify a patient's identity in the PWA so that I can begin a 
 
 ## Tasks/Subtasks
 
-### Task 1: Initialize `apps/opd-lite-pwa` Next.js App
-- [x] 1.1: Scaffold Next.js 15 App Router project in `apps/opd-lite-pwa`
+### Task 1: Initialize `apps/opd-lite` Next.js App
+- [x] 1.1: Scaffold Next.js 15 App Router project in `apps/opd-lite`
 - [x] 1.2: Configure `package.json` with workspace dependencies (`@ultranos/shared-types`, `@ultranos/ui-kit`)
 - [x] 1.3: Set up `tsconfig.json` extending base, Tailwind CSS config, `next.config.js`
 - [x] 1.4: Create root layout with Inter font, RTL support, and design token imports
@@ -131,7 +131,7 @@ As a GP, I want to verify a patient's identity in the PWA so that I can begin a 
 - Fixed React 19 `use(Promise)` in encounter page: extracted `EncounterDashboard` component for testability, page wrapper handles Promise params
 
 ### Completion Notes
-- 43 tests in opd-lite-pwa (smoke: 2, db: 8, store: 8, search-logic: 6, components: 12, encounter: 7)
+- 43 tests in opd-lite (smoke: 2, db: 8, store: 8, search-logic: 6, components: 12, encounter: 7)
 - 104 total monorepo tests passing (0 regressions)
 - Production build succeeds (Next.js 15.5.15)
 - First Load JS: 135 kB for search page, 103 kB for encounter page
@@ -140,34 +140,34 @@ As a GP, I want to verify a patient's identity in the PWA so that I can begin a 
 - Hub API patient search procedure added to `patientRouter` (Supabase query with name/ID search)
 
 ## File List
-- `apps/opd-lite-pwa/package.json` (new)
-- `apps/opd-lite-pwa/tsconfig.json` (new)
-- `apps/opd-lite-pwa/next.config.js` (new)
-- `apps/opd-lite-pwa/tailwind.config.ts` (new)
-- `apps/opd-lite-pwa/postcss.config.js` (new)
-- `apps/opd-lite-pwa/vitest.config.ts` (new)
-- `apps/opd-lite-pwa/src/app/globals.css` (new)
-- `apps/opd-lite-pwa/src/app/layout.tsx` (new)
-- `apps/opd-lite-pwa/src/app/page.tsx` (new)
-- `apps/opd-lite-pwa/src/app/encounter/[patientId]/page.tsx` (new)
-- `apps/opd-lite-pwa/src/lib/db.ts` (new)
-- `apps/opd-lite-pwa/src/lib/trpc.ts` (new)
-- `apps/opd-lite-pwa/src/lib/use-patient-search.ts` (new)
-- `apps/opd-lite-pwa/src/lib/use-sync.ts` (new)
-- `apps/opd-lite-pwa/src/stores/patient-store.ts` (new)
-- `apps/opd-lite-pwa/src/components/search-input.tsx` (new)
-- `apps/opd-lite-pwa/src/components/pill-button.tsx` (new)
-- `apps/opd-lite-pwa/src/components/patient-result-list.tsx` (new)
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/setup.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/smoke.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/db.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/patient-store.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/components.test.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/search-logic.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/encounter-dashboard.test.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/use-sync.test.ts` (new — review patch)
-- `apps/opd-lite-pwa/src/lib/hash-national-id.ts` (new — review patch)
+- `apps/opd-lite/package.json` (new)
+- `apps/opd-lite/tsconfig.json` (new)
+- `apps/opd-lite/next.config.js` (new)
+- `apps/opd-lite/tailwind.config.ts` (new)
+- `apps/opd-lite/postcss.config.js` (new)
+- `apps/opd-lite/vitest.config.ts` (new)
+- `apps/opd-lite/src/app/globals.css` (new)
+- `apps/opd-lite/src/app/layout.tsx` (new)
+- `apps/opd-lite/src/app/page.tsx` (new)
+- `apps/opd-lite/src/app/encounter/[patientId]/page.tsx` (new)
+- `apps/opd-lite/src/lib/db.ts` (new)
+- `apps/opd-lite/src/lib/trpc.ts` (new)
+- `apps/opd-lite/src/lib/use-patient-search.ts` (new)
+- `apps/opd-lite/src/lib/use-sync.ts` (new)
+- `apps/opd-lite/src/stores/patient-store.ts` (new)
+- `apps/opd-lite/src/components/search-input.tsx` (new)
+- `apps/opd-lite/src/components/pill-button.tsx` (new)
+- `apps/opd-lite/src/components/patient-result-list.tsx` (new)
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` (new)
+- `apps/opd-lite/src/__tests__/setup.ts` (new)
+- `apps/opd-lite/src/__tests__/smoke.test.ts` (new)
+- `apps/opd-lite/src/__tests__/db.test.ts` (new)
+- `apps/opd-lite/src/__tests__/patient-store.test.ts` (new)
+- `apps/opd-lite/src/__tests__/components.test.tsx` (new)
+- `apps/opd-lite/src/__tests__/search-logic.test.ts` (new)
+- `apps/opd-lite/src/__tests__/encounter-dashboard.test.tsx` (new)
+- `apps/opd-lite/src/__tests__/use-sync.test.ts` (new — review patch)
+- `apps/opd-lite/src/lib/hash-national-id.ts` (new — review patch)
 - `apps/hub-api/src/trpc/routers/patient.ts` (modified — added search procedure, review patches)
 
 ## Change Log

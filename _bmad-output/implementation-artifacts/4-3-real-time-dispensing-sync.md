@@ -38,7 +38,7 @@ so that the prescription's status is updated everywhere to prevent fraud and ens
 ### Project Structure Notes
 
 - Router: `apps/hub-api/src/trpc/routers/medication.ts`
-- Hook: `apps/opd-lite-pwa/src/lib/use-sync.ts`
+- Hook: `apps/opd-lite/src/lib/use-sync.ts`
 
 ### References
 
@@ -93,10 +93,10 @@ No debug issues encountered.
 
 - `apps/hub-api/src/trpc/routers/medication.ts` (modified — added `recordDispense` mutation with HLC conflict resolution)
 - `apps/hub-api/src/__tests__/medication.test.ts` (modified — added 8 new tests for recordDispense + HLC conflict)
-- `apps/opd-lite-pwa/src/lib/dispense-sync.ts` (new — Hub sync with offline queue fallback)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added `SyncQueueEntry` type, `syncQueue` table, Dexie v11)
-- `apps/opd-lite-pwa/src/stores/fulfillment-store.ts` (modified — added `confirmDispense`, `syncStatus`, `dispensing`/`completed` phases)
-- `apps/opd-lite-pwa/src/components/pharmacy/SyncPulse.tsx` (new — sync status indicator component)
-- `apps/opd-lite-pwa/src/__tests__/dispense-sync.test.ts` (new — 5 tests for sync logic)
-- `apps/opd-lite-pwa/src/__tests__/fulfillment-store.test.ts` (modified — added 7 tests for confirmDispense)
-- `apps/opd-lite-pwa/src/__tests__/SyncPulse.test.tsx` (new — 6 tests for SyncPulse component)
+- `apps/opd-lite/src/lib/dispense-sync.ts` (new — Hub sync with offline queue fallback)
+- `apps/opd-lite/src/lib/db.ts` (modified — added `SyncQueueEntry` type, `syncQueue` table, Dexie v11)
+- `apps/opd-lite/src/stores/fulfillment-store.ts` (modified — added `confirmDispense`, `syncStatus`, `dispensing`/`completed` phases)
+- `apps/opd-lite/src/components/pharmacy/SyncPulse.tsx` (new — sync status indicator component)
+- `apps/opd-lite/src/__tests__/dispense-sync.test.ts` (new — 5 tests for sync logic)
+- `apps/opd-lite/src/__tests__/fulfillment-store.test.ts` (modified — added 7 tests for confirmDispense)
+- `apps/opd-lite/src/__tests__/SyncPulse.test.tsx` (new — 6 tests for SyncPulse component)

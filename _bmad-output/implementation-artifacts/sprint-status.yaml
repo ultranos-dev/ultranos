@@ -13,12 +13,14 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-04-30T21:00:00.000000'
+last_updated: '2026-04-30T23:59:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 development_status:
+  # Cross-cutting infrastructure
+  0-1-ecosystem-package-rename: done
   epic-1: in-progress
   1-1-monorepo-foundation-shared-contracts: ready-for-dev
   1-2-hub-api-trpc-scaffolding: ready-for-dev

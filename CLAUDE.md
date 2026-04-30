@@ -4,10 +4,10 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 
 ## Tech Stack
 
-- **OPD Lite Desktop (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
+- **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
 - **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
-- **Health Passport:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
-- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite-pwa/`)
+- **Patient Lite Mobile:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
+- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`)
 - **Lab Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
@@ -20,10 +20,10 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 ultranos/
 ├── apps/
 │   ├── hub-api/           # Central Hub backend (Node.js)
-│   ├── opd-desktop/       # OPD Lite Desktop PWA (Next.js)
+│   ├── opd-lite/           # OPD Lite Desktop PWA (Next.js)
 │   ├── opd-lite-mobile/   # OPD Lite Mobile (Expo/React Native) [SCAFFOLDED — future dev]
-│   ├── health-passport/   # Patient app (React Native)
-│   ├── pharmacy-lite-pwa/ # Pharmacy PWA (Next.js — standalone spoke)
+│   ├── patient-lite-mobile/ # Patient app (React Native)
+│   ├── pharmacy-lite/     # Pharmacy PWA (Next.js — standalone spoke)
 │   └── lab-portal/        # Lab PWA (Next.js)
 ├── packages/
 │   ├── shared-types/      # FHIR R4 type definitions, enums, interfaces
@@ -46,8 +46,8 @@ This is a **monorepo** managed with pnpm workspaces. Shared packages are in `pac
 ```bash
 pnpm install                          # Install all dependencies
 pnpm -F hub-api dev                   # Run Hub API locally
-pnpm -F opd-desktop dev               # Run OPD Desktop PWA locally
-pnpm -F health-passport start         # Run Health Passport in simulator
+pnpm -F opd-lite dev                  # Run OPD Lite Desktop PWA locally
+pnpm -F patient-lite-mobile start     # Run Patient Lite Mobile in simulator
 pnpm test                             # Run all tests
 pnpm -F hub-api test                  # Run tests for a specific app
 pnpm -F shared-types build            # Build a shared package
@@ -138,7 +138,7 @@ When you encounter a decision point (ambiguous design choice, multiple valid app
 
 ## When Compacting
 
-When compacting, always preserve: the full list of modified files, any failing test names and their error messages, which sync tier is relevant to the current work, and the current module being worked on (hub-api, opd-desktop, etc.).
+When compacting, always preserve: the full list of modified files, any failing test names and their error messages, which sync tier is relevant to the current work, and the current module being worked on (hub-api, opd-lite, etc.).
 
 ## Database Operations — Supabase MCP Required
 

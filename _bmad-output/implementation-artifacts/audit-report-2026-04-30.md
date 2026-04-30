@@ -8,17 +8,17 @@
 
 ## Executive Summary
 
-The Ultranos codebase has strong progress on clinical encounter workflows (Epics 2–3), Health Passport (Epic 5), and PWA encryption (Story 7.1), backed by 1,900+ passing tests. However, **two entire apps specified in the architecture are missing** (`pharmacy-pos` and `opd-lite-mobile`), the sync engine has no queue drain mechanism (making offline-first cosmetic), audit logging is a stub, and Hub API stores PHI in plaintext. These gaps are blockers for production and regulatory compliance.
+The Ultranos codebase has strong progress on clinical encounter workflows (Epics 2–3), Health Passport (Epic 5), and PWA encryption (Story 7.1), backed by 1,900+ passing tests. However, **two entire apps specified in the architecture are missing** (`pharmacy-lite` and `opd-lite-mobile`), the sync engine has no queue drain mechanism (making offline-first cosmetic), audit logging is a stub, and Hub API stores PHI in plaintext. These gaps are blockers for production and regulatory compliance.
 
 ---
 
 ## 1. Critical Finding: Missing Applications
 
-### 1.1 `apps/pharmacy-pos/` — Does Not Exist
+### 1.1 `apps/pharmacy-lite/` — Does Not Exist
 
 The architecture ([architecture.md:171](../_bmad-output/planning-artifacts/architecture.md)) specifies a dedicated **Pharmacy POS** Next.js PWA as one of 6 core spoke apps. Epic 4 (Stories 4.1–4.3) is marked **DONE** in the sprint status.
 
-**What actually happened:** All pharmacy workflows — QR scanning, fulfillment checklist, medication labeling, dispensing sync — were built **inside `apps/opd-lite-pwa/`** as components (`PharmacyScannerView`, `FulfillmentChecklist`, `MedicationLabel`, `SyncPulse`).
+**What actually happened:** All pharmacy workflows — QR scanning, fulfillment checklist, medication labeling, dispensing sync — were built **inside `apps/opd-lite/`** as components (`PharmacyScannerView`, `FulfillmentChecklist`, `MedicationLabel`, `SyncPulse`).
 
 **Impact:**
 - Pharmacists and clinicians share the same application deployment
@@ -30,7 +30,7 @@ The architecture ([architecture.md:171](../_bmad-output/planning-artifacts/archi
 
 The architecture ([architecture.md:169](../_bmad-output/planning-artifacts/architecture.md)) specifies an **Expo Android app for clinicians** separate from the Health Passport. Story 1.4 (Mobile Identity Verification with SQLCipher) remains in **BACKLOG**.
 
-**What actually happened:** The `health-passport` app has SQLCipher and biometric unlock, but it is the **patient** app. No mobile clinician experience exists.
+**What actually happened:** The `patient-lite-mobile` app has SQLCipher and biometric unlock, but it is the **patient** app. No mobile clinician experience exists.
 
 **Impact:**
 - Field GPs in rural areas (a core PRD persona) have no mobile app
@@ -70,15 +70,15 @@ The architecture ([architecture.md:169](../_bmad-output/planning-artifacts/archi
 
 ### 4.1 Pharmacy Merged Into Clinician PWA
 
-The architecture defines 6 separate spoke apps with distinct deployments. Pharmacy fulfillment was merged into `opd-lite-pwa` rather than being its own app. This means:
+The architecture defines 6 separate spoke apps with distinct deployments. Pharmacy fulfillment was merged into `opd-lite` rather than being its own app. This means:
 - Pharmacists access the clinician app with role-based UI gating
 - No independent deployment or scaling for pharmacy operations
 - Violates the Hub-and-Spoke isolation principle
 
 ### 4.2 Missing `packages/drug-db/`
 
-The architecture references a shared drug interaction database package. Instead, the interaction checker and 100-medication formulary are embedded directly in `opd-lite-pwa/src/lib/`. This means:
-- Drug data is not reusable across apps (e.g., a future pharmacy-pos would need its own copy)
+The architecture references a shared drug interaction database package. Instead, the interaction checker and 100-medication formulary are embedded directly in `opd-lite/src/lib/`. This means:
+- Drug data is not reusable across apps (e.g., a future pharmacy-lite would need its own copy)
 - No shared contract for interaction severity levels
 
 ### 4.3 Sync Engine Is HLC-Only
@@ -117,7 +117,7 @@ The architecture references a shared drug interaction database package. Instead,
 | 1 | Ecosystem Foundation & Identity | 🟡 Partial | 3/5 | 104 | Stories 1.4 (mobile) and 1.5 (RTL) in BACKLOG |
 | 2 | Clinical Encounter & SOAP | ✅ Done | 5/5 | 248 | — |
 | 3 | E-Prescribing & Medication Safety | ✅ Done | 4/4 | 375 | Interaction check limited to pending Rx only |
-| 4 | Pharmacy Operations | ⚠️ Architecturally Non-Compliant | 3/3 code done | 461 | Built in wrong app (`opd-lite-pwa` instead of `pharmacy-pos`) |
+| 4 | Pharmacy Operations | ⚠️ Architecturally Non-Compliant | 3/3 code done | 461 | Built in wrong app (`opd-lite` instead of `pharmacy-lite`) |
 | 5 | Patient Health Passport & Consent | 🟡 In Progress | 1/3 done, 2 in-progress | 226 | Timeline and consent management need re-review |
 | 6 | Trust, Audit & Access | 🟡 In Progress | 1/1 in-progress | 50 | Row-level scoping deferred |
 | 7 | Security & Encryption | 🟡 Partial | 2/4 done | 539 | Stories 7.3 and 7.4 not started |
@@ -154,7 +154,7 @@ The [deferred-work.md](deferred-work.md) documents **74 deferred items** across 
 | **P0** | Implement sync queue drain (Epic 9) | Without this, offline-first is non-functional. No data reaches the Hub. |
 | **P0** | Wire audit logging with hash chaining (Epic 8) | Regulatory requirement. Cannot ship without immutable audit trail. |
 | **P1** | Hub API field-level encryption (Story 7.3) | PHI in plaintext on the server is a compliance blocker. |
-| **P1** | Scaffold `apps/pharmacy-pos/` and extract pharmacy components | Architectural deviation that gets harder to fix over time. RBAC isolation requires it. |
+| **P1** | Scaffold `apps/pharmacy-lite/` and extract pharmacy components | Architectural deviation that gets harder to fix over time. RBAC isolation requires it. |
 | **P2** | Practitioner key lifecycle (Story 7.4) | Compromised keys can forge prescriptions indefinitely without TTL/revocation. |
 | **P2** | Implement `MedicationStatement` and full interaction checking (Epic 10) | Current interaction checker misses chronic medications. Patient safety risk. |
 | **P3** | Scaffold `apps/opd-lite-mobile/` | Required if mobile clinician use is in scope for initial release. |
@@ -173,7 +173,7 @@ The [deferred-work.md](deferred-work.md) documents **74 deferred items** across 
 | No audit trail for PHI access | **Critical** | Certain | Implement Epic 8 — regulatory non-compliance |
 | Drug interaction false negatives | **High** | Likely | Implement MedicationStatement model (Epic 10) |
 | Forged prescriptions via compromised keys | **High** | Possible | Implement Story 7.4 — key TTL and revocation |
-| Pharmacy-clinician RBAC bleed | **Medium** | Possible | Extract pharmacy-pos into separate app |
+| Pharmacy-clinician RBAC bleed | **Medium** | Possible | Extract pharmacy-lite into separate app |
 | No mobile clinician app for field use | **Medium** | Certain | Scaffold opd-lite-mobile or descope from initial release |
 | Hardcoded English strings block MENA launch | **Medium** | Certain | Begin i18n foundation early to avoid refactor debt |
 

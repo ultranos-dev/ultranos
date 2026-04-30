@@ -19,7 +19,7 @@ so that I can complete consultations rapidly and maintain clinical flow.
 ## Tasks / Subtasks
 
 - [x] **Task 1: Setup Command Palette Library** (AC: 1, 5)
-  - [x] Install `cmdk` in `apps/opd-lite-pwa`.
+  - [x] Install `cmdk` in `apps/opd-lite`.
   - [x] Create the `CommandPalette` component with an overlay/modal structure.
 - [x] **Task 2: Keyboard Listeners** (AC: 1)
   - [x] Implement a global keyboard listener hook for the `Ctrl+K` trigger.
@@ -39,8 +39,8 @@ so that I can complete consultations rapidly and maintain clinical flow.
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/layout/CommandPalette.tsx`
-- Layout: `apps/opd-lite-pwa/src/components/layout/Navbar.tsx` (Trigger location)
+- Component: `apps/opd-lite/src/components/layout/CommandPalette.tsx`
+- Layout: `apps/opd-lite/src/components/layout/Navbar.tsx` (Trigger location)
 
 ### References
 
@@ -60,7 +60,7 @@ Claude Opus 4.6 (1M context)
 
 ### Completion Notes List
 
-- Installed `cmdk@1` as the command palette library in `opd-lite-pwa`
+- Installed `cmdk@1` as the command palette library in `opd-lite`
 - Created `useCommandPalette` hook with global `Ctrl+K`/`Cmd+K` listener, `preventDefault` to avoid browser search collision, and proper cleanup on unmount
 - Created `CommandPalette` component using cmdk with: fuzzy search (case-insensitive, built-in), 4 clinical actions (Vitals, Subjective, Objective, Assessment), focus management via `data-section` attributes and `scrollIntoView`
 - Styled with Wise-inspired design system tokens (Inter font, neutral/primary HSL palette, spacing scale), glassmorphism backdrop (`backdrop-blur-sm` on overlay, `backdrop-blur-md` on palette container)
@@ -98,10 +98,10 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- `apps/opd-lite-pwa/package.json` (modified — added cmdk dependency)
-- `apps/opd-lite-pwa/src/hooks/use-command-palette.ts` (new)
-- `apps/opd-lite-pwa/src/components/layout/CommandPalette.tsx` (new)
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` (modified — integrated palette + data-section attrs)
-- `apps/opd-lite-pwa/src/__tests__/command-palette.test.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/use-command-palette.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/setup.ts` (modified — added ResizeObserver + scrollIntoView polyfills)
+- `apps/opd-lite/package.json` (modified — added cmdk dependency)
+- `apps/opd-lite/src/hooks/use-command-palette.ts` (new)
+- `apps/opd-lite/src/components/layout/CommandPalette.tsx` (new)
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` (modified — integrated palette + data-section attrs)
+- `apps/opd-lite/src/__tests__/command-palette.test.tsx` (new)
+- `apps/opd-lite/src/__tests__/use-command-palette.test.ts` (new)
+- `apps/opd-lite/src/__tests__/setup.ts` (modified — added ResizeObserver + scrollIntoView polyfills)

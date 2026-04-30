@@ -19,7 +19,7 @@ so that I have a clinical record of the visit that is durable and follows local 
 ## Tasks / Subtasks
 
 - [x] **Task 1: Scaffold SOAP UI Components** (AC: 1, 5)
-  - [x] Create `SOAPNoteEntry` component in `apps/opd-lite-pwa/src/components/clinical/`.
+  - [x] Create `SOAPNoteEntry` component in `apps/opd-lite/src/components/clinical/`.
   - [x] Implement textareas for Subjective and Objective inputs.
   - [x] Apply `@ultranos/ui-kit` typography and spacing tokens.
   - [x] Ensure `dir="rtl"` is applied based on the global language context.
@@ -42,8 +42,8 @@ so that I have a clinical record of the visit that is durable and follows local 
 
 ### Project Structure Notes
 
-- Components: `apps/opd-lite-pwa/src/components/clinical/*`
-- Store: `apps/opd-lite-pwa/src/store/useEncounterStore.ts`
+- Components: `apps/opd-lite/src/components/clinical/*`
+- Store: `apps/opd-lite/src/store/useEncounterStore.ts`
 - Types: `@ultranos/shared-types` (ClinicalImpression schema)
 
 ### References
@@ -72,20 +72,20 @@ Claude Opus 4.6 (1M context)
 
 ### File List
 
-- `apps/opd-lite-pwa/src/components/clinical/soap-note-entry.tsx` (new)
-- `apps/opd-lite-pwa/src/components/clinical/autosave-indicator.tsx` (new)
-- `apps/opd-lite-pwa/src/stores/soap-note-store.ts` (new)
-- `apps/opd-lite-pwa/src/lib/use-autosave.ts` (new)
-- `apps/opd-lite-pwa/src/lib/fhir-mappers.ts` (new)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added `soapLedger` table v3)
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` (modified — integrated SOAP note)
+- `apps/opd-lite/src/components/clinical/soap-note-entry.tsx` (new)
+- `apps/opd-lite/src/components/clinical/autosave-indicator.tsx` (new)
+- `apps/opd-lite/src/stores/soap-note-store.ts` (new)
+- `apps/opd-lite/src/lib/use-autosave.ts` (new)
+- `apps/opd-lite/src/lib/fhir-mappers.ts` (new)
+- `apps/opd-lite/src/lib/db.ts` (modified — added `soapLedger` table v3)
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` (modified — integrated SOAP note)
 - `packages/shared-types/src/fhir/clinical-impression.schema.ts` (new)
 - `packages/shared-types/src/index.ts` (modified — added clinical-impression export)
-- `apps/opd-lite-pwa/src/__tests__/soap-note-entry.test.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/autosave-indicator.test.tsx` (new)
-- `apps/opd-lite-pwa/src/__tests__/soap-note-store.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/use-autosave.test.ts` (new)
-- `apps/opd-lite-pwa/src/__tests__/fhir-mappers.test.ts` (new)
+- `apps/opd-lite/src/__tests__/soap-note-entry.test.tsx` (new)
+- `apps/opd-lite/src/__tests__/autosave-indicator.test.tsx` (new)
+- `apps/opd-lite/src/__tests__/soap-note-store.test.ts` (new)
+- `apps/opd-lite/src/__tests__/use-autosave.test.ts` (new)
+- `apps/opd-lite/src/__tests__/fhir-mappers.test.ts` (new)
 
 ### Review Findings
 

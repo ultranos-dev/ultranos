@@ -47,7 +47,7 @@ so that only authorized clinical staff can access Protected Health Information (
   - [x] Implement role-check logic for `Patient`, `Encounter`, and `MedicationRequest` routers.
   - [x] Add specific checks for `consent.sync` to prevent grantor impersonation (D167).
 - [x] **Task 3: Client-Side Session Integration** (AC: 4)
-  - [x] Refactor `apps/opd-lite` and `apps/health-passport` to use the authenticated user's session.
+  - [x] Refactor `apps/opd-lite` and `apps/patient-lite-mobile` to use the authenticated user's session.
   - [x] Replace `Practitioner/current-user` constants with `session.user.practitionerId` (D29, D44, D52).
 - [x] **Task 4: RBAC Security Audit** (AC: 5)
   - [x] Verify that unauthorized requests (e.g., Pharmacist reading SOAP notes) are blocked at the API level.
@@ -75,10 +75,10 @@ so that only authorized clinical staff can access Protected Health Information (
 
 ### Completion Notes
 
-All 4 tasks completed with 50 passing tests (45 hub-api + 5 opd-lite-pwa):
+All 4 tasks completed with 50 passing tests (45 hub-api + 5 opd-lite):
 - Task 1: JWT verification with `jose`, practitioner lookup helper, protectedProcedure and roleRestrictedProcedure
 - Task 2: enforceResourceAccess middleware applied to all routers (patient, medication, consent), grantor impersonation prevention on consent.sync
-- Task 3: auth-session-store in opd-lite-pwa, hardcoded PRACTITIONER_REF replaced with session-based practitionerRef
+- Task 3: auth-session-store in opd-lite, hardcoded PRACTITIONER_REF replaced with session-based practitionerRef
 - Task 4: 16-test security audit covering PHARMACIST restrictions, PATIENT restrictions, unauthenticated access denial, ADMIN bypass, and D167 impersonation prevention
 
 Pre-existing test failures (5 files: auth-middleware, consent, health, medication, enforce-consent) are unrelated to RBAC changes — they fail due to missing `@ultranos/audit-logger` module resolution and mock chaining issues that predate this story.
@@ -96,8 +96,8 @@ Pre-existing test failures (5 files: auth-middleware, consent, health, medicatio
 - `apps/hub-api/src/__tests__/resource-authorization.test.ts` — enforceResourceAccess tests (9 tests)
 - `apps/hub-api/src/__tests__/consent-grantor-validation.test.ts` — D167 impersonation tests (3 tests)
 - `apps/hub-api/src/__tests__/rbac-security-audit.test.ts` — End-to-end RBAC security audit (16 tests)
-- `apps/opd-lite-pwa/src/stores/auth-session-store.ts` — Auth session Zustand store
-- `apps/opd-lite-pwa/src/__tests__/auth-session-store.test.ts` — Auth session store tests (5 tests)
+- `apps/opd-lite/src/stores/auth-session-store.ts` — Auth session Zustand store
+- `apps/opd-lite/src/__tests__/auth-session-store.test.ts` — Auth session store tests (5 tests)
 
 ### Modified Files
 - `apps/hub-api/src/trpc/init.ts` — JWT verification in createTRPCContext, exported tInstance
@@ -106,7 +106,7 @@ Pre-existing test failures (5 files: auth-middleware, consent, health, medicatio
 - `apps/hub-api/src/trpc/routers/consent.ts` — Added enforceResourceAccess, grantor impersonation check (D167), removed stale TODO
 - `apps/hub-api/src/trpc/routers/encounter.ts` — Updated guidance comments for RBAC middleware
 - `apps/hub-api/package.json` — Added `jose` dependency
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` — Replaced hardcoded PRACTITIONER_REF with auth session store
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` — Replaced hardcoded PRACTITIONER_REF with auth session store
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated epic-6 and story 6-1 status
 
 ## Review Findings

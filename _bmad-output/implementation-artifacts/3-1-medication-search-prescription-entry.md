@@ -22,7 +22,7 @@ so that I can provide treatment to the patient that is documented in a FHIR-comp
   - [x] Pre-load a subset of common medications into the Dexie `vocabulary` store (linked to FHIR `Medication` resources).
   - [x] Implement a `searchMedications` utility with fuzzy matching in `@ultranos/sync-engine` or local service.
 - [x] **Task 2: Prescription Entry UI** (AC: 2, 3)
-  - [x] Create `PrescriptionEntry` component in `apps/opd-lite-pwa`.
+  - [x] Create `PrescriptionEntry` component in `apps/opd-lite`.
   - [x] Implement autocomplete for medication search.
   - [x] Build a sub-form for Dosage (quantity), Frequency (e.g., BID, TID), and Duration (days).
 - [x] **Task 3: MedicationRequest Mapping** (AC: 4, 5)
@@ -41,8 +41,8 @@ so that I can provide treatment to the patient that is documented in a FHIR-comp
 
 ### Project Structure Notes
 
-- Component: `apps/opd-lite-pwa/src/components/clinical/PrescriptionEntry.tsx`
-- Vocabulary: `apps/opd-lite-pwa/src/assets/vocab/medications_subset.json`
+- Component: `apps/opd-lite/src/components/clinical/PrescriptionEntry.tsx`
+- Vocabulary: `apps/opd-lite/src/assets/vocab/medications_subset.json`
 
 ### References
 
@@ -68,18 +68,18 @@ No debug issues encountered. All tests passed on first run.
 
 ### File List
 
-- `apps/opd-lite-pwa/src/assets/vocab/medications_subset.json` (new)
-- `apps/opd-lite-pwa/src/lib/medication-search.ts` (new)
-- `apps/opd-lite-pwa/src/lib/prescription-config.ts` (new)
-- `apps/opd-lite-pwa/src/lib/medication-request-mapper.ts` (new)
-- `apps/opd-lite-pwa/src/stores/prescription-store.ts` (new)
-- `apps/opd-lite-pwa/src/components/clinical/PrescriptionEntry.tsx` (new)
-- `apps/opd-lite-pwa/src/lib/db.ts` (modified — added v6 schema with medications table)
-- `apps/opd-lite-pwa/src/components/encounter-dashboard.tsx` (modified — integrated prescriptions)
-- `apps/opd-lite-pwa/src/__tests__/medication-search.test.ts` (new — 10 tests)
-- `apps/opd-lite-pwa/src/__tests__/PrescriptionEntry.test.tsx` (new — 10 tests)
-- `apps/opd-lite-pwa/src/__tests__/medication-request-mapper.test.ts` (new — 20 tests)
-- `apps/opd-lite-pwa/src/__tests__/prescription-store.test.ts` (new — 15 tests)
+- `apps/opd-lite/src/assets/vocab/medications_subset.json` (new)
+- `apps/opd-lite/src/lib/medication-search.ts` (new)
+- `apps/opd-lite/src/lib/prescription-config.ts` (new)
+- `apps/opd-lite/src/lib/medication-request-mapper.ts` (new)
+- `apps/opd-lite/src/stores/prescription-store.ts` (new)
+- `apps/opd-lite/src/components/clinical/PrescriptionEntry.tsx` (new)
+- `apps/opd-lite/src/lib/db.ts` (modified — added v6 schema with medications table)
+- `apps/opd-lite/src/components/encounter-dashboard.tsx` (modified — integrated prescriptions)
+- `apps/opd-lite/src/__tests__/medication-search.test.ts` (new — 10 tests)
+- `apps/opd-lite/src/__tests__/PrescriptionEntry.test.tsx` (new — 10 tests)
+- `apps/opd-lite/src/__tests__/medication-request-mapper.test.ts` (new — 20 tests)
+- `apps/opd-lite/src/__tests__/prescription-store.test.ts` (new — 15 tests)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story status)
 - `_bmad-output/implementation-artifacts/3-1-medication-search-prescription-entry.md` (modified — task checkboxes, dev record)
 
