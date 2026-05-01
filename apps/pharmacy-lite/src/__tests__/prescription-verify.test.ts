@@ -52,6 +52,8 @@ function makeBundle(overrides?: Partial<SignedPrescriptionBundle>): SignedPrescr
 beforeEach(async () => {
   vi.clearAllMocks()
   await db.practitionerKeys.clear()
+  // revokedKeys table added in Dexie v3 — clear if available
+  try { await db.revokedKeys.clear() } catch { /* table may not exist in older schema tests */ }
 })
 
 describe('verifyPrescriptionQr', () => {
@@ -134,6 +136,28 @@ describe('verifyPrescriptionQr', () => {
       expect.any(Uint8Array),
       expect.any(Uint8Array),
     )
+  })
+
+  it('rejects signatures from keys in the local KRL (Story 7.4 AC 4)', async () => {
+    mockVerify.mockResolvedValue(true) // signature is technically valid
+    const bundle = makeBundle()
+
+    // Key is cached and not expired
+    await db.practitionerKeys.put({
+      publicKey: bundle.pub,
+      practitionerId: 'pract-001',
+      practitionerName: 'Dr. Ahmad',
+      cachedAt: new Date().toISOString(),
+    })
+
+    // But the key is in the local KRL (revoked)
+    await db.revokedKeys.put({
+      publicKey: bundle.pub,
+      revokedAt: '2026-06-01T00:00:00Z',
+    })
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_revoked')
   })
 
   it('works entirely offline without Hub connectivity (AC 5)', async () => {

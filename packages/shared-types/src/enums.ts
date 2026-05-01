@@ -37,6 +37,7 @@ export enum AuditResourceType {
   ENCOUNTER = 'ENCOUNTER',
   CONSENT = 'CONSENT',
   USER_ACCOUNT = 'USER_ACCOUNT',
+  NOTIFICATION = 'NOTIFICATION',
 }
 
 export enum AuditOutcome {
@@ -81,6 +82,12 @@ export enum GrantorRole {
   EMERGENCY_OVERRIDE = 'EMERGENCY_OVERRIDE',
 }
 
+export enum LabStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+}
+
 export enum DrugInteractionSeverity {
   CONTRAINDICATED = 'CONTRAINDICATED',
   ALLERGY_MATCH = 'ALLERGY_MATCH',
@@ -110,4 +117,26 @@ export enum AdministrativeGender {
   FEMALE = 'female',
   OTHER = 'other',
   UNKNOWN = 'unknown',
+}
+
+export enum NotificationType {
+  LAB_RESULT_AVAILABLE = 'LAB_RESULT_AVAILABLE',
+  LAB_RESULT_ESCALATION = 'LAB_RESULT_ESCALATION',
+  PRESCRIPTION_READY = 'PRESCRIPTION_READY',
+  CONSENT_CHANGE = 'CONSENT_CHANGE',
+  SYNC_CONFLICT = 'SYNC_CONFLICT',
+  ALLERGY_UPDATE = 'ALLERGY_UPDATE',
+}
+
+export enum NotificationStatus {
+  QUEUED = 'QUEUED',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  ACKNOWLEDGED = 'ACKNOWLEDGED',
+  FAILED = 'FAILED',
+}
+
+export enum RecipientRole {
+  CLINICIAN = 'CLINICIAN',
+  PATIENT = 'PATIENT',
 }

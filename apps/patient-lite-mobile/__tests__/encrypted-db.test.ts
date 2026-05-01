@@ -24,8 +24,15 @@ jest.mock('@/lib/mobile-key-service', () => ({
   getOrCreateDbPassphrase: jest.fn().mockResolvedValue('ab'.repeat(32)),
 }))
 
+jest.mock('@/lib/audit', () => ({
+  emitAuditEvent: jest.fn(),
+}))
+
 import * as SQLite from 'expo-sqlite'
-import { getEncryptedDbConnection, closeDatabase, isDatabaseOpen, markAuthenticated } from '@/lib/encrypted-db'
+import { getEncryptedDbConnection, closeDatabase, isDatabaseOpen, markAuthenticated, generateUnlockToken } from '@/lib/encrypted-db'
+import { emitAuditEvent } from '@/lib/audit'
+
+const VALID_TOKEN = 'ab'.repeat(32)
 
 describe('getEncryptedDbConnection', () => {
   beforeEach(async () => {
@@ -34,12 +41,17 @@ describe('getEncryptedDbConnection', () => {
     mockCloseAsync.mockResolvedValue(undefined)
     // Reset singleton state
     await closeDatabase()
-    markAuthenticated()
+    markAuthenticated(VALID_TOKEN)
   })
 
   it('throws if not authenticated', async () => {
-    await closeDatabase() // resets authenticated flag
+    await closeDatabase() // resets unlock token
     await expect(getEncryptedDbConnection()).rejects.toThrow('biometric authentication')
+  })
+
+  it('throws if markAuthenticated called with invalid token', () => {
+    expect(() => markAuthenticated('')).toThrow('Invalid unlock token')
+    expect(() => markAuthenticated('short')).toThrow('Invalid unlock token')
   })
 
   it('opens the database with expo-sqlite', async () => {
@@ -54,11 +66,14 @@ describe('getEncryptedDbConnection', () => {
     )
   })
 
-  it('sets PRAGMA cipher_page_size for performance', async () => {
+  it('sets cipher_page_size before verification query', async () => {
     await getEncryptedDbConnection()
-    expect(mockExecAsync).toHaveBeenCalledWith(
-      expect.stringContaining('PRAGMA cipher_page_size'),
-    )
+    const calls = mockExecAsync.mock.calls.map((c: unknown[]) => c[0])
+    const keyIndex = calls.findIndex((c: string) => c.includes('PRAGMA key'))
+    const pageSizeIndex = calls.findIndex((c: string) => c.includes('cipher_page_size'))
+    const verifyIndex = calls.findIndex((c: string) => c.includes('sqlite_master'))
+    expect(pageSizeIndex).toBeGreaterThan(keyIndex)
+    expect(pageSizeIndex).toBeLessThan(verifyIndex)
   })
 
   it('verifies encryption key with sqlite_master query', async () => {
@@ -85,7 +100,7 @@ describe('getEncryptedDbConnection', () => {
   it('creates a new connection after closeDatabase()', async () => {
     await getEncryptedDbConnection()
     await closeDatabase()
-    markAuthenticated() // Re-authenticate after close resets auth state
+    markAuthenticated(VALID_TOKEN) // Re-authenticate after close resets token
     await getEncryptedDbConnection()
     expect(SQLite.openDatabaseAsync).toHaveBeenCalledTimes(2)
   })
@@ -98,24 +113,26 @@ describe('getEncryptedDbConnection', () => {
     expect(isDatabaseOpen()).toBe(false)
   })
 
-  it('creates patient_profiles table', async () => {
+  it('creates schema tables atomically in a transaction', async () => {
     await getEncryptedDbConnection()
-    expect(mockExecAsync).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE TABLE IF NOT EXISTS patient_profiles'),
+    const calls = mockExecAsync.mock.calls.map((c: unknown[]) => c[0] as string)
+    const schemaCall = calls.find((c: string) =>
+      c.includes('BEGIN TRANSACTION') && c.includes('CREATE TABLE') && c.includes('COMMIT'),
     )
+    expect(schemaCall).toBeDefined()
+    expect(schemaCall).toContain('patient_profiles')
+    expect(schemaCall).toContain('medical_history')
+    expect(schemaCall).toContain('consents')
   })
 
-  it('creates medical_history table', async () => {
+  it('emits audit event on successful database unlock', async () => {
     await getEncryptedDbConnection()
-    expect(mockExecAsync).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE TABLE IF NOT EXISTS medical_history'),
-    )
-  })
-
-  it('creates consents table', async () => {
-    await getEncryptedDbConnection()
-    expect(mockExecAsync).toHaveBeenCalledWith(
-      expect.stringContaining('CREATE TABLE IF NOT EXISTS consents'),
+    expect(emitAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_READ',
+        resourceType: 'Database',
+        metadata: { event: 'database_unlock' },
+      }),
     )
   })
 
@@ -137,5 +154,13 @@ describe('getEncryptedDbConnection', () => {
     consoleSpy.mockRestore()
     consoleWarnSpy.mockRestore()
     consoleErrorSpy.mockRestore()
+  })
+})
+
+describe('generateUnlockToken', () => {
+  it('returns a 64-char hex string', async () => {
+    const token = await generateUnlockToken()
+    expect(token).toHaveLength(64)
+    expect(/^[0-9a-f]{64}$/.test(token)).toBe(true)
   })
 })

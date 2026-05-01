@@ -60,8 +60,19 @@ export interface PractitionerKeyEntry {
   cachedAt: string           // ISO 8601 timestamp
 }
 
+/**
+ * Local Key Revocation List (KRL) entry.
+ * Story 7.4 AC 3: Synchronized from Hub as high-priority sync item.
+ * Contains only the revoked public key and revocation time — no PHI.
+ */
+export interface RevokedKeyEntry {
+  publicKey: string          // base64-encoded Ed25519 public key (primary key)
+  revokedAt: string          // ISO 8601 timestamp
+}
+
 class PharmacyLiteDatabase extends Dexie {
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
+  revokedKeys!: EntityTable<RevokedKeyEntry, 'publicKey'>
   dispenses!: EntityTable<LocalMedicationDispense, 'id'>
   dispenseAuditLog!: EntityTable<DispenseAuditEntry, 'id'>
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
@@ -82,6 +93,13 @@ class PharmacyLiteDatabase extends Dexie {
     // so no encryption is needed.
     this.version(2).stores({
       pendingAuditEvents: 'id, _syncStatus, timestamp',
+    })
+
+    // v3: Add revokedKeys table for local Key Revocation List (KRL).
+    // Story 7.4 AC 3: KRL synchronized as high-priority sync item.
+    // Non-PHI — contains only revoked public keys and timestamps.
+    this.version(3).stores({
+      revokedKeys: 'publicKey',
     })
   }
 }

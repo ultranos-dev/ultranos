@@ -26,8 +26,10 @@ export interface VerifiedPrescription {
 export type VerificationResult =
   | { status: 'verified'; prescriptions: VerifiedPrescription[]; practitionerName?: string }
   | { status: 'invalid_signature' }
+  | { status: 'key_revoked' }
   | { status: 'expired'; expiry: string }
   | { status: 'unknown_clinician'; fallbackAvailable: boolean }
+  | { status: 'untrusted'; reason: string }
   | { status: 'parse_error'; message: string }
 
 function base64ToUint8(b64: string): Uint8Array {
@@ -67,6 +69,21 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
   }
   if (expiryDate.getTime() < Date.now()) {
     return { status: 'expired', expiry: bundle.expiry }
+  }
+
+  // Story 7.4 AC 4: Check local KRL BEFORE any signature verification.
+  // Immediately reject signatures from keys present in the local KRL.
+  // Fail-closed: if KRL check fails, treat as untrusted (Developer Guardrail).
+  try {
+    const revoked = await db.revokedKeys.get(bundle.pub)
+    if (revoked) {
+      // AC 5: Log attempt to use a revoked key
+      await logRevokedKeyAttempt(bundle.pub, revoked.revokedAt)
+      return { status: 'key_revoked' }
+    }
+  } catch {
+    // Fail-closed: KRL check failure means we cannot verify key status
+    return { status: 'untrusted', reason: 'Key revocation list unavailable' }
   }
 
   // Look up the clinician's public key in the trusted local cache FIRST
@@ -135,6 +152,8 @@ async function lookupPractitionerByPublicKey(
       const cachedAge = Date.now() - new Date(entry.cachedAt).getTime()
       if (cachedAge > KEY_CACHE_TTL_MS) {
         await db.practitionerKeys.delete(pubKeyBase64)
+        // AC 5: Log attempt to use an expired (stale) cached key
+        await logExpiredKeyAttempt(pubKeyBase64)
         return null
       }
       return { id: entry.practitionerId, name: entry.practitionerName, publicKeyRaw: entry.publicKey }
@@ -184,4 +203,48 @@ export async function fetchAndCachePractitionerKey(
   })
 
   return { id: data.practitionerId as string, name: data.practitionerName as string }
+}
+
+/**
+ * Story 7.4 AC 5: Log attempts to use an expired or revoked key.
+ * Queues an audit event for sync to Hub API. Contains only opaque identifiers — no PHI.
+ */
+async function logRevokedKeyAttempt(publicKey: string, revokedAt: string): Promise<void> {
+  try {
+    await db.pendingAuditEvents.add({
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      actorRole: 'SYSTEM',
+      action: 'REVOKED_KEY_USAGE_ATTEMPT',
+      resourceType: 'PractitionerKey',
+      outcome: 'DENIED',
+      denialReason: `Key revoked at ${revokedAt}`,
+      metadata: { publicKeyPrefix: publicKey.slice(0, 8) },
+      _syncStatus: 'pending',
+    })
+  } catch {
+    // Best-effort logging — don't block verification flow
+  }
+}
+
+/**
+ * Story 7.4 AC 5: Log attempts to use an expired (stale cache) key.
+ * Queues an audit event for sync to Hub API. Contains only opaque identifiers — no PHI.
+ */
+async function logExpiredKeyAttempt(publicKey: string): Promise<void> {
+  try {
+    await db.pendingAuditEvents.add({
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      actorRole: 'SYSTEM',
+      action: 'EXPIRED_KEY_USAGE_ATTEMPT',
+      resourceType: 'PractitionerKey',
+      outcome: 'DENIED',
+      denialReason: 'Cached key TTL expired (24h)',
+      metadata: { publicKeyPrefix: publicKey.slice(0, 8) },
+      _syncStatus: 'pending',
+    })
+  } catch {
+    // Best-effort logging — don't block verification flow
+  }
 }

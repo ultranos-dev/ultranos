@@ -6,6 +6,7 @@ import { SearchInput } from '@/components/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
 import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
+import { NotificationBell } from '@/components/NotificationPanel'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 export default function PatientSearchPage() {
@@ -30,13 +31,16 @@ export default function PatientSearchPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
-          Patient Search
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Search by name or National ID to start an encounter
-        </p>
+      <header className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-neutral-900">
+            Patient Search
+          </h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            Search by name or National ID to start an encounter
+          </p>
+        </div>
+        <NotificationBell />
       </header>
 
       <SearchInput value={query} onChange={handleQueryChange} />

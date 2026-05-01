@@ -213,6 +213,17 @@
 - **W2: No `requireAuthentication: true` on SecureStore for Android** — `WHEN_PASSCODE_SET_THIS_DEVICE_ONLY` is iOS-only. Android needs `requireAuthentication: true` on expo-secure-store to enforce hardware-backed biometric binding at the OS keystore level. Deferred because adding it changes SecureStore access patterns (every read triggers biometric prompt). Revisit when auth architecture is finalized.
 - **W3: isUnlocked hook state can diverge from actual DB singleton state** — `useDatabaseUnlock` tracks `isUnlocked` in React state, but the DB singleton is module-level. If another code path calls `closeDatabase()` directly (e.g., logout handler), the hook state is stale. Requires context provider or event-based sync pattern. Architectural concern, not a bug in current scope.
 
+## Deferred from: code review 2 of 7-2-mobile-sqlcipher-migration (2026-04-30)
+
+- **W3: SecureStore `requireAuthentication: true` not set** — Pre-existing deferred item D2. App-level biometric check accepted for now; OS-level enforcement deferred to auth architecture finalization.
+- **W4: `closeDatabase()` doesn't wait for in-flight DB operations** — Close can interrupt active queries from other code paths. Architectural concern requiring operation tracking. Pre-existing design (extends W2).
+- **W5: Timer cleanup on unmount doesn't lock database** — Component unmount leaves DB open with `authenticated = true`. Same root cause as W2 (lifecycle/singleton coupling).
+- **W6: `deletePassphrase()` can permanently destroy encryption key** — Not called in current code paths. Pre-existing deferred W1.
+- **W7: Background lock timer race on return to foreground** — setTimeout callback may already be queued when `active` event fires. Low probability, lock is idempotent.
+- **W8: `getOrCreateDbPassphrase` TOCTOU race on concurrent first-launch calls** — Two calls could generate different passphrases. Extremely unlikely in single-threaded JS with single entry point.
+- **W9: No schema migration/versioning strategy beyond `user_version = 1`** — Version is write-only, never read. Forward-looking concern for future schema changes.
+- **W10: `INSERT OR REPLACE` can overwrite newer SQLCipher data** — Only possible if migration runs after app is already in use, which normal flow prevents.
+
 ## Deferred from: code review of 1-6-opd-lite-mobile-scaffold (2026-04-30)
 
 - **W1: RTL support absent in scaffold UI** — Scaffold placeholder uses hardcoded styles with no RTL consideration. Acceptable for placeholder; address when active development begins.
@@ -226,3 +237,58 @@
 - **W1: `syncQueue` deduplication — no idempotency guard on retry** — `enqueueForRetry()` generates new UUID per call. Same dispense can be queued multiple times. Needs Hub-side dedup or local dedup guard. Pre-existing pattern from opd-lite (consistent with W4 from 4-3).
 - **W2: `fetchAndCachePractitionerKey` cache key mismatch (base64 normalization)** — Cache `put` uses `data.publicKey` (Hub response) as primary key, but lookup queries by `bundle.pub` (QR). Different base64 encodings (standard vs URL-safe, padding differences) could cause infinite fetch-and-cache loop. Requires Hub API response format investigation.
 - **W3: Non-standard Tailwind classes in FulfillmentChecklist** — `rounded-pill`, `bg-pill-green`, `text-pill-text` in FulfillmentChecklist.tsx:149. Not standard Tailwind; likely defined in shared UI kit theme. Pre-existing from opd-lite.
+
+## Deferred from: code review of 1-7-lab-lite-pwa-scaffold (2026-04-30)
+
+## Deferred from: code review of 12-1-lab-credentialing-technician-auth (2026-04-30)
+
+- **W1: Migration file written manually instead of Supabase MCP tools** — Process concern. `006_lab_tables.sql` created as raw SQL file instead of via `mcp__plugin_supabase_supabase__apply_migration`. Migration content is correct.
+- **W2: No RTL snapshot tests for login page** — CLAUDE.md requires RTL snapshots for patient-facing components. Lab login page has no RTL tests. Cross-cutting concern (Story 1-5/11-1).
+- **W3: No inactivity timeout on lab-lite session** — CLAUDE.md requires 30-min inactivity re-auth for clinical views. No session timeout mechanism in lab-lite. Cross-cutting session management concern.
+- **W4: Audit hash chain race condition on concurrent requests** — `AuditLogger.emit()` does read-then-write on chain hash without serialization. Two concurrent events fork from same parent hash. Pre-existing in `packages/audit-logger/src/logger.ts`.
+- **W6: Replace client-callable `reportAuthEvent` with server-side auth event capture** — Current `reportAuthEvent` uses `baseProcedure` (unauthenticated) and is inherently spoofable. Rate limiting + actorId validation applied as interim fix. Long-term: remove client-callable endpoint entirely and use Supabase Auth webhooks to capture auth events (login, MFA, failures) server-side. This eliminates the spoofing surface completely. Requires Supabase webhook configuration and a dedicated webhook handler endpoint.
+- **W5: x-forwarded-for header trust without proxy validation** — `reportAuthEvent` trusts `x-forwarded-for` directly. IP is hashed before storage, but attribution is spoofable without trusted proxy config. Infrastructure-level concern.
+
+- **Missing `@ultranos/crypto` and `@ultranos/audit-logger` dependencies** — AC #2 specifies only shared-types, sync-engine, ui-kit. Crypto and audit-logger will be required when Epic 12 implements PHI-touching workflows (result upload, patient verification).
+- **`dir="auto"` without explicit RTL locale handling** — All sibling spoke apps use the same pattern. Will be addressed in Epic 11 (RTL/i18n framework).
+- **Hardcoded `lang="en"` without i18n** — Same pattern across all spoke apps. Epic 11 scope.
+- **Google Fonts CDN in offline PWA context** — Inter loaded via CDN will fail on first offline load. Address when service worker infrastructure is added.
+- **No PWA manifest or service worker** — Story is a scaffold; PWA infrastructure will be added in a future story.
+- **No CSP or security headers in `next.config.js`** — No sibling app sets these either. Should be addressed as cross-cutting infrastructure.
+
+## Deferred from: code review of 12-2-restricted-patient-verification (2026-04-30)
+
+- **No rate limiting on `verifyPatient` endpoint** — Allows PHI enumeration by brute-forcing National IDs. An authenticated LAB_TECH could iterate National ID patterns and harvest firstName + age. Pre-existing architectural gap — `reportAuthEvent` has rate limiting but `verifyPatient` does not. Consistent with D15.
+
+## Deferred from: code review of 12-3-result-upload-metadata-tagging (2026-04-30)
+
+- **No server-side MIME type / magic byte verification** — File type trusted from client input. Would require magic byte detection library. ClamAV covers some cases when configured.
+
+## Deferred from: code review of 12-5-upload-queue-offline-resilience (2026-04-30)
+
+- **W1: Audit events silently dropped with no local fallback** — `queue-audit.ts` fire-and-forget pattern swallows all fetch failures with no local retry queue, console warning, or fallback storage. Systemic across all lab-lite audit reporting (auth + queue events). Consistent with D9/D23/D38. Address when client-side audit infrastructure is built.
+- **D1: Adopt `@ultranos/audit-logger` across lab-lite** — All lab-lite audit events (auth + queue) use raw `fetch` instead of the canonical `@ultranos/audit-logger` with SHA-256 hash chaining. Consistent pattern across lab-lite but violates CLAUDE.md rule #6. Migrate all lab-lite audit calls to audit-logger in a dedicated story. Reason: systemic gap, not a single-story regression.
+
+## Deferred from: code review of 12-4-notification-dispatch (2026-04-30)
+
+- **`list` endpoint QUEUED→SENT update error silently ignored** — If the bulk status update fails in notification.ts:141-144, the client sees SENT but DB says QUEUED. Pre-existing error-handling pattern.
+- **No exponential backoff retry mechanism implemented** — AC 7 requires retry with exponential backoff on dispatch failure. DB columns exist (`retry_count`, `next_retry_at`) but no scheduled job or retry logic populates them. Requires infrastructure for scheduled background jobs.
+- **BACKOFFICE escalation has no delivery path** — 48h escalation creates notifications with `recipient_ref='BACKOFFICE'` but no user or UI exists to consume them. Dead-letter notifications. Defer until back-office dashboard story is created.
+- **Deferred virus scan has no background processor** — Files stored with `pending` virus_scan_status but no mechanism to scan them later. Separate story/infrastructure needed.
+- **File content stored in TEXT column — blob storage recommended** — 20MB+ encrypted base64 in PostgreSQL TEXT causes table bloat. Should use object storage (S3/Supabase Storage) with only a reference in the DB.
+- **Memory pressure from base64-in-JSON pattern** — Single request holds ~47MB in memory (base64 + buffer + encrypted). Would require streaming upload architecture.
+- **`updated_at` column has no trigger — will never update** — Pre-existing pattern across project migrations. No ON UPDATE trigger or application-level update logic.
+
+## Deferred from: code review of 12-6-ai-metadata-extraction-ocr (2026-04-30)
+
+- **W1: No rate limiting on analyzeUpload** — Authenticated LAB_TECH can call analyzeUpload at high frequency, consuming server memory and OCR API costs. Pre-existing pattern — no other authenticated lab endpoints have rate limiting either. Address with infrastructure-level rate limiting.
+- **W2: Frontend OcrSuggestion type not from shared package** — `trpc.ts` defines its own `OcrSuggestion` interface structurally identical to `ocr.ts`. Type drift undetected by TypeScript. Pre-existing pattern — lab-lite uses raw fetch, not shared types.
+- **W3: Keyword substring false positives in LOINC matching** — Keywords like "hepatic" match inside "nonhepatic"/"prehepatic", "lipid" matches inside "hyperlipidemia". Known limitation of keyword-based matching; mitigated by confirmation gate (technician must confirm all OCR suggestions).
+
+## Deferred from: code review of 7-4-practitioner-key-lifecycle-management (2026-05-01)
+
+- **AC2: No caller invokes revalidateKey when cache is stale** — `getCachedKey` returns `stale: true` but no verification flow calls `revalidateKey()`. Revalidation function exists but is not wired into any active code path. Requires hook/UI integration in pharmacy and OPD verification flows.
+- **AC3: KRLSyncService not integrated with sync engine queue** — `KRLSyncService` class exists with applySnapshot/addRevocation methods, but no code subscribes to Hub push events, registers with the sync queue, or triggers KRL refresh on reconnect. Requires sync-engine internals integration work.
+- **KRL not stored as Bloom filter/hash list per guardrail** — Developer Guardrail says "compact Bloom filter or sorted list of hashes to minimize sync bandwidth." Implementation stores full base64 key strings. Optimization for scale — acceptable at current revocation volumes.
+- **OPD Lite missing KRL/cache implementation** — AC4 says "All scanners (OPD/Pharmacy) immediately reject." Only Pharmacy Lite has the KRL guard. OPD Lite scope is a separate story.
+- **Revocation gap window between revokeKey and KRL propagation** — Inherent in async sync architecture. Between Hub revocation and KRL sync to edge devices, a revoked key could still verify locally. Mitigated by 24h TTL on cache + priority-1 sync classification.

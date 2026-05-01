@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-04-30T23:59:00.000000'
+last_updated: '2026-05-01T12:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -28,6 +28,7 @@ development_status:
   1-4-mobile-identity-verification-sqlcipher-persistence: backlog
   1-5-rtl-global-context-mirroring: backlog
   1-6-opd-lite-mobile-scaffold: done
+  1-7-lab-lite-pwa-scaffold: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-encounter-lifecycle-zustand-store: backlog
@@ -60,7 +61,7 @@ development_status:
   7-1-pwa-dexie-encryption-key-in-memory: done
   7-2-mobile-sqlcipher-migration: done
   7-3-hub-api-field-level-encryption: in-progress
-  7-4-practitioner-key-lifecycle-management: ready-for-dev
+  7-4-practitioner-key-lifecycle-management: in-progress
   epic-7-retrospective: optional
   epic-8: backlog
   8-1-client-side-audit-ledger: backlog
@@ -80,3 +81,11 @@ development_status:
   11-1-global-rtl-i18n-framework: backlog
   11-2-resilience-error-recovery: backlog
   epic-11-retrospective: optional
+  epic-12: backlog
+  12-1-lab-credentialing-technician-auth: done
+  12-2-restricted-patient-verification: done
+  12-3-result-upload-metadata-tagging: done
+  12-4-notification-dispatch: done
+  12-5-upload-queue-offline-resilience: done
+  12-6-ai-metadata-extraction-ocr: done
+  epic-12-retrospective: optional

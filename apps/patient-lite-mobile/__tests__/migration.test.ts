@@ -25,8 +25,12 @@ jest.mock('expo-sqlite', () => ({
 
 jest.mock('@/lib/mobile-key-service')
 jest.mock('@/lib/encrypted-db')
+jest.mock('@/lib/audit', () => ({
+  emitAuditEvent: jest.fn(),
+}))
 
 import { getEncryptedDbConnection } from '@/lib/encrypted-db'
+import { emitAuditEvent } from '@/lib/audit'
 import { migrateFromSecureStore, isMigrationNeeded } from '@/lib/migration'
 
 const mockedGetDb = getEncryptedDbConnection as jest.MockedFunction<typeof getEncryptedDbConnection>
@@ -90,6 +94,25 @@ describe('migrateFromSecureStore', () => {
     )
   })
 
+  it('emits audit events during migration', async () => {
+    const patientData = JSON.stringify({ id: 'patient-1' })
+    ;(SecureStore.getItemAsync as jest.Mock).mockImplementation((key: string) => {
+      if (key === 'ultranos_patient_profile') return Promise.resolve(patientData)
+      return Promise.resolve(null)
+    })
+
+    await migrateFromSecureStore()
+
+    expect(emitAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_WRITE',
+        resourceType: 'Patient',
+        resourceId: 'patient-1',
+        metadata: { event: 'securestore_migration' },
+      }),
+    )
+  })
+
   it('migrates medical history from SecureStore', async () => {
     const historyData = JSON.stringify({
       encounters: [{ id: 'enc-1', resourceType: 'Encounter' }],
@@ -105,6 +128,25 @@ describe('migrateFromSecureStore', () => {
 
     const result = await migrateFromSecureStore()
 
+    expect(result.medicalHistoryMigrated).toBe(true)
+  })
+
+  it('skips encounters with missing id and tracks them', async () => {
+    const historyData = JSON.stringify({
+      encounters: [{ resourceType: 'Encounter' }], // no id
+      medications: [{ id: 'med-1', resourceType: 'MedicationRequest' }],
+    })
+    ;(SecureStore.getItemAsync as jest.Mock).mockImplementation((key: string) => {
+      if (key === 'ultranos_medical_history_patient-1') return Promise.resolve(historyData)
+      if (key === 'ultranos_patient_profile') {
+        return Promise.resolve(JSON.stringify({ id: 'patient-1' }))
+      }
+      return Promise.resolve(null)
+    })
+
+    const result = await migrateFromSecureStore()
+
+    expect(result.skippedRecords).toBe(1)
     expect(result.medicalHistoryMigrated).toBe(true)
   })
 
@@ -162,7 +204,32 @@ describe('migrateFromSecureStore', () => {
       return Promise.resolve(null)
     })
 
-    await expect(migrateFromSecureStore()).rejects.toThrow('missing id field')
+    await expect(migrateFromSecureStore()).rejects.toThrow('missing or empty id field')
     expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled()
+  })
+
+  it('aborts migration when patient profile has empty string id', async () => {
+    ;(SecureStore.getItemAsync as jest.Mock).mockImplementation((key: string) => {
+      if (key === 'ultranos_patient_profile') return Promise.resolve('{"id":""}')
+      return Promise.resolve(null)
+    })
+
+    await expect(migrateFromSecureStore()).rejects.toThrow('missing or empty id field')
+    expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled()
+  })
+
+  it('handles SecureStore deletion failure gracefully after successful commit', async () => {
+    const patientData = JSON.stringify({ id: 'patient-1' })
+    ;(SecureStore.getItemAsync as jest.Mock).mockImplementation((key: string) => {
+      if (key === 'ultranos_patient_profile') return Promise.resolve(patientData)
+      return Promise.resolve(null)
+    })
+    ;(SecureStore.deleteItemAsync as jest.Mock).mockRejectedValue(new Error('Keychain error'))
+
+    // Should not throw — deletion failure is swallowed after successful commit
+    const result = await migrateFromSecureStore()
+
+    expect(result.patientProfileMigrated).toBe(true)
+    expect(mockExecAsync).toHaveBeenCalledWith('COMMIT')
   })
 })

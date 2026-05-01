@@ -98,6 +98,9 @@ export function getEncryptionConfig() {
       'medication_text',
       'soap_assessment',
       'soap_plan',
+      // Lab result tables (Story 12.3)
+      'report_conclusion',
+      'encrypted_content',
     ] as const,
   }
 }

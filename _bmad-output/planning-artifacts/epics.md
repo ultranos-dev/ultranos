@@ -89,12 +89,14 @@ FR15: Epic 9 - Append-only Sync Ledger
 FR16: Epic 6 - Role-Based Access Control
 FR17: Epic 8 - Cryptographic Audit Logging
 FR18: Epic 11 - Multilingual/RTL UI
+LAB-001 through LAB-024: Epic 12 - Lab Diagnostics & Reporting
 
 ## Epic List
 
 ### Epic 1: Ecosystem Foundation & Identity
 Establish the Hub-and-Spoke connectivity, initialize the shared sync engine contracts, and enable the core "Patient Identity" workflow.
 **FRs covered:** FR1, FR11, FR13, FR14, FR15, FR18
+**Scaffold stories:** 1.6 (OPD-Lite Mobile), 1.7 (Lab-Lite)
 
 ### Epic 2: Clinical Encounter & SOAP Charting
 Build the core "OPD Lite" clinician experience for charting encounters.
@@ -192,6 +194,18 @@ As a system architect, I want to scaffold the `apps/opd-lite-mobile/` Expo appli
 - **And** a README documents the app's purpose, target user (field GPs), and deferred status
 
 > **Architecture Decision (2026-04-30):** `opd-lite-mobile` is scaffolded but not actively developed. It acknowledges the architecture's mobile clinician spoke. Active development deferred until field GP support is prioritized. See Story 1.4 for future activation requirements.
+
+### Story 1.7: Lab-Lite PWA Scaffold
+As a system architect, I want to scaffold the `apps/lab-lite/` Next.js PWA application shell, so that the lab diagnostics spoke is established in the codebase and ready for Epic 12 development.
+
+**Acceptance Criteria:**
+- **Given** the monorepo structure
+- **When** `apps/lab-lite/` is initialized
+- **Then** a valid Next.js 15 App Router project exists with `@ultranos/lab-lite` package name
+- **And** it depends on shared packages (`shared-types`, `sync-engine`, `ui-kit`)
+- **And** a placeholder page renders with "Lab Diagnostics Portal — Coming Soon"
+- **And** tRPC client is configured to connect to `hub-api`
+- **And** a README documents purpose, target users (lab technicians), and data minimization constraint
 
 ### Story 1.5: RTL Global Context & Mirroring
 As a multilingual clinician, I want the UI to mirror correctly for RTL languages so that I can work comfortably in Arabic or Dari.
@@ -518,4 +532,74 @@ As a user, I want the application to recover gracefully from storage errors so t
 - **When** it occurs
 - **Then** a React Error Boundary catches the crash and offers a "Safe Mode" recovery path
 - **And** critical data is backed up to memory until storage is restored
+
+## Epic 12: Lab Diagnostics & Reporting
+Enable the lab technician's result upload workflow via the standalone `lab-lite` spoke app, with strict data minimization enforcement.
+**FRs covered:** LAB-001, LAB-002, LAB-010, LAB-011, LAB-020, LAB-021, LAB-022, LAB-023, LAB-024
+
+### Story 12.1: Lab Credentialing & Technician Authentication
+As a lab technician, I want to register my lab and authenticate with my credentials, so that I can upload results tied to my verified identity and lab affiliation.
+
+**Acceptance Criteria:**
+- **Given** a lab technician
+- **When** they authenticate via Supabase Auth
+- **Then** TOTP MFA is enforced
+- **And** the session includes technician ID and lab affiliation
+- **And** only technicians with `ACTIVE` lab status can access upload workflows
+
+### Story 12.2: Restricted Patient Verification
+As a lab technician, I want to verify patient identity before uploading results, so that I can confirm I'm attaching results to the correct patient without seeing their medical history.
+
+**Acceptance Criteria:**
+- **Given** a patient identifier (National ID or QR scan)
+- **When** the `lab.verifyPatient` endpoint is called
+- **Then** the response returns **only** `{ firstName, age, patientRef }` — no other patient data
+- **And** the data minimization is enforced at the SQL query level, tRPC output schema, and RBAC middleware (three-layer defense)
+- **And** `patientRef` is an opaque reference (HMAC-SHA256) — not the raw patient ID
+
+> **Architecture Decision (2026-04-30):** Lab data minimization is enforced at THREE levels: SQL SELECT, tRPC Zod output schema, and RBAC middleware. If any one layer fails, the other two still protect the data. See CLAUDE.md Rule #7.
+
+### Story 12.3: Result Upload & Metadata Tagging
+As a lab technician, I want to upload lab result files and tag them with test metadata, so that the results are stored as FHIR DiagnosticReport resources and linked to the correct patient.
+
+**Acceptance Criteria:**
+- **Given** a verified patient context
+- **When** a lab result file (PDF, JPEG, PNG; max 20 MB) is uploaded with test category and collection date
+- **Then** a FHIR `DiagnosticReport` resource is created with status `preliminary`
+- **And** the test category is mapped to a LOINC code
+- **And** the file is stored encrypted at rest (AES-256-GCM)
+- **And** a server-side virus scan is performed before storage
+
+### Story 12.4: Notification Dispatch
+As a lab technician, I want the ordering doctor and patient to be notified automatically when I upload a result, so that they can review the findings promptly.
+
+**Acceptance Criteria:**
+- **Given** a successful upload commit
+- **When** the Hub processes the upload
+- **Then** the ordering doctor is notified in OPD Lite within 60 seconds
+- **And** the patient is notified in Patient Lite Mobile
+- **And** notifications are queued if the recipient is offline
+- **And** critical results unacknowledged after 24 hours trigger escalation
+
+### Story 12.5: Upload Queue & Offline Resilience
+As a lab technician, I want my uploads to be preserved locally if the connection drops, so that I don't lose work and can resume when connectivity returns.
+
+**Acceptance Criteria:**
+- **Given** a connection drop during upload
+- **When** the file and metadata are preserved locally
+- **Then** the upload queue holds up to 50 pending items
+- **And** the queue survives browser refresh
+- **And** items drain automatically on connectivity restore
+- **And** items older than 48 hours require manual re-upload
+
+### Story 12.6: AI Metadata Extraction (OCR)
+As a lab technician, I want the system to auto-suggest metadata from uploaded documents, so that I can tag results faster with fewer manual errors.
+
+**Acceptance Criteria:**
+- **Given** an uploaded file
+- **When** Cloud Vision OCR analyzes the document
+- **Then** metadata fields are pre-populated with confidence indicators
+- **And** fields below 85% confidence are left blank for manual entry
+- **And** the technician must explicitly confirm all metadata before commit
+- **And** if OCR is unavailable, the form falls back to fully manual entry
 

@@ -10,6 +10,7 @@
 import * as SecureStore from 'expo-secure-store'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as Crypto from 'expo-crypto'
+import { generateUnlockToken } from '@/lib/encrypted-db'
 
 const DB_PASSPHRASE_KEY = 'ultranos_db_passphrase'
 const BIOMETRIC_PROMPT_MESSAGE = 'Authenticate to unlock your health records'
@@ -18,7 +19,7 @@ const BIOMETRIC_PROMPT_MESSAGE = 'Authenticate to unlock your health records'
 export type UnlockFailureReason = 'cancelled' | 'not-enrolled' | 'failed' | 'not-available'
 
 export type UnlockResult =
-  | { success: true; passphrase: string }
+  | { success: true; unlockToken: string }
   | { success: false; reason: UnlockFailureReason }
 
 /**
@@ -78,8 +79,10 @@ export async function unlockWithBiometrics(): Promise<UnlockResult> {
     return { success: false, reason: mapAuthError(result.error) }
   }
 
-  const passphrase = await getOrCreateDbPassphrase()
-  return { success: true, passphrase }
+  // Ensure passphrase exists (creates on first run)
+  await getOrCreateDbPassphrase()
+  const token = await generateUnlockToken()
+  return { success: true, unlockToken: token }
 }
 
 /** Map expo-local-authentication error strings to unlock failure reasons. */
@@ -115,8 +118,9 @@ async function unlockWithPasscode(): Promise<UnlockResult> {
     return { success: false, reason: mapAuthError(result.error) }
   }
 
-  const passphrase = await getOrCreateDbPassphrase()
-  return { success: true, passphrase }
+  await getOrCreateDbPassphrase()
+  const token = await generateUnlockToken()
+  return { success: true, unlockToken: token }
 }
 
 /**

@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { protectedProcedure } from './init'
+import type { LabStatus } from '@ultranos/shared-types'
 
 /**
  * RBAC role-to-FHIR-resource permission map.
@@ -85,3 +86,64 @@ export function roleRestrictedProcedure(allowedRoles: string[]) {
     return opts.next({ ctx: opts.ctx })
   })
 }
+
+/**
+ * Lab context extracted from practitioner record for lab-scoped endpoints.
+ * Data minimization: contains ONLY technician identity and lab affiliation — no patient data.
+ */
+export interface LabContext {
+  technicianId: string
+  labId: string
+  labStatus: LabStatus
+}
+
+/**
+ * Lab-scoped procedure for lab technician endpoints.
+ * Requires LAB_TECH role and enriches context with technicianId and labId
+ * by querying the practitioner's lab affiliation from the database.
+ *
+ * Story 12.1 AC 2, 3: Validates LAB_TECH role and includes lab context.
+ */
+export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
+  const userRole = opts.ctx.user.role
+
+  // ADMIN bypass — no lab context injected; downstream endpoints
+  // check ctx.lab existence to scope queries or return all results.
+  if (userRole === 'ADMIN') {
+    return opts.next({ ctx: opts.ctx })
+  }
+
+  if (userRole !== 'LAB_TECH') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Access denied — LAB_TECH role required',
+    })
+  }
+
+  // Resolve lab affiliation from the labs/lab_technicians tables
+  const { data: technicianRecord, error } = await opts.ctx.supabase
+    .from('lab_technicians')
+    .select('id, lab_id, labs!inner(id, status)')
+    .eq('practitioner_id', opts.ctx.user.sub)
+    .single()
+
+  if (error || !technicianRecord) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'No lab affiliation found for this technician',
+    })
+  }
+
+  const labRecord = technicianRecord.labs as unknown as { id: string; status: string }
+
+  return opts.next({
+    ctx: {
+      ...opts.ctx,
+      lab: {
+        technicianId: technicianRecord.id,
+        labId: technicianRecord.lab_id,
+        labStatus: labRecord.status as LabStatus,
+      } satisfies LabContext,
+    },
+  })
+})

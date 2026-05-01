@@ -8,7 +8,7 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 - **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
 - **Patient Lite Mobile:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
 - **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`)
-- **Lab Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS
+- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`)
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
 - **Infrastructure:** Terraform, Docker, GitHub Actions CI/CD
@@ -24,7 +24,7 @@ ultranos/
 │   ├── opd-lite-mobile/   # OPD Lite Mobile (Expo/React Native) [SCAFFOLDED — future dev]
 │   ├── patient-lite-mobile/ # Patient app (React Native)
 │   ├── pharmacy-lite/     # Pharmacy PWA (Next.js — standalone spoke)
-│   └── lab-portal/        # Lab PWA (Next.js)
+│   └── lab-lite/          # Lab Diagnostics PWA (Next.js — push-only, data-minimized)
 ├── packages/
 │   ├── shared-types/      # FHIR R4 type definitions, enums, interfaces
 │   ├── sync-engine/       # Offline queue, HLC timestamps, conflict resolution

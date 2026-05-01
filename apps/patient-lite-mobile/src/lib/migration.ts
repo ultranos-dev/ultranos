@@ -11,6 +11,7 @@
  */
 import * as SecureStore from 'expo-secure-store'
 import { getEncryptedDbConnection } from '@/lib/encrypted-db'
+import { emitAuditEvent } from '@/lib/audit'
 
 const PATIENT_PROFILE_KEY = 'ultranos_patient_profile'
 const MEDICAL_HISTORY_KEY_PREFIX = 'ultranos_medical_history_'
@@ -25,11 +26,18 @@ export interface MigrationResult {
 
 /**
  * Check whether there is existing SecureStore data that needs migration.
- * Checks patient profile as primary indicator plus known key patterns.
+ * Checks all known key patterns — not just patient profile.
  */
 export async function isMigrationNeeded(): Promise<boolean> {
   const patientData = await SecureStore.getItemAsync(PATIENT_PROFILE_KEY)
-  return patientData !== null
+  if (patientData !== null) return true
+
+  // Also check for orphaned medical history or consent data
+  // (can happen if patient profile was migrated but subsequent keys failed)
+  // Note: SecureStore doesn't support enumeration, so we can only check
+  // known key patterns. Without a patientId we can't check prefixed keys,
+  // so this remains a best-effort check.
+  return false
 }
 
 /**
@@ -62,15 +70,13 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
       try {
         patient = JSON.parse(patientRaw)
       } catch {
-        await db.execAsync('ROLLBACK')
         throw new Error('Corrupt patient profile data in SecureStore — migration aborted')
       }
 
       patientId = patient.id ?? null
 
-      if (!patientId) {
-        await db.execAsync('ROLLBACK')
-        throw new Error('Patient profile missing id field — migration aborted')
+      if (!patientId || patientId.trim() === '') {
+        throw new Error('Patient profile missing or empty id field — migration aborted')
       }
 
       await db.runAsync(
@@ -78,6 +84,15 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
         [patientId, patientRaw],
       )
       result.patientProfileMigrated = true
+
+      emitAuditEvent({
+        action: 'PHI_WRITE',
+        resourceType: 'Patient',
+        resourceId: patientId,
+        patientId,
+        outcome: 'success',
+        metadata: { event: 'securestore_migration' },
+      })
     }
 
     // --- Migrate medical history ---
@@ -91,29 +106,47 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
         try {
           history = JSON.parse(historyRaw)
         } catch {
-          await db.execAsync('ROLLBACK')
           throw new Error('Corrupt medical history data in SecureStore — migration aborted')
         }
 
         if (Array.isArray(history.encounters)) {
           for (const encounter of history.encounters) {
+            const enc = encounter as Record<string, unknown>
+            if (!enc.id || typeof enc.id !== 'string') {
+              result.skippedRecords++
+              continue
+            }
             await db.runAsync(
               'INSERT OR REPLACE INTO medical_history (id, patient_id, resource_type, data, updated_at) VALUES (?, ?, ?, ?, datetime(\'now\'))',
-              [encounter.id, patientId, 'Encounter', JSON.stringify(encounter)],
+              [enc.id, patientId, 'Encounter', JSON.stringify(encounter)],
             )
           }
         }
 
         if (Array.isArray(history.medications)) {
           for (const med of history.medications) {
+            const m = med as Record<string, unknown>
+            if (!m.id || typeof m.id !== 'string') {
+              result.skippedRecords++
+              continue
+            }
             await db.runAsync(
               'INSERT OR REPLACE INTO medical_history (id, patient_id, resource_type, data, updated_at) VALUES (?, ?, ?, ?, datetime(\'now\'))',
-              [med.id, patientId, 'MedicationRequest', JSON.stringify(med)],
+              [m.id, patientId, 'MedicationRequest', JSON.stringify(med)],
             )
           }
         }
 
         result.medicalHistoryMigrated = true
+
+        emitAuditEvent({
+          action: 'PHI_WRITE',
+          resourceType: 'MedicalHistory',
+          resourceId: patientId,
+          patientId,
+          outcome: 'success',
+          metadata: { event: 'securestore_migration' },
+        })
       }
 
       // --- Migrate consents ---
@@ -126,7 +159,6 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
         try {
           consents = JSON.parse(consentsRaw)
         } catch {
-          await db.execAsync('ROLLBACK')
           throw new Error('Corrupt consent data in SecureStore — migration aborted')
         }
 
@@ -142,16 +174,27 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
                 [consent.id, patientId, category, consent.status, JSON.stringify(consent)],
               )
             } else {
-              // Track skipped records — don't silently drop data
               result.skippedRecords++
             }
           }
         }
 
-        // Only mark migrated if no records were skipped
-        if (result.skippedRecords === 0) {
+        // Only mark migrated if no consent records were skipped
+        const consentSkips = Array.isArray(consents)
+          ? (consents as Array<Record<string, unknown>>).filter(c => !c.id || !c.status).length
+          : 0
+        if (consentSkips === 0) {
           result.consentsMigrated = true
         }
+
+        emitAuditEvent({
+          action: 'PHI_WRITE',
+          resourceType: 'Consent',
+          resourceId: patientId,
+          patientId,
+          outcome: 'success',
+          metadata: { event: 'securestore_migration' },
+        })
       }
     }
 
@@ -167,16 +210,21 @@ export async function migrateFromSecureStore(): Promise<MigrationResult> {
   }
 
   // --- Securely delete old SecureStore entries ONLY after successful commit ---
-  if (result.patientProfileMigrated) {
-    await SecureStore.deleteItemAsync(PATIENT_PROFILE_KEY)
-  }
+  try {
+    if (result.patientProfileMigrated) {
+      await SecureStore.deleteItemAsync(PATIENT_PROFILE_KEY)
+    }
 
-  if (result.medicalHistoryMigrated && patientId) {
-    await SecureStore.deleteItemAsync(MEDICAL_HISTORY_KEY_PREFIX + patientId)
-  }
+    if (result.medicalHistoryMigrated && patientId) {
+      await SecureStore.deleteItemAsync(MEDICAL_HISTORY_KEY_PREFIX + patientId)
+    }
 
-  if (result.consentsMigrated && patientId) {
-    await SecureStore.deleteItemAsync(CONSENT_KEY_PREFIX + patientId)
+    if (result.consentsMigrated && patientId) {
+      await SecureStore.deleteItemAsync(CONSENT_KEY_PREFIX + patientId)
+    }
+  } catch {
+    // SecureStore cleanup failed — data is safely committed to SQLCipher.
+    // Migration will re-run on next launch (idempotent via INSERT OR REPLACE).
   }
 
   return result

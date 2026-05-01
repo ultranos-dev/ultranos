@@ -12,7 +12,8 @@
  */
 export const SYNC_PRIORITY: Record<string, number> = {
   AllergyIntolerance: 1,
-  Consent: 1,         // High-priority: consent changes affect data access immediately
+  Consent: 1,              // High-priority: consent changes affect data access immediately
+  KeyRevocationList: 1,    // High-priority: revoked keys must propagate immediately (Story 7.4 AC 3)
   MedicationRequest: 2,
   DiagnosticReport: 3,
   ClinicalImpression: 4,

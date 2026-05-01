@@ -10,6 +10,10 @@ import * as SecureStore from 'expo-secure-store'
 import * as LocalAuthentication from 'expo-local-authentication'
 import * as Crypto from 'expo-crypto'
 
+jest.mock('@/lib/encrypted-db', () => ({
+  generateUnlockToken: jest.fn().mockResolvedValue('cc'.repeat(32)),
+}))
+
 import {
   getOrCreateDbPassphrase,
   unlockWithBiometrics,
@@ -89,7 +93,7 @@ describe('unlockWithBiometrics', () => {
     ;(SecureStore.getItemAsync as jest.Mock).mockResolvedValue('existing-key')
   })
 
-  it('authenticates with biometrics and returns passphrase on success', async () => {
+  it('authenticates with biometrics and returns unlock token on success', async () => {
     ;(LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true)
     ;(LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(true)
     ;(LocalAuthentication.authenticateAsync as jest.Mock).mockResolvedValue({
@@ -100,7 +104,7 @@ describe('unlockWithBiometrics', () => {
 
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.passphrase).toBe('existing-key')
+      expect(result.unlockToken).toBe('cc'.repeat(32))
     }
     expect(LocalAuthentication.authenticateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -108,6 +112,21 @@ describe('unlockWithBiometrics', () => {
         disableDeviceFallback: false,
       }),
     )
+  })
+
+  it('does not return passphrase in unlock result', async () => {
+    ;(LocalAuthentication.hasHardwareAsync as jest.Mock).mockResolvedValue(true)
+    ;(LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(true)
+    ;(LocalAuthentication.authenticateAsync as jest.Mock).mockResolvedValue({
+      success: true,
+    })
+
+    const result = await unlockWithBiometrics()
+
+    if (result.success) {
+      expect(result).not.toHaveProperty('passphrase')
+      expect(result).toHaveProperty('unlockToken')
+    }
   })
 
   it('returns cancelled when user cancels biometric prompt', async () => {

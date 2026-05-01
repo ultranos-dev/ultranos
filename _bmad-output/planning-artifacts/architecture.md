@@ -172,7 +172,11 @@ ultranos/
 │   │   ├── src/components/pharmacy/  # Scanner, Fulfillment, Label, SyncPulse
 │   │   ├── src/stores/          # <--- Zustand Store (Pharmacy Fulfillment State)
 │   │   └── src/lib/             # Prescription verify, dispense sync, status client
-│   └── patient-lite-mobile/     # Expo Mobile App (Patients)
+│   ├── patient-lite-mobile/     # Expo Mobile App (Patients)
+│   └── lab-lite/                # Next.js PWA (Lab Technicians — near-online, push-only)
+│       ├── src/app/             # App Router pages
+│       ├── src/components/      # Upload, verification, queue UI
+│       └── src/lib/             # LOINC mappings, upload queue, Dexie
 ├── packages/
 │   ├── sync-engine/             # Shared HLC & Append-only ledger logic
 │   ├── ui-kit/                  # Wise-inspired design tokens & React components

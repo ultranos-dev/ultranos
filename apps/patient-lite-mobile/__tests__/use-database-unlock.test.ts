@@ -4,6 +4,7 @@
  * Verifies:
  * - AC4: Unlocking database requires biometric authentication
  * - Background re-lock after 3 minutes
+ * - Unlock token pattern (D4 resolution)
  */
 
 jest.mock('@/lib/mobile-key-service')
@@ -31,6 +32,7 @@ import { AppState } from 'react-native'
 import { renderHook, act } from '@testing-library/react-native'
 import { useDatabaseUnlock } from '@/hooks/use-database-unlock'
 
+const MOCK_TOKEN = 'dd'.repeat(32)
 const mockedUnlock = unlockWithBiometrics as jest.MockedFunction<typeof unlockWithBiometrics>
 const mockedGetDb = getEncryptedDbConnection as jest.MockedFunction<typeof getEncryptedDbConnection>
 const mockedCloseDb = closeDatabase as jest.MockedFunction<typeof closeDatabase>
@@ -42,7 +44,7 @@ describe('useDatabaseUnlock', () => {
     jest.clearAllMocks()
     mockAppStateCallback = null
     mockedIsOpen.mockReturnValue(false)
-    mockedUnlock.mockResolvedValue({ success: true, passphrase: 'test-key' })
+    mockedUnlock.mockResolvedValue({ success: true, unlockToken: MOCK_TOKEN })
     mockedGetDb.mockResolvedValue({} as any)
     mockedCloseDb.mockResolvedValue()
   })
@@ -54,7 +56,7 @@ describe('useDatabaseUnlock', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('unlock() calls biometric authentication, marks auth, and opens db', async () => {
+  it('unlock() calls biometric authentication, marks auth with token, and opens db', async () => {
     const { result } = renderHook(() => useDatabaseUnlock())
 
     await act(async () => {
@@ -62,7 +64,7 @@ describe('useDatabaseUnlock', () => {
     })
 
     expect(mockedUnlock).toHaveBeenCalled()
-    expect(mockedMarkAuth).toHaveBeenCalled()
+    expect(mockedMarkAuth).toHaveBeenCalledWith(MOCK_TOKEN)
     expect(mockedGetDb).toHaveBeenCalled()
     expect(result.current.isUnlocked).toBe(true)
     expect(result.current.isUnlocking).toBe(false)
@@ -94,7 +96,7 @@ describe('useDatabaseUnlock', () => {
     expect(result.current.error).toBe('not-available')
   })
 
-  it('lock() closes the database', async () => {
+  it('lock() closes the database and handles errors gracefully', async () => {
     const { result } = renderHook(() => useDatabaseUnlock())
 
     await act(async () => {
@@ -106,6 +108,21 @@ describe('useDatabaseUnlock', () => {
       await result.current.lock()
     })
     expect(mockedCloseDb).toHaveBeenCalled()
+    expect(result.current.isUnlocked).toBe(false)
+  })
+
+  it('lock() does not throw if closeDatabase fails', async () => {
+    mockedCloseDb.mockRejectedValueOnce(new Error('close failed'))
+
+    const { result } = renderHook(() => useDatabaseUnlock())
+
+    await act(async () => {
+      await result.current.unlock()
+    })
+
+    await act(async () => {
+      await result.current.lock() // should not throw
+    })
     expect(result.current.isUnlocked).toBe(false)
   })
 

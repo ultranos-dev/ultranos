@@ -29,15 +29,21 @@ export function useDatabaseUnlock(): DatabaseUnlockState {
   const [error, setError] = useState<string | null>(null)
   const backgroundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const backgroundAtRef = useRef<number | null>(null)
+  const isUnlockingRef = useRef(false)
 
   const lock = useCallback(async () => {
-    await closeDatabase()
+    try {
+      await closeDatabase()
+    } catch {
+      // Best-effort — DB handle may already be closed
+    }
     setIsUnlocked(false)
     setError(null)
   }, [])
 
   const unlock = useCallback(async () => {
-    if (isUnlocking) return // Prevent double-unlock race
+    if (isUnlockingRef.current) return // Prevent double-unlock race via ref
+    isUnlockingRef.current = true
 
     setIsUnlocking(true)
     setError(null)
@@ -48,18 +54,20 @@ export function useDatabaseUnlock(): DatabaseUnlockState {
       if (!result.success) {
         setError(result.reason)
         setIsUnlocking(false)
+        isUnlockingRef.current = false
         return
       }
 
-      markAuthenticated()
+      markAuthenticated(result.unlockToken)
       await getEncryptedDbConnection()
       setIsUnlocked(true)
     } catch {
       setError('failed')
     } finally {
       setIsUnlocking(false)
+      isUnlockingRef.current = false
     }
-  }, [isUnlocking])
+  }, [])
 
   // Background re-lock: close DB after 3 minutes in background
   useEffect(() => {
@@ -73,7 +81,7 @@ export function useDatabaseUnlock(): DatabaseUnlockState {
         }
         backgroundTimerRef.current = setTimeout(() => {
           if (isDatabaseOpen()) {
-            void lock()
+            lock().catch(() => { /* best-effort background lock */ })
           }
         }, BACKGROUND_LOCK_TIMEOUT_MS)
       } else if (nextState === 'active') {
@@ -89,7 +97,7 @@ export function useDatabaseUnlock(): DatabaseUnlockState {
           backgroundAtRef.current = null
 
           if (elapsed >= BACKGROUND_LOCK_TIMEOUT_MS && isDatabaseOpen()) {
-            void lock()
+            lock().catch(() => { /* best-effort foreground re-lock */ })
           }
         }
       }

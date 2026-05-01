@@ -20,3 +20,6 @@ export {
   getSyncPriority,
   compareSyncPriority,
 } from './sync-priority.js'
+
+export { KRLSyncService } from './krl-sync.js'
+export type { KRLEntry, KRLStorage } from './krl-sync.js'
