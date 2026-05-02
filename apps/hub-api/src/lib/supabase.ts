@@ -1,6 +1,14 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { toSnakeCase, toCamelCase } from './case-transform'
-import { encryptRow, decryptRow, decryptRows } from './field-encryption'
+import {
+  encryptRow,
+  decryptRow,
+  decryptRows,
+  getCachedEncryptionKey,
+} from './field-encryption'
+import { getEncryptionConfig } from '@ultranos/crypto/server'
+
+const SENSITIVE_FIELDS = new Set(getEncryptionConfig().randomizedFields)
 
 let _client: SupabaseClient | null = null
 
@@ -43,45 +51,82 @@ export function createSupabaseClient(
  * Database helpers — apply camelCase↔snake_case and field-level encryption
  * at the Supabase query boundary.
  *
- * Write path:  camelCase object → encrypt PHI fields → snake_case → DB insert
+ * Write path:  camelCase object → snake_case → encrypt PHI fields → DB insert
  * Read path:   DB row (snake_case) → decrypt PHI fields → camelCase → TypeScript
  *
- * Architecture doc: "Apply snake_case mapping when writing to Supabase,
- * but use camelCase in the TypeScript UI logic."
+ * Story 7.3b: Encryption is MANDATORY. The encryption key is resolved internally
+ * via getCachedEncryptionKey() — callers never handle raw keys. Use toRowRaw()
+ * for tables with no PHI columns (requires a reason string for audit traceability).
  */
 export const db = {
   /**
    * Transform camelCase object to snake_case for DB insert/update.
-   * Encrypts configured PHI fields before the case transform.
+   * Automatically encrypts configured PHI fields — no opt-out.
+   * The encryption key is resolved internally; callers never pass it.
    */
-  toRow<T extends Record<string, unknown>>(data: T, encryptionKey?: string): T {
+  toRow<T extends Record<string, unknown>>(data: T): T {
     const snaked = toSnakeCase(data)
-    if (!encryptionKey) return snaked
-    return encryptRow(snaked, encryptionKey)
+    return encryptRow(snaked, getCachedEncryptionKey())
+  },
+
+  /**
+   * Transform camelCase object to snake_case WITHOUT encryption.
+   * Escape hatch for non-PHI tables (notifications, labs, consents, sync_events).
+   *
+   * @param reason — Required audit trail string explaining why encryption is skipped.
+   *   Expected: "non-PHI: notifications", "non-PHI: labs", etc.
+   * @throws TypeError if reason is missing or empty.
+   */
+  toRowRaw<T extends Record<string, unknown>>(data: T, reason: string): T {
+    if (!reason || typeof reason !== 'string' || !reason.trim()) {
+      throw new TypeError(
+        'db.toRowRaw() requires a non-empty reason string for audit traceability',
+      )
+    }
+    const snaked = toSnakeCase(data)
+    for (const key of Object.keys(snaked)) {
+      if (SENSITIVE_FIELDS.has(key)) {
+        throw new Error(
+          `db.toRowRaw() cannot write sensitive field "${key}" — use db.toRow() instead`,
+        )
+      }
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[db.toRowRaw] plaintext write: ${reason}`)
+    }
+    return snaked
   },
 
   /**
    * Transform snake_case DB row to camelCase for TypeScript consumption.
-   * Decrypts configured PHI fields after the case transform boundary
-   * (decryption operates on snake_case field names before case transform).
+   * Automatically decrypts configured PHI fields.
    */
-  fromRow<T>(row: T, encryptionKey?: string): T {
-    if (encryptionKey) {
-      const decrypted = decryptRow(row as Record<string, unknown>, encryptionKey)
-      return toCamelCase(decrypted as T)
-    }
+  fromRow<T>(row: T): T {
+    const decrypted = decryptRow(
+      row as Record<string, unknown>,
+      getCachedEncryptionKey(),
+    )
+    return toCamelCase(decrypted as T)
+  },
+
+  /**
+   * Transform snake_case DB row to camelCase WITHOUT decryption.
+   * For non-PHI tables where no sensitive fields exist.
+   */
+  fromRowRaw<T>(row: T): T {
     return toCamelCase(row)
   },
 
   /**
    * Transform an array of snake_case DB rows to camelCase.
-   * Decrypts configured PHI fields.
+   * Automatically decrypts configured PHI fields.
    */
-  fromRows<T>(rows: T[], encryptionKey?: string): T[] {
-    if (encryptionKey) {
-      const decrypted = decryptRows(rows as Record<string, unknown>[], encryptionKey)
-      return decrypted.map(toCamelCase) as T[]
-    }
-    return rows.map(toCamelCase)
+  fromRows<T>(rows: T[]): T[] {
+    const key = getCachedEncryptionKey()
+    const decrypted = decryptRows(
+      rows as Record<string, unknown>[],
+      key,
+    )
+    return decrypted.map(toCamelCase) as T[]
   },
 }

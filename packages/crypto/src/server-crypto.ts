@@ -95,6 +95,9 @@ export function getEncryptionConfig() {
       'reason_code',
       'dosage_instruction',
       'interaction_override',
+      // medication_text is the free-text column (PHI). medication_display is a separate
+      // column containing standardized drug names from formulary — NOT PHI, not encrypted.
+      // See migration 005_medication_requests.sql for both column definitions.
       'medication_text',
       'soap_assessment',
       'soap_plan',

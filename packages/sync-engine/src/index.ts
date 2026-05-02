@@ -23,3 +23,25 @@ export {
 
 export { KRLSyncService } from './krl-sync.js'
 export type { KRLEntry, KRLStorage } from './krl-sync.js'
+
+export { getConflictTier } from './conflict-tiers.js'
+export type { ConflictTier } from './conflict-tiers.js'
+
+export { resolveConflict } from './conflict-resolver.js'
+export type {
+  SyncRecord,
+  ConflictStrategy,
+  ConflictResolution,
+} from './conflict-resolver.js'
+
+export { createSyncQueue, getBackoffMs } from './queue.js'
+export { enqueueSyncAction } from './enqueue.js'
+export type { EnqueueSyncActionInput } from './enqueue.js'
+export { DrainWorker } from './drain-worker.js'
+export type { SyncResult, DrainWorkerConfig } from './drain-worker.js'
+export type {
+  SyncQueueEntry,
+  EnqueueInput,
+  SyncQueueStorage,
+  SyncQueue,
+} from './queue.js'

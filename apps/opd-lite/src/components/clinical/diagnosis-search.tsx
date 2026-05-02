@@ -80,18 +80,28 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchSeqRef = useRef(0)
 
-  const handleSearch = useCallback((value: string) => {
+  const handleSearch = useCallback(async (value: string) => {
     setQuery(value)
     if (value.trim().length < 2) {
       setResults([])
       setIsOpen(false)
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
       return
     }
-    const found = searchVocab(value)
-    setResults(found)
-    setIsOpen(found.length > 0)
-    setActiveIndex(-1)
+    // Debounce
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    const seq = ++searchSeqRef.current
+    searchTimerRef.current = setTimeout(async () => {
+      const found = await searchVocab(value)
+      // Stale result guard: discard if a newer search started
+      if (seq !== searchSeqRef.current) return
+      setResults(found)
+      setIsOpen(found.length > 0)
+      setActiveIndex(-1)
+    }, 150)
   }, [])
 
   const handleSelect = useCallback(
@@ -127,10 +137,11 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
     [isOpen, results, activeIndex, handleSelect],
   )
 
-  // Clean up blur timer on unmount
+  // Clean up timers on unmount
   useEffect(() => {
     return () => {
       if (blurTimerRef.current) clearTimeout(blurTimerRef.current)
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     }
   }, [])
 

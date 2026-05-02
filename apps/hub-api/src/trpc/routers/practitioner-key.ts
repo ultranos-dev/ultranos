@@ -48,16 +48,20 @@ export const practitionerKeyRouter = createTRPCRouter({
 
       // Audit: key status lookup (practitioner_id is PHI-adjacent)
       const audit = new AuditLogger(ctx.supabase)
-      audit.emit({
-        action: 'READ',
-        resourceType: 'PractitionerKey',
-        resourceId: data.id,
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
-        sessionId: ctx.user.sessionId,
-        metadata: { keyStatus: status },
-      }).catch(() => {})
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'PractitionerKey',
+          resourceId: data.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { keyStatus: status },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PractitionerKey', resourceId: data.id })
+      }
 
       return {
         status,
@@ -146,16 +150,20 @@ export const practitionerKeyRouter = createTRPCRouter({
 
       // Audit: key revocation is a security-critical admin action
       const audit = new AuditLogger(ctx.supabase)
-      audit.emit({
-        action: 'UPDATE',
-        resourceType: 'PractitionerKey',
-        resourceId: data.id,
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
-        sessionId: ctx.user.sessionId,
-        metadata: { revocationReason: input.reason },
-      }).catch(() => {})
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'PractitionerKey',
+          resourceId: data.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { revocationReason: input.reason },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'PractitionerKey', resourceId: data.id })
+      }
 
       return { revoked: true }
     }),

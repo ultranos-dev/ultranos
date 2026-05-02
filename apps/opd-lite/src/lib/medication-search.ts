@@ -1,5 +1,6 @@
 import Fuse from 'fuse.js'
-import medicationsData from '@/assets/vocab/medications_subset.json'
+import { db } from './db'
+import type { VocabMedicationEntry } from './db'
 
 export interface MedicationItem {
   code: string
@@ -20,22 +21,50 @@ const fuseOptions: Fuse.IFuseOptions<MedicationItem> = {
   minMatchCharLength: 2,
 }
 
-let fuseInstance: Fuse<MedicationItem> | null = null
-
-function getFuse(): Fuse<MedicationItem> {
-  if (!fuseInstance) {
-    fuseInstance = new Fuse(medicationsData as MedicationItem[], fuseOptions)
-  }
-  return fuseInstance
-}
-
 export interface MedicationSearchResult {
   item: MedicationItem
   matches: Fuse.FuseResultMatch[] | undefined
 }
 
-export function searchMedications(query: string): MedicationSearchResult[] {
+function toMedicationItem(entry: VocabMedicationEntry): MedicationItem {
+  return {
+    code: entry.code,
+    display: entry.display,
+    form: entry.form,
+    strength: entry.strength,
+  }
+}
+
+/**
+ * Hybrid search: Dexie indexed prefix match → Fuse.js fuzzy ranking.
+ * Maintains the same API as the previous static-JSON implementation.
+ */
+export async function searchMedications(query: string): Promise<MedicationSearchResult[]> {
   if (!query || query.trim().length < 2) return []
-  const results = getFuse().search(query.trim(), { limit: 20 })
+
+  const trimmed = query.trim()
+
+  // Stage 1: Dexie indexed prefix match on display name
+  const prefixCandidates = await db.vocabularyMedications
+    .where('display')
+    .startsWithIgnoreCase(trimmed)
+    .limit(200)
+    .toArray()
+
+  // Stage 2: Also grab broader candidates if prefix match is thin
+  let candidates: VocabMedicationEntry[]
+  if (prefixCandidates.length < 10) {
+    // Fall back to full table scan for fuzzy matching on small datasets
+    // or when the prefix doesn't match well (e.g. typos, form searches)
+    candidates = await db.vocabularyMedications.toArray()
+  } else {
+    candidates = prefixCandidates
+  }
+
+  // Stage 3: Fuse.js fuzzy ranking on the candidate set
+  const items = candidates.map(toMedicationItem)
+  const fuse = new Fuse(items, fuseOptions)
+  const results = fuse.search(trimmed, { limit: 20 })
+
   return results.map((r) => ({ item: r.item, matches: r.matches }))
 }

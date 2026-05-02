@@ -1,6 +1,7 @@
 import { verifySignature } from '@ultranos/sync-engine'
 import type { SignedPrescriptionBundle } from './prescription-types'
 import { db } from './db'
+import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
 
 export interface VerifiedPrescription {
   id: string
@@ -131,6 +132,16 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
       return { status: 'parse_error', message: 'Prescription entry missing required fields' }
     }
   }
+
+  // Audit: prescription QR scan/verify success (PHI access — prescription details)
+  auditPhiAccess(
+    'pharmacy-user',
+    AuditAction.READ,
+    AuditResourceType.PRESCRIPTION,
+    'qr-scan-verify',
+    prescriptions[0]?.pat,
+    { phiAccess: 'prescription_scan_verify', prescriptionCount: prescriptions.length },
+  )
 
   return {
     status: 'verified',

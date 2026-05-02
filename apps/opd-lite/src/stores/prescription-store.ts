@@ -4,6 +4,9 @@ import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
 import { mapFormToMedicationRequest, type InteractionContext } from '@/lib/medication-request-mapper'
 import { db } from '@/lib/db'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
 
 interface PrescriptionState {
   pendingPrescriptions: FhirMedicationRequestZod[]
@@ -61,7 +64,19 @@ export const usePrescriptionStore = create<PrescriptionState>()(
       try {
         await db.medications.put(medicationRequest)
 
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'MedicationRequest',
+          resourceId: medicationRequest.id,
+          action: 'create',
+          payload: medicationRequest as unknown as Record<string, unknown>,
+          hlcTimestamp: medicationRequest._ultranos.hlcTimestamp,
+        })
+
         if (storeEpoch !== epochAtStart) return medicationRequest
+
+        auditPhiAccess(AuditAction.CREATE, AuditResourceType.PRESCRIPTION, medicationRequest.id, patientId, {
+          phiAccess: 'prescription_create',
+        })
 
         set((state) => {
           state.pendingPrescriptions.push(medicationRequest)
@@ -104,6 +119,20 @@ export const usePrescriptionStore = create<PrescriptionState>()(
 
       try {
         await db.medications.put(cancelled)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'MedicationRequest',
+          resourceId: cancelled.id,
+          action: 'update',
+          payload: cancelled as unknown as Record<string, unknown>,
+          hlcTimestamp: cancelled.meta.lastUpdated,
+        })
+
+        const patientRef = prescription.subject.reference.replace('Patient/', '')
+        auditPhiAccess(AuditAction.DELETE_REQUEST, AuditResourceType.PRESCRIPTION, medicationRequestId, patientRef, {
+          phiAccess: 'prescription_cancel',
+        })
+
         set((state) => {
           state.pendingPrescriptions = state.pendingPrescriptions.filter(
             (p) => p.id !== medicationRequestId,
@@ -131,6 +160,13 @@ export const usePrescriptionStore = create<PrescriptionState>()(
         const active = medications.filter(
           (m) => m.status === 'active' && !cancelledBaseIds.has(m.id),
         )
+
+        if (active.length > 0) {
+          auditPhiAccess(AuditAction.READ, AuditResourceType.PRESCRIPTION, encounterId, undefined, {
+            phiAccess: 'prescription_view',
+            prescriptionCount: active.length,
+          })
+        }
 
         set((state) => {
           state.pendingPrescriptions = active

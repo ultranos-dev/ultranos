@@ -9,6 +9,22 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./adapters/dexie": {
+      "import": "./dist/adapters/dexie-adapter.js",
+      "types": "./dist/adapters/dexie-adapter.d.ts"
+    },
+    "./adapters/sqlite": {
+      "import": "./dist/adapters/sqlite-adapter.js",
+      "types": "./dist/adapters/sqlite-adapter.d.ts"
+    },
+    "./drain": {
+      "import": "./dist/drain.js",
+      "types": "./dist/drain.d.ts"
     }
   },
   "scripts": {
@@ -20,8 +36,17 @@
     "@ultranos/shared-types": "workspace:*",
     "@supabase/supabase-js": "^2.49.0"
   },
+  "peerDependencies": {
+    "dexie": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "dexie": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "typescript": "^5.4.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "dexie": "^4.0.0"
   }
 }

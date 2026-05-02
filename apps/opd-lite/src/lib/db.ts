@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod } from '@ultranos/shared-types'
+import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod } from '@ultranos/shared-types'
+import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
@@ -28,6 +29,10 @@ export type LocalCondition = FhirCondition
 
 export type LocalMedicationRequest = FhirMedicationRequestZod
 
+export type LocalAllergyIntolerance = FhirAllergyIntolerance
+
+export type LocalMedicationStatement = FhirMedicationStatementZod
+
 export interface InteractionAuditEntry {
   id: string
   encounterId: string
@@ -53,6 +58,8 @@ export interface SyncQueueEntry {
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
+  conflictFlag?: boolean
+  failureReason?: string
 }
 
 export interface PractitionerKeyEntry {
@@ -60,6 +67,32 @@ export interface PractitionerKeyEntry {
   practitionerId: string
   practitionerName: string
   cachedAt: string           // ISO 8601 timestamp
+}
+
+// --- Vocabulary tables (Story 10.3) ---
+
+export interface VocabMedicationEntry {
+  code: string       // indexed, unique — e.g. "RX001"
+  display: string    // indexed — drug name
+  form: string
+  strength: string
+  atcCode?: string   // optional — for future ATC/RxNorm migration
+  version: number
+}
+
+export interface VocabIcd10Entry {
+  code: string       // indexed, unique — e.g. "A09"
+  display: string    // indexed — diagnosis name
+  version: number
+}
+
+export interface VocabInteractionEntry {
+  id?: number        // auto-incremented
+  drugA: string      // indexed
+  drugB: string      // indexed
+  severity: string
+  description: string
+  version: number
 }
 
 class OpdLiteDatabase extends Dexie {
@@ -72,6 +105,12 @@ class OpdLiteDatabase extends Dexie {
   interactionAuditLog!: EntityTable<InteractionAuditEntry, 'id'>
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
+  clientAuditLog!: EntityTable<ClientAuditEvent, 'id'>
+  allergyIntolerances!: EntityTable<LocalAllergyIntolerance, 'id'>
+  medicationStatements!: EntityTable<LocalMedicationStatement, 'id'>
+  vocabularyMedications!: EntityTable<VocabMedicationEntry, 'code'>
+  vocabularyIcd10!: EntityTable<VocabIcd10Entry, 'code'>
+  vocabularyInteractions!: EntityTable<VocabInteractionEntry, 'id'>
 
   constructor() {
     super('opd-lite')
@@ -265,6 +304,131 @@ class OpdLiteDatabase extends Dexie {
       syncQueue:
         'id, resourceType, resourceId, status, createdAt',
     })
+
+    // v13: Client-side audit ledger (Story 8.1)
+    // Not encrypted — contains only opaque IDs, no PHI.
+    this.version(13).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+      clientAuditLog:
+        'id, status, queuedAt, [status+queuedAt]',
+    })
+
+    // v14: Vocabulary tables for Dexie-backed terminology service (Story 10.3)
+    // Not encrypted — vocabulary is non-PHI reference data.
+    this.version(14).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+      clientAuditLog:
+        'id, status, queuedAt, [status+queuedAt]',
+      vocabularyMedications:
+        '&code, display, form, version',
+      vocabularyIcd10:
+        '&code, display, version',
+      vocabularyInteractions:
+        '++id, drugA, drugB, version',
+    })
+
+    // v15: AllergyIntolerance table (Story 10.2)
+    // Tier 1 safety-critical — append-only merge in sync engine.
+    // Encrypted: contains substance info (PHI).
+    this.version(15).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+      clientAuditLog:
+        'id, status, queuedAt, [status+queuedAt]',
+      vocabularyMedications:
+        '&code, display, form, version',
+      vocabularyIcd10:
+        '&code, display, version',
+      vocabularyInteractions:
+        '++id, drugA, drugB, version',
+      allergyIntolerances:
+        'id, patient.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+    })
+
+    // v16: MedicationStatement cache for cross-encounter interaction checks (Story 10.1)
+    // Encrypted — contains medication names (clinical content).
+    this.version(16).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+      clientAuditLog:
+        'id, status, queuedAt, [status+queuedAt]',
+      vocabularyMedications:
+        '&code, display, form, version',
+      vocabularyIcd10:
+        '&code, display, version',
+      vocabularyInteractions:
+        '++id, drugA, drugB, version',
+      allergyIntolerances:
+        'id, patient.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      medicationStatements:
+        'id, status, subject.reference, _ultranos.sourcePrescriptionId, _ultranos.hlcTimestamp, meta.lastUpdated',
+    })
   }
 }
 
@@ -330,6 +494,27 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
       'status',
       'subject.reference',
       'encounter.reference',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'allergyIntolerances',
+    indexedFields: [
+      'id',
+      'patient.reference',
+      'clinicalStatus.coding[0].code',
+      '_ultranos.hlcTimestamp',
+      'meta.lastUpdated',
+    ],
+  },
+  {
+    tableName: 'medicationStatements',
+    indexedFields: [
+      'id',
+      'status',
+      'subject.reference',
+      '_ultranos.sourcePrescriptionId',
       '_ultranos.hlcTimestamp',
       'meta.lastUpdated',
     ],

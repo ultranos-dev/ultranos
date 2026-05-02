@@ -26,6 +26,8 @@ export enum AuditAction {
   MFA_FAIL = 'MFA_FAIL',
   BREAK_GLASS = 'BREAK_GLASS',
   EXPORT = 'EXPORT',
+  PHI_READ = 'PHI_READ',
+  PHI_WRITE = 'PHI_WRITE',
 }
 
 export enum AuditResourceType {
@@ -38,6 +40,8 @@ export enum AuditResourceType {
   CONSENT = 'CONSENT',
   USER_ACCOUNT = 'USER_ACCOUNT',
   NOTIFICATION = 'NOTIFICATION',
+  ALLERGY = 'ALLERGY',
+  MEDICATION_STATEMENT = 'MEDICATION_STATEMENT',
 }
 
 export enum AuditOutcome {

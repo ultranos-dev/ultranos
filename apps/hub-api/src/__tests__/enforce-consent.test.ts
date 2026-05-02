@@ -4,6 +4,13 @@ import { ConsentScope, ConsentStatus } from '@ultranos/shared-types'
 // Mock Supabase before importing
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => mockSupabaseClient),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 const mockSupabaseClient = {
@@ -17,10 +24,14 @@ const { checkConsent, enforceConsentMiddleware } = await import(
 const PATIENT_ID = 'patient-001'
 const TEST_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
 
-function mockSupabaseConsents(consents: Array<{ id: string; status: string; category: string[] }>) {
+function mockSupabaseConsents(consents: Array<{ id: string; status: string; category: string[]; date_time?: string; provision_end?: string | null }>) {
   return vi.fn().mockReturnValue({
     select: vi.fn().mockReturnValue({
       eq: vi.fn().mockImplementation(() => ({
+        order: vi.fn().mockResolvedValue({
+          data: consents,
+          error: null,
+        }),
         eq: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue({
             data: consents,
@@ -36,6 +47,10 @@ function mockSupabaseError() {
   return vi.fn().mockReturnValue({
     select: vi.fn().mockReturnValue({
       eq: vi.fn().mockImplementation(() => ({
+        order: vi.fn().mockResolvedValue({
+          data: null,
+          error: { code: 'UNKNOWN', message: 'DB error' },
+        }),
         eq: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue({
             data: null,
@@ -141,6 +156,50 @@ describe('checkConsent', () => {
     const result = await checkConsent(supabase, {
       patientId: PATIENT_ID,
       resourceType: 'Patient',
+    })
+
+    expect(result).toBe(true)
+  })
+
+  it('returns false when consent is active but provision_end is in the past (expired)', async () => {
+    const pastDate = new Date(Date.now() - 86400000).toISOString() // 1 day ago
+    const from = mockSupabaseConsents([
+      { id: 'c-expired', status: ConsentStatus.ACTIVE, category: [ConsentScope.PRESCRIPTIONS], provision_end: pastDate },
+    ])
+    const supabase = { from } as never
+
+    const result = await checkConsent(supabase, {
+      patientId: PATIENT_ID,
+      resourceType: 'MedicationRequest',
+    })
+
+    expect(result).toBe(false)
+  })
+
+  it('returns true when consent is active and provision_end is in the future', async () => {
+    const futureDate = new Date(Date.now() + 86400000 * 30).toISOString() // 30 days from now
+    const from = mockSupabaseConsents([
+      { id: 'c-valid', status: ConsentStatus.ACTIVE, category: [ConsentScope.PRESCRIPTIONS], provision_end: futureDate },
+    ])
+    const supabase = { from } as never
+
+    const result = await checkConsent(supabase, {
+      patientId: PATIENT_ID,
+      resourceType: 'MedicationRequest',
+    })
+
+    expect(result).toBe(true)
+  })
+
+  it('returns true when consent is active and provision_end is null (indefinite)', async () => {
+    const from = mockSupabaseConsents([
+      { id: 'c-indef', status: ConsentStatus.ACTIVE, category: [ConsentScope.PRESCRIPTIONS], provision_end: null },
+    ])
+    const supabase = { from } as never
+
+    const result = await checkConsent(supabase, {
+      patientId: PATIENT_ID,
+      resourceType: 'MedicationRequest',
     })
 
     expect(result).toBe(true)

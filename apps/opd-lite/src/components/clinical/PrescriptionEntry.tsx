@@ -77,6 +77,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
   const listRef = useRef<HTMLUListElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchSeqRef = useRef(0)
 
   const hasMedication = form.medicationCode !== ''
 
@@ -90,8 +91,10 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
     }
     // P11: Debounce search to avoid UI jank on low-resource devices
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-    searchTimerRef.current = setTimeout(() => {
-      const found = searchMedications(value)
+    const seq = ++searchSeqRef.current
+    searchTimerRef.current = setTimeout(async () => {
+      const found = await searchMedications(value)
+      if (seq !== searchSeqRef.current) return  // stale result guard
       setResults(found)
       setIsOpen(found.length > 0)
       setActiveIndex(-1)

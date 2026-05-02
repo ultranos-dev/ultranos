@@ -40,6 +40,37 @@ export function getFieldEncryptionKeys(): {
 }
 
 /**
+ * Lazy-init-once cache for encryption keys.
+ * Resolved on first call to getCachedEncryptionKey() and cached thereafter.
+ * Throws if env vars are missing — ensures no code path can silently write
+ * plaintext PHI through db.toRow().
+ *
+ * Story 7.3b: Mandatory encryption wiring.
+ */
+let _cachedKeys: { encryptionKey: string; hmacKey: string } | null = null
+
+/**
+ * Returns the cached encryption key (resolved on first call, cached thereafter).
+ * Throws if FIELD_ENCRYPTION_KEY is not configured.
+ * Callers never handle raw key material.
+ */
+export function getCachedEncryptionKey(): string {
+  if (!_cachedKeys) {
+    _cachedKeys = getFieldEncryptionKeys()
+  }
+  return _cachedKeys.encryptionKey
+}
+
+/**
+ * Validate encryption configuration at startup.
+ * Call this from the app entry point to fail fast if encryption env vars are missing.
+ * After this call, getCachedEncryptionKey() is guaranteed to succeed.
+ */
+export function validateEncryptionConfig(): void {
+  getCachedEncryptionKey()
+}
+
+/**
  * Encrypt sensitive fields in a database row before insert/update.
  * Non-sensitive fields and null/undefined values pass through unchanged.
  * JSONB fields (arrays/objects) are JSON-stringified before encryption.

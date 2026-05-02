@@ -1,6 +1,6 @@
 # Story 7.4: Practitioner Key Lifecycle Management
 
-Status: in-progress
+Status: done
 
 ## User Story
 
@@ -109,3 +109,4 @@ so that revoked or compromised keys are quickly invalidated across the ecosystem
 - 2026-04-29: Story created by Antigravity.
 - 2026-05-01: Story implemented by Amelia (Dev Agent). All ACs satisfied, 22 new tests passing.
 - 2026-05-01: Code review by Claude. 3 decision-needed, 7 patch, 5 deferred findings.
+- 2026-05-02: Gap review confirmed all patches applied correctly. Status moved to done. 5 deferred items tracked for future stories.

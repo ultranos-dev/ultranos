@@ -43,7 +43,7 @@ export async function checkConsent(
   // to determine if consent is currently active or withdrawn.
   const { data, error } = await supabase
     .from('consents')
-    .select('id, status, category, date_time')
+    .select('id, status, category, date_time, provision_end')
     .eq('patient_ref', `Patient/${input.patientId}`)
     .order('date_time', { ascending: false })
 
@@ -67,6 +67,11 @@ export async function checkConsent(
       return categories.includes(scope)
     })
     if (latest && latest.status === ConsentStatus.ACTIVE) {
+      // Reject expired consent grants — a consent with provision_end in the past
+      // is no longer active regardless of status field (privacy enforcement).
+      if (latest.provision_end && latest.provision_end < new Date().toISOString()) {
+        continue
+      }
       return true
     }
   }

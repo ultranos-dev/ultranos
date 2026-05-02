@@ -2,6 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 function createMockSupabase(overrides?: {

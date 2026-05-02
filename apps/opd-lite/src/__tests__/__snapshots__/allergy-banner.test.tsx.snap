@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AllergyBanner > renders correctly in RTL layout — allergy substances visible 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      aria-live="assertive"
+      class="sticky top-0 z-50 bg-red-600 ps-4 pe-4 py-3 text-center text-sm font-bold text-white"
+      data-banner-state="active"
+      data-testid="allergy-banner"
+      role="alert"
+    >
+      <span
+        aria-label="Patient has 2 known allergies"
+      >
+        ALLERGIES: 
+        Penicillin, Peanuts
+      </span>
+    </div>
+  </div>
+</div>
+`;

@@ -1,4 +1,7 @@
+import { z } from 'zod'
 import { baseProcedure, createTRPCRouter } from '../init'
+import { roleRestrictedProcedure } from '../rbac'
+import { AuditLogger } from '@ultranos/audit-logger'
 
 export const healthRouter = createTRPCRouter({
   /**
@@ -29,4 +32,26 @@ export const healthRouter = createTRPCRouter({
       timestamp: new Date().toISOString(),
     }
   }),
+
+  /**
+   * AC 4: Verify the hash chain integrity of the audit log.
+   * Restricted to ADMIN role. Returns valid/invalid with checked count.
+   */
+  auditChainIntegrity: roleRestrictedProcedure(['ADMIN'])
+    .input(
+      z.object({
+        limit: z.number().min(1).max(10000).default(1000),
+      }).optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase)
+      const limit = input?.limit ?? 1000
+      const result = await audit.verifyChain(limit)
+
+      return {
+        valid: result.valid,
+        checkedCount: result.checkedCount,
+        brokenAt: result.brokenAt,
+      }
+    }),
 })

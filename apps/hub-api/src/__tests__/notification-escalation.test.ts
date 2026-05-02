@@ -28,6 +28,13 @@ const mockFrom = vi.fn(() => ({
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 const { checkEscalations, CRITICAL_LOINC_CODES } = await import('../services/notification-escalation')

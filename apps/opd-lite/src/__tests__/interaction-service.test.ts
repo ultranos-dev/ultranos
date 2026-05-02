@@ -1,82 +1,83 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import {
   checkInteractions,
+  invalidateInteractionCache,
   type InteractionResult,
   type InteractionCheckSummary,
 } from '@/services/interactionService'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
+import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
+import { db } from '@/lib/db'
 
-describe('InteractionChecker service', () => {
+beforeAll(async () => {
+  await seedVocabularyIfEmpty()
+})
+
+describe('InteractionChecker service (Dexie-backed)', () => {
   describe('checkInteractions', () => {
-    it('returns CLEAR when no interactions exist', () => {
-      const result = checkInteractions('Paracetamol', ['Amoxicillin'])
+    it('returns CLEAR when no interactions exist', async () => {
+      const result = await checkInteractions('Paracetamol', ['Amoxicillin'])
       expect(result.result).toBe('CLEAR')
       expect(result.interactions).toHaveLength(0)
     })
 
-    it('returns CLEAR when active medications list is empty', () => {
-      const result = checkInteractions('Warfarin', [])
+    it('returns CLEAR when active medications list is empty', async () => {
+      const result = await checkInteractions('Warfarin', [])
       expect(result.result).toBe('CLEAR')
       expect(result.interactions).toHaveLength(0)
     })
 
-    it('returns BLOCKED for CONTRAINDICATED interactions', () => {
-      // Warfarin + Aspirin = CONTRAINDICATED
-      const result = checkInteractions('Warfarin', ['Aspirin'])
+    it('returns BLOCKED for CONTRAINDICATED interactions', async () => {
+      const result = await checkInteractions('Warfarin', ['Aspirin'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
       expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
       expect(result.interactions[0].description).toBeTruthy()
     })
 
-    it('returns BLOCKED for MAJOR interactions', () => {
-      // Warfarin + Ibuprofen = MAJOR
-      const result = checkInteractions('Warfarin', ['Ibuprofen'])
+    it('returns BLOCKED for MAJOR interactions', async () => {
+      const result = await checkInteractions('Warfarin', ['Ibuprofen'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
       expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MAJOR)
     })
 
-    it('returns WARNING for MODERATE interactions', () => {
-      // Omeprazole + Clopidogrel = MODERATE
-      const result = checkInteractions('Omeprazole', ['Clopidogrel'])
+    it('returns WARNING for MODERATE interactions', async () => {
+      const result = await checkInteractions('Omeprazole', ['Clopidogrel'])
       expect(result.result).toBe('WARNING')
       expect(result.interactions.length).toBeGreaterThanOrEqual(1)
       expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MODERATE)
     })
 
-    it('is bidirectional - order of drugs does not matter', () => {
-      const resultA = checkInteractions('Warfarin', ['Aspirin'])
-      const resultB = checkInteractions('Aspirin', ['Warfarin'])
+    it('is bidirectional - order of drugs does not matter', async () => {
+      const resultA = await checkInteractions('Warfarin', ['Aspirin'])
+      const resultB = await checkInteractions('Aspirin', ['Warfarin'])
       expect(resultA.result).toBe(resultB.result)
       expect(resultA.interactions.length).toBe(resultB.interactions.length)
     })
 
-    it('is case-insensitive for drug names', () => {
-      const result = checkInteractions('warfarin', ['ASPIRIN'])
+    it('is case-insensitive for drug names', async () => {
+      const result = await checkInteractions('warfarin', ['ASPIRIN'])
       expect(result.result).toBe('BLOCKED')
     })
 
-    it('detects multiple interactions at once', () => {
-      // Warfarin interacts with both Aspirin and Ibuprofen
-      const result = checkInteractions('Warfarin', ['Aspirin', 'Ibuprofen', 'Paracetamol'])
+    it('detects multiple interactions at once', async () => {
+      const result = await checkInteractions('Warfarin', ['Aspirin', 'Ibuprofen', 'Paracetamol'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions.length).toBeGreaterThanOrEqual(2)
     })
 
-    it('returns the highest severity when multiple interactions exist', () => {
-      // If both CONTRAINDICATED and MODERATE found, result should be BLOCKED
-      const result = checkInteractions('Warfarin', ['Aspirin', 'Clopidogrel'])
+    it('returns the highest severity when multiple interactions exist', async () => {
+      const result = await checkInteractions('Warfarin', ['Aspirin', 'Clopidogrel'])
       expect(result.result).toBe('BLOCKED')
-      // Should contain the CONTRAINDICATED interaction
       const hasSevere = result.interactions.some(
         (i) => i.severity === DrugInteractionSeverity.CONTRAINDICATED
       )
       expect(hasSevere).toBe(true)
     })
 
-    it('interaction results include drugA, drugB, severity, and description', () => {
-      const result = checkInteractions('Warfarin', ['Aspirin'])
+    it('interaction results include drugA, drugB, severity, and description', async () => {
+      const result = await checkInteractions('Warfarin', ['Aspirin'])
       expect(result.interactions.length).toBeGreaterThan(0)
       const interaction = result.interactions[0]
       expect(interaction).toHaveProperty('drugA')
@@ -88,41 +89,39 @@ describe('InteractionChecker service', () => {
       expect(interaction.description.length).toBeGreaterThan(0)
     })
 
-    it('detects dual RAAS blockade (ACE inhibitor + ARB)', () => {
-      // Lisinopril (ACE) + Losartan (ARB) = CONTRAINDICATED
-      const result = checkInteractions('Lisinopril', ['Losartan'])
+    it('detects dual RAAS blockade (ACE inhibitor + ARB)', async () => {
+      const result = await checkInteractions('Lisinopril', ['Losartan'])
       expect(result.result).toBe('BLOCKED')
       expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.CONTRAINDICATED)
     })
 
-    it('detects serotonin syndrome risk (SSRI + TCA)', () => {
-      // Fluoxetine + Amitriptyline = CONTRAINDICATED
-      const result = checkInteractions('Fluoxetine', ['Amitriptyline'])
+    it('detects serotonin syndrome risk (SSRI + TCA)', async () => {
+      const result = await checkInteractions('Fluoxetine', ['Amitriptyline'])
       expect(result.result).toBe('BLOCKED')
     })
 
-    it('detects CNS depression risk (opioid + benzodiazepine)', () => {
-      // Morphine + Diazepam = MAJOR
-      const result = checkInteractions('Morphine', ['Diazepam'])
+    it('detects CNS depression risk (opioid + benzodiazepine)', async () => {
+      const result = await checkInteractions('Morphine', ['Diazepam'])
       expect(result.result).toBe('BLOCKED')
     })
 
-    it('detects digoxin + spironolactone interaction', () => {
-      const result = checkInteractions('Digoxin', ['Spironolactone'])
+    it('detects digoxin + spironolactone interaction', async () => {
+      const result = await checkInteractions('Digoxin', ['Spironolactone'])
       expect(result.result).toBe('BLOCKED')
     })
 
-    it('detects levothyroxine absorption interactions (MODERATE)', () => {
-      // Levothyroxine + Calcium Carbonate = MODERATE
-      const result = checkInteractions('Levothyroxine', ['Calcium Carbonate'])
+    it('detects levothyroxine absorption interactions (MODERATE)', async () => {
+      const result = await checkInteractions('Levothyroxine', ['Calcium Carbonate'])
       expect(result.result).toBe('WARNING')
     })
 
-    it('executes in under 200ms', () => {
+    it('executes in under 200ms', async () => {
+      // Warm up the cache
+      await checkInteractions('Warfarin', ['Aspirin'])
+
       const start = performance.now()
-      // Run multiple checks to ensure consistent performance
       for (let i = 0; i < 100; i++) {
-        checkInteractions('Warfarin', [
+        await checkInteractions('Warfarin', [
           'Aspirin', 'Ibuprofen', 'Metformin', 'Amlodipine', 'Lisinopril',
           'Omeprazole', 'Paracetamol', 'Atorvastatin', 'Clopidogrel', 'Prednisolone',
         ])
@@ -131,30 +130,73 @@ describe('InteractionChecker service', () => {
       expect(elapsed).toBeLessThan(200)
     })
 
-    it('returns unknown drug as CLEAR (no false negatives from missing data)', () => {
-      // A drug not in the matrix should return CLEAR, not error
-      const result = checkInteractions('UnknownDrugXYZ', ['Warfarin'])
+    it('returns unknown drug as CLEAR (no false negatives from missing data)', async () => {
+      const result = await checkInteractions('UnknownDrugXYZ', ['Warfarin'])
       expect(result.result).toBe('CLEAR')
       expect(result.interactions).toHaveLength(0)
     })
 
-    it('handles MINOR interactions as WARNING', () => {
-      // Cetirizine + Loratadine = MINOR (duplicate antihistamines)
-      const result = checkInteractions('Cetirizine', ['Loratadine'])
+    it('handles MINOR interactions as WARNING', async () => {
+      const result = await checkInteractions('Cetirizine', ['Loratadine'])
       expect(result.result).toBe('WARNING')
       expect(result.interactions[0].severity).toBe(DrugInteractionSeverity.MINOR)
     })
 
-    it('detects NSAIDs + ACE inhibitor interaction', () => {
-      // Ibuprofen + Lisinopril = MAJOR
-      const result = checkInteractions('Ibuprofen', ['Lisinopril'])
+    it('detects NSAIDs + ACE inhibitor interaction', async () => {
+      const result = await checkInteractions('Ibuprofen', ['Lisinopril'])
       expect(result.result).toBe('BLOCKED')
     })
 
-    it('detects beta-blocker + insulin masking hypoglycemia', () => {
-      // Atenolol + Insulin Glargine = MODERATE
-      const result = checkInteractions('Atenolol', ['Insulin Glargine'])
+    it('detects beta-blocker + insulin masking hypoglycemia', async () => {
+      const result = await checkInteractions('Atenolol', ['Insulin Glargine'])
       expect(result.result).toBe('WARNING')
+    })
+  })
+
+  describe('safety invariants', () => {
+    beforeEach(() => {
+      invalidateInteractionCache()
+      vi.restoreAllMocks()
+    })
+
+    it('throws when interaction database is empty (P1 — empty-DB false negative)', async () => {
+      vi.spyOn(db.vocabularyInteractions, 'toArray').mockResolvedValueOnce([])
+      await expect(checkInteractions('Warfarin', ['Aspirin'])).rejects.toThrow(
+        'Interaction database empty',
+      )
+    })
+
+    it('concurrent calls result in only one buildLookupMap (P2 — build race fix)', async () => {
+      const toArraySpy = vi.spyOn(db.vocabularyInteractions, 'toArray')
+
+      // Fire three concurrent calls before any resolves
+      const [r1, r2, r3] = await Promise.all([
+        checkInteractions('Warfarin', ['Aspirin']),
+        checkInteractions('Warfarin', ['Ibuprofen']),
+        checkInteractions('Warfarin', ['Aspirin']),
+      ])
+
+      // toArray should have been called exactly once across all three concurrent callers
+      expect(toArraySpy).toHaveBeenCalledTimes(1)
+      // Results should still be correct
+      expect(r1.result).toBe('BLOCKED')
+      expect(r2.result).toBe('BLOCKED')
+      expect(r3.result).toBe('BLOCKED')
+    })
+
+    it('throws when severity string is unknown (P3 — unknown severity false negative)', async () => {
+      vi.spyOn(db.vocabularyInteractions, 'toArray').mockResolvedValueOnce([
+        {
+          id: 'test-entry-1',
+          drugA: 'DrugA',
+          drugB: 'DrugB',
+          severity: 'UNKNOWN_SEVERITY',
+          description: 'Test interaction',
+        } as any,
+      ])
+      await expect(checkInteractions('DrugA', ['DrugB'])).rejects.toThrow(
+        'Unknown drug interaction severity: "UNKNOWN_SEVERITY"',
+      )
     })
   })
 })

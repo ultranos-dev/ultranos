@@ -9,6 +9,13 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', TEST_HMAC_KEY)
 // Mock dependencies before importing
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => mockSupabaseClient),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 vi.mock('@ultranos/audit-logger', () => ({

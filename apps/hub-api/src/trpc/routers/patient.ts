@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { generateBlindIndex } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
+import { AuditLogger } from '@ultranos/audit-logger'
 // NOTE: enforceConsentMiddleware is available for per-patient data endpoints.
 // The search endpoint returns identity data for verification (not clinical PHI),
 // so consent enforcement is applied at the individual patient data level, not search.
@@ -80,6 +81,26 @@ export const patientRouter = createTRPCRouter({
         })
       }
 
+      // Audit PHI access — patient identity data returned (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: 'patient-search',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { resultCount: (data ?? []).length },
+        })
+      } catch (auditError) {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'patient-search' })
+      }
+
+      // db.fromRow() not used here: the SELECT only returns identity/demographics columns
+      // (name, gender, birth_date, identifiers). No SENSITIVE_FIELDS are queried.
+      // The _ultranos namespace fields require custom mapping that doesn't fit db.fromRowRaw().
       return {
         patients: (data ?? []).map((row) => ({
           id: row.id,

@@ -5,7 +5,14 @@ import { LOINC } from '@/lib/vitals-fhir-mapper'
 
 beforeEach(async () => {
   useVitalsStore.getState().clearPhiState()
+  // Ensure DB connection is fresh — protects against cross-test contamination
+  // from shared fake-indexeddb singleton (e.g., interaction-service.test.ts
+  // seeding vocabulary can leave stale transaction state).
+  if (!db.isOpen()) {
+    await db.open()
+  }
   await db.observations.clear()
+  await db.syncQueue.clear()
 })
 
 describe('useVitalsStore', () => {

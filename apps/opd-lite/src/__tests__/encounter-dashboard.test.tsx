@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import React from 'react'
 import { usePatientStore } from '@/stores/patient-store'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { FhirPatient } from '@ultranos/shared-types'
+import { useAllergyStore } from '@/stores/allergy-store'
+import { usePrescriptionStore } from '@/stores/prescription-store'
 
 // Mock next/navigation
 const mockPush = vi.fn()
@@ -13,7 +16,18 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
+// Mock PrescriptionEntry to expose a direct onSubmit trigger for P2/P3 path testing
+vi.mock('@/components/clinical/PrescriptionEntry', () => ({
+  PrescriptionEntry: vi.fn(),
+}))
+
+// Mock interactionAuditService to avoid Dexie dependency in P3 path
+vi.mock('@/services/interactionAuditService', () => ({
+  logInteractionCheck: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { EncounterDashboard } from '@/components/encounter-dashboard'
+import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 
 function makePatient(id: string, nameLocal: string): FhirPatient {
   return {
@@ -52,6 +66,12 @@ function resetStores() {
     role: 'clinician',
     sessionId: 'test-session',
   })
+  useAllergyStore.setState({
+    allergies: [],
+    isLoading: false,
+    loadError: null,
+    loadAllergies: vi.fn(),
+  })
 }
 
 describe('Encounter Dashboard', () => {
@@ -60,6 +80,28 @@ describe('Encounter Dashboard', () => {
     await db.patients.clear()
     await db.encounters.clear()
     resetStores()
+    // Configure PrescriptionEntry mock to render a submit button for P2/P3 testing
+    vi.mocked(PrescriptionEntry).mockImplementation(({ onSubmit }) =>
+      React.createElement(
+        'button',
+        {
+          'data-testid': 'mock-prescription-submit',
+          onClick: () =>
+            onSubmit({
+              medicationCode: 'med-amox-500',
+              medicationDisplay: 'Amoxicillin',
+              medicationForm: 'Capsule',
+              medicationStrength: '500mg',
+              dosageQuantity: '1',
+              dosageUnit: 'tablet',
+              frequencyCode: 'BID',
+              durationDays: '7',
+              notes: '',
+            }),
+        },
+        'Mock Submit Prescription',
+      )
+    )
   })
 
   it('should show patient not found when no patient exists locally', async () => {
@@ -236,5 +278,70 @@ describe('Encounter Dashboard', () => {
       expect(status).toBeDefined()
       expect(status.closest('[role="status"]')).toBeDefined()
     })
+  })
+
+  // --- P2/P3: Allergy store safety gates in handleAddPrescription ---
+
+  it('P2: blocks prescription add while allergy store is loading', async () => {
+    const patient = makePatient('patient-p2', 'Test P2')
+    usePatientStore.setState({ selectedPatient: patient })
+
+    render(<EncounterDashboard patientId="patient-p2" />)
+
+    fireEvent.click(screen.getByText('Start Encounter'))
+    await waitFor(() => {
+      expect(screen.getByText('Active Consultation')).toBeDefined()
+    })
+
+    // Set allergy store to loading state AFTER encounter starts
+    useAllergyStore.setState({ isLoading: true, loadError: null })
+
+    // Inject mock so we can assert addPrescription was NOT called (blocked)
+    const mockAddPrescription = vi.fn()
+    usePrescriptionStore.setState({ addPrescription: mockAddPrescription } as never)
+
+    fireEvent.click(screen.getByTestId('mock-prescription-submit'))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Allergy data still loading — please wait before prescribing/),
+      ).toBeDefined()
+    })
+    // Prescription must be fully blocked — addPrescription must never be called
+    expect(mockAddPrescription).not.toHaveBeenCalled()
+  })
+
+  it('P3: allows prescription add with UNAVAILABLE flag when allergy data has load error', async () => {
+    const patient = makePatient('patient-p3', 'Test P3')
+    usePatientStore.setState({ selectedPatient: patient })
+    // Provide a mock addPrescription that returns a stub rx so the P3 path completes
+    const mockAddPrescription = vi.fn().mockResolvedValue({ id: 'rx-test-001' })
+    usePrescriptionStore.setState({ addPrescription: mockAddPrescription } as never)
+
+    render(<EncounterDashboard patientId="patient-p3" />)
+
+    fireEvent.click(screen.getByText('Start Encounter'))
+    await waitFor(() => {
+      expect(screen.getByText('Active Consultation')).toBeDefined()
+    })
+
+    // Set allergy store to error state
+    useAllergyStore.setState({ isLoading: false, loadError: 'Failed to load allergies' })
+
+    fireEvent.click(screen.getByTestId('mock-prescription-submit'))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Allergy data unavailable — interaction check incomplete/),
+      ).toBeDefined()
+    })
+    // Prescription must still be saved (with UNAVAILABLE flag)
+    expect(mockAddPrescription).toHaveBeenCalledWith(
+      expect.objectContaining({ medicationDisplay: 'Amoxicillin' }),
+      expect.any(String), // encounterId
+      'patient-p3',
+      expect.any(String), // practitionerRef
+      { interactionCheckResult: 'UNAVAILABLE' },
+    )
   })
 })

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { db } from '@/lib/supabase'
 import { checkConsent } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
@@ -59,25 +60,25 @@ export const consentRouter = createTRPCRouter({
       // Append-only insert — never update or delete consent records
       const { data, error } = await ctx.supabase
         .from('consents')
-        .insert({
+        .insert(db.toRowRaw({
           id: input.id,
           status: input.status,
           category: input.category,
-          patient_ref: input.patientRef,
-          date_time: input.dateTime,
-          provision_start: input.provisionStart,
-          provision_end: input.provisionEnd ?? null,
-          grantor_id: input.grantorId,
-          grantor_role: input.grantorRole,
+          patientRef: input.patientRef,
+          dateTime: input.dateTime,
+          provisionStart: input.provisionStart,
+          provisionEnd: input.provisionEnd ?? null,
+          grantorId: input.grantorId,
+          grantorRole: input.grantorRole,
           purpose: input.purpose,
-          consent_version: input.consentVersion,
-          audit_hash: input.auditHash,
-          hlc_timestamp: input.hlcTimestamp,
-          withdrawn_at: input.withdrawnAt ?? null,
-          withdrawal_reason: input.withdrawalReason ?? null,
-          synced_by: ctx.user.sub,
-          synced_at: now,
-        })
+          consentVersion: input.consentVersion,
+          auditHash: input.auditHash,
+          hlcTimestamp: input.hlcTimestamp,
+          withdrawnAt: input.withdrawnAt ?? null,
+          withdrawalReason: input.withdrawalReason ?? null,
+          syncedBy: ctx.user.sub,
+          syncedAt: now,
+        }, 'non-PHI: consents'))
         .select('id')
         .single()
 
@@ -94,17 +95,21 @@ export const consentRouter = createTRPCRouter({
       }
 
       const audit = new AuditLogger(ctx.supabase)
-      await audit.emit({
-        action: 'PHI_WRITE',
-        resourceType: 'Consent',
-        resourceId: data.id,
-        patientId: input.patientRef.replace('Patient/', ''),
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'success',
-        sessionId: ctx.user.sessionId,
-        metadata: { syncAction: 'consent_synced' },
-      })
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'Consent',
+          resourceId: data.id,
+          patientId: input.patientRef.replace('Patient/', ''),
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'success',
+          sessionId: ctx.user.sessionId,
+          metadata: { syncAction: 'consent_synced' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'Consent', resourceId: data.id })
+      }
 
       return { success: true, consentId: data.id, alreadySynced: false }
     }),
@@ -128,20 +133,24 @@ export const consentRouter = createTRPCRouter({
       })
 
       const audit = new AuditLogger(ctx.supabase)
-      await audit.emit({
-        action: 'PHI_READ',
-        resourceType: 'Consent',
-        resourceId: 'consent-check',
-        patientId: input.patientId,
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'success',
-        sessionId: ctx.user.sessionId,
-        metadata: {
-          checkedResourceType: input.resourceType,
-          permitted: String(hasConsent),
-        },
-      })
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'Consent',
+          resourceId: 'consent-check',
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'success',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            checkedResourceType: input.resourceType,
+            permitted: String(hasConsent),
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'Consent', resourceId: 'consent-check' })
+      }
 
       return { permitted: hasConsent }
     }),

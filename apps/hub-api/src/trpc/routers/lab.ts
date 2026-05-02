@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { labRestrictedProcedure } from '../rbac'
 import { enforceLabActive } from '../middleware/enforceLabActive'
+import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { generateBlindIndex, encryptField } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
@@ -36,37 +37,37 @@ async function dispatchResultNotifications(
     .single()
 
   const notifications: Array<{
-    recipient_ref: string
-    recipient_role: string
+    recipientRef: string
+    recipientRole: string
     type: string
     payload: string
     status: string
-    next_retry_at: string
+    nextRetryAt: string
   }> = []
 
   const nextRetryAt = new Date(Date.now() + 60_000).toISOString() // 60s initial retry window
 
   // Doctor notification (AC: 1)
   if (encounter?.practitioner_id) {
-    notifications.push({
-      recipient_ref: encounter.practitioner_id,
-      recipient_role: 'CLINICIAN',
+    notifications.push(db.toRowRaw({
+      recipientRef: encounter.practitioner_id,
+      recipientRole: 'CLINICIAN',
       type: 'LAB_RESULT_AVAILABLE',
       payload: JSON.stringify(payload),
       status: 'QUEUED',
-      next_retry_at: nextRetryAt,
-    })
+      nextRetryAt,
+    }, 'non-PHI: notifications'))
   }
 
   // Patient notification (AC: 2) — use patientRef as recipient
-  notifications.push({
-    recipient_ref: patientRef,
-    recipient_role: 'PATIENT',
+  notifications.push(db.toRowRaw({
+    recipientRef: patientRef,
+    recipientRole: 'PATIENT',
     type: 'LAB_RESULT_AVAILABLE',
     payload: JSON.stringify(payload),
     status: 'QUEUED',
-    next_retry_at: nextRetryAt,
-  })
+    nextRetryAt,
+  }, 'non-PHI: notifications'))
 
   if (notifications.length > 0) {
     const { data: inserted } = await supabase
@@ -74,23 +75,27 @@ async function dispatchResultNotifications(
       .insert(notifications)
       .select('id')
 
-    // Audit notification dispatch (best-effort)
+    // Audit notification dispatch
     if (inserted) {
       const audit = new AuditLogger(supabase)
       for (const n of inserted) {
-        audit.emit({
-          action: 'CREATE',
-          resourceType: 'NOTIFICATION',
-          resourceId: n.id,
-          actorId: opts.actorId,
-          actorRole: opts.actorRole,
-          outcome: 'SUCCESS',
-          sessionId: opts.sessionId,
-          metadata: {
-            notificationAction: 'dispatched_on_upload',
-            diagnosticReportId: payload.diagnosticReportId,
-          },
-        }).catch(() => {})
+        try {
+          await audit.emit({
+            action: 'CREATE',
+            resourceType: 'NOTIFICATION',
+            resourceId: n.id,
+            actorId: opts.actorId,
+            actorRole: opts.actorRole,
+            outcome: 'SUCCESS',
+            sessionId: opts.sessionId,
+            metadata: {
+              notificationAction: 'dispatched_on_upload',
+              diagnosticReportId: payload.diagnosticReportId,
+            },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'NOTIFICATION', resourceId: n.id })
+        }
       }
     }
   }
@@ -148,12 +153,12 @@ export const labRouter = createTRPCRouter({
       // Insert lab record with PENDING status
       const { data: lab, error: labError } = await ctx.supabase
         .from('labs')
-        .insert({
+        .insert(db.toRowRaw({
           name: input.labName,
-          license_ref: input.licenseRef,
-          accreditation_ref: input.accreditationRef ?? null,
+          licenseRef: input.licenseRef,
+          accreditationRef: input.accreditationRef ?? null,
           status: 'PENDING',
-        })
+        }, 'non-PHI: labs'))
         .select('id')
         .single()
 
@@ -167,11 +172,11 @@ export const labRouter = createTRPCRouter({
       // Bind the registering practitioner as a technician of this lab
       const { error: techError } = await ctx.supabase
         .from('lab_technicians')
-        .insert({
-          practitioner_id: ctx.user.sub,
-          lab_id: lab.id,
-          credential_ref: input.technicianCredentialRef,
-        })
+        .insert(db.toRowRaw({
+          practitionerId: ctx.user.sub,
+          labId: lab.id,
+          credentialRef: input.technicianCredentialRef,
+        }, 'non-PHI: labs'))
 
       if (techError) {
         // Compensating delete: remove orphaned lab record
@@ -191,16 +196,20 @@ export const labRouter = createTRPCRouter({
 
       // Audit event for lab registration
       const audit = new AuditLogger(ctx.supabase)
-      await audit.emit({
-        action: 'CREATE',
-        resourceType: 'Organization',
-        resourceId: lab.id,
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
-        sessionId: ctx.user.sessionId,
-        metadata: { registrationAction: 'lab_registered' },
-      })
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'Organization',
+          resourceId: lab.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { registrationAction: 'lab_registered' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'Organization', resourceId: lab.id })
+      }
 
       return {
         success: true,
@@ -275,22 +284,26 @@ export const labRouter = createTRPCRouter({
 
       const sourceIpHash = ip !== 'unknown' ? ipHash : undefined
 
-      await audit.emit({
-        action: actionMap[input.event]!,
-        resourceType: 'USER_ACCOUNT',
-        resourceId: validatedActorId ?? 'anonymous',
-        actorId: validatedActorId,
-        actorRole: ctx.user?.role ?? 'LAB_TECH',
-        outcome: outcomeMap[input.event]!,
-        sessionId: ctx.user?.sessionId,
-        sourceIpHash,
-        metadata: {
-          authEvent: input.event,
-          ...(input.event.includes('FAILURE') && input.actorEmail
-            ? { failedEmail: '[REDACTED]' }
-            : {}),
-        },
-      })
+      try {
+        await audit.emit({
+          action: actionMap[input.event]!,
+          resourceType: 'USER_ACCOUNT',
+          resourceId: validatedActorId ?? 'anonymous',
+          actorId: validatedActorId,
+          actorRole: ctx.user?.role ?? 'LAB_TECH',
+          outcome: outcomeMap[input.event]!,
+          sessionId: ctx.user?.sessionId,
+          sourceIpHash,
+          metadata: {
+            authEvent: input.event,
+            ...(input.event.includes('FAILURE') && input.actorEmail
+              ? { failedEmail: '[REDACTED]' }
+              : {}),
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: actionMap[input.event], resourceType: 'USER_ACCOUNT', resourceId: 'auth-event' })
+      }
 
       return { logged: true }
     }),
@@ -364,17 +377,21 @@ export const labRouter = createTRPCRouter({
       const { data: patient, error } = await patientQuery
 
       if (error || !patient) {
-        // Audit the failed lookup — no PHI in the audit event (best-effort, non-blocking)
-        audit.emit({
-          action: 'READ',
-          resourceType: 'PATIENT',
-          resourceId: 'unknown',
-          actorId: technicianId,
-          actorRole: ctx.user.role,
-          outcome: 'FAILURE',
-          sessionId: ctx.user.sessionId,
-          metadata: { lookupMethod: input.method, verificationAction: 'patient_verify' },
-        }).catch(() => {})
+        // Audit the failed lookup — no PHI in the audit event
+        try {
+          await audit.emit({
+            action: 'READ',
+            resourceType: 'PATIENT',
+            resourceId: 'unknown',
+            actorId: technicianId,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { lookupMethod: input.method, verificationAction: 'patient_verify' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: 'unknown' })
+        }
 
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -402,17 +419,21 @@ export const labRouter = createTRPCRouter({
         age--
       }
 
-      // Audit successful verification — no PHI (best-effort, non-blocking)
-      audit.emit({
-        action: 'READ',
-        resourceType: 'PATIENT',
-        resourceId: patientRef,
-        actorId: technicianId,
-        actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
-        sessionId: ctx.user.sessionId,
-        metadata: { lookupMethod: input.method, verificationAction: 'patient_verify' },
-      }).catch(() => {})
+      // Audit successful verification — no PHI
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'PATIENT',
+          resourceId: 'patient-verify',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { lookupMethod: input.method, verificationAction: 'patient_verify' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'PATIENT', resourceId: 'patient-verify' })
+      }
 
       return {
         firstName: patient.given_name,
@@ -633,19 +654,23 @@ export const labRouter = createTRPCRouter({
 
         if (deleteError) {
           // Orphaned report — emit audit event for ops visibility
-          audit.emit({
-            action: 'CREATE',
-            resourceType: 'LAB_RESULT',
-            resourceId: report.id,
-            actorId: technicianId,
-            actorRole: ctx.user.role,
-            outcome: 'FAILURE',
-            sessionId: ctx.user.sessionId,
-            metadata: {
-              uploadAction: 'compensating_delete_failed',
-              orphanedReportId: report.id,
-            },
-          }).catch(() => {})
+          try {
+            await audit.emit({
+              action: 'CREATE',
+              resourceType: 'LAB_RESULT',
+              resourceId: report.id,
+              actorId: technicianId,
+              actorRole: ctx.user.role,
+              outcome: 'FAILURE',
+              sessionId: ctx.user.sessionId,
+              metadata: {
+                uploadAction: 'compensating_delete_failed',
+                orphanedReportId: report.id,
+              },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'LAB_RESULT', resourceId: report.id })
+          }
         }
 
         throw new TRPCError({
@@ -741,22 +766,26 @@ export const labRouter = createTRPCRouter({
       const result = await analyzeFile(input.fileBase64, input.fileType)
 
       // Audit the OCR analysis — PHI file sent to external service (Safety Rule #6)
-      audit.emit({
-        action: 'READ',
-        resourceType: 'LAB_RESULT',
-        resourceId: 'ocr-analysis',
-        actorId: technicianId,
-        actorRole: ctx.user.role,
-        outcome: result.available ? 'SUCCESS' : 'FAILURE',
-        sessionId: ctx.user.sessionId,
-        metadata: {
-          ocrAction: 'analyze_upload',
-          provider: result.provider,
-          available: result.available,
-          suggestionsCount: result.suggestions.length,
-          processingTimeMs: result.processingTimeMs,
-        },
-      }).catch(() => {})
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'LAB_RESULT',
+          resourceId: 'ocr-analysis',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: result.available ? 'SUCCESS' : 'FAILURE',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            ocrAction: 'analyze_upload',
+            provider: result.provider,
+            available: result.available,
+            suggestionsCount: result.suggestions.length,
+            processingTimeMs: result.processingTimeMs,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'LAB_RESULT', resourceId: 'ocr-analysis' })
+      }
 
       return {
         suggestions: result.suggestions,

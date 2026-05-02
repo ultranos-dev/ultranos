@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { LocalMedicationDispense } from './medication-dispense'
+import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
@@ -77,6 +78,7 @@ class PharmacyLiteDatabase extends Dexie {
   dispenseAuditLog!: EntityTable<DispenseAuditEntry, 'id'>
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
   pendingAuditEvents!: EntityTable<PendingAuditEvent, 'id'>
+  clientAuditLog!: EntityTable<ClientAuditEvent, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -100,6 +102,12 @@ class PharmacyLiteDatabase extends Dexie {
     // Non-PHI — contains only revoked public keys and timestamps.
     this.version(3).stores({
       revokedKeys: 'publicKey',
+    })
+
+    // v4: Client-side audit ledger (Story 8.1)
+    // Not encrypted — contains only opaque IDs, no PHI.
+    this.version(4).stores({
+      clientAuditLog: 'id, status, queuedAt, [status+queuedAt]',
     })
   }
 }

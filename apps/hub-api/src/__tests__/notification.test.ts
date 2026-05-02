@@ -52,6 +52,13 @@ vi.mock('@ultranos/audit-logger', () => ({
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')

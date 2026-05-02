@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import './globals.css'
 
 const inter = Inter({
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" dir="ltr" className={inter.variable}>
       <body className="font-sans bg-neutral-50 text-neutral-900 antialiased">
-        {children}
+        <ClientErrorBoundary>
+          {children}
+        </ClientErrorBoundary>
       </body>
     </html>
   )

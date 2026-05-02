@@ -1,7 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DiagnosisSearch } from '@/components/clinical/diagnosis-search'
+import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
+
+beforeAll(async () => {
+  await seedVocabularyIfEmpty()
+})
 
 describe('DiagnosisSearch', () => {
   const mockOnSelect = vi.fn()
@@ -20,8 +25,9 @@ describe('DiagnosisSearch', () => {
     const input = screen.getByRole('combobox')
     await user.type(input, 'diabetes')
 
-    expect(screen.getByRole('listbox')).toBeInTheDocument()
-    const options = screen.getAllByRole('option')
+    const listbox = await screen.findByRole('listbox')
+    expect(listbox).toBeInTheDocument()
+    const options = within(listbox).getAllByRole('option')
     expect(options.length).toBeGreaterThan(0)
   })
 
@@ -31,10 +37,11 @@ describe('DiagnosisSearch', () => {
 
     await user.type(screen.getByRole('combobox'), 'hypertension')
 
-    const options = screen.getAllByRole('option')
-    // Check first result contains code and description
-    expect(options[0].textContent).toMatch(/I10/)
-    expect(options[0].textContent).toMatch(/hypertension/i)
+    const listbox = await screen.findByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
+    // First result should contain an ICD code and the word hypertension
+    expect(options[0].textContent).toMatch(/[A-Z]\d/)
+    expect(options[0].textContent).toMatch(/hypertens/i)
   })
 
   it('does not show results for single character', async () => {
@@ -52,7 +59,8 @@ describe('DiagnosisSearch', () => {
 
     await user.type(screen.getByRole('combobox'), 'fever')
 
-    const options = screen.getAllByRole('option')
+    const listbox = await screen.findByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
     await user.click(options[0])
 
     expect(mockOnSelect).toHaveBeenCalledWith(
@@ -65,12 +73,12 @@ describe('DiagnosisSearch', () => {
     const user = userEvent.setup()
     render(<DiagnosisSearch onSelect={mockOnSelect} />)
 
-    // Toggle to secondary
     await user.click(screen.getByRole('radio', { name: /secondary/i }))
 
     await user.type(screen.getByRole('combobox'), 'fever')
 
-    const options = screen.getAllByRole('option')
+    const listbox = await screen.findByRole('listbox')
+    const options = within(listbox).getAllByRole('option')
     await user.click(options[0])
 
     expect(mockOnSelect).toHaveBeenCalledWith(
@@ -85,7 +93,8 @@ describe('DiagnosisSearch', () => {
 
     const input = screen.getByRole('combobox')
     await user.type(input, 'fever')
-    await user.click(screen.getAllByRole('option')[0])
+    const listbox = await screen.findByRole('listbox')
+    await user.click(within(listbox).getAllByRole('option')[0])
 
     expect(input).toHaveValue('')
   })
@@ -97,13 +106,17 @@ describe('DiagnosisSearch', () => {
     const input = screen.getByRole('combobox')
     await user.type(input, 'acute')
 
+    await screen.findByRole('listbox')
+
     await user.keyboard('{ArrowDown}')
     const firstOption = screen.getAllByRole('option')[0]
     expect(firstOption).toHaveAttribute('aria-selected', 'true')
 
     await user.keyboard('{ArrowDown}')
-    const secondOption = screen.getAllByRole('option')[1]
-    expect(secondOption).toHaveAttribute('aria-selected', 'true')
+    await waitFor(() => {
+      const secondOption = screen.getAllByRole('option')[1]
+      expect(secondOption).toHaveAttribute('aria-selected', 'true')
+    })
   })
 
   it('selects with Enter key', async () => {
@@ -111,6 +124,7 @@ describe('DiagnosisSearch', () => {
     render(<DiagnosisSearch onSelect={mockOnSelect} />)
 
     await user.type(screen.getByRole('combobox'), 'pneumonia')
+    await screen.findByRole('listbox')
     await user.keyboard('{ArrowDown}{Enter}')
 
     expect(mockOnSelect).toHaveBeenCalledWith(
@@ -124,10 +138,12 @@ describe('DiagnosisSearch', () => {
     render(<DiagnosisSearch onSelect={mockOnSelect} />)
 
     await user.type(screen.getByRole('combobox'), 'diabetes')
-    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    await screen.findByRole('listbox')
 
     await user.keyboard('{Escape}')
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    })
   })
 
   it('disables input when disabled prop is true', () => {

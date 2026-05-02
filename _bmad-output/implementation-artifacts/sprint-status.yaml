@@ -13,7 +13,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-01T12:00:00.000000'
+last_updated: '2026-05-02T04:20:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -22,66 +22,69 @@ development_status:
   # Cross-cutting infrastructure
   0-1-ecosystem-package-rename: done
   epic-1: in-progress
-  1-1-monorepo-foundation-shared-contracts: ready-for-dev
-  1-2-hub-api-trpc-scaffolding: ready-for-dev
-  1-3-pwa-identity-verification-dexie-persistence: ready-for-dev
+  1-1-monorepo-foundation-shared-contracts: done
+  1-2-hub-api-trpc-scaffolding: done
+  1-3-pwa-identity-verification-dexie-persistence: done
   1-4-mobile-identity-verification-sqlcipher-persistence: backlog
   1-5-rtl-global-context-mirroring: backlog
   1-6-opd-lite-mobile-scaffold: done
   1-7-lab-lite-pwa-scaffold: done
   epic-1-retrospective: optional
-  epic-2: backlog
-  2-1-encounter-lifecycle-zustand-store: backlog
-  2-2-soap-note-entry-subjective-objective: backlog
-  2-3-vital-signs-charting: backlog
-  2-4-diagnosis-entry-icd-10-search: backlog
-  2-5-clinical-command-palette-ux-dr4: backlog
+  epic-2: done
+  2-1-encounter-lifecycle-zustand-store: done
+  2-2-soap-note-entry-subjective-objective: done
+  2-3-vital-signs-charting: done
+  2-4-diagnosis-entry-icd-10-search: done
+  2-5-clinical-command-palette-ux-dr4: done
   epic-2-retrospective: optional
-  epic-3: backlog
-  3-1-medication-search-prescription-entry: backlog
-  3-2-local-drug-drug-interaction-checker: backlog
-  3-3-cryptographically-signed-qr-generation: backlog
-  3-4-global-prescription-invalidation-check: backlog
+  epic-3: done
+  3-1-medication-search-prescription-entry: done
+  3-2-local-drug-drug-interaction-checker: done
+  3-3-cryptographically-signed-qr-generation: done
+  3-4-global-prescription-invalidation-check: done
   epic-3-retrospective: optional
-  epic-4: backlog
+  epic-4: done
   4-1-pharmacy-scan-load: done
   4-2-medication-fulfillment-labeling: done
   4-3-real-time-dispensing-sync: done
   4-4-pharmacy-lite-pwa-extraction: done
   epic-4-retrospective: optional
-  epic-5: in-progress
+  epic-5: done
   5-1-patient-profile-qr-identity: done
-  5-2-medical-history-timeline-low-literacy-ui: in-progress
-  5-3-data-sharing-consent-management: in-progress
+  5-2-medical-history-timeline-low-literacy-ui: done
+  5-3-data-sharing-consent-management: done
   epic-5-retrospective: optional
-  epic-6: in-progress
-  6-1-role-based-access-control-rbac: in-progress
+  epic-6: done
+  6-1-role-based-access-control-rbac: done
   epic-6-retrospective: optional
-  epic-7: in-progress
+  epic-7: done
   7-1-pwa-dexie-encryption-key-in-memory: done
   7-2-mobile-sqlcipher-migration: done
-  7-3-hub-api-field-level-encryption: in-progress
-  7-4-practitioner-key-lifecycle-management: in-progress
+  7-3-hub-api-field-level-encryption: done
+  7-3b-mandatory-encryption-wiring: done
+  7-4-practitioner-key-lifecycle-management: done
   epic-7-retrospective: optional
-  epic-8: backlog
-  8-1-client-side-audit-ledger: backlog
-  8-2-immutable-hash-chained-audit-logging: backlog
+  epic-8: done
+  8-1-client-side-audit-ledger: done
+  8-2-immutable-hash-chained-audit-logging: done
   epic-8-retrospective: optional
-  epic-9: backlog
-  9-1-tiered-conflict-resolution-hlc-integration: backlog
-  9-2-background-sync-worker-retry-logic: backlog
-  9-3-global-sync-dashboard: backlog
+  epic-9: done
+  9-1-tiered-conflict-resolution-hlc-integration: done
+  9-2-background-sync-worker-retry-logic: done
+  9-3-global-sync-dashboard: done
   epic-9-retrospective: optional
-  epic-10: backlog
-  10-1-medicationstatement-cross-medication-interaction-checks: backlog
-  10-2-global-allergy-management-high-visibility-banners: backlog
-  10-3-terminology-service-migration-dexie-vocabulary: backlog
+  epic-10: done
+  10-1-medicationstatement-cross-medication-interaction-checks: done
+  10-2-global-allergy-management-high-visibility-banners: done
+  10-3-terminology-service-migration-dexie-vocabulary: done
   epic-10-retrospective: optional
   epic-11: backlog
   11-1-global-rtl-i18n-framework: backlog
-  11-2-resilience-error-recovery: backlog
   epic-11-retrospective: optional
-  epic-12: backlog
+  epic-13: done
+  13-1-react-error-boundaries-safe-mode: done
+  epic-13-retrospective: optional
+  epic-12: done
   12-1-lab-credentialing-technician-auth: done
   12-2-restricted-patient-verification: done
   12-3-result-upload-metadata-tagging: done

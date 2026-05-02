@@ -4,6 +4,7 @@ import type { VerifiedPrescription } from '@/lib/prescription-verify'
 import { createMedicationDispense } from '@/lib/medication-dispense'
 import { syncDispenseToHub, type DispenseSyncResult } from '@/lib/dispense-sync'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { db } from '@/lib/db'
 
 export type FulfillmentPhase =
@@ -77,6 +78,19 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         state.patientAge = patient?.age ?? null
         state.scannedAt = new Date().toISOString()
       })
+
+      // Audit: PHI access when patient demographics are loaded for fulfillment view
+      if (prescriptions.length > 0) {
+        const patientRef = prescriptions[0]?.pat
+        auditPhiAccess(
+          'pharmacy-user', // No auth session store in pharmacy-lite; actor resolved at Hub sync
+          AuditAction.READ,
+          AuditResourceType.PRESCRIPTION,
+          'fulfillment-view',
+          patientRef,
+          { phiAccess: 'fulfillment_view', prescriptionCount: prescriptions.length },
+        )
+      }
     },
 
     toggleItem: (prescriptionId) => {

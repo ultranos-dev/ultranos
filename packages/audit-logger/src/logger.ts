@@ -84,16 +84,17 @@ export class AuditLogger {
   }
 
   // Verify hash chain integrity from startId to latest
-  async verifyChain(limit = 100): Promise<{ valid: boolean; broken_at?: string }> {
+  async verifyChain(limit = 100): Promise<{ valid: boolean; checkedCount: number; brokenAt?: string }> {
     const { data: rows, error } = await this.db
       .from(AUDIT_TABLE)
       .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, patient_id, outcome, chain_hash')
       .order('timestamp', { ascending: true })
       .limit(limit)
 
-    if (error || !rows) return { valid: false, broken_at: 'query_failed' }
+    if (error || !rows) return { valid: false, checkedCount: 0, brokenAt: 'query_failed' }
 
     let prevHash = GENESIS_HASH
+    let checkedCount = 0
     for (const row of rows) {
       const expected = computeChainHash(prevHash, {
         id: row.id,
@@ -110,11 +111,12 @@ export class AuditLogger {
         sourceIpHash: undefined,
         denialReason: undefined,
       })
+      checkedCount++
       if (expected !== row.chain_hash) {
-        return { valid: false, broken_at: row.id }
+        return { valid: false, checkedCount, brokenAt: row.id }
       }
       prevHash = row.chain_hash
     }
-    return { valid: true }
+    return { valid: true, checkedCount }
   }
 }

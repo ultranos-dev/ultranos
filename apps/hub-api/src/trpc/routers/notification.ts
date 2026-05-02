@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
 
 /**
@@ -46,22 +47,26 @@ export const notificationRouter = createTRPCRouter({
       if (queuedIds.length > 0) {
         await ctx.supabase
           .from('notifications')
-          .update({ status: 'SENT', delivered_at: new Date().toISOString() })
+          .update(db.toRowRaw({ status: 'SENT', deliveredAt: new Date().toISOString() }, 'non-PHI: notifications'))
           .in('id', queuedIds)
 
-        // Audit delivery events (best-effort)
+        // Audit delivery events
         const audit = new AuditLogger(ctx.supabase)
         for (const id of queuedIds) {
-          audit.emit({
-            action: 'UPDATE',
-            resourceType: 'NOTIFICATION',
-            resourceId: id,
-            actorId: ctx.user.sub,
-            actorRole: ctx.user.role,
-            outcome: 'SUCCESS',
-            sessionId: ctx.user.sessionId,
-            metadata: { notificationAction: 'delivered' },
-          }).catch(() => {})
+          try {
+            await audit.emit({
+              action: 'UPDATE',
+              resourceType: 'NOTIFICATION',
+              resourceId: id,
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'SUCCESS',
+              sessionId: ctx.user.sessionId,
+              metadata: { notificationAction: 'delivered' },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'NOTIFICATION', resourceId: id })
+          }
         }
       }
 
@@ -114,10 +119,10 @@ export const notificationRouter = createTRPCRouter({
 
       const { error: updateError } = await ctx.supabase
         .from('notifications')
-        .update({
+        .update(db.toRowRaw({
           status: 'ACKNOWLEDGED',
-          acknowledged_at: new Date().toISOString(),
-        })
+          acknowledgedAt: new Date().toISOString(),
+        }, 'non-PHI: notifications'))
         .eq('id', input.notificationId)
 
       if (updateError) {

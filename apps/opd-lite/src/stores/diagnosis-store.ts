@@ -5,6 +5,9 @@ import type { Icd10Item } from '@/lib/vocab-search'
 import type { DiagnosisRank } from '@/lib/condition-mapper'
 import { mapIcd10ToCondition } from '@/lib/condition-mapper'
 import { db } from '@/lib/db'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
 
 interface DiagnosisState {
   conditions: FhirCondition[]
@@ -60,8 +63,20 @@ export const useDiagnosisStore = create<DiagnosisState>()(
       try {
         await db.conditions.put(condition)
 
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'Condition',
+          resourceId: condition.id,
+          action: 'create',
+          payload: condition as unknown as Record<string, unknown>,
+          hlcTimestamp: condition._ultranos.hlcTimestamp,
+        })
+
         // Discard if clearPhiState was called while awaiting
         if (storeEpoch !== epochAtStart) return condition
+
+        auditPhiAccess(AuditAction.CREATE, AuditResourceType.CLINICAL_NOTE, condition.id, patientId, {
+          phiAccess: 'diagnosis_add',
+        })
 
         set((state) => {
           state.conditions.push(condition)
@@ -105,6 +120,20 @@ export const useDiagnosisStore = create<DiagnosisState>()(
 
       try {
         await db.conditions.put(deactivated)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'Condition',
+          resourceId: deactivated.id,
+          action: 'update',
+          payload: deactivated as unknown as Record<string, unknown>,
+          hlcTimestamp: deactivated._ultranos.hlcTimestamp,
+        })
+
+        const patientRef = condition.subject.reference.replace('Patient/', '')
+        auditPhiAccess(AuditAction.DELETE_REQUEST, AuditResourceType.CLINICAL_NOTE, conditionId, patientRef, {
+          phiAccess: 'diagnosis_remove',
+        })
+
         set((state) => {
           state.conditions = state.conditions.filter(
             (c) => c.id !== conditionId,
@@ -136,6 +165,15 @@ export const useDiagnosisStore = create<DiagnosisState>()(
 
       try {
         await db.conditions.put(updated)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'Condition',
+          resourceId: updated.id,
+          action: 'update',
+          payload: updated as unknown as Record<string, unknown>,
+          hlcTimestamp: updated._ultranos.hlcTimestamp,
+        })
+
         set((state) => {
           const idx = state.conditions.findIndex((c) => c.id === conditionId)
           if (idx !== -1) {
@@ -158,6 +196,13 @@ export const useDiagnosisStore = create<DiagnosisState>()(
         const active = conditions.filter(
           (c) => c.clinicalStatus.coding[0]?.code === 'active',
         )
+
+        if (active.length > 0) {
+          auditPhiAccess(AuditAction.READ, AuditResourceType.CLINICAL_NOTE, encounterId, undefined, {
+            phiAccess: 'diagnosis_view',
+            conditionCount: active.length,
+          })
+        }
 
         set((state) => {
           state.conditions = active

@@ -6,6 +6,9 @@ import { calculateBMI } from '@ultranos/shared-types'
 import { getVitalRangeStatus, type VitalKey } from '@/lib/vitals-config'
 import { mapVitalsToObservations, LOINC } from '@/lib/vitals-fhir-mapper'
 import type { RangeStatus } from '@/components/clinical/vitals-form'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
 
 type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -110,13 +113,27 @@ export const useVitalsStore = create<VitalsState>()(
           },
         )
 
-        // TODO: [D9/D23] Emit audit event for PHI write when local audit infrastructure lands
+        auditPhiAccess(AuditAction.UPDATE, AuditResourceType.OBSERVATION, encounterId, patientId, {
+          phiAccess: 'vitals_edit',
+        })
+
+        const hlcString = serializeHlc(ts)
 
         // Append-only: add new observations without deleting old ones (Tier 2 addenda).
         // Old versions are preserved for sync conflict resolution.
         await db.transaction('rw', db.observations, async () => {
           await db.observations.bulkAdd(observations)
         })
+
+        for (const obs of observations) {
+          void enqueueSyncAction(syncQueue, {
+            resourceType: 'Observation',
+            resourceId: obs.id,
+            action: 'create',
+            payload: obs as unknown as Record<string, unknown>,
+            hlcTimestamp: hlcString,
+          })
+        }
 
         const savedEncounterId = encounterId
         set((state) => {
@@ -137,8 +154,6 @@ export const useVitalsStore = create<VitalsState>()(
     },
 
     loadFromObservations: async (encounterId: string) => {
-      // TODO: [D9/D23] Emit audit event for PHI read when local audit infrastructure lands
-
       const observations = await db.observations
         .where('encounter.reference')
         .equals(`Encounter/${encounterId}`)
@@ -146,6 +161,10 @@ export const useVitalsStore = create<VitalsState>()(
 
       if (observations.length === 0) return
       if (get().encounterId !== encounterId) return
+
+      auditPhiAccess(AuditAction.READ, AuditResourceType.OBSERVATION, encounterId, get().patientId ?? undefined, {
+        phiAccess: 'vitals_view',
+      })
 
       // Append-only: pick the latest observation per LOINC code by HLC timestamp
       const latestByCode = new Map<string, typeof observations[0]>()

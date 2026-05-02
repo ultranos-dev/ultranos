@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { usePatientStore } from '@/stores/patient-store'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { useSoapNoteStore } from '@/stores/soap-note-store'
@@ -21,8 +21,12 @@ import { checkInteractions, type InteractionCheckSummary, type InteractionResult
 import { InteractionWarningModal } from '@/components/modals/InteractionWarningModal'
 import { logInteractionCheck } from '@/services/interactionAuditService'
 import { PrescriptionQR } from '@/components/clinical/PrescriptionQR'
+import { AllergyBanner } from '@/components/clinical/AllergyBanner'
+import { AllergyEntry } from '@/components/clinical/AllergyEntry'
+import { useAllergyStore } from '@/stores/allergy-store'
 import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -97,6 +101,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     delay: 300,
   })
 
+  // Allergy state — for ALLERGY_MATCH interaction checking
+  const activeAllergies = useAllergyStore((s) => s.allergies)
+
+  // Story 10.1: Medication history state for cross-encounter interaction checks
+  const medicationHistoryAvailable = useEncounterStore((s) => s.medicationHistoryAvailable)
+  const activeMedicationStatements = useEncounterStore((s) => s.activeMedicationStatements)
+  const loadMedicationHistory = useEncounterStore((s) => s.loadMedicationHistory)
+
   // Prescription state
   const pendingPrescriptions = usePrescriptionStore((s) => s.pendingPrescriptions)
   const addPrescription = usePrescriptionStore((s) => s.addPrescription)
@@ -155,7 +167,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     initVitalsForEncounter(activeEncounter.id, patientId)
     loadVitals(activeEncounter.id)
     loadPrescriptions(activeEncounter.id)
-  }, [activeEncounter?.id, activeEncounter?.status, initForEncounter, loadFromLedger, initVitalsForEncounter, loadVitals, loadPrescriptions])
+    // Story 10.1: Load medication history for cross-encounter interaction checks
+    loadMedicationHistory(patientId)
+  }, [activeEncounter?.id, activeEncounter?.status, initForEncounter, loadFromLedger, initVitalsForEncounter, loadVitals, loadPrescriptions, loadMedicationHistory, patientId])
 
   const handleSubjectiveChange = useCallback((value: string) => {
     setSubjective(value)
@@ -173,74 +187,121 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const handleDiastolicChange = useCallback((v: string) => { setDiastolic(v); triggerVitalsAutosave() }, [setDiastolic, triggerVitalsAutosave])
   const handleTemperatureChange = useCallback((v: string) => { setTemperature(v); triggerVitalsAutosave() }, [setTemperature, triggerVitalsAutosave])
 
+  const prescriptionCheckInFlight = useRef(false)
+
   const handleAddPrescription = useCallback(async (form: PrescriptionFormData) => {
     if (!activeEncounter || !practitionerRef) return
+    if (prescriptionCheckInFlight.current) return  // guard against double-submit
+    prescriptionCheckInFlight.current = true
     setPrescriptionError(null)
 
-    // Safety gate: check interactions against active meds
-    const activeMedNames = pendingPrescriptions.map(
-      (rx) => rx.medicationCodeableConcept.coding[0]?.display ?? '',
-    ).filter(Boolean)
+    // P2: Block prescription while allergy store is still loading
+    const allergyLoading = useAllergyStore.getState().isLoading
+    if (allergyLoading) {
+      setPrescriptionError('⚠ Allergy data still loading — please wait before prescribing')
+      prescriptionCheckInFlight.current = false
+      return
+    }
 
-    let checkResult: InteractionCheckSummary
-    try {
-      checkResult = checkInteractions(form.medicationDisplay, activeMedNames)
-    } catch {
-      // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
-      setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
+    // P3: Treat allergy load error same as interaction check unavailable (CLAUDE.md Rule #3)
+    const allergyLoadError = useAllergyStore.getState().loadError
+    if (allergyLoadError) {
+      setPrescriptionError('⚠ Allergy data unavailable — interaction check incomplete. Verify allergies before prescribing.')
       try {
         const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
           interactionCheckResult: 'UNAVAILABLE',
         })
-        await logInteractionCheck({
-          encounterId: activeEncounter.id,
-          patientId,
-          medicationRequestId: rx.id,
-          medicationDisplay: form.medicationDisplay,
-          checkResult: 'UNAVAILABLE',
-          interactionsFound: 0,
-          practitionerRef: practitionerRef,
-        })
+        try {
+          await logInteractionCheck({
+            encounterId: activeEncounter.id,
+            patientId,
+            medicationRequestId: rx.id,
+            medicationDisplay: form.medicationDisplay,
+            checkResult: 'UNAVAILABLE',
+            interactionsFound: 0,
+            practitionerRef: practitionerRef,
+          })
+        } catch {
+          // Audit log failure must not block the prescription — log is best-effort locally
+        }
       } catch (err) {
         setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
       }
+      prescriptionCheckInFlight.current = false
       return
     }
 
-    if (checkResult.result === 'BLOCKED') {
-      // Show modal — require clinician override with justification
-      setInteractionModal({
-        open: true,
-        interactions: checkResult.interactions,
-        pendingForm: form,
-        checkResult,
-      })
-      return
-    }
-
-    // CLEAR or WARNING — proceed (warnings shown inline on the prescription)
-    const interactionResult = checkResult.result === 'WARNING' ? 'WARNING' as const : 'CLEAR' as const
     try {
-      const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
-        interactionCheckResult: interactionResult,
-      })
+      // Safety gate: check interactions against active meds
+      const activeMedNames = pendingPrescriptions.map(
+        (rx) => rx.medicationCodeableConcept.coding[0]?.display ?? '',
+      ).filter(Boolean)
+
+      let checkResult: InteractionCheckSummary
       try {
-        await logInteractionCheck({
-          encounterId: activeEncounter.id,
-          patientId,
-          medicationRequestId: rx.id,
-          medicationDisplay: form.medicationDisplay,
-          checkResult: interactionResult,
-          interactionsFound: checkResult.interactions.length,
-          practitionerRef: practitionerRef,
+        checkResult = await checkInteractions(form.medicationDisplay, activeMedNames, {
+          activeMedications: activeMedicationStatements,
+          activeAllergies,
         })
       } catch {
-        // Audit log failure must not block the prescription — log is best-effort locally
+        // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
+        setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
+        try {
+          const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
+            interactionCheckResult: 'UNAVAILABLE',
+          })
+          await logInteractionCheck({
+            encounterId: activeEncounter.id,
+            patientId,
+            medicationRequestId: rx.id,
+            medicationDisplay: form.medicationDisplay,
+            checkResult: 'UNAVAILABLE',
+            interactionsFound: 0,
+            practitionerRef: practitionerRef,
+          })
+        } catch (err) {
+          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        }
+        return
       }
-    } catch (err) {
-      setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+
+      if (checkResult.result === 'BLOCKED') {
+        // Show modal — require clinician override with justification
+        setInteractionModal({
+          open: true,
+          interactions: checkResult.interactions,
+          pendingForm: form,
+          checkResult,
+        })
+        return
+      }
+
+      // CLEAR or WARNING — proceed (warnings shown inline on the prescription)
+      const interactionResult = checkResult.result === 'WARNING' ? 'WARNING' as const : 'CLEAR' as const
+      try {
+        const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
+          interactionCheckResult: interactionResult,
+        })
+        try {
+          await logInteractionCheck({
+            encounterId: activeEncounter.id,
+            patientId,
+            medicationRequestId: rx.id,
+            medicationDisplay: form.medicationDisplay,
+            checkResult: interactionResult,
+            interactionsFound: checkResult.interactions.length,
+            practitionerRef: practitionerRef,
+          })
+        } catch {
+          // Audit log failure must not block the prescription — log is best-effort locally
+        }
+      } catch (err) {
+        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+      }
+    } finally {
+      prescriptionCheckInFlight.current = false
     }
-  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions])
+  }, [activeEncounter, addPrescription, patientId, practitionerRef, pendingPrescriptions, activeAllergies, activeMedicationStatements, prescriptionCheckInFlight])
 
   const handleInteractionOverride = useCallback(async (justification: string) => {
     if (!activeEncounter || !interactionModal.pendingForm) return
@@ -334,6 +395,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
+      {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
+      <AllergyBanner patientId={patientId} />
+
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <header className="mb-8">
         <button
@@ -411,6 +475,18 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         )}
       </section>
 
+      {/* Allergies — visible only during active encounter */}
+      {isActive && (
+        <section
+          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          aria-label="Allergies"
+          data-section="allergies"
+          tabIndex={-1}
+        >
+          <AllergyEntry patientId={patientId} />
+        </section>
+      )}
+
       {/* Vital Signs — visible only during active encounter */}
       {isActive && (
         <section
@@ -467,6 +543,21 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           data-section="prescriptions"
           tabIndex={-1}
         >
+          {/* Story 10.1 AC 9: Medication history unavailable warning */}
+          {!medicationHistoryAvailable && (
+            <div
+              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              role="alert"
+            >
+              <p className="text-sm font-bold text-amber-800">
+                Full medication history unavailable — interaction check limited to current encounter
+              </p>
+              <p className="text-xs text-amber-700">
+                The patient&apos;s chronic medication history could not be loaded. Cross-encounter interactions may not be detected.
+              </p>
+            </div>
+          )}
+
           {/* Drug interaction check status */}
           {pendingPrescriptions.some((rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE') ? (
             <div
@@ -489,7 +580,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                 Drug interaction checking active
               </p>
               <p className="text-xs text-green-700">
-                New prescriptions are checked against active medications for known interactions.
+                Checking against {activeMedicationStatements.length} active medication{activeMedicationStatements.length !== 1 ? 's' : ''} and {activeAllergies.length} known allerg{activeAllergies.length !== 1 ? 'ies' : 'y'}.
               </p>
             </div>
           )}
@@ -577,6 +668,15 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                     prescriptions={pendingPrescriptions}
                     privateKey={signingKey}
                     publicKey={signingPublicKey}
+                    onFinalized={() => {
+                      auditPhiAccess(
+                        AuditAction.EXPORT,
+                        AuditResourceType.PRESCRIPTION,
+                        activeEncounter?.id ?? 'unknown',
+                        selectedPatient?.id,
+                        { phiAccess: 'qr_generation', prescriptionCount: pendingPrescriptions.length },
+                      )
+                    }}
                   />
                 </div>
               )}

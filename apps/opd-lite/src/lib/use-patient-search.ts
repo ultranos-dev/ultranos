@@ -5,6 +5,7 @@ import { usePatientStore } from '@/stores/patient-store'
 import { useSync } from '@/lib/use-sync'
 import { db } from '@/lib/db'
 import { hashNationalId } from '@/lib/hash-national-id'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 const LOCAL_SEARCH_LIMIT = 50
@@ -63,6 +64,8 @@ export function usePatientSearch() {
 }
 
 async function searchLocal(query: string): Promise<FhirPatient[]> {
+  if (!encryptionKeyStore.isReady()) return []
+
   const trimmed = query.trim()
 
   // Search by nameLocal (starts-with, case-insensitive)

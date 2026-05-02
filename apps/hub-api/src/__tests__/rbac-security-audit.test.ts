@@ -6,6 +6,13 @@ vi.stubEnv('FIELD_ENCRYPTION_HMAC_KEY', 'b'.repeat(64))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 vi.mock('@ultranos/audit-logger', () => ({

@@ -19,9 +19,11 @@ const CLINICIAN_RESOURCES = new Set([
   'Condition',
   'MedicationRequest',
   'MedicationDispense',
+  'MedicationStatement',
   'ClinicalImpression',
   'DiagnosticReport',
   'Consent',
+  'AllergyIntolerance',
 ])
 
 export const ROLE_PERMISSIONS: Record<string, Set<string>> = {

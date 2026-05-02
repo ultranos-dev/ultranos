@@ -13,6 +13,13 @@ const mockFrom = vi.fn(() => ({ select: mockSelect }))
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: mockFrom })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 const { createTRPCRouter, createCallerFactory, protectedProcedure } = await import('../trpc/init')

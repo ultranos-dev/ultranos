@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { FhirPatient } from '@ultranos/shared-types'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 interface SyncStatus {
   isPending: boolean
@@ -30,8 +31,23 @@ export const usePatientStore = create<PatientState>()((set) => ({
   syncStatus: { isPending: false, isError: false, lastSyncedAt: null },
 
   setQuery: (query) => set({ query }),
-  setResults: (results) => set({ results }),
-  selectPatient: (patient) => set({ selectedPatient: patient }),
+  setResults: (results) => {
+    set({ results })
+    if (results.length > 0) {
+      auditPhiAccess(AuditAction.READ, AuditResourceType.PATIENT, 'search-results', undefined, {
+        resultCount: results.length,
+        phiAccess: 'patient_search',
+      })
+    }
+  },
+  selectPatient: (patient) => {
+    set({ selectedPatient: patient })
+    if (patient) {
+      auditPhiAccess(AuditAction.READ, AuditResourceType.PATIENT, patient.id, patient.id, {
+        phiAccess: 'patient_demographics_view',
+      })
+    }
+  },
   clearSearch: () => set({ query: '', results: [], isSearching: false }),
   setIsSearching: (isSearching) => set({ isSearching }),
   setSyncStatus: (syncStatus) => set({ syncStatus }),

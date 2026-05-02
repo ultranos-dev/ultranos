@@ -1,8 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
+import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
+
+beforeAll(async () => {
+  await seedVocabularyIfEmpty()
+})
 
 describe('PrescriptionEntry', () => {
   const onSubmit = vi.fn<(form: PrescriptionFormData) => void>()

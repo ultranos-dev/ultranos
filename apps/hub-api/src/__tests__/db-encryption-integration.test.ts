@@ -13,9 +13,9 @@ vi.mock('@supabase/supabase-js', () => ({
 
 const { db } = await import('../lib/supabase')
 
-describe('db helper with field-level encryption', () => {
+describe('db helper with mandatory field-level encryption (Story 7.3b)', () => {
   describe('toRow (write path)', () => {
-    it('encrypts PHI fields when encryption key is provided', () => {
+    it('automatically encrypts PHI fields without requiring a key parameter', () => {
       const row = {
         id: '123',
         status: 'active',
@@ -23,7 +23,7 @@ describe('db helper with field-level encryption', () => {
         reasonCode: 'E11.9',
       }
 
-      const result = db.toRow(row, TEST_ENCRYPTION_KEY)
+      const result = db.toRow(row)
 
       // Case-transformed to snake_case
       expect(result.id).toBe('123')
@@ -34,23 +34,72 @@ describe('db helper with field-level encryption', () => {
       expect(result.reason_code).toMatch(/^v1:/)
     })
 
-    it('does not encrypt when no key is provided', () => {
+    it('writing a SENSITIVE_FIELD without encryption is impossible through db.toRow()', () => {
+      // AC 8: There is no way to call db.toRow() and get plaintext PHI
       const row = { diagnosis: 'Type 2 Diabetes' }
       const result = db.toRow(row)
 
-      expect(result.diagnosis).toBe('Type 2 Diabetes')
+      expect(result.diagnosis).toMatch(/^v1:/)
+      expect(result.diagnosis).not.toBe('Type 2 Diabetes')
+    })
+  })
+
+  describe('toRowRaw (escape hatch)', () => {
+    it('applies case transform without encryption when reason is provided', () => {
+      const row = {
+        recipientRef: 'user-123',
+        notificationType: 'LAB_RESULT',
+        status: 'QUEUED',
+      }
+
+      const result = db.toRowRaw(row, 'non-PHI: notifications')
+
+      expect(result.recipient_ref).toBe('user-123')
+      expect(result.notification_type).toBe('LAB_RESULT')
+      expect(result.status).toBe('QUEUED')
+    })
+
+    it('throws TypeError when reason string is missing', () => {
+      const row = { status: 'active' }
+
+      // @ts-expect-error — intentionally omitting required reason parameter
+      expect(() => db.toRowRaw(row)).toThrow(TypeError)
+      // @ts-expect-error — empty string is not a valid reason
+      expect(() => db.toRowRaw(row, '')).toThrow(TypeError)
+    })
+
+    it('throws if data contains SENSITIVE_FIELDS', () => {
+      const row = {
+        diagnosis: 'Type 2 Diabetes',
+        reasonCode: 'E11.9',
+      }
+
+      expect(() => db.toRowRaw(row, 'non-PHI: test')).toThrow(
+        'db.toRowRaw() cannot write sensitive field "diagnosis"',
+      )
+    })
+
+    it('passes non-PHI data through without encryption', () => {
+      const row = {
+        recipientRef: 'user-1',
+        status: 'QUEUED',
+      }
+
+      const result = db.toRowRaw(row, 'non-PHI: notifications')
+
+      expect(result.recipient_ref).toBe('user-1')
+      expect(result.status).toBe('QUEUED')
     })
   })
 
   describe('fromRow (read path)', () => {
-    it('decrypts PHI fields when encryption key is provided', () => {
+    it('automatically decrypts PHI fields without requiring a key parameter', () => {
       // Simulate an encrypted DB row (snake_case)
       const encrypted = db.toRow(
         { id: '123', diagnosis: 'Type 2 Diabetes', reasonCode: 'E11.9' },
-        TEST_ENCRYPTION_KEY,
       )
 
-      const decrypted = db.fromRow(encrypted, TEST_ENCRYPTION_KEY)
+      const decrypted = db.fromRow(encrypted)
 
       // Decrypted and case-transformed to camelCase
       expect(decrypted.id).toBe('123')
@@ -60,50 +109,50 @@ describe('db helper with field-level encryption', () => {
 
     it('handles null PHI fields gracefully', () => {
       const row = { id: '123', diagnosis: null }
-      const result = db.fromRow(row, TEST_ENCRYPTION_KEY)
+      const result = db.fromRow(row)
       expect(result.diagnosis).toBeNull()
+    })
+  })
+
+  describe('fromRowRaw (non-PHI read path)', () => {
+    it('applies case transform without decryption', () => {
+      const row = {
+        recipient_ref: 'user-123',
+        created_at: '2026-01-01',
+        status: 'QUEUED',
+      }
+
+      const result = db.fromRowRaw(row)
+
+      expect(result.recipientRef).toBe('user-123')
+      expect(result.createdAt).toBe('2026-01-01')
+      expect(result.status).toBe('QUEUED')
     })
   })
 
   describe('fromRows (batch read path)', () => {
     it('decrypts all rows in an array', () => {
       const rows = [
-        db.toRow({ id: '1', diagnosis: 'Condition A' }, TEST_ENCRYPTION_KEY),
-        db.toRow({ id: '2', diagnosis: 'Condition B' }, TEST_ENCRYPTION_KEY),
+        db.toRow({ id: '1', diagnosis: 'Condition A' }),
+        db.toRow({ id: '2', diagnosis: 'Condition B' }),
       ]
 
-      const decrypted = db.fromRows(rows, TEST_ENCRYPTION_KEY)
+      const decrypted = db.fromRows(rows)
       expect(decrypted[0]!.diagnosis).toBe('Condition A')
       expect(decrypted[1]!.diagnosis).toBe('Condition B')
     })
   })
 
-  describe('AC 3: only authorized requests trigger decryption', () => {
-    it('returns raw encrypted data when no key is passed (no session)', () => {
-      const encrypted = db.toRow(
-        { id: '123', diagnosis: 'Secret' },
-        TEST_ENCRYPTION_KEY,
-      )
-
-      // Without encryption key, the encrypted values pass through as-is
-      const raw = db.fromRow(encrypted)
-      expect(raw.diagnosis).toMatch(/^v1:/)
-    })
-  })
-
   describe('AC 5: no PHI in plaintext when encrypted', () => {
     it('encrypted row contains no readable PHI in any field', () => {
-      const row = db.toRow(
-        {
-          id: '123',
-          status: 'active',
-          diagnosis: 'Hypertension stage 2',
-          reasonCode: 'I11',
-          dosageInstruction: [{ text: 'Take 10mg daily' }],
-          interactionOverride: 'Approved by Dr. Smith',
-        },
-        TEST_ENCRYPTION_KEY,
-      )
+      const row = db.toRow({
+        id: '123',
+        status: 'active',
+        diagnosis: 'Hypertension stage 2',
+        reasonCode: 'I11',
+        dosageInstruction: [{ text: 'Take 10mg daily' }],
+        interactionOverride: 'Approved by Dr. Smith',
+      })
 
       // Non-PHI fields are in plaintext (expected)
       expect(row.id).toBe('123')

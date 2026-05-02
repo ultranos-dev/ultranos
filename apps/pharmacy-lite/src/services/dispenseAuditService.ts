@@ -1,13 +1,7 @@
 import { db, type DispenseAuditEntry } from '@/lib/db'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
-import { emitAuditEvent } from '@/lib/audit-emitter'
-import {
-  AuditAction,
-  AuditOutcome,
-  AuditResourceType,
-  UserRole,
-} from '@ultranos/shared-types'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 /**
  * Append-only audit log entry for a medication dispense event.
@@ -43,21 +37,16 @@ export async function logDispenseEvent(
   // 1. Local Dexie audit record (encrypted, includes clinical details)
   await db.dispenseAuditLog.add(entry)
 
-  // 2. Structured audit event for Hub sync (opaque IDs only — no PHI).
-  //    Maps dispense actions to the shared AuditAction enum.
+  // 2. Structured audit event via shared @ultranos/audit-logger/client module.
+  //    Replaces the ad-hoc emitAuditEvent pattern (Story 8.1).
   //    NOTE: Do NOT include medication names, codes, or any clinical
   //    content in the audit event payload. Use opaque IDs only.
-  await emitAuditEvent({
-    actorId: dispense.performer?.[0]?.actor.reference,
-    actorRole: UserRole.PHARMACIST,
-    action: action === 'created' ? AuditAction.CREATE : AuditAction.DELETE_REQUEST,
-    resourceType: AuditResourceType.PRESCRIPTION,
-    resourceId: dispense.id,
-    patientId: dispense.subject.reference,
-    outcome: AuditOutcome.SUCCESS,
-    metadata: {
-      dispenseAction: action,
-      source: 'pharmacy-lite',
-    },
-  })
+  auditPhiAccess(
+    dispense.performer?.[0]?.actor.reference ?? 'unknown',
+    action === 'created' ? AuditAction.CREATE : AuditAction.DELETE_REQUEST,
+    AuditResourceType.PRESCRIPTION,
+    dispense.id,
+    dispense.subject.reference,
+    { phiAccess: 'dispense_action', dispenseAction: action },
+  )
 }

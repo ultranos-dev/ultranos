@@ -3,6 +3,9 @@ import { immer } from 'zustand/middleware/immer'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
 
 const SOAP_FIELD_MAX_LENGTH = 10_000
 
@@ -79,13 +82,27 @@ export const useSoapNoteStore = create<SoapNoteState>()(
         const ts = hlc.now()
         const nowIso = new Date().toISOString()
 
-        await db.soapLedger.add({
+        const ledgerEntry = {
           id: crypto.randomUUID(),
           encounterId,
           subjective,
           objective,
           hlcTimestamp: serializeHlc(ts),
           createdAt: nowIso,
+        }
+
+        await db.soapLedger.add(ledgerEntry)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'ClinicalImpression',
+          resourceId: encounterId,
+          action: 'update',
+          payload: ledgerEntry as unknown as Record<string, unknown>,
+          hlcTimestamp: ledgerEntry.hlcTimestamp,
+        })
+
+        auditPhiAccess(AuditAction.UPDATE, AuditResourceType.CLINICAL_NOTE, encounterId, undefined, {
+          phiAccess: 'soap_note_edit',
         })
 
         set((state) => {
@@ -110,6 +127,10 @@ export const useSoapNoteStore = create<SoapNoteState>()(
 
       // Guard: if encounter changed while loading, discard stale result
       if (get().encounterId !== encounterId) return
+
+      auditPhiAccess(AuditAction.READ, AuditResourceType.CLINICAL_NOTE, encounterId, undefined, {
+        phiAccess: 'soap_note_view',
+      })
 
       set((state) => {
         state.subjective = latest.subjective

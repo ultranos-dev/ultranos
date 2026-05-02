@@ -1,8 +1,11 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import type { FhirEncounterZod } from '@ultranos/shared-types'
+import type { FhirEncounterZod, FhirMedicationStatementZod } from '@ultranos/shared-types'
 import { HybridLogicalClock, serializeHlc } from '@ultranos/sync-engine'
 import { db } from '@/lib/db'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { enqueueSyncAction } from '@ultranos/sync-engine'
+import { syncQueue } from '@/lib/sync-queue'
 
 const NODE_ID_KEY = 'ultranos_node_id'
 
@@ -20,10 +23,13 @@ const hlc = new HybridLogicalClock(getOrCreateNodeId())
 interface EncounterState {
   activeEncounter: FhirEncounterZod | null
   isStarting: boolean
+  medicationHistoryAvailable: boolean
+  activeMedicationStatements: FhirMedicationStatementZod[]
 
   startEncounter: (patientId: string, practitionerRef: string) => Promise<void>
   endEncounter: () => Promise<void>
   loadActiveEncounter: (patientId: string) => Promise<void>
+  loadMedicationHistory: (patientId: string) => Promise<void>
   clearPhiState: () => void
 }
 
@@ -31,6 +37,8 @@ export const useEncounterStore = create<EncounterState>()(
   immer((set, get) => ({
     activeEncounter: null,
     isStarting: false,
+    medicationHistoryAvailable: false,
+    activeMedicationStatements: [],
 
     startEncounter: async (patientId: string, practitionerRef: string) => {
       // P2: Guard against concurrent/duplicate encounters
@@ -86,6 +94,18 @@ export const useEncounterStore = create<EncounterState>()(
         })
 
         await db.encounters.put(encounter)
+
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'Encounter',
+          resourceId: encounter.id,
+          action: 'create',
+          payload: encounter as unknown as Record<string, unknown>,
+          hlcTimestamp: hlcString,
+        })
+
+        auditPhiAccess(AuditAction.CREATE, AuditResourceType.ENCOUNTER, encounter.id, patientId, {
+          phiAccess: 'encounter_start',
+        })
       } catch {
         // P1: Rollback optimistic state on Dexie/HLC failure
         set((state) => {
@@ -126,6 +146,19 @@ export const useEncounterStore = create<EncounterState>()(
 
         await db.encounters.put(updated)
 
+        void enqueueSyncAction(syncQueue, {
+          resourceType: 'Encounter',
+          resourceId: updated.id,
+          action: 'update',
+          payload: updated as unknown as Record<string, unknown>,
+          hlcTimestamp: hlcString,
+        })
+
+        const patientRef = current.subject.reference.replace('Patient/', '')
+        auditPhiAccess(AuditAction.UPDATE, AuditResourceType.ENCOUNTER, current.id, patientRef, {
+          phiAccess: 'encounter_end',
+        })
+
         // P4: Clear activeEncounter after successful persist
         set((state) => {
           state.activeEncounter = null
@@ -154,12 +187,72 @@ export const useEncounterStore = create<EncounterState>()(
       set((state) => {
         state.activeEncounter = active ?? null
       })
+
+      if (active) {
+        auditPhiAccess(AuditAction.READ, AuditResourceType.ENCOUNTER, active.id, patientId, {
+          phiAccess: 'encounter_load',
+        })
+      }
+    },
+
+    /**
+     * Story 10.1 AC 8, 9: Load active MedicationStatements from Dexie cache.
+     * On encounter start, the Hub API is fetched and cached in Dexie.
+     * If no cached data exists, set medicationHistoryAvailable to false
+     * so the interaction checker shows the "history unavailable" warning.
+     */
+    loadMedicationHistory: async (patientId: string) => {
+      try {
+        const cached = await db.medicationStatements
+          .where('subject.reference')
+          .equals(`Patient/${patientId}`)
+          .filter((ms) => ms.status === 'active')
+          .toArray()
+
+        set((state) => {
+          state.activeMedicationStatements = cached
+          state.medicationHistoryAvailable = true
+        })
+      } catch {
+        // Offline or Dexie failure — check if we have any cached data at all
+        try {
+          const anyCached = await db.medicationStatements
+            .where('subject.reference')
+            .equals(`Patient/${patientId}`)
+            .count()
+
+          if (anyCached > 0) {
+            const cached = await db.medicationStatements
+              .where('subject.reference')
+              .equals(`Patient/${patientId}`)
+              .filter((ms) => ms.status === 'active')
+              .toArray()
+
+            set((state) => {
+              state.activeMedicationStatements = cached
+              state.medicationHistoryAvailable = true
+            })
+          } else {
+            set((state) => {
+              state.activeMedicationStatements = []
+              state.medicationHistoryAvailable = false
+            })
+          }
+        } catch {
+          set((state) => {
+            state.activeMedicationStatements = []
+            state.medicationHistoryAvailable = false
+          })
+        }
+      }
     },
 
     clearPhiState: () => {
       set((state) => {
         state.activeEncounter = null
         state.isStarting = false
+        state.medicationHistoryAvailable = false
+        state.activeMedicationStatements = []
       })
     },
   })),

@@ -513,8 +513,8 @@ As a system administrator, I want the formulary and ICD-10 search to be backed b
 - **Then** results are queried from a dedicated Dexie vocabulary store
 - **And** the store can be updated incrementally from the Hub API without a full reload
 
-## Epic 11: Internationalization & UX Resilience
-Provide a world-class, accessible experience for all regional users.
+## Epic 11: Internationalization (RTL/i18n)
+Provide multilingual RTL support for Arabic and Dari users across all spoke apps.
 
 ### Story 11.1: Global RTL & i18n Framework
 As a multilingual user, I want the entire application to respect RTL rules so that I can work natively in Arabic or Dari.
@@ -524,14 +524,20 @@ As a multilingual user, I want the entire application to respect RTL rules so th
 - **When** the locale is switched to Arabic/Dari
 - **Then** the layout mirrors (RTL) and all physical CSS properties are replaced by logical ones (e.g., padding-inline-start) (FR18)
 
-### Story 11.2: Resilience & Error Recovery
+> **Priority Decision (2026-05-02):** RTL/i18n deferred to pre-deployment sprint. Not blocking for English-only development phase.
+
+## Epic 13: Application Resilience & Error Recovery
+Ensure all spoke apps recover gracefully from storage errors, network failures, and unexpected states without data loss.
+
+### Story 13.1: React Error Boundaries & Safe Mode
 As a user, I want the application to recover gracefully from storage errors so that I never lose data due to a browser quota issue.
 
 **Acceptance Criteria:**
-- **Given** a local storage error (e.g., IndexedDB failure)
+- **Given** a local storage error (e.g., IndexedDB failure, quota exceeded)
 - **When** it occurs
 - **Then** a React Error Boundary catches the crash and offers a "Safe Mode" recovery path
 - **And** critical data is backed up to memory until storage is restored
+- **And** a "Stale Data" yellow banner warns the user when operating on potentially outdated information
 
 ## Epic 12: Lab Diagnostics & Reporting
 Enable the lab technician's result upload workflow via the standalone `lab-lite` spoke app, with strict data minimization enforcement.

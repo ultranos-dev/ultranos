@@ -7,6 +7,8 @@ import { PatientResultList } from '@/components/patient-result-list'
 import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
 import { NotificationBell } from '@/components/NotificationPanel'
+import { SyncPulse } from '@/components/SyncPulse'
+import { SyncDashboard } from '@/components/SyncDashboard'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 export default function PatientSearchPage() {
@@ -40,8 +42,12 @@ export default function PatientSearchPage() {
             Search by name or National ID to start an encounter
           </p>
         </div>
-        <NotificationBell />
+        <div className="flex items-center gap-2">
+          <SyncPulse />
+          <NotificationBell />
+        </div>
       </header>
+      <SyncDashboard />
 
       <SearchInput value={query} onChange={handleQueryChange} />
 

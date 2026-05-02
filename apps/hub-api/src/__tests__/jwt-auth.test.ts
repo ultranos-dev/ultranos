@@ -5,6 +5,13 @@ import type { KeyLike } from 'jose'
 // Mock Supabase before imports
 vi.mock('@/lib/supabase', () => ({
   getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+  db: {
+    toRow: (data: any) => data,
+    toRowRaw: (data: any) => data,
+    fromRow: (data: any) => data,
+    fromRowRaw: (data: any) => data,
+    fromRows: (data: any[]) => data,
+  },
 }))
 
 let privateKey: KeyLike
@@ -100,6 +107,13 @@ describe('createTRPCContext — JWT integration', () => {
     vi.resetModules()
     vi.mock('@/lib/supabase', () => ({
       getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+      db: {
+        toRow: (data: any) => data,
+        toRowRaw: (data: any) => data,
+        fromRow: (data: any) => data,
+        fromRowRaw: (data: any) => data,
+        fromRows: (data: any[]) => data,
+      },
     }))
     const { createTRPCContext } = await import('../trpc/init')
 
@@ -124,6 +138,13 @@ describe('createTRPCContext — JWT integration', () => {
     vi.resetModules()
     vi.mock('@/lib/supabase', () => ({
       getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+      db: {
+        toRow: (data: any) => data,
+        toRowRaw: (data: any) => data,
+        fromRow: (data: any) => data,
+        fromRowRaw: (data: any) => data,
+        fromRows: (data: any[]) => data,
+      },
     }))
     const { createTRPCContext } = await import('../trpc/init')
 
@@ -140,6 +161,13 @@ describe('createTRPCContext — JWT integration', () => {
     vi.resetModules()
     vi.mock('@/lib/supabase', () => ({
       getSupabaseClient: vi.fn(() => ({ from: vi.fn() })),
+      db: {
+        toRow: (data: any) => data,
+        toRowRaw: (data: any) => data,
+        fromRow: (data: any) => data,
+        fromRowRaw: (data: any) => data,
+        fromRows: (data: any[]) => data,
+      },
     }))
     const { createTRPCContext } = await import('../trpc/init')
 

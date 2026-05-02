@@ -292,3 +292,78 @@
 - **KRL not stored as Bloom filter/hash list per guardrail** — Developer Guardrail says "compact Bloom filter or sorted list of hashes to minimize sync bandwidth." Implementation stores full base64 key strings. Optimization for scale — acceptable at current revocation volumes.
 - **OPD Lite missing KRL/cache implementation** — AC4 says "All scanners (OPD/Pharmacy) immediately reject." Only Pharmacy Lite has the KRL guard. OPD Lite scope is a separate story.
 - **Revocation gap window between revokeKey and KRL propagation** — Inherent in async sync architecture. Between Hub revocation and KRL sync to edge devices, a revoked key could still verify locally. Mitigated by 24h TTL on cache + priority-1 sync classification.
+
+## Deferred from: code review of 7-3b-mandatory-encryption-wiring (2026-05-01)
+
+- **Encryption key cached indefinitely — no rotation support** [field-encryption.ts:50] — `_cachedKeys` is never cleared. Key rotation requires process restart. By design — `v1:` prefix in place for future rotation story.
+- **medication.ts has 5 raw .insert()/.update() calls bypassing db.\* helpers** [medication.ts] — No SENSITIVE_FIELDS currently written, but inconsistent with mandatory-encryption pattern. Should use `db.toRowRaw()` for audit trail.
+- **lab.ts diagnostic_reports/lab_result_files inserts bypass db helpers** [lab.ts:597,612] — `encrypted_content` manually encrypted via `encryptField()`. `diagnostic_reports` insert has no SENSITIVE_FIELDS. Both should use `db.toRowRaw()` for consistency.
+- **practitioner-key.ts has 3 raw Supabase calls not using db.\* helpers** [practitioner-key.ts] — No SENSITIVE_FIELDS involved. Consistency gap.
+- **notification.ts list read uses manual camelCase mapping instead of db.fromRowRaw()** [notification.ts:70-86] — Write paths correctly use `db.toRowRaw()` but read path was not migrated.
+- **db.toRow()/fromRow() return type T is misleading** [supabase.ts:64,93] — Returns snake_cased + encrypted object but TypeScript type claims `T`. Type improvement for future.
+
+## Deferred from: code review of 9-1-tiered-conflict-resolution-hlc-integration (2026-05-01)
+
+- **NaN wallMs causes silent nondeterministic behavior** — If `HlcTimestamp.wallMs` is `NaN` (corrupted deserialization), `compareHlc` returns `NaN`, `isWithinConflictWindow` returns `false`, and `determineWinner` always picks `remote`. HLC generates valid timestamps by construction; input validation belongs at the sync worker boundary (Story 9.2).
+- **drain-worker.ts marks conflicts as synced without onConflict handler** — When 409 conflict response received and `onConflict` is undefined, falls through to `markSynced` silently. Conflicting entries swallowed. Pre-existing in drain-worker.ts.
+- **drain-worker.ts SyncRecord version field inconsistency** — `version: entry.hlcTimestamp` sets version to serialized HLC string. Not consumed by `resolveConflict` but inconsistent contract. Pre-existing.
+
+## Deferred from: code review of 8-2-immutable-hash-chained-audit-logging (2026-05-01)
+
+- **Hash chain race condition in emit() — concurrent calls can fork the chain** — `packages/audit-logger/src/logger.ts`. `emit()` reads previous hash, computes new hash, inserts. No serialization (advisory lock, SELECT FOR UPDATE). Two concurrent emits read same parent hash, producing a fork. verifyChain reports false negatives. Low risk at current single-clinic scale but must be fixed before multi-tenant or high-throughput deployment.
+- ~~**checkConsent ignores provision_end — expired consent grants access indefinitely**~~ — RESOLVED (2026-05-02). Patched `enforceConsent.ts`: added `provision_end` to select query, added expiry check before granting access. 3 tests added to `enforce-consent.test.ts`.
+- **Lab register orphaned record on compensating delete failure** — `lab.ts:181-195`. If `lab_technicians` insert fails, compensating delete of `labs` row is fire-and-forget (error not checked). Failed delete leaves orphaned PENDING lab with no technician. Needs DB transaction or RPC.
+- **recordDispense insert before conflict check with no rollback** — `medication.ts:132-215`. Dispense row commits before HLC conflict check. On `alreadyCompleted && incomingIsOlder` branch, dispense record persists with no corresponding prescription status update. Permanent data inconsistency.
+- **rateLimitMap unbounded memory growth** — `lab.ts:112-126`. Module-level Map grows by one entry per unique IP hash. Stale entries never pruned. OOM risk on long-running processes under distributed load.
+- **notification-escalation 48h alert uses wrong recipient_role** — `notification-escalation.ts:86-93`. Escalation notification inserted with `recipient_role: 'CLINICIAN'` and `recipient_ref: 'BACKOFFICE'`. No user resolves `BACKOFFICE` ref. Escalation alerts are dead-lettered. Patient safety concern.
+- **decryptRow returns '[Encrypted Content]' placeholder with no error signal** — `field-encryption.ts:125-140`. Failed decryption (wrong key, tampered ciphertext) silently returns placeholder string. Callers cannot distinguish success from failure. Placeholder can reach UI as clinical content, and if row is subsequently updated, original ciphertext is permanently destroyed.
+- **notification.list concurrent QUEUED-to-SENT race** — `notification.ts:43-70`. Two concurrent `list` calls read same QUEUED IDs, both update to SENT, both emit audit events. Duplicate audit entries inflate log. Fix: conditional `.eq('status', 'QUEUED')` on update.
+- **getRevocationList cursor pagination breaks on duplicate timestamps** — `practitioner-key.ts:86-119`. Cursor uses `revoked_at` which isn't unique. Bulk revocation skips keys. Security gap: edge devices miss revoked keys.
+- **loincCode in notification payload leaks diagnostic category** — `lab.ts:710-716`. LOINC code stored in notification payload, returned to PATIENT-role users via `notification.list`. Reveals diagnostic test type without consent/access flow.
+- **handleInteractionOverride clears pendingForm before addPrescription completes** — `encounter-dashboard.tsx:246-279`. Modal closed at line 250, before `await addPrescription()` at line 252. On failure, prescription data is lost. Clinician must re-enter everything.
+
+## Deferred from: code review of 8-1-client-side-audit-ledger (2026-05-01)
+
+- **Unbounded growth of synced/failed events in IndexedDB** — No pruning or TTL for `clientAuditLog` table. Over weeks of clinical use, table grows unbounded with `synced`/`failed` records never cleaned up. `getPending` becomes expensive on large tables. Pruning is a separate operational concern, not a correctness bug.
+- **Sequential event processing in audit.sync blocks on slow emit** — `for...of` with `await audit.emit()` in Hub audit.sync means one slow event blocks the entire batch of 50. Performance optimization, not a correctness issue. Consider parallel processing or Promise.allSettled in a follow-up.
+
+## Deferred from: code review of 9-3-global-sync-dashboard (2026-05-01)
+
+- **Multi-tab concurrent drain race condition** — Both tabs instantiate separate drain workers, read same pending entries, and push duplicates to Hub. No cross-tab lock. Pre-existing sync-engine design issue.
+- **QuotaExceededError unhandled in sync queue operations** — IndexedDB quota exceeded causes retry loop (markFailed itself fails). Pre-existing in sync-engine.
+- **Tab close leaves entries stuck in 'syncing' status** — No beforeunload handler resets in-flight entries. 2-minute blackout until recoverStale runs. Pre-existing.
+- **recoverStale uses wall clock vulnerable to system clock changes** — Clock backward adjustment prematurely resets syncing entries, causing duplicate pushes. Pre-existing.
+- **SyncQueueEntry type mismatch between db.ts and sync-engine** — db.ts defines 3 statuses, sync-engine defines 4. Runtime works but types diverge. Pre-existing (W1 from 9-2 review).
+- **Conflict silently swallowed when no onConflict handler** — drain-worker marks conflicts as synced when no handler configured. Tier 1 safety data could be lost. Pre-existing.
+- **getByResourceId deduplication only matches first entry** — Multiple pending entries for same resource causes stale data sync. Pre-existing.
+
+## Deferred from: code review of 9-2-background-sync-worker-retry-logic (2026-05-01)
+
+- **W1: Dexie db.ts SyncQueueEntry type diverges from sync-engine type** — db.ts defines status as `'pending' | 'in-flight' | 'failed'`, sync-engine uses `'pending' | 'syncing' | 'failed' | 'synced'`. Dexie is schema-flexible so it works at runtime, but TypeScript types diverge. Needs db.ts schema alignment.
+- **W2: TOCTOU race in enqueue deduplication** — `enqueue()` does read-then-write without Dexie transaction. Concurrent calls for same resourceId can create duplicates. Needs Dexie transaction wrapper.
+- **W3: Hub sync.push TOCTOU race between conflict check and upsert** — No database-level optimistic locking (WHERE hlc_timestamp = $expected). Concurrent pushes from different spokes can silently overwrite each other. Needs DB constraint or conditional upsert.
+- **W4: Hub sync.pull uses lexicographic HLC comparison via SQL `>`** — HLC format has non-zero-padded numeric strings; lexicographic ordering is incorrect for temporal comparison. Needs schema change (numeric column) or custom SQL comparison function.
+- **W5: No cleanup of synced/failed entries — unbounded IndexedDB growth** — Entries transition to synced/failed and remain forever. No purge mechanism. On long-running clinic devices, causes quota pressure and degraded query performance.
+- **W6: clearPhiState clears Zustand but sync queue retains PHI payloads in IndexedDB** — Tab close clears memory state but serialized PHI payloads persist in sync queue. Needs design decision on encrypting sync queue or clearing it on PHI wipe.
+- **W7: No handling for expired auth tokens in drain worker** — JWT expires at 15 min, drain polls at 30s. Expired tokens cause 401s, exhausting retries and permanently failing entries. Needs token refresh integration or 401-specific pause.
+- **W8: Sync status store updated once after full drain cycle, not per-item** — AC9 says "real-time" but `updateStatus()` called only in finally block. Minor UX concern during long drain cycles.
+
+
+## Deferred from: code review of 10-3-terminology-service-migration-dexie-vocabulary (2026-05-01)
+
+- **D86: Module-level `lookupMap` singleton survives HMR in development** — `interactionService.ts` module-level singleton is not reset by Hot Module Replacement during development, causing stale interaction data until full page reload. Dev-time only; no production impact.
+
+## Deferred from: code review of 10-2-global-allergy-management-high-visibility-banners (2026-05-01)
+
+- **D87: checkAllergyMatch free-text substring quality** — Substring matching on drug display names produces cross-class false negatives (PCN ≠ Penicillin) and false positives (iron ∈ ciprofloxacin). Dev Notes explicitly acknowledge this as a follow-up enhancement. Address when RxNorm/SNOMED cross-reference data is available.
+- **D88: meta.lastUpdated stale on client after Hub sync** — `allergy.create` sets `metaLastUpdated: now` server-side but returns only `{success, allergyId, alreadySynced}`. Client's IndexedDB copy retains the client-generated `lastUpdated` value permanently. Broader pattern affects all synced resources; address with sync response envelope standardization.
+- **D89: No coded substance selection UI (AC 3 "optional coded")** — AllergyEntry.tsx provides free-text only; the `code.coding` field is never populated from the UI. AC 3 marks this as optional. Implement coded lookup (SNOMED CT substances or local drug DB) when vocabulary service supports it.
+- **D90: Duplicate allergy submission on retry** — If `addAllergy()` throws after DB write, user can resubmit the same substance creating a duplicate local record. ID-level idempotency on the Hub prevents Hub-side duplication. Client-side duplicate detection (by substance name + patient) deferred until UX review.
+- **D91: Unicode whitespace-equivalent substance passes trim() validation** — A substance string composed entirely of Unicode non-breaking spaces passes `!substance.trim()` check. Low clinical risk given UI text entry context. Add `\S` regex check when input hardening is prioritized.
+- **D87: `localStorage` vocab version not reset on Dexie v14 schema upgrade** — If a user upgrades from a hypothetical prior schema variant, `localStorage` version keys persist but vocabulary tables are cleared by Dexie's `onUpgrade` handler. The subsequent delta sync correctly fetches all data (sinceVersion=N but table empty), but only if the seeder re-seeds first. Pre-existing migration edge case; addressed by ensuring seeder runs before sync on empty tables.
+
+## Deferred from: code review of 13-1-react-error-boundaries-safe-mode (2026-05-02)
+
+- **D92: Invalid `lastSyncedAt` string produces NaN** — `StaleDataBanner` passes an invalid date string to `new Date()`, resulting in `NaN` comparison that suppresses the banner instead of showing it. Safe failure mode should treat invalid dates as maximally stale. [`packages/ui-kit/src/StaleDataBanner.tsx:17`]
+- **D93: Error object stored in React state may contain PHI** — `getDerivedStateFromError` stores the raw error in component state. While `sanitizeErrorMessage` prevents PHI from rendering, the error object is accessible via React DevTools or error monitoring tools. Consider scrubbing at ingestion time. [`packages/ui-kit/src/ErrorBoundary.tsx:61`]
+- **D94: RTL: inline styles use physical CSS properties** — `ErrorBoundary` and `StaleDataBanner` use physical CSS properties (margin, padding shorthand) instead of logical properties (margin-inline-start, etc.). No RTL snapshot tests exist for these components. Defer to Story 11.1 (RTL/i18n framework). [`packages/ui-kit/src/ErrorBoundary.tsx`, `packages/ui-kit/src/StaleDataBanner.tsx`]
