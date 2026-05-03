@@ -276,6 +276,36 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         return
       }
 
+      if (checkResult.result === 'UNAVAILABLE') {
+        // CLAUDE.md safety rule #3: never default to "no interactions found"
+        const staleMsg = checkResult.reason === 'DATABASE_STALE'
+          ? '⚠ Interaction check unavailable — drug database outdated'
+          : '⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.'
+        setPrescriptionError(staleMsg)
+        try {
+          const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
+            interactionCheckResult: 'UNAVAILABLE',
+          })
+          try {
+            await logInteractionCheck({
+              encounterId: activeEncounter.id,
+              patientId,
+              medicationRequestId: rx.id,
+              medicationDisplay: form.medicationDisplay,
+              checkResult: 'UNAVAILABLE',
+              interactionsFound: checkResult.interactions.length,
+              practitionerRef: practitionerRef,
+            })
+          } catch {
+            // Audit log failure must not block the prescription
+          }
+        } catch (err) {
+          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        }
+        prescriptionCheckInFlight.current = false
+        return
+      }
+
       // CLEAR or WARNING — proceed (warnings shown inline on the prescription)
       const interactionResult = checkResult.result === 'WARNING' ? 'WARNING' as const : 'CLEAR' as const
       try {

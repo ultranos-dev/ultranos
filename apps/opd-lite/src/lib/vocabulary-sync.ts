@@ -210,6 +210,16 @@ async function syncVocabType(type: VocabType, token?: string): Promise<boolean> 
   // P19 — always update local version even when there are no new entries;
   // Hub may have advanced its version without sending us any entries.
   setLocalVersion(type, latestVersion)
+
+  // Persist last-synced timestamp for staleness checks (Story 25.2)
+  if (type === 'interactions') {
+    try {
+      localStorage.setItem('ultranos:vocab-last-synced:interactions', new Date().toISOString())
+    } catch {
+      // localStorage unavailable — staleness tracking degraded but not fatal
+    }
+  }
+
   return entries.length > 0
 }
 

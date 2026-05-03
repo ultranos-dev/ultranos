@@ -159,11 +159,11 @@ describe('InteractionChecker service (Dexie-backed)', () => {
       vi.restoreAllMocks()
     })
 
-    it('throws when interaction database is empty (P1 — empty-DB false negative)', async () => {
+    it('returns UNAVAILABLE when interaction database is empty (P1 — empty-DB false negative)', async () => {
       vi.spyOn(db.vocabularyInteractions, 'toArray').mockResolvedValueOnce([])
-      await expect(checkInteractions('Warfarin', ['Aspirin'])).rejects.toThrow(
-        'Interaction database empty',
-      )
+      const result = await checkInteractions('Warfarin', ['Aspirin'])
+      expect(result.result).toBe('UNAVAILABLE')
+      expect(result.interactions).toEqual([])
     })
 
     it('concurrent calls result in only one buildLookupMap (P2 — build race fix)', async () => {

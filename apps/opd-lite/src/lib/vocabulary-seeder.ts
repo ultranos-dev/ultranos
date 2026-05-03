@@ -93,5 +93,12 @@ async function seedInteractions(): Promise<void> {
       version: 1,
     }))
     await db.vocabularyInteractions.bulkAdd(entries)
+
+    // Set initial last-synced timestamp for staleness checks (Story 25.2)
+    try {
+      localStorage.setItem('ultranos:vocab-last-synced:interactions', new Date().toISOString())
+    } catch {
+      // localStorage unavailable — staleness tracking degraded but not fatal
+    }
   })
 }

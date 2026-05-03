@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ultranos/crypto": "workspace:*",
+    "@ultranos/drug-db": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",

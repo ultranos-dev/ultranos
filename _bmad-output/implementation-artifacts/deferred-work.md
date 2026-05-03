@@ -367,3 +367,27 @@
 - **D92: Invalid `lastSyncedAt` string produces NaN** — `StaleDataBanner` passes an invalid date string to `new Date()`, resulting in `NaN` comparison that suppresses the banner instead of showing it. Safe failure mode should treat invalid dates as maximally stale. [`packages/ui-kit/src/StaleDataBanner.tsx:17`]
 - **D93: Error object stored in React state may contain PHI** — `getDerivedStateFromError` stores the raw error in component state. While `sanitizeErrorMessage` prevents PHI from rendering, the error object is accessible via React DevTools or error monitoring tools. Consider scrubbing at ingestion time. [`packages/ui-kit/src/ErrorBoundary.tsx:61`]
 - **D94: RTL: inline styles use physical CSS properties** — `ErrorBoundary` and `StaleDataBanner` use physical CSS properties (margin, padding shorthand) instead of logical properties (margin-inline-start, etc.). No RTL snapshot tests exist for these components. Defer to Story 11.1 (RTL/i18n framework). [`packages/ui-kit/src/ErrorBoundary.tsx`, `packages/ui-kit/src/StaleDataBanner.tsx`]
+
+## Deferred from: code review of 25-1-create-packages-drug-db-package (2026-05-02)
+
+- **D95: Global singleton cache not per-adapter** — `checker.ts` module-level `cachedMap`/`buildInFlight` ignore adapter identity. Second adapter silently gets first adapter's data. Not a current issue (one adapter per app process), but relevant for multi-adapter future. [`packages/drug-db/src/checker.ts:55-56`]
+- **D96: Module-level adapter instantiation SSR risk** — `createDexieDrugAdapter()` runs at module load; IndexedDB unavailable during SSR. Pre-existing pattern in OPD Lite client modules. [`apps/opd-lite/src/services/interactionService.ts:25`]
+- **D97: Allergy substring matching false positives** — 3-char minimum reduces but doesn't prevent false positives (e.g., "iron" matching "envirion"). Pre-existing design from original code. Consistent with D87. [`packages/drug-db/src/checker.ts:155`]
+- **D98: `checkAllergyMatch` crashes if `_ultranos` undefined** — `allergy._ultranos.substanceFreeText` throws TypeError if `_ultranos` is missing on corrupted/foreign FHIR data. Type contract requires it but no runtime guard. [`packages/drug-db/src/checker.ts:149`]
+- **D99: Duplicate drug pairs — last entry overwrites first in lookup map** — No "take highest severity" logic for duplicate drug pairs in vocabulary data. Pre-existing behavior. [`packages/drug-db/src/checker.ts:62-78`]
+- **D100: Dexie adapter has zero error handling** — Errors propagate correctly to UNAVAILABLE via caller's catch, but adapter could add resilience. Error messages from Dexie may contain table/schema details. [`apps/opd-lite/src/lib/dexie-drug-adapter.ts:10-18`]
+- **D101: Audit trail incomplete for failure-mode prescriptions** — When interaction check throws, audit log records `interactionsFound: 0` without listing active allergies at time of check. Pre-existing in encounter-dashboard. Reduces forensic capability.
+
+## Deferred from: code review of 25-2-drug-database-staleness-enforcement (2026-05-02)
+
+- **D102: Module-level cache not per-adapter** — `checker.ts` uses module-level `cachedMap` shared across all callers regardless of adapter identity. Pre-existing from Story 25.1. Consistent with D95. [`packages/drug-db/src/checker.ts:62-63`]
+- **D103: Allergy substring matching produces false positives** — `checkAllergyMatch` uses bidirectional substring matching (e.g., "ASA" matches "Dapagliflozin"). Pre-existing from Story 10.2. Consistent with D87/D97. [`packages/drug-db/src/checker.ts:156-167`]
+- **D104: ensureMap returns stale data on cache generation mismatch** — When `gen !== cacheGeneration`, the stale build result is returned to the current caller (but not cached). Pre-existing from Story 25.1. [`packages/drug-db/src/checker.ts:96`]
+- **D105: Unsafe `null as unknown as LookupMap` cast** — When entries are empty, null is cast to LookupMap type. Caller checks `if (!map)` but the type system is lying. Pre-existing from Story 25.1. [`packages/drug-db/src/checker.ts:99`]
+- **D106: NONE severity returns CLEAR with non-empty interactions array** — Drug entries with severity NONE produce interactions that don't trigger BLOCKED or WARNING, resulting in contradictory `{ result: 'CLEAR', interactions: [...] }`. Pre-existing from Story 25.1. [`packages/drug-db/src/checker.ts:279-285`]
+- **D107: System clock drift in field deployments** — Timestamps use `Date.now()`. If the system clock is set far forward during sync then corrected, the database appears permanently stale until 45 days pass. Inherent to timestamp-based design; needs server-time anchor to fix. [`packages/drug-db/src/checker.ts:225`]
+
+## Deferred from: code review of 25-3-diagnosticreport-medicationdispense-fhir-types (2026-05-02)
+
+- **D108: FHIR datetime strictness** — `z.string().datetime()` rejects partial FHIR dates (e.g. `2025-06-15`) across all schemas. All shared-types schemas use this same validator instead of `FhirDateTimeOrDateSchema` from `common.schema.ts`. Project-wide decision needed.
+- **D109: AttachmentSchema `data` field has no max size constraint** — Base64 `data` field in DiagnosticReport attachments accepts arbitrarily large payloads. Could bloat IndexedDB/sync queue. Architectural concern for a future storage-limits story.

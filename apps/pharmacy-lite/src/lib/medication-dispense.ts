@@ -1,33 +1,8 @@
 import { hlc, serializeHlc } from '@/lib/hlc'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
+import type { FhirMedicationDispense } from '@ultranos/shared-types'
 
-export interface LocalMedicationDispense {
-  id: string
-  resourceType: 'MedicationDispense'
-  status: 'completed' | 'in-progress' | 'cancelled'
-  medicationCodeableConcept: {
-    coding?: Array<{ system: string; code: string; display?: string }>
-    text?: string
-  }
-  subject: { reference: string; display?: string }
-  performer?: Array<{ actor: { reference: string; display?: string } }>
-  authorizingPrescription?: Array<{ reference: string }>
-  whenHandedOver: string
-  dosageInstruction?: Array<{ text: string }>
-  _ultranos: {
-    hlcTimestamp: string
-    createdAt: string
-    brandName?: string
-    batchLot?: string
-    isOfflineCreated: boolean
-    fulfilledCount?: number
-    totalCount?: number
-  }
-  meta: {
-    lastUpdated: string
-    versionId?: string
-  }
-}
+export type LocalMedicationDispense = FhirMedicationDispense
 
 /**
  * Maps a fulfilled prescription item to a FHIR R4 MedicationDispense resource.
@@ -37,7 +12,7 @@ export function createMedicationDispense(
   item: FulfillmentItem,
   pharmacistId: string,
   fulfillmentContext?: { fulfilledCount: number; totalCount: number },
-): LocalMedicationDispense {
+): FhirMedicationDispense {
   const { prescription, brandName, batchLot } = item
   const now = new Date().toISOString()
   const ts = hlc.now()

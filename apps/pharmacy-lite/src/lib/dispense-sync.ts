@@ -49,6 +49,10 @@ export async function syncDispenseToHub(
     return { synced: false, queued: false, error: 'Missing required fields for Hub sync' }
   }
 
+  if (!dispense.whenHandedOver) {
+    return { synced: false, queued: false, error: 'whenHandedOver is required for Hub sync' }
+  }
+
   const mutationPayload = {
     dispenseId: dispense.id,
     prescriptionId,

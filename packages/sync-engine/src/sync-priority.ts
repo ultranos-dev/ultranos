@@ -17,6 +17,7 @@ export const SYNC_PRIORITY: Record<string, number> = {
   MedicationRequest: 2,
   MedicationStatement: 2,
   DiagnosticReport: 3,
+  MedicationDispense: 3,
   Encounter: 4,
   ClinicalImpression: 4,
   Condition: 4,
