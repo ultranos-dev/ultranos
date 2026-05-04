@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-04T15:00:00.000000'
+last_updated: '2026-05-04T18:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -142,7 +142,7 @@ development_status:
   epic-14: in-progress
   14-1-opd-lite-supabase-auth-login-page: done
   14-2-pharmacy-lite-supabase-auth-login-page: done
-  14-3-shared-session-management-hook-reauth-modal: backlog
+  14-3-shared-session-management-hook-reauth-modal: done
   14-3a-opd-lite-session-timeout-integration: backlog
   14-3b-pharmacy-lite-session-timeout-integration: backlog
   14-3c-lab-lite-session-timeout-integration: backlog

@@ -406,3 +406,8 @@
 
 - **D110: No client-side MFA retry limit** — No retry counter or re-challenge after N TOTP failures. Server-side Supabase rate limiting is the primary control. Client-side limit is defense-in-depth. Not caused by this change — same pattern as Lab Lite.
 - **D111: Supabase session auto-refresh handling on login page** — If a previous expired session exists, Supabase client may trigger background refresh on the login page, potentially causing redirect loops with future route protection. Deferred to Story 14.5 (Route Protection Middleware).
+
+## Deferred from: code review of 14-3-shared-session-management-hook-reauth-modal (2026-05-04)
+
+- **D119: `inactivityMs < WARNING_BEFORE_MS` creates immediate warning state** — If a consumer passes `inactivityMs` smaller than `WARNING_BEFORE_MS` (5 min), warning fires immediately on first tick. Won't occur with spec-defined `INACTIVITY_TIMEOUT` (30 min) constant, but no runtime guard prevents it.
+- **D120: No `SessionManagerProvider` test file** — Provider is thin glue code wiring hook + toast + modal. Integration testing will be covered in stories 14.3a/b/c when spoke apps integrate the provider.
