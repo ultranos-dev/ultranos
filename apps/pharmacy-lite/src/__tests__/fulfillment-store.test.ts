@@ -7,6 +7,16 @@ import { db } from '@/lib/db'
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+// Mock auth session store (cascading dep via dispense-sync)
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      getAccessToken: vi.fn().mockResolvedValue('test-token'),
+    }),
+  },
+}))
+
 const sampleRx: VerifiedPrescription[] = [
   {
     id: 'rx-001',

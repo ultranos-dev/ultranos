@@ -391,3 +391,18 @@
 
 - **D108: FHIR datetime strictness** — `z.string().datetime()` rejects partial FHIR dates (e.g. `2025-06-15`) across all schemas. All shared-types schemas use this same validator instead of `FhirDateTimeOrDateSchema` from `common.schema.ts`. Project-wide decision needed.
 - **D109: AttachmentSchema `data` field has no max size constraint** — Base64 `data` field in DiagnosticReport attachments accepts arbitrarily large payloads. Could bloat IndexedDB/sync queue. Architectural concern for a future storage-limits story.
+
+## Deferred from: code review of 14-2-pharmacy-lite-supabase-auth-login-page (2026-05-04)
+
+- **D112: `dispense-sync` enqueue can fail silently, losing dispense data** — If `enqueueForRetry` throws (IndexedDB quota, DB locked), the exception is unhandled. Dispense persists locally but never syncs to Hub with no mechanism to detect or recover.
+- **D113: `confirmDispense` partial failure leaves items in inconsistent state** — If the loop processes 2 of 3 items then the 3rd throws, first 2 are persisted/synced but UI shows a generic error with no per-item status tracking.
+- **D114: `AbortSignal.timeout()` not supported in Safari <16.4 or older Android WebView** — PWA targets low-resource clinical environments where older browsers are likely. TypeError from missing API is classified as offline error, masking the real issue.
+- **D115: `fulfillment-store` hardcoded actor ID `'pharmacy-user'`** — Auth session store now exists (added in this story). `auditPhiAccess('pharmacy-user', ...)` should read from `useAuthSessionStore.getState().session?.userId`. Out of scope for Story 14.2 but should be addressed in a follow-up.
+- **D116: `processingRef` not reset after `handleFetchKey` failure** — In PharmacyScannerView, if `handleFetchKey` catches an error, `processingRef.current` stays true, permanently blocking subsequent camera scans until page reload.
+- **D117: `window.location.href` destroys Zustand store on redirect** — After login, `window.location.href = '/'` triggers full page reload, destroying the just-populated session store. Same pattern as OPD Lite. Story 14.5 (route protection) must handle session rehydration from Supabase cookies.
+- **D118: OPD Lite login page has same dangling session bug on null JWT post-MFA** — OPD Lite `login/page.tsx:122-126` also does not call `signOut()` when JWT is null after MFA verify success. Fix in OPD Lite to match the Pharmacy Lite patch.
+
+## Deferred from: code review of 14-1-opd-lite-supabase-auth-login-page (2026-05-04)
+
+- **D110: No client-side MFA retry limit** — No retry counter or re-challenge after N TOTP failures. Server-side Supabase rate limiting is the primary control. Client-side limit is defense-in-depth. Not caused by this change — same pattern as Lab Lite.
+- **D111: Supabase session auto-refresh handling on login page** — If a previous expired session exists, Supabase client may trigger background refresh on the login page, potentially causing redirect loops with future route protection. Deferred to Story 14.5 (Route Protection Middleware).

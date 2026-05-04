@@ -7,6 +7,7 @@ import {
   type PrescriptionStatusResult,
 } from '@/lib/prescription-status-client'
 import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export type ScanState =
   | { phase: 'idle' }
@@ -36,7 +37,6 @@ function isOfflineError(err: unknown): boolean {
 }
 
 interface PrescriptionScannerProps {
-  authToken?: string
   onDispensed?: (prescriptionId: string) => void
 }
 
@@ -52,7 +52,6 @@ function parsePrescriptionIds(qrData: string): string[] {
 }
 
 export function PrescriptionScanner({
-  authToken,
   onDispensed,
 }: PrescriptionScannerProps) {
   const [scanState, setScanState] = useState<ScanState>({ phase: 'idle' })
@@ -61,10 +60,7 @@ export function PrescriptionScanner({
   const html5QrRef = useRef<unknown>(null)
 
   // Ref to always access the latest handleQrData (avoids stale closure)
-  const handleQrDataRef = useRef(handleQrData)
-  useEffect(() => {
-    handleQrDataRef.current = handleQrData
-  }, [handleQrData])
+  const handleQrDataRef = useRef<((qrData: string) => Promise<void>) | null>(null)
 
   // Start camera scanner
   const startCameraScanner = useCallback(async () => {
@@ -81,7 +77,7 @@ export function PrescriptionScanner({
         (decodedText) => {
           scanner.stop().catch(() => {})
           html5QrRef.current = null
-          handleQrDataRef.current(decodedText)
+          handleQrDataRef.current?.(decodedText)
         },
         () => {
           // Scan failure frame — expected, keep scanning
@@ -106,6 +102,7 @@ export function PrescriptionScanner({
 
   // Handle QR data (from camera or manual entry)
   const handleQrData = useCallback(async (qrData: string) => {
+    const authToken = await useAuthSessionStore.getState().getAccessToken()
     if (!authToken) {
       setScanState({
         phase: 'error',
@@ -169,13 +166,19 @@ export function PrescriptionScanner({
         })
       }
     }
-  }, [authToken])
+  }, [])
+
+  // Keep ref in sync with latest handleQrData
+  useEffect(() => {
+    handleQrDataRef.current = handleQrData
+  }, [handleQrData])
 
   // Handle manual prescription ID entry
   const handleManualCheck = useCallback(async () => {
     const id = manualInput.trim()
     if (!id) return
 
+    const authToken = await useAuthSessionStore.getState().getAccessToken()
     if (!authToken) {
       setScanState({
         phase: 'error',
@@ -203,10 +206,11 @@ export function PrescriptionScanner({
         })
       }
     }
-  }, [manualInput, authToken])
+  }, [manualInput])
 
   // AC 5: Dispense / complete the prescription
   const handleDispense = useCallback(async (prescriptionId: string) => {
+    const authToken = await useAuthSessionStore.getState().getAccessToken()
     if (!authToken) {
       setScanState({
         phase: 'error',
@@ -231,7 +235,7 @@ export function PrescriptionScanner({
         message: err instanceof Error ? err.message : 'Dispensing failed',
       })
     }
-  }, [authToken, onDispensed])
+  }, [onDispensed])
 
   const handleReset = useCallback(() => {
     setScanState({ phase: 'idle' })
@@ -344,7 +348,6 @@ export function PrescriptionScanner({
             result={scanState.result}
             onDispense={handleDispense}
             onReset={handleReset}
-            authToken={authToken}
           />
         </>
       )}
@@ -439,13 +442,12 @@ function StatusBanner({
   result,
   onDispense,
   onReset,
-  authToken,
 }: {
   result: PrescriptionStatusResult
   onDispense: (id: string) => void
   onReset: () => void
-  authToken?: string
 }) {
+  const isAuthenticated = useAuthSessionStore((s) => s.session !== null)
   if (result.status === 'AVAILABLE') {
     return (
       <div
@@ -466,7 +468,7 @@ function StatusBanner({
           <button
             type="button"
             onClick={() => onDispense(result.prescriptionId)}
-            disabled={!authToken}
+            disabled={!isAuthenticated}
             className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
             data-testid="dispense-btn"
           >

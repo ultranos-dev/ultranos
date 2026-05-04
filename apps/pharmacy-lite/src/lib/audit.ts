@@ -13,12 +13,14 @@ setAuditStoreAdapter(auditAdapter)
 // Initialize drain worker (syncs pending events to Hub when online)
 let drainWorker: AuditDrainWorker | null = null
 
-export function startAuditDrain(hubBaseUrl: string, getAuthToken: () => string): void {
+export function startAuditDrain(hubBaseUrl: string): void {
   drainWorker?.stop()
   drainWorker = new AuditDrainWorker({
     store: auditAdapter,
     syncFn: async (events) => {
-      const token = getAuthToken()
+      const { useAuthSessionStore } = await import('@/stores/auth-session-store')
+      const token = await useAuthSessionStore.getState().getAccessToken()
+      if (!token) throw new Error('No auth token available for audit sync')
       const res = await fetch(`${hubBaseUrl}/audit.sync`, {
         method: 'POST',
         headers: {

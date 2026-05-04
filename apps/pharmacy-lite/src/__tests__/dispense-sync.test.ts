@@ -6,6 +6,17 @@ import type { LocalMedicationDispense } from '@/lib/medication-dispense'
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+// Mock auth session store (imported by dispense-sync)
+const mockGetAccessToken = vi.fn().mockResolvedValue('test-token')
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      getAccessToken: mockGetAccessToken,
+    }),
+  },
+}))
+
 // Import after mocks
 const { syncDispenseToHub } = await import('@/lib/dispense-sync')
 

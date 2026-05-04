@@ -1,6 +1,6 @@
 # Story 14.1: OPD Lite Supabase Auth Login Page
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,44 +24,55 @@ so that my session is authenticated before I access patient data.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Supabase dependencies (AC: #9)
-  - [ ] Add `@supabase/supabase-js` and `@supabase/ssr` to `apps/opd-lite/package.json`
-  - [ ] Run `pnpm install` to update lockfile
-- [ ] Task 2: Create Supabase browser client (AC: #10)
-  - [ ] Create `apps/opd-lite/src/lib/supabase.ts` — singleton pattern matching Lab Lite exactly
-  - [ ] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` env vars
-  - [ ] Throw at module load if env vars missing (fail-fast)
-- [ ] Task 3: Create auth event reporting utility (AC: #8)
-  - [ ] Add `reportAuthEvent()` function to `apps/opd-lite/src/lib/trpc.ts`
-  - [ ] Fire-and-forget pattern: POST to `{HUB_API_URL}/lab.reportAuthEvent` with event type and actor info
-  - [ ] Never throws — auth flow must not be blocked by audit failures
-  - [ ] Match Lab Lite's exact `reportAuthEvent` signature
-- [ ] Task 4: Create login page (AC: #1, #2, #3, #6, #7)
-  - [ ] Create `apps/opd-lite/src/app/login/page.tsx`
-  - [ ] Implement two-step auth flow: credentials form → TOTP MFA form
-  - [ ] On credential success: check `supabase.auth.mfa.listFactors()` for enrolled TOTP
-  - [ ] If no TOTP enrolled: show error, revoke session with `supabase.auth.signOut()`, stay on login
-  - [ ] If TOTP enrolled: create challenge with `supabase.auth.mfa.challenge()`, show TOTP input
-  - [ ] On MFA verify success: redirect to `/`
-  - [ ] Display generic error messages (no credential enumeration, no PHI)
-  - [ ] Clear password from state after credential submission
-  - [ ] Style using OPD Lite's existing Tailwind classes and primary color tokens
-- [ ] Task 5: Populate auth session store on login (AC: #4, #5)
-  - [ ] After successful MFA verification, get session via `supabase.auth.getSession()`
-  - [ ] Extract from JWT: `sub` → userId, `role` → role, `session_id` → sessionId
-  - [ ] Look up practitionerId: query `practitioners` table via Hub API or extract from JWT custom claims
-  - [ ] Call `useAuthSessionStore.getState().setSession({ userId, practitionerId, role, sessionId })`
-  - [ ] If practitionerId cannot be resolved, use `userId` as fallback with a console warning
-- [ ] Task 6: Write tests (AC: #11)
-  - [ ] Create `apps/opd-lite/src/__tests__/login.test.ts`
-  - [ ] Test credential form renders with email/password fields
-  - [ ] Test successful credential submission transitions to MFA step
-  - [ ] Test failed credential submission shows error, emits LOGIN_FAILURE event
-  - [ ] Test MFA form renders with TOTP input
-  - [ ] Test successful MFA populates auth session store
-  - [ ] Test failed MFA shows error, clears TOTP input
-  - [ ] Test no TOTP enrolled shows enrollment error and signs out
-  - [ ] Verify all existing OPD Lite tests pass
+- [x] Task 1: Add Supabase dependencies (AC: #9)
+  - [x] Add `@supabase/supabase-js` and `@supabase/ssr` to `apps/opd-lite/package.json`
+  - [x] Run `pnpm install` to update lockfile
+- [x] Task 2: Create Supabase browser client (AC: #10)
+  - [x] Create `apps/opd-lite/src/lib/supabase.ts` — singleton pattern matching Lab Lite exactly
+  - [x] Validate `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` env vars
+  - [x] Throw at module load if env vars missing (fail-fast)
+- [x] Task 3: Create auth event reporting utility (AC: #8)
+  - [x] Add `reportAuthEvent()` function to `apps/opd-lite/src/lib/trpc.ts`
+  - [x] Fire-and-forget pattern: POST to `{HUB_API_URL}/lab.reportAuthEvent` with event type and actor info
+  - [x] Never throws — auth flow must not be blocked by audit failures
+  - [x] Match Lab Lite's exact `reportAuthEvent` signature
+- [x] Task 4: Create login page (AC: #1, #2, #3, #6, #7)
+  - [x] Create `apps/opd-lite/src/app/login/page.tsx`
+  - [x] Implement two-step auth flow: credentials form → TOTP MFA form
+  - [x] On credential success: check `supabase.auth.mfa.listFactors()` for enrolled TOTP
+  - [x] If no TOTP enrolled: show error, revoke session with `supabase.auth.signOut()`, stay on login
+  - [x] If TOTP enrolled: create challenge with `supabase.auth.mfa.challenge()`, show TOTP input
+  - [x] On MFA verify success: redirect to `/`
+  - [x] Display generic error messages (no credential enumeration, no PHI)
+  - [x] Clear password from state after credential submission
+  - [x] Style using OPD Lite's existing Tailwind classes and primary color tokens
+- [x] Task 5: Populate auth session store on login (AC: #4, #5)
+  - [x] After successful MFA verification, get session via `supabase.auth.getSession()`
+  - [x] Extract from JWT: `sub` → userId, `role` → role, `session_id` → sessionId
+  - [x] Look up practitionerId: query `practitioners` table via Hub API or extract from JWT custom claims
+  - [x] Call `useAuthSessionStore.getState().setSession({ userId, practitionerId, role, sessionId })`
+  - [x] If practitionerId cannot be resolved, use `userId` as fallback with a console warning
+- [x] Task 6: Write tests (AC: #11)
+  - [x] Create `apps/opd-lite/src/__tests__/login.test.tsx`
+  - [x] Test credential form renders with email/password fields
+  - [x] Test successful credential submission transitions to MFA step
+  - [x] Test failed credential submission shows error, emits LOGIN_FAILURE event
+  - [x] Test MFA form renders with TOTP input
+  - [x] Test successful MFA populates auth session store
+  - [x] Test failed MFA shows error, clears TOTP input
+  - [x] Test no TOTP enrolled shows enrollment error and signs out
+  - [x] Verify all existing OPD Lite tests pass
+
+### Review Findings
+
+- [x] [Review][Patch] JWT `atob()` unsafe for Base64url payloads — replace with Base64url-safe decode [apps/opd-lite/src/app/login/page.tsx:121]
+- [x] [Review][Patch] Redirect to `/` proceeds even when session store not populated (JWT null) [apps/opd-lite/src/app/login/page.tsx:141]
+- [x] [Review][Patch] Dangling Supabase session on factorsError or challengeError — add signOut() [apps/opd-lite/src/app/login/page.tsx:58-83]
+- [x] [Review][Patch] `handleBackToSignIn` does not clear `factorId` and `challengeId` state [apps/opd-lite/src/app/login/page.tsx:149-155]
+- [x] [Review][Patch] Remove `console.warn` — deviates from Lab Lite pattern and CLAUDE.md console output rule [apps/opd-lite/src/app/login/page.tsx:128-130]
+- [x] [Review][Patch] Missing test assertion for redirect to `/` after successful MFA [apps/opd-lite/src/__tests__/login.test.tsx]
+- [x] [Review][Defer] No client-side MFA retry limit — server-side rate limiting (Supabase responsibility), not this story
+- [x] [Review][Defer] Supabase session auto-refresh handling on login page — deferred to Story 14.5 (Route Protection)
 
 ## Dev Notes
 
@@ -208,8 +219,31 @@ NEXT_PUBLIC_HUB_API_URL=http://localhost:3000/api/trpc  (already used by trpc.ts
 
 ### Agent Model Used
 
+Claude Opus 4.6 (1M context)
+
 ### Debug Log References
+
+None — clean implementation, no debugging needed.
 
 ### Completion Notes List
 
+- Supabase deps added (@supabase/supabase-js, @supabase/ssr) and lockfile updated
+- Supabase browser client created as singleton matching Lab Lite's exact pattern
+- reportAuthEvent fire-and-forget utility added to trpc.ts matching Lab Lite signature
+- Login page implements full credentials → MFA two-step flow with all error handling
+- Auth session store populated from JWT claims after MFA success (practitionerId fallback to userId)
+- 8 comprehensive tests covering all ACs: renders, credential success/failure, MFA success/failure, no TOTP enrolled, session store population, practitionerId fallback
+- Full regression suite: 52 test files, 540 tests pass (zero regressions)
+- Pre-existing typecheck errors in interactionService.ts confirmed unrelated
+
 ### File List
+
+| File | Action |
+|------|--------|
+| `apps/opd-lite/package.json` | MODIFIED — added @supabase/supabase-js, @supabase/ssr |
+| `apps/opd-lite/src/lib/supabase.ts` | NEW — Supabase browser client singleton |
+| `apps/opd-lite/src/lib/trpc.ts` | MODIFIED — added reportAuthEvent() |
+| `apps/opd-lite/src/app/login/page.tsx` | NEW — Login page with credentials + MFA flow |
+| `apps/opd-lite/src/__tests__/login.test.tsx` | NEW — 8 tests covering login flow |
+| `pnpm-lock.yaml` | MODIFIED — lockfile updated |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | MODIFIED — status updated |

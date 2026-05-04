@@ -4,6 +4,16 @@ import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import { SyncPulse } from '@/components/pharmacy/SyncPulse'
 import { db } from '@/lib/db'
 
+// Mock auth session store (cascading dep via dispense-sync)
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      getAccessToken: vi.fn().mockResolvedValue('test-token'),
+    }),
+  },
+}))
+
 // Mock fetch to prevent unhandled rejections
 vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
   ok: true,

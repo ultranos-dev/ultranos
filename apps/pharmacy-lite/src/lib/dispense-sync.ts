@@ -1,26 +1,7 @@
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
-
-function getHubApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
-  }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
-}
-
-/**
- * Returns the current auth token for Hub API calls.
- * Token is provided by the caller (from auth session store).
- */
-let _authToken: string | null = null
-
-export function setDispenseSyncAuthToken(token: string | null): void {
-  _authToken = token
-}
-
-function getAuthToken(): string | null {
-  return _authToken
-}
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { getHubApiUrl } from '@/lib/trpc'
 
 export interface DispenseSyncResult {
   synced: boolean
@@ -69,7 +50,7 @@ export async function syncDispenseToHub(
     const url = new URL(getHubApiUrl())
     url.pathname = url.pathname.replace(/\/$/, '') + '/medication.recordDispense'
 
-    const token = getAuthToken()
+    const token = await useAuthSessionStore.getState().getAccessToken()
     if (!token) {
       return { synced: false, queued: false, error: 'Authentication required for Hub sync' }
     }

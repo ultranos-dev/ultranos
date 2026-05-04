@@ -8,6 +8,8 @@ import {
   type VerifiedPrescription,
 } from '@/lib/prescription-verify'
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { getHubApiUrl } from '@/lib/trpc'
 
 type ViewPhase =
   | { step: 'idle' }
@@ -17,14 +19,10 @@ type ViewPhase =
   | { step: 'error'; message: string }
 
 interface PharmacyScannerViewProps {
-  authToken?: string
-  hubBaseUrl?: string
   onNavigateToReview?: () => void
 }
 
 export function PharmacyScannerView({
-  authToken,
-  hubBaseUrl,
   onNavigateToReview,
 }: PharmacyScannerViewProps) {
   const [phase, setPhase] = useState<ViewPhase>({ step: 'idle' })
@@ -95,12 +93,14 @@ export function PharmacyScannerView({
 
   // Fetch clinician key from Hub and re-verify
   const handleFetchKey = useCallback(async (rawQr: string) => {
-    if (!authToken || !hubBaseUrl) return
+    const token = await useAuthSessionStore.getState().getAccessToken()
+    const hubBaseUrl = getHubApiUrl()
+    if (!token) return
 
     try {
       // Extract pub key from QR
       const bundle = JSON.parse(rawQr) as { pub: string }
-      await fetchAndCachePractitionerKey(bundle.pub, hubBaseUrl, authToken)
+      await fetchAndCachePractitionerKey(bundle.pub, hubBaseUrl, token)
       // Reset processingRef so the scanner can be used again after re-verification
       processingRef.current = false
       // Re-verify now that key is cached
@@ -108,7 +108,7 @@ export function PharmacyScannerView({
     } catch {
       setPhase({ step: 'error', message: 'Failed to fetch clinician key from Hub.' })
     }
-  }, [authToken, hubBaseUrl, handleVerify])
+  }, [handleVerify])
 
   // Load into fulfillment store and navigate
   const handleProceedToReview = useCallback(
@@ -220,8 +220,6 @@ export function PharmacyScannerView({
           onProceedToReview={handleProceedToReview}
           onFetchKey={handleFetchKey}
           onReset={handleReset}
-          authToken={authToken}
-          hubBaseUrl={hubBaseUrl}
         />
       )}
 
@@ -252,17 +250,14 @@ function ResultDisplay({
   onProceedToReview,
   onFetchKey,
   onReset,
-  authToken,
-  hubBaseUrl,
 }: {
   result: VerificationResult
   rawQr: string
   onProceedToReview: (rx: VerifiedPrescription[], name?: string) => void
   onFetchKey: (rawQr: string) => void
   onReset: () => void
-  authToken?: string
-  hubBaseUrl?: string
 }) {
+  const isAuthenticated = useAuthSessionStore((s) => s.session !== null)
   switch (result.status) {
     case 'verified':
       return (
@@ -383,7 +378,7 @@ function ResultDisplay({
             The prescription signature is valid, but the signing clinician is not
             in the local trusted registry.
           </p>
-          {result.fallbackAvailable && authToken && hubBaseUrl && (
+          {result.fallbackAvailable && isAuthenticated && (
             <button
               type="button"
               onClick={() => onFetchKey(rawQr)}

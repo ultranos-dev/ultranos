@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+
+// Mock auth session store (cascading dep via dispense-sync)
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      getAccessToken: vi.fn().mockResolvedValue('test-token'),
+    }),
+  },
+}))
+
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
 

@@ -13,6 +13,22 @@ vi.mock('html5-qrcode', () => ({
   Html5Qrcode: vi.fn(),
 }))
 
+// Mock auth session store
+const mockGetAccessToken = vi.fn().mockResolvedValue('test-token')
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: Object.assign(
+    vi.fn((selector: (s: Record<string, unknown>) => unknown) =>
+      selector({ session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' } }),
+    ),
+    {
+      getState: vi.fn(() => ({
+        session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+        getAccessToken: mockGetAccessToken,
+      })),
+    },
+  ),
+}))
+
 import { checkPrescriptionStatus, completePrescription } from '@/lib/prescription-status-client'
 import { PrescriptionScanner } from '@/components/pharmacy/PrescriptionScanner'
 
@@ -42,7 +58,7 @@ describe('PrescriptionScanner', () => {
     })
 
     const user = userEvent.setup()
-    render(<PrescriptionScanner authToken="test-token" />)
+    render(<PrescriptionScanner />)
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-001')
     await user.click(screen.getByTestId('manual-check-btn'))
@@ -57,6 +73,9 @@ describe('PrescriptionScanner', () => {
   })
 
   it('requires auth token for status check', async () => {
+    // Simulate no auth token
+    mockGetAccessToken.mockResolvedValueOnce(null)
+
     const user = userEvent.setup()
     render(<PrescriptionScanner />)
 
@@ -82,7 +101,7 @@ describe('PrescriptionScanner', () => {
     })
 
     const user = userEvent.setup()
-    render(<PrescriptionScanner authToken="test-token" />)
+    render(<PrescriptionScanner />)
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-002')
     await user.click(screen.getByTestId('manual-check-btn'))
@@ -105,7 +124,7 @@ describe('PrescriptionScanner', () => {
     })
 
     const user = userEvent.setup()
-    render(<PrescriptionScanner authToken="test-token" />)
+    render(<PrescriptionScanner />)
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-003')
     await user.click(screen.getByTestId('manual-check-btn'))
@@ -123,7 +142,7 @@ describe('PrescriptionScanner', () => {
     mockCheck.mockRejectedValue(new TypeError('Failed to fetch'))
 
     const user = userEvent.setup()
-    render(<PrescriptionScanner authToken="test-token" />)
+    render(<PrescriptionScanner />)
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-001')
     await user.click(screen.getByTestId('manual-check-btn'))
@@ -158,7 +177,7 @@ describe('PrescriptionScanner', () => {
     const onDispensed = vi.fn()
     const user = userEvent.setup()
     render(
-      <PrescriptionScanner authToken="test-token" onDispensed={onDispensed} />,
+      <PrescriptionScanner onDispensed={onDispensed} />,
     )
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-001')
@@ -183,7 +202,7 @@ describe('PrescriptionScanner', () => {
     mockCheck.mockRejectedValue(new Error('Prescription not found'))
 
     const user = userEvent.setup()
-    render(<PrescriptionScanner authToken="test-token" />)
+    render(<PrescriptionScanner />)
 
     await user.type(screen.getByTestId('manual-prescription-input'), 'rx-bad')
     await user.click(screen.getByTestId('manual-check-btn'))

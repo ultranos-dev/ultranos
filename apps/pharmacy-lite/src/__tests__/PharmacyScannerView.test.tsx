@@ -27,6 +27,27 @@ vi.mock('@/stores/fulfillment-store', () => ({
   ),
 }))
 
+// Mock auth session store
+const mockGetAccessToken = vi.fn().mockResolvedValue('test-token')
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: Object.assign(
+    vi.fn((selector: (s: Record<string, unknown>) => unknown) =>
+      selector({ session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' } }),
+    ),
+    {
+      getState: vi.fn(() => ({
+        session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+        getAccessToken: mockGetAccessToken,
+      })),
+    },
+  ),
+}))
+
+// Mock trpc
+vi.mock('@/lib/trpc', () => ({
+  getHubApiUrl: vi.fn(() => 'http://hub'),
+}))
+
 import { verifyPrescriptionQr, fetchAndCachePractitionerKey } from '@/lib/prescription-verify'
 import { PharmacyScannerView } from '@/components/pharmacy/PharmacyScannerView'
 import type { SignedPrescriptionBundle } from '@ultranos/shared-types'
@@ -139,7 +160,7 @@ describe('PharmacyScannerView', () => {
     })
 
     const user = userEvent.setup()
-    render(<PharmacyScannerView authToken="test-token" hubBaseUrl="http://hub" />)
+    render(<PharmacyScannerView />)
 
     fireEvent.change(screen.getByTestId('qr-paste-input'), { target: { value: makeQrData() } })
     await user.click(screen.getByTestId('verify-btn'))
