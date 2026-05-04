@@ -411,3 +411,13 @@
 
 - **D119: `inactivityMs < WARNING_BEFORE_MS` creates immediate warning state** — If a consumer passes `inactivityMs` smaller than `WARNING_BEFORE_MS` (5 min), warning fires immediately on first tick. Won't occur with spec-defined `INACTIVITY_TIMEOUT` (30 min) constant, but no runtime guard prevents it.
 - **D120: No `SessionManagerProvider` test file** — Provider is thin glue code wiring hook + toast + modal. Integration testing will be covered in stories 14.3a/b/c when spoke apps integrate the provider.
+
+## Deferred from: code review of 14-3a-opd-lite-session-timeout-integration (2026-05-04)
+
+- **D121: `signInWithPassword` re-auth creates mismatched sessionId in store** — Re-auth via `signInWithPassword` creates a new Supabase session but the Zustand auth store retains the old `sessionId`. Audit events and API calls reference a stale session. Architectural concern — requires design decision on whether re-auth should update store session metadata.
+- **D122: No audit event on session expiry or re-auth attempt** — `handleExpired` (PHI cleanup) and `handleReAuth` (security event) emit no structured audit events. Session timeout and failed re-auth attempts are security-relevant but auditing was not in the acceptance criteria for this story.
+- **D123: `signInWithPassword` may trigger `onAuthStateChange` listeners** — Re-auth call fires Supabase `SIGNED_IN` event, which could trigger registered listeners (e.g., re-running login logic, re-deriving keys). Requires investigation across auth listener registrations.
+
+## Deferred from: code review of 14-3b-pharmacy-lite-session-timeout-integration (2026-05-04)
+
+- **D124: `handleExpired` clearSession triggers re-render before redirect** — `clearSession()` sets `isAuthenticated = false` at step 3 of cleanup, which can cause a React re-render before `window.location.href = '/login'` fires at step 5. Briefly shows unauthenticated children. Cosmetic only — redirect fires in same event loop tick. Same pattern as OPD Lite 14-3a. Architectural choice.

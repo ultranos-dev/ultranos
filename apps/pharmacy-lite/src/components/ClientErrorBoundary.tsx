@@ -3,6 +3,7 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
+import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
 
 const DB_NAME = 'pharmacy-lite'
 
@@ -40,7 +41,9 @@ export function ClientErrorBoundary({ children }: { children: ReactNode }) {
     <ErrorBoundary appName="pharmacy-lite" dbName={DB_NAME}>
       <AsyncErrorBridge>
         <SyncAwareStaleDataBanner />
-        {children}
+        <SessionTimeoutWrapper>
+          {children}
+        </SessionTimeoutWrapper>
       </AsyncErrorBridge>
     </ErrorBoundary>
   )

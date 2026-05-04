@@ -26,6 +26,7 @@ function setupAuthSession() {
     practitionerId: 'Practitioner/doctor-001',
     role: 'DOCTOR',
     sessionId: 'session-001',
+    email: 'doctor@hospital.com',
   })
 }
 

@@ -133,11 +133,13 @@ export default function LoginPage() {
       const role = payload.role ?? ''
       const sessionId = payload.session_id ?? ''
       const practitionerId = payload.practitioner_id ?? userId
+      const userEmail = sessionData.session?.user?.email ?? ''
       useAuthSessionStore.getState().setSession({
         userId,
         practitionerId,
         role,
         sessionId,
+        email: userEmail,
       })
 
       // MFA verified — redirect to scanner view

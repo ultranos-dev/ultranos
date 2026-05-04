@@ -133,11 +133,13 @@ export default function LoginPage() {
       const sessionId = payload.session_id ?? ''
       // Use userId as practitionerId fallback (Story 14.6 handles full resolution)
       const practitionerId = payload.practitioner_id ?? userId
+      const userEmail = sessionData.session?.user?.email ?? ''
       useAuthSessionStore.getState().setSession({
         userId,
         practitionerId,
         role,
         sessionId,
+        email: userEmail,
       })
 
       // MFA verified — redirect to dashboard

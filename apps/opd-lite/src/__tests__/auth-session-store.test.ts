@@ -27,6 +27,7 @@ describe('useAuthSessionStore', () => {
       practitionerId: 'Practitioner/prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
+      email: 'doctor@hospital.com',
     })
 
     const state = useAuthSessionStore.getState()
@@ -36,6 +37,7 @@ describe('useAuthSessionStore', () => {
       practitionerId: 'Practitioner/prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
+      email: 'doctor@hospital.com',
     })
   })
 
@@ -46,6 +48,7 @@ describe('useAuthSessionStore', () => {
       practitionerId: 'Practitioner/prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
+      email: 'doctor@hospital.com',
     })
 
     expect(useAuthSessionStore.getState().getPractitionerRef()).toBe('Practitioner/prac-001')
@@ -65,6 +68,7 @@ describe('useAuthSessionStore', () => {
       practitionerId: 'Practitioner/prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
+      email: 'doctor@hospital.com',
     })
 
     useAuthSessionStore.getState().clearSession()

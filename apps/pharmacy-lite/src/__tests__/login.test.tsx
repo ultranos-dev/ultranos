@@ -186,7 +186,7 @@ describe('LoginPage', () => {
     }
     const fakeJwt = `header.${btoa(JSON.stringify(payload))}.signature`
     mockGetSession.mockResolvedValue({
-      data: { session: { access_token: fakeJwt } },
+      data: { session: { access_token: fakeJwt, user: { email: 'pharm@hospital.com' } } },
     })
 
     render(<LoginPage />)
@@ -211,6 +211,7 @@ describe('LoginPage', () => {
         practitionerId: 'pract-456',
         role: 'PHARMACIST',
         sessionId: 'sess-abc',
+        email: 'pharm@hospital.com',
       })
     })
 

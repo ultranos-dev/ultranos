@@ -187,7 +187,7 @@ describe('LoginPage', () => {
     }
     const fakeJwt = `header.${btoa(JSON.stringify(payload))}.signature`
     mockGetSession.mockResolvedValue({
-      data: { session: { access_token: fakeJwt } },
+      data: { session: { access_token: fakeJwt, user: { email: 'doc@hospital.com' } } },
     })
 
     render(<LoginPage />)
@@ -212,6 +212,7 @@ describe('LoginPage', () => {
         practitionerId: 'pract-456',
         role: 'CLINICIAN',
         sessionId: 'sess-abc',
+        email: 'doc@hospital.com',
       })
     })
 
@@ -288,7 +289,7 @@ describe('LoginPage', () => {
     }
     const fakeJwt = `header.${btoa(JSON.stringify(payload))}.signature`
     mockGetSession.mockResolvedValue({
-      data: { session: { access_token: fakeJwt } },
+      data: { session: { access_token: fakeJwt, user: { email: 'doc@hospital.com' } } },
     })
 
     render(<LoginPage />)
@@ -311,6 +312,7 @@ describe('LoginPage', () => {
         practitionerId: 'user-789', // fallback to userId
         role: 'DOCTOR',
         sessionId: 'sess-xyz',
+        email: 'doc@hospital.com',
       })
     })
   })

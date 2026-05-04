@@ -65,6 +65,7 @@ function resetStores() {
     practitionerId: 'Practitioner/test-practitioner',
     role: 'clinician',
     sessionId: 'test-session',
+    email: 'test@hospital.com',
   })
   useAllergyStore.setState({
     allergies: [],

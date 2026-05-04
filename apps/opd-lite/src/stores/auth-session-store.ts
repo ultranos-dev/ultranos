@@ -5,6 +5,7 @@ export interface AuthSession {
   practitionerId: string
   role: string
   sessionId: string
+  email: string
 }
 
 interface AuthSessionState {

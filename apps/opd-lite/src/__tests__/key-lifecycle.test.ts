@@ -35,6 +35,7 @@ describe('key lifecycle', () => {
       practitionerId: 'p1',
       role: 'clinician',
       sessionId: 's1',
+      email: 'test@hospital.com',
     })
 
     expect(encryptionKeyStore.isReady()).toBe(true)
