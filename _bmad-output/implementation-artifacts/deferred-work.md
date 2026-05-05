@@ -421,3 +421,8 @@
 ## Deferred from: code review of 14-3b-pharmacy-lite-session-timeout-integration (2026-05-04)
 
 - **D124: `handleExpired` clearSession triggers re-render before redirect** — `clearSession()` sets `isAuthenticated = false` at step 3 of cleanup, which can cause a React re-render before `window.location.href = '/login'` fires at step 5. Briefly shows unauthenticated children. Cosmetic only — redirect fires in same event loop tick. Same pattern as OPD Lite 14-3a. Architectural choice.
+
+## Deferred from: code review of 14-3c-lab-lite-session-timeout-integration (2026-05-04)
+
+- **D125: No error handling for signOut in MFA rejection path** — `login/page.tsx:68`. If `signOut()` throws when rejecting a user without TOTP, exception propagates unhandled. Partial Supabase session remains active. Pre-existing in login page, not introduced by this change.
+- **D126: No error handling for signOut in "Back to sign in" handler** — `login/page.tsx:137`. `handleBackToSignIn` has no try-catch. If `signOut()` throws, partial session persists. Pre-existing in login page.

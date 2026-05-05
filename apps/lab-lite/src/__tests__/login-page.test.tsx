@@ -8,6 +8,7 @@ const mockSignOut = vi.fn()
 const mockListFactors = vi.fn()
 const mockChallenge = vi.fn()
 const mockVerify = vi.fn()
+const mockGetSession = vi.fn()
 
 const mockReportAuthEvent = vi.fn()
 vi.mock('@/lib/trpc', () => ({
@@ -19,6 +20,7 @@ vi.mock('@/lib/supabase', () => ({
     auth: {
       signInWithPassword: mockSignInWithPassword,
       signOut: mockSignOut,
+      getSession: mockGetSession,
       mfa: {
         listFactors: mockListFactors,
         challenge: mockChallenge,
@@ -26,6 +28,13 @@ vi.mock('@/lib/supabase', () => ({
       },
     },
   }),
+}))
+
+const mockSetSession = vi.fn()
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({ setSession: mockSetSession }),
+  },
 }))
 
 function setupMfaFlow() {
@@ -37,6 +46,27 @@ function setupMfaFlow() {
   mockChallenge.mockResolvedValue({
     data: { id: 'challenge-1' },
     error: null,
+  })
+  mockGetSession.mockResolvedValue({
+    data: {
+      session: {
+        user: {
+          id: 'user-1',
+          email: 'tech@lab.com',
+          user_metadata: { practitioner_id: 'Practitioner/p1' },
+        },
+      },
+    },
+  })
+}
+
+// Mock crypto.randomUUID if not available in jsdom
+if (!globalThis.crypto?.randomUUID) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: {
+      ...globalThis.crypto,
+      randomUUID: () => 'test-uuid-1234',
+    },
   })
 }
 
@@ -51,6 +81,9 @@ async function submitCredentials() {
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetSession.mockResolvedValue({
+      data: { session: { user: { id: 'user-1', email: 'tech@lab.com', user_metadata: {} } } },
+    })
   })
 
   it('renders the credential form initially', () => {
@@ -250,5 +283,30 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Email')).toBeDefined()
     })
+  })
+
+  it('shows error when getSession returns null session after MFA', async () => {
+    setupMfaFlow()
+    mockVerify.mockResolvedValue({ error: null })
+    mockGetSession.mockResolvedValue({
+      data: { session: null },
+    })
+
+    render(<LoginPage />)
+    await submitCredentials()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('TOTP Code')).toBeDefined()
+    })
+
+    fireEvent.change(screen.getByLabelText('TOTP Code'), { target: { value: '123456' } })
+    await act(async () => {
+      fireEvent.submit(screen.getByLabelText('TOTP Code').closest('form')!)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toContain('Session unavailable after MFA verification')
+    })
+    expect(mockSetSession).not.toHaveBeenCalled()
   })
 })

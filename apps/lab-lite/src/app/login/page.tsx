@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 type AuthStep = 'credentials' | 'mfa' | 'error'
 
@@ -110,6 +111,22 @@ export default function LoginPage() {
       }
 
       reportAuthEvent('MFA_VERIFY_SUCCESS')
+
+      // Populate auth session store before redirect
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData.session?.user
+      if (!user?.email) {
+        setError('Session unavailable after MFA verification. Please try again.')
+        setLoading(false)
+        return
+      }
+      useAuthSessionStore.getState().setSession({
+        userId: user.id,
+        practitionerId: user.user_metadata?.practitioner_id ?? '',
+        role: 'LAB_TECH',
+        sessionId: crypto.randomUUID(),
+        email: user.email,
+      })
 
       // MFA verified — redirect to dashboard
       window.location.href = '/'

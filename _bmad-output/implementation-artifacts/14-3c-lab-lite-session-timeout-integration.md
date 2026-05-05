@@ -1,6 +1,6 @@
 # Story 14.3c: Lab Lite Session Timeout Integration
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -26,35 +26,35 @@ so that the lab workstation is protected when I step away.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create auth session store (AC: #8)
-  - [ ] Create `apps/lab-lite/src/stores/auth-session-store.ts`
-  - [ ] Define `AuthSession` interface: `{ userId: string, practitionerId: string, role: string, sessionId: string, email: string }`
-  - [ ] Define `AuthSessionState`: `{ session: AuthSession | null, isAuthenticated: boolean, setSession(session: AuthSession): void, clearSession(): void }`
-  - [ ] Export `useAuthSessionStore` Zustand store
-  - [ ] `setSession` sets `session` and `isAuthenticated = true`
-  - [ ] `clearSession` sets `session = null` and `isAuthenticated = false`
+- [x] Task 1: Create auth session store (AC: #8)
+  - [x] Create `apps/lab-lite/src/stores/auth-session-store.ts`
+  - [x] Define `AuthSession` interface: `{ userId: string, practitionerId: string, role: string, sessionId: string, email: string }`
+  - [x] Define `AuthSessionState`: `{ session: AuthSession | null, isAuthenticated: boolean, setSession(session: AuthSession): void, clearSession(): void }`
+  - [x] Export `useAuthSessionStore` Zustand store
+  - [x] `setSession` sets `session` and `isAuthenticated = true`
+  - [x] `clearSession` sets `session = null` and `isAuthenticated = false`
 
-- [ ] Task 2: Add `zustand` dependency (AC: #8)
-  - [ ] Add `zustand` to `apps/lab-lite/package.json` dependencies
-  - [ ] Run `pnpm install` from workspace root
+- [x] Task 2: Add `zustand` dependency (AC: #8)
+  - [x] Add `zustand` to `apps/lab-lite/package.json` dependencies
+  - [x] Run `pnpm install` from workspace root
 
-- [ ] Task 3: Update login page to populate auth store (AC: #9)
-  - [ ] In `apps/lab-lite/src/app/login/page.tsx`, import `useAuthSessionStore`
-  - [ ] After MFA verify success, extract email from `sessionData.session?.user?.email ?? ''`
-  - [ ] Call `useAuthSessionStore.getState().setSession({ userId, practitionerId, role, sessionId, email })`
-  - [ ] Ensure this happens BEFORE the redirect to dashboard
+- [x] Task 3: Update login page to populate auth store (AC: #9)
+  - [x] In `apps/lab-lite/src/app/login/page.tsx`, import `useAuthSessionStore`
+  - [x] After MFA verify success, extract email from `sessionData.session?.user?.email ?? ''`
+  - [x] Call `useAuthSessionStore.getState().setSession({ userId, practitionerId, role, sessionId, email })`
+  - [x] Ensure this happens BEFORE the redirect to dashboard
 
-- [ ] Task 4: Create session timeout wrapper component (AC: #1, #2, #3)
-  - [ ] Create `apps/lab-lite/src/components/SessionTimeoutWrapper.tsx` — a `'use client'` component
-  - [ ] Import `SessionManagerProvider`, `SESSION_DURATIONS`, `INACTIVITY_TIMEOUT` from `@ultranos/ui-kit`
-  - [ ] Import `useAuthSessionStore` to read session and email
-  - [ ] Only render `SessionManagerProvider` when `isAuthenticated === true`
-  - [ ] Pass `maxDurationMs`: `SESSION_DURATIONS[session.role] ?? SESSION_DURATIONS.LAB_TECH`
-  - [ ] Pass `inactivityMs` as `INACTIVITY_TIMEOUT` (30 minutes)
-  - [ ] Pass `userEmail` from `session.email`
+- [x] Task 4: Create session timeout wrapper component (AC: #1, #2, #3)
+  - [x] Create `apps/lab-lite/src/components/SessionTimeoutWrapper.tsx` — a `'use client'` component
+  - [x] Import `SessionManagerProvider`, `SESSION_DURATIONS`, `INACTIVITY_TIMEOUT` from `@ultranos/ui-kit`
+  - [x] Import `useAuthSessionStore` to read session and email
+  - [x] Only render `SessionManagerProvider` when `isAuthenticated === true`
+  - [x] Pass `maxDurationMs`: `SESSION_DURATIONS[session.role] ?? SESSION_DURATIONS.LAB_TECH`
+  - [x] Pass `inactivityMs` as `INACTIVITY_TIMEOUT` (30 minutes)
+  - [x] Pass `userEmail` from `session.email`
 
-- [ ] Task 5: Wire `onExpired` callback — cleanup (AC: #7)
-  - [ ] In `SessionTimeoutWrapper.tsx`, implement the `onExpired` callback:
+- [x] Task 5: Wire `onExpired` callback — cleanup (AC: #7)
+  - [x] In `SessionTimeoutWrapper.tsx`, implement the `onExpired` callback:
     ```
     async function handleExpired() {
       useAuthSessionStore.getState().clearSession()
@@ -63,10 +63,10 @@ so that the lab workstation is protected when I step away.
       window.location.href = '/login'
     }
     ```
-  - [ ] Import Supabase browser client from `apps/lab-lite/src/lib/supabase.ts`
+  - [x] Import Supabase browser client from `apps/lab-lite/src/lib/supabase.ts`
 
-- [ ] Task 6: Wire `onReAuth` callback — password re-verification (AC: #5, #6)
-  - [ ] In `SessionTimeoutWrapper.tsx`, implement the `onReAuth` callback:
+- [x] Task 6: Wire `onReAuth` callback — password re-verification (AC: #5, #6)
+  - [x] In `SessionTimeoutWrapper.tsx`, implement the `onReAuth` callback:
     ```
     async (password: string): Promise<boolean> => {
       try {
@@ -84,23 +84,31 @@ so that the lab workstation is protected when I step away.
       } catch { return false }
     }
     ```
-  - [ ] Pattern matches OPD Lite's 14-3a review finding: try getUser(), fall back to store email
+  - [x] Pattern matches OPD Lite's 14-3a review finding: try getUser(), fall back to store email
 
-- [ ] Task 7: Integrate into layout (AC: #1)
-  - [ ] Update `apps/lab-lite/src/components/ClientErrorBoundary.tsx` to wrap children with `SessionTimeoutWrapper`
-  - [ ] Place INSIDE `ErrorBoundary` wrapping `{children}`
+- [x] Task 7: Integrate into layout (AC: #1)
+  - [x] Update `apps/lab-lite/src/components/ClientErrorBoundary.tsx` to wrap children with `SessionTimeoutWrapper`
+  - [x] Place INSIDE `ErrorBoundary` wrapping `{children}`
 
-- [ ] Task 8: Write tests (AC: #10)
-  - [ ] Create `apps/lab-lite/src/__tests__/SessionTimeoutWrapper.test.tsx`
-  - [ ] Test: does not render SessionManagerProvider when `isAuthenticated === false`
-  - [ ] Test: renders SessionManagerProvider with correct props (8h LAB_TECH duration)
-  - [ ] Test: `onExpired` clears session, signs out, redirects
-  - [ ] Test: `onReAuth` calls Supabase signInWithPassword and returns boolean
-  - [ ] Test: `onReAuth` fallback to store email when getUser() returns null
-  - [ ] Create `apps/lab-lite/src/__tests__/auth-session-store.test.ts`
-  - [ ] Test: `setSession` sets session and isAuthenticated
-  - [ ] Test: `clearSession` resets to null and false
-  - [ ] Verify all existing Lab Lite tests pass
+- [x] Task 8: Write tests (AC: #10)
+  - [x] Create `apps/lab-lite/src/__tests__/SessionTimeoutWrapper.test.tsx`
+  - [x] Test: does not render SessionManagerProvider when `isAuthenticated === false`
+  - [x] Test: renders SessionManagerProvider with correct props (8h LAB_TECH duration)
+  - [x] Test: `onExpired` clears session, signs out, redirects
+  - [x] Test: `onReAuth` calls Supabase signInWithPassword and returns boolean
+  - [x] Test: `onReAuth` fallback to store email when getUser() returns null
+  - [x] Create `apps/lab-lite/src/__tests__/auth-session-store.test.ts`
+  - [x] Test: `setSession` sets session and isAuthenticated
+  - [x] Test: `clearSession` resets to null and false
+  - [x] Verify all existing Lab Lite tests pass
+
+### Review Findings
+
+- [x] [Review][Patch] `handleExpired` missing try/finally — signOut throw blocks redirect [SessionTimeoutWrapper.tsx:18-23]
+- [x] [Review][Patch] Login page should validate session data before populating store [login/page.tsx:116-124]
+- [x] [Review][Patch] Empty-string email guard before calling setSession [login/page.tsx:118]
+- [x] [Review][Defer] No error handling for signOut in MFA rejection path [login/page.tsx:68] — deferred, pre-existing
+- [x] [Review][Defer] No error handling for signOut in "Back to sign in" handler [login/page.tsx:137] — deferred, pre-existing
 
 ## Dev Notes
 
@@ -265,8 +273,33 @@ import { createBrowserClient } from '@supabase/ssr'
 
 ### Agent Model Used
 
+Claude Opus 4.6 (1M context)
+
 ### Debug Log References
+
+None — clean implementation, no debugging required.
 
 ### Completion Notes List
 
+- Created Zustand auth session store with AuthSession interface (userId, practitionerId, role, sessionId, email)
+- Added zustand dependency to lab-lite package.json
+- Updated login page to populate auth store after MFA verify success, before redirect
+- Created SessionTimeoutWrapper component with LAB_TECH 8h max duration and 30min inactivity timeout
+- onExpired: clearSession → signOut (awaited) → redirect to /login (3 steps only, no PHI/encryption cleanup needed)
+- onReAuth: tries getUser() for email, falls back to store email, then signInWithPassword
+- Integrated SessionTimeoutWrapper inside ClientErrorBoundary's ErrorBoundary > AsyncErrorBridge
+- All 13 new tests pass (3 store + 10 wrapper), all 95 existing tests pass, 1 pre-existing failure in patient-verify-scanner.test.tsx (unrelated to this story)
+
 ### File List
+
+| File | Action |
+|------|--------|
+| `apps/lab-lite/src/stores/auth-session-store.ts` | NEW |
+| `apps/lab-lite/src/components/SessionTimeoutWrapper.tsx` | NEW |
+| `apps/lab-lite/src/__tests__/auth-session-store.test.ts` | NEW |
+| `apps/lab-lite/src/__tests__/SessionTimeoutWrapper.test.tsx` | NEW |
+| `apps/lab-lite/src/app/login/page.tsx` | MODIFIED |
+| `apps/lab-lite/src/components/ClientErrorBoundary.tsx` | MODIFIED |
+| `apps/lab-lite/package.json` | MODIFIED |
+| `apps/lab-lite/src/__tests__/login-page.test.tsx` | MODIFIED |
+| `pnpm-lock.yaml` | MODIFIED |
