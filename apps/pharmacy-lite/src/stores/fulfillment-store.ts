@@ -6,6 +6,7 @@ import { syncDispenseToHub, type DispenseSyncResult } from '@/lib/dispense-sync'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { db } from '@/lib/db'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export type FulfillmentPhase =
   | 'empty'
@@ -47,7 +48,7 @@ interface FulfillmentState {
   setBrandName: (prescriptionId: string, brandName: string) => void
   setBatchLot: (prescriptionId: string, batchLot: string) => void
   startReview: () => void
-  confirmDispense: (pharmacistId: string) => Promise<void>
+  confirmDispense: () => Promise<void>
   reset: () => void
 }
 
@@ -134,9 +135,16 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       }
     },
 
-    confirmDispense: async (pharmacistId: string) => {
+    confirmDispense: async () => {
       // Guard: prevent double-invocation (e.g. double-tap)
       if (get().phase === 'dispensing') return
+
+      let pharmacistRef: string
+      try {
+        pharmacistRef = useAuthSessionStore.getState().getPractitionerRef()
+      } catch {
+        throw new Error('Session expired — re-authentication required')
+      }
 
       const selectedItems = get().items.filter((i) => i.selected)
       if (selectedItems.length === 0) return
@@ -152,7 +160,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
 
         for (let i = 0; i < selectedItems.length; i++) {
           const item = selectedItems[i]!
-          const dispense = createMedicationDispense(item, pharmacistId, {
+          const dispense = createMedicationDispense(item, pharmacistRef, {
             fulfilledCount: i + 1,
             totalCount: selectedItems.length,
           })

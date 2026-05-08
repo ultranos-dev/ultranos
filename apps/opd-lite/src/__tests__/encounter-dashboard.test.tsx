@@ -62,7 +62,7 @@ function resetStores() {
   // Set up auth session so practitionerRef is available for encounter operations
   useAuthSessionStore.getState().setSession({
     userId: 'test-user',
-    practitionerId: 'Practitioner/test-practitioner',
+    practitionerId: 'test-practitioner',
     role: 'clinician',
     sessionId: 'test-session',
     email: 'test@hospital.com',

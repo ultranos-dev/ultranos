@@ -52,7 +52,7 @@ beforeEach(async () => {
 describe('createMedicationDispense', () => {
   it('creates a FHIR MedicationDispense resource per fulfilled item', () => {
     const items = makeItems()
-    const dispenses = items.map((item) => createMedicationDispense(item, 'pharmacist-001'))
+    const dispenses = items.map((item) => createMedicationDispense(item, 'Practitioner/pharmacist-001'))
 
     expect(dispenses).toHaveLength(2)
     expect(dispenses[0]!.resourceType).toBe('MedicationDispense')
@@ -61,7 +61,7 @@ describe('createMedicationDispense', () => {
 
   it('links to the original MedicationRequest via authorizingPrescription', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.authorizingPrescription).toEqual([
       { reference: `MedicationRequest/${items[0]!.prescription.id}` },
@@ -70,14 +70,14 @@ describe('createMedicationDispense', () => {
 
   it('sets subject reference to Patient', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.subject.reference).toBe('Patient/pat-001')
   })
 
   it('sets performer reference to pharmacist', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     const performer = dispense.performer?.[0]
     expect(performer?.actor.reference).toBe('Practitioner/pharmacist-001')
@@ -85,7 +85,7 @@ describe('createMedicationDispense', () => {
 
   it('maps medication code from prescription', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.medicationCodeableConcept.coding?.[0]?.code).toBe('AMX500')
     expect(dispense.medicationCodeableConcept.text).toBe('Amoxicillin 500mg Capsule')
@@ -93,21 +93,21 @@ describe('createMedicationDispense', () => {
 
   it('includes brand name in Ultranos extension when provided', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense._ultranos.brandName).toBe('Amoxil')
   })
 
   it('includes batch/lot in Ultranos extension when provided', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense._ultranos.batchLot).toBe('LOT-2026-04A')
   })
 
   it('omits brand/batch when empty', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[1]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[1]!, 'Practitioner/pharmacist-001')
 
     expect(dispense._ultranos.brandName).toBeUndefined()
     expect(dispense._ultranos.batchLot).toBeUndefined()
@@ -115,7 +115,7 @@ describe('createMedicationDispense', () => {
 
   it('assigns HLC timestamp in Ultranos extension', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense._ultranos.hlcTimestamp).toBeTruthy()
     expect(typeof dispense._ultranos.hlcTimestamp).toBe('string')
@@ -123,14 +123,14 @@ describe('createMedicationDispense', () => {
 
   it('sets status to completed', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.status).toBe('completed')
   })
 
   it('sets whenHandedOver to current ISO timestamp', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.whenHandedOver).toBeTruthy()
     // Should be a valid ISO date string
@@ -139,8 +139,8 @@ describe('createMedicationDispense', () => {
 
   it('generates a unique UUID id', () => {
     const items = makeItems()
-    const d1 = createMedicationDispense(items[0]!, 'pharmacist-001')
-    const d2 = createMedicationDispense(items[1]!, 'pharmacist-001')
+    const d1 = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
+    const d2 = createMedicationDispense(items[1]!, 'Practitioner/pharmacist-001')
 
     expect(d1.id).toBeTruthy()
     expect(d2.id).toBeTruthy()
@@ -149,7 +149,7 @@ describe('createMedicationDispense', () => {
 
   it('includes dosage instruction from the prescription', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.dosageInstruction).toBeTruthy()
     expect(dispense.dosageInstruction![0]!.text).toContain('1 capsule')
@@ -159,7 +159,7 @@ describe('createMedicationDispense', () => {
 describe('MedicationDispense Dexie persistence', () => {
   it('saves a dispense to the local ledger', async () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     await db.dispenses.put(dispense)
 
@@ -172,7 +172,7 @@ describe('MedicationDispense Dexie persistence', () => {
   it('can query dispenses by subject reference', async () => {
     const items = makeItems()
     for (const item of items) {
-      const dispense = createMedicationDispense(item, 'pharmacist-001')
+      const dispense = createMedicationDispense(item, 'Practitioner/pharmacist-001')
       await db.dispenses.put(dispense)
     }
 
@@ -186,7 +186,7 @@ describe('MedicationDispense Dexie persistence', () => {
 
   it('can query dispenses by HLC timestamp', async () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
     await db.dispenses.put(dispense)
 
     const results = await db.dispenses
@@ -201,14 +201,14 @@ describe('MedicationDispense Dexie persistence', () => {
 describe('MedicationDispense meta fields', () => {
   it('includes versionId in meta', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense.meta.versionId).toBe('1')
   })
 
   it('includes fulfillment tracking when context provided', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001', {
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001', {
       fulfilledCount: 1,
       totalCount: 2,
     })
@@ -219,7 +219,7 @@ describe('MedicationDispense meta fields', () => {
 
   it('omits fulfillment tracking when no context provided', () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     expect(dispense._ultranos.fulfilledCount).toBeUndefined()
     expect(dispense._ultranos.totalCount).toBeUndefined()
@@ -229,7 +229,7 @@ describe('MedicationDispense meta fields', () => {
 describe('Dispense audit logging', () => {
   it('logs a dispense audit event on creation', async () => {
     const items = makeItems()
-    const dispense = createMedicationDispense(items[0]!, 'pharmacist-001')
+    const dispense = createMedicationDispense(items[0]!, 'Practitioner/pharmacist-001')
 
     await logDispenseEvent(dispense, 'created')
 

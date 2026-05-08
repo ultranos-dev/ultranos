@@ -52,6 +52,7 @@ export const FhirConditionSchema = z.object({
   code: CodeableConceptSchema,
   subject: ReferenceSchema,
   encounter: ReferenceSchema,
+  recorder: ReferenceSchema.optional(),
   recordedDate: z.string().datetime().optional(),
   _ultranos: z.object({
     isOfflineCreated: z.boolean(),

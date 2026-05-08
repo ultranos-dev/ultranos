@@ -44,3 +44,6 @@ export type { ReAuthModalProps } from './ReAuthModal.js'
 
 export { SessionManagerProvider } from './SessionManagerProvider.js'
 export type { SessionManagerProviderProps } from './SessionManagerProvider.js'
+
+export { AppShell } from './AppShell.js'
+export type { AppShellProps, AppShellUser, NavItem } from './AppShell.js'

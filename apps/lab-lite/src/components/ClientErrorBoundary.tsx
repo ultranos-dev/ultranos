@@ -4,6 +4,7 @@ import { useCallback, useState, type ReactNode } from 'react'
 import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
 import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
+import { AuthGuard } from './AuthGuard'
 
 const DB_NAME = 'lab-lite'
 
@@ -40,10 +41,12 @@ export function ClientErrorBoundary({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary appName="lab-lite" dbName={DB_NAME}>
       <AsyncErrorBridge>
-        <SyncAwareStaleDataBanner />
-        <SessionTimeoutWrapper>
-          {children}
-        </SessionTimeoutWrapper>
+        <AuthGuard>
+          <SyncAwareStaleDataBanner />
+          <SessionTimeoutWrapper>
+            {children}
+          </SessionTimeoutWrapper>
+        </AuthGuard>
       </AsyncErrorBridge>
     </ErrorBoundary>
   )

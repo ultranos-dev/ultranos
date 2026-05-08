@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useSoapNoteStore } from '@/stores/soap-note-store'
 import { db } from '@/lib/db'
+
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      getPractitionerRef: () => 'test-practitioner-123',
+    }),
+  },
+}))
 
 function resetStore() {
   useSoapNoteStore.setState({
@@ -80,6 +88,34 @@ describe('soap note store', () => {
       expect(entries.length).toBe(2)
       expect(entries[0]!.subjective).toBe('v1')
       expect(entries[1]!.subjective).toBe('v2')
+    })
+
+    it('should include assessorRef from auth session', async () => {
+      useSoapNoteStore.getState().initForEncounter(TEST_ENCOUNTER_ID)
+      useSoapNoteStore.getState().setSubjective('headache')
+      await useSoapNoteStore.getState().persistToLedger()
+
+      const entries = await db.soapLedger.toArray()
+      expect(entries[0]!.assessorRef).toBe('Practitioner/test-practitioner-123')
+    })
+
+    it('should set autosaveStatus to error when no auth session exists', async () => {
+      const mod = await import('@/stores/auth-session-store')
+      const original = mod.useAuthSessionStore.getState
+      try {
+        mod.useAuthSessionStore.getState = () => ({
+          ...original(),
+          getPractitionerRef: () => { throw new Error('No authenticated session') },
+        })
+
+        useSoapNoteStore.getState().initForEncounter(TEST_ENCOUNTER_ID)
+        useSoapNoteStore.getState().setSubjective('headache')
+        await useSoapNoteStore.getState().persistToLedger()
+
+        expect(useSoapNoteStore.getState().autosaveStatus).toBe('error')
+      } finally {
+        mod.useAuthSessionStore.getState = original
+      }
     })
 
     it('should include HLC timestamp in each ledger entry', async () => {

@@ -7,6 +7,7 @@ import { getVitalRangeStatus, type VitalKey } from '@/lib/vitals-config'
 import { mapVitalsToObservations, LOINC } from '@/lib/vitals-fhir-mapper'
 import type { RangeStatus } from '@/components/clinical/vitals-form'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
 
@@ -103,6 +104,8 @@ export const useVitalsStore = create<VitalsState>()(
         const nowIso = new Date().toISOString()
         const bmi = get().getBmi()
 
+        const practitionerRef = `Practitioner/${useAuthSessionStore.getState().getPractitionerRef()}`
+
         const observations = mapVitalsToObservations(
           { weight, height, systolic, diastolic, temperature, bmi },
           {
@@ -110,6 +113,7 @@ export const useVitalsStore = create<VitalsState>()(
             encounterId,
             hlcTimestamp: serializeHlc(ts),
             nowIso,
+            practitionerRef,
           },
         )
 

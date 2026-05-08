@@ -11,6 +11,7 @@ describe('mapIcd10ToCondition', () => {
     encounterId: 'enc-123',
     patientId: 'pat-456',
     rank: 'primary' as const,
+    practitionerRef: 'Practitioner/test-practitioner-123',
   }
 
   it('produces a valid FHIR Condition resource', () => {
@@ -62,6 +63,13 @@ describe('mapIcd10ToCondition', () => {
   it('includes display text in code.text', () => {
     const condition = mapIcd10ToCondition(input)
     expect(condition.code.text).toBe(input.item.display)
+  })
+
+  it('sets recorder reference from practitionerRef', () => {
+    const condition = mapIcd10ToCondition(input)
+    expect(condition.recorder).toEqual({
+      reference: 'Practitioner/test-practitioner-123',
+    })
   })
 
   it('throws if encounterId is empty', () => {

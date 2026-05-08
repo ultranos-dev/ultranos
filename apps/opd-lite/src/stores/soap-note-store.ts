@@ -4,6 +4,7 @@ import { hlc, serializeHlc } from '@/lib/hlc'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
 
@@ -82,11 +83,14 @@ export const useSoapNoteStore = create<SoapNoteState>()(
         const ts = hlc.now()
         const nowIso = new Date().toISOString()
 
+        const practitionerRef = `Practitioner/${useAuthSessionStore.getState().getPractitionerRef()}`
+
         const ledgerEntry = {
           id: crypto.randomUUID(),
           encounterId,
           subjective,
           objective,
+          assessorRef: practitionerRef,
           hlcTimestamp: serializeHlc(ts),
           createdAt: nowIso,
         }

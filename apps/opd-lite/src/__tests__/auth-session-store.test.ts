@@ -24,7 +24,7 @@ describe('useAuthSessionStore', () => {
     const { useAuthSessionStore } = await import('../stores/auth-session-store')
     useAuthSessionStore.getState().setSession({
       userId: 'auth-uuid-123',
-      practitionerId: 'Practitioner/prac-001',
+      practitionerId: 'prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
       email: 'doctor@hospital.com',
@@ -34,7 +34,7 @@ describe('useAuthSessionStore', () => {
     expect(state.isAuthenticated).toBe(true)
     expect(state.session).toEqual({
       userId: 'auth-uuid-123',
-      practitionerId: 'Practitioner/prac-001',
+      practitionerId: 'prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
       email: 'doctor@hospital.com',
@@ -45,13 +45,13 @@ describe('useAuthSessionStore', () => {
     const { useAuthSessionStore } = await import('../stores/auth-session-store')
     useAuthSessionStore.getState().setSession({
       userId: 'auth-uuid-123',
-      practitionerId: 'Practitioner/prac-001',
+      practitionerId: 'prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
       email: 'doctor@hospital.com',
     })
 
-    expect(useAuthSessionStore.getState().getPractitionerRef()).toBe('Practitioner/prac-001')
+    expect(useAuthSessionStore.getState().getPractitionerRef()).toBe('prac-001')
   })
 
   it('getPractitionerRef throws when not authenticated', async () => {
@@ -65,7 +65,7 @@ describe('useAuthSessionStore', () => {
     const { useAuthSessionStore } = await import('../stores/auth-session-store')
     useAuthSessionStore.getState().setSession({
       userId: 'auth-uuid-123',
-      practitionerId: 'Practitioner/prac-001',
+      practitionerId: 'prac-001',
       role: 'DOCTOR',
       sessionId: 'sess-abc',
       email: 'doctor@hospital.com',

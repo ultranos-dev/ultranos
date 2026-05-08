@@ -23,7 +23,21 @@ export async function syncDispenseToHub(
   ) ?? ''
   const medicationCode = dispense.medicationCodeableConcept.coding?.[0]?.code ?? ''
   const medicationDisplay = dispense.medicationCodeableConcept.text ?? ''
-  const pharmacistRef = dispense.performer?.[0]?.actor.reference ?? ''
+
+  // Belt-and-suspenders: derive pharmacistRef from auth store, not from dispense record
+  let pharmacistRef: string
+  try {
+    pharmacistRef = useAuthSessionStore.getState().getPractitionerRef()
+  } catch {
+    // Auth store unavailable — cannot construct valid payload without identity, do not queue
+    return { synced: false, queued: false, error: 'auth-unavailable' }
+  }
+
+  // Log warning if stored performer differs from auth store (no PHI)
+  const storedPerformerRef = dispense.performer?.[0]?.actor.reference ?? ''
+  if (storedPerformerRef && storedPerformerRef !== pharmacistRef) {
+    console.warn('[dispense-sync] Performer ref mismatch: stored performer differs from auth session identity')
+  }
 
   // Validate required fields — empty strings will fail Hub Zod validation forever
   if (!prescriptionId || !medicationCode || !medicationDisplay || !pharmacistRef) {

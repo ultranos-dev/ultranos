@@ -426,3 +426,26 @@
 
 - **D125: No error handling for signOut in MFA rejection path** — `login/page.tsx:68`. If `signOut()` throws when rejecting a user without TOTP, exception propagates unhandled. Partial Supabase session remains active. Pre-existing in login page, not introduced by this change.
 - **D126: No error handling for signOut in "Back to sign in" handler** — `login/page.tsx:137`. `handleBackToSignIn` has no try-catch. If `signOut()` throws, partial session persists. Pre-existing in login page.
+
+## Deferred from: code review of 14-5-route-protection-middleware (2026-05-08)
+
+- **AuthGuard does not react to session changes/expiry after mount** — `useEffect` runs once with `[isLoginPage]` dependency. No `onAuthStateChange` listener. If Supabase session expires while user is on a protected page, AuthGuard won't re-check until next mount. SessionTimeoutWrapper partially covers this but there's a gap window. Architectural enhancement beyond story scope.
+- **Three near-identical AuthGuard implementations (DRY violation)** — AuthGuard is copy-pasted across OPD Lite, Pharmacy Lite, and Lab Lite with minor variations (JWT decode vs user_metadata, hardcoded role). Spec explicitly chose per-app AuthGuard due to per-app auth store differences. Extracting to shared package with config injection is a future optimization.
+
+## Deferred from: code review of 14-4-shared-appshell-component-in-ui-kit (2026-05-05)
+
+- **W1: `dangerouslySetInnerHTML` for `<style>` injection** — Tokens are hardcoded HSL values (not user-controlled), so current risk is low. Pattern is fragile if tokens ever become dynamic or sourced from external config. [`packages/ui-kit/src/AppShell.tsx`]
+- **W2: Hamburger resize stale state on viewport changes** — `mobileNavOpen` state stays `true` when viewport crosses 641px breakpoint via resize or device rotation. Nav drawer reappears unexpectedly on resize back to mobile. Needs `matchMedia` listener to reset state. [`packages/ui-kit/src/AppShell.tsx`]
+- **W3: `navItems` keyed by `href` — duplicate href risk** — `key={item.href}` assumes unique hrefs. Duplicate hrefs produce React key warnings. Low probability in practice. [`packages/ui-kit/src/AppShell.tsx:156`]
+- **W4: No hover/focus-visible styles on interactive elements**
+
+## Deferred from: code review of 14-6-opd-lite-practitioner-reference-replacement (2026-05-08)
+
+- **W5: `ReferenceSchema` accepts any string — no FHIR reference format validation** — `ReferenceSchema` in `common.schema.ts` uses `z.string()` with no format check. Malformed references (empty, missing `/`, wrong resource type) pass validation and persist to IndexedDB, only failing on Hub API sync. Add a `.refine()` or regex guard when FHIR validation is hardened. [`packages/shared-types/src/fhir/common.schema.ts`] — Inline styles cannot express pseudo-classes. No visual feedback on hover or keyboard focus for nav links, avatar button, or dropdown items. Known limitation of the project's inline-style approach. [`packages/ui-kit/src/AppShell.tsx`]
+
+## Deferred from: code review of 14-6a-pharmacy-lite-identity-trust-fix (2026-05-08)
+
+- **W6: Stale pharmacistRef baked into queued retry payloads** — When Hub sync fails (offline), `enqueueForRetry` serializes the mutation payload containing the current `pharmacistRef`. If a different pharmacist logs in before retry fires, the queued payload still contains the original pharmacist's identity. Pre-existing sync design issue — retry would need to re-derive identity at replay time.
+- **W7: TOCTOU between dual getPractitionerRef() calls** — `confirmDispense` calls `getPractitionerRef()` and then `syncDispenseToHub` calls it again independently (belt-and-suspenders per spec). Session could theoretically expire between the two calls, creating a window where the local dispense has one ref and the Hub sync fails or uses a different ref. Intentional tradeoff per spec design.
+- **W8: Audit service reads pharmacistRef from dispense.performer, not from auth store** — `logDispenseEvent` and `auditPhiAccess` extract pharmacistRef from `dispense.performer[0].actor.reference` rather than from the auth session store. Inconsistent with the security posture of this story, but audit service was out of scope.
+- **W9: No error state in fulfillment store for auth failure** — When `getPractitionerRef()` throws in `confirmDispense`, the error propagates as an unhandled promise rejection. The store has no dedicated error field — a UI reading `syncStatus` for errors will miss auth failures. UI concern beyond story scope.

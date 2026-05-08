@@ -10,7 +10,7 @@ export type LocalMedicationDispense = FhirMedicationDispense
  */
 export function createMedicationDispense(
   item: FulfillmentItem,
-  pharmacistId: string,
+  pharmacistRef: `Practitioner/${string}`,
   fulfillmentContext?: { fulfilledCount: number; totalCount: number },
 ): FhirMedicationDispense {
   const { prescription, brandName, batchLot } = item
@@ -40,7 +40,7 @@ export function createMedicationDispense(
     },
     subject: { reference: `Patient/${prescription.pat}` },
     performer: [
-      { actor: { reference: `Practitioner/${pharmacistId}` } },
+      { actor: { reference: pharmacistRef } },
     ],
     authorizingPrescription: [
       { reference: `MedicationRequest/${prescription.id}` },

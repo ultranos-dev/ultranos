@@ -128,8 +128,11 @@ export default function LoginPage() {
         email: user.email,
       })
 
-      // MFA verified — redirect to dashboard
-      window.location.href = '/'
+      // MFA verified — redirect to returnUrl or dashboard
+      const params = new URLSearchParams(window.location.search)
+      const returnUrl = params.get('returnUrl') ?? '/'
+      const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
+      window.location.href = safeUrl
     } catch {
       setError('An unexpected error occurred during MFA verification')
     } finally {

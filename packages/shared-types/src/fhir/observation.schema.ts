@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   CodingSchema,
   CodeableConceptSchema,
+  ReferenceSchema,
   FhirMetaSchema,
 } from './common.schema.js'
 
@@ -46,6 +47,7 @@ export const FhirObservationSchema = z.object({
     display: z.string().optional(),
   }),
   effectiveDateTime: z.string().datetime(),
+  performer: z.array(ReferenceSchema).optional(),
   valueQuantity: QuantitySchema.optional(),
   component: z.array(ObservationComponentSchema).optional(),
   _ultranos: z.object({

@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-05T00:00:00.000000'
+last_updated: '2026-05-08T12:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -146,10 +146,10 @@ development_status:
   14-3a-opd-lite-session-timeout-integration: done
   14-3b-pharmacy-lite-session-timeout-integration: done
   14-3c-lab-lite-session-timeout-integration: done
-  14-4-shared-appshell-component-in-ui-kit: ready-for-dev
-  14-5-route-protection-middleware: ready-for-dev
-  14-6-opd-lite-practitioner-reference-replacement: ready-for-dev
-  14-6a-pharmacy-lite-identity-trust-fix: ready-for-dev
+  14-4-shared-appshell-component-in-ui-kit: done
+  14-5-route-protection-middleware: done
+  14-6-opd-lite-practitioner-reference-replacement: done
+  14-6a-pharmacy-lite-identity-trust-fix: done
   epic-14-retrospective: optional
 
   # Phase 1: PWA Infrastructure & Installability

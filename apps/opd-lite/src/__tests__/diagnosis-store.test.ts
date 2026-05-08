@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useDiagnosisStore } from '@/stores/diagnosis-store'
 import { db } from '@/lib/db'
+
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      getPractitionerRef: () => 'test-practitioner-123',
+    }),
+  },
+}))
 
 describe('useDiagnosisStore', () => {
   const testItem = {
@@ -44,6 +52,16 @@ describe('useDiagnosisStore', () => {
 
     expect(condition.encounter.reference).toBe(`Encounter/${encounterId}`)
     expect(condition.subject.reference).toBe(`Patient/${patientId}`)
+  })
+
+  it('sets recorder from auth session practitioner ref', async () => {
+    const condition = await useDiagnosisStore
+      .getState()
+      .addDiagnosis(testItem, encounterId, patientId, 'primary')
+
+    expect(condition.recorder).toEqual({
+      reference: 'Practitioner/test-practitioner-123',
+    })
   })
 
   it('soft-deletes a diagnosis (sets clinicalStatus to inactive) and removes from store', async () => {
@@ -123,6 +141,25 @@ describe('useDiagnosisStore', () => {
 
     const updated = useDiagnosisStore.getState().conditions[0]
     expect(updated.meta.versionId).toBe('2')
+  })
+
+  it('throws when no auth session exists', async () => {
+    const mod = await import('@/stores/auth-session-store')
+    const original = mod.useAuthSessionStore.getState
+    try {
+      mod.useAuthSessionStore.getState = () => ({
+        ...original(),
+        getPractitionerRef: () => { throw new Error('No authenticated session') },
+      })
+
+      await expect(
+        useDiagnosisStore
+          .getState()
+          .addDiagnosis(testItem, encounterId, patientId, 'primary'),
+      ).rejects.toThrow('No authenticated session')
+    } finally {
+      mod.useAuthSessionStore.getState = original
+    }
   })
 
   it('rejects concurrent addDiagnosis calls', async () => {

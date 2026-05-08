@@ -1,7 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useVitalsStore } from '@/stores/vitals-store'
 import { db } from '@/lib/db'
 import { LOINC } from '@/lib/vitals-fhir-mapper'
+
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: {
+    getState: () => ({
+      getPractitionerRef: () => 'test-practitioner-123',
+    }),
+  },
+}))
 
 beforeEach(async () => {
   useVitalsStore.getState().clearPhiState()
@@ -91,6 +99,38 @@ describe('useVitalsStore', () => {
     expect(weightObs!.valueQuantity!.value).toBe(70)
     expect(weightObs!.encounter.reference).toBe('Encounter/enc-1')
     expect(weightObs!.subject.reference).toBe('Patient/pat-1')
+  })
+
+  it('sets performer from auth session practitioner ref', async () => {
+    useVitalsStore.getState().initForEncounter('enc-1', 'pat-1')
+    useVitalsStore.getState().setWeight('70')
+
+    await useVitalsStore.getState().persistObservations()
+
+    const saved = await db.observations.toArray()
+    expect(saved[0].performer).toEqual([
+      { reference: 'Practitioner/test-practitioner-123' },
+    ])
+  })
+
+  it('throws when no auth session exists', async () => {
+    const mod = await import('@/stores/auth-session-store')
+    const original = mod.useAuthSessionStore.getState
+    try {
+      mod.useAuthSessionStore.getState = () => ({
+        ...original(),
+        getPractitionerRef: () => { throw new Error('No authenticated session') },
+      })
+
+      useVitalsStore.getState().initForEncounter('enc-1', 'pat-1')
+      useVitalsStore.getState().setWeight('70')
+
+      await useVitalsStore.getState().persistObservations()
+
+      expect(useVitalsStore.getState().autosaveStatus).toBe('error')
+    } finally {
+      mod.useAuthSessionStore.getState = original
+    }
   })
 
   it('appends new observations on re-save (Tier 2 addenda)', async () => {

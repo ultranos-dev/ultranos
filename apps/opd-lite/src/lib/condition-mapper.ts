@@ -9,6 +9,7 @@ interface MapConditionInput {
   encounterId: string
   patientId: string
   rank: DiagnosisRank
+  practitionerRef: string
 }
 
 export function mapIcd10ToCondition(input: MapConditionInput): FhirCondition {
@@ -17,6 +18,9 @@ export function mapIcd10ToCondition(input: MapConditionInput): FhirCondition {
   }
   if (!input.patientId?.trim()) {
     throw new Error('patientId is required')
+  }
+  if (!input.practitionerRef?.trim()) {
+    throw new Error('practitionerRef is required')
   }
 
   const nowIso = new Date().toISOString()
@@ -59,6 +63,9 @@ export function mapIcd10ToCondition(input: MapConditionInput): FhirCondition {
     },
     encounter: {
       reference: `Encounter/${input.encounterId}`,
+    },
+    recorder: {
+      reference: input.practitionerRef,
     },
     recordedDate: nowIso,
     _ultranos: {

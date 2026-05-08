@@ -6,6 +6,7 @@ const ctx = {
   encounterId: '00000000-0000-0000-0000-000000000002',
   hlcTimestamp: '1000000000000:00000:test-node',
   nowIso: '2026-04-28T12:00:00.000Z',
+  practitionerRef: 'Practitioner/test-practitioner-123',
 }
 
 describe('mapVitalsToObservations', () => {
@@ -130,6 +131,16 @@ describe('mapVitalsToObservations', () => {
       ctx,
     )
     expect(obs[0]._ultranos.isOfflineCreated).toBe(true)
+  })
+
+  it('sets performer reference from practitionerRef', () => {
+    const obs = mapVitalsToObservations(
+      { weight: '70', height: '', systolic: '', diastolic: '', temperature: '', bmi: null },
+      ctx,
+    )
+    expect(obs[0].performer).toEqual([
+      { reference: 'Practitioner/test-practitioner-123' },
+    ])
   })
 
   it('includes HLC timestamp', () => {

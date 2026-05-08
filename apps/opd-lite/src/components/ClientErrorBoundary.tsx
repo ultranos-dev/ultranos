@@ -5,6 +5,7 @@ import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos
 import { useSyncStore } from '@/stores/sync-store'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
+import { AuthGuard } from './AuthGuard'
 
 const DB_NAME = 'opd-lite'
 
@@ -46,10 +47,12 @@ export function ClientErrorBoundary({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary appName="opd-lite" dbName={DB_NAME} onClearData={handleClearEncryptionKey}>
       <AsyncErrorBridge>
-        <SyncAwareStaleDataBanner />
-        <SessionTimeoutWrapper>
-          {children}
-        </SessionTimeoutWrapper>
+        <AuthGuard>
+          <SyncAwareStaleDataBanner />
+          <SessionTimeoutWrapper>
+            {children}
+          </SessionTimeoutWrapper>
+        </AuthGuard>
       </AsyncErrorBridge>
     </ErrorBoundary>
   )

@@ -19,6 +19,7 @@ export interface SoapLedgerEntry {
   encounterId: string
   subjective: string
   objective: string
+  assessorRef: string
   hlcTimestamp: string
   createdAt: string
 }

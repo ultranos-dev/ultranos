@@ -5,6 +5,7 @@ import type { Icd10Item } from '@/lib/vocab-search'
 import type { DiagnosisRank } from '@/lib/condition-mapper'
 import { mapIcd10ToCondition } from '@/lib/condition-mapper'
 import { db } from '@/lib/db'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { enqueueSyncAction } from '@ultranos/sync-engine'
 import { syncQueue } from '@/lib/sync-queue'
@@ -49,18 +50,20 @@ export const useDiagnosisStore = create<DiagnosisState>()(
 
       const epochAtStart = storeEpoch
 
+      const practitionerRef = `Practitioner/${useAuthSessionStore.getState().getPractitionerRef()}`
+
       set((state) => {
         state.isSaving = true
       })
 
-      const condition = mapIcd10ToCondition({
-        item,
-        encounterId,
-        patientId,
-        rank,
-      })
-
       try {
+        const condition = mapIcd10ToCondition({
+          item,
+          encounterId,
+          patientId,
+          rank,
+          practitionerRef,
+        })
         await db.conditions.put(condition)
 
         void enqueueSyncAction(syncQueue, {

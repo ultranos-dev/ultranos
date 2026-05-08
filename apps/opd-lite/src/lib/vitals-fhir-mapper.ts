@@ -30,6 +30,7 @@ interface MappingContext {
   encounterId: string
   hlcTimestamp: string
   nowIso: string
+  practitionerRef?: string
 }
 
 function makeObservation(
@@ -59,6 +60,7 @@ function makeObservation(
     subject: { reference: `Patient/${ctx.patientId}` },
     encounter: { reference: `Encounter/${ctx.encounterId}` },
     effectiveDateTime: ctx.nowIso,
+    performer: [{ reference: ctx.practitionerRef }],
     _ultranos: {
       isOfflineCreated: true,
       hlcTimestamp: ctx.hlcTimestamp,

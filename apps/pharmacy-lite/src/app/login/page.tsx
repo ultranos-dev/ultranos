@@ -142,8 +142,11 @@ export default function LoginPage() {
         email: userEmail,
       })
 
-      // MFA verified — redirect to scanner view
-      window.location.href = '/'
+      // MFA verified — redirect to returnUrl or scanner view
+      const params = new URLSearchParams(window.location.search)
+      const returnUrl = params.get('returnUrl') ?? '/'
+      const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
+      window.location.href = safeUrl
     } catch {
       await supabase.auth.signOut()
       setError('An unexpected error occurred during MFA verification')

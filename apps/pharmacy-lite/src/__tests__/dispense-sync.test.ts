@@ -8,10 +8,12 @@ vi.stubGlobal('fetch', fetchMock)
 
 // Mock auth session store (imported by dispense-sync)
 const mockGetAccessToken = vi.fn().mockResolvedValue('test-token')
+const mockGetPractitionerRef = vi.fn().mockReturnValue('Practitioner/practitioner-abc-123')
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: {
     getState: () => ({
-      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      session: { userId: 'u1', practitionerId: 'practitioner-abc-123', role: 'PHARMACIST', sessionId: 's1', email: 'pharm@test.local' },
+      getPractitionerRef: mockGetPractitionerRef,
       getAccessToken: mockGetAccessToken,
     }),
   },
@@ -30,7 +32,7 @@ function makeSampleDispense(overrides?: Partial<LocalMedicationDispense>): Local
       text: 'Amoxicillin 500mg Capsule',
     },
     subject: { reference: 'Patient/pat-001' },
-    performer: [{ actor: { reference: 'Practitioner/pharmacist-001' } }],
+    performer: [{ actor: { reference: 'Practitioner/practitioner-abc-123' } }],
     authorizingPrescription: [{ reference: 'MedicationRequest/rx-001' }],
     whenHandedOver: '2026-04-29T12:00:00Z',
     dosageInstruction: [{ text: '1 capsule, 3× per day, for 7 days' }],
@@ -146,5 +148,45 @@ describe('syncDispenseToHub', () => {
     expect(queued[0]!.payload).toBeTruthy()
     const payload = JSON.parse(queued[0]!.payload)
     expect(payload.dispenseId).toBe('dispense-001')
+  })
+
+  it('derives pharmacistRef from auth store, not from dispense performer (AC: #4)', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        result: {
+          data: {
+            json: { success: true, dispenseId: 'dispense-001', prescriptionStatus: 'completed' },
+          },
+        },
+      }),
+    })
+
+    // Dispense record has a DIFFERENT performer than auth store
+    const dispense = makeSampleDispense({
+      performer: [{ actor: { reference: 'Practitioner/forged-id' } }],
+    })
+    const result = await syncDispenseToHub(dispense)
+
+    expect(result.synced).toBe(true)
+    expect(mockGetPractitionerRef).toHaveBeenCalled()
+
+    // Verify the Hub payload uses auth store value, not the forged performer
+    const body = JSON.parse(fetchMock.mock.calls[0]![1]?.body as string)
+    expect(body.json.pharmacistRef).toBe('Practitioner/practitioner-abc-123')
+  })
+
+  it('aborts sync when auth store is unavailable (session expired)', async () => {
+    mockGetPractitionerRef.mockImplementationOnce(() => {
+      throw new Error('No authenticated session')
+    })
+
+    const dispense = makeSampleDispense()
+    const result = await syncDispenseToHub(dispense)
+
+    expect(result.synced).toBe(false)
+    expect(result.queued).toBe(false)
+    expect(result.error).toBe('auth-unavailable')
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

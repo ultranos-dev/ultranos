@@ -7,12 +7,15 @@ import { db } from '@/lib/db'
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-// Mock auth session store (cascading dep via dispense-sync)
+// Mock auth session store (used by fulfillment-store and cascading dep via dispense-sync)
+const mockGetPractitionerRef = vi.fn().mockReturnValue('Practitioner/practitioner-abc-123')
+const mockGetAccessToken = vi.fn().mockResolvedValue('test-token')
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: {
     getState: () => ({
-      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
-      getAccessToken: vi.fn().mockResolvedValue('test-token'),
+      session: { userId: 'u1', practitionerId: 'practitioner-abc-123', role: 'PHARMACIST', sessionId: 's1', email: 'pharm@test.local' },
+      getPractitionerRef: mockGetPractitionerRef,
+      getAccessToken: mockGetAccessToken,
     }),
   },
 }))
@@ -145,7 +148,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
     useFulfillmentStore.getState().startReview()
 
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     expect(useFulfillmentStore.getState().phase).toBe('completed')
     expect(useFulfillmentStore.getState().syncStatus.isPending).toBe(false)
@@ -160,7 +163,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     })
 
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     const dispenses = await db.dispenses.toArray()
     expect(dispenses).toHaveLength(2) // 2 items in sampleRx
@@ -175,7 +178,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     })
 
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     const auditEntries = await db.dispenseAuditLog.toArray()
     expect(auditEntries).toHaveLength(2)
@@ -186,7 +189,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     fetchMock.mockRejectedValue(new Error('offline'))
 
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     expect(useFulfillmentStore.getState().phase).toBe('completed')
 
@@ -205,7 +208,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
 
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
     useFulfillmentStore.getState().toggleItem('rx-002') // deselect 2nd item
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     const dispenses = await db.dispenses.toArray()
     expect(dispenses).toHaveLength(1)
@@ -215,7 +218,7 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
   it('does nothing when no items selected', async () => {
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
     useFulfillmentStore.getState().deselectAll()
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     expect(useFulfillmentStore.getState().phase).toBe('loaded')
     const dispenses = await db.dispenses.toArray()
@@ -231,11 +234,44 @@ describe('FulfillmentStore confirmDispense (Story 4.3)', () => {
     })
 
     useFulfillmentStore.getState().loadPrescriptions(sampleRx)
-    await useFulfillmentStore.getState().confirmDispense('pharmacist-001')
+    await useFulfillmentStore.getState().confirmDispense()
 
     const { syncStatus } = useFulfillmentStore.getState()
     expect(syncStatus.isPending).toBe(false)
     expect(syncStatus.pendingCount).toBe(0)
     expect(syncStatus.lastSyncResult).toBeTruthy()
+  })
+
+  it('reads practitioner identity from auth session store, not from caller (AC: #1, #3)', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: { data: { json: { success: true, dispenseId: 'd-1', prescriptionStatus: 'completed' } } },
+      }),
+    })
+
+    useFulfillmentStore.getState().loadPrescriptions(sampleRx)
+    await useFulfillmentStore.getState().confirmDispense()
+
+    // Verify getPractitionerRef was called (identity from auth store, not client-supplied)
+    expect(mockGetPractitionerRef).toHaveBeenCalled()
+    // confirmDispense() accepts no arguments — TypeScript enforces this
+    expect(useFulfillmentStore.getState().confirmDispense.length).toBe(0)
+  })
+
+  it('throws when auth session is expired (session expired guard)', async () => {
+    mockGetPractitionerRef.mockImplementationOnce(() => {
+      throw new Error('No authenticated session — cannot resolve Practitioner reference')
+    })
+
+    useFulfillmentStore.getState().loadPrescriptions(sampleRx)
+
+    await expect(
+      useFulfillmentStore.getState().confirmDispense(),
+    ).rejects.toThrow('Session expired — re-authentication required')
+
+    // Phase should not have transitioned
+    expect(useFulfillmentStore.getState().phase).not.toBe('dispensing')
+    expect(useFulfillmentStore.getState().phase).not.toBe('completed')
   })
 })

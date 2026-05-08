@@ -1,6 +1,6 @@
 # Story 14.4: Shared AppShell Component in UI-Kit
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,52 +24,52 @@ so that all PWA spoke apps have a consistent, accessible navigation bar without 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `AppShell` component (AC: #1, #2, #3, #4, #5, #6, #7, #8, #9, #10)
-  - [ ] Create `packages/ui-kit/src/AppShell.tsx`
-  - [ ] Add `'use client'` directive at top of file
-  - [ ] Define and export interfaces: `NavItem`, `AppShellUser`, `AppShellProps`
-  - [ ] Implement navbar layout with inline styles using design tokens from `src/tokens.ts`
-  - [ ] Navbar height: 56px, white background, border-bottom 1px solid neutral-200
-  - [ ] Left section: app name with font-weight 700, color primary-700
-  - [ ] Center section: navigation links with font-weight 500, color neutral-600, active state = primary-600 with underline
-  - [ ] Right section: slots for `syncIndicator` and `notificationBell` (rendered as-is via ReactNode)
-  - [ ] Right section: user avatar circle (32px, bg primary-100, text primary-700, font-weight 600, displays `user.initials`)
-  - [ ] Implement dropdown toggle on avatar click
-  - [ ] Dropdown: absolute positioned, white bg, shadow-lg, border neutral-200, border-radius 0.5rem
-  - [ ] Dropdown contents: user name (bold), role badge (pill: bg primary-50, text primary-700, font-size 0.75rem), "Settings" link, "Sign Out" button
-  - [ ] "Sign Out" button calls `onSignOut` callback
-  - [ ] Click outside dropdown closes it (use `useEffect` with document click listener)
-  - [ ] Keyboard: Enter/Space toggles dropdown, Escape closes it, Tab navigates dropdown items
-  - [ ] ARIA attributes: `aria-expanded`, `aria-haspopup="menu"`, `role="navigation"`, `role="menu"`, `role="menuitem"`
-  - [ ] When `user` is null/undefined, hide avatar and dropdown entirely
-  - [ ] Mobile responsive: hamburger button toggles navItems visibility, user menu remains visible
-  - [ ] Use logical CSS properties throughout for RTL safety (e.g., `paddingInlineStart`, `marginInlineEnd`, `insetInlineEnd`)
-  - [ ] `children` rendered below the navbar as main content area
+- [x] Task 1: Create `AppShell` component (AC: #1, #2, #3, #4, #5, #6, #7, #8, #9, #10)
+  - [x] Create `packages/ui-kit/src/AppShell.tsx`
+  - [x] Add `'use client'` directive at top of file
+  - [x] Define and export interfaces: `NavItem`, `AppShellUser`, `AppShellProps`
+  - [x] Implement navbar layout with inline styles using design tokens from `src/tokens.ts`
+  - [x] Navbar height: 56px, white background, border-bottom 1px solid neutral-200
+  - [x] Left section: app name with font-weight 700, color primary-700
+  - [x] Center section: navigation links with font-weight 500, color neutral-600, active state = primary-600 with underline
+  - [x] Right section: slots for `syncIndicator` and `notificationBell` (rendered as-is via ReactNode)
+  - [x] Right section: user avatar circle (32px, bg primary-100, text primary-700, font-weight 600, displays `user.initials`)
+  - [x] Implement dropdown toggle on avatar click
+  - [x] Dropdown: absolute positioned, white bg, shadow-lg, border neutral-200, border-radius 0.5rem
+  - [x] Dropdown contents: user name (bold), role badge (pill: bg primary-50, text primary-700, font-size 0.75rem), "Settings" link, "Sign Out" button
+  - [x] "Sign Out" button calls `onSignOut` callback
+  - [x] Click outside dropdown closes it (use `useEffect` with document click listener)
+  - [x] Keyboard: Enter/Space toggles dropdown, Escape closes it, Tab navigates dropdown items
+  - [x] ARIA attributes: `aria-expanded`, `aria-haspopup="menu"`, `role="navigation"`, `role="menu"`, `role="menuitem"`
+  - [x] When `user` is null/undefined, hide avatar and dropdown entirely
+  - [x] Mobile responsive: hamburger button toggles navItems visibility, user menu remains visible
+  - [x] Use logical CSS properties throughout for RTL safety (e.g., `paddingInlineStart`, `marginInlineEnd`, `insetInlineEnd`)
+  - [x] `children` rendered below the navbar as main content area
 
-- [ ] Task 2: Export `AppShell` from ui-kit (AC: #1)
-  - [ ] Update `packages/ui-kit/src/index.ts` to export:
+- [x] Task 2: Export `AppShell` from ui-kit (AC: #1)
+  - [x] Update `packages/ui-kit/src/index.ts` to export:
     - `AppShell` component
     - `AppShellProps` type
     - `AppShellUser` type
     - `NavItem` type
-  - [ ] Run `pnpm -F ui-kit build` to verify exports compile cleanly
+  - [x] Run `pnpm -F ui-kit build` to verify exports compile cleanly
 
-- [ ] Task 3: Unit tests with snapshots (AC: #11)
-  - [ ] Create `packages/ui-kit/src/__tests__/AppShell.test.tsx`
-  - [ ] Test: renders app name in navbar
-  - [ ] Test: renders nav items with correct active state styling
-  - [ ] Test: renders user avatar with initials when user prop provided
-  - [ ] Test: does not render avatar/dropdown when user is null
-  - [ ] Test: dropdown opens on avatar click, contains user name, role badge, Settings, Sign Out
-  - [ ] Test: Sign Out button calls onSignOut callback
-  - [ ] Test: dropdown closes on click outside
-  - [ ] Test: dropdown closes on Escape key
-  - [ ] Test: dropdown opens on Enter/Space key on avatar button
-  - [ ] Test: renders syncIndicator and notificationBell slot content
-  - [ ] Test: hamburger menu toggles nav visibility (simulated mobile)
-  - [ ] Snapshot test: default render with all props
-  - [ ] Snapshot test: render with user=null (unauthenticated state)
-  - [ ] Run `pnpm -F ui-kit test` to verify all tests pass
+- [x] Task 3: Unit tests with snapshots (AC: #11)
+  - [x] Create `packages/ui-kit/src/__tests__/AppShell.test.tsx`
+  - [x] Test: renders app name in navbar
+  - [x] Test: renders nav items with correct active state styling
+  - [x] Test: renders user avatar with initials when user prop provided
+  - [x] Test: does not render avatar/dropdown when user is null
+  - [x] Test: dropdown opens on avatar click, contains user name, role badge, Settings, Sign Out
+  - [x] Test: Sign Out button calls onSignOut callback
+  - [x] Test: dropdown closes on click outside
+  - [x] Test: dropdown closes on Escape key
+  - [x] Test: dropdown opens on Enter/Space key on avatar button
+  - [x] Test: renders syncIndicator and notificationBell slot content
+  - [x] Test: hamburger menu toggles nav visibility (simulated mobile)
+  - [x] Snapshot test: default render with all props
+  - [x] Snapshot test: render with user=null (unauthenticated state)
+  - [x] Run `pnpm -F ui-kit test` to verify all tests pass
 
 ## Dev Notes
 
@@ -173,3 +173,51 @@ Use CSS logical properties in all inline styles:
 - Existing component patterns: `packages/ui-kit/src/StaleDataBanner.tsx`, `packages/ui-kit/src/ErrorBoundary.tsx`
 - Existing test patterns: `packages/ui-kit/src/__tests__/SessionWarningToast.test.tsx`
 - RTL best practices: use logical CSS properties per CLAUDE.md guidelines
+
+## Dev Agent Record
+
+### Implementation Plan
+
+- Created `AppShell.tsx` following existing ui-kit patterns (StaleDataBanner, SessionWarningToast)
+- Used inline styles with design tokens from `tokens.ts` — no Tailwind, no external deps
+- All CSS properties use logical properties for RTL safety (paddingInlineStart, insetInlineEnd, etc.)
+- Responsive hamburger uses CSS media queries via injected `<style>` tag; hamburger visible in DOM always (hidden on desktop via `@media (min-width: 641px)`) so jsdom tests can find it
+- Click-outside detection via `mousedown` event listener on document
+- Focus management: dropdown open focuses first menu item, close returns focus to avatar button
+
+### Completion Notes
+
+- All 16 tests pass including 2 snapshot tests
+- Full ui-kit regression suite: 89 tests pass across 8 files, 0 failures
+- Build compiles cleanly with all exports
+- Component satisfies all 11 acceptance criteria
+
+## File List
+
+| File | Action |
+|------|--------|
+| `packages/ui-kit/src/AppShell.tsx` | NEW |
+| `packages/ui-kit/src/index.ts` | MODIFIED (added AppShell exports) |
+| `packages/ui-kit/src/__tests__/AppShell.test.tsx` | NEW |
+| `packages/ui-kit/src/__tests__/__snapshots__/AppShell.test.tsx.snap` | NEW (auto-generated) |
+
+### Review Findings
+
+- [x] [Review][Decision] D1: ARIA menu pattern — resolved: (A) full ARIA compliance with Arrow keys + roving tabindex
+- [x] [Review][Decision] D2: `onSignOut` silently does nothing when undefined — resolved: (B) hide Sign Out when callback missing
+- [x] [Review][Patch] P1: Avatar `aria-label` uses initials instead of descriptive label — fixed
+- [x] [Review][Patch] P2: Tab-on-last-item doesn't close dropdown per spec keyboard table — fixed
+- [x] [Review][Patch] P3: No test for Tab-on-last-item behavior — fixed (added test)
+- [x] [Review][Patch] P4: Physical `padding` shorthand in dropdown violates RTL logical properties — fixed
+- [x] [Review][Patch] P5: Non-menuitem children inside `role="menu"` need `role="presentation"` — fixed
+- [x] [Review][Patch] P6: Global CSS class names need scoping via `useId()` — fixed
+- [x] [Review][Patch] P7: Mobile nav doesn't close on link click — fixed
+- [x] [Review][Patch] P8: No RTL snapshot tests per CLAUDE.md requirement — fixed (2 RTL snapshots added)
+- [x] [Review][Defer] W1: `dangerouslySetInnerHTML` for style injection — low risk, tokens hardcoded [AppShell.tsx] — deferred, pre-existing pattern
+- [x] [Review][Defer] W2: Hamburger resize stale state on viewport changes [AppShell.tsx] — deferred, edge case
+- [x] [Review][Defer] W3: `navItems` keyed by `href` — duplicate href risk [AppShell.tsx] — deferred, low probability
+- [x] [Review][Defer] W4: No hover/focus-visible styles — inline style limitation [AppShell.tsx] — deferred, pre-existing constraint
+
+## Change Log
+
+- 2026-05-04: Implemented AppShell component with navbar, user dropdown, responsive hamburger, keyboard/ARIA accessibility, RTL-safe logical properties, and comprehensive test coverage (16 tests + 2 snapshots)

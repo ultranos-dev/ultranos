@@ -23,7 +23,7 @@ const mockAdapter: AuditStoreAdapter = {
 function setupAuthSession() {
   useAuthSessionStore.getState().setSession({
     userId: 'doctor-001',
-    practitionerId: 'Practitioner/doctor-001',
+    practitionerId: 'doctor-001',
     role: 'DOCTOR',
     sessionId: 'session-001',
     email: 'doctor@hospital.com',

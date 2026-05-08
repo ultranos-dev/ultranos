@@ -316,4 +316,98 @@ describe('LoginPage', () => {
       })
     })
   })
+
+  describe('returnUrl handling', () => {
+    function setupFullMfaFlow() {
+      mockSignInWithPassword.mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+        error: null,
+      })
+      mockListFactors.mockResolvedValue({
+        data: { totp: [{ id: 'factor-1' }] },
+        error: null,
+      })
+      mockChallenge.mockResolvedValue({
+        data: { id: 'challenge-1' },
+        error: null,
+      })
+      mockVerify.mockResolvedValue({ error: null })
+      const payload = { sub: 'user-123', role: 'CLINICIAN', session_id: 'sess-1', practitioner_id: 'p-1' }
+      const fakeJwt = `header.${btoa(JSON.stringify(payload))}.signature`
+      mockGetSession.mockResolvedValue({
+        data: { session: { access_token: fakeJwt, user: { email: 'doc@hospital.com' } } },
+      })
+    }
+
+    async function completeMfaFlow(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByLabelText('Email'), 'doc@hospital.com')
+      await user.type(screen.getByLabelText('Password'), 'correct-pass')
+      await user.click(screen.getByRole('button', { name: 'Sign In' }))
+      await waitFor(() => {
+        expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
+      })
+      await user.type(screen.getByLabelText('TOTP Code'), '123456')
+      await user.click(screen.getByRole('button', { name: 'Verify' }))
+    }
+
+    it('redirects to returnUrl after login when present', async () => {
+      Object.defineProperty(window.location, 'search', {
+        value: '?returnUrl=%2Fencounters%2F42',
+        writable: true,
+      })
+      setupFullMfaFlow()
+      const user = userEvent.setup()
+      render(<LoginPage />)
+      await completeMfaFlow(user)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/encounters/42')
+      })
+    })
+
+    it('redirects to / when no returnUrl present', async () => {
+      Object.defineProperty(window.location, 'search', {
+        value: '',
+        writable: true,
+      })
+      setupFullMfaFlow()
+      const user = userEvent.setup()
+      render(<LoginPage />)
+      await completeMfaFlow(user)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/')
+      })
+    })
+
+    it('rejects absolute URL returnUrl (open redirect prevention)', async () => {
+      Object.defineProperty(window.location, 'search', {
+        value: '?returnUrl=https%3A%2F%2Fevil.com',
+        writable: true,
+      })
+      setupFullMfaFlow()
+      const user = userEvent.setup()
+      render(<LoginPage />)
+      await completeMfaFlow(user)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/')
+      })
+    })
+
+    it('rejects protocol-relative URL returnUrl (// prefix)', async () => {
+      Object.defineProperty(window.location, 'search', {
+        value: '?returnUrl=%2F%2Fevil.com',
+        writable: true,
+      })
+      setupFullMfaFlow()
+      const user = userEvent.setup()
+      render(<LoginPage />)
+      await completeMfaFlow(user)
+
+      await waitFor(() => {
+        expect(window.location.href).toBe('/')
+      })
+    })
+  })
 })
