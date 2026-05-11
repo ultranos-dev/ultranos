@@ -1,16 +1,12 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { generateBlindIndex } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { AuditLogger } from '@ultranos/audit-logger'
-// NOTE: enforceConsentMiddleware is available for per-patient data endpoints.
-// The search endpoint returns identity data for verification (not clinical PHI),
-// so consent enforcement is applied at the individual patient data level, not search.
-// When per-patient clinical data endpoints are added to this router, apply:
-//   .use(enforceConsentMiddleware('Patient'))
-// See: apps/hub-api/src/trpc/middleware/enforceConsent.ts
+import { db } from '@/lib/supabase'
 
 function sanitizeFilterValue(value: string): string {
   // Strip dangerous chars, then escape SQL ILIKE wildcards
@@ -123,6 +119,373 @@ export const patientRouter = createTRPCRouter({
             versionId: row.meta_version_id,
           },
         })),
+      }
+    }),
+
+  // ── patient.create ──────────────────────────────────────────
+  // Story 16.2 — AC #1, #2, #5, #6
+  create: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        nameLocal: z.string().min(1).max(500),
+        nameLatin: z.string().max(500).optional(),
+        namePhonetic: z.string().max(500).optional(),
+        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
+        birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'birthDate must be YYYY-MM-DD').optional(),
+        birthYearOnly: z.boolean().optional(),
+        telecomPhone: z.string().max(50).optional(),
+        nationalId: z.string().min(1).max(200).optional(),
+        guardianId: z.string().uuid().optional(),
+        consentVersion: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+      const patientId = crypto.randomUUID()
+
+      // Generate blind index for national ID (AC #2)
+      let nationalIdHash: string | null = null
+      if (input.nationalId) {
+        nationalIdHash = hashNationalId(input.nationalId)
+
+        // Duplicate detection via blind index (AC #6)
+        const { data: existing } = await ctx.supabase
+          .from('patients')
+          .select('id')
+          .eq('national_id_hash', nationalIdHash)
+          .limit(1)
+
+        if (existing && existing.length > 0) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A patient with this national ID already exists',
+          })
+        }
+      }
+
+      // Build row with dual-write: plain columns for search + encrypted _enc columns for read.
+      // db.toRow() encrypts fields in randomizedFields (the _enc columns) automatically.
+      const row = db.toRow({
+        id: patientId,
+        // Plain columns (searchable, not in encryption config)
+        nameLocal: input.nameLocal,
+        nameLatin: input.nameLatin ?? null,
+        namePhonetic: input.namePhonetic ?? null,
+        // Encrypted copies (in encryption config — AES-256-GCM)
+        nameLocalEnc: input.nameLocal,
+        nameLatinEnc: input.nameLatin ?? null,
+        namePhoneticEnc: input.namePhonetic ?? null,
+        birthDateEnc: input.birthDate ?? null,
+        // Standard fields
+        gender: input.gender ?? null,
+        birthDate: input.birthDate ?? null,
+        birthYearOnly: input.birthYearOnly ?? false,
+        telecomPhone: input.telecomPhone ?? null,
+        nationalIdHash,
+        guardianId: input.guardianId ?? null,
+        consentVersion: input.consentVersion ?? null,
+        isActive: true,
+        createdBy: ctx.user.sub,
+        createdAt: now,
+        updatedAt: now,
+      })
+
+      const { error } = await ctx.supabase
+        .from('patients')
+        .insert(row)
+
+      if (error) {
+        // Check for unique constraint violation on national_id_hash
+        if (error.code === '23505' && error.message?.includes('national_id_hash')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A patient with this national ID already exists',
+          })
+        }
+        console.error('Patient create error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create patient',
+        })
+      }
+
+      // Audit PHI write (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'create' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: patientId })
+      }
+
+      return {
+        id: patientId,
+        resourceType: 'Patient' as const,
+        meta: { lastUpdated: now },
+        _ultranos: { createdAt: now },
+      }
+    }),
+
+  // ── patient.read ────────────────────────────────────────────
+  // Story 16.2 — AC #3, #5
+  read: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .use(enforceConsentMiddleware('Patient'))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('patients')
+        .select('*')
+        .eq('id', input.patientId)
+        .eq('is_active', true)
+        .single()
+
+      if (error || !data) {
+        if (error?.code === 'PGRST116' || !data) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Patient not found',
+          })
+        }
+        console.error('Patient read error:', { code: error?.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to read patient',
+        })
+      }
+
+      // Decrypt PHI fields via db.fromRow()
+      const patient = db.fromRow(data) as Record<string, unknown>
+
+      // Audit PHI read (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'read' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: input.patientId })
+      }
+
+      // Return FHIR-aligned patient with _ultranos extensions.
+      // Use decrypted _enc fields for PHI, fall back to plain columns if _enc is empty.
+      return {
+        id: patient.id as string,
+        resourceType: 'Patient' as const,
+        nameLocal: (patient.nameLocalEnc as string) ?? (patient.nameLocal as string),
+        nameLatin: (patient.nameLatinEnc as string) ?? (patient.nameLatin as string | null),
+        namePhonetic: (patient.namePhoneticEnc as string) ?? (patient.namePhonetic as string | null),
+        gender: patient.gender as string | null,
+        birthDate: (patient.birthDateEnc as string) ?? (patient.birthDate as string | null),
+        birthYearOnly: patient.birthYearOnly as boolean,
+        telecomPhone: patient.telecomPhone as string | null,
+        guardianId: patient.guardianId as string | null,
+        consentVersion: patient.consentVersion as string | null,
+        _ultranos: {
+          isActive: patient.isActive as boolean,
+          createdBy: patient.createdBy as string | null,
+          createdAt: patient.createdAt as string,
+          mpiWarn: patient.mpiWarn as boolean,
+        },
+        meta: {
+          lastUpdated: patient.updatedAt as string,
+          versionId: (patient.metaVersionId as string) ?? undefined,
+        },
+      }
+    }),
+
+  // ── patient.update ──────────────────────────────────────────
+  // Story 16.2 — AC #4, #5
+  update: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        lastKnownUpdate: z.string().min(1),
+        nameLocal: z.string().min(1).max(500).optional(),
+        nameLatin: z.string().max(500).optional(),
+        namePhonetic: z.string().max(500).optional(),
+        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
+        birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'birthDate must be YYYY-MM-DD').optional(),
+        birthYearOnly: z.boolean().optional(),
+        telecomPhone: z.string().max(50).optional(),
+        nationalId: z.string().min(1).max(200).optional(),
+        guardianId: z.string().uuid().nullable().optional(),
+        consentVersion: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch current patient for HLC conflict detection
+      const { data: current, error: fetchError } = await ctx.supabase
+        .from('patients')
+        .select('id, updated_at, national_id_hash')
+        .eq('id', input.patientId)
+        .eq('is_active', true)
+        .single()
+
+      if (fetchError || !current) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Patient not found',
+        })
+      }
+
+      // Tier 3 LWW conflict detection — compare client's last-known timestamp against server's updated_at
+      if (current.updated_at && input.lastKnownUpdate < current.updated_at) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Stale update — a newer version exists',
+        })
+      }
+
+      // Build partial update payload from provided fields only
+      const updates: Record<string, unknown> = {}
+      const fieldsUpdated: string[] = []
+
+      if (input.nameLocal !== undefined) {
+        updates.nameLocal = input.nameLocal
+        updates.nameLocalEnc = input.nameLocal
+        fieldsUpdated.push('nameLocal')
+      }
+      if (input.nameLatin !== undefined) {
+        updates.nameLatin = input.nameLatin
+        updates.nameLatinEnc = input.nameLatin
+        fieldsUpdated.push('nameLatin')
+      }
+      if (input.namePhonetic !== undefined) {
+        updates.namePhonetic = input.namePhonetic
+        updates.namePhoneticEnc = input.namePhonetic
+        fieldsUpdated.push('namePhonetic')
+      }
+      if (input.gender !== undefined) {
+        updates.gender = input.gender
+        fieldsUpdated.push('gender')
+      }
+      if (input.birthDate !== undefined) {
+        updates.birthDate = input.birthDate
+        updates.birthDateEnc = input.birthDate
+        fieldsUpdated.push('birthDate')
+      }
+      if (input.birthYearOnly !== undefined) {
+        updates.birthYearOnly = input.birthYearOnly
+        fieldsUpdated.push('birthYearOnly')
+      }
+      if (input.telecomPhone !== undefined) {
+        updates.telecomPhone = input.telecomPhone
+        fieldsUpdated.push('telecomPhone')
+      }
+      if (input.guardianId !== undefined) {
+        updates.guardianId = input.guardianId
+        fieldsUpdated.push('guardianId')
+      }
+      if (input.consentVersion !== undefined) {
+        updates.consentVersion = input.consentVersion
+        fieldsUpdated.push('consentVersion')
+      }
+
+      // National ID change — re-hash and check duplicates (excluding current patient)
+      if (input.nationalId !== undefined) {
+        const newHash = hashNationalId(input.nationalId)
+
+        const { data: duplicate } = await ctx.supabase
+          .from('patients')
+          .select('id')
+          .eq('national_id_hash', newHash)
+          .neq('id', input.patientId)
+          .limit(1)
+
+        if (duplicate && duplicate.length > 0) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A patient with this national ID already exists',
+          })
+        }
+
+        updates.nationalIdHash = newHash
+        fieldsUpdated.push('nationalId')
+      }
+
+      if (fieldsUpdated.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'No fields to update',
+        })
+      }
+
+      updates.updatedAt = new Date().toISOString()
+      const row = db.toRow(updates)
+
+      const { data: updated, error: updateError } = await ctx.supabase
+        .from('patients')
+        .update(row)
+        .eq('id', input.patientId)
+        .eq('is_active', true)
+        .select('id')
+
+      if (updateError) {
+        if (updateError.code === '23505' && updateError.message?.includes('national_id_hash')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A patient with this national ID already exists',
+          })
+        }
+        console.error('Patient update error:', { code: updateError.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update patient',
+        })
+      }
+
+      if (!updated || updated.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Patient not found or was deactivated',
+        })
+      }
+
+      // Audit PHI write (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'update', fieldsUpdated },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: input.patientId })
+      }
+
+      return {
+        id: input.patientId,
+        resourceType: 'Patient' as const,
+        meta: {
+          lastUpdated: updates.updatedAt as string,
+        },
       }
     }),
 })

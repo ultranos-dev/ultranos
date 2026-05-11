@@ -12,6 +12,7 @@ import { auditRouter } from './audit'
 import { syncRouter } from './sync'
 import { vocabularyRouter } from './vocabulary'
 import { allergyRouter } from './allergy'
+import { diagnosticReportRouter } from './diagnostic-report'
 
 /**
  * Root tRPC router — aggregates all domain routers.
@@ -31,6 +32,7 @@ export const appRouter = createTRPCRouter({
   sync: syncRouter,
   vocabulary: vocabularyRouter,
   allergy: allergyRouter,
+  diagnosticReport: diagnosticReportRouter,
 })
 
 export type AppRouter = typeof appRouter

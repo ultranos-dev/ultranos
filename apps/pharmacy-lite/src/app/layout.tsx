@@ -1,13 +1,18 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin', 'latin-ext'],
+const inter = localFont({
+  src: [
+    { path: '../../public/fonts/inter-latin-400.woff2', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/inter-latin-500.woff2', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/inter-latin-600.woff2', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/inter-latin-700.woff2', weight: '700', style: 'normal' },
+    { path: '../../public/fonts/inter-latin-900.woff2', weight: '900', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-inter',
-  weight: ['400', '500', '600', '700', '900'],
 })
 
 export const metadata: Metadata = {

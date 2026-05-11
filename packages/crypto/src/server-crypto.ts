@@ -92,18 +92,25 @@ export function getEncryptionConfig() {
   return {
     randomizedFields: [
       'diagnosis',
-      'reason_code',
       'dosage_instruction',
       'interaction_override',
       // medication_text is the free-text column (PHI). medication_display is a separate
       // column containing standardized drug names from formulary — NOT PHI, not encrypted.
       // See migration 005_medication_requests.sql for both column definitions.
       'medication_text',
+      'soap_subjective',
+      'soap_objective',
       'soap_assessment',
       'soap_plan',
       // Lab result tables (Story 12.3)
       'report_conclusion',
       'encrypted_content',
+      // Patient PHI — encrypted copies for secure read (Story 16.2, Option A).
+      // The unencrypted originals (name_local, name_latin, etc.) remain for ILIKE search.
+      'name_local_enc',
+      'name_latin_enc',
+      'name_phonetic_enc',
+      'birth_date_enc',
     ] as const,
   }
 }

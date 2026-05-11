@@ -14,6 +14,12 @@
 - **D7: Case-transform destroys Date/Map/Set class instances** — `toSnakeCase`/`toCamelCase` treat all objects as plain records. Low risk with FHIR string-based data + superjson, but add type guards when `db.toRow`/`db.fromRow` are first used with complex types.
 - **D8: Case-transform has no circular reference protection** — Recursive transform will stack overflow on cyclic objects. FHIR data is acyclic; add cycle detection if non-FHIR data flows through these helpers.
 
+## Deferred from: code review of 16-6-hub-api-drug-interaction-check-endpoint (2026-05-11)
+
+- **W1: `@ultranos/audit-logger` undeclared in hub-api `package.json`** — Pre-existing: AuditLogger is imported across many hub-api files without being declared in `package.json`. Works via pnpm workspace hoisting but will break if hoisting behavior changes. Add `"@ultranos/audit-logger": "workspace:*"` to dependencies.
+- **W2: Module-level `cachedMap` in drug-db checker has no invalidation strategy** — The interaction vocabulary cache in `checker.ts` persists in process memory indefinitely. If `vocab_interactions` is updated without restarting the server, stale data is served. Requires an ops-level cache invalidation mechanism (e.g., `invalidateCache()` call after vocab sync).
+- **W3: No pagination on `getInteractions()` — loads entire vocab table** — `supabase-drug-adapter.ts` `getInteractions()` does `select(...)` with no limit. Large interaction databases could cause memory pressure. Consider pagination or streaming.
+
 ## Deferred from: code review of 1-3-pwa-identity-verification-dexie-persistence (2026-04-28)
 
 - **D9: No audit logging for PHI access** — CLAUDE.md rule #6 violated. Neither Hub API `patient.search` nor PWA Dexie search emit audit events. Deferred to story 6-2.
@@ -449,3 +455,54 @@
 - **W7: TOCTOU between dual getPractitionerRef() calls** — `confirmDispense` calls `getPractitionerRef()` and then `syncDispenseToHub` calls it again independently (belt-and-suspenders per spec). Session could theoretically expire between the two calls, creating a window where the local dispense has one ref and the Hub sync fails or uses a different ref. Intentional tradeoff per spec design.
 - **W8: Audit service reads pharmacistRef from dispense.performer, not from auth store** — `logDispenseEvent` and `auditPhiAccess` extract pharmacistRef from `dispense.performer[0].actor.reference` rather than from the auth session store. Inconsistent with the security posture of this story, but audit service was out of scope.
 - **W9: No error state in fulfillment store for auth failure** — When `getPractitionerRef()` throws in `confirmDispense`, the error propagates as an unhandled promise rejection. The store has no dedicated error field — a UI reading `syncStatus` for errors will miss auth failures. UI concern beyond story scope.
+
+## Deferred from: code review of 15-1-opd-lite-pwa-manifest-service-worker (2026-05-10)
+
+- **W10: No offline navigation fallback page** — OPD-Lite has no `/offline` route (unlike Lab-Lite). Uncached navigation requests show browser-level network error instead of a graceful fallback. Not in story ACs.
+- **W11: `beforeinstallprompt` timing race conditions** — Event may fire before React hydration (lost) or after the 2-min timer already ran (banner never shows). Unlikely in practice; a global event capture in `<head>` would mitigate.
+- **W12: Icon `purpose: 'any maskable'` on placeholder icons** — Combined purpose causes poor cropping on Android. Will matter when real branded icons replace placeholders.
+
+## Deferred from: code review of 16-7-practitioner-key-registration-endpoint (2026-05-10)
+
+- **No cap on active keys per practitioner** — A practitioner can accumulate unlimited active (non-revoked, non-expired) keys. No count check or throttle. Policy decision — consider max active keys per practitioner or auto-revoking previous keys on new registration.
+- **`practitionerId` not verified to exist in system** — `practitionerId` accepts any valid UUID without verifying it corresponds to an actual practitioner record. If no FK constraint exists, orphan keys can be created. If FK exists, `23503` error is caught by generic `INTERNAL_SERVER_ERROR` handler with no descriptive message.
+- **No upper bound on key expiry duration** — A caller can set `expiresAt` decades into the future. No max expiry enforced (e.g., 2 years). Policy decision for healthcare key lifecycle management.
+
+## Deferred from: code review of 16-4-dispensing-idempotency-guard (2026-05-11)
+
+- **W12: `patientRef` not validated against prescription's `subject_reference` in `recordDispense`** — Consent middleware checks consent for the `patientRef` in input, not the actual patient on the prescription. Dispense record and audit trail reference the wrong patient if `patientRef` mismatches. Pre-existing since `recordDispense` was introduced. Consistent with W10 from 6-1 review. [medication.ts:448-451]
+- **W13: HLC string comparison has no format validation** — `hlcTimestamp` input validated as `z.string().min(1)` with no format enforcement; lexicographic comparison assumes zero-padded format. Pre-existing across all HLC-using endpoints. Consistent with W4 from 9-2 review. [medication.ts:440,543]
+- **W14: Conflict log insert failure throws INTERNAL_SERVER_ERROR, orphaning dispense record** — The `dispense_conflicts` insert failure path at line 561 throws instead of log-and-continue. The already-inserted dispense record persists as an orphan. Pre-existing conflict logging pattern. [medication.ts:561-567]
+- **W15: Audit payload fields not deeply asserted in duplicate-dispense test** — Test only verifies `from('audit_log')` was called, not that payload contains `existingDispenseId` and `attemptedDispenseId` per spec testing standards. Consistent with existing audit test patterns across the file. [medication.test.ts:671-672]
+
+## Deferred from: code review of 16-3-medication-create-prescription-lifecycle (2026-05-11)
+
+- **Audit failure silently swallowed with no rollback/retry** — `create` and `read` procedures wrap `audit.emit()` in try/catch, logging a warning on failure. Prescription persists without audit trail. Project-wide pattern matching spec ("audit failures must not crash procedure"). Consistent with allergy router, other routers. Address with transactional audit or dead-letter queue architecture.
+- **`dosageInstruction`/`dispenseRequest` accept arbitrary nested objects** — `z.record(z.unknown())` allows any JSON shape. FHIR R4 dosage instruction is complex and variable. Full structural validation is a broader FHIR compliance effort.
+- **`hlcTimestamp` not format-validated** — `z.string().min(1)` accepts any non-empty string. HLC timestamps have specific format for lexicographic comparison. Pre-existing across all router procedures.
+- **`interactionOverride` accepted when `interactionCheck` is CLEAR** — Override reason stored even when no interaction was detected. Minor data hygiene, no safety risk.
+
+## Deferred from: code review of 16-8-diagnosticreport-read-list-endpoints (2026-05-11)
+
+- **W1: Audit failure silently swallowed** — All audit emit() calls wrapped in try/catch with console.warn. Request succeeds without audit record. CLAUDE.md Rule #6 says "No exceptions." Pre-existing systemic pattern across all routers (D5, D9, D23, D38, P2).
+- **W2: Decryption failure detection via magic string** — `decryptField` returns `'[Encrypted Content]'` placeholder on failure, detected via string equality comparison. Pre-existing pattern in `@ultranos/crypto/server`.
+- **W3: No rate limiting on file download endpoint** — `/api/lab-files/[fileId]` is a raw Next.js route handler outside tRPC, so any tRPC-level rate limiting doesn't apply. Combined with memory-intensive file loading, susceptible to resource exhaustion. Pre-existing infrastructure gap.
+- **W4: Large file memory pressure** — File download loads entire `encrypted_content` (up to 20MB encrypted base64) into Node.js Buffer. Concurrent downloads could cause OOM. Acknowledged in spec dev notes.
+
+## Deferred from: code review of 16-2-patient-crud-endpoints (2026-05-10)
+
+- **W1: `db.toRow()`/`db.fromRow()` unhandled throws** — If encryption key is missing or data is malformed, these helpers throw uncaught exceptions in all CRUD procedures. Cross-cutting concern — validate encryption config at startup rather than per-call.
+- **W2: Migration 013 non-atomic index swap** — `DROP INDEX` then `CREATE UNIQUE INDEX` leaves a window with no index under concurrent load. Use a transaction or CONCURRENTLY when applying to production.
+- **W3: Consent middleware test is a no-op** — Test "blocks access when consent middleware denies" cannot verify denial because the router is already constructed with the pass-through mock. Middleware IS correctly wired in production. Test title is misleading.
+
+## Deferred from: code review of 16-1-encounter-crud-endpoints (2026-05-10)
+
+- **W13: No pagination on `listByPatient`** — Returns unbounded result set for a patient's encounters. No `.limit()` or cursor. Matches AC 5 ("returns all encounters") but causes performance issues for high-volume patients. Address when encounter volume grows.
+- **W14: No-op update allowed when no optional fields provided** — If only `hlcTimestamp` is passed without `status`, `classCode`, or `reasonCode`, the update only advances the HLC with no meaningful data change. Unnecessary DB write and audit event.
+
+## Deferred from: code review of 16-5-soap-note-sync-endpoints (2026-05-11)
+
+- **W1: Audit failure silently swallowed in try/catch** — Both `addSOAPNote` and `listSOAPNotes` catch audit emit errors and only `console.warn`. CLAUDE.md Rule #6 says "no exceptions." Project-wide pattern across all routers. Address with transactional audit or dead-letter queue architecture.
+- **W2: Audit hash chain race condition under concurrent requests** — `AuditLogger.emit()` reads previous hash, computes new, inserts without serialization. Concurrent emits fork the chain. Pre-existing in `packages/audit-logger/src/logger.ts`. Consistent with prior reviews.
+- **W3: No pagination on `listSOAPNotes`** — Returns unbounded result set. Long-running encounters with many SOAP notes cause memory pressure. Address with cursor pagination.
+- **W4: HLC timestamp no format validation at DB or Zod level** — `z.string().min(1)` accepts any non-empty string. Lexicographic ordering only works with consistent format. Pre-existing pattern across all routers.

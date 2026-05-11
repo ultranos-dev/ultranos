@@ -393,6 +393,7 @@ describe('medication.complete', () => {
 
 describe('medication.recordDispense', () => {
   const DISPENSE_UUID = '00000000-0000-4000-8000-000000000010'
+  const EXISTING_DISPENSE_UUID = '00000000-0000-4000-8000-000000000099'
   const HLC_TS = '000001714400000:00000:node-abc'
 
   const validInput = {
@@ -407,60 +408,138 @@ describe('medication.recordDispense', () => {
     status: 'completed' as const,
   }
 
-  it('creates a medication_dispense record and updates medication_request status to completed', async () => {
-    const insertMock = vi.fn().mockReturnValue({
+  // Standard active-rx data for reuse
+  const ACTIVE_RX = {
+    id: RX_UUID_1,
+    prescription_status: 'ACTIVE',
+    status: 'active',
+    hlc_timestamp: null,
+  }
+
+  // Consent mock: returns active consent so middleware passes
+  function consentMock() {
+    return {
       select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: DISPENSE_UUID },
-          error: null,
-        }),
-      }),
-    })
-    // HLC check: prescription is ACTIVE, no conflict
-    const hlcCheckMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: RX_UUID_1,
-            prescription_status: 'ACTIVE',
-            status: 'active',
-            hlc_timestamp: null,
-          },
-          error: null,
-        }),
-      }),
-    })
-    // Update with double .eq() guard (id + prescription_status)
-    const updateMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: RX_UUID_1,
-                prescription_status: 'DISPENSED',
-                status: 'completed',
-                dispensed_at: '2026-04-29T12:00:00Z',
-              },
-              error: null,
-            }),
+          order: vi.fn().mockResolvedValue({
+            data: [{ id: 'consent-1', status: 'ACTIVE', category: ['PRESCRIPTIONS', 'FULL_RECORD'], date_time: '2026-01-01T00:00:00Z', provision_end: null }],
+            error: null,
           }),
         }),
       }),
-    })
-    const auditMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { id: 'audit-1' }, error: null }),
-      }),
-    })
+    }
+  }
 
-    const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
-      callCount.n++
-      if (callCount.n === 1) return { insert: insertMock }
-      if (callCount.n === 2) return { select: hlcCheckMock }
-      if (callCount.n === 3) return { update: updateMock }
-      return { insert: auditMock }
+  // Audit log mock (AuditLogger uses from('audit_log') internally)
+  function auditLogMock() {
+    return {
+      select: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    }
+  }
+
+  // Generic passthrough for tables we don't need to assert on
+  function passthrough() {
+    const handler: any = {}
+    const proxy = new Proxy(handler, {
+      get: (_target, prop) => {
+        if (prop === 'then') return undefined // prevent Promise detection
+        return vi.fn().mockImplementation(() => proxy)
+      },
+    })
+    // Terminal async methods
+    ;(proxy as any).single = vi.fn().mockResolvedValue({ data: null, error: null })
+    ;(proxy as any).limit = vi.fn().mockResolvedValue({ data: [], error: null })
+    return proxy
+  }
+
+  /**
+   * Table-name dispatch mock factory.
+   * Handles consent middleware, audit logger, and mutation-specific tables.
+   */
+  function createDispenseMockFrom(opts: {
+    rxLookupData?: { data: any; error: any }
+    idempotencyData?: any[]
+    dispenseInsertResult?: { data: any; error: any }
+    rxUpdateResult?: { data: any; error: any }
+  }) {
+    const rxCallCount = { n: 0 }
+    const dispenseCallCount = { n: 0 }
+
+    return vi.fn().mockImplementation((table: string) => {
+      if (table === 'consents') return consentMock()
+      if (table === 'audit_log') return auditLogMock()
+
+      if (table === 'medication_requests') {
+        rxCallCount.n++
+        if (rxCallCount.n === 1) {
+          // Prescription lookup (step 1)
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue(opts.rxLookupData ?? { data: ACTIVE_RX, error: null }),
+              }),
+            }),
+          }
+        }
+        // Rx status update (step 4)
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue(opts.rxUpdateResult ?? { data: null, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
+
+      if (table === 'medication_dispenses') {
+        dispenseCallCount.n++
+        if (dispenseCallCount.n === 1) {
+          // Idempotency check (step 2)
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue({ data: opts.idempotencyData ?? [], error: null }),
+                }),
+              }),
+            }),
+          }
+        }
+        // Dispense insert (step 3)
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue(opts.dispenseInsertResult ?? { data: { id: DISPENSE_UUID }, error: null }),
+            }),
+          }),
+        }
+      }
+
+      // Anything else (medication_statements, medication_request_sync, dispense_conflicts, etc.)
+      return passthrough()
+    })
+  }
+
+  it('creates a medication_dispense record and updates medication_request status to completed', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [],
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
+      rxUpdateResult: {
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+        error: null,
+      },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
@@ -476,57 +555,14 @@ describe('medication.recordDispense', () => {
   })
 
   it('returns partial status when status input is in-progress', async () => {
-    const insertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: DISPENSE_UUID },
-          error: null,
-        }),
-      }),
-    })
-    const hlcCheckMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: RX_UUID_1,
-            prescription_status: 'ACTIVE',
-            status: 'active',
-            hlc_timestamp: null,
-          },
-          error: null,
-        }),
-      }),
-    })
-    const updateMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: RX_UUID_1,
-                prescription_status: 'PARTIALLY_DISPENSED',
-                status: 'active',
-                dispensed_at: null,
-              },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-    })
-    const auditMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { id: 'audit-1' }, error: null }),
-      }),
-    })
-
-    const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
-      callCount.n++
-      if (callCount.n === 1) return { insert: insertMock }
-      if (callCount.n === 2) return { select: hlcCheckMock }
-      if (callCount.n === 3) return { update: updateMock }
-      return { insert: auditMock }
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [],
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
+      rxUpdateResult: {
+        data: { id: RX_UUID_1, prescription_status: 'PARTIALLY_DISPENSED', status: 'active', dispensed_at: null },
+        error: null,
+      },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
@@ -541,17 +577,107 @@ describe('medication.recordDispense', () => {
     expect(result.prescriptionStatus).toBe('partial')
   })
 
-  it('throws INTERNAL_SERVER_ERROR when dispense insert fails', async () => {
-    const insertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: null,
-          error: { code: 'PGRST500', message: 'insert failed' },
-        }),
-      }),
+  it('rejects with NOT_FOUND when prescription does not exist, and no dispense row is created', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: null, error: { code: 'PGRST116', message: 'not found' } },
     })
 
-    const mockFrom = vi.fn().mockReturnValue({ insert: insertMock })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    await expect(
+      caller.medication.recordDispense(validInput),
+    ).rejects.toThrow('Prescription not found')
+
+    // Verify no medication_dispenses call was made (orphan prevention)
+    const fromCalls = mockFrom.mock.calls.map((c: any[]) => c[0])
+    expect(fromCalls).not.toContain('medication_dispenses')
+  })
+
+  it('rejects with PRECONDITION_FAILED when prescription status is CANCELLED', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: { ...ACTIVE_RX, prescription_status: 'CANCELLED' }, error: null },
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    await expect(
+      caller.medication.recordDispense(validInput),
+    ).rejects.toThrow('Prescription is no longer active')
+  })
+
+  it('rejects with PRECONDITION_FAILED when prescription status is EXPIRED', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: { ...ACTIVE_RX, prescription_status: 'EXPIRED' }, error: null },
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    await expect(
+      caller.medication.recordDispense(validInput),
+    ).rejects.toThrow('Prescription is no longer active')
+  })
+
+  it('rejects with CONFLICT / ALREADY_DISPENSED when a completed dispense already exists', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [{ id: EXISTING_DISPENSE_UUID }],
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    await expect(
+      caller.medication.recordDispense(validInput),
+    ).rejects.toThrow('Prescription has already been dispensed')
+  })
+
+  it('succeeds when an in-progress dispense exists (partial re-attempt allowed)', async () => {
+    // The idempotency check only queries status='completed', so in-progress is not returned
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [], // in-progress dispenses are NOT returned by the completed-only query
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
+      rxUpdateResult: {
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+        error: null,
+      },
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    const result = await caller.medication.recordDispense(validInput)
+
+    expect(result.success).toBe(true)
+    expect(result.dispenseId).toBe(DISPENSE_UUID)
+  })
+
+  it('emits DUPLICATE_DISPENSE_ATTEMPT audit event when duplicate detected', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [{ id: EXISTING_DISPENSE_UUID }],
+    })
+
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
+    const caller = createCaller(ctx)
+
+    await expect(
+      caller.medication.recordDispense(validInput),
+    ).rejects.toThrow('Prescription has already been dispensed')
+
+    // Verify audit was called (AuditLogger calls from('audit_log') for chain + insert)
+    expect(mockFrom).toHaveBeenCalledWith('audit_log')
+  })
+
+  it('throws INTERNAL_SERVER_ERROR when dispense insert fails', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [],
+      dispenseInsertResult: { data: null, error: { code: 'PGRST500', message: 'insert failed' } },
+    })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
@@ -579,61 +705,15 @@ describe('medication.recordDispense', () => {
     ).rejects.toThrow()
   })
 
-  it('emits audit log entry for dispense sync', async () => {
-    const insertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: DISPENSE_UUID },
-          error: null,
-        }),
-      }),
-    })
-    const hlcCheckMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: RX_UUID_1,
-            prescription_status: 'ACTIVE',
-            status: 'active',
-            hlc_timestamp: null,
-          },
-          error: null,
-        }),
-      }),
-    })
-    const updateMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: RX_UUID_1,
-                prescription_status: 'DISPENSED',
-                status: 'completed',
-                dispensed_at: '2026-04-29T12:00:00Z',
-              },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-    })
-    const auditInsertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: 'audit-001' },
-          error: null,
-        }),
-      }),
-    })
-
-    const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
-      callCount.n++
-      if (callCount.n === 1) return { insert: insertMock }
-      if (callCount.n === 2) return { select: hlcCheckMock }
-      if (callCount.n === 3) return { update: updateMock }
-      return { insert: auditInsertMock }
+  it('emits audit log entry for successful dispense sync', async () => {
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [],
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
+      rxUpdateResult: {
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+        error: null,
+      },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
@@ -641,57 +721,35 @@ describe('medication.recordDispense', () => {
 
     await caller.medication.recordDispense(validInput)
 
-    // Fourth call should be to medication_request_sync audit table
-    expect(mockFrom).toHaveBeenCalledWith('medication_request_sync')
+    // Audit logger calls from('audit_log') for the audit chain + insert
+    expect(mockFrom).toHaveBeenCalledWith('audit_log')
   })
 
   it('ignores dispense with older HLC when prescription already completed (AC 5)', async () => {
-    // Simulate: a dispense arrives but the medication_request is already DISPENSED
-    // with a newer HLC timestamp
     const existingHlc = '000001714500000:00000:node-xyz' // newer
     const incomingHlc = '000001714400000:00000:node-abc' // older
 
-    // First call: insert into medication_dispenses succeeds
-    const insertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: DISPENSE_UUID },
-          error: null,
-        }),
-      }),
+    const baseMockFrom = createDispenseMockFrom({
+      rxLookupData: {
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', hlc_timestamp: existingHlc },
+        error: null,
+      },
+      idempotencyData: [],
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
     })
 
-    // Before update, we check current state — already DISPENSED with newer HLC
-    const selectMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: RX_UUID_1,
-            prescription_status: 'DISPENSED',
-            status: 'completed',
-            hlc_timestamp: existingHlc,
-          },
-          error: null,
-        }),
-      }),
-    })
-
-    // Conflict log insert
-    const conflictInsertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: 'conflict-1' },
-          error: null,
-        }),
-      }),
-    })
-
-    const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
-      callCount.n++
-      if (callCount.n === 1) return { insert: insertMock }
-      if (callCount.n === 2) return { select: selectMock }
-      return { insert: conflictInsertMock }
+    // Override to handle dispense_conflicts table explicitly
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'dispense_conflicts') {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: 'conflict-1' }, error: null }),
+            }),
+          }),
+        }
+      }
+      return baseMockFrom(table)
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
@@ -704,77 +762,24 @@ describe('medication.recordDispense', () => {
 
     expect(result.success).toBe(true)
     expect(result.conflictDetected).toBe(true)
-    // medication_requests should NOT have been updated (no update call)
     expect(mockFrom).toHaveBeenCalledWith('dispense_conflicts')
   })
 
   it('proceeds normally when no existing completed status (no conflict)', async () => {
-    const incomingHlc = '000001714400000:00000:node-abc'
-
-    const insertMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: { id: DISPENSE_UUID },
-          error: null,
-        }),
-      }),
-    })
-
-    // Check: prescription is ACTIVE (not yet dispensed)
-    const selectMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: RX_UUID_1,
-            prescription_status: 'ACTIVE',
-            status: 'active',
-            hlc_timestamp: null,
-          },
-          error: null,
-        }),
-      }),
-    })
-
-    const updateMock = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: RX_UUID_1,
-                prescription_status: 'DISPENSED',
-                status: 'completed',
-                dispensed_at: '2026-04-29T12:00:00Z',
-              },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-    })
-
-    const auditMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue({ data: { id: 'audit-1' }, error: null }),
-      }),
-    })
-
-    const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
-      callCount.n++
-      if (callCount.n === 1) return { insert: insertMock }
-      if (callCount.n === 2) return { select: selectMock }
-      if (callCount.n === 3) return { update: updateMock }
-      return { insert: auditMock }
+    const mockFrom = createDispenseMockFrom({
+      rxLookupData: { data: ACTIVE_RX, error: null },
+      idempotencyData: [],
+      dispenseInsertResult: { data: { id: DISPENSE_UUID }, error: null },
+      rxUpdateResult: {
+        data: { id: RX_UUID_1, prescription_status: 'DISPENSED', status: 'completed', dispensed_at: '2026-04-29T12:00:00Z' },
+        error: null,
+      },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
-    const result = await caller.medication.recordDispense({
-      ...validInput,
-      hlcTimestamp: incomingHlc,
-    })
+    const result = await caller.medication.recordDispense(validInput)
 
     expect(result.success).toBe(true)
     expect(result.conflictDetected).toBe(false)

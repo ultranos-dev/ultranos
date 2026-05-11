@@ -1,5 +1,5 @@
 # generated: 2026-04-29T03:34:34.691026
-# last_updated: 2026-05-02T12:00:00.000000
+# last_updated: 2026-05-11T12:00:00.000000
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-08T12:00:00.000000'
+last_updated: '2026-05-11T15:10:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -153,22 +153,22 @@ development_status:
   epic-14-retrospective: optional
 
   # Phase 1: PWA Infrastructure & Installability
-  epic-15: backlog
-  15-1-opd-lite-pwa-manifest-service-worker: backlog
-  15-2-pharmacy-lite-pwa-manifest-service-worker: backlog
-  15-3-lab-lite-pwa-manifest-service-worker: backlog
+  epic-15: in-progress
+  15-1-opd-lite-pwa-manifest-service-worker: review
+  15-2-pharmacy-lite-pwa-manifest-service-worker: done
+  15-3-lab-lite-pwa-manifest-service-worker: done
   epic-15-retrospective: optional
 
   # Phase 1: Hub API Clinical Lifecycle Endpoints
-  epic-16: backlog
-  16-1-encounter-crud-endpoints: backlog
-  16-2-patient-crud-endpoints: backlog
-  16-3-medication-create-prescription-lifecycle: backlog
-  16-4-dispensing-idempotency-guard: backlog
-  16-5-soap-note-sync-endpoints: backlog
-  16-6-hub-api-drug-interaction-check-endpoint: backlog
-  16-7-practitioner-key-registration-endpoint: backlog
-  16-8-diagnosticreport-read-list-endpoints: backlog
+  epic-16: done
+  16-1-encounter-crud-endpoints: done
+  16-2-patient-crud-endpoints: done
+  16-3-medication-create-prescription-lifecycle: done
+  16-4-dispensing-idempotency-guard: done
+  16-5-soap-note-sync-endpoints: done
+  16-6-hub-api-drug-interaction-check-endpoint: done
+  16-7-practitioner-key-registration-endpoint: done
+  16-8-diagnosticreport-read-list-endpoints: done
   epic-16-retrospective: optional
 
   # Phase 1: Lab Lite — Complete UI/UX

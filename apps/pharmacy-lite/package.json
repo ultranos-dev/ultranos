@@ -30,6 +30,8 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@serwist/next": "^9.0.0",
+    "serwist": "^9.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.6.1",

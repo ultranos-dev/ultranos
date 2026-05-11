@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.49.0",
     "@trpc/server": "^11.0.0",
     "@ultranos/crypto": "workspace:*",
+    "@ultranos/drug-db": "workspace:*",
     "@ultranos/shared-types": "workspace:*",
     "jose": "^6.2.3",
     "next": "^15.0.0",

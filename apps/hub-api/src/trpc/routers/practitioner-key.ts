@@ -120,6 +120,91 @@ export const practitionerKeyRouter = createTRPCRouter({
     }),
 
   /**
+   * Story 16.7: Register a practitioner's Ed25519 public key.
+   * DOCTOR, CLINICIAN, or ADMIN only. Default expiry: 1 year from registration.
+   */
+  register: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN', 'ADMIN'])
+    .input(
+      z.object({
+        publicKey: z.string().min(44).max(44).regex(/^[A-Za-z0-9+/]{43}=$/, 'Invalid Ed25519 base64 public key'),
+        practitionerId: z.string().uuid(),
+        practitionerName: z.string().min(1).max(200).trim(),
+        expiresAt: z.string().datetime().optional().refine(
+          (val) => !val || new Date(val).getTime() > Date.now(),
+          'Expiry date must be in the future',
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Non-ADMIN callers can only register keys for themselves
+      if (ctx.user.role !== 'ADMIN' && ctx.user.sub !== input.practitionerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Can only register keys for your own practitioner ID',
+        })
+      }
+
+      const now = new Date()
+      const defaultExpiry = new Date(now)
+      defaultExpiry.setFullYear(defaultExpiry.getFullYear() + 1)
+      const expiresAt = input.expiresAt ?? defaultExpiry.toISOString()
+
+      const { data, error } = await ctx.supabase
+        .from('practitioner_keys')
+        .insert({
+          public_key_ed25519: input.publicKey,
+          practitioner_id: input.practitionerId,
+          practitioner_name: input.practitionerName,
+          expires_at: expiresAt,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Public key already registered',
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to register key',
+        })
+      }
+
+      if (!data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to register key',
+        })
+      }
+
+      // Audit: key registration
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'PractitionerKey',
+          resourceId: data.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { practitionerId: input.practitionerId },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', {
+          action: 'CREATE',
+          resourceType: 'PractitionerKey',
+          resourceId: data.id,
+        })
+      }
+
+      return { registered: true, expiresAt }
+    }),
+
+  /**
    * AC 3: Revoke a practitioner's public key. ADMIN-only.
    * Sets revoked_at on the key record; the KRL sync propagates this to edge devices.
    */

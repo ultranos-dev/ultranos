@@ -1,10 +1,13 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
+import { roleRestrictedProcedure } from '../rbac'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { checkInteractions } from '@ultranos/drug-db'
 import { db } from '@/lib/supabase'
+import { createSupabaseDrugAdapter } from '@/lib/supabase-drug-adapter'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -139,6 +142,219 @@ const GetStatusInputSchema = z
  */
 export const medicationRouter = createTRPCRouter({
   /**
+   * Story 16.3: Create a MedicationRequest (prescription) on the Hub.
+   * RBAC: DOCTOR, CLINICIAN only. PHI fields encrypted via db.toRow().
+   */
+  create: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceResourceAccess('MedicationRequest'))
+    .input(
+      z.object({
+        prescriptionId: z.string().uuid().optional(),
+        medicationCode: z.string().min(1),
+        medicationDisplay: z.string().min(1),
+        medicationText: z.string().optional(),
+        patientId: z.string().uuid(),
+        encounterId: z.string().uuid().optional(),
+        dosageInstruction: z.record(z.unknown()).optional(),
+        dispenseRequest: z.record(z.unknown()).optional(),
+        interactionCheck: z.enum(['CLEAR', 'WARNING', 'BLOCKED', 'UNAVAILABLE']),
+        interactionOverride: z.string().optional(),
+        intent: z.enum(['proposal', 'plan', 'order']).default('order'),
+        isOfflineCreated: z.boolean().default(false),
+        hlcTimestamp: z.string().min(1),
+      }).refine(
+        (val) => val.interactionCheck === 'CLEAR' || (val.interactionOverride && val.interactionOverride.length > 0),
+        { message: 'interactionOverride is required when interactionCheck is not CLEAR', path: ['interactionOverride'] },
+      ),
+    )
+    .use(enforceConsentMiddleware('MedicationRequest'))
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+      const prescriptionId = input.prescriptionId ?? crypto.randomUUID()
+      const qrCodeId = crypto.randomUUID()
+
+      const row = db.toRow({
+        id: prescriptionId,
+        resourceType: 'MedicationRequest',
+        status: 'active',
+        prescriptionStatus: 'ACTIVE',
+        intent: input.intent,
+        medicationCodeableConcept: input.medicationCode,
+        medicationDisplay: input.medicationDisplay,
+        medicationText: input.medicationText ?? null,
+        subjectReference: `Patient/${input.patientId}`,
+        encounterReference: input.encounterId ? `Encounter/${input.encounterId}` : null,
+        requesterId: ctx.user.sub,
+        dosageInstruction: input.dosageInstruction ?? null,
+        dispenseRequest: input.dispenseRequest ?? null,
+        interactionCheck: input.interactionCheck,
+        interactionOverride: input.interactionOverride ?? null,
+        qrCodeId,
+        authoredOn: now,
+        isOfflineCreated: input.isOfflineCreated,
+        hlcTimestamp: input.hlcTimestamp,
+        createdAt: now,
+        metaLastUpdated: now,
+        metaVersionId: '1',
+      })
+
+      const { data, error } = await ctx.supabase
+        .from('medication_requests')
+        .insert(row)
+        .select('id')
+        .single()
+
+      if (error) {
+        // Duplicate key = already synced — verify ownership before returning idempotent success
+        if (error.code === '23505') {
+          const { data: existing } = await ctx.supabase
+            .from('medication_requests')
+            .select('requester_id, qr_code_id')
+            .eq('id', prescriptionId)
+            .single()
+
+          if (existing?.requester_id !== ctx.user.sub) {
+            // Audit the rejected conflict attempt (CLAUDE.md Rule #6)
+            const conflictAudit = new AuditLogger(ctx.supabase)
+            try {
+              await conflictAudit.emit({
+                action: 'PHI_WRITE',
+                resourceType: 'PRESCRIPTION',
+                resourceId: prescriptionId,
+                patientId: input.patientId,
+                actorId: ctx.user.sub,
+                actorRole: ctx.user.role,
+                outcome: 'DENIED',
+                sessionId: ctx.user.sessionId,
+                metadata: { operation: 'prescription_create_conflict' },
+              })
+            } catch {
+              console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: prescriptionId })
+            }
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'Prescription ID conflict: record belongs to a different clinician',
+            })
+          }
+
+          // Audit the idempotent replay (CLAUDE.md Rule #6)
+          const replayAudit = new AuditLogger(ctx.supabase)
+          try {
+            await replayAudit.emit({
+              action: 'PHI_WRITE',
+              resourceType: 'PRESCRIPTION',
+              resourceId: prescriptionId,
+              patientId: input.patientId,
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'SUCCESS',
+              sessionId: ctx.user.sessionId,
+              metadata: { operation: 'prescription_create_idempotent' },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: prescriptionId })
+          }
+
+          return { prescriptionId, qrCodeId: existing?.qr_code_id ?? qrCodeId, status: 'active' as const, alreadySynced: true }
+        }
+        console.error('Medication create error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create prescription',
+        })
+      }
+
+      if (!data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create prescription',
+        })
+      }
+
+      // Audit PHI write (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PRESCRIPTION',
+          resourceId: prescriptionId,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'prescription_create', interactionCheck: input.interactionCheck },
+        })
+      } catch (auditError) {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: prescriptionId })
+      }
+
+      return {
+        prescriptionId,
+        qrCodeId,
+        status: 'active' as const,
+      }
+    }),
+
+  /**
+   * Story 16.3: Read a single MedicationRequest with decrypted PHI fields.
+   * RBAC: DOCTOR, CLINICIAN only.
+   */
+  read: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceResourceAccess('MedicationRequest'))
+    .input(
+      z.object({
+        prescriptionId: z.string().uuid(),
+        patientId: z.string().uuid(),
+      }),
+    )
+    .use(enforceConsentMiddleware('MedicationRequest'))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, status, prescription_status, intent, medication_codeable_concept, medication_display, medication_text, subject_reference, encounter_reference, requester_id, dosage_instruction, dispense_request, interaction_check, interaction_override, qr_code_id, authored_on, is_offline_created, hlc_timestamp, meta_last_updated, meta_version_id')
+        .eq('id', input.prescriptionId)
+        .eq('subject_reference', `Patient/${input.patientId}`)
+        .single()
+
+      if (error || !data) {
+        if (error?.code === 'PGRST116') {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Prescription not found',
+          })
+        }
+        console.error('Medication read error:', { code: error?.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve prescription',
+        })
+      }
+
+      const decrypted = db.fromRow(data)
+
+      // Audit PHI read (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PRESCRIPTION',
+          resourceId: input.prescriptionId,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'prescription_read' },
+        })
+      } catch (auditError) {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PRESCRIPTION', resourceId: input.prescriptionId })
+      }
+
+      return decrypted
+    }),
+
+  /**
    * AC 1, 2: Real-time status check against the Hub.
    * Returns AVAILABLE, FULFILLED, or VOIDED.
    */
@@ -211,7 +427,6 @@ export const medicationRouter = createTRPCRouter({
    */
   recordDispense: protectedProcedure
     .use(enforceResourceAccess('MedicationDispense'))
-    .use(enforceConsentMiddleware('MedicationRequest'))
     .input(
       z.object({
         dispenseId: z.string().uuid(),
@@ -225,9 +440,77 @@ export const medicationRouter = createTRPCRouter({
         status: z.enum(['completed', 'in-progress']),
       })
     )
+    .use(enforceConsentMiddleware('MedicationRequest'))
     .mutation(async ({ ctx, input }) => {
-      // 1. Insert the medication_dispense record
       const now = new Date().toISOString()
+
+      // 1. Lookup prescription FIRST — reject early if not found (fixes W9)
+      const { data: currentRx, error: fetchError } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, prescription_status, status, hlc_timestamp')
+        .eq('id', input.prescriptionId)
+        .single()
+
+      if (fetchError || !currentRx) {
+        if (fetchError?.code === 'PGRST116') {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Prescription not found',
+          })
+        }
+        console.error('Prescription fetch error:', { code: fetchError?.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve prescription for dispense',
+        })
+      }
+
+      // 2. Validate prescription status — reject CANCELLED/EXPIRED
+      if (currentRx.prescription_status === 'CANCELLED' || currentRx.prescription_status === 'EXPIRED') {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Prescription is no longer active',
+        })
+      }
+
+      // 3. Idempotency check — reject if already dispensed (fixes W1)
+      const { data: existingDispense } = await ctx.supabase
+        .from('medication_dispenses')
+        .select('id')
+        .eq('prescription_id', input.prescriptionId)
+        .eq('status', 'completed')
+        .limit(1)
+
+      if (existingDispense && existingDispense.length > 0) {
+        // Audit the duplicate attempt before rejecting
+        const dupAudit = new AuditLogger(ctx.supabase)
+        try {
+          await dupAudit.emit({
+            action: 'DUPLICATE_DISPENSE_ATTEMPT',
+            resourceType: 'PRESCRIPTION',
+            resourceId: input.prescriptionId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'DENIED',
+            sessionId: ctx.user.sessionId,
+            metadata: {
+              existingDispenseId: existingDispense[0].id,
+              attemptedDispenseId: input.dispenseId,
+            },
+          })
+        } catch {
+          // Audit failure must not prevent rejection
+          console.warn('[AUDIT_FAILURE]', { action: 'DUPLICATE_DISPENSE_ATTEMPT', resourceId: input.prescriptionId })
+        }
+
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Prescription has already been dispensed',
+          cause: { code: 'ALREADY_DISPENSED', existingDispenseId: existingDispense[0].id },
+        })
+      }
+
+      // 4. Insert the medication_dispense record (now safe — prescription validated)
       const { data: dispenseRow, error: insertError } = await ctx.supabase
         .from('medication_dispenses')
         .insert({
@@ -247,31 +530,21 @@ export const medicationRouter = createTRPCRouter({
         .single()
 
       if (insertError || !dispenseRow) {
+        // Duplicate dispenseId = idempotent replay (offline-first sync delivers same event twice)
+        if (insertError?.code === '23505') {
+          return {
+            success: true,
+            dispenseId: input.dispenseId,
+            prescriptionStatus: input.status === 'completed' ? 'completed' : 'partial',
+            dispensedAt: null,
+            conflictDetected: false,
+            alreadySynced: true,
+          }
+        }
         console.error('Dispense insert error:', { code: insertError?.code })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to record dispense event',
-        })
-      }
-
-      // 2. HLC conflict check — fetch current prescription state
-      const { data: currentRx, error: fetchError } = await ctx.supabase
-        .from('medication_requests')
-        .select('id, prescription_status, status, hlc_timestamp')
-        .eq('id', input.prescriptionId)
-        .single()
-
-      if (fetchError || !currentRx) {
-        if (fetchError?.code === 'PGRST116') {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Prescription not found',
-          })
-        }
-        console.error('Prescription fetch error:', { code: fetchError?.code })
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve prescription for dispense',
         })
       }
 
@@ -334,6 +607,16 @@ export const medicationRouter = createTRPCRouter({
         .single()
 
       if (updateError || !updatedRx) {
+        // Clean up orphaned dispense row — insert succeeded but update failed
+        try {
+          await ctx.supabase
+            .from('medication_dispenses')
+            .delete()
+            .eq('id', input.dispenseId)
+        } catch {
+          console.warn('[ORPHAN_CLEANUP_FAILED]', { dispenseId: input.dispenseId })
+        }
+
         if (updateError?.code === 'PGRST116') {
           throw new TRPCError({
             code: 'CONFLICT',
@@ -591,5 +874,124 @@ export const medicationRouter = createTRPCRouter({
         prescriptionId: updated.id,
         newStatus: 'VOIDED' as const,
       }
+    }),
+
+  /**
+   * Story 16.6: Server-side drug interaction check.
+   * Queries patient's active medications + allergies and runs the check centrally.
+   * RBAC: enforces MedicationRequest resource access.
+   * CLAUDE.md Rule #3: Never return CLEAR on failure — return UNAVAILABLE.
+   * CLAUDE.md Rule #6: Audit every PHI access.
+   */
+  checkInteractions: protectedProcedure
+    .use(enforceResourceAccess('MedicationRequest'))
+    .input(
+      z.object({
+        medicationCode: z.string().min(1),
+        medicationDisplay: z.string().min(1),
+        patientId: z.string().uuid(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const patientRef = `Patient/${input.patientId}`
+
+      // 1. Query active MedicationStatements (select only fields needed by drug-db checker)
+      const { data: statements, error: stmtError } = await ctx.supabase
+        .from('medication_statements')
+        .select('id, medication_codeable_concept, medication_display, subject_reference, status')
+        .eq('subject_reference', patientRef)
+        .eq('status', 'active')
+
+      if (stmtError) {
+        console.error('MedicationStatement query error:', { code: stmtError.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve active medication statements',
+        })
+      }
+
+      // 2. Query pending MedicationRequests (ACTIVE prescriptions — only need display name)
+      const { data: pendingRequests, error: rxError } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, medication_display')
+        .eq('subject_reference', patientRef)
+        .eq('prescription_status', 'ACTIVE')
+
+      if (rxError) {
+        console.error('MedicationRequest query error:', { code: rxError.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve pending medication requests',
+        })
+      }
+
+      // 3. Query active allergies (select fields needed by drug-db allergy matching)
+      const { data: allergies, error: allergyError } = await ctx.supabase
+        .from('allergy_intolerances')
+        .select('id, code_coding, code_text, clinical_status_code, patient_ref')
+        .eq('patient_ref', patientRef)
+        .eq('clinical_status_code', 'active')
+
+      if (allergyError) {
+        console.error('AllergyIntolerance query error:', { code: allergyError.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve active allergies',
+        })
+      }
+
+      // 4. Extract display names from pending MedicationRequests
+      const pendingRxNames = (pendingRequests ?? [])
+        .map((rx) => rx.medication_display as string | null)
+        .filter((name): name is string => !!name)
+
+      // 5. Build adapter and run interaction check
+      // CLAUDE.md Rule #3: Never return CLEAR on failure — catch any thrown error
+      const adapter = createSupabaseDrugAdapter(ctx.supabase)
+      const activeMedStatements = (statements ?? []).map((row) => db.fromRow(row))
+
+      let result
+      try {
+        result = await checkInteractions(
+          input.medicationDisplay,
+          pendingRxNames,
+          {
+            activeMedications: activeMedStatements,
+            activeAllergies: (allergies ?? []).map((row) => db.fromRow(row)),
+          },
+          adapter,
+        )
+      } catch (checkError) {
+        console.error('Drug interaction check error:', { code: (checkError as { code?: string })?.code })
+        result = { result: 'UNAVAILABLE' as const, interactions: [], reason: 'ADAPTER_ERROR' as const }
+      }
+
+      // 6. Audit PHI read (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'INTERACTION_CHECK',
+          resourceId: input.patientId,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            medicationDisplay: input.medicationDisplay,
+            result: result.result,
+            interactionCount: result.interactions.length,
+            ...(result.reason ? { reason: result.reason } : {}),
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', {
+          action: 'PHI_READ',
+          resourceType: 'INTERACTION_CHECK',
+        })
+      }
+
+      return result
     }),
 })

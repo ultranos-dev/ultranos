@@ -6,6 +6,7 @@ import { useSyncStore } from '@/stores/sync-store'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
 import { AuthGuard } from './AuthGuard'
+import { InstallPrompt } from './InstallPrompt'
 
 const DB_NAME = 'opd-lite'
 
@@ -52,6 +53,7 @@ export function ClientErrorBoundary({ children }: { children: ReactNode }) {
           <SessionTimeoutWrapper>
             {children}
           </SessionTimeoutWrapper>
+          <InstallPrompt />
         </AuthGuard>
       </AsyncErrorBridge>
     </ErrorBoundary>

@@ -5,6 +5,8 @@ import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos
 import { useSyncStore } from '@/stores/sync-store'
 import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
 import { AuthGuard } from './AuthGuard'
+import { InstallPrompt } from './InstallPrompt'
+import { SwUpdateNotification } from './SwUpdateNotification'
 
 const DB_NAME = 'pharmacy-lite'
 
@@ -46,6 +48,8 @@ export function ClientErrorBoundary({ children }: { children: ReactNode }) {
           <SessionTimeoutWrapper>
             {children}
           </SessionTimeoutWrapper>
+          <InstallPrompt />
+          <SwUpdateNotification />
         </AuthGuard>
       </AsyncErrorBridge>
     </ErrorBoundary>
