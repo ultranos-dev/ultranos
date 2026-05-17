@@ -165,11 +165,10 @@ describe('medication.createPaperPrescription (Story 24.3)', () => {
 
     // AuditLogger uses rpc('audit_emit_with_lock') for hash-chained insert
     expect(rpcMock).toHaveBeenCalledWith('audit_emit_with_lock', expect.objectContaining({
-      p_action: 'PHI_WRITE',
+      p_action: 'PAPER_PRESCRIPTION_CREATED',
       p_resource_type: 'PRESCRIPTION',
       p_actor_id: TEST_PHARMACIST.sub,
       p_metadata: expect.objectContaining({
-        operation: 'PAPER_PRESCRIPTION_CREATED',
         source: 'PAPER_OCR',
       }),
     }))

@@ -153,8 +153,8 @@ development_status:
   epic-14-retrospective: optional
 
   # Phase 1: PWA Infrastructure & Installability
-  epic-15: in-progress
-  15-1-opd-lite-pwa-manifest-service-worker: review
+  epic-15: done
+  15-1-opd-lite-pwa-manifest-service-worker: done
   15-2-pharmacy-lite-pwa-manifest-service-worker: done
   15-3-lab-lite-pwa-manifest-service-worker: done
   epic-15-retrospective: optional
@@ -258,10 +258,10 @@ development_status:
   epic-23-retrospective: optional
 
   # Phase 5: AI Clinical Intelligence
-  epic-24: in-progress
+  epic-24: done
   24-1-ai-clinical-scribe-soap-note-parsing: done
   24-2-empathy-translation-engine-prescription-tts: done
-  24-3-paper-prescription-ocr: in-progress
+  24-3-paper-prescription-ocr: done
   24-4-edge-ai-model-update-service: done
   epic-24-retrospective: optional
 

@@ -1,6 +1,6 @@
 # Story 24.3: Paper Prescription OCR
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -101,7 +101,7 @@ so that I can verify them against the system even for non-digital prescriptions.
   - [x] Test "Manual Verification Required" banner is always visible
   - [x] Test pharmacist can edit all fields regardless of confidence
   - [x] Test submission creates paper prescription with correct metadata
-  - [ ] Test RTL layout renders correctly (snapshot test)
+  - [x] Test RTL layout renders correctly (snapshot test)
   - [x] Test paper prescriptions show "PAPER" badge in dispensing queue
   - [x] Verify all existing Pharmacy Lite tests pass — no regressions
 
@@ -149,10 +149,11 @@ Unlike TTS audio (ephemeral, deleted after delivery), prescription images are re
 ### Completion Notes
 - All 7 Hub API paper-prescription tests pass
 - All 12 OCR client tests pass
-- All 7 paper-rx page UI tests pass
+- All 9 paper-rx page UI tests pass (including 2 RTL snapshots)
 - All 17 PharmacyDashboard tests pass (updated after rename)
 - Pre-existing test failures in `medication.test.ts` (16 failures) caused by prior branch changes to middleware mock infrastructure — not introduced by this story
-- RTL snapshot test deferred (marked [ ] in tasks) — requires snapshot infrastructure setup
+- Code review applied 16 patches: API key moved server-side, real confidence scores, security validations, encryption, audit improvements, LEGACY_PAPER guards, and RTL snapshots
+- Supabase bucket `paper-prescriptions` configured with `allowedMimeTypes: ['image/jpeg', 'image/png']`
 
 ### Debug Log
 - AuditLogger uses `rpc('audit_emit_with_lock')` not `from('audit_log').insert()` — test needed fix
@@ -160,18 +161,22 @@ Unlike TTS audio (ephemeral, deleted after delivery), prescription images are re
 
 ## File List
 
-- `apps/pharmacy-lite/src/lib/ocr.ts` (NEW)
-- `apps/pharmacy-lite/src/app/paper-rx/page.tsx` (NEW)
+- `apps/pharmacy-lite/src/lib/ocr.ts` (NEW — rewritten to call server-side API route)
+- `apps/pharmacy-lite/src/app/api/ocr/route.ts` (NEW — server-side Cloud Vision proxy)
+- `apps/pharmacy-lite/src/app/paper-rx/page.tsx` (NEW — multi-step scan page with AbortController)
 - `apps/pharmacy-lite/src/__tests__/ocr.test.ts` (NEW)
-- `apps/pharmacy-lite/src/__tests__/paper-rx-page.test.tsx` (NEW)
-- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` (MODIFIED)
-- `apps/pharmacy-lite/src/components/pharmacy/QueueItemCard.tsx` (MODIFIED)
+- `apps/pharmacy-lite/src/__tests__/paper-rx-page.test.tsx` (NEW — includes RTL snapshots)
+- `apps/pharmacy-lite/src/__tests__/__snapshots__/paper-rx-page.test.tsx.snap` (NEW)
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` (MODIFIED — sanitized error log)
+- `apps/pharmacy-lite/src/components/pharmacy/QueueItemCard.tsx` (MODIFIED — formatTime guard)
 - `apps/pharmacy-lite/src/__tests__/PharmacyDashboard.test.tsx` (MODIFIED)
-- `apps/hub-api/src/trpc/routers/medication.ts` (MODIFIED)
-- `apps/hub-api/src/__tests__/paper-prescription.test.ts` (NEW)
+- `apps/hub-api/src/trpc/routers/medication.ts` (MODIFIED — security, audit, LEGACY_PAPER guards)
+- `apps/hub-api/src/__tests__/paper-prescription.test.ts` (NEW — updated audit assertion)
 - `apps/hub-api/src/__tests__/medication.test.ts` (MODIFIED — added organizations mock)
+- `packages/crypto/src/server-crypto.ts` (MODIFIED — added ocr_metadata to encrypted fields)
 - `_bmad-output/implementation-artifacts/24-3-paper-prescription-ocr.md` (MODIFIED)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED)
+- `_bmad-output/implementation-artifacts/deferred-work.md` (MODIFIED — added W14-W18)
 
 ## Review Findings
 
@@ -181,7 +186,7 @@ Unlike TTS audio (ephemeral, deleted after delivery), prescription images are re
 - [x] [Review][Patch] **CRITICAL: fileToBase64 returns undefined on malformed data URL** — added guard + reject [apps/pharmacy-lite/src/lib/ocr.ts]
 - [x] [Review][Patch] **HIGH: Drug interaction warning missing + complete/recordDispense not guarded for LEGACY_PAPER** — added info banner + LEGACY_PAPER guards
 - [x] [Review][Patch] **HIGH: ocrMetadata JSON blob not field-encrypted** — added ocr_metadata to randomizedFields [packages/crypto/src/server-crypto.ts]
-- [ ] [Review][Patch] **HIGH: Supabase bucket missing allowedMimeTypes enforcement** — requires bucket config migration (manual step)
+- [x] [Review][Patch] **HIGH: Supabase bucket missing allowedMimeTypes enforcement** — applied migration: configure_paper_prescriptions_bucket_allowed_mime_types
 - [x] [Review][Patch] **HIGH: Audit action is PHI_WRITE not PAPER_PRESCRIPTION_CREATED** — changed to dedicated action [apps/hub-api/src/trpc/routers/medication.ts]
 - [x] [Review][Patch] **HIGH: invalidate rejection path doesn't emit audit event** — added audit emit before throw [apps/hub-api/src/trpc/routers/medication.ts]
 - [x] [Review][Patch] **HIGH: PharmacyDashboard console.warn may leak PHI via err.message** — logs err.constructor.name only [apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx]
@@ -200,3 +205,4 @@ Unlike TTS audio (ephemeral, deleted after delivery), prescription images are re
 ## Change Log
 
 - 2026-05-16: Story 24.3 implemented — Paper Prescription OCR with Cloud Vision, Hub API endpoints, scan page UI, LEGACY_PAPER handling, dashboard integration, and comprehensive test coverage (26 new tests)
+- 2026-05-16: Code review — addressed 16 findings: moved API key server-side, real OCR confidence scores, imageStorageKey ownership validation, ocrMetadata field encryption, LEGACY_PAPER guards in complete/recordDispense, dedicated audit action, invalidate rejection audit, PHI log sanitization, AbortController for unmount, useCallback dependency fixes, zero-dimension canvas guard, file size limit, formatTime NaN guard, Supabase bucket MIME enforcement, RTL snapshot tests

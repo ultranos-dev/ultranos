@@ -52,6 +52,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   // Reset fetch mock
   global.fetch = vi.fn()
+  mockExtract.mockResolvedValue({ success: false, fields: [], error: 'OCR_UNAVAILABLE' })
 })
 
 describe('Paper Prescription Scan Page (Story 24.3)', () => {
@@ -242,6 +243,27 @@ describe('Paper Prescription Scan Page (Story 24.3)', () => {
       frequency: 0.88,
       prescriberName: 0.92,
       prescriptionDate: 0.95,
+    })
+  })
+
+  // RTL snapshot tests (CLAUDE.md requirement: snapshot tests for every patient-facing component in both LTR and RTL)
+  describe('RTL snapshot tests', () => {
+    it('matches snapshot in LTR mode', () => {
+      const { container } = render(
+        <div dir="ltr">
+          <PaperRxPage />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
+    })
+
+    it('matches snapshot in RTL mode', () => {
+      const { container } = render(
+        <div dir="rtl">
+          <PaperRxPage />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
     })
   })
 })
