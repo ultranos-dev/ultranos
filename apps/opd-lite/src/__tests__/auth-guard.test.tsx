@@ -143,6 +143,126 @@ describe('AuthGuard', () => {
     })
   })
 
+  it('redirects PENDING_VERIFICATION doctor to /kyc', async () => {
+    const mockSession = {
+      access_token: buildMockJwt({
+        sub: 'user-1',
+        role: 'DOCTOR',
+        session_id: 'sess-1',
+        practitioner_id: 'pract-1',
+        kyc_status: 'PENDING_VERIFICATION',
+      }),
+      user: { email: 'doc@hospital.example' },
+    }
+    mockGetSession.mockResolvedValue({
+      data: { session: mockSession },
+      error: null,
+    })
+
+    render(
+      <AuthGuard>
+        <div>Protected Content</div>
+      </AuthGuard>,
+    )
+
+    await waitFor(() => {
+      expect(locationHref).toBe('/kyc')
+    })
+
+    // Protected content should NOT render
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
+  })
+
+  it('allows ACTIVE doctor to access clinical features', async () => {
+    const mockSession = {
+      access_token: buildMockJwt({
+        sub: 'user-1',
+        role: 'DOCTOR',
+        session_id: 'sess-1',
+        practitioner_id: 'pract-1',
+        kyc_status: 'ACTIVE',
+      }),
+      user: { email: 'doc@hospital.example' },
+    }
+    mockGetSession.mockResolvedValue({
+      data: { session: mockSession },
+      error: null,
+    })
+
+    render(
+      <AuthGuard>
+        <div>Protected Content</div>
+      </AuthGuard>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Protected Content')).toBeInTheDocument()
+    })
+
+    // Should NOT redirect to /kyc
+    expect(locationHref).not.toBe('/kyc')
+  })
+
+  it('renders children on /kyc without entitlement gate after auth check', async () => {
+    Object.defineProperty(window.location, 'pathname', {
+      value: '/kyc',
+      writable: true,
+    })
+
+    const mockSession = {
+      access_token: buildMockJwt({
+        sub: 'user-1',
+        role: 'DOCTOR',
+        session_id: 'sess-1',
+        practitioner_id: 'pract-1',
+        kyc_status: 'PENDING_VERIFICATION',
+      }),
+      user: { email: 'doc@hospital.example' },
+    }
+    mockGetSession.mockResolvedValue({
+      data: { session: mockSession },
+      error: null,
+    })
+
+    render(
+      <AuthGuard>
+        <div>KYC Form</div>
+      </AuthGuard>,
+    )
+
+    // KYC page renders after auth check, without entitlement gate
+    await waitFor(() => {
+      expect(screen.getByText('KYC Form')).toBeInTheDocument()
+    })
+  })
+
+  it('redirects REJECTED doctor to /kyc', async () => {
+    const mockSession = {
+      access_token: buildMockJwt({
+        sub: 'user-1',
+        role: 'DOCTOR',
+        session_id: 'sess-1',
+        practitioner_id: 'pract-1',
+        kyc_status: 'REJECTED',
+      }),
+      user: { email: 'doc@hospital.example' },
+    }
+    mockGetSession.mockResolvedValue({
+      data: { session: mockSession },
+      error: null,
+    })
+
+    render(
+      <AuthGuard>
+        <div>Protected Content</div>
+      </AuthGuard>,
+    )
+
+    await waitFor(() => {
+      expect(locationHref).toBe('/kyc')
+    })
+  })
+
   it('rehydrates auth session store from Supabase session on hard refresh', async () => {
     // Zustand store is empty (simulates hard refresh)
     expect(useAuthSessionStore.getState().isAuthenticated).toBe(false)

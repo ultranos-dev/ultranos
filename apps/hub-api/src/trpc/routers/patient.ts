@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import { rateLimitMiddleware, RATE_LIMIT_TIERS } from '../middleware/rateLimit'
 import { generateBlindIndex } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { AuditLogger } from '@ultranos/audit-logger'
@@ -27,6 +28,7 @@ function hashNationalId(rawId: string): string {
  */
 export const patientRouter = createTRPCRouter({
   search: protectedProcedure
+    .use(rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch'))
     .use(enforceResourceAccess('Patient'))
     .input(
       z.object({

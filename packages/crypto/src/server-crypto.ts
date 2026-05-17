@@ -102,9 +102,14 @@ export function getEncryptionConfig() {
       'soap_objective',
       'soap_assessment',
       'soap_plan',
+      // AI scribe PHI fields (Story 24.1)
+      'original_freeform_text',
+      'ai_raw_response',
       // Lab result tables (Story 12.3)
       'report_conclusion',
       'encrypted_content',
+      // Paper prescription OCR metadata contains prescriber name and prescription date (Story 24.3)
+      'ocr_metadata',
       // Patient PHI — encrypted copies for secure read (Story 16.2, Option A).
       // The unencrypted originals (name_local, name_latin, etc.) remain for ILIKE search.
       'name_local_enc',

@@ -1,7 +1,22 @@
 import { useState } from 'react'
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native'
 import { TimelineIcon } from './TimelineIcon'
+import { ListenButton } from '@/components/ListenButton'
+import type { ListenDialect } from '@/components/ListenButton'
 import type { TimelineEvent } from '@/hooks/useMedicalHistory'
+import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
+
+/** Extract the first medication code from the FHIR resource for offline fragment lookup */
+function getMedicationCode(med: TimelineEvent): string {
+  if (med.type === 'medication') {
+    const rx = med.resource as FhirMedicationRequestZod
+    const coding = rx.medicationCodeableConcept?.coding
+    if (coding && coding.length > 0 && coding[0].code) {
+      return coding[0].code
+    }
+  }
+  return med.id // fallback to ID if no code available
+}
 import {
   consumerColors,
   consumerSpacing,
@@ -12,9 +27,23 @@ import {
 
 interface ActiveMedicationsProps {
   medications: TimelineEvent[]
+  patientId?: string
+  dialect?: ListenDialect
+  hasAIConsent?: boolean
+  authToken?: string
+  isOnline?: boolean
 }
 
-function ActiveMedCard({ med }: { med: TimelineEvent }) {
+interface ActiveMedCardProps {
+  med: TimelineEvent
+  patientId?: string
+  dialect?: ListenDialect
+  hasAIConsent?: boolean
+  authToken?: string
+  isOnline?: boolean
+}
+
+function ActiveMedCard({ med, patientId, dialect, hasAIConsent, authToken, isOnline }: ActiveMedCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -32,6 +61,18 @@ function ActiveMedCard({ med }: { med: TimelineEvent }) {
       <View style={styles.activeBadge}>
         <Text style={styles.activeBadgeText}>Active</Text>
       </View>
+      {/* Story 24.2: Listen button for TTS */}
+      {patientId && (
+        <ListenButton
+          medicationRequestId={med.id}
+          medicationCode={getMedicationCode(med)}
+          patientId={patientId}
+          dialect={dialect ?? 'EN'}
+          hasAIConsent={hasAIConsent ?? false}
+          authToken={authToken}
+          isOnline={isOnline}
+        />
+      )}
       {expanded && (
         <View style={styles.detailSection} testID={`active-med-detail-${med.id}`}>
           <Text style={styles.detailText}>{med.label}</Text>
@@ -44,7 +85,7 @@ function ActiveMedCard({ med }: { med: TimelineEvent }) {
   )
 }
 
-export function ActiveMedications({ medications }: ActiveMedicationsProps) {
+export function ActiveMedications({ medications, patientId, dialect, hasAIConsent, authToken, isOnline }: ActiveMedicationsProps) {
   if (medications.length === 0) return null
 
   return (
@@ -62,7 +103,15 @@ export function ActiveMedications({ medications }: ActiveMedicationsProps) {
         testID="active-medications-list"
       >
         {medications.map((med) => (
-          <ActiveMedCard key={med.id} med={med} />
+          <ActiveMedCard
+            key={med.id}
+            med={med}
+            patientId={patientId}
+            dialect={dialect}
+            hasAIConsent={hasAIConsent}
+            authToken={authToken}
+            isOnline={isOnline}
+          />
         ))}
       </ScrollView>
     </View>

@@ -37,19 +37,20 @@ describe('audit_log append-only enforcement (contract tests)', () => {
     expect(triggerEvents).not.toContain('INSERT')
   })
 
-  it('AuditLogger.emit() never calls update or delete on audit_log', async () => {
-    // Verify the AuditLogger code only uses .insert(), never .update() or .delete()
-    // This is a static analysis assertion — if AuditLogger ever adds update/delete,
-    // the DB trigger will block it at runtime.
+  it('AuditLogger.emit() uses RPC (atomic insert) and never calls update or delete on audit_log', async () => {
+    // Story 21.6: emit() now uses .rpc('audit_emit_with_lock') which does the INSERT
+    // inside a PostgreSQL function with advisory lock. The function itself only INSERTs.
+    // Verify the logger never uses .update() or .delete() directly.
     const { readFileSync } = await import('fs')
     const { resolve } = await import('path')
 
     const loggerPath = resolve(__dirname, '../../../../packages/audit-logger/src/logger.ts')
     const source = readFileSync(loggerPath, 'utf-8')
 
-    // AuditLogger should only use .insert() on audit_log, never DB .update() or .delete()
-    // Note: createHash().update() is the crypto API, not a DB operation
-    expect(source).toContain('.insert(')
+    // emit() should use .rpc() for atomic insert (Story 21.6)
+    expect(source).toContain('.rpc(')
+    expect(source).toContain('audit_emit_with_lock')
+    // Never use direct .update() or .delete() on audit_log
     expect(source).not.toMatch(/\.from\([^)]*\)[\s\S]*?\.update\s*\(/)
     expect(source).not.toMatch(/\.from\([^)]*\)[\s\S]*?\.delete\s*\(/)
   })

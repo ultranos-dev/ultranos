@@ -19,6 +19,7 @@
     "@ultranos/ui-kit": "workspace:*",
     "@ultranos/audit-logger": "workspace:*",
     "expo": "~52.0.0",
+    "expo-av": "~14.0.0",
     "expo-crypto": "~14.0.0",
     "expo-file-system": "~18.0.0",
     "expo-local-authentication": "~15.0.0",

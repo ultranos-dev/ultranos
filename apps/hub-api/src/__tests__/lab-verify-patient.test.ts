@@ -30,7 +30,38 @@ const mockAuditOrder = vi.fn(() => ({
   limit: vi.fn(() => ({ single: vi.fn().mockResolvedValue({ data: null, error: null }) })),
 }))
 
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
 const mockFrom = vi.fn((table: string) => {
+  if (table === 'organizations') return mockOrganizationsTable()
+  if (table === 'org_subscriptions') {
+    return {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            in: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: 'sub-1', status: 'ACTIVE' },
+                error: null,
+              }),
+              limit: vi.fn().mockResolvedValue({
+                data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      }),
+    }
+  }
   if (table === 'lab_technicians') {
     return { select: mockTechSelect }
   }
@@ -60,7 +91,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -114,7 +145,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     const result = await caller.lab.verifyPatient({
@@ -144,7 +175,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -159,7 +190,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -171,7 +202,7 @@ describe('lab.verifyPatient', () => {
   it('rejects DOCTOR role', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+      makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -182,7 +213,7 @@ describe('lab.verifyPatient', () => {
   it('rejects PHARMACIST role', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+      makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -193,7 +224,7 @@ describe('lab.verifyPatient', () => {
   it('rejects PATIENT role', async () => {
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'p-1', role: 'PATIENT', sessionId: 's1' }),
+      makeCtx({ sub: 'p-1', role: 'PATIENT', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -216,7 +247,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -231,7 +262,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' })
@@ -259,7 +290,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     const result1 = await caller.lab.verifyPatient({
@@ -287,7 +318,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -302,7 +333,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' })
@@ -326,7 +357,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await caller.lab.verifyPatient({ query: 'NID-12345', method: 'NATIONAL_ID' })
@@ -343,7 +374,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await caller.lab.verifyPatient({ query: 'NID-UNKNOWN', method: 'NATIONAL_ID' }).catch(() => {})
@@ -364,7 +395,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -377,7 +408,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -392,7 +423,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' }),
+      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     const result = await caller.lab.verifyPatient({
@@ -411,7 +442,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(
@@ -425,7 +456,7 @@ describe('lab.verifyPatient', () => {
 
     const router = createTRPCRouter({ lab: labRouter })
     const caller = createCallerFactory(router)(
-      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }),
+      makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }),
     )
 
     await expect(

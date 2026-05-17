@@ -12,9 +12,40 @@ const mockRbacSingle = vi.fn()
 const mockRbacEq = vi.fn(() => ({ single: mockRbacSingle }))
 const mockRbacSelect = vi.fn(() => ({ eq: mockRbacEq }))
 
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
 let fromCalls: string[] = []
 const mockFrom = vi.fn((table: string) => {
   fromCalls.push(table)
+  if (table === 'organizations') return mockOrganizationsTable()
+  if (table === 'org_subscriptions') {
+    return {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            in: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: 'sub-1', status: 'ACTIVE' },
+                error: null,
+              }),
+              limit: vi.fn().mockResolvedValue({
+                data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      }),
+    }
+  }
   if (table === 'lab_technicians') {
     return { select: mockRbacSelect }
   }
@@ -66,7 +97,7 @@ vi.mock('@/lib/supabase', () => ({
 const { createTRPCRouter, createCallerFactory } = await import('../trpc/init')
 const { labRouter } = await import('../trpc/routers/lab')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null } | null) {
   return {
     supabase: { from: mockFrom } as never,
     user,
@@ -112,7 +143,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     const result = await caller.lab.uploadResult(validInput)
 
@@ -133,7 +164,7 @@ describe('lab.uploadResult', () => {
     const { encryptField } = await import('@ultranos/crypto/server')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -149,7 +180,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -168,7 +199,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'BAD_REQUEST',
@@ -187,7 +218,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
@@ -209,7 +240,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     const result = await caller.lab.uploadResult(validInput)
     expect(result.virusScanStatus).toBe('pending')
@@ -219,7 +250,7 @@ describe('lab.uploadResult', () => {
     const hugeBase64 = Buffer.alloc(21 * 1024 * 1024).toString('base64')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(
       caller.lab.uploadResult({ ...validInput, fileBase64: hugeBase64 }),
@@ -237,7 +268,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -262,7 +293,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -290,7 +321,7 @@ describe('lab.uploadResult', () => {
     })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toThrow()
 
@@ -311,7 +342,7 @@ describe('lab.uploadResult', () => {
     const hugeBase64 = Buffer.alloc(21 * 1024 * 1024).toString('base64')
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(
       caller.lab.uploadResult({ ...validInput, fileBase64: hugeBase64 }),
@@ -338,7 +369,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await caller.lab.uploadResult(validInput)
 
@@ -359,7 +390,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: { code: '42P01', message: 'relation error' } })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     await expect(caller.lab.uploadResult(validInput)).rejects.toMatchObject({
       code: 'INTERNAL_SERVER_ERROR',
@@ -372,7 +403,7 @@ describe('lab.uploadResult', () => {
 
   it('validates required input fields', async () => {
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     // Missing loincCode
     await expect(
@@ -399,7 +430,7 @@ describe('lab.uploadResult', () => {
       .mockReturnValueOnce({ error: null })
 
     const router = createTRPCRouter({ lab: labRouter })
-    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1' }))
+    const caller = createCallerFactory(router)(makeCtx({ sub: 'tech-1', role: 'LAB_TECH', sessionId: 's1', orgId: 'org-test-001' }))
 
     const result = await caller.lab.uploadResult(validInput)
     expect(result.status).toBe('preliminary')

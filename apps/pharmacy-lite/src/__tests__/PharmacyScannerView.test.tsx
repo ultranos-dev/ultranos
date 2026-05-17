@@ -203,6 +203,48 @@ describe('PharmacyScannerView', () => {
     expect(onNavigate).toHaveBeenCalled()
   })
 
+  it('renders offline warning for key_untrusted_offline with no Proceed option (Story 26.7 AC 4, 5.6)', async () => {
+    mockVerifyQr.mockResolvedValue({ status: 'key_untrusted_offline' })
+
+    const user = userEvent.setup()
+    render(<PharmacyScannerView />)
+
+    fireEvent.change(screen.getByTestId('qr-paste-input'), { target: { value: makeQrData() } })
+    await user.click(screen.getByTestId('verify-btn'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-untrusted-offline-warning')).toBeInTheDocument()
+    })
+
+    // AC 4: Verify the warning message is shown
+    expect(screen.getByText(/hub offline/i)).toBeInTheDocument()
+    expect(screen.getByText(/dispensing is blocked/i)).toBeInTheDocument()
+
+    // AC 3.4: No "Proceed Anyway" button — fail-closed mandatory
+    expect(screen.queryByText(/proceed anyway/i)).not.toBeInTheDocument()
+
+    // Verify "Wait and Retry" and "Cancel" options are present
+    expect(screen.getByTestId('retry-revalidation-btn')).toBeInTheDocument()
+    expect(screen.getByTestId('cancel-offline-btn')).toBeInTheDocument()
+  })
+
+  it('renders key_revoked warning with no dispensing option', async () => {
+    mockVerifyQr.mockResolvedValue({ status: 'key_revoked' })
+
+    const user = userEvent.setup()
+    render(<PharmacyScannerView />)
+
+    fireEvent.change(screen.getByTestId('qr-paste-input'), { target: { value: makeQrData() } })
+    await user.click(screen.getByTestId('verify-btn'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('key-revoked-warning')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText(/key has been revoked/i)).toBeInTheDocument()
+    expect(screen.getByText(/must not be dispensed/i)).toBeInTheDocument()
+  })
+
   it('shows parse error for malformed QR data', async () => {
     mockVerifyQr.mockResolvedValue({
       status: 'parse_error',

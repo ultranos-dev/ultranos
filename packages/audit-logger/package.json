@@ -30,7 +30,8 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "@ultranos/shared-types": "workspace:*",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "typescript": "^5.4.0",
     "@types/node": "^20.0.0",
-    "dexie": "^4.0.0"
+    "dexie": "^4.0.0",
+    "vitest": "^3.1.0"
   }
 }

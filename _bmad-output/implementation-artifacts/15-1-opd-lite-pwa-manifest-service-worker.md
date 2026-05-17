@@ -1,6 +1,6 @@
 # Story 15.1: OPD Lite PWA Manifest, Service Worker & Install Prompt
 
-Status: review
+Status: done
 
 ## Story
 

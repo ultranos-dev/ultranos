@@ -47,13 +47,24 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-2' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-2', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
 const REPORT_UUID = '00000000-0000-4000-8000-000000000200'
 const PATIENT_REF = 'Patient/00000000-0000-4000-8000-000000000001'
 const LAB_UUID = '00000000-0000-4000-8000-000000000300'
 const FILE_UUID = '00000000-0000-4000-8000-000000000400'
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -85,6 +96,27 @@ describe('diagnosticReport.read', () => {
     ]
 
     return vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -172,6 +204,27 @@ describe('diagnosticReport.read', () => {
 
   it('enforces consent — no active consent returns FORBIDDEN', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -231,6 +284,27 @@ describe('diagnosticReport.listByPatient', () => {
 
   function createListMockFrom(reportRows: any[] = []) {
     return vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -352,6 +426,27 @@ describe('diagnosticReport.listByLab', () => {
 
   function createLabListMockFrom(reportRows: any[] = []) {
     return vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -440,6 +535,27 @@ describe('diagnosticReport.listByLab', () => {
   it('emits READ audit event (not PHI_READ)', async () => {
     const insertSpy = vi.fn().mockResolvedValue({ error: null })
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -493,6 +609,27 @@ describe('diagnosticReport.listByLab', () => {
   it('does not enforce consent middleware (lab-scoped)', async () => {
     // LAB_TECH accessing without consent records should still succeed
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({
+                    data: { id: 'sub-1', status: 'ACTIVE' },
+                    error: null,
+                  }),
+                  limit: vi.fn().mockResolvedValue({
+                    data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }
+      }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({

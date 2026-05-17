@@ -47,3 +47,9 @@ export type { SessionManagerProviderProps } from './SessionManagerProvider.js'
 
 export { AppShell } from './AppShell.js'
 export type { AppShellProps, AppShellUser, NavItem } from './AppShell.js'
+
+export { EntitlementGate } from './EntitlementGate.js'
+export type { EntitlementGateProps } from './EntitlementGate.js'
+
+export { getSecurityHeaders } from './security-headers.js'
+export type { SecurityHeadersConfig } from './security-headers.js'

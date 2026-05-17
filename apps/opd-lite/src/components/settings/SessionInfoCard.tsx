@@ -1,0 +1,75 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+
+function parseJwtPayload(token: string): { exp?: number; iat?: number } | null {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(base64))
+  } catch {
+    return null
+  }
+}
+
+function formatCountdown(remainingMs: number): string {
+  if (remainingMs <= 0) return '0:00'
+  const minutes = Math.floor(remainingMs / 60_000)
+  const seconds = Math.floor((remainingMs % 60_000) / 1_000)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
+function countdownColor(remainingMs: number): string {
+  if (remainingMs > 5 * 60_000) return 'text-green-600'
+  if (remainingMs > 2 * 60_000) return 'text-yellow-600'
+  return 'text-red-600'
+}
+
+export function SessionInfoCard() {
+  const session = useAuthSessionStore((s) => s.session)
+  const [remainingMs, setRemainingMs] = useState<number | null>(null)
+
+  const payload = session?.token ? parseJwtPayload(session.token) : null
+  const expiresAtMs = payload?.exp ? payload.exp * 1000 : null
+  const loginAtMs = payload?.iat ? payload.iat * 1000 : null
+
+  useEffect(() => {
+    if (!expiresAtMs) return
+
+    const update = () => setRemainingMs(Math.max(0, expiresAtMs - Date.now()))
+    update()
+    const interval = setInterval(update, 1_000)
+    return () => clearInterval(interval)
+  }, [expiresAtMs])
+
+  if (!session) return null
+
+  const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : 'Unknown'
+
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <h2 className="mb-4 text-sm font-semibold text-neutral-900">Session Info</h2>
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-xs font-medium text-neutral-500">Login Time</p>
+          <p className="text-sm text-neutral-900">{loginTime}</p>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-neutral-500">Session Expiry</p>
+          {remainingMs !== null ? (
+            <p
+              data-testid="session-countdown"
+              className={`text-lg font-bold ${countdownColor(remainingMs)}`}
+            >
+              {formatCountdown(remainingMs)}
+            </p>
+          ) : (
+            <p className="text-sm text-neutral-400">Unavailable</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -25,3 +25,21 @@ export * from './fhir/allergy-intolerance.schema.js'
 export * from './fhir/medication-statement.schema.js'
 export * from './fhir/diagnostic-report.schema.js'
 export * from './fhir/medication-dispense.schema.js'
+
+// SOAP ledger AI types
+export * from './fhir/soap-ledger.js'
+
+// Lab registration types
+export * from './fhir/lab-registration.js'
+
+// KYC types
+export * from './fhir/kyc.js'
+
+// Subscription constants
+export * from './subscription.js'
+
+// Admin types
+export * from './admin/anomaly-alert.js'
+
+// AI model registry types (Story 24.4)
+export * from './ai-model.js'

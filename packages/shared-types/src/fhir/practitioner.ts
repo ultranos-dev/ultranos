@@ -33,6 +33,10 @@ export interface FhirPractitioner {
   _ultranos: {
     licenseExpiry?: string   // ISO 8601 date
     kycStatus: KycStatus
+    lastExpiryNotificationAt?: string    // ISO 8601 — last notification sent
+    lastExpiryNotificationThreshold?: number // days threshold (7, 30, 60)
+    suspendedAt?: string                 // ISO 8601 date — anchors 90-day read-only grace period
+    renewalDocumentUrl?: string          // URL of license renewal evidence document
     clinicName?: string
     clinicAddress?: string
     gpsLat?: number

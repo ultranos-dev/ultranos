@@ -2,10 +2,12 @@ import { z } from 'zod'
 import { baseProcedure, createTRPCRouter } from '../init'
 import { roleRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { isRedisHealthy } from '@/lib/redis'
 
 export const healthRouter = createTRPCRouter({
   /**
-   * Health check — verifies the Hub API is running and Supabase is reachable.
+   * Health check — verifies the Hub API is running, Supabase is reachable,
+   * and Redis connectivity status.
    * No authentication required.
    */
   check: baseProcedure.query(async ({ ctx }) => {
@@ -23,12 +25,28 @@ export const healthRouter = createTRPCRouter({
       dbStatus = 'unreachable'
     }
 
-    const healthy = dbStatus === 'connected'
+    // Redis status: connected, disconnected, or not_configured
+    let redisStatus: 'connected' | 'disconnected' | 'not_configured'
+    if (!process.env.REDIS_URL) {
+      redisStatus = 'not_configured'
+    } else {
+      redisStatus = (await isRedisHealthy()) ? 'connected' : 'disconnected'
+    }
+
+    // Overall: ok if db=connected. Redis is non-critical (fail-open philosophy).
+    const dbOk = dbStatus === 'connected'
+
+    // Surface Redis issues as warnings, not as degraded status
+    const warnings: string[] = []
+    if (redisStatus === 'disconnected') {
+      warnings.push('Redis disconnected — rate limiting and cron locks operating in fail-open mode')
+    }
 
     return {
-      status: healthy ? ('ok' as const) : ('degraded' as const),
+      status: dbOk ? ('ok' as const) : ('degraded' as const),
       version: '0.1.0',
-      services: { db: dbStatus },
+      services: { db: dbStatus, redis: redisStatus },
+      ...(warnings.length > 0 && { warnings }),
       timestamp: new Date().toISOString(),
     }
   }),

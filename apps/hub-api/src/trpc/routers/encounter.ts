@@ -5,7 +5,11 @@ import { roleRestrictedProcedure } from '../rbac'
 import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { parseSOAPNote } from '@/lib/ai-scribe'
+import { aiScribeInvocationsTotal, aiScribeEditRate } from '@/lib/clinical-safety-metrics'
 
 const encounterStatusEnum = z.enum(['planned', 'in-progress', 'finished', 'cancelled'])
 
@@ -23,6 +27,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_WRITE audit event.
    */
   create: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('Encounter'))
     .input(
       z.object({
@@ -123,6 +129,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_READ audit event.
    */
   read: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('Encounter'))
     .input(
       z.object({
@@ -177,6 +185,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_WRITE audit event.
    */
   update: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('Encounter'))
     .input(
       z.object({
@@ -261,6 +271,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_WRITE audit event.
    */
   close: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('Encounter'))
     .input(
       z.object({
@@ -350,6 +362,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_WRITE audit event.
    */
   addSOAPNote: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('ClinicalImpression'))
     .input(
       z.object({
@@ -439,6 +453,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_READ audit event.
    */
   listSOAPNotes: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('ClinicalImpression'))
     .input(
       z.object({
@@ -455,7 +471,7 @@ export const encounterRouter = createTRPCRouter({
 
       const { data, error } = await ctx.supabase
         .from('soap_ledger')
-        .select('id, encounter_id, practitioner_id, soap_subjective, soap_objective, soap_assessment, soap_plan, hlc_timestamp, created_at')
+        .select('id, encounter_id, practitioner_id, soap_subjective, soap_objective, soap_assessment, soap_plan, hlc_timestamp, created_at, source, ai_model_version, confirmed_by, confirmed_at')
         .eq('encounter_id', input.encounterId)
         .order('hlc_timestamp', { ascending: true })
 
@@ -499,6 +515,10 @@ export const encounterRouter = createTRPCRouter({
           plan: row.soapPlan,
           hlcTimestamp: row.hlcTimestamp,
           createdAt: row.createdAt,
+          source: row.source ?? 'MANUAL',
+          aiModelVersion: row.aiModelVersion ?? null,
+          confirmedBy: row.confirmedBy ?? null,
+          confirmedAt: row.confirmedAt ?? null,
         })),
       }
     }),
@@ -510,6 +530,8 @@ export const encounterRouter = createTRPCRouter({
    * Emits PHI_READ audit event.
    */
   listByPatient: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('Encounter'))
     .input(
       z.object({
@@ -552,5 +574,271 @@ export const encounterRouter = createTRPCRouter({
       }
 
       return { encounters: rows }
+    }),
+
+  /**
+   * Story 24.1 AC 2, 9: Parse freeform clinical text into SOAP via Cloud LLM.
+   * RBAC: DOCTOR, CLINICIAN.
+   * Checks AI_PROCESSING consent before sending to LLM.
+   * Never logs clinical content (PHI safety).
+   */
+  parseSOAPWithAI: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
+    .use(enforceResourceAccess('ClinicalImpression'))
+    .input(
+      z.object({
+        encounterId: z.string().uuid(),
+        freeformText: z.string().min(1).max(50000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch encounter to get patient ID
+      const { data: encounter } = await ctx.supabase
+        .from('encounters')
+        .select('id, subject_id, status')
+        .eq('id', input.encounterId)
+        .single()
+
+      if (!encounter) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Encounter not found' })
+      }
+
+      if (encounter.status === 'cancelled') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot use AI on a cancelled encounter' })
+      }
+
+      const patientId = encounter.subject_id
+
+      // AC 9: Check AI_PROCESSING consent
+      const { data: consentRecords } = await ctx.supabase
+        .from('consents')
+        .select('id, status, purpose, date_time, provision_end')
+        .eq('patient_ref', `Patient/${patientId}`)
+        .eq('purpose', 'AI_PROCESSING')
+        .order('date_time', { ascending: false })
+        .limit(1)
+
+      const latestConsent = consentRecords?.[0]
+      const hasAIConsent = latestConsent?.status === 'ACTIVE' &&
+        (!latestConsent.provision_end || new Date(latestConsent.provision_end).getTime() >= Date.now())
+
+      if (!hasAIConsent) {
+        // Audit the denied attempt (metadata only, no clinical content)
+        const audit = new AuditLogger(ctx.supabase)
+        try {
+          await audit.emit({
+            action: 'PHI_READ',
+            resourceType: 'ClinicalImpression',
+            resourceId: input.encounterId,
+            patientId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'DENIED',
+            sessionId: ctx.user.sessionId,
+            metadata: { operation: 'ai_scribe_consent_denied' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'ClinicalImpression' })
+        }
+
+        aiScribeInvocationsTotal.inc({ status: 'consent_denied' })
+        return {
+          error: 'CONSENT_NOT_GRANTED' as const,
+          message: 'Patient has not consented to AI processing',
+        }
+      }
+
+      // Fetch patient context (allergies + active meds) for AI relevance
+      const { data: allergies } = await ctx.supabase
+        .from('allergy_intolerances')
+        .select('code_text')
+        .eq('patient_id', patientId)
+        .eq('clinical_status', 'active')
+
+      const { data: meds } = await ctx.supabase
+        .from('medication_statements')
+        .select('medication_display')
+        .eq('subject_id', patientId)
+        .eq('status', 'active')
+
+      const allergyNames = (allergies ?? []).map((a: Record<string, unknown>) => String(a.code_text ?? '')).filter(Boolean)
+      const medNames = (meds ?? []).map((m: Record<string, unknown>) => String(m.medication_display ?? '')).filter(Boolean)
+
+      // Call Cloud LLM
+      const result = await parseSOAPNote(input.freeformText, {
+        allergies: allergyNames,
+        activeMeds: medNames,
+      })
+
+      // Metrics: Story 24.1 Task 9
+      aiScribeInvocationsTotal.inc({ status: 'error' in result ? 'error' : 'success' })
+
+      // Audit: AI_SCRIBE_INVOKED (no clinical content, only metadata)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'ClinicalImpression',
+          resourceId: input.encounterId,
+          patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'error' in result ? 'FAILURE' : 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'ai_scribe_invoked',
+            ...('modelVersion' in result ? { aiModelVersion: result.modelVersion } : {}),
+            ...('error' in result ? { errorType: result.error } : {}),
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'ClinicalImpression' })
+      }
+
+      return result
+    }),
+
+  /**
+   * Story 24.1 AC 5, 6, 7: Commit AI-confirmed SOAP note to the ledger.
+   * RBAC: DOCTOR, CLINICIAN.
+   * Stores TWO entries: AI_GENERATED (raw AI output) + AI_CONFIRMED (physician version).
+   * Both entries linked to the same encounter.
+   */
+  commitAISOAPNote: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
+    .use(enforceResourceAccess('ClinicalImpression'))
+    .input(
+      z.object({
+        encounterId: z.string().uuid(),
+        originalFreeformText: z.string().max(50000),
+        aiSubjective: z.string(),
+        aiObjective: z.string(),
+        aiAssessment: z.string(),
+        aiPlan: z.string(),
+        confirmedSubjective: z.string(),
+        confirmedObjective: z.string(),
+        confirmedAssessment: z.string(),
+        confirmedPlan: z.string(),
+        aiModelVersion: z.string(),
+        hlcTimestamp: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Validate encounter exists and is not cancelled
+      const { data: encounter } = await ctx.supabase
+        .from('encounters')
+        .select('id, status, subject_id')
+        .eq('id', input.encounterId)
+        .single()
+
+      if (!encounter) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Encounter not found' })
+      }
+      if (encounter.status === 'cancelled') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add SOAP notes to a cancelled encounter' })
+      }
+
+      // Re-check AI_PROCESSING consent (may have been withdrawn since parseSOAPWithAI)
+      const { data: consentRecords } = await ctx.supabase
+        .from('consents')
+        .select('id, status, purpose, date_time, provision_end')
+        .eq('patient_ref', `Patient/${encounter.subject_id}`)
+        .eq('purpose', 'AI_PROCESSING')
+        .order('date_time', { ascending: false })
+        .limit(1)
+
+      const latestConsent = consentRecords?.[0]
+      const hasAIConsent = latestConsent?.status === 'ACTIVE' &&
+        (!latestConsent.provision_end || new Date(latestConsent.provision_end).getTime() >= Date.now())
+
+      if (!hasAIConsent) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Patient AI processing consent has been withdrawn' })
+      }
+
+      const nowIso = new Date().toISOString()
+
+      // Entry 1: AI_GENERATED — the raw AI output before physician edits
+      const aiGeneratedRow = db.toRow({
+        id: crypto.randomUUID(),
+        encounterId: input.encounterId,
+        practitionerId: ctx.user.sub,
+        soapSubjective: input.aiSubjective,
+        soapObjective: input.aiObjective,
+        soapAssessment: input.aiAssessment,
+        soapPlan: input.aiPlan,
+        hlcTimestamp: input.hlcTimestamp,
+        source: 'AI_GENERATED',
+        aiModelVersion: input.aiModelVersion,
+        originalFreeformText: input.originalFreeformText,
+        aiRawResponse: JSON.stringify({
+          subjective: input.aiSubjective,
+          objective: input.aiObjective,
+          assessment: input.aiAssessment,
+          plan: input.aiPlan,
+        }),
+      })
+
+      // Entry 2: AI_CONFIRMED — the physician-reviewed version
+      const aiConfirmedRow = db.toRow({
+        id: crypto.randomUUID(),
+        encounterId: input.encounterId,
+        practitionerId: ctx.user.sub,
+        soapSubjective: input.confirmedSubjective,
+        soapObjective: input.confirmedObjective,
+        soapAssessment: input.confirmedAssessment,
+        soapPlan: input.confirmedPlan,
+        hlcTimestamp: input.hlcTimestamp,
+        source: 'AI_CONFIRMED',
+        aiModelVersion: input.aiModelVersion,
+        confirmedBy: ctx.user.sub,
+        confirmedAt: nowIso,
+      })
+
+      // Insert both entries atomically (single insert call ensures both or neither)
+      const { error: insertErr } = await ctx.supabase
+        .from('soap_ledger')
+        .insert([aiGeneratedRow, aiConfirmedRow])
+
+      if (insertErr) {
+        console.error('AI SOAP insert error:', { code: insertErr.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to store AI SOAP notes' })
+      }
+
+      // Metrics: Story 24.1 Task 9 — track physician edit rate
+      // Count character-level differences between AI and confirmed text
+      const aiText = `${input.aiSubjective}${input.aiObjective}${input.aiAssessment}${input.aiPlan}`
+      const confirmedText = `${input.confirmedSubjective}${input.confirmedObjective}${input.confirmedAssessment}${input.confirmedPlan}`
+      let diffChars = 0
+      const maxLen = Math.max(aiText.length, confirmedText.length)
+      for (let i = 0; i < maxLen; i++) {
+        if (aiText[i] !== confirmedText[i]) diffChars++
+      }
+      const editRate = maxLen > 0 ? (diffChars / maxLen) * 100 : 0
+      aiScribeEditRate.set(editRate)
+
+      // Audit: AI_SCRIBE_CONFIRMED (no clinical content)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'ClinicalImpression',
+          resourceId: input.encounterId,
+          patientId: encounter.subject_id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'ai_scribe_confirmed',
+            aiModelVersion: input.aiModelVersion,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'ClinicalImpression' })
+      }
+
+      return { success: true }
     }),
 })

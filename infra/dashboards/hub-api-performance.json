@@ -1,0 +1,106 @@
+{
+  "__meta": {
+    "description": "Grafana dashboard — Hub API Performance (Story 23.1 Task 3)",
+    "version": 1,
+    "datasource": "Prometheus"
+  },
+  "title": "Hub API Performance",
+  "uid": "hub-api-perf",
+  "tags": ["ultranos", "hub-api", "performance"],
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate — Top 10 Busiest Procedures",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (router, procedure) (rate(trpc_request_total[5m])))",
+          "legendFormat": "{{router}}.{{procedure}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "P50 / P95 / P99 Response Time by Procedure",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, router, procedure) (rate(trpc_request_duration_ms_bucket[5m])))",
+          "legendFormat": "P50 {{router}}.{{procedure}}"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, router, procedure) (rate(trpc_request_duration_ms_bucket[5m])))",
+          "legendFormat": "P95 {{router}}.{{procedure}}"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le, router, procedure) (rate(trpc_request_duration_ms_bucket[5m])))",
+          "legendFormat": "P99 {{router}}.{{procedure}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Error Rate by Procedure",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum by (router, procedure) (rate(trpc_request_errors_total[5m])) / sum by (router, procedure) (rate(trpc_request_total[5m])) * 100",
+          "legendFormat": "{{router}}.{{procedure}} error %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 1, "color": "red" }] } }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Overall Request Count & Error Rate (24h)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(trpc_request_total[5m]))",
+          "legendFormat": "Requests/sec"
+        },
+        {
+          "expr": "sum(rate(trpc_request_errors_total[5m])) / sum(rate(trpc_request_total[5m])) * 100",
+          "legendFormat": "Error rate %"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Sync Queue Depth by Spoke Type",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sync_queue_depth",
+          "legendFormat": "{{spoke_type}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Active Connections / Concurrent Requests",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "nodejs_active_requests_total",
+          "legendFormat": "Active requests"
+        },
+        {
+          "expr": "nodejs_active_handles_total",
+          "legendFormat": "Active handles"
+        }
+      ]
+    }
+  ]
+}

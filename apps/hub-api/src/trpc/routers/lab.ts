@@ -3,6 +3,8 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { labRestrictedProcedure } from '../rbac'
 import { enforceLabActive } from '../middleware/enforceLabActive'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { generateBlindIndex, encryptField } from '@ultranos/crypto/server'
@@ -319,6 +321,8 @@ export const labRouter = createTRPCRouter({
    * 4. Lab status: must be ACTIVE (via enforceLabActive)
    */
   verifyPatient: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(
       z.object({
@@ -450,6 +454,8 @@ export const labRouter = createTRPCRouter({
    * AC: 7, 8, 9, 10, 11, 12
    */
   uploadResult: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(
       z.object({
@@ -752,6 +758,8 @@ export const labRouter = createTRPCRouter({
    * PRIVACY: No PHI is logged. Only structured metadata is returned.
    */
   analyzeUpload: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceLabActive())
     .input(
       z.object({

@@ -22,7 +22,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -34,14 +34,47 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
 const SOAP_NOTE_UUID = '00000000-0000-4000-8000-000000000200'
 
 beforeEach(() => {
   vi.clearAllMocks()
 })
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
+/** Mock for org_subscriptions table used by enforceEntitlement middleware */
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'sub-1', status: 'ACTIVE' },
+              error: null,
+            }),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ id: 'sub-1', status: 'ACTIVE' }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
+  }
+}
 
 // Helper: creates a mockFrom that handles audit_log, encounters, and soap_ledger
 function createMockFrom(opts: {
@@ -50,6 +83,8 @@ function createMockFrom(opts: {
   soapSelectResult?: { data: any; error: any }
 }) {
   return vi.fn((table: string) => {
+    if (table === 'organizations') return mockOrganizationsTable()
+    if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
     if (table === 'audit_log') {
       return {
         select: vi.fn().mockReturnValue({
@@ -410,6 +445,10 @@ describe('encounter.listSOAPNotes', () => {
       plan: 'Rest',
       hlcTimestamp: '000001715300000:00001:node-1',
       createdAt: '2026-05-10T08:00:00Z',
+      source: 'MANUAL',
+      aiModelVersion: null,
+      confirmedBy: null,
+      confirmedAt: null,
     })
   })
 })

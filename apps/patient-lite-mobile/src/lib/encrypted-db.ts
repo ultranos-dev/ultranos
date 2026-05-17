@@ -134,8 +134,48 @@ async function createSchema(db: SQLite.SQLiteDatabase): Promise<void> {
     COMMIT;
   `)
 
-  // Track schema version for future migrations
-  await db.execAsync(`PRAGMA user_version = 1`)
+  // Track initial schema version
+  const { user_version } = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version') ?? { user_version: 0 }
+  if (user_version < 1) {
+    await db.execAsync('PRAGMA user_version = 1')
+  }
+
+  // Run subsequent migrations (Story 24.4+)
+  await applyMigrations(db)
+}
+
+async function applyMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
+  const { user_version } = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version') ?? { user_version: 0 }
+
+  if (user_version < 2) {
+    // Story 24.4: AI model metadata and sync queue
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS ai_model_metadata (
+        model_id TEXT PRIMARY KEY,
+        model_type TEXT NOT NULL,
+        version TEXT NOT NULL,
+        downloaded_at TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        checksum TEXT NOT NULL,
+        is_stale INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS sync_queue (
+        id TEXT PRIMARY KEY,
+        resource_type TEXT NOT NULL,
+        resource_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        status TEXT NOT NULL,
+        hlc_timestamp TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        retry_count INTEGER NOT NULL,
+        last_attempt_at TEXT
+      );
+
+      PRAGMA user_version = 2;
+    `)
+  }
 }
 
 /**

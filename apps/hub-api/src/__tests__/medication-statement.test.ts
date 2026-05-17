@@ -24,7 +24,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -33,6 +33,39 @@ function createTestContext(overrides?: {
     supabase: supabase as never,
     user: overrides?.user ?? null,
     headers: new Headers(),
+  }
+}
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
+/** Mock for org_subscriptions table used by enforceEntitlement middleware */
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'sub-1', status: 'ACTIVE' },
+              error: null,
+            }),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ id: 'sub-1', status: 'ACTIVE' }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
   }
 }
 
@@ -45,8 +78,8 @@ const MS_UUID_2 = '00000000-0000-4000-8000-000000000102'
 const RX_UUID = '00000000-0000-4000-8000-000000000201'
 const ENC_UUID = '00000000-0000-4000-8000-000000000301'
 
-const CLINICIAN_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST', sessionId: 'sess-2' }
+const CLINICIAN_USER = { sub: 'doc-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharm-001', role: 'PHARMACIST', sessionId: 'sess-2', orgId: 'org-test-001' }
 
 describe('medicationStatement.listActive', () => {
   it('returns active medication statements for a patient', async () => {
@@ -82,7 +115,9 @@ describe('medicationStatement.listActive', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { select: mockSelect }
       return { insert: auditMock }
@@ -117,7 +152,9 @@ describe('medicationStatement.listActive', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { select: mockSelect }
       return { insert: auditMock }
@@ -162,7 +199,11 @@ describe('medicationStatement.listActive', () => {
       }),
     })
 
-    const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      return { select: mockSelect }
+    })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
     const caller = createCaller(ctx)
@@ -221,7 +262,9 @@ describe('medicationStatement.create', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { select: selectExistingMock }
       if (callCount.n === 2) return { insert: insertMock }
@@ -263,7 +306,9 @@ describe('medicationStatement.create', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { select: selectExistingMock }
       return { update: updateMock }
@@ -315,7 +360,9 @@ describe('medicationStatement.create', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { select: selectExistingMock }
       if (callCount.n === 2) return { insert: insertMock }
@@ -353,7 +400,9 @@ describe('medicationStatement.updateStatus', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { update: updateMock }
       return { insert: auditMock }
@@ -392,7 +441,9 @@ describe('medicationStatement.updateStatus', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       callCount.n++
       if (callCount.n === 1) return { update: updateMock }
       return { insert: auditMock }
@@ -424,7 +475,11 @@ describe('medicationStatement.updateStatus', () => {
       }),
     })
 
-    const mockFrom = vi.fn().mockReturnValue({ update: updateMock })
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
+      return { update: updateMock }
+    })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
     const caller = createCaller(ctx)

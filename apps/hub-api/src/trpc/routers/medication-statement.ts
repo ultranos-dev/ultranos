@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 
@@ -16,6 +18,8 @@ export const medicationStatementRouter = createTRPCRouter({
    * RBAC: CLINICIAN, ADMIN (via enforceResourceAccess).
    */
   listActive: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationStatement'))
     .input(
       z.object({
@@ -69,6 +73,8 @@ export const medicationStatementRouter = createTRPCRouter({
    * RBAC: CLINICIAN, ADMIN. Emits audit event.
    */
   create: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationStatement'))
     .input(
       z.object({
@@ -203,6 +209,8 @@ export const medicationStatementRouter = createTRPCRouter({
    * RBAC: CLINICIAN, ADMIN. Emits audit event.
    */
   updateStatus: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationStatement'))
     .input(
       z.object({

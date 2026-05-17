@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PediatricDosingBanner > renders correctly in RTL layout 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="mb-4 rounded-lg py-3 ps-4 pe-4 font-semibold"
+      data-testid="pediatric-dosing-banner"
+      dir="auto"
+      role="alert"
+      style="background-color: rgb(255, 209, 26); color: rgb(14, 15, 12);"
+    >
+      Weight-based dosing not supported — calculate manually
+    </div>
+  </div>
+</div>
+`;

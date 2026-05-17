@@ -22,7 +22,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -34,11 +34,45 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
+
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
+/** Mock for org_subscriptions table used by enforceEntitlement middleware */
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'sub-1', status: 'ACTIVE' },
+              error: null,
+            }),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ id: 'sub-1', status: 'ACTIVE' }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -72,6 +106,8 @@ describe('encounter.create', () => {
 
   it('creates encounter and returns id', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -109,6 +145,8 @@ describe('encounter.create', () => {
   it('handles duplicate key (23505) idempotently', async () => {
     let callCount = 0
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -157,6 +195,8 @@ describe('encounter.create', () => {
 
   it('emits PHI_WRITE audit event', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -194,6 +234,8 @@ describe('encounter.create', () => {
     const toRowSpy = vi.spyOn(mockDb, 'toRow')
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -256,6 +298,8 @@ describe('encounter.read', () => {
     }
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -303,6 +347,8 @@ describe('encounter.read', () => {
 
   it('throws NOT_FOUND for missing encounter', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -344,6 +390,8 @@ describe('encounter.read', () => {
 
   it('emits PHI_READ audit event', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -407,6 +455,8 @@ describe('encounter.update', () => {
 
   it('updates encounter with valid HLC', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -455,6 +505,8 @@ describe('encounter.update', () => {
 
   it('rejects stale HLC with CONFLICT error', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -494,6 +546,8 @@ describe('encounter.update', () => {
 
   it('emits PHI_WRITE audit event', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -571,6 +625,8 @@ describe('encounter.close', () => {
     })
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -613,6 +669,8 @@ describe('encounter.close', () => {
 
   it('rejects closing a non-in-progress encounter with BAD_REQUEST', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -647,6 +705,8 @@ describe('encounter.close', () => {
 
   it('rejects stale HLC with CONFLICT', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -709,6 +769,8 @@ describe('encounter.listByPatient', () => {
     ]
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -759,6 +821,8 @@ describe('encounter.listByPatient', () => {
     ]
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -805,6 +869,8 @@ describe('encounter.listByPatient', () => {
 
   it('emits PHI_READ audit event', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return mockOrgSubscriptionsTable()
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({

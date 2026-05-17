@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import crypto from 'crypto'
 
 // Mock the Supabase client before importing the router
 vi.mock('@/lib/supabase', () => ({
@@ -28,6 +29,7 @@ function createTestContext(overrides?: {
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
+    rpc: vi.fn().mockResolvedValue({ data: [{ chain_hash: 'abc123' }], error: null }),
   }
   return {
     supabase: supabase as never,
@@ -47,139 +49,202 @@ const RX_UUID_3 = '00000000-0000-4000-8000-000000000003'
 const RX_UUID_4 = '00000000-0000-4000-8000-000000000004'
 const RX_UUID_BAD = '00000000-0000-4000-8000-ffffffffffff'
 
-const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1' }
+const TEST_USER = { sub: 'pharmacist-001', role: 'PHARMACIST', sessionId: 'sess-1', orgId: 'org-test-001' }
 
-describe('medication.getStatus', () => {
-  it('returns AVAILABLE for an active prescription', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
+// Ed25519 key pair for signed bundle tests (Story 21.2)
+let testKeyPair: crypto.KeyPairKeyObjectResult
+let publicKeyBase64: string
+
+beforeAll(() => {
+  testKeyPair = crypto.generateKeyPairSync('ed25519')
+  publicKeyBase64 = testKeyPair.publicKey
+    .export({ type: 'spki', format: 'der' })
+    .toString('base64')
+})
+
+function signPayload(payload: string): string {
+  return crypto.sign(null, Buffer.from(payload), testKeyPair.privateKey).toString('base64')
+}
+
+function makeSignedBundle(data: Record<string, unknown>) {
+  const payloadStr = JSON.stringify(data)
+  return { payload: payloadStr, sig: signPayload(payloadStr), pub: publicKeyBase64 }
+}
+
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
+function entitlementMock() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_1,
-              prescription_status: 'ACTIVE',
-              status: 'active',
-              medication_display: 'Amoxicillin 500mg',
-              authored_on: '2026-04-20T10:00:00Z',
-              dispensed_at: null,
-            },
-            error: null,
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'sub-1', status: 'ACTIVE' },
+              error: null,
+            }),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ id: 'sub-1', status: 'ACTIVE' }],
+              error: null,
+            }),
           }),
         }),
       }),
+    }),
+  }
+}
+
+function auditLogMock() {
+  return {
+    select: vi.fn().mockReturnValue({
+      order: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    }),
+    insert: vi.fn().mockResolvedValue({ error: null }),
+  }
+}
+
+function krlMock() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { revoked_at: null }, error: null }),
+      }),
+    }),
+  }
+}
+
+function createGetStatusMockFrom(rxResult: { data: any; error: any }) {
+  return vi.fn().mockImplementation((table: string) => {
+    if (table === 'organizations') return mockOrganizationsTable()
+    if (table === 'org_subscriptions') return entitlementMock()
+    if (table === 'audit_log') return auditLogMock()
+    if (table === 'practitioner_keys') return krlMock()
+    if (table === 'medication_requests') {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue(rxResult),
+          }),
+        }),
+      }
+    }
+    return { select: vi.fn().mockResolvedValue({ data: null, error: null }) }
+  })
+}
+
+describe('medication.getStatus', () => {
+  it('returns AVAILABLE for an active prescription (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ prescriptionId: RX_UUID_1 })
+    const mockFrom = createGetStatusMockFrom({
+      data: {
+        id: RX_UUID_1,
+        prescription_status: 'ACTIVE',
+        status: 'active',
+        medication_display: 'Amoxicillin 500mg',
+        authored_on: '2026-04-20T10:00:00Z',
+        dispensed_at: null,
+      },
+      error: null,
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
-    const result = await caller.medication.getStatus({
-      prescriptionId: RX_UUID_1,
-    })
+    const result = await caller.medication.getStatus({ signedBundle })
 
     expect(result.status).toBe('AVAILABLE')
     expect(result.prescriptionId).toBe(RX_UUID_1)
     expect(result.medicationDisplay).toBe('Amoxicillin 500mg')
   })
 
-  it('returns FULFILLED for a completed/dispensed prescription', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_2,
-              prescription_status: 'DISPENSED',
-              status: 'completed',
-              medication_display: 'Ibuprofen 400mg',
-              authored_on: '2026-04-18T10:00:00Z',
-              dispensed_at: '2026-04-19T14:00:00Z',
-            },
-            error: null,
-          }),
-        }),
-      }),
+  it('returns FULFILLED for a completed/dispensed prescription (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ prescriptionId: RX_UUID_2 })
+    const mockFrom = createGetStatusMockFrom({
+      data: {
+        id: RX_UUID_2,
+        prescription_status: 'DISPENSED',
+        status: 'completed',
+        medication_display: 'Ibuprofen 400mg',
+        authored_on: '2026-04-18T10:00:00Z',
+        dispensed_at: '2026-04-19T14:00:00Z',
+      },
+      error: null,
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
-    const result = await caller.medication.getStatus({
-      prescriptionId: RX_UUID_2,
-    })
+    const result = await caller.medication.getStatus({ signedBundle })
 
     expect(result.status).toBe('FULFILLED')
   })
 
-  it('returns VOIDED for a cancelled prescription', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_3,
-              prescription_status: 'CANCELLED',
-              status: 'cancelled',
-              medication_display: 'Metformin 850mg',
-              authored_on: '2026-04-17T10:00:00Z',
-              dispensed_at: null,
-            },
-            error: null,
-          }),
-        }),
-      }),
+  it('returns VOIDED for a cancelled prescription (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ prescriptionId: RX_UUID_3 })
+    const mockFrom = createGetStatusMockFrom({
+      data: {
+        id: RX_UUID_3,
+        prescription_status: 'CANCELLED',
+        status: 'cancelled',
+        medication_display: 'Metformin 850mg',
+        authored_on: '2026-04-17T10:00:00Z',
+        dispensed_at: null,
+      },
+      error: null,
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
-    const result = await caller.medication.getStatus({
-      prescriptionId: RX_UUID_3,
-    })
+    const result = await caller.medication.getStatus({ signedBundle })
 
     expect(result.status).toBe('VOIDED')
   })
 
-  it('throws NOT_FOUND when prescription does not exist', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { code: 'PGRST116', message: 'not found' },
-          }),
-        }),
-      }),
+  it('throws NOT_FOUND when prescription does not exist (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ prescriptionId: RX_UUID_BAD })
+    const mockFrom = createGetStatusMockFrom({
+      data: null,
+      error: { code: 'PGRST116', message: 'not found' },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
     await expect(
-      caller.medication.getStatus({ prescriptionId: RX_UUID_BAD }),
+      caller.medication.getStatus({ signedBundle }),
     ).rejects.toThrow('Prescription not found')
   })
 
-  it('throws INTERNAL_SERVER_ERROR on database failure', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { code: 'PGRST500', message: 'db error' },
-          }),
-        }),
-      }),
+  it('throws INTERNAL_SERVER_ERROR on database failure (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ prescriptionId: RX_UUID_1 })
+    const mockFrom = createGetStatusMockFrom({
+      data: null,
+      error: { code: 'PGRST500', message: 'db error' },
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
     await expect(
-      caller.medication.getStatus({ prescriptionId: RX_UUID_1 }),
+      caller.medication.getStatus({ signedBundle }),
     ).rejects.toThrow('Prescription status check failed')
   })
 
-  it('supports lookup by qrCodeId', async () => {
+  it('supports lookup by qrCodeId (signed bundle)', async () => {
+    const signedBundle = makeSignedBundle({ qrCodeId: 'qr-abc-123' })
     const mockEq = vi.fn().mockReturnValue({
       single: vi.fn().mockResolvedValue({
         data: {
@@ -193,24 +258,27 @@ describe('medication.getStatus', () => {
         error: null,
       }),
     })
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: mockEq,
-      }),
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return entitlementMock()
+      if (table === 'audit_log') return auditLogMock()
+      if (table === 'practitioner_keys') return krlMock()
+      if (table === 'medication_requests') {
+        return { select: vi.fn().mockReturnValue({ eq: mockEq }) }
+      }
+      return { select: vi.fn().mockResolvedValue({ data: null, error: null }) }
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
-    const result = await caller.medication.getStatus({
-      qrCodeId: 'qr-abc-123',
-    })
+    const result = await caller.medication.getStatus({ signedBundle })
 
     expect(result.status).toBe('AVAILABLE')
     expect(mockEq).toHaveBeenCalledWith('qr_code_id', 'qr-abc-123')
   })
 
-  it('rejects when neither prescriptionId nor qrCodeId provided', async () => {
+  it('rejects when no input provided', async () => {
     const ctx = createTestContext({ user: TEST_USER })
     const caller = createCaller(ctx)
 
@@ -228,13 +296,16 @@ describe('medication.getStatus', () => {
     ).rejects.toThrow('UNAUTHORIZED')
   })
 
-  it('rejects invalid UUID for prescriptionId', async () => {
-    const ctx = createTestContext({ user: TEST_USER })
+  it('rejects unsigned lookup with raw prescriptionId (Story 21.2)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const mockFrom = createGetStatusMockFrom({ data: null, error: null })
+    const ctx = createTestContext({ supabaseFrom: mockFrom, user: TEST_USER })
     const caller = createCaller(ctx)
 
     await expect(
-      caller.medication.getStatus({ prescriptionId: 'not-a-uuid' }),
-    ).rejects.toThrow()
+      caller.medication.getStatus({ prescriptionId: RX_UUID_1 }),
+    ).rejects.toThrow('UNSIGNED_LOOKUP_REJECTED')
+    warnSpy.mockRestore()
   })
 })
 
@@ -270,7 +341,8 @@ describe('medication.complete', () => {
     })
 
     const callCount = { n: 0 }
-    const mockFrom = vi.fn().mockImplementation(() => {
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
       callCount.n++
       if (callCount.n === 1) {
         return {
@@ -298,20 +370,23 @@ describe('medication.complete', () => {
   })
 
   it('rejects completing an already-fulfilled prescription', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_2,
-              prescription_status: 'DISPENSED',
-              status: 'completed',
-              interaction_check: 'CLEAR',
-            },
-            error: null,
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: RX_UUID_2,
+                prescription_status: 'DISPENSED',
+                status: 'completed',
+                interaction_check: 'CLEAR',
+              },
+              error: null,
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const ctx = createTestContext({
@@ -326,20 +401,23 @@ describe('medication.complete', () => {
   })
 
   it('rejects dispensing when interaction_check is BLOCKED', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_1,
-              prescription_status: 'ACTIVE',
-              status: 'active',
-              interaction_check: 'BLOCKED',
-            },
-            error: null,
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: RX_UUID_1,
+                prescription_status: 'ACTIVE',
+                status: 'active',
+                interaction_check: 'BLOCKED',
+              },
+              error: null,
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const ctx = createTestContext({
@@ -354,20 +432,23 @@ describe('medication.complete', () => {
   })
 
   it('rejects dispensing when interaction_check is UNAVAILABLE', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: RX_UUID_1,
-              prescription_status: 'ACTIVE',
-              status: 'active',
-              interaction_check: 'UNAVAILABLE',
-            },
-            error: null,
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: {
+                id: RX_UUID_1,
+                prescription_status: 'ACTIVE',
+                status: 'active',
+                interaction_check: 'UNAVAILABLE',
+              },
+              error: null,
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const ctx = createTestContext({
@@ -473,6 +554,7 @@ describe('medication.recordDispense', () => {
     const dispenseCallCount = { n: 0 }
 
     return vi.fn().mockImplementation((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'consents') return consentMock()
       if (table === 'audit_log') return auditLogMock()
 

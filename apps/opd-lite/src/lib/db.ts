@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod } from '@ultranos/shared-types'
+import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, AIModelType } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import {
   applyEncryptionMiddleware,
@@ -19,9 +19,16 @@ export interface SoapLedgerEntry {
   encounterId: string
   subjective: string
   objective: string
+  assessment?: string
+  plan?: string
   assessorRef: string
   hlcTimestamp: string
   createdAt: string
+  /** Story 24.1: AI versioning fields */
+  source?: 'MANUAL' | 'AI_GENERATED' | 'AI_CONFIRMED'
+  aiModelVersion?: string
+  confirmedBy?: string
+  confirmedAt?: string
 }
 
 export type LocalObservation = FhirObservation
@@ -96,6 +103,27 @@ export interface VocabInteractionEntry {
   version: number
 }
 
+// --- AI Model metadata tables (Story 24.4) ---
+
+export interface AIModelMetadataEntry {
+  modelId: string         // primary key
+  modelType: AIModelType
+  version: string
+  downloadedAt: string    // ISO 8601
+  fileSize: number
+  checksum: string
+  isStale: boolean
+}
+
+export interface ModelDownloadProgress {
+  modelId: string         // primary key
+  version: string
+  bytesDownloaded: number
+  totalBytes: number
+  downloadUrl: string
+  startedAt: string       // ISO 8601
+}
+
 class OpdLiteDatabase extends Dexie {
   patients!: EntityTable<LocalPatient, 'id'>
   encounters!: EntityTable<LocalEncounter, 'id'>
@@ -112,6 +140,8 @@ class OpdLiteDatabase extends Dexie {
   vocabularyMedications!: EntityTable<VocabMedicationEntry, 'code'>
   vocabularyIcd10!: EntityTable<VocabIcd10Entry, 'code'>
   vocabularyInteractions!: EntityTable<VocabInteractionEntry, 'id'>
+  aiModels!: EntityTable<AIModelMetadataEntry, 'modelId'>
+  modelDownloadProgress!: EntityTable<ModelDownloadProgress, 'modelId'>
 
   constructor() {
     super('opd-lite')
@@ -429,6 +459,45 @@ class OpdLiteDatabase extends Dexie {
         'id, patient.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
       medicationStatements:
         'id, status, subject.reference, _ultranos.sourcePrescriptionId, _ultranos.hlcTimestamp, meta.lastUpdated',
+    })
+
+    // v17: AI model metadata and download progress (Story 24.4)
+    // Not encrypted — model metadata is NOT PHI (just version info).
+    this.version(17).stores({
+      patients:
+        'id, _ultranos.nameLocal, _ultranos.nationalIdHash, _ultranos.nameLatin, meta.lastUpdated',
+      encounters:
+        'id, status, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      soapLedger:
+        'id, encounterId, hlcTimestamp',
+      observations:
+        'id, encounter.reference, subject.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      conditions:
+        'id, encounter.reference, subject.reference, _ultranos.diagnosisRank, meta.lastUpdated',
+      medications:
+        'id, status, subject.reference, encounter.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      interactionAuditLog:
+        'id, encounterId, patientId, medicationRequestId, checkResult, createdAt',
+      practitionerKeys:
+        'publicKey, practitionerId',
+      syncQueue:
+        'id, resourceType, resourceId, status, createdAt',
+      clientAuditLog:
+        'id, status, queuedAt, [status+queuedAt]',
+      vocabularyMedications:
+        '&code, display, form, version',
+      vocabularyIcd10:
+        '&code, display, version',
+      vocabularyInteractions:
+        '++id, drugA, drugB, version',
+      allergyIntolerances:
+        'id, patient.reference, _ultranos.hlcTimestamp, meta.lastUpdated',
+      medicationStatements:
+        'id, status, subject.reference, _ultranos.sourcePrescriptionId, _ultranos.hlcTimestamp, meta.lastUpdated',
+      aiModels:
+        '&modelId, modelType, isStale',
+      modelDownloadProgress:
+        '&modelId',
     })
   }
 }

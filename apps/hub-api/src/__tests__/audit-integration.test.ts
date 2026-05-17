@@ -69,6 +69,26 @@ function makeAuthCtx(role = 'DOCTOR') {
   return {
     supabase: {
       from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'org_subscriptions') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  in: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({
+                      data: { id: 'sub-1', status: 'ACTIVE' },
+                      error: null,
+                    }),
+                    limit: vi.fn().mockResolvedValue({
+                      data: [{ id: 'sub-1', status: 'ACTIVE' }],
+                      error: null,
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }
+        }
         if (table === 'patients') {
           return {
             select: vi.fn().mockReturnValue({
@@ -144,7 +164,7 @@ function makeAuthCtx(role = 'DOCTOR') {
         }
       }),
     } as never,
-    user: { sub: 'user-001', role, sessionId: 'session-001' },
+    user: { sub: 'user-001', role, sessionId: 'session-001', orgId: 'org-test-001' },
     headers: new Headers(),
   }
 }

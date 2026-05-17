@@ -13,6 +13,13 @@ import { syncRouter } from './sync'
 import { vocabularyRouter } from './vocabulary'
 import { allergyRouter } from './allergy'
 import { diagnosticReportRouter } from './diagnostic-report'
+import { patientKeyRouter } from './patient-key'
+import { subscriptionRouter } from './subscription'
+import { entitlementRouter } from './entitlement'
+import { registrationRouter } from './registration'
+import { billingRouter } from './billing'
+import { adminRouter } from './admin'
+import { aiRouter } from './ai'
 
 /**
  * Root tRPC router — aggregates all domain routers.
@@ -33,6 +40,13 @@ export const appRouter = createTRPCRouter({
   vocabulary: vocabularyRouter,
   allergy: allergyRouter,
   diagnosticReport: diagnosticReportRouter,
+  patientKey: patientKeyRouter,
+  subscription: subscriptionRouter,
+  entitlement: entitlementRouter,
+  registration: registrationRouter,
+  billing: billingRouter,
+  admin: adminRouter,
+  ai: aiRouter,
 })
 
 export type AppRouter = typeof appRouter

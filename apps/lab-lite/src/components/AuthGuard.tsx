@@ -3,6 +3,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
+import { EntitlementGate } from '@ultranos/ui-kit'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
@@ -63,8 +65,26 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [isLoginPage])
 
+  useEntitlementCheck('LAB_LITE')
+  const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
+  const clearSession = useAuthSessionStore((s) => s.clearSession)
+
+  function handleSignOut() {
+    clearSession()
+    window.location.href = '/login'
+  }
+
   if (isLoginPage) return <>{children}</>
   if (!ready) return null
 
-  return <>{children}</>
+  return (
+    <EntitlementGate
+      moduleCode="LAB_LITE"
+      moduleName="Lab Diagnostics Portal"
+      status={entitlementStatus}
+      onSignOut={handleSignOut}
+    >
+      {children}
+    </EntitlementGate>
+  )
 }

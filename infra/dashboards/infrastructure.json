@@ -1,0 +1,91 @@
+{
+  "__meta": {
+    "description": "Grafana dashboard — Infrastructure Health (Story 23.1 Task 3)",
+    "version": 1,
+    "datasource": "Prometheus"
+  },
+  "title": "Infrastructure Health",
+  "uid": "infra-health",
+  "tags": ["ultranos", "infrastructure", "health"],
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Node.js Heap Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "nodejs_heap_size_used_bytes / 1024 / 1024",
+          "legendFormat": "Heap Used (MB)"
+        },
+        {
+          "expr": "nodejs_heap_size_total_bytes / 1024 / 1024",
+          "legendFormat": "Heap Total (MB)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } }
+    },
+    {
+      "id": 2,
+      "title": "Garbage Collection Duration",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(nodejs_gc_duration_seconds_sum[5m])",
+          "legendFormat": "GC time/sec"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 3,
+      "title": "Event Loop Lag",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds * 1000",
+          "legendFormat": "Event loop lag (ms)"
+        },
+        {
+          "expr": "nodejs_eventloop_lag_p99_seconds * 1000",
+          "legendFormat": "P99 event loop lag (ms)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } }
+    },
+    {
+      "id": 4,
+      "title": "Database Connection Pool Utilization",
+      "description": "Sourced from cloud-provider metrics (Supabase/Vercel). Panel placeholder for external datasource.",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "pg_stat_activity_count",
+          "legendFormat": "Active connections"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Redis Connection Status & Latency",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "expr": "redis_connected_clients",
+          "legendFormat": "Redis clients"
+        },
+        {
+          "expr": "redis_ping_latency_ms",
+          "legendFormat": "Redis latency (ms)"
+        }
+      ]
+    }
+  ]
+}

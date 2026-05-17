@@ -91,13 +91,13 @@ export function PharmacyScannerView({
     handleVerify(data)
   }, [pasteInput, handleVerify])
 
-  // Fetch clinician key from Hub and re-verify
+  // Fetch clinician key from Hub and re-verify (used for unknown_clinician fallback)
   const handleFetchKey = useCallback(async (rawQr: string) => {
-    const token = await useAuthSessionStore.getState().getAccessToken()
-    const hubBaseUrl = getHubApiUrl()
-    if (!token) return
-
     try {
+      const token = await useAuthSessionStore.getState().getAccessToken()
+      const hubBaseUrl = getHubApiUrl()
+      if (!token) return
+
       // Extract pub key from QR
       const bundle = JSON.parse(rawQr) as { pub: string }
       await fetchAndCachePractitionerKey(bundle.pub, hubBaseUrl, token)
@@ -108,6 +108,12 @@ export function PharmacyScannerView({
     } catch {
       setPhase({ step: 'error', message: 'Failed to fetch clinician key from Hub.' })
     }
+  }, [handleVerify])
+
+  // Re-run full verification (used for key_untrusted_offline retry — triggers revalidation path)
+  const handleRetryVerify = useCallback((rawQr: string) => {
+    processingRef.current = false
+    handleVerify(rawQr)
   }, [handleVerify])
 
   // Load into fulfillment store and navigate
@@ -219,6 +225,7 @@ export function PharmacyScannerView({
           rawQr={phase.rawQr}
           onProceedToReview={handleProceedToReview}
           onFetchKey={handleFetchKey}
+          onRetryVerify={handleRetryVerify}
           onReset={handleReset}
         />
       )}
@@ -249,12 +256,14 @@ function ResultDisplay({
   rawQr,
   onProceedToReview,
   onFetchKey,
+  onRetryVerify,
   onReset,
 }: {
   result: VerificationResult
   rawQr: string
   onProceedToReview: (rx: VerifiedPrescription[], name?: string) => void
   onFetchKey: (rawQr: string) => void
+  onRetryVerify: (rawQr: string) => void
   onReset: () => void
 }) {
   const isAuthenticated = useAuthSessionStore((s) => s.session !== null)
@@ -394,6 +403,92 @@ function ResultDisplay({
             className="ms-3 mt-3 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Cancel
+          </button>
+        </div>
+      )
+
+    case 'key_revoked':
+      return (
+        <div
+          className="rounded-lg border-2 border-red-500 bg-red-100 p-6"
+          role="alert"
+          data-testid="key-revoked-warning"
+        >
+          <p className="text-lg font-bold text-red-900">
+            Prescriber Key Revoked
+          </p>
+          <p className="mt-2 text-sm font-semibold text-red-800">
+            The prescriber&apos;s signing key has been revoked. This prescription
+            cannot be verified and MUST NOT be dispensed.
+          </p>
+          <p className="mt-2 text-sm text-red-700">
+            Contact the prescribing clinician or your supervisor for a new prescription.
+          </p>
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-4 rounded-md bg-red-300 px-4 py-2 text-sm font-semibold text-red-900"
+          >
+            Dismiss
+          </button>
+        </div>
+      )
+
+    case 'key_untrusted_offline':
+      return (
+        <div
+          className="rounded-lg border-2 border-amber-500 bg-amber-50 p-6"
+          role="alert"
+          data-testid="key-untrusted-offline-warning"
+        >
+          <p className="text-lg font-bold text-amber-900">
+            Prescriber Verification Unavailable
+          </p>
+          <p className="mt-2 text-sm font-semibold text-amber-800">
+            Prescriber verification unavailable — Hub offline. Key was previously
+            valid but has expired. Cannot verify current status.
+          </p>
+          <p className="mt-2 text-sm text-amber-700">
+            Dispensing is blocked until the prescriber key can be re-verified.
+          </p>
+          <div className="mt-4 flex gap-3">
+            <button
+              type="button"
+              onClick={() => onRetryVerify(rawQr)}
+              className="rounded-md bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-500"
+              data-testid="retry-revalidation-btn"
+            >
+              Wait and Retry
+            </button>
+            <button
+              type="button"
+              onClick={onReset}
+              className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
+              data-testid="cancel-offline-btn"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )
+
+    case 'untrusted':
+      return (
+        <div
+          className="rounded-lg border-2 border-red-400 bg-red-50 p-6"
+          role="alert"
+          data-testid="untrusted-warning"
+        >
+          <p className="text-lg font-bold text-red-900">
+            Verification Blocked
+          </p>
+          <p className="mt-2 text-sm text-red-800">{result.reason}</p>
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-4 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
+          >
+            Dismiss
           </button>
         </div>
       )

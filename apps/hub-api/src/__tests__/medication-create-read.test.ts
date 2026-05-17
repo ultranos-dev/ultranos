@@ -22,7 +22,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -34,9 +34,9 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
-const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-4' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
+const LAB_TECH_USER = { sub: 'lab-001', role: 'LAB_TECH', sessionId: 'sess-4', orgId: 'org-test-001' }
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
 const PRESCRIPTION_UUID = '00000000-0000-4000-8000-000000000200'
 const ENCOUNTER_UUID = '00000000-0000-4000-8000-000000000100'
@@ -75,9 +75,43 @@ function mockAuditTable() {
   }
 }
 
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
+
+/** Mock for org_subscriptions table used by enforceEntitlement middleware */
+function mockOrgSubscriptionsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          in: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 'sub-1', status: 'ACTIVE' },
+              error: null,
+            }),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ id: 'sub-1', status: 'ACTIVE' }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
+  }
+}
+
 /** Returns a mockFrom that handles consents + audit + medication_requests insert */
 function mockFromForCreate(insertResult?: { data: unknown; error: unknown }) {
   return vi.fn((table: string) => {
+    if (table === 'organizations') return mockOrganizationsTable()
     if (table === 'consents') return mockConsentsTable()
     if (table === 'audit_log') return mockAuditTable()
     return {
@@ -95,6 +129,7 @@ function mockFromForCreate(insertResult?: { data: unknown; error: unknown }) {
 /** Returns a mockFrom that handles consents + audit + medication_requests select */
 function mockFromForRead(selectResult: { data: unknown; error: unknown }) {
   return vi.fn((table: string) => {
+    if (table === 'organizations') return mockOrganizationsTable()
     if (table === 'consents') return mockConsentsTable()
     if (table === 'audit_log') return mockAuditTable()
     return {
@@ -227,6 +262,7 @@ describe('medication.create', () => {
 
   it('returns idempotent success on duplicate prescriptionId', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
       if (table === 'consents') return mockConsentsTable()
       if (table === 'audit_log') return mockAuditTable()
       return {

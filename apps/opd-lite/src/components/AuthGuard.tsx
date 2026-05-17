@@ -3,16 +3,23 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
+import { EntitlementGate } from '@ultranos/ui-kit'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
+  const [pathname, setPathname] = useState('')
 
-  // Skip auth check entirely on the login page
-  const isLoginPage =
-    typeof window !== 'undefined' && window.location.pathname === '/login'
+  // Resolve pathname client-side only to avoid SSR/hydration mismatch
+  useEffect(() => {
+    setPathname(window.location.pathname)
+  }, [])
+
+  const isLoginPage = pathname === '/login'
+  const isKycPage = pathname === '/kyc'
 
   useEffect(() => {
-    if (isLoginPage) return
+    if (!pathname || isLoginPage) return
 
     let cancelled = false
 
@@ -41,6 +48,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               role: payload.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
+              kycStatus: payload.kyc_status ?? payload.app_metadata?.kyc_status,
             })
           } catch {
             // Malformed JWT — force re-login
@@ -48,6 +56,23 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             window.location.href = `/login?returnUrl=${returnUrl}`
             return
           }
+        }
+
+        // Story 22.5 AC #8: Redirect PENDING_VERIFICATION/REJECTED/REQUEST_MORE_INFO to KYC page
+        // Only applies to DOCTOR role — other provider roles have different credentialing flows
+        const currentSession = useAuthSessionStore.getState().session
+        const kycStatus = currentSession?.kycStatus
+        const role = currentSession?.role?.toUpperCase()
+        const currentPath = window.location.pathname
+
+        if (
+          role === 'DOCTOR' &&
+          kycStatus &&
+          ['PENDING_VERIFICATION', 'REJECTED', 'REQUEST_MORE_INFO'].includes(kycStatus) &&
+          currentPath !== '/kyc'
+        ) {
+          window.location.href = '/kyc'
+          return
         }
 
         setReady(true)
@@ -63,10 +88,30 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isLoginPage])
+  }, [pathname, isLoginPage])
+
+  useEntitlementCheck('OPD_LITE')
+  const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
+  const clearSession = useAuthSessionStore((s) => s.clearSession)
+
+  function handleSignOut() {
+    clearSession()
+    window.location.href = '/login'
+  }
 
   if (isLoginPage) return <>{children}</>
+  // KYC page: session check still runs (auth verified), but skip entitlement gate
+  if (isKycPage && ready) return <>{children}</>
   if (!ready) return null
 
-  return <>{children}</>
+  return (
+    <EntitlementGate
+      moduleCode="OPD_LITE"
+      moduleName="OPD Lite"
+      status={entitlementStatus}
+      onSignOut={handleSignOut}
+    >
+      {children}
+    </EntitlementGate>
+  )
 }

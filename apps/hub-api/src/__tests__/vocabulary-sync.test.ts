@@ -24,7 +24,7 @@ const createCaller = createCallerFactory(appRouter)
 function createAuthContext() {
   return {
     supabase: mockSupabaseClient as never,
-    user: { sub: 'test-user', role: 'DOCTOR', sessionId: 'test-session' },
+    user: { sub: 'test-user', role: 'DOCTOR', sessionId: 'test-session', orgId: 'org-test-001' },
     headers: new Headers(),
   }
 }
@@ -44,7 +44,8 @@ describe('vocabulary.sync', () => {
     ]
 
     let callCount = 0
-    mockSupabaseClient.from.mockImplementation(() => {
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       callCount++
       if (callCount === 1) {
         // First call: entries query (select * → gt → order)
@@ -77,17 +78,20 @@ describe('vocabulary.sync', () => {
   })
 
   it('returns empty entries when vocabulary is up-to-date', async () => {
-    mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      return {
+        select: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const caller = createCaller(createAuthContext())
@@ -106,17 +110,20 @@ describe('vocabulary.sync', () => {
   })
 
   it('supports all vocabulary types', async () => {
-    mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      return {
+        select: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const caller = createCaller(createAuthContext())
@@ -137,17 +144,20 @@ describe('vocabulary.sync', () => {
 
   it('excludes entries at or below sinceVersion', async () => {
     // Mock returns empty (simulating server filtered correctly)
-    mockSupabaseClient.from.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-        order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+    mockSupabaseClient.from.mockImplementation((table: string) => {
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      return {
+        select: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { version: 1 }, error: null }),
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const caller = createCaller(createAuthContext())

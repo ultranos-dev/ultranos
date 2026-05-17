@@ -500,9 +500,228 @@
 - **W13: No pagination on `listByPatient`** — Returns unbounded result set for a patient's encounters. No `.limit()` or cursor. Matches AC 5 ("returns all encounters") but causes performance issues for high-volume patients. Address when encounter volume grows.
 - **W14: No-op update allowed when no optional fields provided** — If only `hlcTimestamp` is passed without `status`, `classCode`, or `reasonCode`, the update only advances the HLC with no meaningful data change. Unnecessary DB write and audit event.
 
+## Deferred from: code review of 21-1-global-redis-backed-rate-limiting (2026-05-12)
+
+- **IP-based rate limiting trusts X-Forwarded-For without proxy validation** — `deriveIdentifier()` reads `x-forwarded-for` header directly. Unauthenticated clients can spoof the header to cycle through fake IPs and bypass the 20 req/min limit. Requires trusted proxy configuration or connection-level IP extraction at the infrastructure layer.
+- **Redis singleton leaks connections on Next.js HMR in dev mode** — Module-level `let client` in `redis.ts` is not reset by Hot Module Replacement. Old client references are lost without `disconnect()`, leaking Redis connections during development. Dev-mode only; no production impact.
+- **Missing await on dispatchResultNotifications** — `lab.ts` fire-and-forget promise for notification dispatch has no retry mechanism. If the async function fails, the upload response is already sent. Pre-existing pattern, not introduced by this change.
+
+## Deferred from: code review of 21-6-audit-hash-chain-race-condition-fix (2026-05-13)
+
+- **D2: JS timestamp assigned before PG advisory lock — low probability accepted** — `emit()` generates `id` and `timestamp` in JS before the RPC call acquires the advisory lock. Concurrent calls can produce out-of-order timestamps vs chain position. Low probability in single-server deployments. [`packages/audit-logger/src/logger.ts:39-40`]
+- **D3: `audit.sync` silently swallows per-event compliance failures** — The try/catch returns `{ success: false }` per event and continues. A full batch could silently fail with 200 OK. Pre-existing behavior, not introduced by Story 21.6. [`apps/hub-api/src/trpc/routers/audit.ts:71-73`]
+- **W1: Concurrency tests only exercise JS mock, not real PG advisory lock** — `hash-chain-concurrency.test.ts` uses `createSerializedMockSupabase` which simulates serialization in JS. No integration test proves the actual PostgreSQL `pg_advisory_xact_lock` serializes real concurrent requests. [`packages/audit-logger/src/__tests__/hash-chain-concurrency.test.ts`]
+- **W2: `verifyChain()` always starts from genesis hash — cannot verify mid-chain slice** — `prevHash` initialized to `GENESIS_HASH` on every call. Any call with `limit < total_records` that doesn't start from the first record will report false chain breaks. [`packages/audit-logger/src/logger.ts:98`]
+- **W3: `audit.sync` hardcodes `outcome: 'SUCCESS'` — client DENIED events lose true outcome** — Zod schema doesn't include `outcome` field. All synced events written as SUCCESS regardless of client-side outcome. [`apps/hub-api/src/trpc/routers/audit.ts:61`]
+- **W4: `ctx.user.sub` presence not validated — missing sub silently becomes null actorId** — No assertion that `sub` is present and non-empty on the JWT context. A token without `sub` claim produces anonymous audit records. [`apps/hub-api/src/trpc/routers/audit.ts:49`]
+
+## Deferred from: code review of 21-5-mobile-device-security-root-detection-certificate-pinning (2026-05-12)
+
+- **pinnedFetch not wired into any HTTP client** — `pinnedFetch` exists but is never imported. `drain-sync-fn.ts` and `notification-api.ts` use plain `fetch`. Requires HTTP client unification story to replace all Hub API fetch calls with pinned variant.
+- **Read-only mode doesn't render existing local data** — CompromisedDeviceWarning shows text notice only, no actual data viewer for appointments/medication history. Requires UX design.
+- **Read-only mode has no API-level write blocking** — Enforcement is UI-only (App.tsx gate). API-level guards needed as defense-in-depth when navigation/deep links are added.
+- **TLS 1.3 minimum not enforced** — `pkPinning: true` is public key pinning, not TLS version control. Requires native Android `network_security_config.xml` and iOS ATS configuration.
+- **Audit uses local `@/lib/audit` instead of `@ultranos/audit-logger`** — Local audit module feeds into sync queue. Migration to shared package with SHA-256 hash chaining is a broader refactor across patient-lite-mobile.
+- **Placeholder certificate pins with no runtime guard** — `certificate-pins.ts` contains dummy hashes (AAAA/BBBB). Must be replaced with real SHA-256 SPKI hashes before production. Consider adding a build-time assertion or startup-time validation.
+- **Integrity check runs once — no re-check on app foreground** — `App.tsx` runs `checkDeviceIntegrity()` once at mount. A device could be rooted while the app is backgrounded. Add AppState listener to re-check on foreground resume in a hardening pass.
+- **No test for App.tsx integration** — The component orchestrating device integrity check, conditional rendering, and audit emission has no dedicated test. Integration test gap.
+
+## Deferred from: code review of 21-3-consent-authorization-identity-trust-fixes (2026-05-13)
+
+- **W1: ADMIN consent bypass lacks dedicated audit trail** — When ADMIN syncs consent on behalf of another user, no metadata records this was an admin-on-behalf-of action. The success audit has `actorId: ctx.user.sub` but no `grantorId` in metadata. Enhancement for compliance traceability.
+- **W2: Client pharmacistRef has no max length constraint** — `pharmacistRef: z.string().min(1)` accepts arbitrarily long strings that get persisted in immutable audit log metadata. Input validation hardening.
+- **W3-W10: Story 21.2 scope findings** — parsedPayload not validated after JSON.parse (SQL injection risk), .refine() removal from GetStatusInputSchema, verifyEd25519Signature sync/async ambiguity, console.warn audit fallback inconsistency, breaking API for unsigned lookups, isKeyRevoked error handling gap, resourceId missing from some audit events, dead schema fields. All belong to Story 21.2 review scope.
+
+## Deferred from: code review of 21-2-qr-signature-verification-enforcement (2026-05-13)
+
+- **W1: Audit failure on SECURITY_VIOLATION is swallowed (no retry/alert)** — Three SECURITY_VIOLATION audit emit() calls wrapped in try/catch with console.warn fallback. If audit system is down during an attack, security events go unrecorded. Broader audit infrastructure concern — current fail-open-for-audit, fail-closed-for-request is acceptable first pass.
+- **W2: KRL base64 normalization / multiple rows handling** — `isKeyRevoked` does `.eq('public_key', publicKey)` with exact string match. Different base64 variants of the same key bytes could bypass match. `.single()` errors on multiple rows (safe, returns revoked). Data integrity concern about practitioner_keys table schema.
+- **W3: `INTERACTION_CHECK` not in `AuditResourceType` enum** — `checkInteractions` handler emits `resourceType: 'INTERACTION_CHECK'` which is not in the enum. Pre-existing from checkInteractions handler, not introduced by Story 21.2.
+- **W4: KRL check uses caller's Supabase client (RLS context)** — `isKeyRevoked` receives `ctx.supabase` which carries caller's RLS context. A caller who manipulates JWT claims could affect their own KRL check visibility. Needs service-role client investigation.
+
 ## Deferred from: code review of 16-5-soap-note-sync-endpoints (2026-05-11)
 
 - **W1: Audit failure silently swallowed in try/catch** — Both `addSOAPNote` and `listSOAPNotes` catch audit emit errors and only `console.warn`. CLAUDE.md Rule #6 says "no exceptions." Project-wide pattern across all routers. Address with transactional audit or dead-letter queue architecture.
 - **W2: Audit hash chain race condition under concurrent requests** — `AuditLogger.emit()` reads previous hash, computes new, inserts without serialization. Concurrent emits fork the chain. Pre-existing in `packages/audit-logger/src/logger.ts`. Consistent with prior reviews.
 - **W3: No pagination on `listSOAPNotes`** — Returns unbounded result set. Long-running encounters with many SOAP notes cause memory pressure. Address with cursor pagination.
 - **W4: HLC timestamp no format validation at DB or Zod level** — `z.string().min(1)` accepts any non-empty string. Lexicographic ordering only works with consistent format. Pre-existing pattern across all routers.
+
+## Deferred from: code review of 27-3-hub-api-entitlement-middleware (2026-05-13)
+
+- **W1: Exempt router list in JSDoc will drift** — `enforceEntitlement.ts` docblock lists 8 exempt routers but there's no compile-time or runtime enforcement. New routers will silently lack entitlement checks unless a developer reads the comment. Consider a registry pattern or exhaustive-enum guard in a future story.
+- **W2: `cause` field in TRPCError may not serialize to client** — No other TRPCError in the codebase uses the `cause` field. Depending on tRPC serialization config, `error.cause.requiredModule` may not reach the client. Low-risk until Story 27.4 (UI gate) consumes it; verify during that story.
+
+## Deferred from: code review of 21-4-hub-api-security-headers-cors (2026-05-13)
+
+- **Missing `Content-Security-Policy` header** — AC1 lists 4 specific headers; CSP not required but would prevent accidentally-served HTML from loading external resources. Additive security hardening for API-only service. [`apps/hub-api/next.config.js`]
+
+## Deferred from: code review of 27-4-spoke-app-entitlement-gate-ui (2026-05-13)
+
+- **Lab-Lite AuthGuard hardcodes role as `'LAB_TECH'`** — `apps/lab-lite/src/components/AuthGuard.tsx:49` hardcodes `role: 'LAB_TECH'` instead of reading from JWT claims like OPD and Pharmacy. Pre-existing; affects downstream RBAC checks if non-LAB_TECH users log in.
+- **`adminEmail` never passed from any AuthGuard; API doesn't return it** — AC 1 says "if available." The `<EntitlementGate>` component accepts the prop but no data source exists. Wire when `entitlement.check` API is extended to return org admin email.
+
+## Deferred from: code review of 21-4a-pwa-security-headers-via-next-config (2026-05-13)
+
+- **Missing `upgrade-insecure-requests` CSP directive** — HSTS is present but CSP lacks `upgrade-insecure-requests`. First visit before HSTS is cached allows mixed content. Not in current AC scope.
+- **`report-uri` deprecated in CSP Level 3, `report-to` missing** — Modern browsers prefer `report-to` with `Reporting-Endpoints` header. `report-uri` still functional but being phased out. Not in current AC scope.
+- **No `Permissions-Policy` header** — Missing header to restrict camera, microphone, geolocation, etc. Defense-in-depth for healthcare PWA. Not in current AC scope.
+- **`worker-src 'self'` may block Serwist blob URLs in dev mode** — Speculative concern. If Serwist uses blob: URLs for worker threads during development, CSP blocks them. Needs runtime verification.
+
+## Deferred from: code review of 26-7-practitioner-key-revalidation-wiring (2026-05-14)
+
+- **handleVerify has no try/catch — unhandled rejection if verifyPrescriptionQr throws** — `PharmacyScannerView.tsx:handleVerify`. Camera path calls without await. Pre-existing scanner behavior.
+- **processingRef never reset after camera scan handleVerify completes** — `PharmacyScannerView.tsx`. Scan locked until explicit `handleReset`. Pre-existing.
+- **confirmDispense partial failure loses track of which items dispensed vs failed** — `fulfillment-store.ts:confirmDispense`. Catch block sets `phase: 'completed'` with generic error. No per-item status. Pre-existing.
+- **confirmDispense race condition — double-tap can bypass phase guard** — `fulfillment-store.ts`. Async gap between `get()` guard and `set()` state change. Pre-existing.
+- **paste + camera concurrent verification race** — `PharmacyScannerView.tsx`. No mutex between paste-verify and camera-verify paths. Pre-existing.
+- **TOCTOU gap — confirmDispense does not re-verify key freshness before dispensing** — `fulfillment-store.ts`. Unbounded time between verification and dispensing. Design question beyond story scope.
+- **fetchAndCachePractitionerKey does not check local KRL before caching** — `prescription-verify.ts:fetchAndCachePractitionerKey`. Hub-fetched key cached without KRL cross-check. Pre-existing.
+
+## Deferred from: code review of 27-5-admin-subscription-dashboard (2026-05-14)
+
+- **W1: No RTL support / hardcoded en-US locale in Admin Portal** — Layout hardcodes `lang="en"`, no `dir` attribute, physical CSS properties. `formatDate` uses `'en-US'` locale. Pre-existing architectural gap; RTL is Epic 11 scope. [layout.tsx, page.tsx]
+- **W2: No dialog accessibility (focus trap, aria attributes, Escape key)** — Both AddModuleDialog and RemoveModuleDialog use bare `div` with no `role="dialog"`, `aria-modal`, focus trapping, or keyboard dismiss. Admin portal scaffold scope. [AddModuleDialog.tsx, RemoveModuleDialog.tsx]
+- **W3: Inconsistent `resourceType` casing between Story 27.2 and 27.5 audit events** — Story 27.5 uses `'Subscription'` (correct per spec) but pre-existing 27.2 code uses `'SUBSCRIPTION'`. Pre-existing. [subscription.ts]
+- **W4: `listOrgSubscriptions` and `getOrgSubscriptions` are near-duplicate procedures** — Different access control and response shapes. Pre-existing from Story 27.2. [subscription.ts]
+- **W5: Floating-point rounding in cost totals** — IEEE 754 addition can produce values like `80.00000000000001`. Masked by `.toFixed(2)` in display but raw API value may break downstream comparisons. [subscription.ts]
+- **W6: Expired trial shows "0 days remaining" with no visual distinction** — `Math.max(0, ...)` clamps expired trials to 0. Trial lifecycle management not in scope. [page.tsx]
+- **W7: `isLastModule` warning uses stale client-side data** — `activeSubscriptions.length` computed at page load; concurrent session changes not reflected. Server doesn't depend on this value. [page.tsx]
+- **D1: PLATFORM_ADMIN access to admin subscription procedures** — 4 new admin procedures use `roleRestrictedProcedure(['ADMIN'])` only; PLATFORM_ADMIN excluded. Defer to Epic 22 when platform admin role is fully designed. [subscription.ts]
+- **D4: Hub API tests are tautological — test mocks not router code** — Tests construct mock data then assert properties of that mock data. RBAC tests check a local array. Defer to dedicated test infrastructure story. [subscription-admin.test.ts]
+
+## Deferred from: code review of 27-6-organization-admin-self-registration (2026-05-14)
+
+- **W1: TOCTOU race on slug uniqueness** — Slug check-then-insert has a race condition. Two concurrent registrations with the same org name can produce duplicate slugs. Needs DB UNIQUE constraint on `organizations.slug` + catch constraint-violation and retry. Low probability during onboarding. [registration.ts]
+- **W2: No rate limiting on registration endpoint** — `registerOrganization` uses `baseProcedure` (unauthenticated). Spec notes say handle at API gateway level for MVP. [registration.ts]
+- **W3: Org status query per request in enforceVerifiedOrg** — Issues a Supabase query on every protected request. Status changes are rare; a short TTL cache or JWT claim embedding would reduce DB load. [enforceVerifiedOrg.ts]
+- **W4: Orphaned org row if rollback DELETE fails** — If `createUser` fails and the subsequent org DELETE also fails, an orphaned org row persists with no linked admin. Needs a reconciliation/cleanup job. [registration.ts]
+- **W5: selectInitialModules TOCTOU race on existing subscriptions check** — Check-then-insert without DB unique constraint on `(org_id, module_code)`. Concurrent calls can create duplicate subscriptions. [registration.ts]
+- **W6: Welcome email not implemented** — Task 4 (welcome email trigger) deferred. `email_confirm: true` triggers Supabase's built-in confirmation but not the custom onboarding email with KYC/staff provisioning steps. [registration.ts]
+
+## Deferred from: code review of 27-6-organization-admin-self-registration R2 (2026-05-14)
+
+- **W7: Plaintext password in tRPC input layer** — `adminPassword` traverses the tRPC input as a raw string. Could appear in request tracing, Sentry breadcrumbs, or validation error detail. Consider input redaction or `.transform()` to prevent leakage. [registration.ts]
+- **W8: Org name enumeration via slug suffix** — Response returns the generated slug (e.g., `acme-clinic-2`), revealing that `acme-clinic` already exists. Attacker can enumerate org names via the public endpoint. [registration.ts]
+- **W9: Non-Latin org names blocked by slugify** — Arabic/Dari/Farsi-only org names produce empty slugs and are rejected. Significant UX gap for MENA/Central Asia target market. Needs transliteration or hash-based slug fallback. [registration.ts:10-15]
+- **W10: enforceVerifiedOrg middleware not using tRPC middleware builder** — Hand-rolled type signature loses compile-time safety. Should use `t.middleware()` from init.ts. [enforceVerifiedOrg.ts]
+- **W11: Trial period calculated in application code** — `new Date()` uses server local time. Clock skew across instances could produce inconsistent trial end dates. Consider using `now() + interval '30 days'` at the DB level. [registration.ts:80-81]
+
+## Deferred from: code review of 27-8-billing-integration (2026-05-14)
+
+- **W3: No pagination for invoice listing** — `stripe.invoices.list` hard-limited to 100. Long-standing customers lose older records. Add cursor-based pagination when needed. [packages/billing/src/adapters/stripe.ts:122-125]
+- **W4: notification_queue table may not exist** — `billing-notifications.ts` inserts into `notification_queue` which may not have a migration yet. Code handles absence gracefully (catches insert error). Queue infrastructure is a separate concern. [apps/hub-api/src/services/billing-notifications.ts:61]
+
+## Deferred from: code review of 27-7-admin-user-provisioning-scoped-to-subscription (2026-05-14)
+
+- **W1: N+1 query pattern in batch lifecycle operations** — `scheduleUserSuspension`, `processPendingSuspensions`, and `reactivateUsersForModule` loop individual UPDATE queries per practitioner. Refactor to bulk UPDATE when org scale grows. [apps/hub-api/src/lib/subscription-lifecycle.ts]
+- **W2: Audit emit failures silently swallowed with console.warn** — Project-wide pattern. All audit calls catch errors and only console.warn. Applies to non-PHI operations in 27.7. [apps/hub-api/src/lib/subscription-lifecycle.ts, apps/hub-api/src/trpc/routers/subscription.ts]
+- **W3: `listOrgSubscriptions` inline SUBSCRIPTION_READ_ROLES missing CLINICIAN** — Story 27.2 code has a manual role allowlist omitting CLINICIAN despite it being in ROLE_MODULE_MAP. [apps/hub-api/src/trpc/routers/subscription.ts:72]
+- **W4: `removeModule` does not enforce minimum one active module** — Admin can cancel all modules, scheduling suspension of all clinical staff with no safeguard. [apps/hub-api/src/trpc/routers/subscription.ts:496]
+- **W5: `addModule` uses `z.string()` instead of `z.enum` for moduleCode** — Relies on DB check instead of schema-level validation. Story 27.5 code. [apps/hub-api/src/trpc/routers/subscription.ts:334]
+- **W6: No cron job or trigger configured for `processPendingSuspensions`** — Function exists and is tested but no infrastructure runs it. Spec notes this as infrastructure work.
+
+## Deferred from: code review of 27-9-subscription-lifecycle-tier-transitions (2026-05-15)
+
+- **W1: Supabase query builder chain mutation bug in billing webhook handlers** — `billing.ts:130-141, 209-220`: conditional `.eq()` calls on the query builder may not correctly scope updates to a specific subscription. The update may affect ALL active/trial subscriptions for the org when `subscriptionId` is absent. Pre-existing from Story 27.8.
+- **W2: Edge function auth check only validates header format** — `subscription-lifecycle/index.ts:65-68`: checks `Authorization: Bearer` prefix but never validates the token value. Standard Supabase Edge Function pattern, but the function is publicly reachable.
+- **W3: Edge Function cron logic not directly tested** — `subscription-lifecycle-cron.test.ts` imports from hub-api's `subscription-state-machine.ts` instead of testing the Edge Function's inline logic. Date window calculations and deduplication logic in the Edge Function are untested.
+- **W4: State machine logic duplicated between hub-api and Edge Function** — `subscription-state-machine.ts` and `subscription-lifecycle/index.ts` contain independent copies of ALLOWED_TRANSITIONS, transitionOrg, and email templates. Acknowledged architectural limitation (Edge Functions can't import from hub-api).
+
+## Deferred from: code review of 22-1-back-office-admin-web-application-scaffold (2026-05-15)
+
+- **W1: Supabase env var validation throws at module load time** — `apps/admin-portal/src/lib/supabase.ts:6-9` throws at import time if env vars missing, may crash SSR/build. Pre-existing pattern in all spoke apps.
+- **W2: AuthGuard `isLoginPage` exact path match fails with Next.js basePath** — `apps/admin-portal/src/components/AuthGuard.tsx:13-14` uses `window.location.pathname === '/login'` which breaks if deployed at a subpath. Systemic issue across all apps.
+- **W3: No Supabase project-level FIDO2/WebAuthn enablement documented** — No migration or configuration file ensuring FIDO2 is enabled in the Supabase project. Infrastructure config, not code.
+- **W4: Rate limit key spoofable via x-forwarded-for** — `reportAuthEvent` rate limiter keys on client-controlled header. Revisit when deployment infrastructure (trusted proxy, API gateway) is defined. [admin.ts:75-78]
+
+## Deferred from: code review of 22-5-provider-self-service-kyc-submission (2026-05-15)
+
+- **D1: Cloud Vision API key exposed in client bundle** — `NEXT_PUBLIC_` prefix ships key to every browser. Server-side OCR proxy deferred to follow-up story. For now, restrict key in Google Cloud Console (referrer/IP restrictions). [ocr.ts:46,58]
+- **D2: Synthetic OCR confidence scores** — Hardcoded 0.92/0.78 based on regex match index, not Cloud Vision API word-level confidence. v1 limitation. Real fix requires DOCUMENT_TEXT_DETECTION with fullTextAnnotation confidence. [ocr.ts:123-124]
+- **D3: No OCR for PDF uploads** — Cloud Vision PDF support requires different API call (inputConfig with mimeType). Manual entry fallback works. [page.tsx:118-146]
+- **W4: No RTL layout support on KYC page** — AC #12 unmet. Page uses minimal RTL-aware CSS (only `ms-2`). RTL snapshot test explicitly deferred in task checklist. [page.tsx]
+- **W5: Audit failures silently swallowed in submitKyc** — `console.warn` on `audit.emit()` failure, submission still returns success. Pre-existing pattern used across the entire codebase (registerOrganization, selectInitialModules, etc.). [registration.ts:474-480]
+- **W6: Supabase Storage access policies not verifiable from code** — Spec requires ADMIN-only read + submitter self-read on `kyc-documents` bucket. RLS/bucket policies not present in reviewed code files. Requires Supabase dashboard/migration verification. [registration.ts]
+
+## Deferred from: code review of 22-3-lab-approval-suspension-workflow (2026-05-15)
+
+- **W1: `reportAuthEvent` unauthenticated endpoint accepts caller-supplied `actorId`** — Pre-existing from Story 22.1. `baseProcedure` endpoint at `admin.ts:80` accepts `actorId` from unauthenticated callers and validates via DB lookup, allowing audit trail pollution. Move to `protectedProcedure` or add CAPTCHA/CSRF token.
+- **W2: In-process `rateLimitMap` bypassed under multi-instance/serverless deployment** — Pre-existing from Story 22.1. Module-level `Map` at `admin.ts:25` is per-process. Redis-backed rate limiting exists in Epic 21 (`21-1-global-redis-backed-rate-limiting`); wire admin routes to use it.
+- **W3: `labRestrictedProcedure` uses `.single()` — technician with multiple labs causes 406** — Pre-existing in `rbac.ts:127`. If a practitioner is affiliated with multiple labs, `.single()` throws `PGRST116`. Use `.limit(1).maybeSingle()` or add unique constraint on `lab_technicians.practitioner_id`.
+- **W4: AC #9 — Registration documents not linked, only text references shown** — Spec says "lab registration documents" but implementation shows only license/accreditation references as text. Needs document storage model and download/viewer UI in a future story.
+
+## Deferred from: code review of 22-4-provider-license-expiry-monitoring (2026-05-15)
+
+- **W1: `notificationTypeMap` referenced before declaration in `reviewLab`** — `const` is not hoisted; runtime ReferenceError when reviewLab is called. Pre-existing from story 22.3. [admin.ts:412]
+- **W2: In-memory rate limiter not safe for multi-replica deployments** — Module-level `Map` is per-process; ineffective in clustered/serverless deployments. Pre-existing from story 22.1. Redis-backed rate limiting exists in Epic 21. [admin.ts:25]
+- **W3: `evictExpiredEntries` only runs when map exceeds MAX_ENTRIES** — Stale entries accumulate indefinitely below 10k threshold. Pre-existing from story 22.1. [admin.ts:28]
+- **W4: `getLabDetail` exposes technician email without PHI audit event** — `telecom_email` is PII returned with no `audit.emit()`. CLAUDE.md rule 6 violation. Pre-existing from story 22.3. [admin.ts:271]
+- **W5: No optimistic concurrency (versionId) on `_ultranos` updates** — Concurrent admin actions and job runs can silently clobber each other's `_ultranos` writes. Cross-cutting architectural concern affecting all practitioner mutations. [admin.ts, license-expiry-check.ts]
+
+## Deferred from: code review of 22-6-prescribing-anomaly-alert-review (2026-05-15)
+
+- **W1: Module-level controlled codes cache shared across serverless requests** — `getControlledCodes()` uses module-level `let` cache with 60s TTL. Stale data risk and potential cross-context contamination if RLS policies restrict medication visibility. [admin.ts:1401-1419]
+- **W2: Fallback detection loads entire medication_requests table into memory** — `detectControlledSubstanceVolumeFallback` and `detectDrugFrequency` accumulate all prescription rows in Maps/Sets with no upper bound. Performance risk at scale for busy clinics. [anomaly-detection.ts:150-233]
+- **W3: Date window uses UTC boundaries, may misalign with local clinic timezones** — `new Date().toISOString().split('T')[0]` uses UTC date. Prescriptions authored near midnight in UTC+4.5 (Afghanistan) may be systematically misclassified. Cross-cutting timezone design decision. [anomaly-detection.ts:36-39]
+
+## Deferred from: code review of 22-2-kyc-verification-dashboard (2026-05-15)
+
+- **W1: `ConfidenceIndicator` may show 8500% if OCR returns 0-100 range** — Depends on Story 22.5 OCR output normalization. [[submissionId]/page.tsx:69]
+- **W2: `storageKey` path traversal risk if provider upload flow doesn't validate** — If `storageKey` is attacker-controlled via 22.5 upload, signed URL could reference arbitrary objects. Verify in Story 22.5 implementation. [admin.ts:813-820]
+- **W3: SLA breach row highlight lacks screen reader/ARIA indicator** — `bg-red-50` background only; no `aria-label` or role for accessibility. [providers/page.tsx:168-171]
+- **W4: `KycQueueEntry` type duplicated in shared-types and UI pages** — Same interface defined in three places. [kyc.ts:55-66, providers/page.tsx:9-21]
+- **W5: `KycDocument.documents` typed non-nullable but DB column may be null** — Backend uses `?? []` fallback suggesting nullability. [kyc.ts:22, admin.ts:804]
+
+## Deferred from: code review of 23-0-redis-infrastructure-provisioning (2026-05-15)
+
+- **W1: No graceful Redis shutdown (SIGTERM handler)** — No `process.on('SIGTERM')` to call `client.quit()` during deployment rollover. On managed Redis (Upstash/ElastiCache), rapid instance restarts could exhaust connection limits. Platform-level concern for Vercel/serverless. [redis.ts]
+- **W2: Hardcoded version `0.1.0` in health check** — Health endpoint returns hardcoded version string. Will drift from actual package version. Should read from package.json or env var. Pre-existing. [health.ts:43]
+- **W3: Rate limiter `resetEpoch` calculation produces meaningless timestamp** — `resetEpoch = (windowKey + 1) * config.windowSec` produces a 1970-era Unix timestamp. Should multiply by 1000 for milliseconds. Pre-existing in rateLimit.ts. [rateLimit.ts:58-59]
+- **W4: CJS direct invocation guard incompatible with ESM/tsx** — `require.main === module` idiom does not work under `npx tsx` (ESM loaders). Direct invocation silently fails. Low impact. [cron-runner.ts:70]
+
+## Deferred from: code review of 23-1-infrastructure-application-metrics-collection (2026-05-16)
+
+- **W1: Module-level singleton state unreliable in serverless** — Alert state (debounce, auto-resolve) and metric accumulators are in-memory singletons. Cold starts reset state; multi-instance deployments cause duplicate alerts. Architectural limitation of chosen in-memory approach. Revisit when deployment model is decided.
+- **W2: collectDefaultMetrics timer leak in dev (HMR)** — `collectDefaultMetrics()` starts an interval with no stored reference. HMR creates duplicate intervals. Dev-mode only.
+- **W3: Disk and network metrics absent (AC#2)** — Dev notes document these as infrastructure-layer (Vercel/CloudWatch) responsibility, not application-level.
+- **W4: sendAlert blocks evaluation loop if webhook is slow**
+- **D2: No scheduler invokes alerting functions** — `evaluateP95Alerts()`, `evaluateErrorRateAlerts()`, `runSyncQueueMonitor()` are exported but never registered in a cron/timer. Alerting logic is tested but dead code in production without wiring. Needs a cron integration story.
+- **D3: Sync queue query assumes pre-aggregated view** — `supabase.from('sync_queue').select('spoke_type, count, oldest_created_at')` expects aggregated columns. Verify schema or create a DB view/RPC when sync queue table is confirmed. — `sendAlert()` is awaited inside the for-loop. Slow webhooks stall the entire 60s evaluation cycle. Could use fire-and-forget or Promise.allSettled.
+
+## Deferred from: code review of 23-2-clinical-safety-metrics-alerting (2026-05-16)
+
+- **W5: `sendAlert` bypasses AuditLogger hash chain** — `alert-notifier.ts:56` inserts directly into `audit_events` via Supabase, bypassing the `AuditLogger` class and its SHA-256 hash chaining. Pre-existing from Story 23.1.
+- **W6: Concurrent monitor runs can fire duplicate alerts** — If Redis is unavailable, the cron lock is fail-open and two concurrent invocations can both run the monitor, emitting identical P1 alerts. Needs infrastructure-level deduplication or at-least-once delivery with idempotency keys.
+- **W7: Negative resolution times silently accepted in monthly report** — `clinical-safety-report.ts:172` — if `resolved_at` < `created_at` due to clock skew, resolution time is negative, pulling down average/p95 stats. Low impact but could distort report.
+
+## Deferred from: code review of 23-3-audit-chain-integrity-monitoring (2026-05-16)
+
+- **W8: No staleness detection — no alert when cron stops running** — If the audit chain verification cron silently stops (misconfigured schedule, deployment issue), the chain goes unverified indefinitely with no automated alert. Infrastructure-level monitoring concern applicable to all cron jobs, not specific to this story.
+- **W9: Admin portal component tests not implemented** — 2 tests for audit page render (chain status cards) and "Run Full Verification" button loading state are deferred due to missing React testing infrastructure for admin-portal.
+
+## Deferred from: code review of 24-2-empathy-translation-engine-prescription-tts (2026-05-16)
+
+- **W10: No rate limiting on TTS generation endpoint** — `medication.generatePrescriptionAudio` calls external paid TTS API with no per-user/per-patient rate limit. A malicious or buggy client could run up API costs. Cross-cutting infrastructure concern applicable to all external API-calling endpoints.
+- **W11: Audio stored without field-level encryption in Supabase Storage** — Synthesized audio (verbally states medication + dosage) uploaded as plain MP3 to Supabase Storage. Platform-level encryption-at-rest may cover this, but not app-layer AES-256-GCM as CLAUDE.md requires for PHI columns. Investigate Supabase Storage encryption guarantees.
+- **W12: Playback completion logging silently drops when offline** — `logPlaybackCompletion` in tts-api.ts fires network request with `.catch(() => {})`. Offline fragment playback (the exact scenario where this matters) always fails. Monthly playback rate report under-counts offline usage. Needs offline event queue (Epic 24.4 scope).
+- **W13: expo-av may cache media in OS temp directory beyond playback** — `Audio.Sound.createAsync({ uri })` may write to device temp cache. While `unloadAsync()` is called, OS-level media cache is not explicitly purged. Platform investigation needed to verify PHI retention risk.
+
+## Deferred from: code review of 24-3-paper-prescription-ocr (2026-05-16)
+
+- **W14: complete procedure passes empty string for patientRef to createMedicationStatementOnDispense** — Pre-existing in `medication.ts` `complete` procedure. A prescription with null `subject_reference` produces a MedicationStatement with `subjectReference: ''` (invalid FHIR reference).
+- **W15: setTimeout TTS audio cleanup unreliable in serverless/container deployment** — Pre-existing. In-process `setTimeout(..., 15min)` is lost on process recycle. Needs Supabase cron or scheduled function to sweep `tts-audio/` bucket.
+- **W16: voidPrescription audit event discards caller-supplied input.reason** — Pre-existing. Audit metadata hardcodes `reason: 'prescription_voided'` instead of using `input.reason`. Clinical justification lost from audit trail.
+- **W17: RTL snapshot tests for paper-rx page not implemented** — Acknowledged in story tasks. Requires snapshot infrastructure setup.
+- **W18: PharmacyDashboard filter counts retryCount>0, misses first-attempt failures with retryCount===0** — Dashboard shows freshly failed sync items as "pending" not "failed". Requires alignment between `deriveSyncStatus` in queue-data.ts and dashboard filter logic.
+
+## Deferred from: code review of 24-1-ai-clinical-scribe-soap-note-parsing (2026-05-16)
+
+- **W19: No Tab navigation between S/O/A/P sections (AC 10)** — SOAP editor relies on browser default Tab behavior. Custom Tab-to-next-section requires UX design decision on whether to override browser defaults.
+- **W20: Hardcoded fallback URL localhost:3000 in getHubApiUrl** — Pre-existing pattern in ai-scribe-service.ts. Misconfigured production would silently send requests to localhost.
+- **W21: Module-level consent cache has no size bound** — `aiConsentCache` Map in ai-scribe-service.ts grows unbounded. Negligible for typical clinic volumes but should add LRU eviction for high-throughput deployments.
+
+## Deferred from: code review of 24-4-edge-ai-model-update-service (2026-05-16)
+
+- **W22: Staleness banner not wired into any UI component** — `getStalenessBannerMessage()` exported from model-staleness-checker.ts but no .tsx consumer renders it. UI integration belongs to a frontend wiring task.
+- **W23: `startModelUpdateScheduler` never called from app entry points** — Scheduler exported but never imported by app layout or root component. App initialization wiring is separate integration work.
+- **W24: `isDrugDatabaseStale` never called from prescription workflow** — Function exists but PrescriptionEntry doesn't gate on it. Prescription workflow integration belongs to drug-interaction story wiring.

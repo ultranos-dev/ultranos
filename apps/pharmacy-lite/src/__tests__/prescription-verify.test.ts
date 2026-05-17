@@ -10,8 +10,25 @@ vi.mock('@ultranos/sync-engine', async () => {
   }
 })
 
+// Mock auth session store (required by prescription-verify revalidation path)
+const mockGetAccessToken = vi.fn<() => Promise<string | null>>().mockResolvedValue('test-token')
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: Object.assign(vi.fn(), {
+    getState: vi.fn(() => ({
+      session: { userId: 'u1', practitionerId: 'p1', role: 'PHARMACIST', sessionId: 's1' },
+      getAccessToken: mockGetAccessToken,
+    })),
+  }),
+}))
+
+// Mock trpc
+vi.mock('@/lib/trpc', () => ({
+  getHubApiUrl: vi.fn(() => 'http://hub'),
+}))
+
 import { verifySignature } from '@ultranos/sync-engine'
 import { verifyPrescriptionQr } from '@/lib/prescription-verify'
+import { revalidateKey } from '@/lib/practitioner-key-cache'
 import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
 
 const mockVerify = vi.mocked(verifySignature)
@@ -79,6 +96,15 @@ describe('verifyPrescriptionQr', () => {
   it('returns invalid_signature when verification fails (AC 3: Fraud Warning)', async () => {
     mockVerify.mockResolvedValue(false)
     const bundle = makeBundle()
+
+    // Seed a fresh (non-stale) key so we reach the signature verification step
+    await db.practitionerKeys.put({
+      publicKey: bundle.pub,
+      practitionerId: 'pract-001',
+      practitionerName: 'Dr. Ahmad',
+      cachedAt: new Date().toISOString(),
+    })
+
     const result = await verifyPrescriptionQr(JSON.stringify(bundle))
     expect(result.status).toBe('invalid_signature')
   })
@@ -86,6 +112,14 @@ describe('verifyPrescriptionQr', () => {
   it('returns invalid_signature when crypto throws', async () => {
     mockVerify.mockRejectedValue(new Error('crypto error'))
     const bundle = makeBundle()
+
+    await db.practitionerKeys.put({
+      publicKey: bundle.pub,
+      practitionerId: 'pract-001',
+      practitionerName: 'Dr. Ahmad',
+      cachedAt: new Date().toISOString(),
+    })
+
     const result = await verifyPrescriptionQr(JSON.stringify(bundle))
     expect(result.status).toBe('invalid_signature')
   })
@@ -106,7 +140,7 @@ describe('verifyPrescriptionQr', () => {
       publicKey: bundle.pub,
       practitionerId: 'pract-001',
       practitionerName: 'Dr. Ahmad',
-      cachedAt: '2026-04-01T00:00:00Z',
+      cachedAt: new Date().toISOString(),
     })
 
     const result = await verifyPrescriptionQr(JSON.stringify(bundle))
@@ -126,7 +160,7 @@ describe('verifyPrescriptionQr', () => {
       publicKey: bundle.pub,
       practitionerId: 'pract-001',
       practitionerName: 'Dr. Ahmad',
-      cachedAt: '2026-04-01T00:00:00Z',
+      cachedAt: new Date().toISOString(),
     })
 
     await verifyPrescriptionQr(JSON.stringify(bundle))
@@ -160,8 +194,8 @@ describe('verifyPrescriptionQr', () => {
     expect(result.status).toBe('key_revoked')
   })
 
-  it('works entirely offline without Hub connectivity (AC 5)', async () => {
-    // No fetch calls should be made during verification
+  it('works entirely offline without Hub connectivity for non-stale keys (AC 5)', async () => {
+    // No fetch calls should be made during verification of fresh keys
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     mockVerify.mockResolvedValue(true)
     const bundle = makeBundle()
@@ -170,12 +204,199 @@ describe('verifyPrescriptionQr', () => {
       publicKey: bundle.pub,
       practitionerId: 'pract-001',
       practitionerName: 'Dr. Ahmad',
-      cachedAt: '2026-04-01T00:00:00Z',
+      cachedAt: new Date().toISOString(),
     })
 
     const result = await verifyPrescriptionQr(JSON.stringify(bundle))
     expect(result.status).toBe('verified')
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()
+  })
+
+  it('non-stale key skips revalidation, verification proceeds immediately (26.7 AC 5.5)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+
+    // Seed with a FRESH key (not stale)
+    await db.practitionerKeys.put({
+      publicKey: bundle.pub,
+      practitionerId: 'pract-001',
+      practitionerName: 'Dr. Ahmad',
+      cachedAt: new Date().toISOString(),
+    })
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('verified')
+    // No Hub API calls should have been made
+    expect(fetchSpy).not.toHaveBeenCalled()
+    fetchSpy.mockRestore()
+  })
+})
+
+describe('Practitioner key revalidation (Story 26.7)', () => {
+  /** Seed a STALE key (TTL expired >24h ago) */
+  async function seedStaleKey(pubKeyBase64: string) {
+    const staleDate = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString() // 25h ago
+    await db.practitionerKeys.put({
+      publicKey: pubKeyBase64,
+      practitionerId: 'pract-001',
+      practitionerName: 'Dr. Ahmad',
+      cachedAt: staleDate,
+    })
+  }
+
+  it('stale key triggers revalidateKey before verification (AC 1, 5.1)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        result: {
+          data: {
+            status: 'active',
+            practitionerId: 'pract-001',
+            publicKey: 'key',
+            practitionerName: 'Dr. Ahmad',
+            revokedAt: null,
+            expiresAt: '2027-01-01T00:00:00Z',
+          },
+        },
+      }), { status: 200 }),
+    )
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+
+    // Revalidation should have been called (fetch to Hub)
+    expect(fetchSpy).toHaveBeenCalled()
+    // Key is active, so verification should succeed
+    expect(result.status).toBe('verified')
+    fetchSpy.mockRestore()
+  })
+
+  it('active key response refreshes cache, verification succeeds (AC 2, 5.2)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        result: {
+          data: {
+            status: 'active',
+            practitionerId: 'pract-001',
+            publicKey: 'key',
+            practitionerName: 'Dr. Ahmad',
+            revokedAt: null,
+            expiresAt: '2027-01-01T00:00:00Z',
+          },
+        },
+      }), { status: 200 }),
+    )
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('verified')
+
+    // Verify the cache was refreshed (cachedAt should be recent)
+    const refreshedEntry = await db.practitionerKeys.get(bundle.pub)
+    expect(refreshedEntry).toBeTruthy()
+    const cacheAge = Date.now() - new Date(refreshedEntry!.cachedAt).getTime()
+    expect(cacheAge).toBeLessThan(5000) // refreshed within last 5 seconds
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+
+  it('revoked key response deletes cache, returns key_revoked (AC 3, 5.3)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        result: {
+          data: {
+            status: 'revoked',
+            practitionerId: 'pract-001',
+            publicKey: 'key',
+            revokedAt: '2026-05-10T00:00:00Z',
+            expiresAt: '2027-01-01T00:00:00Z',
+          },
+        },
+      }), { status: 200 }),
+    )
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_revoked')
+
+    // Verify the cache entry was deleted
+    const entry = await db.practitionerKeys.get(bundle.pub)
+    expect(entry).toBeUndefined()
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+
+  it('expired key response returns key_revoked — fail-closed (Review Fix 1)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        result: {
+          data: {
+            status: 'expired',
+            practitionerId: 'pract-001',
+            publicKey: 'key',
+            revokedAt: null,
+            expiresAt: '2026-01-01T00:00:00Z',
+          },
+        },
+      }), { status: 200 }),
+    )
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_revoked')
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+
+  it('network failure returns key_untrusted_offline, blocks dispensing (AC 4, 5.4)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'))
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_untrusted_offline')
+
+    vi.mocked(globalThis.fetch).mockRestore()
+  })
+
+  it('returns key_untrusted_offline when auth token is unavailable (AC 4)', async () => {
+    mockGetAccessToken.mockResolvedValueOnce(null)
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_untrusted_offline')
+  })
+
+  it('returns key_untrusted_offline when Hub returns non-200 (AC 4)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('Internal Server Error', { status: 500 }),
+    )
+
+    mockVerify.mockResolvedValue(true)
+    const bundle = makeBundle()
+    await seedStaleKey(bundle.pub)
+
+    const result = await verifyPrescriptionQr(JSON.stringify(bundle))
+    expect(result.status).toBe('key_untrusted_offline')
+
+    vi.mocked(globalThis.fetch).mockRestore()
   })
 })

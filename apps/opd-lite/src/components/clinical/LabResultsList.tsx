@@ -1,0 +1,233 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
+
+interface LabResultsListProps {
+  patientId: string
+  onSelectReport: (report: LocalDiagnosticReport) => void
+}
+
+const URGENT_THRESHOLD_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+function statusBadge(status: string) {
+  switch (status) {
+    case 'preliminary':
+      return (
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+          Preliminary
+        </span>
+      )
+    case 'final':
+      return (
+        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+          Final
+        </span>
+      )
+    case 'amended':
+    case 'corrected':
+      return (
+        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+      )
+    default:
+      return (
+        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-600">
+          {status}
+        </span>
+      )
+  }
+}
+
+function isUrgent(report: LocalDiagnosticReport): boolean {
+  // AC #4: "24h+ unacknowledged" — both conditions must hold
+  if (report.acknowledgedAt) return false
+  if (!report.issued) return false
+  const issued = new Date(report.issued).getTime()
+  if (Number.isNaN(issued)) return false
+  const age = Date.now() - issued
+  return age > URGENT_THRESHOLD_MS
+}
+
+function formatDate(iso?: string): string {
+  if (!iso) return 'Unknown'
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export function LabResultsList({ patientId, onSelectReport }: LabResultsListProps) {
+  const [reports, setReports] = useState<LocalDiagnosticReport[]>([])
+  const [loading, setLoading] = useState(true)
+  const [consentResult, setConsentResult] = useState<ConsentCheckResult | null>(null)
+
+  const loadReports = useCallback(async () => {
+    try {
+      // AC #5 / Task 6: Consent enforcement before displaying results
+      const consent = await checkLabsConsent(patientId)
+      setConsentResult(consent)
+      if (!consent.granted) {
+        setLoading(false)
+        return
+      }
+
+      const patientRef = `Patient/${patientId}`
+      const results = await db.diagnosticReports
+        .where('subject.reference')
+        .equals(patientRef)
+        .toArray()
+
+      // Sort by effectiveDateTime descending, fallback to issued
+      results.sort((a, b) => {
+        const dateA = new Date(a.effectiveDateTime ?? a.issued).getTime()
+        const dateB = new Date(b.effectiveDateTime ?? b.issued).getTime()
+        return dateB - dateA
+      })
+
+      setReports(results)
+
+      // AC #5: Audit PHI READ on list load
+      if (results.length > 0) {
+        auditPhiAccess(
+          AuditAction.PHI_READ,
+          AuditResourceType.LAB_RESULT,
+          patientId,
+          patientId,
+          { phiAccess: 'lab_results_list', resultCount: results.length },
+        )
+      }
+    } catch {
+      // Offline-tolerant: show empty state
+    } finally {
+      setLoading(false)
+    }
+  }, [patientId])
+
+  useEffect(() => {
+    loadReports()
+  }, [loadReports])
+
+  if (loading) {
+    return (
+      <div className="py-4 text-center text-sm text-neutral-500">
+        Loading lab results...
+      </div>
+    )
+  }
+
+  // Task 6.3: No consent message
+  if (consentResult && !consentResult.granted) {
+    if (consentResult.reason === 'expired') {
+      return (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-expired">
+          <p className="font-bold text-amber-800">Consent has expired — request renewal</p>
+          <p className="mt-1 text-amber-700">
+            The patient&apos;s consent to view lab results has expired. Please request a renewed consent before accessing lab data.
+          </p>
+        </div>
+      )
+    }
+    return (
+      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-required">
+        <p className="font-bold text-amber-800">Patient consent required to view lab results</p>
+        <p className="mt-1 text-amber-700">
+          The patient has not granted consent for lab data access. Please obtain consent before viewing lab results.
+        </p>
+      </div>
+    )
+  }
+
+  // Consent unverified warning (offline/network error — still showing cached data)
+  const consentUnverified = consentResult?.granted && consentResult.unverified
+
+  if (reports.length === 0) {
+    return (
+      <div className="py-4 text-center text-sm text-neutral-500">
+        No lab results available for this patient.
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2" data-testid="lab-results-list">
+      {consentUnverified && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm" data-testid="consent-unverified">
+          <p className="font-bold text-amber-800">Consent status could not be verified</p>
+          <p className="mt-1 text-amber-700">
+            Showing cached results. Consent will be re-checked when connectivity is restored.
+          </p>
+        </div>
+      )}
+      <h3 className="text-lg font-bold text-neutral-900">
+        Lab Results ({reports.length})
+      </h3>
+      <ul className="space-y-2" aria-label="Lab results list">
+        {reports.map((report) => {
+          const urgent = isUrgent(report)
+          const loincDisplay =
+            report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'
+          const labName = report.performer?.[0]?.display ?? 'Unknown Lab'
+          const collectionDate = formatDate(report.effectiveDateTime ?? report.issued)
+
+          return (
+            <li key={report.id}>
+              <button
+                type="button"
+                onClick={() => onSelectReport(report)}
+                className={`w-full rounded-lg border px-4 py-3 text-start transition-colors hover:bg-neutral-50 ${
+                  urgent
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-neutral-200 bg-white'
+                }`}
+                aria-label={`View ${loincDisplay} from ${labName}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-neutral-900">
+                        {loincDisplay}
+                      </span>
+                      {statusBadge(report.status)}
+                      {urgent && (
+                        <span
+                          className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
+                          data-testid="urgent-indicator"
+                        >
+                          Urgent
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 flex gap-3 text-xs text-neutral-500">
+                      <span>{collectionDate}</span>
+                      <span>{labName}</span>
+                    </div>
+                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="h-5 w-5 shrink-0 text-neutral-400 rtl:scale-x-[-1]"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}

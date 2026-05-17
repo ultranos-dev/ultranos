@@ -58,7 +58,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -75,14 +75,25 @@ function createTestContext(overrides?: {
 // ---------------------------------------------------------------------------
 
 const PATIENT_UUID = '00000000-0000-4000-8000-000000000001'
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'CLINICIAN', sessionId: 'sess-1' }
-const LAB_TECH_USER = { sub: 'lab-tech-001', role: 'LAB_TECH', sessionId: 'sess-2' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'CLINICIAN', sessionId: 'sess-1', orgId: 'org-test-001' }
+const LAB_TECH_USER = { sub: 'lab-tech-001', role: 'LAB_TECH', sessionId: 'sess-2', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
 
 const DEFAULT_INPUT = {
   medicationCode: 'RX001',
   medicationDisplay: 'Warfarin 5mg',
   patientId: PATIENT_UUID,
+}
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
 }
 
 /**
@@ -92,6 +103,7 @@ const DEFAULT_INPUT = {
  */
 function buildMultiTableMock(tables: Record<string, { data: any; error: any }>) {
   return vi.fn((tableName: string) => {
+    if (tableName === 'organizations') return mockOrganizationsTable()
     const result = tables[tableName] ?? { data: [], error: null }
     return {
       select: vi.fn().mockReturnValue({

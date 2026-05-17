@@ -27,6 +27,7 @@ import { useAllergyStore } from '@/stores/allergy-store'
 import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { checkAIProcessingConsent } from '@/services/ai-scribe-service'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -66,12 +67,20 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   // SOAP note state
   const subjective = useSoapNoteStore((s) => s.subjective)
   const objective = useSoapNoteStore((s) => s.objective)
+  const assessment = useSoapNoteStore((s) => s.assessment)
+  const soapPlan = useSoapNoteStore((s) => s.plan)
   const setSubjective = useSoapNoteStore((s) => s.setSubjective)
   const setObjective = useSoapNoteStore((s) => s.setObjective)
+  const setAssessment = useSoapNoteStore((s) => s.setAssessment)
+  const setSoapPlan = useSoapNoteStore((s) => s.setPlan)
   const autosaveStatus = useSoapNoteStore((s) => s.autosaveStatus)
   const initForEncounter = useSoapNoteStore((s) => s.initForEncounter)
   const persistToLedger = useSoapNoteStore((s) => s.persistToLedger)
   const loadFromLedger = useSoapNoteStore((s) => s.loadFromLedger)
+
+  // AI consent and online status (Story 24.1)
+  const [aiConsentGranted, setAiConsentGranted] = useState(false)
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
 
   const { trigger: triggerAutosave, flush: flushAutosave } = useAutosave({
     onSave: persistToLedger,
@@ -171,6 +180,24 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     loadMedicationHistory(patientId)
   }, [activeEncounter?.id, activeEncounter?.status, initForEncounter, loadFromLedger, initVitalsForEncounter, loadVitals, loadPrescriptions, loadMedicationHistory, patientId])
 
+  // Story 24.1: Online status tracking
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true)
+    const goOffline = () => setIsOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
+
+  // Story 24.1: Check AI_PROCESSING consent when encounter loads
+  useEffect(() => {
+    if (!isActive || !patientId) return
+    checkAIProcessingConsent(patientId).then(setAiConsentGranted).catch(() => setAiConsentGranted(false))
+  }, [isActive, patientId])
+
   const handleSubjectiveChange = useCallback((value: string) => {
     setSubjective(value)
     triggerAutosave()
@@ -180,6 +207,16 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     setObjective(value)
     triggerAutosave()
   }, [setObjective, triggerAutosave])
+
+  const handleAssessmentChange = useCallback((value: string) => {
+    setAssessment(value)
+    triggerAutosave()
+  }, [setAssessment, triggerAutosave])
+
+  const handlePlanChange = useCallback((value: string) => {
+    setSoapPlan(value)
+    triggerAutosave()
+  }, [setSoapPlan, triggerAutosave])
 
   const handleWeightChange = useCallback((v: string) => { setWeight(v); triggerVitalsAutosave() }, [setWeight, triggerVitalsAutosave])
   const handleHeightChange = useCallback((v: string) => { setHeight(v); triggerVitalsAutosave() }, [setHeight, triggerVitalsAutosave])
@@ -559,8 +596,16 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           <SOAPNoteEntry
             subjective={subjective}
             objective={objective}
+            assessment={assessment}
+            plan={soapPlan}
             onSubjectiveChange={handleSubjectiveChange}
             onObjectiveChange={handleObjectiveChange}
+            onAssessmentChange={handleAssessmentChange}
+            onPlanChange={handlePlanChange}
+            encounterId={activeEncounter?.id ?? ''}
+            patientId={patientId}
+            aiConsentGranted={aiConsentGranted}
+            isOnline={isOnline}
           />
         </section>
       )}
@@ -715,20 +760,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         </section>
       )}
 
-      {/* Assessment — placeholder for command palette targeting */}
-      {isActive && (
-        <section
-          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
-          aria-label="Assessment"
-          data-section="assessment"
-          tabIndex={-1}
-        >
-          <h2 className="text-lg font-bold text-neutral-900">Assessment</h2>
-          <p className="mt-2 text-sm text-neutral-400">
-            Assessment entry will be available in a future update.
-          </p>
-        </section>
-      )}
     </main>
   )
 }

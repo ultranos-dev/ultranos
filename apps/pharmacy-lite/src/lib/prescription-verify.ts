@@ -2,6 +2,9 @@ import { verifySignature } from '@ultranos/sync-engine'
 import type { SignedPrescriptionBundle } from './prescription-types'
 import { db } from './db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
+import { getCachedKey, revalidateKey } from './practitioner-key-cache'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { getHubApiUrl } from '@/lib/trpc'
 
 export interface VerifiedPrescription {
   id: string
@@ -28,6 +31,7 @@ export type VerificationResult =
   | { status: 'verified'; prescriptions: VerifiedPrescription[]; practitionerName?: string }
   | { status: 'invalid_signature' }
   | { status: 'key_revoked' }
+  | { status: 'key_untrusted_offline' }
   | { status: 'expired'; expiry: string }
   | { status: 'unknown_clinician'; fallbackAvailable: boolean }
   | { status: 'untrusted'; reason: string }
@@ -87,13 +91,25 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
     return { status: 'untrusted', reason: 'Key revocation list unavailable' }
   }
 
-  // Look up the clinician's public key in the trusted local cache FIRST
-  const practitioner = await lookupPractitionerByPublicKey(bundle.pub)
-  if (!practitioner) {
+  // Look up the clinician's public key in the trusted local cache
+  const cachedKey = await getCachedKey(bundle.pub)
+  if (!cachedKey) {
     return { status: 'unknown_clinician', fallbackAvailable: typeof navigator !== 'undefined' && navigator.onLine }
   }
 
+  // Story 26.7 AC 1: If stale (TTL expired), revalidate before proceeding
+  if (cachedKey.stale) {
+    const revalidationResult = await revalidateStaleKey(bundle.pub)
+    if (revalidationResult) return revalidationResult
+    // null means key is active and refreshed — proceed with verification
+  }
+
   // Decode and verify Ed25519 signature against the TRUSTED cached key
+  const practitioner = {
+    id: cachedKey.practitionerId,
+    name: cachedKey.practitionerName,
+    publicKeyRaw: cachedKey.publicKey,
+  }
   let signature: Uint8Array
   let publicKey: Uint8Array
   try {
@@ -135,7 +151,7 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
 
   // Audit: prescription QR scan/verify success (PHI access — prescription details)
   auditPhiAccess(
-    'pharmacy-user',
+    useAuthSessionStore.getState().session?.userId ?? 'unknown',
     AuditAction.READ,
     AuditResourceType.PRESCRIPTION,
     'qr-scan-verify',
@@ -150,29 +166,44 @@ export async function verifyPrescriptionQr(qrData: string): Promise<Verification
   }
 }
 
-/** Maximum cache age for practitioner keys: 24 hours */
-const KEY_CACHE_TTL_MS = 24 * 60 * 60 * 1000
-
-async function lookupPractitionerByPublicKey(
+/**
+ * Story 26.7: Attempt revalidation for a stale practitioner key.
+ * Returns a VerificationResult if verification should stop (revoked/offline),
+ * or null if the key is active and verification should proceed.
+ */
+async function revalidateStaleKey(
   pubKeyBase64: string,
-): Promise<{ id: string; name: string; publicKeyRaw: string } | null> {
+): Promise<VerificationResult | null> {
+  let authToken: string | null = null
   try {
-    const entry = await db.practitionerKeys.get(pubKeyBase64)
-    if (entry) {
-      // Check TTL — reject stale cached keys (revoked keys must not persist)
-      const cachedAge = Date.now() - new Date(entry.cachedAt).getTime()
-      if (cachedAge > KEY_CACHE_TTL_MS) {
-        await db.practitionerKeys.delete(pubKeyBase64)
-        // AC 5: Log attempt to use an expired (stale) cached key
-        await logExpiredKeyAttempt(pubKeyBase64)
-        return null
-      }
-      return { id: entry.practitionerId, name: entry.practitionerName, publicKeyRaw: entry.publicKey }
-    }
-    return null
+    authToken = await useAuthSessionStore.getState().getAccessToken()
   } catch {
-    return null
+    // Auth unavailable — fail-closed
   }
+
+  if (!authToken) {
+    await logRevalidationOutcome(pubKeyBase64, 'auth_unavailable')
+    return { status: 'key_untrusted_offline' }
+  }
+
+  const hubBaseUrl = getHubApiUrl()
+  const result = await revalidateKey(pubKeyBase64, hubBaseUrl, authToken)
+
+  // AC 4: Hub unreachable — fail-closed
+  if (!result) {
+    await logRevalidationOutcome(pubKeyBase64, 'hub_unreachable')
+    return { status: 'key_untrusted_offline' }
+  }
+
+  // AC 3: Key revoked or expired — fail-closed
+  if (result.status === 'revoked' || result.status === 'expired') {
+    await logRevalidationOutcome(pubKeyBase64, result.status)
+    return { status: 'key_revoked' }
+  }
+
+  // AC 2: Key active — cache refreshed by revalidateKey, proceed with verification
+  await logRevalidationOutcome(pubKeyBase64, 'active')
+  return null
 }
 
 /**
@@ -239,23 +270,27 @@ async function logRevokedKeyAttempt(publicKey: string, revokedAt: string): Promi
 }
 
 /**
- * Story 7.4 AC 5: Log attempts to use an expired (stale cache) key.
- * Queues an audit event for sync to Hub API. Contains only opaque identifiers — no PHI.
+ * Story 26.7: Audit revalidation outcomes for security traceability.
+ * Contains only opaque identifiers — no PHI.
  */
-async function logExpiredKeyAttempt(publicKey: string): Promise<void> {
+async function logRevalidationOutcome(
+  publicKey: string,
+  outcome: 'active' | 'revoked' | 'expired' | 'hub_unreachable' | 'auth_unavailable',
+): Promise<void> {
   try {
     await db.pendingAuditEvents.add({
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       actorRole: 'SYSTEM',
-      action: 'EXPIRED_KEY_USAGE_ATTEMPT',
+      action: 'PRACTITIONER_KEY_REVALIDATION',
       resourceType: 'PractitionerKey',
-      outcome: 'DENIED',
-      denialReason: 'Cached key TTL expired (24h)',
-      metadata: { publicKeyPrefix: publicKey.slice(0, 8) },
+      outcome: outcome === 'active' ? 'SUCCESS' : 'DENIED',
+      denialReason: outcome !== 'active' ? `Revalidation outcome: ${outcome}` : undefined,
+      metadata: { publicKeyPrefix: publicKey.slice(0, 8), revalidationResult: outcome },
       _syncStatus: 'pending',
     })
   } catch {
-    // Best-effort logging — don't block verification flow
+    // Best-effort — don't block verification flow
   }
 }
+

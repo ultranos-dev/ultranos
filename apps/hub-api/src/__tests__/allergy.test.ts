@@ -22,7 +22,7 @@ const createCaller = createCallerFactory(appRouter)
 
 function createTestContext(overrides?: {
   supabaseFrom?: ReturnType<typeof vi.fn>
-  user?: { sub: string; role: string; sessionId: string } | null
+  user?: { sub: string; role: string; sessionId: string; orgId?: string } | null
 }) {
   const supabase = {
     from: overrides?.supabaseFrom ?? vi.fn(),
@@ -34,10 +34,21 @@ function createTestContext(overrides?: {
   }
 }
 
-const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1' }
-const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2' }
-const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3' }
+const CLINICIAN_USER = { sub: 'doctor-001', role: 'DOCTOR', sessionId: 'sess-1', orgId: 'org-test-001' }
+const ADMIN_USER = { sub: 'admin-001', role: 'ADMIN', sessionId: 'sess-2', orgId: 'org-test-001' }
+const PHARMACIST_USER = { sub: 'pharma-001', role: 'PHARMACIST', sessionId: 'sess-3', orgId: 'org-test-001' }
 const ALLERGY_UUID = '00000000-0000-4000-8000-000000000020'
+
+/** Mock for organizations table used by enforceVerifiedOrg middleware */
+function mockOrganizationsTable() {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { status: 'TRIAL' }, error: null }),
+      }),
+    }),
+  }
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -76,6 +87,8 @@ describe('allergy.list', () => {
     // P12: default (includeAll=false) adds .eq('clinical_status_code','active') after .order()
     // P14: patientId must be a valid UUID
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -110,6 +123,8 @@ describe('allergy.list', () => {
   it('allows ADMIN access', async () => {
     const PATIENT_UUID = '00000000-0000-4000-8000-000000000002'
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -142,6 +157,8 @@ describe('allergy.list', () => {
 
   it('emits a PHI_READ audit event on successful list', async () => {
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -182,6 +199,8 @@ describe('allergy.list', () => {
     ]
 
     const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({
@@ -246,15 +265,31 @@ describe('allergy.create', () => {
   })
 
   it('creates an allergy record and emits audit event', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: { id: ALLERGY_UUID },
-            error: null,
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      if (table === 'audit_log') {
+        return {
+          select: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }),
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        }
+      }
+      return {
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { id: ALLERGY_UUID },
+              error: null,
+            }),
           }),
         }),
-      }),
+      }
     })
 
     const ctx = createTestContext({ supabaseFrom: mockFrom, user: CLINICIAN_USER })
@@ -276,7 +311,9 @@ describe('allergy.create', () => {
   it('handles duplicate gracefully (idempotent)', async () => {
     let callCount = 0
     // P13: on 23505 duplicate, router makes a second from() call to verify ownership
-    const mockFrom = vi.fn(() => {
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       callCount++
       if (callCount === 1) {
         // First call: insert fails with 23505 duplicate key
@@ -340,6 +377,8 @@ describe('allergy.create', () => {
     const toRowSpy = vi.spyOn(mockDb, 'toRow')
 
     const mockFromWithAudit = vi.fn((table: string) => {
+      if (table === 'organizations') return mockOrganizationsTable()
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
       if (table === 'audit_log') {
         return {
           select: vi.fn().mockReturnValue({

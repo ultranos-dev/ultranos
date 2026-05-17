@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { getSupabaseClient } from '@/lib/supabase'
 import { verifySupabaseJwt, getSupabaseJwk } from '@/lib/jwt'
+import { metricsMiddleware } from '@/trpc/middleware/metrics'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { UserRole } from '@ultranos/shared-types'
 
@@ -11,7 +12,7 @@ import type { UserRole } from '@ultranos/shared-types'
  */
 export interface TRPCContext {
   supabase: SupabaseClient
-  user: { sub: string; role: string; sessionId: string } | null
+  user: { sub: string; role: string; sessionId: string; orgId: string | null; status: string | null } | null
   headers: Headers
 }
 
@@ -30,16 +31,29 @@ export const createTRPCContext = async (opts: {
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7)
     const jwk = getSupabaseJwk()
+    // Decode token header+payload without verification to debug
+    const [hdr, body] = token.split('.').slice(0, 2).map(p => JSON.parse(Buffer.from(p.replace(/-/g,'+').replace(/_/g,'/'), 'base64').toString()))
+    console.log('[AUTH_DEBUG] token header:', JSON.stringify(hdr), 'payload.sub:', body.sub, 'payload.iss:', body.iss, 'payload.aud:', body.aud)
+    console.log('[AUTH_DEBUG] jwk type:', jwk ? (jwk instanceof Uint8Array ? 'Uint8Array(' + jwk.length + ')' : 'object') : 'NULL')
     if (jwk) {
       const payload = await verifySupabaseJwt(token, jwk)
+      console.log('[AUTH_DEBUG] verify result:', payload ? 'SUCCESS sub=' + payload.sub : 'FAILED')
       if (payload?.sub) {
+        // App-level role/org_id are in user_metadata (set at createUser time).
+        // Supabase's top-level `role` is always "authenticated" — not our app role.
+        const userMeta = (payload.user_metadata as Record<string, unknown>) ?? {}
         user = {
           sub: payload.sub,
-          role: ((payload.role as string) ?? '').toUpperCase(),
+          role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
           sessionId: (payload.session_id as string) ?? '',
+          orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? null,
+          status: (userMeta.status as string) ?? null,
         }
+        console.log('[AUTH_DEBUG] resolved user:', JSON.stringify(user))
       }
     }
+  } else {
+    console.log('[AUTH_DEBUG] no auth header found')
   }
 
   return { supabase, user, headers: opts.headers }
@@ -51,7 +65,12 @@ const t = initTRPC.context<TRPCContext>().create({
 
 export const createTRPCRouter = t.router
 export const createCallerFactory = t.createCallerFactory
-export const baseProcedure = t.procedure
+
+/**
+ * Base procedure with metrics middleware as outermost layer — Story 23.1 Task 1.
+ * Every tRPC call records latency, count, and error metrics.
+ */
+export const baseProcedure = t.procedure.use(metricsMiddleware)
 
 /** Expose the tRPC instance for middleware composition in rbac.ts */
 export const tInstance = t
@@ -60,10 +79,19 @@ export const tInstance = t
  * Protected procedure — requires a valid authenticated user in context.
  * Fail-Safe: if no user, throws UNAUTHORIZED (No Access default).
  */
-export const protectedProcedure = t.procedure.use(async (opts) => {
+export const protectedProcedure = baseProcedure.use(async (opts) => {
   if (!opts.ctx.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
+
+  // Story 27.7 AC #4: Suspended users cannot log in or access API
+  if (opts.ctx.user.status === 'SUSPENDED') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'ACCOUNT_SUSPENDED',
+    })
+  }
+
   return opts.next({
     ctx: { ...opts.ctx, user: opts.ctx.user },
   })

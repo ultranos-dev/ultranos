@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { protectedProcedure, createTRPCRouter } from '../init'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
 // db is imported solely for db.fromRowRaw, which is a pure snake_case→camelCase
 // transform (wraps toCamelCase — no encryption, no DB coupling). Vocabulary tables
 // contain no PHI so the non-decrypting fromRowRaw variant is correct here.
@@ -19,6 +20,7 @@ export const vocabularyRouter = createTRPCRouter({
    * No RBAC restriction — vocabulary is non-PHI, all authenticated users can sync.
    */
   sync: protectedProcedure
+    .use(enforceEntitlement('OPD_LITE'))
     .input(
       z.object({
         type: vocabularyTypeSchema,

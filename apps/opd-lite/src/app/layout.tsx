@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import './globals.css'
@@ -12,11 +12,14 @@ const inter = localFont({
   display: 'swap',
 })
 
+export const viewport: Viewport = {
+  themeColor: '#1e40af',
+}
+
 export const metadata: Metadata = {
   title: 'OPD Lite — Patient Search',
   description: 'Ultranos OPD Lite PWA for clinical encounters',
   manifest: '/manifest.webmanifest',
-  themeColor: '#1e40af',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

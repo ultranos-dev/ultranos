@@ -4,6 +4,8 @@ import { createTRPCRouter } from '../init'
 import { roleRestrictedProcedure } from '../rbac'
 import { db } from '@/lib/supabase'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
 
 /**
@@ -19,6 +21,8 @@ export const allergyRouter = createTRPCRouter({
    * RBAC: CLINICIAN, ADMIN.
    */
   list: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN', 'ADMIN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('AllergyIntolerance'))
     .input(
       z.object({
@@ -77,6 +81,8 @@ export const allergyRouter = createTRPCRouter({
    * Encrypts substanceFreeText (PHI field) via db.toRow().
    */
   create: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(async (opts) => {
       // ADMIN is explicitly excluded from allergy creation — only clinical staff
       // can write Tier 1 safety-critical allergy records.

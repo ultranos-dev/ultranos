@@ -1,0 +1,731 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LTR) 1`] = `
+<div
+  data-testid="conflict-diff-view"
+>
+  <div
+    class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+    role="alert"
+  >
+    <p
+      class="text-xs font-bold text-amber-800"
+    >
+      Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
+    </p>
+    <p
+      class="text-xs text-amber-700"
+    >
+      "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
+    </p>
+  </div>
+  <div
+    class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+    data-testid="diff-grid"
+  >
+    <div
+      class="bg-blue-50 ps-4 pe-4 py-2"
+    >
+      <span
+        class="text-xs font-bold text-blue-800"
+      >
+        Local Version
+      </span>
+    </div>
+    <div
+      class="bg-purple-50 ps-4 pe-4 py-2"
+    >
+      <span
+        class="text-xs font-bold text-purple-800"
+      >
+        Remote Version
+      </span>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          clinicalStatus
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          active
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          clinicalStatus
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          active
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          verificationStatus
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          verificationStatus
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          type
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          type
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          category
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          category
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          criticality
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          high
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          criticality
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          high
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-yellow-50"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          code
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          Penicillin
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-yellow-50"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          code
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          Amoxicillin
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          reaction
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          reaction
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          onsetDateTime
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          onsetDateTime
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+    <div
+      class="contents"
+    >
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          note
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+      <div
+        class="ps-4 pe-4 py-2 bg-white"
+      >
+        <p
+          class="text-xs font-semibold text-neutral-500"
+        >
+          note
+        </p>
+        <p
+          class="mt-0.5 text-sm text-neutral-900 break-words"
+        >
+          —
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    class="mt-4 flex flex-wrap gap-2"
+  >
+    <button
+      class="inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+      data-testid="resolve-keep-both"
+      type="button"
+    >
+      <span
+        class="text-xs font-bold text-green-600"
+      >
+        Recommended
+      </span>
+      Keep Both
+    </button>
+    <button
+      class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+      data-testid="resolve-prefer-local"
+      type="button"
+    >
+      Prefer Local
+    </button>
+    <button
+      class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+      data-testid="resolve-prefer-remote"
+      type="button"
+    >
+      Prefer Remote
+    </button>
+  </div>
+</div>
+`;
+
+exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RTL) 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    data-testid="conflict-diff-view"
+  >
+    <div
+      class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+      role="alert"
+    >
+      <p
+        class="text-xs font-bold text-amber-800"
+      >
+        Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
+      </p>
+      <p
+        class="text-xs text-amber-700"
+      >
+        "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
+      </p>
+    </div>
+    <div
+      class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+      data-testid="diff-grid"
+    >
+      <div
+        class="bg-blue-50 ps-4 pe-4 py-2"
+      >
+        <span
+          class="text-xs font-bold text-blue-800"
+        >
+          Local Version
+        </span>
+      </div>
+      <div
+        class="bg-purple-50 ps-4 pe-4 py-2"
+      >
+        <span
+          class="text-xs font-bold text-purple-800"
+        >
+          Remote Version
+        </span>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            clinicalStatus
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            active
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            clinicalStatus
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            active
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            verificationStatus
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            verificationStatus
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            type
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            type
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            category
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            category
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            criticality
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            high
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            criticality
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            high
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-yellow-50"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            code
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            Penicillin
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-yellow-50"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            code
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            Amoxicillin
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            reaction
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            reaction
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            onsetDateTime
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            onsetDateTime
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+      <div
+        class="contents"
+      >
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            note
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+        <div
+          class="ps-4 pe-4 py-2 bg-white"
+        >
+          <p
+            class="text-xs font-semibold text-neutral-500"
+          >
+            note
+          </p>
+          <p
+            class="mt-0.5 text-sm text-neutral-900 break-words"
+          >
+            —
+          </p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="mt-4 flex flex-wrap gap-2"
+    >
+      <button
+        class="inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+        data-testid="resolve-keep-both"
+        type="button"
+      >
+        <span
+          class="text-xs font-bold text-green-600"
+        >
+          Recommended
+        </span>
+        Keep Both
+      </button>
+      <button
+        class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+        data-testid="resolve-prefer-local"
+        type="button"
+      >
+        Prefer Local
+      </button>
+      <button
+        class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+        data-testid="resolve-prefer-remote"
+        type="button"
+      >
+        Prefer Remote
+      </button>
+    </div>
+  </div>
+</div>
+`;

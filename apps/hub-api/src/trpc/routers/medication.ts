@@ -4,10 +4,22 @@ import { createTRPCRouter, protectedProcedure } from '../init'
 import { roleRestrictedProcedure } from '../rbac'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { checkInteractions } from '@ultranos/drug-db'
 import { db } from '@/lib/supabase'
+import {
+  drugInteractionChecksTotal,
+  drugInteractionOverridesTotal,
+  prescriptionsWithoutInteractionCheckTotal,
+} from '@/lib/clinical-safety-metrics'
 import { createSupabaseDrugAdapter } from '@/lib/supabase-drug-adapter'
+import { verifyEd25519Signature } from '@/lib/ed25519-verify'
+import { isKeyRevoked } from '@/lib/krl-check'
+import { buildTTSPrompt, getDisclaimer } from '@/lib/tts-prompt-builder'
+import type { TTSDialect } from '@/lib/tts-prompt-builder'
+import { synthesizeSpeech, isTTSError } from '@/lib/tts-client'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -126,14 +138,80 @@ function toInvalidationStatus(prescriptionStatus: string): 'AVAILABLE' | 'FULFIL
   }
 }
 
-const GetStatusInputSchema = z
-  .object({
-    prescriptionId: z.string().uuid().optional(),
-    qrCodeId: z.string().min(1).optional(),
-  })
-  .refine((val) => val.prescriptionId || val.qrCodeId, {
-    message: 'Either prescriptionId or qrCodeId must be provided',
-  })
+/**
+ * Story 23.2: Detect override severity from the interaction check result.
+ * Maps the interactionCheck enum to clinical severity levels for metrics.
+ */
+function detectOverrideSeverity(
+  interactionCheck: string,
+  overrideReason: string,
+): string {
+  // The interactionCheck tells us the severity level that was overridden
+  if (interactionCheck === 'BLOCKED') return 'CONTRAINDICATED'
+  if (interactionCheck === 'WARNING') {
+    // Differentiate WARNING sub-types via override reason prefix
+    const upper = overrideReason.toUpperCase()
+    if (upper.startsWith('ALLERGY')) return 'ALLERGY_MATCH'
+    if (upper.startsWith('MAJOR')) return 'MAJOR'
+    return 'MODERATE'
+  }
+  // UNAVAILABLE overrides are tracked separately, but label them for completeness
+  return 'MODERATE'
+}
+
+/**
+ * Story 24.2: Check if a patient has AI_PROCESSING consent.
+ * Queries the append-only consent ledger for the latest AI_PROCESSING record.
+ * Privacy by Design: missing or expired consent = denied.
+ */
+async function checkAIProcessingConsent(
+  supabase: SupabaseClient,
+  patientId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('consents')
+    .select('id, status, purpose, date_time, provision_end')
+    .eq('patient_ref', `Patient/${patientId}`)
+    .eq('purpose', 'AI_PROCESSING')
+    .order('date_time', { ascending: false })
+    .limit(1)
+
+  if (error || !data || data.length === 0) {
+    return false
+  }
+
+  const latest = data[0]
+  if (latest.status !== 'ACTIVE') {
+    return false
+  }
+
+  // Reject expired consent
+  if (latest.provision_end && new Date(latest.provision_end) < new Date()) {
+    return false
+  }
+
+  return true
+}
+
+const GetStatusInputSchema = z.object({
+  prescriptionId: z.string().uuid().optional(),
+  qrCodeId: z.string().min(1).optional(),
+  // P3: signedBundle is schematically optional to preserve specific error messages
+  // and audit events for unsigned lookup attempts (AC 4). Always required at runtime.
+  signedBundle: z.object({
+    payload: z.string().min(1),
+    sig: z.string().min(1),
+    pub: z.string().min(1),
+  }).optional(),
+})
+
+/** P1: Validates the JSON-parsed contents of a signed prescription payload. */
+const SignedPayloadSchema = z.object({
+  prescriptionId: z.string().uuid().optional(),
+  qrCodeId: z.string().min(1).optional(),
+}).refine(data => data.prescriptionId || data.qrCodeId, {
+  message: 'Signed payload must contain prescriptionId or qrCodeId',
+})
 
 /**
  * Medication domain router.
@@ -146,6 +224,8 @@ export const medicationRouter = createTRPCRouter({
    * RBAC: DOCTOR, CLINICIAN only. PHI fields encrypted via db.toRow().
    */
   create: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationRequest'))
     .input(
       z.object({
@@ -271,6 +351,18 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
+      // Story 23.2: Increment Prometheus clinical safety metrics
+      drugInteractionChecksTotal.inc({ result: input.interactionCheck })
+      if (input.interactionCheck === 'UNAVAILABLE') {
+        prescriptionsWithoutInteractionCheckTotal.inc()
+      }
+      if (input.interactionOverride) {
+        // Parse override severity from the override reason string prefix (e.g., "CONTRAINDICATED: ...")
+        // The severity is stored as the interactionCheck value when an override is provided
+        const overrideSeverity = detectOverrideSeverity(input.interactionCheck, input.interactionOverride)
+        drugInteractionOverridesTotal.inc({ severity: overrideSeverity })
+      }
+
       // Audit PHI write (CLAUDE.md Rule #6)
       const audit = new AuditLogger(ctx.supabase)
       try {
@@ -301,6 +393,8 @@ export const medicationRouter = createTRPCRouter({
    * RBAC: DOCTOR, CLINICIAN only.
    */
   read: roleRestrictedProcedure(['DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationRequest'))
     .input(
       z.object({
@@ -358,12 +452,127 @@ export const medicationRouter = createTRPCRouter({
    * AC 1, 2: Real-time status check against the Hub.
    * Returns AVAILABLE, FULFILLED, or VOIDED.
    */
-  getStatus: protectedProcedure
+  getStatus: roleRestrictedProcedure(['PHARMACIST', 'CLINICIAN', 'DOCTOR'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
     .use(enforceResourceAccess('MedicationRequest'))
     .input(GetStatusInputSchema)
     .query(async ({ ctx, input }) => {
-      const lookupColumn = input.prescriptionId ? 'id' : 'qr_code_id'
-      const lookupValue = input.prescriptionId ?? input.qrCodeId!
+      const audit = new AuditLogger(ctx.supabase)
+
+      // Story 21.2: Signature verification enforcement BEFORE any DB lookup.
+      if (!input.signedBundle) {
+        if (input.prescriptionId || input.qrCodeId) {
+          // AC 4: Reject unsigned lookups with raw IDs
+          try {
+            await audit.emit({
+              action: 'SECURITY_VIOLATION',
+              resourceType: 'PRESCRIPTION',
+              actorId: ctx.user.sub,
+              actorRole: ctx.user.role,
+              outcome: 'FAILURE',
+              sessionId: ctx.user.sessionId,
+              metadata: { reason: 'unsigned_lookup', attemptedPrescriptionId: input.prescriptionId, attemptedQrCodeId: input.qrCodeId },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'SECURITY_VIOLATION', reason: 'unsigned_lookup' })
+          }
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'UNSIGNED_LOOKUP_REJECTED',
+          })
+        }
+        // P2: Emit audit for completely empty requests (AC 5 — all rejection paths must audit)
+        try {
+          await audit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'PRESCRIPTION',
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { reason: 'missing_signed_bundle' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'SECURITY_VIOLATION', reason: 'missing_signed_bundle' })
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'signedBundle is required',
+        })
+      }
+
+      // AC 1: Verify Ed25519 signature
+      const sigValid = verifyEd25519Signature(
+        input.signedBundle.payload,
+        input.signedBundle.sig,
+        input.signedBundle.pub,
+      )
+      if (!sigValid) {
+        // AC 2: Invalid signature → reject, no DB lookup
+        try {
+          await audit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'PRESCRIPTION',
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { reason: 'invalid_signature' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'SECURITY_VIOLATION', reason: 'invalid_signature' })
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'INVALID_SIGNATURE',
+        })
+      }
+
+      // AC 3: Check KRL — reject if key is revoked
+      const revoked = await isKeyRevoked(input.signedBundle.pub, ctx.supabase)
+      if (revoked) {
+        try {
+          await audit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'PRESCRIPTION',
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            metadata: { reason: 'key_revoked', publicKeyPrefix: input.signedBundle.pub.slice(0, 8) },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'SECURITY_VIOLATION', reason: 'key_revoked' })
+        }
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'KEY_REVOKED',
+        })
+      }
+
+      // P1: Extract and validate prescription IDs from verified payload with Zod
+      let rawPayload: unknown
+      try {
+        rawPayload = JSON.parse(input.signedBundle.payload)
+      } catch {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid signed payload format',
+        })
+      }
+
+      const payloadResult = SignedPayloadSchema.safeParse(rawPayload)
+      if (!payloadResult.success) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Signed payload must contain prescriptionId (UUID) or qrCodeId',
+        })
+      }
+      const parsedPayload = payloadResult.data
+
+      const lookupColumn = parsedPayload.prescriptionId ? 'id' : 'qr_code_id'
+      const lookupValue = (parsedPayload.prescriptionId ?? parsedPayload.qrCodeId)!
 
       const { data, error } = await ctx.supabase
         .from('medication_requests')
@@ -380,7 +589,6 @@ export const medicationRouter = createTRPCRouter({
             message: 'Prescription not found',
           })
         }
-        // Log error shape only — never log PHI
         console.error('Medication status check error:', { code: error.code })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -389,7 +597,6 @@ export const medicationRouter = createTRPCRouter({
       }
 
       // Audit PHI access — prescription data returned (CLAUDE.md Rule #6)
-      const audit = new AuditLogger(ctx.supabase)
       try {
         await audit.emit({
           action: 'PHI_READ',
@@ -426,6 +633,8 @@ export const medicationRouter = createTRPCRouter({
    * on the update prevents simultaneous double-dispense.
    */
   recordDispense: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
     .use(enforceResourceAccess('MedicationDispense'))
     .input(
       z.object({
@@ -434,7 +643,7 @@ export const medicationRouter = createTRPCRouter({
         medicationCode: z.string().min(1),
         medicationDisplay: z.string().min(1),
         patientRef: z.string().min(1),
-        pharmacistRef: z.string().min(1),
+        pharmacistRef: z.string().startsWith('Practitioner/').min(1),
         whenHandedOver: z.string().datetime(),
         hlcTimestamp: z.string().min(1),
         status: z.enum(['completed', 'in-progress']),
@@ -465,11 +674,19 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
-      // 2. Validate prescription status — reject CANCELLED/EXPIRED
+      // 2. Validate prescription status — reject CANCELLED/EXPIRED/LEGACY_PAPER
       if (currentRx.prescription_status === 'CANCELLED' || currentRx.prescription_status === 'EXPIRED') {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Prescription is no longer active',
+        })
+      }
+
+      // Story 24.3: Paper prescriptions cannot go through digital dispensing workflow
+      if (currentRx.prescription_status === 'LEGACY_PAPER') {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Paper prescriptions cannot be processed through digital dispense workflow',
         })
       }
 
@@ -510,6 +727,28 @@ export const medicationRouter = createTRPCRouter({
         })
       }
 
+      // Story 21.3: Override pharmacistRef with server-verified identity.
+      // Client-supplied pharmacistRef is untrusted — always use ctx.user.sub.
+      const verifiedPharmacistRef = `Practitioner/${ctx.user.sub}`
+      if (input.pharmacistRef !== verifiedPharmacistRef) {
+        // Audit the mismatch (potential spoofing attempt or stale client data)
+        const mismatchAudit = new AuditLogger(ctx.supabase)
+        try {
+          await mismatchAudit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'MEDICATION_DISPENSE',
+            resourceId: input.dispenseId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: { reason: 'pharmacist_ref_overridden', clientSupplied: input.pharmacistRef.slice(0, 8) + '...' },
+          })
+        } catch {
+          // Audit failure must not block the dispense
+        }
+      }
+
       // 4. Insert the medication_dispense record (now safe — prescription validated)
       const { data: dispenseRow, error: insertError } = await ctx.supabase
         .from('medication_dispenses')
@@ -519,7 +758,7 @@ export const medicationRouter = createTRPCRouter({
           medication_code: input.medicationCode,
           medication_display: input.medicationDisplay,
           patient_ref: input.patientRef,
-          pharmacist_ref: input.pharmacistRef,
+          pharmacist_ref: verifiedPharmacistRef,
           when_handed_over: input.whenHandedOver,
           hlc_timestamp: input.hlcTimestamp,
           status: input.status,
@@ -678,6 +917,8 @@ export const medicationRouter = createTRPCRouter({
    * Protected — requires authenticated pharmacist session.
    */
   complete: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
     .use(enforceResourceAccess('MedicationDispense'))
     .input(
       z.object({
@@ -709,6 +950,13 @@ export const medicationRouter = createTRPCRouter({
       const currentInvalidationStatus = toInvalidationStatus(current.prescription_status)
 
       if (current.prescription_status !== 'ACTIVE') {
+        // Story 24.3: Paper prescriptions cannot go through digital dispensing workflow
+        if (current.prescription_status === 'LEGACY_PAPER') {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Paper prescriptions cannot be processed through digital dispense workflow',
+          })
+        }
         throw new TRPCError({
           code: 'CONFLICT',
           message: `Prescription cannot be fulfilled — current status: ${currentInvalidationStatus}`,
@@ -804,6 +1052,8 @@ export const medicationRouter = createTRPCRouter({
    * Transitions prescription to CANCELLED and MedicationStatement to stopped.
    */
   voidPrescription: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationRequest'))
     .input(
       z.object({
@@ -877,6 +1127,252 @@ export const medicationRouter = createTRPCRouter({
     }),
 
   /**
+   * Story 24.3 AC #2: Generate a signed upload URL for paper prescription images.
+   * Storage bucket: paper-prescriptions (private, PHARMACIST + ADMIN readable).
+   * Only image/jpeg and image/png allowed. 15-minute upload window.
+   */
+  getPaperRxUploadUrl: roleRestrictedProcedure(['PHARMACIST', 'ADMIN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .input(
+      z.object({
+        contentType: z.enum(['image/jpeg', 'image/png']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storageKey = `${ctx.user.sub}/${crypto.randomUUID()}-${Date.now()}`
+      const expiresIn = 900 // 15 minutes
+
+      const { data, error } = await ctx.supabase.storage
+        .from('paper-prescriptions')
+        .createSignedUploadUrl(storageKey, { expiresIn })
+
+      if (error || !data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate upload URL',
+        })
+      }
+
+      return {
+        uploadUrl: data.signedUrl,
+        storageKey,
+        expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
+      }
+    }),
+
+  /**
+   * Story 24.3 AC #8, #9, #10, #11: Create a paper prescription record.
+   * Stored with source: 'PAPER_OCR', prescription_status: 'LEGACY_PAPER'.
+   * Cannot be digitally invalidated. No QR code. No drug interaction checks.
+   */
+  createPaperPrescription: roleRestrictedProcedure(['PHARMACIST'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .input(
+      z.object({
+        patientId: z.string().uuid().optional(),
+        medicationName: z.string().min(1),
+        dosage: z.string().min(1),
+        frequency: z.string().min(1),
+        prescriberName: z.string().min(1),
+        prescriptionDate: z.string().min(1),
+        ocrConfidenceScores: z.record(z.string(), z.number().min(0).max(1)),
+        imageStorageKey: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Validate imageStorageKey belongs to the authenticated user
+      if (!input.imageStorageKey.startsWith(`${ctx.user.sub}/`)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid image storage key',
+        })
+      }
+
+      const now = new Date().toISOString()
+      const prescriptionId = crypto.randomUUID()
+
+      const row = db.toRow({
+        id: prescriptionId,
+        resourceType: 'MedicationRequest',
+        status: 'active',
+        prescriptionStatus: 'LEGACY_PAPER',
+        intent: 'order',
+        medicationDisplay: input.medicationName,
+        medicationText: `${input.dosage} - ${input.frequency}`,
+        subjectReference: input.patientId ? `Patient/${input.patientId}` : null,
+        requesterId: null,
+        dosageInstruction: { text: `${input.dosage}, ${input.frequency}` },
+        source: 'PAPER_OCR',
+        manualVerificationRequired: true,
+        ocrMetadata: {
+          confidenceScores: input.ocrConfidenceScores,
+          extractedAt: now,
+          prescriberName: input.prescriberName,
+          prescriptionDate: input.prescriptionDate,
+          imageStorageKey: input.imageStorageKey,
+        },
+        interactionCheck: null,
+        interactionOverride: null,
+        qrCodeId: null,
+        authoredOn: input.prescriptionDate,
+        isOfflineCreated: false,
+        hlcTimestamp: now,
+        createdAt: now,
+        metaLastUpdated: now,
+        metaVersionId: '1',
+      })
+
+      const { error } = await ctx.supabase
+        .from('medication_requests')
+        .insert(row)
+
+      if (error) {
+        console.error('Paper prescription create error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create paper prescription',
+        })
+      }
+
+      // Audit: PAPER_PRESCRIPTION_CREATED (AC #11)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PAPER_PRESCRIPTION_CREATED',
+          resourceType: 'PRESCRIPTION',
+          resourceId: prescriptionId,
+          patientId: input.patientId ?? undefined,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            source: 'PAPER_OCR',
+            hasPatientId: !!input.patientId,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PAPER_PRESCRIPTION_CREATED', resourceType: 'PRESCRIPTION', resourceId: prescriptionId })
+      }
+
+      return {
+        success: true,
+        prescriptionId,
+        status: 'LEGACY_PAPER' as const,
+      }
+    }),
+
+  /**
+   * Story 24.3 AC #8: Reject digital invalidation of LEGACY_PAPER prescriptions.
+   * Paper prescriptions cannot be digitally invalidated.
+   */
+  invalidate: roleRestrictedProcedure(['PHARMACIST', 'DOCTOR', 'CLINICIAN'])
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('PHARMACY_LITE'))
+    .use(enforceResourceAccess('MedicationRequest'))
+    .input(
+      z.object({
+        prescriptionId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: rx, error: fetchError } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, prescription_status, subject_reference')
+        .eq('id', input.prescriptionId)
+        .single()
+
+      if (fetchError || !rx) {
+        if (fetchError?.code === 'PGRST116') {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Prescription not found',
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve prescription',
+        })
+      }
+
+      // AC #8: Paper prescriptions cannot be digitally invalidated
+      if (rx.prescription_status === 'LEGACY_PAPER') {
+        // Audit the rejected access attempt (CLAUDE.md Rule #6)
+        const rejectionAudit = new AuditLogger(ctx.supabase)
+        try {
+          await rejectionAudit.emit({
+            action: 'PHI_READ',
+            resourceType: 'PRESCRIPTION',
+            resourceId: input.prescriptionId,
+            patientId: (rx.subject_reference as string)?.replace('Patient/', ''),
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'DENIED',
+            sessionId: ctx.user.sessionId,
+            metadata: { reason: 'LEGACY_PAPER_INVALIDATION_REJECTED' },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.prescriptionId })
+        }
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Paper prescriptions cannot be digitally invalidated',
+        })
+      }
+
+      const now = new Date().toISOString()
+      const { data: updated, error: updateError } = await ctx.supabase
+        .from('medication_requests')
+        .update({
+          status: 'cancelled',
+          prescription_status: 'CANCELLED',
+          meta_last_updated: now,
+        })
+        .eq('id', input.prescriptionId)
+        .eq('prescription_status', 'ACTIVE')
+        .select('id, prescription_status')
+        .single()
+
+      if (updateError || !updated) {
+        if (updateError?.code === 'PGRST116') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Prescription is no longer active',
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to invalidate prescription',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PRESCRIPTION',
+          resourceId: updated.id,
+          patientId: (rx.subject_reference as string)?.replace('Patient/', ''),
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'prescription_invalidated' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PRESCRIPTION', resourceId: updated.id })
+      }
+
+      return {
+        success: true,
+        prescriptionId: updated.id,
+        newStatus: 'VOIDED' as const,
+      }
+    }),
+
+  /**
    * Story 16.6: Server-side drug interaction check.
    * Queries patient's active medications + allergies and runs the check centrally.
    * RBAC: enforces MedicationRequest resource access.
@@ -884,6 +1380,8 @@ export const medicationRouter = createTRPCRouter({
    * CLAUDE.md Rule #6: Audit every PHI access.
    */
   checkInteractions: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('OPD_LITE'))
     .use(enforceResourceAccess('MedicationRequest'))
     .input(
       z.object({
@@ -966,6 +1464,12 @@ export const medicationRouter = createTRPCRouter({
         result = { result: 'UNAVAILABLE' as const, interactions: [], reason: 'ADAPTER_ERROR' as const }
       }
 
+      // Story 23.2: Track interaction check completion vs failure
+      drugInteractionChecksTotal.inc({ result: result.result })
+      if (result.result === 'UNAVAILABLE') {
+        prescriptionsWithoutInteractionCheckTotal.inc()
+      }
+
       // 6. Audit PHI read (CLAUDE.md Rule #6)
       const audit = new AuditLogger(ctx.supabase)
       try {
@@ -993,5 +1497,212 @@ export const medicationRouter = createTRPCRouter({
       }
 
       return result
+    }),
+
+  /**
+   * Story 24.2 Task 1: Generate dialect-tuned TTS audio for a prescription.
+   * RBAC: PATIENT, GUARDIAN, DOCTOR, CLINICIAN.
+   * Checks AI_PROCESSING consent before generating audio.
+   * Returns a pre-signed Supabase Storage URL with 15-minute expiry.
+   */
+  generatePrescriptionAudio: protectedProcedure
+    .input(
+      z.object({
+        medicationRequestId: z.string().uuid(),
+        dialect: z.enum(['AR_LEVANTINE', 'AR_GULF', 'DARI', 'EN']),
+        patientId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const allowedRoles = ['PATIENT', 'GUARDIAN', 'DOCTOR', 'CLINICIAN']
+      if (!allowedRoles.includes(ctx.user.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Insufficient permissions for TTS generation',
+        })
+      }
+
+      // Ownership check: PATIENT/GUARDIAN can only access their own prescriptions
+      if (['PATIENT', 'GUARDIAN'].includes(ctx.user.role) && ctx.user.sub !== input.patientId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot generate TTS for another patient',
+        })
+      }
+
+      // AC #8: Check AI_PROCESSING consent
+      const hasConsent = await checkAIProcessingConsent(ctx.supabase, input.patientId)
+      if (!hasConsent) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'AI_PROCESSING_CONSENT_REQUIRED',
+        })
+      }
+
+      // Fetch medication details (decrypt PHI fields)
+      const { data: rxRow, error: rxError } = await ctx.supabase
+        .from('medication_requests')
+        .select('id, medication_display, medication_text, dosage_instruction, dispense_request, subject_reference')
+        .eq('id', input.medicationRequestId)
+        .single()
+
+      if (rxError || !rxRow) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Medication request not found',
+        })
+      }
+
+      const rx = db.fromRow(rxRow)
+
+      // Verify medication belongs to the claimed patient
+      const expectedRef = `Patient/${input.patientId}`
+      if (rx.subjectReference && rx.subjectReference !== expectedRef) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Medication does not belong to the specified patient',
+        })
+      }
+
+      // Build medication TTS input from prescription data
+      const dosageObj = rx.dosageInstruction as Record<string, unknown> | null
+      const dispenseObj = rx.dispenseRequest as Record<string, unknown> | null
+
+      const ttsInput = {
+        medicationName: rx.medicationDisplay ?? rx.medicationText ?? 'your medication',
+        dosageInstruction: (dosageObj?.text as string) ?? (dosageObj?.dose as string) ?? 'Take as directed',
+        frequency: (dosageObj?.frequency as string) ?? 'as directed by your doctor',
+        duration: (dispenseObj?.duration as string) ?? (dosageObj?.duration as string) ?? '',
+        timeOfDay: (dosageObj?.timeOfDay as string) ?? undefined,
+        caution: (dosageObj?.caution as string) ?? undefined,
+      }
+
+      // Step 1: Build dialect-appropriate prompt text
+      const promptText = buildTTSPrompt(ttsInput, input.dialect as TTSDialect)
+
+      // Step 2: Synthesize audio via Cloud TTS API
+      const ttsResult = await synthesizeSpeech(promptText, input.dialect as TTSDialect)
+
+      if (isTTSError(ttsResult)) {
+        // AC #5: Return explicit error, never silent failure
+        throw new TRPCError({
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'TTS_UNAVAILABLE',
+        })
+      }
+
+      // Upload audio to Supabase Storage with a unique filename
+      const audioFileName = `tts/${crypto.randomUUID()}.mp3`
+      const { error: uploadError } = await ctx.supabase.storage
+        .from('tts-audio')
+        .upload(audioFileName, ttsResult.audio, {
+          contentType: 'audio/mpeg',
+          cacheControl: 'no-store',
+        })
+
+      if (uploadError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to upload audio',
+        })
+      }
+
+      // Generate pre-signed URL with 15-minute expiry (AC #3)
+      const expiresInSeconds = 15 * 60
+      const { data: signedUrlData, error: signedUrlError } = await ctx.supabase.storage
+        .from('tts-audio')
+        .createSignedUrl(audioFileName, expiresInSeconds)
+
+      if (signedUrlError || !signedUrlData?.signedUrl) {
+        // Clean up orphaned audio file
+        await ctx.supabase.storage.from('tts-audio').remove([audioFileName]).catch(() => {})
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate audio URL',
+        })
+      }
+
+      const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString()
+
+      // Audio file cleanup handled by /api/cron/tts-cleanup (every 5 min)
+      // — setTimeout is unreliable in serverless; cron ensures PHI deletion (PRD Section 9)
+
+      // Audit: TTS_GENERATED — never log medication content (CLAUDE.md Rule #1)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PRESCRIPTION',
+          resourceId: input.medicationRequestId,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            ttsAction: 'TTS_GENERATED',
+            dialect: input.dialect,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', {
+          action: 'PHI_READ',
+          resourceType: 'PRESCRIPTION',
+          ttsAction: 'TTS_GENERATED',
+        })
+      }
+
+      return {
+        audioUrl: signedUrlData.signedUrl,
+        expiresAt,
+        duration: null, // Audio duration could be extracted from the buffer but TTS APIs vary
+        dialect: input.dialect,
+      }
+    }),
+
+  /**
+   * Story 24.2 Task 6: Log TTS playback completion.
+   * Fire-and-forget from client — feeds the monthly clinical safety report
+   * (Story 23.2 TTS playback completion rate metric).
+   */
+  logTTSPlayback: protectedProcedure
+    .input(
+      z.object({
+        medicationRequestId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        dialect: z.enum(['AR_LEVANTINE', 'AR_GULF', 'DARI', 'EN']),
+        source: z.enum(['CLOUD_TTS', 'OFFLINE_FRAGMENT']),
+        completedAt: z.string().datetime(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const allowedRoles = ['PATIENT', 'GUARDIAN', 'DOCTOR', 'CLINICIAN']
+      if (!allowedRoles.includes(ctx.user.role)) {
+        return { success: false }
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PRESCRIPTION',
+          resourceId: input.medicationRequestId,
+          patientId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            ttsAction: 'TTS_PLAYBACK_COMPLETED',
+            dialect: input.dialect,
+            source: input.source,
+            completedAt: input.completedAt,
+          },
+        })
+      } catch {
+        // Playback logging is fire-and-forget — never block on failure
+      }
+
+      return { success: true }
     }),
 })

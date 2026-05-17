@@ -42,6 +42,23 @@ export const consentRouter = createTRPCRouter({
       // Only PATIENT, GUARDIAN, and ADMIN may grant consent.
       const CONSENT_GRANTOR_ROLES = ['PATIENT', 'GUARDIAN', 'ADMIN']
       if (!CONSENT_GRANTOR_ROLES.includes(ctx.user.role)) {
+        // Story 21.3: Emit security audit event before rejecting
+        const roleAudit = new AuditLogger(ctx.supabase)
+        try {
+          await roleAudit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'CONSENT',
+            resourceId: input.id,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            patientId: input.patientRef.replace('Patient/', ''),
+            metadata: { reason: 'unauthorized_role', attemptedRole: ctx.user.role },
+          })
+        } catch {
+          // Audit failure must not block the rejection
+        }
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Only patients, guardians, and administrators may grant consent',
@@ -49,6 +66,23 @@ export const consentRouter = createTRPCRouter({
       }
       // ADMIN may sync on behalf of patients (override).
       if (ctx.user.role !== 'ADMIN' && input.grantorId !== ctx.user.sub) {
+        // Story 21.3: Emit security audit event before rejecting
+        const impersonationAudit = new AuditLogger(ctx.supabase)
+        try {
+          await impersonationAudit.emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'CONSENT',
+            resourceId: input.id,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'FAILURE',
+            sessionId: ctx.user.sessionId,
+            patientId: input.patientRef.replace('Patient/', ''),
+            metadata: { reason: 'grantor_impersonation' },
+          })
+        } catch {
+          // Audit failure must not block the rejection
+        }
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Consent grantor must match the authenticated user',

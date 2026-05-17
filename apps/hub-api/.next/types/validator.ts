@@ -56,6 +56,87 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/billing/webhook/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/billing/webhook">> = Specific
+  const handler = {} as typeof import("../../src/app/api/billing/webhook/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/cron/anomaly-detection/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cron/anomaly-detection">> = Specific
+  const handler = {} as typeof import("../../src/app/api/cron/anomaly-detection/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/cron/audit-chain-verify/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cron/audit-chain-verify">> = Specific
+  const handler = {} as typeof import("../../src/app/api/cron/audit-chain-verify/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/cron/clinical-safety/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cron/clinical-safety">> = Specific
+  const handler = {} as typeof import("../../src/app/api/cron/clinical-safety/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/cron/license-expiry/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cron/license-expiry">> = Specific
+  const handler = {} as typeof import("../../src/app/api/cron/license-expiry/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/cron/tts-cleanup/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/cron/tts-cleanup">> = Specific
+  const handler = {} as typeof import("../../src/app/api/cron/tts-cleanup/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/health/redis/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/health/redis">> = Specific
+  const handler = {} as typeof import("../../src/app/api/health/redis/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/lab-files/[fileId]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/lab-files/[fileId]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/lab-files/[fileId]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/metrics/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/metrics">> = Specific
+  const handler = {} as typeof import("../../src/app/api/metrics/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/trpc/[trpc]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/trpc/[trpc]">> = Specific

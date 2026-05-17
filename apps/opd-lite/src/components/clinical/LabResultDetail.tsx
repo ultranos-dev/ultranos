@@ -1,0 +1,286 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { db, type LocalDiagnosticReport } from '@/lib/db'
+import {
+  acknowledgeNotification,
+  fetchNotifications,
+  type NotificationItem,
+} from '@/lib/notification-api'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+
+interface LabResultDetailProps {
+  report: LocalDiagnosticReport
+  /** Notification linked to this report, if navigated from notification panel */
+  notification?: NotificationItem
+  onBack: () => void
+}
+
+/** Content types safe to render inline */
+const SAFE_IMAGE_PREFIXES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
+const SAFE_CONTENT_TYPES = [...SAFE_IMAGE_PREFIXES, 'application/pdf']
+
+function isSafeContentType(ct: string): boolean {
+  return SAFE_CONTENT_TYPES.some(safe =>
+    ct === safe || (safe.endsWith('+xml') ? false : ct.startsWith(safe.split('/')[0] + '/') && SAFE_IMAGE_PREFIXES.some(p => ct === p)),
+  )
+}
+
+function formatDateTime(iso?: string): string {
+  if (!iso) return 'Unknown'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return 'Unknown'
+  return d.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'preliminary': return 'Preliminary'
+    case 'final': return 'Final'
+    case 'amended': return 'Amended'
+    case 'corrected': return 'Corrected'
+    case 'registered': return 'Registered'
+    default: return status
+  }
+}
+
+function renderAttachment(attachment: { contentType?: string; data?: string; url?: string; title?: string }, index: number) {
+  const contentType = attachment.contentType ?? ''
+
+  // Validate URL protocol if url is provided (no data)
+  if (attachment.url && !attachment.data) {
+    try {
+      const parsed = new URL(attachment.url)
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    } catch {
+      return null
+    }
+  }
+
+  const dataUri = attachment.data
+    ? `data:${contentType};base64,${attachment.data}`
+    : attachment.url
+
+  if (!dataUri) return null
+
+  // Only render known-safe content types inline
+  if (SAFE_IMAGE_PREFIXES.some(p => contentType === p)) {
+    return (
+      <div key={index} className="mt-3">
+        {attachment.title && (
+          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+        )}
+        <img
+          src={dataUri}
+          alt={attachment.title ?? `Attachment ${index + 1}`}
+          className="max-w-full rounded-lg border border-neutral-200"
+        />
+      </div>
+    )
+  }
+
+  if (contentType === 'application/pdf') {
+    return (
+      <div key={index} className="mt-3">
+        {attachment.title && (
+          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+        )}
+        <embed
+          src={dataUri}
+          type="application/pdf"
+          className="h-96 w-full rounded-lg border border-neutral-200"
+          title={attachment.title ?? `PDF ${index + 1}`}
+        />
+      </div>
+    )
+  }
+
+  // Unsupported content type — download only (no inline rendering)
+  if (attachment.data) {
+    return (
+      <div key={index} className="mt-3">
+        <a
+          href={dataUri}
+          download={attachment.title ?? `attachment-${index + 1}`}
+          className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+        >
+          Download {attachment.title ?? `Attachment ${index + 1}`}
+        </a>
+      </div>
+    )
+  }
+
+  return null
+}
+
+export function LabResultDetail({ report, notification: notificationProp, onBack }: LabResultDetailProps) {
+  const [notification, setNotification] = useState<NotificationItem | null>(notificationProp ?? null)
+  const [acknowledged, setAcknowledged] = useState(
+    notificationProp?.status === 'ACKNOWLEDGED' || !!report.acknowledgedAt,
+  )
+  const [acknowledging, setAcknowledging] = useState(false)
+
+  // AC #3: Self-lookup notification if not passed as prop
+  useEffect(() => {
+    if (notificationProp || notification) return
+    let cancelled = false
+    async function lookupNotification() {
+      try {
+        const { notifications } = await fetchNotifications()
+        const match = notifications.find(
+          (n) => n.payload.diagnosticReportId === report.id && n.status !== 'ACKNOWLEDGED',
+        )
+        if (!cancelled && match) {
+          setNotification(match)
+        }
+      } catch {
+        // Best-effort — notification lookup is non-critical
+      }
+    }
+    lookupNotification()
+    return () => { cancelled = true }
+  }, [report.id, notificationProp, notification])
+
+  // AC #5: Audit PHI READ on detail view
+  useEffect(() => {
+    const patientId = report.subject.reference?.replace('Patient/', '') ?? ''
+    auditPhiAccess(
+      AuditAction.PHI_READ,
+      AuditResourceType.LAB_RESULT,
+      report.id,
+      patientId,
+      { phiAccess: 'lab_result_detail_view' },
+    )
+  }, [report.id, report.subject.reference])
+
+  const handleAcknowledge = useCallback(async () => {
+    if (!notification || acknowledged || acknowledging) return
+    setAcknowledging(true)
+    try {
+      await acknowledgeNotification(notification.id)
+      setAcknowledged(true)
+      // Persist acknowledgement locally for urgent indicator tracking
+      await db.diagnosticReports.update(report.id, {
+        acknowledgedAt: new Date().toISOString(),
+      })
+    } catch {
+      // Best-effort — network may be unavailable
+    } finally {
+      setAcknowledging(false)
+    }
+  }, [notification, acknowledged, acknowledging, report.id])
+
+  const loincDisplay =
+    report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'
+  const loincCode = report.code.coding?.[0]?.code
+  const labName = report.performer?.[0]?.display ?? 'Unknown Lab'
+  const performers = Array.isArray(report.performer) ? report.performer : []
+
+  return (
+    <div data-testid="lab-result-detail">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-4 text-sm font-semibold text-primary-500 hover:underline"
+        aria-label="Back to lab results"
+      >
+        &larr; Back to Results
+      </button>
+
+      <h3 className="text-xl font-bold text-neutral-900">{loincDisplay}</h3>
+      {loincCode && (
+        <p className="text-xs text-neutral-500">LOINC: {loincCode}</p>
+      )}
+
+      {/* Metadata grid */}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span className="font-medium text-neutral-500">Status</span>
+          <p className="font-semibold text-neutral-900">{statusLabel(report.status)}</p>
+        </div>
+        <div>
+          <span className="font-medium text-neutral-500">Collection Date</span>
+          <p className="font-semibold text-neutral-900">
+            {formatDateTime(report.effectiveDateTime)}
+          </p>
+        </div>
+        <div>
+          <span className="font-medium text-neutral-500">Issued</span>
+          <p className="font-semibold text-neutral-900">
+            {formatDateTime(report.issued)}
+          </p>
+        </div>
+        <div>
+          <span className="font-medium text-neutral-500">Lab</span>
+          <p className="font-semibold text-neutral-900">{labName}</p>
+        </div>
+      </div>
+
+      {/* Performers */}
+      {performers.length > 1 && (
+        <div className="mt-4">
+          <span className="text-sm font-medium text-neutral-500">Performers</span>
+          <ul className="mt-1 text-sm text-neutral-900">
+            {performers.map((p, i) => (
+              <li key={i}>{p.display ?? p.reference}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Conclusion */}
+      {report.conclusion && (
+        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+          <h4 className="text-sm font-bold text-neutral-700">Conclusion</h4>
+          <p className="mt-1 text-sm text-neutral-900 whitespace-pre-wrap">
+            {report.conclusion}
+          </p>
+        </div>
+      )}
+
+      {/* Presented form (PDF / images) */}
+      {report.presentedForm && report.presentedForm.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-sm font-bold text-neutral-700">Attached Files</h4>
+          {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i))}
+        </div>
+      )}
+
+      {/* No file, no conclusion — show text-based summary hint */}
+      {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
+        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">
+          No report content or attachments available. Result data may be pending.
+        </div>
+      )}
+
+      {/* Acknowledge button — AC #3 */}
+      {notification && !acknowledged && (
+        <button
+          type="button"
+          onClick={handleAcknowledge}
+          disabled={acknowledging}
+          className="mt-6 rounded-md bg-blue-600 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          data-testid="acknowledge-button"
+        >
+          {acknowledging ? 'Acknowledging...' : 'Acknowledge Result'}
+        </button>
+      )}
+
+      {acknowledged && (
+        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-green-700">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+          Result Acknowledged
+        </div>
+      )}
+    </div>
+  )
+}

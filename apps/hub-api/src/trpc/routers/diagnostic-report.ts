@@ -3,6 +3,8 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { enforceConsentMiddleware } from '../middleware/enforceConsent'
+import { enforceEntitlement } from '../middleware/enforceEntitlement'
+import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { labRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
@@ -22,6 +24,8 @@ export const diagnosticReportRouter = createTRPCRouter({
    * Returns file metadata (no inline content) + download URL.
    */
   read: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceResourceAccess('DiagnosticReport'))
     .input(
       z.object({
@@ -112,6 +116,8 @@ export const diagnosticReportRouter = createTRPCRouter({
    * Emits PHI_READ audit event.
    */
   listByPatient: protectedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceResourceAccess('DiagnosticReport'))
     .input(
       z.object({
@@ -216,6 +222,8 @@ export const diagnosticReportRouter = createTRPCRouter({
    * Emits READ audit event (not PHI_READ — operational).
    */
   listByLab: labRestrictedProcedure
+    .use(enforceVerifiedOrg())
+    .use(enforceEntitlement('LAB_LITE'))
     .use(enforceResourceAccess('DiagnosticReport'))
     .input(
       z.object({

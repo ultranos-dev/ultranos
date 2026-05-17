@@ -26,13 +26,16 @@ const { consentRouter } = await import('../trpc/routers/consent')
 const { medicationRouter } = await import('../trpc/routers/medication')
 const { patientRouter } = await import('../trpc/routers/patient')
 
-function makeCtx(user: { sub: string; role: string; sessionId: string } | null) {
+function makeCtx(user: { sub: string; role: string; sessionId: string; orgId?: string | null } | null) {
   // Mock supabase with realistic chain methods
   // Consent check needs: from().select().eq().order() → { data: [], error: null }
   const single = vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
   const order = vi.fn().mockResolvedValue({ data: [], error: null })
   const limit = vi.fn().mockResolvedValue({ data: [], error: null })
-  const eq = vi.fn().mockReturnValue({ single, limit, order })
+  const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null })
+  const limitSub = vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null })
+  const inFn = vi.fn().mockReturnValue({ maybeSingle, limit: limitSub })
+  const eq = vi.fn().mockReturnValue({ single, limit, order, in: inFn, eq: vi.fn().mockReturnValue({ single, in: inFn }) })
   const orMethod = vi.fn().mockReturnValue({ eq })
   const select = vi.fn().mockReturnValue({ eq, or: orMethod, order, single })
   const insert = vi.fn().mockReturnValue({ select })
@@ -49,7 +52,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
   describe('PHARMACIST restrictions', () => {
     it('Pharmacist CANNOT read patient search (Patient resource)', async () => {
       const caller = createCallerFactory(patientRouter)(
-        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1', orgId: 'org-test-001' }),
       )
       await expect(caller.search({ query: 'John' })).rejects.toMatchObject({
         code: 'FORBIDDEN',
@@ -58,17 +61,17 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Pharmacist CAN check medication status (MedicationRequest resource)', async () => {
       const caller = createCallerFactory(medicationRouter)(
-        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1', orgId: 'org-test-001' }),
       )
-      // Will fail with NOT_FOUND (prescription doesn't exist in mock) — not FORBIDDEN
+      // Story 21.2: unsigned lookups rejected — BAD_REQUEST, not FORBIDDEN (proves RBAC passed)
       await expect(
         caller.getStatus({ prescriptionId: '550e8400-e29b-41d4-a716-446655440000' }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
     })
 
     it('Pharmacist CANNOT access consent endpoints', async () => {
       const caller = createCallerFactory(consentRouter)(
-        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1' }),
+        makeCtx({ sub: 'pharm-1', role: 'PHARMACIST', sessionId: 's1', orgId: 'org-test-001' }),
       )
       await expect(
         caller.check({ patientId: 'p1', resourceType: 'Patient' }),
@@ -78,7 +81,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
   describe('PATIENT restrictions', () => {
     it('Patient CAN access consent check (Consent resource)', async () => {
-      const ctx = makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' })
+      const ctx = makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1', orgId: 'org-test-001' })
       const caller = createCallerFactory(consentRouter)(ctx)
       // Won't throw FORBIDDEN — will return permitted: false (no consent in mock)
       const result = await caller.check({ patientId: 'patient-1', resourceType: 'Patient' })
@@ -87,7 +90,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Patient CANNOT access medication status', async () => {
       const caller = createCallerFactory(medicationRouter)(
-        makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' }),
+        makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1', orgId: 'org-test-001' }),
       )
       await expect(
         caller.getStatus({ prescriptionId: '550e8400-e29b-41d4-a716-446655440000' }),
@@ -96,7 +99,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Patient CAN access patient search (Patient resource)', async () => {
       const caller = createCallerFactory(patientRouter)(
-        makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1' }),
+        makeCtx({ sub: 'patient-1', role: 'PATIENT', sessionId: 's1', orgId: 'org-test-001' }),
       )
       // Will not throw FORBIDDEN — Patient has Patient resource access
       const result = await caller.search({ query: 'self' })
@@ -150,7 +153,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
   describe('DOCTOR (clinician) access', () => {
     it('Doctor CAN access patient search', async () => {
       const caller = createCallerFactory(patientRouter)(
-        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-test-001' }),
       )
       const result = await caller.search({ query: 'test' })
       expect(result).toHaveProperty('patients')
@@ -158,17 +161,17 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Doctor CAN check medication status', async () => {
       const caller = createCallerFactory(medicationRouter)(
-        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-test-001' }),
       )
-      // NOT_FOUND, not FORBIDDEN
+      // Story 21.2: unsigned lookups rejected — BAD_REQUEST, not FORBIDDEN (proves RBAC passed)
       await expect(
         caller.getStatus({ prescriptionId: '550e8400-e29b-41d4-a716-446655440000' }),
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
     })
 
     it('Doctor CAN access consent check', async () => {
       const caller = createCallerFactory(consentRouter)(
-        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1' }),
+        makeCtx({ sub: 'doc-1', role: 'DOCTOR', sessionId: 's1', orgId: 'org-test-001' }),
       )
       const result = await caller.check({ patientId: 'p1', resourceType: 'Patient' })
       expect(result).toHaveProperty('permitted')
@@ -177,7 +180,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
   describe('ADMIN access', () => {
     it('Admin CAN access any endpoint', async () => {
-      const adminCtx = makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1' })
+      const adminCtx = makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-test-001' })
 
       const patientCaller = createCallerFactory(patientRouter)(adminCtx)
       const result = await patientCaller.search({ query: 'test' })
@@ -206,7 +209,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Patient CANNOT sync consent as another patient (impersonation blocked)', async () => {
       const caller = createCallerFactory(consentRouter)(
-        makeCtx({ sub: 'attacker-999', role: 'PATIENT', sessionId: 's1' }),
+        makeCtx({ sub: 'attacker-999', role: 'PATIENT', sessionId: 's1', orgId: 'org-test-001' }),
       )
       await expect(
         caller.sync({ ...baseConsentInput, grantorId: 'patient-001' }),
@@ -215,7 +218,7 @@ describe('RBAC Security Audit — AC 3: Role-based access enforcement', () => {
 
     it('Doctor CANNOT sync consent as a patient (impersonation blocked)', async () => {
       const caller = createCallerFactory(consentRouter)(
-        makeCtx({ sub: 'doctor-001', role: 'DOCTOR', sessionId: 's1' }),
+        makeCtx({ sub: 'doctor-001', role: 'DOCTOR', sessionId: 's1', orgId: 'org-test-001' }),
       )
       await expect(
         caller.sync({ ...baseConsentInput, grantorId: 'patient-001' }),

@@ -6,15 +6,20 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  kycStatus?: string
 }
+
+export type EntitlementStatus = 'active' | 'trial' | 'inactive' | 'checking'
 
 interface AuthSessionState {
   session: AuthSession | null
   isAuthenticated: boolean
+  entitlementStatus: EntitlementStatus | null
 
   setSession: (session: AuthSession) => void
   clearSession: () => void
   getPractitionerRef: () => string
+  setEntitlementStatus: (status: EntitlementStatus) => void
 }
 
 /**
@@ -27,10 +32,13 @@ interface AuthSessionState {
 export const useAuthSessionStore = create<AuthSessionState>()((set, get) => ({
   session: null,
   isAuthenticated: false,
+  entitlementStatus: null,
 
   setSession: (session) => set({ session, isAuthenticated: true }),
 
-  clearSession: () => set({ session: null, isAuthenticated: false }),
+  clearSession: () => set({ session: null, isAuthenticated: false, entitlementStatus: null }),
+
+  setEntitlementStatus: (status) => set({ entitlementStatus: status }),
 
   getPractitionerRef: () => {
     const { session } = get()

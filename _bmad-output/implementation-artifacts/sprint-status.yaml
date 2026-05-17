@@ -1,5 +1,5 @@
 # generated: 2026-04-29T03:34:34.691026
-# last_updated: 2026-05-11T12:00:00.000000
+# last_updated: 2026-05-14T15:10:00.000000
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-11T15:10:00.000000'
+last_updated: '2026-05-16T22:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -131,15 +131,15 @@ development_status:
   # ============================================================
 
   # Phase 1 Sprint 0: Shared Package Completeness
-  epic-25: in-progress
+  epic-25: done
   25-1-create-packages-drug-db-package: done
   25-2-drug-database-staleness-enforcement: done
   25-3-diagnosticreport-medicationdispense-fhir-types: done
-  25-4-mobile-ecdsa-p256-crypto-implementation: backlog
+  25-4-mobile-ecdsa-p256-crypto-implementation: done
   epic-25-retrospective: optional
 
   # Phase 1: Spoke App Authentication & App Shell
-  epic-14: in-progress
+  epic-14: done
   14-1-opd-lite-supabase-auth-login-page: done
   14-2-pharmacy-lite-supabase-auth-login-page: done
   14-3-shared-session-management-hook-reauth-modal: done
@@ -172,12 +172,12 @@ development_status:
   epic-16-retrospective: optional
 
   # Phase 1: Lab Lite — Complete UI/UX
-  epic-17: backlog
-  17-1-lab-dashboard-home-page: backlog
-  17-2-upload-workflow-orchestrator-page: backlog
-  17-3-results-queue-upload-history-page: backlog
-  17-4-lab-lite-in-app-notification-center: backlog
-  17-5-lab-lite-audit-logger-migration: backlog
+  epic-17: done
+  17-1-lab-dashboard-home-page: done
+  17-2-upload-workflow-orchestrator-page: done
+  17-3-results-queue-upload-history-page: done
+  17-4-lab-lite-in-app-notification-center: done
+  17-5-lab-lite-audit-logger-migration: done
   epic-17-retrospective: optional
 
   # Phase 1: Patient Lite Mobile — Complete UI/UX
@@ -196,71 +196,95 @@ development_status:
   epic-18-retrospective: optional
 
   # Phase 2: Sync Queue Reliability & Offline Resilience
-  epic-19: backlog
-  19-1-pharmacy-lite-sync-drain-worker: backlog
-  19-2-patient-lite-mobile-sync-drain-worker: backlog
-  19-3-offline-dispensing-path-for-pharmacy-lite: backlog
-  19-4-sync-queue-size-enforcement: backlog
-  19-5-krl-sync-service-integration: backlog
+  epic-19: done
+  19-1-pharmacy-lite-sync-drain-worker: done
+  19-2-patient-lite-mobile-sync-drain-worker: done
+  19-3-offline-dispensing-path-for-pharmacy-lite: done
+  19-4-sync-queue-size-enforcement: done
+  19-5-krl-sync-service-integration: done
   epic-19-retrospective: optional
 
   # Phase 2: OPD Lite — Complete UI/UX
-  epic-20: backlog
-  20-1-clinical-dashboard-home-page: backlog
-  20-2-encounter-history-patient-chart-view: backlog
-  20-3-soap-plan-section: backlog
-  20-4-conflict-resolution-interface: backlog
-  20-5-lab-results-viewer: backlog
-  20-6-full-notification-center-page: backlog
-  20-7-indexeddb-phi-cleanup-on-tab-close: backlog
-  20-8-opd-lite-settings-profile-page: backlog
-  20-9-pediatric-dosing-warning-banner: backlog
+  epic-20: done
+  20-1-clinical-dashboard-home-page: done
+  20-2-encounter-history-patient-chart-view: done
+  20-3-soap-plan-section: done
+  20-4-conflict-resolution-interface: done
+  20-5-lab-results-viewer: done
+  20-6-full-notification-center-page: done
+  20-7-indexeddb-phi-cleanup-on-tab-close: done
+  20-8-opd-lite-settings-profile-page: done
+  20-9-pediatric-dosing-warning-banner: done
   epic-20-retrospective: optional
 
   # Phase 2: Pharmacy Lite — Complete UI/UX
-  epic-26: backlog
-  26-1-pharmacist-dispensing-dashboard: backlog
-  26-2-prescription-queue-active-work-view: backlog
-  26-3-dispensing-history-day-end-reconciliation: backlog
-  26-4-sync-queue-dashboard-manual-retry: backlog
-  26-5-enhanced-labeling-print-workflow: backlog
-  26-6-pharmacy-lite-settings-page: backlog
-  26-7-practitioner-key-revalidation-wiring: backlog
+  epic-26: done
+  26-1-pharmacist-dispensing-dashboard: done
+  26-2-prescription-queue-active-work-view: done
+  26-3-dispensing-history-day-end-reconciliation: done
+  26-4-sync-queue-dashboard-manual-retry: done
+  26-5-enhanced-labeling-print-workflow: done
+  26-6-pharmacy-lite-settings-page: done
+  26-7-practitioner-key-revalidation-wiring: done
   epic-26-retrospective: optional
 
   # Phase 3: API Security Hardening
-  epic-21: backlog
-  21-1-global-redis-backed-rate-limiting: backlog
-  21-2-qr-signature-verification-enforcement: backlog
-  21-3-consent-authorization-identity-trust-fixes: backlog
-  21-4-hub-api-security-headers-cors: backlog
-  21-4a-pwa-security-headers-via-next-config: backlog
-  21-5-mobile-device-security-root-detection-certificate-pinning: backlog
-  21-6-audit-hash-chain-race-condition-fix: backlog
+  epic-21: in-progress
+  21-1-global-redis-backed-rate-limiting: done
+  21-2-qr-signature-verification-enforcement: done
+  21-3-consent-authorization-identity-trust-fixes: done
+  21-4-hub-api-security-headers-cors: done
+  21-4a-pwa-security-headers-via-next-config: done
+  21-5-mobile-device-security-root-detection-certificate-pinning: in-progress
+  21-6-audit-hash-chain-race-condition-fix: done
   epic-21-retrospective: optional
 
   # Phase 4: Back-Office Administration & Provider Lifecycle
-  epic-22: backlog
-  22-1-back-office-admin-web-application-scaffold: backlog
-  22-2-kyc-verification-dashboard: backlog
-  22-3-lab-approval-suspension-workflow: backlog
-  22-4-provider-license-expiry-monitoring: backlog
-  22-5-provider-self-service-kyc-submission: backlog
-  22-6-prescribing-anomaly-alert-review: backlog
+  epic-22: done
+  22-1-back-office-admin-web-application-scaffold: done
+  22-2-kyc-verification-dashboard: done
+  22-3-lab-approval-suspension-workflow: done
+  22-4-provider-license-expiry-monitoring: done
+  22-5-provider-self-service-kyc-submission: done
+  22-6-prescribing-anomaly-alert-review: done
   epic-22-retrospective: optional
 
   # Phase 4: Monitoring, Alerting & Observability
-  epic-23: backlog
-  23-0-redis-infrastructure-provisioning: backlog
-  23-1-infrastructure-application-metrics-collection: backlog
-  23-2-clinical-safety-metrics-alerting: backlog
-  23-3-audit-chain-integrity-monitoring: backlog
+  epic-23: done
+  23-0-redis-infrastructure-provisioning: done
+  23-1-infrastructure-application-metrics-collection: done
+  23-2-clinical-safety-metrics-alerting: done
+  23-3-audit-chain-integrity-monitoring: done
   epic-23-retrospective: optional
 
   # Phase 5: AI Clinical Intelligence
-  epic-24: backlog
-  24-1-ai-clinical-scribe-soap-note-parsing: backlog
-  24-2-empathy-translation-engine-prescription-tts: backlog
-  24-3-paper-prescription-ocr: backlog
-  24-4-edge-ai-model-update-service: backlog
+  epic-24: in-progress
+  24-1-ai-clinical-scribe-soap-note-parsing: done
+  24-2-empathy-translation-engine-prescription-tts: done
+  24-3-paper-prescription-ocr: in-progress
+  24-4-edge-ai-model-update-service: done
   epic-24-retrospective: optional
+
+  # ============================================================
+  # Epic 27: Subscription & Tenant Management
+  # ============================================================
+
+  # Track A — Platform Foundation
+  epic-27: in-progress
+  27-1-tenant-organization-data-model: done
+  27-2-module-catalog-subscription-state: done
+  27-3-hub-api-entitlement-middleware: done
+  27-4-spoke-app-entitlement-gate-ui: done
+
+  # Track B — Institutional Subscription Management
+  27-5-admin-subscription-dashboard: done
+  27-6-organization-admin-self-registration: done
+  27-7-admin-user-provisioning-scoped-to-subscription: done
+  27-8-billing-integration: done
+  27-9-subscription-lifecycle-tier-transitions: done
+
+  # Track C — Consumer / Patient Freemium
+  27-10-patient-self-registration-flow: ready-for-dev
+  27-11-freemium-tier-definition-feature-gating: ready-for-dev
+  27-12-patient-in-app-upgrade-flow: ready-for-dev
+  epic-27-retrospective: optional

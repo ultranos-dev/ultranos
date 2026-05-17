@@ -84,7 +84,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       if (prescriptions.length > 0) {
         const patientRef = prescriptions[0]?.pat
         auditPhiAccess(
-          'pharmacy-user', // No auth session store in pharmacy-lite; actor resolved at Hub sync
+          useAuthSessionStore.getState().session?.userId ?? 'unknown',
           AuditAction.READ,
           AuditResourceType.PRESCRIPTION,
           'fulfillment-view',
