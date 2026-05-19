@@ -78,126 +78,132 @@ export default function CreateUserPage() {
   }
 
   if (loading) {
-    return <div className="text-neutral-500">Loading available roles...</div>
+    return <div className="text-text-muted">Loading available roles...</div>
   }
 
   if (error) {
-    return <div className="text-red-600">Error: {error}</div>
+    return <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Error: {error}</div>
   }
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold tracking-tight">Create Staff User</h1>
-      <p className="mt-2 text-neutral-500">
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Create Staff User</h1>
+      <p className="mt-4 text-text-muted">
         Assign roles based on your organization&apos;s active module subscriptions.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-        {/* Name Field */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-neutral-700">
-            Full Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="mt-6">
+        <div className="rounded-3xl bg-white p-5 border border-border space-y-6">
+          {/* Name Field */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-text-muted">
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
+            />
+          </div>
 
-        {/* Email Field */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-          />
-        </div>
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-text-muted">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
+            />
+          </div>
 
-        {/* Role Selector — AC #1, #2 */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700">Role</label>
-          <div className="mt-2 space-y-2">
-            {/* Available roles — selectable */}
-            {availableRoles.map((r) => (
-              <label
-                key={r.role}
-                className="flex items-center gap-3 rounded-md border border-neutral-200 px-4 py-3 cursor-pointer hover:bg-neutral-50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50"
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value={r.role}
-                  checked={selectedRole === r.role}
-                  onChange={() => setSelectedRole(r.role)}
-                  className="text-primary-600"
-                />
-                <div>
-                  <span className="font-medium text-sm">{r.role}</span>
-                  {r.moduleName && (
-                    <span className="ms-2 text-xs text-neutral-500">({r.moduleName})</span>
-                  )}
+          {/* Role Selector */}
+          <div>
+            <p className="text-sm font-medium text-text-muted mb-2">Role</p>
+            <div className="space-y-2">
+              {/* Available roles — selectable */}
+              {availableRoles.map((r) => (
+                <label
+                  key={r.role}
+                  className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                    selectedRole === r.role
+                      ? 'border-brand-lime bg-brand-lime/10'
+                      : 'border-border hover:bg-surface'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={r.role}
+                    checked={selectedRole === r.role}
+                    onChange={() => setSelectedRole(r.role)}
+                    className="accent-[#D4FF00]"
+                  />
+                  <div>
+                    <span className="font-medium text-sm text-black">{r.role}</span>
+                    {r.moduleName && (
+                      <span className="ms-2 text-xs text-text-muted">({r.moduleName})</span>
+                    )}
+                  </div>
+                </label>
+              ))}
+
+              {/* Unavailable roles — disabled with subscription prompt */}
+              {unavailableRoles.map((r) => (
+                <div
+                  key={r.role}
+                  className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 opacity-60"
+                >
+                  <input type="radio" name="role" disabled className="accent-[#D4FF00]" />
+                  <div>
+                    <span className="font-medium text-sm text-text-muted">{r.role}</span>
+                    <span className="ms-2 text-xs text-text-muted">
+                      &mdash;{' '}
+                      <a
+                        href="/subscriptions"
+                        className="text-brand-lime hover:underline"
+                      >
+                        Subscribe to {r.moduleName} to add {r.role} users
+                      </a>
+                    </span>
+                  </div>
                 </div>
-              </label>
-            ))}
-
-            {/* Unavailable roles — disabled with subscription prompt (AC #2) */}
-            {unavailableRoles.map((r) => (
-              <div
-                key={r.role}
-                className="flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 px-4 py-3 opacity-60"
-              >
-                <input type="radio" name="role" disabled className="text-neutral-300" />
-                <div>
-                  <span className="font-medium text-sm text-neutral-400">{r.role}</span>
-                  <span className="ms-2 text-xs text-neutral-400">
-                    &mdash;{' '}
-                    <a
-                      href="/subscriptions"
-                      className="text-primary-600 hover:underline"
-                    >
-                      Subscribe to {r.moduleName} to add {r.role} users
-                    </a>
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Submission */}
+        {/* Submission feedback */}
         {submitError && (
-          <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="mt-4 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {submitError}
           </div>
         )}
 
         {submitSuccess && (
-          <div className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
             Role validated successfully. User creation will be available when user management is fully implemented.
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="mt-6 flex gap-3">
           <button
             type="submit"
             disabled={submitting || !selectedRole || !name || !email}
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Validating...' : 'Create User'}
           </button>
           <a
             href="/users"
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="rounded-full border border-black text-black px-6 py-2.5 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
           >
             Cancel
           </a>

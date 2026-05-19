@@ -80,76 +80,76 @@ export default function SubscriptionsPage() {
   }, [fetchData])
 
   if (loading) {
-    return <div className="text-neutral-500">Loading subscription data...</div>
+    return <div className="text-text-muted">Loading subscription data...</div>
   }
 
   if (error) {
-    return <div className="text-red-600">Error: {error}</div>
+    return <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Error: {error}</div>
   }
 
   const activeSubscriptions = subscriptions.filter((s) => s.status === 'ACTIVE' || s.status === 'TRIAL')
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold tracking-tight">Subscriptions</h1>
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Subscriptions</h1>
 
-      {/* AC #1: Org Identity Card */}
+      {/* Org Identity Card */}
       {org && (
-        <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
+        <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">{org.name}</h2>
-              <p className="text-sm text-neutral-500">{org.billingEmail}</p>
+              <h2 className="text-sm font-semibold text-black uppercase tracking-wide">{org.name}</h2>
+              <p className="mt-1 text-sm text-text-muted">{org.billingEmail}</p>
             </div>
             <StatusBadge status={org.status} trialEndsAt={org.trialEndsAt} />
           </div>
         </div>
       )}
 
-      {/* AC #1: Subscribed Modules Table */}
+      {/* Subscribed Modules Table */}
       <div className="mt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Modules</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Modules</h2>
           <button
             onClick={() => setShowAddDialog(true)}
-            className="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
+            className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all"
           >
             Add Module
           </button>
         </div>
 
         {subscriptions.length === 0 ? (
-          <div className="mt-4 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-            <p className="text-neutral-500">No modules subscribed. Add your first module to get started.</p>
+          <div className="rounded-3xl border border-border bg-white p-8 text-center">
+            <p className="text-text-muted">No modules subscribed. Add your first module to get started.</p>
           </div>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Module</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Status</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Start Date</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Renewal / Expiry</th>
-                  <th className="px-4 py-3 text-end font-medium text-neutral-600">Cost / mo</th>
-                  <th className="px-4 py-3 text-end font-medium text-neutral-600">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Module</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Start Date</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Renewal / Expiry</th>
+                  <th className="px-4 py-3 text-end font-medium text-white text-xs uppercase tracking-wider">Cost / mo</th>
+                  <th className="px-4 py-3 text-end font-medium text-white text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {subscriptions.map((sub) => (
-                  <tr key={sub.id}>
-                    <td className="px-4 py-3 font-medium">{sub.moduleName}</td>
+                  <tr key={sub.id} className="hover:bg-brand-lime/5 transition-colors">
+                    <td className="px-4 py-3 font-medium text-black">{sub.moduleName}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={sub.status} />
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">{formatDate(sub.startedAt)}</td>
-                    <td className="px-4 py-3 text-neutral-600">{formatDate(sub.expiresAt)}</td>
-                    <td className="px-4 py-3 text-end text-neutral-600">${sub.monthlyCostUsd.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-text-muted">{formatDate(sub.startedAt)}</td>
+                    <td className="px-4 py-3 text-text-muted">{formatDate(sub.expiresAt)}</td>
+                    <td className="px-4 py-3 text-end text-text-muted">${sub.monthlyCostUsd.toFixed(2)}</td>
                     <td className="px-4 py-3 text-end">
                       {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (
                         <button
                           onClick={() => setRemoveTarget(sub)}
-                          className="text-sm text-red-600 hover:text-red-800 font-medium"
+                          className="rounded-full text-sm text-red-600 hover:text-red-800 font-medium"
                         >
                           Remove
                         </button>
@@ -158,11 +158,11 @@ export default function SubscriptionsPage() {
                   </tr>
                 ))}
               </tbody>
-              {/* AC #1: Total monthly cost */}
-              <tfoot className="border-t border-neutral-200 bg-neutral-50">
+              {/* Total monthly cost footer */}
+              <tfoot className="border-t border-border bg-white">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3 font-medium text-end">Total Monthly Cost</td>
-                  <td className="px-4 py-3 text-end font-semibold">${totalCost.toFixed(2)}</td>
+                  <td colSpan={4} className="px-4 py-3 font-medium text-end text-black">Total Monthly Cost</td>
+                  <td className="px-4 py-3 text-end font-semibold text-black">${totalCost.toFixed(2)}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -171,7 +171,7 @@ export default function SubscriptionsPage() {
         )}
       </div>
 
-      {/* AC #2: Add Module Dialog */}
+      {/* Add Module Dialog */}
       {showAddDialog && (
         <AddModuleDialog
           onClose={() => setShowAddDialog(false)}
@@ -179,7 +179,7 @@ export default function SubscriptionsPage() {
         />
       )}
 
-      {/* AC #3: Remove Module Dialog */}
+      {/* Remove Module Dialog */}
       {removeTarget && (
         <RemoveModuleDialog
           subscription={removeTarget}
