@@ -115,7 +115,7 @@ function MetricCard({ label, value, status, detail }: {
         <div className={`h-2.5 w-2.5 rounded-full ${dotColor[status]}`} />
         <span className="text-sm font-medium text-neutral-700">{label}</span>
       </div>
-      <p className="mt-2 text-2xl font-bold text-neutral-900">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-black">{value}</p>
       {detail && <p className="mt-1 text-xs text-text-muted">{detail}</p>}
     </div>
   )
@@ -193,7 +193,7 @@ function ClinicalSafetySection() {
 
       {/* Monthly reports list */}
       <div>
-        <h3 className="text-lg font-semibold text-neutral-900">Monthly Reports</h3>
+        <h3 className="text-lg font-semibold text-black">Monthly Reports</h3>
         {reports.length === 0 ? (
           <p className="mt-2 text-sm text-text-muted">No monthly reports generated yet.</p>
         ) : (
@@ -228,7 +228,7 @@ function ClinicalSafetySection() {
         {selectedReport && !reportLoading && (
           <div className="mt-4 rounded-3xl border border-border bg-white p-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-neutral-900">Report Detail</h4>
+              <h4 className="font-semibold text-black">Report Detail</h4>
               <button
                 onClick={() => setSelectedReport(null)}
                 className="text-sm text-text-muted hover:text-black transition-colors"
@@ -236,7 +236,7 @@ function ClinicalSafetySection() {
                 Close
               </button>
             </div>
-            <pre className="mt-3 max-h-96 overflow-auto rounded bg-neutral-50 p-3 text-xs text-neutral-700">
+            <pre className="mt-3 max-h-96 overflow-auto rounded bg-surface p-3 text-xs text-neutral-700">
               {JSON.stringify(selectedReport, null, 2)}
             </pre>
           </div>

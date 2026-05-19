@@ -99,7 +99,7 @@ export default function LabsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (

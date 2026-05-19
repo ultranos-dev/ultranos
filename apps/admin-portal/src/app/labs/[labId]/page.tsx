@@ -89,7 +89,7 @@ function ConfirmationDialog({
       title: 'Reactivate Lab',
       description: `Reactivate "${labName}"? This will restore upload access. The technician will be notified.`,
       buttonLabel: 'Reactivate',
-      buttonColor: 'bg-blue-600 hover:bg-blue-700',
+      buttonColor: 'bg-brand-lime hover:brightness-95',
     },
   }
 
@@ -126,7 +126,7 @@ function ConfirmationDialog({
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor} ${action === 'REACTIVATE' ? 'text-black' : 'text-white'}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -246,7 +246,7 @@ export default function LabDetailPage() {
         {lab.status === 'SUSPENDED' && (
           <button
             onClick={() => setPendingAction('REACTIVATE')}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-blue-600 text-white hover:brightness-95 hover:scale-[1.02] transition-all"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-brand-lime text-black hover:brightness-95 hover:scale-[1.02] transition-all"
           >
             Reactivate
           </button>

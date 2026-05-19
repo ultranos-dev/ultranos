@@ -76,17 +76,17 @@ export function ModuleSelectionStep({
               className={`flex cursor-pointer items-start gap-3 rounded-3xl border p-4 transition-colors ${
                 isSelected
                   ? 'border-brand-lime bg-brand-lime/10'
-                  : 'border-border hover:border-neutral-300'
+                  : 'border-border hover:border-brand-lime'
               }`}
             >
               <input
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleModule(mod.code)}
-                className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-[#D4FF00]"
+                className="mt-0.5 h-4 w-4 rounded border-border accent-[#D4FF00]"
               />
               <div>
-                <span className="text-sm font-medium text-neutral-900">{mod.name}</span>
+                <span className="text-sm font-medium text-black">{mod.name}</span>
                 <p className="mt-0.5 text-xs text-text-muted">{mod.description}</p>
               </div>
             </label>

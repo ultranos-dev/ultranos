@@ -139,7 +139,7 @@ export default function LicenseExpiryPage() {
                     className="border-b border-border hover:bg-brand-lime/5 cursor-pointer transition-colors"
                     onClick={() => setRenewTarget(p)}
                   >
-                    <td className="px-4 py-3 font-medium text-neutral-900">{p.name}</td>
+                    <td className="px-4 py-3 font-medium text-black">{p.name}</td>
                     <td className="px-4 py-3 text-neutral-600">{p.licenseNumber}</td>
                     <td className="px-4 py-3 text-neutral-600">{p.issuingBody}</td>
                     <td className="px-4 py-3 text-neutral-600">{p.expiryDate}</td>

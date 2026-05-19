@@ -25,7 +25,7 @@ function KycStatusBadge({ status }: { status: string }) {
     PENDING_VERIFICATION: 'bg-amber-100 text-amber-800',
     ACTIVE: 'bg-green-100 text-green-800',
     REJECTED: 'bg-red-100 text-red-800',
-    REQUEST_MORE_INFO: 'bg-blue-100 text-blue-800',
+    REQUEST_MORE_INFO: 'bg-amber-100 text-amber-800',
     SUSPENDED: 'bg-neutral-100 text-neutral-600',
   }
 
@@ -137,7 +137,7 @@ export default function KycQueuePage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (
@@ -176,7 +176,7 @@ export default function KycQueuePage() {
                     <td className="px-4 py-3 text-neutral-600">{formatDate(sub.submittedAt)}</td>
                     <td className="px-4 py-3 text-neutral-600">
                       {sub.licenseDocumentKey ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-black">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
                           View
                         </span>

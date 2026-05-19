@@ -48,7 +48,7 @@ function KycStatusBadge({ status }: { status: string }) {
     PENDING_VERIFICATION: 'bg-amber-100 text-amber-800',
     ACTIVE: 'bg-green-100 text-green-800',
     REJECTED: 'bg-red-100 text-red-800',
-    REQUEST_MORE_INFO: 'bg-blue-100 text-blue-800',
+    REQUEST_MORE_INFO: 'bg-amber-100 text-amber-800',
   }
 
   const labelMap: Record<string, string> = {

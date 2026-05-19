@@ -48,7 +48,7 @@ function formatDate(iso: string): string {
 
 function ModelTypeBadge({ type }: { type: string }) {
   const colorMap: Record<string, string> = {
-    SOAP_MACRO_TEMPLATES: 'bg-blue-100 text-blue-800',
+    SOAP_MACRO_TEMPLATES: 'bg-neutral-100 text-neutral-600',
     DRUG_DB_OFFLINE: 'bg-red-100 text-red-800',
     TTS_FRAGMENT_BUNDLE: 'bg-purple-100 text-purple-800',
     ONNX_SOAP_MODEL: 'bg-amber-100 text-amber-800',
