@@ -28,7 +28,7 @@ function getPasswordStrength(password: string): { label: string; color: string; 
 
   if (score <= 2) return { label: 'Weak', color: 'bg-red-500', width: '33%' }
   if (score <= 4) return { label: 'Fair', color: 'bg-amber-500', width: '66%' }
-  return { label: 'Strong', color: 'bg-green-500', width: '100%' }
+  return { label: 'Strong', color: 'bg-brand-lime', width: '100%' }
 }
 
 export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCredentialsStepProps) {
@@ -68,7 +68,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="adminName" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="adminName" className="mb-1 block text-sm font-medium text-text-muted">
           Full Name
         </label>
         <input
@@ -77,7 +77,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
 
           value={data.adminName}
           onChange={(e) => onChange({ ...data, adminName: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           placeholder="Dr. Ahmad Hassan"
         />
         {errors.adminName && (
@@ -86,7 +86,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
       </div>
 
       <div>
-        <label htmlFor="adminEmail" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="adminEmail" className="mb-1 block text-sm font-medium text-text-muted">
           Email
         </label>
         <input
@@ -95,7 +95,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
 
           value={data.adminEmail}
           onChange={(e) => onChange({ ...data, adminEmail: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           placeholder="admin@hospital.example"
           autoComplete="email"
         />
@@ -105,7 +105,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
       </div>
 
       <div>
-        <label htmlFor="adminPassword" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="adminPassword" className="mb-1 block text-sm font-medium text-text-muted">
           Password
         </label>
         <input
@@ -114,7 +114,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
 
           value={data.adminPassword}
           onChange={(e) => onChange({ ...data, adminPassword: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           autoComplete="new-password"
           minLength={12}
         />
@@ -137,7 +137,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-text-muted">
           Confirm Password
         </label>
         <input
@@ -146,7 +146,7 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
 
           value={data.confirmPassword}
           onChange={(e) => onChange({ ...data, confirmPassword: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           autoComplete="new-password"
         />
         {errors.confirmPassword && (
@@ -158,13 +158,13 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          className="flex-1 rounded-full border border-black px-4 py-2 text-sm font-medium text-text-muted hover:scale-[1.02] transition-all"
         >
           Back
         </button>
         <button
           type="submit"
-          className="flex-1 rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+          className="flex-1 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all"
         >
           Next
         </button>

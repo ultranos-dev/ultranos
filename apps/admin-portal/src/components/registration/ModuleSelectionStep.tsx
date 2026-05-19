@@ -73,21 +73,21 @@ export function ModuleSelectionStep({
           return (
             <label
               key={mod.code}
-              className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+              className={`flex cursor-pointer items-start gap-3 rounded-3xl border p-4 transition-colors ${
                 isSelected
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-neutral-200 hover:border-neutral-300'
+                  ? 'border-brand-lime bg-brand-lime/10'
+                  : 'border-border hover:border-neutral-300'
               }`}
             >
               <input
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleModule(mod.code)}
-                className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-[#D4FF00]"
               />
               <div>
                 <span className="text-sm font-medium text-neutral-900">{mod.name}</span>
-                <p className="mt-0.5 text-xs text-neutral-500">{mod.description}</p>
+                <p className="mt-0.5 text-xs text-text-muted">{mod.description}</p>
               </div>
             </label>
           )
@@ -98,7 +98,7 @@ export function ModuleSelectionStep({
         <p className="text-xs text-red-600" role="alert">{error}</p>
       )}
 
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-text-muted">
         All modules include a 30-day free trial. No payment required during trial.
       </p>
 
@@ -107,14 +107,14 @@ export function ModuleSelectionStep({
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="flex-1 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+          className="flex-1 rounded-full border border-black px-4 py-2 text-sm font-medium text-text-muted hover:scale-[1.02] transition-all disabled:opacity-50"
         >
           Back
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+          className="flex-1 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
         >
           {loading ? 'Creating account\u2026' : 'Complete Registration'}
         </button>

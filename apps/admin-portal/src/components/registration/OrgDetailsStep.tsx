@@ -65,7 +65,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="orgName" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="orgName" className="mb-1 block text-sm font-medium text-text-muted">
           Organization Name
         </label>
         <input
@@ -74,7 +74,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
 
           value={data.orgName}
           onChange={(e) => onChange({ ...data, orgName: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           placeholder="Al-Noor Medical Center"
         />
         {errors.orgName && (
@@ -83,7 +83,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
       </div>
 
       <div>
-        <label htmlFor="countryCode" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="countryCode" className="mb-1 block text-sm font-medium text-text-muted">
           Country
         </label>
         <select
@@ -91,7 +91,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
 
           value={data.countryCode}
           onChange={(e) => onChange({ ...data, countryCode: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
         >
           <option value="">Select a country</option>
           {COUNTRY_OPTIONS.map((c) => (
@@ -106,7 +106,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
       </div>
 
       <div>
-        <label htmlFor="billingEmail" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="billingEmail" className="mb-1 block text-sm font-medium text-text-muted">
           Billing Email
         </label>
         <input
@@ -115,7 +115,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
 
           value={data.billingEmail}
           onChange={(e) => onChange({ ...data, billingEmail: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           placeholder="billing@hospital.example"
         />
         {errors.billingEmail && (
@@ -125,7 +125,7 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
 
       <button
         type="submit"
-        className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+        className="w-full rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all"
       >
         Next
       </button>
