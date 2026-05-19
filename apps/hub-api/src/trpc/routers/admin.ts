@@ -72,11 +72,92 @@ export const adminRouter = createTRPCRouter({
       .select('id', { count: 'exact', head: true })
       .in('status', ['UNREVIEWED', 'ESCALATED'])
 
+    // --- SLA-breached KYC count ---
+    const { data: pendingKycRows } = await ctx.supabase
+      .from('kyc_submissions')
+      .select('submitted_at')
+      .eq('status', 'PENDING')
+
+    let slaBreachedKycCount = 0
+    for (const row of (pendingKycRows ?? [])) {
+      const sla = calculateSlaDeadline((row as Record<string, unknown>).submitted_at as string)
+      if (sla.breached) slaBreachedKycCount++
+    }
+
+    // --- Oldest pending lab (days) ---
+    const { data: oldestLab } = await ctx.supabase
+      .from('labs')
+      .select('created_at')
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    let oldestPendingLabDays: number | null = null
+    if (oldestLab) {
+      const labCreated = new Date((oldestLab as Record<string, unknown>).created_at as string)
+      oldestPendingLabDays = Math.floor((Date.now() - labCreated.getTime()) / 86_400_000)
+    }
+
+    // --- High severity alert count ---
+    const { count: highSeverityAlertCount } = await ctx.supabase
+      .from('prescribing_anomalies')
+      .select('id', { count: 'exact', head: true })
+      .eq('severity', 'HIGH')
+      .in('status', ['UNREVIEWED', 'ESCALATED'])
+
+    // --- Audit chain health ---
+    const { data: latestVerification } = await ctx.supabase
+      .from('audit_chain_verifications')
+      .select('valid')
+      .order('verified_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const auditChainHealthy = latestVerification
+      ? (latestVerification as Record<string, unknown>).valid === true
+      : null
+
+    // --- User counts breakdown ---
+    const { count: totalUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+
+    const { count: activeUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'ACTIVE')
+
+    const { count: suspendedUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'SUSPENDED')
+
+    const { count: pendingInviteUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'PENDING_INVITE')
+
     return {
       pendingKycReviews: pendingKycReviews ?? 0,
       pendingLabApprovals: pendingLabApprovals ?? 0,
       activeAlerts: unreviewedAlerts ?? 0,
       recentAuditEvents: 0,
+      slaBreachedKycCount,
+      oldestPendingLabDays,
+      highSeverityAlertCount: highSeverityAlertCount ?? 0,
+      auditChainHealthy,
+      userCounts: {
+        total: totalUsers ?? 0,
+        active: activeUsers ?? 0,
+        suspended: suspendedUsers ?? 0,
+        pendingInvite: pendingInviteUsers ?? 0,
+        withoutMfa: 0, // MFA count requires batch Auth API — deferred
+      },
     }
   }),
 
@@ -2268,7 +2349,7 @@ export const adminRouter = createTRPCRouter({
       if (existing.auth_user_id) {
         try {
           await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
-            ban_duration: 'none',
+            ban_duration: '876000h',
             user_metadata: { status: 'SUSPENDED' },
           })
         } catch {
@@ -2807,141 +2888,8 @@ export const adminRouter = createTRPCRouter({
     }),
 
   // ================================================================
-  // Task 4: Dashboard Stats Extension & Recent Activity
+  // Task 4: Recent Activity
   // ================================================================
-
-  /**
-   * Extended dashboard stats: includes SLA-breached KYC count, oldest pending lab,
-   * high-severity alert count, audit chain health, and user counts breakdown.
-   */
-  dashboardStatsExtended: adminProcedure.query(async ({ ctx }) => {
-    // --- Existing stats (replicated from dashboardStats) ---
-    const { count: pendingLabApprovals } = await ctx.supabase
-      .from('labs')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'PENDING')
-
-    const { count: pendingKycReviews } = await ctx.supabase
-      .from('kyc_submissions')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'PENDING')
-
-    const { count: unreviewedAlerts } = await ctx.supabase
-      .from('prescribing_anomalies')
-      .select('id', { count: 'exact', head: true })
-      .in('status', ['UNREVIEWED', 'ESCALATED'])
-
-    // --- SLA-breached KYC count ---
-    const { data: pendingKycRows } = await ctx.supabase
-      .from('kyc_submissions')
-      .select('submitted_at')
-      .eq('status', 'PENDING_VERIFICATION')
-
-    let slaBreachedKycCount = 0
-    for (const row of (pendingKycRows ?? [])) {
-      const sla = calculateSlaDeadline((row as Record<string, unknown>).submitted_at as string)
-      if (sla.breached) slaBreachedKycCount++
-    }
-
-    // --- Oldest pending lab (days) ---
-    const { data: oldestLab } = await ctx.supabase
-      .from('labs')
-      .select('created_at')
-      .eq('status', 'PENDING')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-
-    let oldestPendingLabDays: number | null = null
-    if (oldestLab) {
-      const labCreated = new Date((oldestLab as Record<string, unknown>).created_at as string)
-      oldestPendingLabDays = Math.floor((Date.now() - labCreated.getTime()) / 86_400_000)
-    }
-
-    // --- High severity alert count ---
-    const { count: highSeverityAlertCount } = await ctx.supabase
-      .from('prescribing_anomalies')
-      .select('id', { count: 'exact', head: true })
-      .eq('severity', 'HIGH')
-      .in('status', ['UNREVIEWED', 'ESCALATED'])
-
-    // --- Audit chain health ---
-    const { data: latestVerification } = await ctx.supabase
-      .from('audit_chain_verifications')
-      .select('valid')
-      .order('verified_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    const auditChainHealthy = latestVerification
-      ? (latestVerification as Record<string, unknown>).valid === true
-      : null
-
-    // --- User counts breakdown ---
-    const { count: totalUsers } = await ctx.supabase
-      .from('practitioners')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.user.orgId)
-
-    const { count: activeUsers } = await ctx.supabase
-      .from('practitioners')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.user.orgId)
-      .eq('status', 'ACTIVE')
-
-    const { count: suspendedUsers } = await ctx.supabase
-      .from('practitioners')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.user.orgId)
-      .eq('status', 'SUSPENDED')
-
-    const { count: pendingInviteUsers } = await ctx.supabase
-      .from('practitioners')
-      .select('id', { count: 'exact', head: true })
-      .eq('org_id', ctx.user.orgId)
-      .eq('status', 'PENDING_INVITE')
-
-    // MFA count: query auth users for practitioners in this org
-    // Best-effort — count practitioners with auth_user_id and check MFA
-    const { data: orgPractitioners } = await ctx.supabase
-      .from('practitioners')
-      .select('auth_user_id')
-      .eq('org_id', ctx.user.orgId)
-      .not('auth_user_id', 'is', null)
-
-    let withoutMfa = 0
-    for (const p of (orgPractitioners ?? [])) {
-      try {
-        const { data: authUser } = await ctx.supabase.auth.admin.getUserById(
-          (p as Record<string, unknown>).auth_user_id as string,
-        )
-        const factors = (authUser?.user as any)?.factors ?? []
-        const hasVerifiedMfa = factors.some((f: any) => f.status === 'verified')
-        if (!hasVerifiedMfa) withoutMfa++
-      } catch {
-        // Best effort — count as without MFA on error
-        withoutMfa++
-      }
-    }
-
-    return {
-      pendingKycReviews: pendingKycReviews ?? 0,
-      pendingLabApprovals: pendingLabApprovals ?? 0,
-      activeAlerts: unreviewedAlerts ?? 0,
-      recentAuditEvents: 0,
-      slaBreachedKycCount,
-      oldestPendingLabDays,
-      highSeverityAlertCount: highSeverityAlertCount ?? 0,
-      auditChainHealthy,
-      userCounts: {
-        total: totalUsers ?? 0,
-        active: activeUsers ?? 0,
-        suspended: suspendedUsers ?? 0,
-        pendingInvite: pendingInviteUsers ?? 0,
-        withoutMfa,
-      },
-    }
-  }),
 
   /**
    * Recent admin activity from audit_log.
@@ -2954,12 +2902,12 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Query audit_log for admin-initiated actions
+      // Query audit_log for this admin's own recent actions
       const { data: rows, error } = await ctx.supabase
         .from('audit_log')
         .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome, metadata')
         .eq('actor_role', 'ADMIN')
-        .eq('org_id', ctx.user.orgId)
+        .eq('actor_id', ctx.user.sub)
         .order('timestamp', { ascending: false })
         .limit(input.limit)
 
