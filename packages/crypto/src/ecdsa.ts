@@ -78,7 +78,7 @@ export async function verifyEcdsaSignature(
     const data = new TextEncoder().encode(payload)
     const signature = base64ToUint8(signatureBase64)
 
-    return await crypto.subtle.verify(SIGN_ALGO, key, signature, data)
+    return await crypto.subtle.verify(SIGN_ALGO, key, signature as BufferSource, data as BufferSource)
   } catch {
     return false
   }

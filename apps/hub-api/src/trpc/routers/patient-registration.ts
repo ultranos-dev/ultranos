@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server'
 import { baseProcedure, createTRPCRouter } from '../init'
 import { rateLimitMiddleware, checkRateLimit } from '../middleware/rateLimit'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { encryptField } from '@ultranos/crypto/server-crypto'
+import { encryptField } from '@ultranos/crypto/server'
 import { db } from '@/lib/supabase'
 
 /**

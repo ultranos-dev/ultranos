@@ -1,14 +1,16 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
 addendumStarted: '2026-05-02'
+addendum5Started: '2026-05-18'
 inputDocuments:
   - docs/ultranos_master_prd_v3.md
   - _bmad-output/planning-artifacts/architecture.md
   - _bmad-output/planning-artifacts/ux-design-specification.md
   - _bmad-output/planning-artifacts/gap-analysis-report.md
+  - _bmad-output/implementation-artifacts/deferred-work.md
 ---
 
 # Ultranos - Epic Breakdown
@@ -1788,4 +1790,1623 @@ As a pharmacist, I want stale practitioner keys to be automatically revalidated,
 - **And** if the key is confirmed active by the Hub, the cache is refreshed with a new TTL
 - **And** if the key is revoked, the cache entry is deleted and the verification fails with `KEY_REVOKED`
 - **And** if the Hub is unreachable, the stale key is treated as untrusted (fail-closed) and the pharmacist is shown an offline verification warning
+
+---
+
+# Addendum 5: Deferred Work Epics (28–36)
+
+> Generated 2026-05-18 from comprehensive review of `_bmad-output/implementation-artifacts/deferred-work.md`.
+> These epics address ~172 deferred items accumulated across code reviews of Epics 1–27.
+
+## Deferred Work — Epic List
+
+### Epic 28: Client-Side PHI Encryption & Data Lifecycle
+Ensure all PHI stored in IndexedDB (PWA) and local state is encrypted at rest using `@ultranos/crypto`, with proper key lifecycle and data cleanup on session end.
+**Deferred items covered:** D10, D24, D26, D34, D37, D51, D58, D71, D74, D75, W6 (9-2), W3/W5/W6/W7/W8 (7-1)
+
+### Epic 29: Comprehensive Audit Infrastructure
+Every PHI read/write across all apps emits a structured audit event via `@ultranos/audit-logger` with SHA-256 hash chaining — no silent gaps, no swallowed failures.
+**Deferred items covered:** D5, D9, D23, D38, D56, D63, P2, W1 (many), W5 (23-2), D101, D122, D1 (12-5), W56, W57, W38, W3/W4 (21-6)
+
+### Epic 30: Sync Engine Hardening & Reliability
+The sync engine reliably delivers all queued data to the Hub with no data loss, no duplicates, and correct ordering — even across tab restarts, auth token expiry, and concurrent operations.
+**Deferred items covered:** D4, D11, D20, D27, D35, D62, P6, W1-W8 (9-2), W1-W7 (9-3), W4 (4-3), D88, D107
+
+### Epic 31: FHIR R4 Compliance & Schema Hardening
+All FHIR resources, types, and database schemas strictly conform to FHIR R4 conventions with proper validation, consistent Meta fields, and correct namespace usage.
+**Deferred items covered:** D1, D3, D36, D40, D43, D53, D65, D108, D109, W3 (3-3), D105, D106, W14 (24-3), W5 (14-6), W13 (16-4), W1/W2 (3-4), D30
+
+### Epic 32: Security Hardening Phase 2
+Close all known exploitable security vulnerabilities — forged QR acceptance, client-supplied identity trust, unverified webhooks, rate limiting gaps, and credential exposure.
+**Deferred items covered:** D12, D15, P3, D60, D61, W5-W11 (6-1), D2/D3 (5-3), W2/W4 (21-2), W7-W9 (27-6), D1 (22-5), W42 (18-7a), W2 (27-11), D1-D3 (27-12), W1/W2 (22-3)
+
+### Epic 33: Clinical Safety & Drug Interaction Improvements
+Drug interaction checks evaluate the patient's full active medication list, allergy matching uses coded substances, and all clinical safety invariants are tested.
+**Deferred items covered:** D2, D25, D31, D55, D57, D72, D87, D89, D97, D98, D99, D104, W2/D2 (3-2), W3/W5 (3-1/3-2), D106, D49, D90, D91
+
+### Epic 34: Infrastructure & DevOps Resilience
+Eliminate operational risks from memory leaks, missing cron wiring, module-level singletons, and Dexie schema fragility across all apps.
+**Deferred items covered:** D33, D42, D41, D86, D92, D96, D7, D8, W1-W5 (1-6), W1-W4 (23-0), W1-W3 (23-1), D2-D3 (23-1), W1-W3 (22-4), W1 (22-6)
+
+### Epic 35: UX Polish, Accessibility & RTL Completion
+All apps render correctly in RTL mode with proper font loading, i18n integration, WCAG accessibility compliance, and consistent design tokens.
+**Deferred items covered:** D13, D14, D22, D28, D64, D66, D94, D-RTL1 through D-RTL4, W1-W4 (14-4), W19 (24-1), W2-W3 (22-2), W49, W37, W44-W48, D67, W12 (15-1)
+
+### Epic 36: Data Integrity & Race Condition Fixes
+Eliminate data corruption and inconsistency from race conditions, partial failures, and stale state across all critical code paths.
+**Deferred items covered:** W1 (7-1), W2 (3-2), W1 (4-2), W1 (27-6), W4 (27-6), D90, D116, D117, D118, D121, D124, D125, D126, D47, D112-D114
+
+### Deferred Item Coverage Map
+
+| Deferred Items | Epic |
+|---|---|
+| D10, D24, D26, D34, D37, D51, D58, D71, D74, D75 | Epic 28 — Client-Side Encryption |
+| D5, D9, D23, D38, D56, D63, P2, D101, D122 | Epic 29 — Audit Infrastructure |
+| D4, D11, D20, D27, D35, D62, P6, D88, D107 | Epic 30 — Sync Engine |
+| D1, D3, D36, D40, D43, D53, D65, D108, D109, D30, D105, D106 | Epic 31 — FHIR Compliance |
+| D12, D15, P3, D60, D61, D2/D3 (5-3) | Epic 32 — Security Phase 2 |
+| D2, D25, D31, D55, D57, D72, D87, D89, D97-D99, D104, D49, D90, D91 | Epic 33 — Clinical Safety |
+| D33, D42, D41, D86, D92, D96, D7, D8 | Epic 34 — Infrastructure |
+| D13, D14, D22, D28, D64, D66, D94, D-RTL1–4 | Epic 35 — UX/RTL/A11y |
+| D47, D90, D112-D114, D116-D118, D121, D124-D126 | Epic 36 — Data Integrity |
+
+---
+
+## Epic 28: Client-Side PHI Encryption & Data Lifecycle
+
+Ensure all PHI stored in IndexedDB (PWA) and local state is encrypted at rest using `@ultranos/crypto`, with proper key lifecycle and data cleanup on session end — achieving CLAUDE.md compliance for all client-side data stores.
+
+### Story 28.1: Encrypt All OPD-Lite Dexie Tables via Crypto Proxy
+
+As a clinic administrator,
+I want all patient data stored locally in OPD-Lite to be encrypted at rest,
+So that a stolen or compromised workstation does not expose PHI.
+
+**Acceptance Criteria:**
+
+- **Given** OPD-Lite is running with a valid session key
+- **When** any record is written to Dexie tables (patients, encounters, soapLedger, observations, conditions, medications)
+- **Then** the record body is encrypted via `@ultranos/crypto` AES-256-GCM before IndexedDB write
+- **And** only fields listed in `indexedFields` remain in cleartext for query support
+
+- **Given** an encrypted record exists in any Dexie table
+- **When** it is read back via Dexie query
+- **Then** the record is transparently decrypted and returned as the original object
+
+- **Given** the session key has been wiped (tab close or logout)
+- **When** any Dexie read is attempted
+- **Then** a `DecryptionKeyMissingError` is thrown (not a silent placeholder)
+
+- **Given** OPD-Lite has existing unencrypted data from before this migration
+- **When** the app opens with the new encryption proxy
+- **Then** a one-time migration encrypts existing records in place
+- **And** the Dexie version is incremented with the new schema
+
+### Story 28.2: Comprehensive PHI Cleanup on Session End
+
+As a clinician,
+I want all locally stored PHI to be wiped when I close the browser tab or log out,
+So that the next user of the workstation cannot access my patients' data.
+
+**Acceptance Criteria:**
+
+- **Given** a clinician is logged into OPD-Lite, Pharmacy-Lite, or Lab-Lite
+- **When** the user clicks "Logout"
+- **Then** all Dexie tables containing PHI are cleared (`db.table.clear()` for each table)
+- **And** the in-memory encryption key is wiped
+- **And** Zustand stores are reset
+
+- **Given** a clinician has an active session
+- **When** the browser tab is closed (`beforeunload` event)
+- **Then** the encryption key is wiped from memory
+- **And** IndexedDB data remains encrypted but unreadable without the key
+
+- **Given** `clearPhiState()` is called from any trigger (logout, session expiry, tab close)
+- **When** the function completes
+- **Then** every Dexie table that stores PHI has been cleared — not just Zustand state
+- **And** the sync queue is either cleared or its PHI payloads are purged
+
+### Story 28.3: Sync Queue PHI Payload Encryption
+
+As a system operator,
+I want PHI payloads in the sync queue to be encrypted at rest,
+So that queued data awaiting sync is not exposed if the device is compromised.
+
+**Acceptance Criteria:**
+
+- **Given** a clinical event (encounter, prescription, vitals, etc.) is enqueued for sync
+- **When** `enqueue()` writes the `SyncQueueEntry` to IndexedDB
+- **Then** the `payload` field is encrypted with the session key before write
+- **And** metadata fields (resourceType, resourceId, hlcTimestamp, status) remain in cleartext for queue management
+
+- **Given** the drain worker picks up a pending entry
+- **When** it prepares the payload for Hub API push
+- **Then** the payload is decrypted in memory just before the API call
+- **And** the decrypted payload is never persisted back to IndexedDB
+
+- **Given** the session key is unavailable (expired session, fresh tab)
+- **When** the drain worker attempts to process encrypted queue entries
+- **Then** those entries are skipped with status `'awaiting-key'`
+- **And** they are retried after re-authentication restores the session key
+
+- **Given** `clearPhiState()` is triggered
+- **When** the sync queue contains entries with encrypted payloads
+- **Then** entries with status `'synced'` are deleted
+- **And** entries with status `'pending'`/`'failed'` are retained (encrypted, unreadable without key)
+
+### Story 28.4: Key Derivation from Supabase JWT (PBKDF2)
+
+As a clinician,
+I want my local encryption key to survive a page refresh without re-entering credentials,
+So that I don't lose access to my locally cached patient data on accidental refresh.
+
+**Acceptance Criteria:**
+
+- **Given** a user authenticates via Supabase
+- **When** the session JWT is available
+- **Then** a deterministic encryption key is derived using PBKDF2 with the JWT `sub` claim + a device salt stored in `localStorage`
+- **And** the same JWT always produces the same key on the same device
+
+- **Given** a user refreshes the page
+- **When** the Supabase session is still valid (auto-refresh within 15-min window)
+- **Then** the encryption key is re-derived from the refreshed JWT
+- **And** all previously encrypted IndexedDB data is readable
+
+- **Given** the Supabase session has fully expired (no valid refresh token)
+- **When** the user refreshes the page
+- **Then** the encryption key cannot be derived
+- **And** IndexedDB data remains encrypted and inaccessible until re-authentication
+
+- **Given** a different user logs in on the same device
+- **When** they authenticate with a different JWT
+- **Then** a different encryption key is derived
+- **And** the previous user's encrypted data is unreadable
+
+### Story 28.5: Key Rotation with Version-Prefixed Payloads
+
+As a system administrator,
+I want encryption keys to be rotatable without making existing data permanently unreadable,
+So that key compromise events can be remediated.
+
+**Acceptance Criteria:**
+
+- **Given** encrypted payloads already contain a `v1:` version prefix
+- **When** a key rotation is triggered (new key version `v2`)
+- **Then** new writes use `v2:` prefix with the new key
+- **And** reads detect the version prefix and select the correct key for decryption
+
+- **Given** a rotation has occurred and both `v1` and `v2` keys exist
+- **When** a background re-encryption job runs
+- **Then** all `v1:`-prefixed records are decrypted with the old key and re-encrypted with the new key
+- **And** the `v1` key can be retired after all records are migrated
+
+- **Given** a record with an unknown version prefix (e.g., `v3:`) is encountered
+- **When** decryption is attempted
+- **Then** a `UnknownKeyVersionError` is thrown with the version prefix in the error
+- **And** the error is logged (without PHI) for operational alerting
+
+### Story 28.6: Search Encryption Strategy for Indexed Patient Names
+
+As a clinician,
+I want to search for patients by name even though names are encrypted at rest,
+So that clinical workflows are not degraded by encryption.
+
+**Acceptance Criteria:**
+
+- **Given** `_ultranos.nameLocal` and `_ultranos.nameLatin` are encrypted in IndexedDB
+- **When** a clinician types a patient name search query
+- **Then** the search works with acceptable performance (<200ms for 1000 patients)
+
+- **Given** the chosen strategy (encrypted Fuse.js index, in-memory decrypt-and-search, or deterministic token hashing)
+- **When** the search is executed
+- **Then** results match against both `nameLocal` and `nameLatin` fields
+- **And** the approach is documented in an ADR explaining the tradeoff between search quality and encryption strength
+
+- **Given** the encryption key is not available
+- **When** a patient search is attempted
+- **Then** the search returns an empty result set with a clear error message ("Session required for patient search")
+- **And** no unencrypted name data is leaked to the UI or console
+
+---
+
+## Epic 29: Comprehensive Audit Infrastructure
+
+Every PHI read/write across all apps emits a structured audit event via `@ultranos/audit-logger` with SHA-256 hash chaining — no silent gaps, no swallowed failures.
+
+### Story 29.1: Hub API Transactional Audit on All PHI Router Procedures
+
+As a compliance officer,
+I want every Hub API endpoint that reads or writes PHI to emit a verified audit event,
+So that there is a complete, tamper-evident trail of all data access for regulatory review.
+
+**Acceptance Criteria:**
+
+- **Given** any tRPC procedure that reads PHI (patient.search, patient.read, encounter.listByPatient, soapNote.list, medication.getStatus, diagnosticReport.read, notification.list, etc.)
+- **When** the procedure executes successfully
+- **Then** an audit event is emitted via `AuditLogger.emit()` with correct `actorId`, `resourceType`, `resourceId`, `action: 'READ'`, and `outcome: 'SUCCESS'`
+
+- **Given** any tRPC procedure that writes PHI (patient.create, encounter.create, soapNote.add, medication.create, recordDispense, allergy.create, consent.sync, etc.)
+- **When** the procedure executes successfully
+- **Then** an audit event is emitted with `action: 'CREATE'|'UPDATE'|'DELETE'` as appropriate
+
+- **Given** an audit emit fails during a procedure
+- **When** the failure is caught
+- **Then** the procedure still completes (fail-open for clinical availability)
+- **But** the failed audit event is written to a `dead_letter_audit` table with the full event payload, error message, and timestamp
+- **And** an operational alert metric is incremented
+
+- **Given** the `audit.sync` endpoint receives client events
+- **When** client events include an `outcome` field
+- **Then** the server preserves the client-supplied `outcome` value (not hardcode `'SUCCESS'`)
+
+- **Given** `ctx.user.sub` is missing or empty on the JWT context
+- **When** an audit event is constructed
+- **Then** the event is emitted with `actorId: 'ANONYMOUS'` and flagged with `metadata.missingSubClaim: true`
+
+### Story 29.2: Migrate Patient-Lite-Mobile to @ultranos/audit-logger
+
+As a compliance officer,
+I want the patient mobile app to use the canonical audit logger with hash chaining,
+So that patient-side PHI access has the same audit integrity guarantees as clinician apps.
+
+**Acceptance Criteria:**
+
+- **Given** patient-lite-mobile currently uses a local `@/lib/audit` module
+- **When** this story is complete
+- **Then** all audit calls in patient-lite-mobile import from `@ultranos/audit-logger`
+- **And** the local `@/lib/audit` module is deleted
+
+- **Given** the `@ultranos/audit-logger` is designed for server-side (Supabase client)
+- **When** used in a React Native context
+- **Then** the logger uses a mobile-compatible adapter (SQLCipher-backed local ledger with SHA-256 hash chaining)
+- **And** the adapter implements the same `AuditLogger` interface
+
+- **Given** the mobile app is offline
+- **When** an audit event is emitted
+- **Then** it is persisted to the local SQLCipher audit ledger
+- **And** it is queued for sync to Hub via the sync engine with priority matching consent/allergy tier
+
+- **Given** the in-memory `auditQueue` array previously used for batching
+- **When** it is replaced by the persistent ledger
+- **Then** audit events survive app crashes and restarts
+
+### Story 29.3: Migrate Lab-Lite to @ultranos/audit-logger
+
+As a compliance officer,
+I want lab-lite audit events to use the canonical logger with hash chaining,
+So that lab technician PHI access (patient verification, result uploads) has full audit integrity.
+
+**Acceptance Criteria:**
+
+- **Given** lab-lite currently uses raw `fetch` for audit reporting (auth events + queue events)
+- **When** this story is complete
+- **Then** all audit calls in lab-lite import from `@ultranos/audit-logger`
+- **And** the client-side audit ledger in IndexedDB uses SHA-256 hash chaining
+
+- **Given** `@ultranos/audit-logger` is added as a dependency
+- **When** `package.json` is updated
+- **Then** `"@ultranos/audit-logger": "workspace:*"` is declared in dependencies
+
+- **Given** lab-lite audit events previously used fire-and-forget `fetch`
+- **When** the Hub is unreachable
+- **Then** events are stored in the local IndexedDB audit ledger
+- **And** they are synced when connectivity is restored
+
+### Story 29.4: Audit Dead-Letter Queue and Retry Mechanism
+
+As a system operator,
+I want failed audit events to be captured and retried,
+So that no PHI access goes permanently unaudited.
+
+**Acceptance Criteria:**
+
+- **Given** `AuditLogger.emit()` fails on the Hub API (DB error, connection failure)
+- **When** the error is caught
+- **Then** the full event payload is inserted into a `dead_letter_audit` table with columns: `id`, `event_payload` (JSONB), `error_message`, `retry_count`, `next_retry_at`, `created_at`
+
+- **Given** dead-letter entries exist with `retry_count < 5`
+- **When** a scheduled job runs (every 5 minutes)
+- **Then** entries are retried via `AuditLogger.emit()` with exponential backoff
+- **And** successful retries are deleted from `dead_letter_audit` and present in the main audit chain
+
+- **Given** a dead-letter entry reaches `retry_count = 5`
+- **When** all retries are exhausted
+- **Then** the entry is marked `status: 'permanent_failure'`
+- **And** an operational P2 alert is emitted
+
+- **Given** client-side audit events fail to sync via `audit.sync`
+- **When** the client retry mechanism fires
+- **Then** events are retried with the same exponential backoff strategy
+- **And** the client audit ledger retains all unsent events until confirmed synced
+
+### Story 29.5: Audit Event Pruning with Configurable Retention
+
+As a system operator,
+I want synced and expired audit events in client-side IndexedDB to be automatically pruned,
+So that long-running clinic devices don't suffer unbounded storage growth.
+
+**Acceptance Criteria:**
+
+- **Given** audit events in the client-side IndexedDB ledger have status `'synced'`
+- **When** the event is older than the configured retention period (default: 7 days)
+- **Then** the event is deleted from the local ledger
+
+- **Given** audit events with status `'failed'` and `retryCount >= 5`
+- **When** the event is older than 30 days
+- **Then** the event is deleted with a warning log entry noting permanent data loss
+
+- **Given** the pruning job runs
+- **When** it completes
+- **Then** it emits a local metric: `{ prunedSynced: N, prunedFailed: M, remaining: R }`
+
+- **Given** audit events with status `'pending'`
+- **When** pruning runs
+- **Then** pending events are NEVER pruned regardless of age
+
+### Story 29.6: Audit Security Events (Session, Auth, Authorization)
+
+As a security analyst,
+I want session expiry, re-authentication attempts, and authorization denials to be audited,
+So that security incidents can be investigated through the audit trail.
+
+**Acceptance Criteria:**
+
+- **Given** a session expires due to inactivity timeout (30 min)
+- **When** the SessionTimeoutWrapper triggers expiry
+- **Then** an audit event is emitted: `{ action: 'SESSION_EXPIRED', resourceType: 'Session', actorId, metadata: { reason: 'inactivity', sessionDuration } }`
+
+- **Given** a user attempts re-authentication via the re-auth modal
+- **When** re-auth succeeds
+- **Then** an audit event is emitted: `{ action: 'REAUTH_SUCCESS', resourceType: 'Session' }`
+- **When** re-auth fails
+- **Then** an audit event is emitted: `{ action: 'REAUTH_FAILURE', resourceType: 'Session', outcome: 'DENIED' }`
+
+- **Given** `enforceResourceAccess`, `roleRestrictedProcedure`, or `protectedProcedure` denies a request
+- **When** the authorization check fails
+- **Then** an audit event is emitted: `{ action: 'AUTHORIZATION_DENIED', resourceType, actorId, metadata: { requiredRole, actualRole, endpoint } }`
+
+- **Given** the `sendAlert` function in monitoring emits to `audit_events`
+- **When** it writes an alert record
+- **Then** it uses `AuditLogger.emit()` instead of direct Supabase insert
+- **And** the alert is part of the hash chain
+
+### Story 29.7: Fix audit.sync Client Event Outcome Preservation
+
+As a compliance officer,
+I want client-side audit event outcomes (SUCCESS, DENIED, ERROR) to be preserved when synced to Hub,
+So that the audit trail accurately reflects what happened on the client.
+
+**Acceptance Criteria:**
+
+- **Given** the `audit.sync` Zod input schema
+- **When** a client event includes an `outcome` field
+- **Then** the schema accepts `outcome` as `z.enum(['SUCCESS', 'DENIED', 'ERROR']).optional()`
+
+- **Given** a client audit event with `outcome: 'DENIED'`
+- **When** it is synced to Hub via `audit.sync`
+- **Then** the Hub audit record preserves `outcome: 'DENIED'` (not overwrite with `'SUCCESS'`)
+
+- **Given** a client audit event without an `outcome` field
+- **When** it is synced
+- **Then** the Hub defaults to `outcome: 'SUCCESS'` for backwards compatibility
+
+---
+
+## Epic 30: Sync Engine Hardening & Reliability
+
+The sync engine reliably delivers all queued data to the Hub with no data loss, no duplicates, and correct ordering — even across tab restarts, auth token expiry, and concurrent operations.
+
+### Story 30.1: Server-Side HLC Timestamp Generation
+
+As a system architect,
+I want all Hub API mutations to stamp records with HLC timestamps instead of wall-clock `new Date()`,
+So that conflict resolution and sync ordering are consistent across all spokes.
+
+**Acceptance Criteria:**
+
+- **Given** any Hub API mutation that writes a timestamp (`dispensed_at`, `meta_last_updated`, `created_at`, `scannedAt`, etc.)
+- **When** the mutation executes
+- **Then** it generates an HLC timestamp via a server-side `HybridLogicalClock` instance
+- **And** the HLC value is stored in the `hlc_timestamp` column
+
+- **Given** the server-side HLC clock
+- **When** it is initialized
+- **Then** the `nodeId` is derived from the server instance identifier (hostname or deployment ID)
+- **And** it is NOT a hardcoded string
+
+- **Given** existing records with `hlc_timestamp = NULL`
+- **When** a migration runs
+- **Then** NULL `hlc_timestamp` values are backfilled from the `created_at` or `updated_at` wall-clock column using a deterministic conversion
+- **And** the migration is idempotent
+
+- **Given** the `patients` table
+- **When** this story is complete
+- **Then** the table has an `hlc_timestamp` column populated on all rows
+
+### Story 30.2: Cross-Tab Drain Mutex via Web Lock API
+
+As a clinician with multiple tabs open,
+I want only one tab to drain the sync queue at a time,
+So that duplicate pushes to the Hub are prevented.
+
+**Acceptance Criteria:**
+
+- **Given** two browser tabs running the same spoke app (OPD-Lite, Pharmacy-Lite, or Lab-Lite)
+- **When** the drain worker activates in both tabs
+- **Then** only one tab acquires the `'sync-drain-lock'` via the Web Locks API
+- **And** the other tab skips the drain cycle
+
+- **Given** the tab holding the lock is closed or crashes
+- **When** the lock is released by the browser
+- **Then** the surviving tab acquires the lock on its next drain cycle
+
+- **Given** the Web Locks API is unavailable (older browser)
+- **When** the drain worker starts
+- **Then** it falls back to the current behavior (no lock) with a console warning
+
+### Story 30.3: Transactional Enqueue Deduplication
+
+As a system developer,
+I want sync queue enqueue operations to be atomic,
+So that concurrent calls for the same resource don't create duplicate entries.
+
+**Acceptance Criteria:**
+
+- **Given** two concurrent calls to `enqueue()` for the same `resourceId`
+- **When** both execute simultaneously
+- **Then** only one `SyncQueueEntry` is created in IndexedDB
+- **And** the second call updates the existing entry's payload and timestamp
+
+- **Given** the `enqueue()` function
+- **When** it performs the read-check-write operation
+- **Then** the entire operation is wrapped in a `db.transaction('rw', ...)` Dexie transaction
+
+- **Given** `enqueueForRetry()` in pharmacy dispensing sync
+- **When** it generates a new UUID via `crypto.randomUUID()`
+- **Then** it first checks for an existing entry with the same `resourceId`
+- **And** reuses the existing entry ID if found
+
+### Story 30.4: Hub sync.push Optimistic Locking
+
+As a system architect,
+I want Hub sync pushes to use optimistic locking,
+So that concurrent pushes from different spokes don't silently overwrite each other.
+
+**Acceptance Criteria:**
+
+- **Given** a sync.push request with an `hlcTimestamp` value
+- **When** the Hub processes the upsert
+- **Then** the SQL uses `WHERE hlc_timestamp = $expected` (or `< $incoming` for LWW tiers)
+- **And** a mismatch returns a `409 Conflict` response with the current server HLC
+
+- **Given** a `409 Conflict` response
+- **When** the drain worker receives it
+- **Then** the `onConflict` handler is invoked with both local and server versions
+- **And** the entry is NOT silently marked as `'synced'`
+
+- **Given** no `onConflict` handler is configured for a resource type
+- **When** a conflict occurs
+- **Then** the entry is marked `'conflict'` (new status) instead of `'synced'`
+- **And** it appears in the sync dashboard for manual review
+
+### Story 30.5: Fix HLC Lexicographic Comparison in SQL
+
+As a system architect,
+I want HLC timestamps to compare correctly in PostgreSQL queries,
+So that sync.pull and conflict detection return temporally accurate results.
+
+**Acceptance Criteria:**
+
+- **Given** HLC timestamps stored as strings with format `{wallMs}-{counter}-{nodeId}`
+- **When** SQL queries use `>` or `<` operators for temporal ordering
+- **Then** the comparison produces correct temporal results
+
+- **Given** the chosen fix approach (zero-padded string format OR numeric `wall_ms` column + index)
+- **When** applied via migration
+- **Then** all existing HLC values are migrated to the new format
+- **And** `sync.pull` queries return correct chronological results
+
+- **Given** the HLC comparison function
+- **When** two timestamps have identical `wallMs` but different counters
+- **Then** the counter breaks the tie correctly
+- **And** `nodeId` is used as final tiebreaker
+
+### Story 30.6: Sync Queue Lifecycle — Purge and Retention
+
+As a system operator,
+I want synced and permanently failed sync queue entries to be automatically purged,
+So that clinic devices don't run out of IndexedDB quota.
+
+**Acceptance Criteria:**
+
+- **Given** sync queue entries with status `'synced'`
+- **When** they are older than the retention period (default: 48 hours)
+- **Then** they are deleted from IndexedDB by a periodic cleanup job
+
+- **Given** sync queue entries with status `'failed'` and `retryCount >= maxRetries`
+- **When** they are older than 7 days
+- **Then** they are deleted with a warning metric emitted
+
+- **Given** the cleanup job runs
+- **When** it detects IndexedDB usage exceeding 80% of estimated quota
+- **Then** it reduces retention periods by 50% and runs an aggressive purge
+- **And** emits a `STORAGE_PRESSURE` metric
+
+- **Given** entries with status `'pending'` or `'syncing'`
+- **When** cleanup runs
+- **Then** these entries are NEVER purged regardless of age
+
+### Story 30.7: Auth Token Refresh Integration in Drain Worker
+
+As a clinician,
+I want the sync drain worker to handle expired JWT tokens gracefully,
+So that my data syncs successfully without manual intervention after token refresh.
+
+**Acceptance Criteria:**
+
+- **Given** the drain worker makes an API call with an expired JWT (15-min expiry)
+- **When** the Hub returns `401 Unauthorized`
+- **Then** the drain worker pauses processing
+- **And** triggers a Supabase token refresh via `supabase.auth.refreshSession()`
+
+- **Given** the token refresh succeeds
+- **When** a new valid JWT is available
+- **Then** the drain worker resumes processing from where it paused
+- **And** the failed entry is retried with the new token (not counted as a retry failure)
+
+- **Given** the token refresh fails (refresh token expired)
+- **When** no valid session can be restored
+- **Then** the drain worker stops entirely
+- **And** the sync dashboard shows `'AUTH_REQUIRED'` status
+- **And** entries remain in `'pending'` status (not `'failed'`)
+
+### Story 30.8: QuotaExceededError Handling and Recovery
+
+As a system developer,
+I want sync queue operations to handle IndexedDB quota errors gracefully,
+So that quota exhaustion doesn't cause infinite retry loops or data loss.
+
+**Acceptance Criteria:**
+
+- **Given** an `enqueue()` or `markFailed()` call
+- **When** IndexedDB throws `QuotaExceededError`
+- **Then** the error is caught and classified as `STORAGE_FULL`
+- **And** the drain worker triggers an immediate aggressive purge of synced entries
+
+- **Given** the aggressive purge frees sufficient space
+- **When** the original operation is retried
+- **Then** it succeeds and processing continues normally
+
+- **Given** the purge does not free sufficient space
+- **When** the retry still fails with `QuotaExceededError`
+- **Then** the sync dashboard shows `'STORAGE_FULL'` status with guidance
+- **And** no further enqueue attempts are made until space is freed
+
+### Story 30.9: SyncQueueEntry Type Alignment
+
+As a developer,
+I want the `SyncQueueEntry` type in `db.ts` to match the sync-engine definition,
+So that TypeScript catches status mismatches at compile time.
+
+**Acceptance Criteria:**
+
+- **Given** `db.ts` defines status as `'pending' | 'in-flight' | 'failed'`
+- **And** sync-engine defines `'pending' | 'syncing' | 'failed' | 'synced'`
+- **When** this story is complete
+- **Then** both use a single shared type from `@ultranos/shared-types`: `'pending' | 'syncing' | 'failed' | 'synced' | 'conflict' | 'awaiting-key'`
+
+- **Given** the `recoverStale` function resets stuck `'syncing'` entries
+- **When** it checks for staleness
+- **Then** it uses the entry's HLC timestamp (not wall clock) for age calculation
+- **And** clock backward adjustments do not prematurely reset entries
+
+---
+
+## Epic 31: FHIR R4 Compliance & Schema Hardening
+
+All FHIR resources, types, and database schemas strictly conform to FHIR R4 conventions with proper validation, consistent Meta fields, and correct namespace usage.
+
+### Story 31.1: Add TypeScript Interfaces for All FHIR Resources
+
+As a developer,
+I want every FHIR resource to have both a Zod schema and a TypeScript interface,
+So that the codebase has consistent patterns for type checking and runtime validation.
+
+**Acceptance Criteria:**
+
+- **Given** `FhirPatient` has both an interface and a Zod schema
+- **When** this story is complete
+- **Then** `FhirEncounter`, `FhirMedicationRequest`, `FhirMedicationDispense`, `FhirDiagnosticReport`, `FhirMedicationStatement`, and `FhirClinicalImpression` all have both
+
+- **Given** each new interface
+- **When** it is defined
+- **Then** it is derived from the Zod schema via `z.infer<typeof Schema>` to prevent drift
+- **And** exported from `packages/shared-types/src/fhir/`
+
+### Story 31.2: FHIR Meta Fields and _ultranos Namespace Migration
+
+As a system architect,
+I want all database tables to use FHIR-canonical Meta field names and the `_ultranos` namespace correctly,
+So that the data layer conforms to FHIR R4 and Ultranos conventions.
+
+**Acceptance Criteria:**
+
+- **Given** the `patients` table is missing `version_id` and `last_updated`
+- **When** a migration runs
+- **Then** columns `version_id` (TEXT) and `last_updated` (TIMESTAMPTZ) are added
+- **And** existing rows are backfilled from `updated_at`
+
+- **Given** `created_at` exists as a top-level column across multiple tables
+- **When** the FHIR Meta convention is enforced
+- **Then** `created_at` remains as a DB-layer operational column
+- **And** API responses map it to `_ultranos.createdAt` (not in `meta`)
+- **And** `meta.lastUpdated` and `meta.versionId` are populated from the corresponding DB columns
+
+- **Given** `birthYearOnly` exists on the patient type outside `_ultranos`
+- **When** this story is complete
+- **Then** it is moved to `_ultranos.birthYearOnly` in the type definition
+- **And** all consumers are updated
+
+### Story 31.3: FhirDateTimeOrDateSchema Adoption Across All Schemas
+
+As a developer,
+I want FHIR datetime fields to accept both full ISO datetimes and partial dates,
+So that legitimate FHIR data (e.g., `2025-06-15`) is not rejected by validation.
+
+**Acceptance Criteria:**
+
+- **Given** `z.string().datetime()` is used across all shared-types schemas
+- **When** this story is complete
+- **Then** all FHIR datetime fields use `FhirDateTimeOrDateSchema` from `common.schema.ts`
+- **And** it accepts: full ISO datetime, date-only, year-month, and year-only
+
+- **Given** the `FhirDateTimeOrDateSchema`
+- **When** an invalid string is passed (e.g., `"not-a-date"`, empty string)
+- **Then** validation fails with a descriptive error
+
+### Story 31.4: HLC Timestamp Format Validation
+
+As a developer,
+I want HLC timestamp inputs to be format-validated at the Zod schema level,
+So that malformed HLC strings don't corrupt lexicographic ordering or comparison logic.
+
+**Acceptance Criteria:**
+
+- **Given** all router procedures that accept `hlcTimestamp` as input
+- **When** the input is validated
+- **Then** the Zod schema uses `.refine()` with a regex matching the HLC format: `{zero-padded-wallMs}-{counter}-{nodeId}`
+
+- **Given** a malformed HLC string (e.g., `"abc"`, `""`, `"123"`)
+- **When** it is submitted to any endpoint
+- **Then** the request is rejected with a `BAD_REQUEST` error describing the expected format
+
+- **Given** the format regex
+- **When** it validates a well-formed HLC
+- **Then** it ensures `wallMs` is zero-padded to a fixed width (enabling correct lexicographic comparison)
+
+### Story 31.5: FHIR Reference Format Validation
+
+As a developer,
+I want FHIR `Reference` fields to validate the `{ResourceType}/{id}` format,
+So that malformed references are caught at validation time instead of failing on Hub sync.
+
+**Acceptance Criteria:**
+
+- **Given** `ReferenceSchema` in `common.schema.ts` currently accepts any string
+- **When** this story is complete
+- **Then** `ReferenceSchema.reference` uses `.refine()` to match pattern: `{ResourceType}/{uuid-or-id}`
+- **And** the allowed resource types are constrained to the known FHIR types used in the project
+
+- **Given** a malformed reference (e.g., `""`, `"just-an-id"`, `"Unknown/123"`)
+- **When** it is validated
+- **Then** validation fails with a descriptive error
+
+- **Given** existing data may contain the placeholder `"Practitioner/current-user"`
+- **When** validation runs
+- **Then** the placeholder format is accepted but flagged with a deprecation warning in development mode
+
+### Story 31.6: FHIR DetectedIssue Mapping for Interaction Overrides
+
+As a system architect,
+I want drug interaction overrides to be stored as FHIR DetectedIssue resources,
+So that the data model conforms to FHIR R4 standards for clinical decision support.
+
+**Acceptance Criteria:**
+
+- **Given** interaction overrides are currently stored in the `_ultranos` extension namespace
+- **When** this story is complete
+- **Then** a `FhirDetectedIssue` type is defined in `shared-types`
+- **And** overrides are mapped to `DetectedIssue` resources with `status`, `severity`, `mitigation[].action` (the override reason)
+
+- **Given** existing override data in `_ultranos`
+- **When** a migration path is provided
+- **Then** existing records can be transformed to `DetectedIssue` format
+- **And** the `_ultranos` override fields are deprecated with a removal timeline
+
+### Story 31.7: Standard Terminology Codes for Formulary
+
+As a system architect,
+I want the medication formulary to use standard terminology codes alongside internal codes,
+So that interoperability with external systems is possible.
+
+**Acceptance Criteria:**
+
+- **Given** `medications_subset.json` uses internal codes (`urn:ultranos:formulary/RX001`)
+- **When** this story is complete
+- **Then** each medication entry includes optional `rxnormCode` and `atcCode` fields
+- **And** internal codes are retained as a fallback
+
+- **Given** the drug interaction checker compares by display name
+- **When** standard codes are available
+- **Then** the checker preferentially matches by `rxnormCode`
+- **And** falls back to display name only when codes are absent
+
+- **Given** the formulary will grow beyond 100 items
+- **When** the data model supports codes
+- **Then** the Dexie vocabulary table indexes both `rxnormCode` and `atcCode` for efficient lookup
+
+---
+
+## Epic 32: Security Hardening Phase 2
+
+Close all known exploitable security vulnerabilities — forged QR acceptance, client-supplied identity trust, unverified webhooks, rate limiting gaps, and credential exposure.
+
+### Story 32.1: Server-Derived Identity for All Mutations
+
+As a security engineer,
+I want all mutation endpoints to derive practitioner/patient identity from the JWT context,
+So that client-supplied identity cannot be forged for false attribution.
+
+**Acceptance Criteria:**
+
+- **Given** `recordDispense` currently accepts client-supplied `pharmacistRef`
+- **When** this story is complete
+- **Then** `pharmacistRef` is derived from `ctx.user.sub` on the server
+- **And** the client input field is removed from the Zod schema
+
+- **Given** `recordDispense` accepts client-supplied `patientRef`
+- **When** a dispense is created
+- **Then** `patientRef` is validated against the prescription's `subject_reference`
+- **And** a mismatch returns `BAD_REQUEST` with "Patient does not match prescription"
+
+- **Given** any endpoint that constructs a FHIR `Reference` for the acting user
+- **When** the reference is built
+- **Then** it uses `Practitioner/${ctx.user.sub}` (or patient equivalent)
+- **And** no client-supplied actor reference is trusted
+
+- **Given** the pharmacy audit service reads `pharmacistRef` from `dispense.performer[0].actor.reference`
+- **When** this story is complete
+- **Then** audit services also read actor identity from the auth context, not from the data record
+
+### Story 32.2: recordDispense Validation and Safety Gates
+
+As a pharmacist,
+I want the dispensing endpoint to validate all preconditions before creating records,
+So that orphan records, wrong-patient dispenses, and interaction-blocked prescriptions are prevented.
+
+**Acceptance Criteria:**
+
+- **Given** a `recordDispense` call with a `prescriptionId`
+- **When** the prescription is looked up
+- **Then** the lookup happens BEFORE the dispense record insert (not after)
+- **And** a non-existent prescription returns `NOT_FOUND`
+
+- **Given** a prescription with `interaction_check === 'BLOCKED'`
+- **When** `recordDispense` is called
+- **Then** the request is rejected with `PRECONDITION_FAILED: "Blocked drug interaction must be resolved before dispensing"`
+- **And** an audit event records the blocked attempt
+
+- **Given** the dispense insert succeeds but the conflict log insert fails
+- **When** the error is caught
+- **Then** the dispense record is rolled back (or the conflict failure is logged and continued — not thrown as INTERNAL_SERVER_ERROR)
+
+- **Given** a duplicate dispense attempt (same prescription + pharmacist within 60s)
+- **When** `recordDispense` is called
+- **Then** the idempotency guard returns the existing dispense record
+- **And** no duplicate is created
+
+### Story 32.3: Rate Limiting on Sensitive Endpoints
+
+As a security engineer,
+I want sensitive endpoints to be protected by Redis-backed rate limiting,
+So that brute-force attacks and PHI enumeration are mitigated.
+
+**Acceptance Criteria:**
+
+- **Given** `guardian.verifyOtp` has no rate limiting
+- **When** this story is complete
+- **Then** it is limited to 5 attempts per phone number per 15 minutes
+- **And** exceeding the limit returns `429 Too Many Requests`
+
+- **Given** `verifyPatient` (lab) allows unlimited calls
+- **When** rate limiting is applied
+- **Then** it is limited to 20 lookups per authenticated user per minute
+
+- **Given** `analyzeUpload` (lab OCR) has no rate limiting
+- **When** rate limiting is applied
+- **Then** it is limited to 10 calls per user per minute
+
+- **Given** `registerOrganization` is unauthenticated
+- **When** rate limiting is applied
+- **Then** it is limited to 3 registrations per IP per hour via Redis rate limiter
+
+- **Given** all rate-limited endpoints
+- **When** Redis is unavailable
+- **Then** the rate limiter fails CLOSED for security-sensitive endpoints (verifyOtp, registration)
+- **And** fails OPEN for clinical endpoints (verifyPatient) with a degraded-mode log entry
+
+### Story 32.4: Input Sanitization — PostgREST Wildcard Injection
+
+As a security engineer,
+I want user search inputs to be sanitized against SQL LIKE wildcards,
+So that patients cannot be enumerated via `%` and `_` pattern injection.
+
+**Acceptance Criteria:**
+
+- **Given** `sanitizeFilterValue` in `patient.ts` strips `,.*()\\` but not `%` and `_`
+- **When** this story is complete
+- **Then** `%` is escaped to `\%` and `_` is escaped to `\_` before being passed to PostgREST `.ilike()`
+
+- **Given** a search query containing `%` or `_`
+- **When** the sanitized query is executed
+- **Then** it matches literal `%` and `_` characters only
+
+### Story 32.5: Practitioner Key TTL and KRL Cache Revalidation
+
+As a pharmacist,
+I want cached practitioner signing keys to automatically expire and revalidate,
+So that revoked keys are detected within the TTL window.
+
+**Acceptance Criteria:**
+
+- **Given** a practitioner key cached in IndexedDB with `cachedAt` timestamp
+- **When** the cache entry is older than 24 hours
+- **Then** `getCachedKey` returns `{ stale: true }`
+- **And** the calling code invokes `revalidateKey()` before trusting the key
+
+- **Given** `revalidateKey()` is currently not called by any code path
+- **When** this story is complete
+- **Then** the pharmacy verification flow calls `revalidateKey()` when `stale: true`
+- **And** the OPD verification flow does the same
+
+- **Given** `fetchAndCachePractitionerKey` stores keys without checking the local KRL
+- **When** a key is fetched from Hub
+- **Then** it is cross-checked against the local KRL before caching
+- **And** a revoked key is not cached
+
+### Story 32.6: JWK Cache TTL and Rotation-Aware Refresh
+
+As a system operator,
+I want the JWT verification key cache to have a TTL,
+So that key rotations take effect without requiring process restarts.
+
+**Acceptance Criteria:**
+
+- **Given** `_cachedJwk` is module-level with no TTL
+- **When** this story is complete
+- **Then** the cache has a 1-hour TTL
+- **And** after TTL expiry, the next verification request fetches fresh JWKS
+
+- **Given** a JWT verification fails with the cached key
+- **When** the failure type is `JWKInvalid` or `JWSSignatureVerificationFailed`
+- **Then** the cache is immediately invalidated and a fresh JWKS fetch is attempted
+- **And** verification is retried once with the new key
+
+### Story 32.7: Server-Side OCR Proxy (Remove Client API Key)
+
+As a security engineer,
+I want Cloud Vision OCR calls to go through a server-side proxy,
+So that the Google API key is not exposed in the client bundle.
+
+**Acceptance Criteria:**
+
+- **Given** `NEXT_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY` is used in client-side `ocr.ts`
+- **When** this story is complete
+- **Then** a Hub API endpoint `ocr.analyze` accepts the image and calls Cloud Vision server-side
+- **And** the `NEXT_PUBLIC_` env var is removed
+
+- **Given** the new server-side endpoint
+- **When** it receives an image
+- **Then** it validates file size (<10MB), MIME type, and rate limits per user
+- **And** passes the image to Cloud Vision with the server-side API key
+
+### Story 32.8: Guardian Nonce Enforcement — Fail Closed
+
+As a security engineer,
+I want guardian OTP nonce verification to fail closed when Redis is unavailable,
+So that OTP verification cannot be bypassed.
+
+**Acceptance Criteria:**
+
+- **Given** `createLink` currently skips OTP nonce verification when Redis is unavailable
+- **When** this story is complete
+- **Then** `createLink` returns `SERVICE_UNAVAILABLE` when Redis is down
+- **And** the error message instructs the user to try again later
+
+- **Given** `verifyOtp` checks the nonce
+- **When** Redis is unavailable
+- **Then** verification returns `SERVICE_UNAVAILABLE` (not success)
+
+- **Given** a development/test environment
+- **When** `NODE_ENV === 'development'` or `NODE_ENV === 'test'`
+- **Then** a configurable flag `ALLOW_NONCE_BYPASS_IN_DEV=true` permits the old fail-open behavior
+- **And** production environments always fail closed
+
+### Story 32.9: Webhook Signature Verification (Apple & Google)
+
+As a system operator,
+I want App Store and Play Store webhook payloads to be cryptographically verified,
+So that unauthenticated tier manipulation via forged webhooks is prevented.
+
+**Acceptance Criteria:**
+
+- **Given** an Apple App Store Server Notification (V2)
+- **When** the webhook endpoint receives it
+- **Then** the JWS signature is verified against Apple's root certificate chain
+- **And** unsigned or tampered payloads are rejected with `401`
+
+- **Given** a Google Play Developer Notification via Pub/Sub
+- **When** the webhook endpoint receives it
+- **Then** the Pub/Sub push token audience is verified
+- **And** messages with invalid tokens are rejected
+
+- **Given** `validatePurchaseReceipt` currently returns `true` unconditionally
+- **When** this story is complete
+- **Then** it calls the respective store API (Google Play Developer API / Apple App Store Server API)
+- **And** returns `false` for invalid or already-consumed receipts
+- **And** missing API credentials cause the function to return `false` (fail closed)
+
+### Story 32.10: Emergency Break-Glass Access Model
+
+As an emergency physician,
+I want to access patient data in emergency situations even without explicit consent,
+So that life-threatening situations are not blocked by access controls.
+
+**Acceptance Criteria:**
+
+- **Given** `GrantorRole.EMERGENCY_OVERRIDE` exists as an enum but is never checked
+- **When** this story is complete
+- **Then** `enforceConsentMiddleware` accepts an `emergencyOverride: true` flag on the request context
+
+- **Given** an emergency override is invoked
+- **When** consent would normally be denied
+- **Then** access is granted for a time-bounded window (configurable, default 4 hours)
+- **And** an audit event is emitted: `{ action: 'EMERGENCY_OVERRIDE', resourceType: 'Consent', metadata: { reason, duration, actorId } }`
+
+- **Given** an emergency override is active
+- **When** the time window expires
+- **Then** access reverts to normal consent enforcement
+- **And** a follow-up audit event records the override expiry
+
+- **Given** emergency overrides
+- **When** they are reviewed
+- **Then** a dedicated admin dashboard view lists all override events with actor, patient, duration, and reason
+- **And** overrides without a documented reason are flagged for review
+
+---
+
+## Epic 33: Clinical Safety & Drug Interaction Improvements
+
+Drug interaction checks evaluate the patient's full active medication list, allergy matching uses coded substances, and all clinical safety invariants are tested.
+
+### Story 33.1: Interaction Check Against Full Active MedicationStatements
+
+As a clinician,
+I want drug interaction checks to evaluate against all of the patient's active medications (not just pending prescriptions),
+So that dangerous interactions with chronic medications are detected before prescribing.
+
+**Acceptance Criteria:**
+
+- **Given** a patient has active `MedicationStatement` records (chronic meds)
+- **When** a new prescription is being entered and interaction check runs
+- **Then** `checkInteractions()` receives both pending prescriptions AND active MedicationStatements
+- **And** interactions between the new drug and any active med are detected
+
+- **Given** the patient has no MedicationStatement data (not yet synced or doesn't exist)
+- **When** the interaction check runs
+- **Then** a warning banner displays: "Interaction check limited — active medication history unavailable"
+- **And** the check still runs against pending prescriptions
+
+- **Given** a CONTRAINDICATED interaction is found with a chronic medication
+- **When** the clinician reviews
+- **Then** the interaction details show which active medication triggered the alert
+- **And** the clinician can override with a documented reason
+
+### Story 33.2: Coded Substance Model for Allergy Matching
+
+As a clinician,
+I want allergy matching to use coded substances (SNOMED CT / local drug codes) instead of free-text substring matching,
+So that cross-class matches (PCN to Penicillin) are caught and false positives (iron in ciprofloxacin) are eliminated.
+
+**Acceptance Criteria:**
+
+- **Given** `AllergyEntry.tsx` currently provides free-text only input
+- **When** this story is complete
+- **Then** the allergy entry UI offers an optional coded substance autocomplete (from the local drug vocabulary)
+- **And** free-text entry is still permitted as fallback
+
+- **Given** an allergy has a coded substance (e.g., SNOMED `764146007` for Penicillin)
+- **When** a drug interaction/allergy check runs
+- **Then** the check uses code-based matching first (drug class membership)
+- **And** free-text substring matching is used only when no code is available
+
+- **Given** the `AllergyIntolerance.code.coding` field
+- **When** a coded substance is selected
+- **Then** the coding array is populated with `{ system: 'http://snomed.info/sct', code, display }`
+
+### Story 33.3: checkAllergyMatch Robustness and Edge Cases
+
+As a developer,
+I want `checkAllergyMatch` to handle edge cases safely,
+So that crashes, false positives, and missed matches are minimized.
+
+**Acceptance Criteria:**
+
+- **Given** an allergy record with `_ultranos` undefined or missing `substanceFreeText`
+- **When** `checkAllergyMatch` is called
+- **Then** it safely returns no match (not TypeError crash)
+- **And** the allergy is logged as skipped with reason `'missing_substance_data'`
+
+- **Given** allergy matching uses case-sensitive `Set` deduplication
+- **When** "Penicillin" and "penicillin" are both present
+- **Then** they are treated as the same substance (case-insensitive normalization)
+
+- **Given** duplicate drug pairs exist in the vocabulary with different severities
+- **When** the lookup map is built
+- **Then** the highest severity wins (CONTRAINDICATED > SEVERE > MODERATE > MILD)
+
+- **Given** a substance string composed entirely of Unicode non-breaking spaces
+- **When** it is submitted
+- **Then** the regex guard rejects it as empty
+
+### Story 33.4: Drug Interaction Test Coverage — All Mandatory Paths
+
+As a QA engineer,
+I want comprehensive test coverage for all drug interaction code paths required by CLAUDE.md,
+So that clinical safety invariants are verified in CI.
+
+**Acceptance Criteria:**
+
+- **Given** CLAUDE.md mandates tests for CONTRAINDICATED blocking
+- **When** two drugs with CONTRAINDICATED severity are checked
+- **Then** the test asserts `result === 'BLOCKED'` and prescribing is prevented
+
+- **Given** CLAUDE.md mandates tests for ALLERGY_MATCH blocking
+- **When** a prescribed drug matches a patient allergy
+- **Then** the test asserts `result === 'ALLERGY_BLOCKED'` with the matching allergy substance
+
+- **Given** CLAUDE.md mandates tests for override-with-reason logging
+- **When** a clinician overrides a blocked interaction with a reason
+- **Then** the test asserts the override is logged in the audit trail with the reason text
+
+- **Given** CLAUDE.md mandates tests for "check unavailable" fallback
+- **When** `checkInteractions()` throws (network error, DB unavailable)
+- **Then** the test asserts the UI shows "Interaction check unavailable" warning
+- **And** does NOT show "No interactions found"
+
+- **Given** `NONE` severity entries in the vocabulary
+- **When** they produce interactions
+- **Then** the result is `CLEAR` with an empty interactions array (not contradictory non-empty array)
+
+### Story 33.5: Add Prescribe Command to Clinical Command Palette
+
+As a clinician,
+I want a `>Prescribe` command in the clinical command palette,
+So that I can quickly navigate to the prescription entry section via keyboard.
+
+**Acceptance Criteria:**
+
+- **Given** the clinical command palette exists (Story 2.5)
+- **When** this story is complete
+- **Then** `CLINICAL_COMMANDS` includes a `Prescribe` entry
+- **And** invoking it navigates to/focuses the prescription entry section
+
+- **Given** the Prescribe command
+- **When** the prescription section is not visible (encounter not started)
+- **Then** the command is grayed out with tooltip "Start an encounter first"
+
+### Story 33.6: Sensitive Medication Privacy Mapping
+
+As a patient,
+I want antiretrovirals and psychiatric medications to be flagged as sensitive,
+So that my privacy is protected when others view my medical history.
+
+**Acceptance Criteria:**
+
+- **Given** `humanizeMedication` currently returns `isSensitive: false` for all medications
+- **When** this story is complete
+- **Then** a sensitivity mapping (based on ATC code drug classes or a curated list) identifies sensitive categories: antiretrovirals, psychiatric medications, reproductive health, substance abuse treatment
+
+- **Given** a medication is flagged as sensitive
+- **When** it appears in the patient timeline
+- **Then** it is masked as "Private Health Matter" by default
+- **And** requires biometric unlock to reveal (existing Story 18.9 pattern)
+
+- **Given** the sensitivity mapping
+- **When** a medication has no ATC/RxNorm code (free-text only)
+- **Then** keyword-based heuristic matching is used as fallback
+- **And** ambiguous matches default to non-sensitive (to avoid overly aggressive masking)
+
+---
+
+## Epic 34: Infrastructure & DevOps Resilience
+
+Eliminate operational risks from memory leaks, missing cron wiring, module-level singletons, and Dexie schema fragility across all apps.
+
+### Story 34.1: Dexie Schema Management and Migration Framework
+
+As a developer,
+I want a single source of truth for Dexie table definitions with a proper migration framework,
+So that schema upgrades don't silently drop tables and new versions don't repeat all prior definitions.
+
+**Acceptance Criteria:**
+
+- **Given** each Dexie `version(N).stores()` call currently redeclares all tables
+- **When** this story is complete
+- **Then** a `DexieSchemaManager` class maintains the canonical table registry
+- **And** each version upgrade only declares changes (added tables, new indexes)
+- **And** the manager auto-includes unchanged tables from previous versions
+
+- **Given** a Dexie version upgrade occurs while another tab has the DB open
+- **When** the `versionchange` event fires
+- **Then** the old tab shows a notification: "Database update required — please reload"
+- **And** closes its DB connection to unblock the upgrade
+
+- **Given** a schema change is needed
+- **When** the developer adds a migration
+- **Then** they only specify the delta (new table, new index, altered column)
+- **And** the framework handles the full stores declaration
+
+### Story 34.2: Cron Job Wiring for Monitoring and Lifecycle Functions
+
+As a system operator,
+I want all exported monitoring and lifecycle functions to be connected to scheduled execution,
+So that alerting, pruning, and state machine transitions actually run in production.
+
+**Acceptance Criteria:**
+
+- **Given** `evaluateP95Alerts()`, `evaluateErrorRateAlerts()`, `runSyncQueueMonitor()` are dead code
+- **When** this story is complete
+- **Then** they are registered in the cron runner with appropriate schedules (P95/error rate: every 60s, sync queue monitor: every 5 min)
+
+- **Given** `processPendingSuspensions()` has no execution trigger
+- **When** this story is complete
+- **Then** it runs daily at 02:00 UTC via the Edge Function cron or the cron runner
+
+- **Given** audit chain verification has no staleness detection
+- **When** the cron job stops running
+- **Then** a heartbeat mechanism detects the missed run within 2x the scheduled interval
+- **And** a P2 alert is emitted
+
+- **Given** the Supabase Edge Function `subscription-lifecycle`
+- **When** its cron schedule is configured
+- **Then** it runs daily and processes trial expirations, grace period transitions, and suspension enforcement
+
+### Story 34.3: Module-Level Singleton HMR Safety
+
+As a developer,
+I want module-level singletons to be safe across Hot Module Replacement,
+So that development doesn't produce stale caches, leaked timers, or duplicate intervals.
+
+**Acceptance Criteria:**
+
+- **Given** module-level singletons: Redis client, Fuse instance, drug cache map, rate limit maps, `collectDefaultMetrics` timer
+- **When** HMR replaces the module
+- **Then** the old singleton is disposed (timers cleared, connections closed)
+- **And** the new module creates a fresh singleton
+
+- **Given** the pattern for HMR-safe singletons
+- **When** implemented
+- **Then** it uses `if (module.hot) { module.hot.dispose(() => cleanup()) }` or a global registry keyed by module path
+- **And** production builds skip the HMR guard with zero overhead
+
+- **Given** `cachedMap` in `checker.ts` (drug-db)
+- **When** a second adapter is instantiated (e.g., in tests)
+- **Then** it gets its own cache (per-adapter, not module-global)
+
+### Story 34.4: Bounded Rate Limit Maps with TTL Eviction
+
+As a system operator,
+I want in-memory rate limit maps to have bounded size and automatic eviction,
+So that long-running processes don't leak memory.
+
+**Acceptance Criteria:**
+
+- **Given** `rateLimitMap` in `admin.ts` and other modules grows unbounded
+- **When** this story is complete
+- **Then** all in-memory rate limit maps use a `BoundedMap` with max entries: 10,000, TTL per entry: 2x the rate limit window, LRU eviction when max entries reached
+
+- **Given** stale entries currently only evict when `map.size > MAX_ENTRIES`
+- **When** the bounded map is used
+- **Then** eviction runs on every write (amortized O(1) via LRU linked list)
+
+- **Given** a module-level consent cache (`aiConsentCache`) with no size bound
+- **When** this story is complete
+- **Then** it uses the same `BoundedMap` with max 1,000 entries
+
+### Story 34.5: Case-Transform Type Guards and Safety
+
+As a developer,
+I want `toSnakeCase`/`toCamelCase` to handle non-plain objects safely,
+So that Date, Map, Set, and circular references don't cause crashes or data loss.
+
+**Acceptance Criteria:**
+
+- **Given** `toSnakeCase` or `toCamelCase` receives a `Date`, `Map`, `Set`, or `RegExp` instance
+- **When** the transform runs
+- **Then** the instance is returned as-is (not destructured into a plain object)
+
+- **Given** a circular reference in the input object
+- **When** the transform runs
+- **Then** it detects the cycle via a `WeakSet` and returns the circular reference as-is
+- **And** does NOT stack overflow
+
+- **Given** normal FHIR data (acyclic, string-based)
+- **When** the transform runs
+- **Then** behavior is identical to the current implementation (no regression)
+
+### Story 34.6: StaleDataBanner NaN Guard and updated_at Triggers
+
+As a clinician,
+I want the stale data banner to show correctly even when sync timestamps are invalid,
+So that I'm never falsely assured my data is fresh.
+
+**Acceptance Criteria:**
+
+- **Given** `StaleDataBanner` receives an invalid `lastSyncedAt` string
+- **When** `new Date(lastSyncedAt)` produces `NaN`
+- **Then** the banner treats the data as maximally stale and displays immediately
+
+- **Given** `updated_at` columns across all migrations have no auto-update trigger
+- **When** this story is complete
+- **Then** a PostgreSQL trigger function `set_updated_at()` is created
+- **And** it is applied to all tables with an `updated_at` column via migration
+
+### Story 34.7: Redis Graceful Shutdown and Connection Lifecycle
+
+As a system operator,
+I want Redis connections to be properly managed during deployment rollover,
+So that connection limits are not exhausted.
+
+**Acceptance Criteria:**
+
+- **Given** no `SIGTERM` handler exists for Redis cleanup
+- **When** this story is complete
+- **Then** `process.on('SIGTERM', () => client.quit())` is registered
+
+- **Given** SSR module-level `createDexieDrugAdapter()` runs at import time
+- **When** the module is imported during SSR (IndexedDB unavailable)
+- **Then** the adapter creation is lazy (deferred to first use)
+- **And** SSR does not crash
+
+- **Given** the health check endpoint returns hardcoded version `0.1.0`
+- **When** this story is complete
+- **Then** it reads version from `package.json` or `process.env.APP_VERSION`
+
+---
+
+## Epic 35: UX Polish, Accessibility & RTL Completion
+
+All apps render correctly in RTL mode with proper font loading, i18n integration, WCAG accessibility compliance, and consistent design tokens.
+
+### Story 35.1: DirectionalIcon Integration Across All Apps
+
+As an Arabic-speaking clinician,
+I want navigation arrows and chevrons to mirror correctly in RTL mode,
+So that the UI is intuitive in my language direction.
+
+**Acceptance Criteria:**
+
+- **Given** `DirectionalIcon` is exported from `@ultranos/ui-kit` but unused
+- **When** this story is complete
+- **Then** all navigation arrows, back buttons, and chevrons across OPD-Lite, Pharmacy-Lite, Lab-Lite, and Admin Portal import and use `DirectionalIcon`
+
+- **Given** a medical icon (pill, stethoscope, lab flask)
+- **When** rendered in RTL mode
+- **Then** it does NOT mirror (per CLAUDE.md RTL rules)
+
+- **Given** the icon migration
+- **When** RTL snapshot tests run
+- **Then** all migrated icons pass the RTL snapshot comparison
+
+### Story 35.2: Clinical Arabic Font Wiring and Verification
+
+As an Arabic-speaking clinician,
+I want clinical document views to use the Noto Naskh Arabic serif font,
+So that clinical text is rendered with appropriate typography for medical documents.
+
+**Acceptance Criteria:**
+
+- **Given** `--font-family-serif-ar` is defined in `tokens.css` but unused
+- **When** this story is complete
+- **Then** clinical document views (SOAP notes, prescriptions, diagnostic reports) apply the serif Arabic font when locale is `ar` or `fa`
+
+- **Given** patient-lite-mobile references `NotoSansArabic-Bold`
+- **When** the font is used
+- **Then** a `useFonts` hook or equivalent ensures the font is loaded before rendering
+- **And** a fallback system font is used during loading
+
+### Story 35.3: Patient-Lite-Mobile i18n Initialization
+
+As a patient using the mobile app,
+I want the app to display in my chosen language from startup,
+So that I can navigate the app without reading English.
+
+**Acceptance Criteria:**
+
+- **Given** `initI18n()` exists at `src/i18n/index.ts` but is never called
+- **When** this story is complete
+- **Then** `App.tsx` calls `initI18n()` during initialization (before first render)
+- **And** the stored locale preference is loaded from AsyncStorage
+
+- **Given** hardcoded English strings exist across patient-lite-mobile components
+- **When** they are extracted
+- **Then** all user-facing strings use `t()` translation function calls
+- **And** message catalogs exist for English, Arabic, and Dari
+
+- **Given** the language onboarding gateway (Story 18.3)
+- **When** the user selects a language
+- **Then** `initI18n()` applies the selection immediately
+- **And** subsequent screens render in the chosen language
+
+### Story 35.4: RTL Snapshot Test Completion
+
+As a QA engineer,
+I want comprehensive RTL snapshot tests for all patient-facing components,
+So that RTL regressions are caught in CI.
+
+**Acceptance Criteria:**
+
+- **Given** components missing RTL snapshots: EncounterDashboard, PatientSearchScreen, PatientResultList (OPD-Lite), LabelPreviewPanel (Pharmacy-Lite), ErrorBoundary, StaleDataBanner
+- **When** this story is complete
+- **Then** each has a snapshot test rendered with `dir="rtl"` container wrapper
+
+- **Given** admin portal dialogs (AddModuleDialog, RemoveModuleDialog)
+- **When** RTL snapshots are added
+- **Then** they verify logical CSS properties are used (no physical left/right)
+
+- **Given** the CI RTL snapshot pipeline
+- **When** a component is modified
+- **Then** both LTR and RTL snapshots must pass for the PR to merge
+
+### Story 35.5: Admin Portal Dialog Accessibility
+
+As an admin portal user navigating with keyboard,
+I want dialogs to trap focus, support Escape to close, and have proper ARIA attributes,
+So that the admin portal meets WCAG 2.1 AA requirements.
+
+**Acceptance Criteria:**
+
+- **Given** AddModuleDialog and RemoveModuleDialog use bare `<div>`
+- **When** this story is complete
+- **Then** they use `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` pointing to the dialog title
+
+- **Given** a dialog is open
+- **When** the user presses Tab
+- **Then** focus cycles within the dialog (focus trap)
+- **When** the user presses Escape
+- **Then** the dialog closes
+
+- **Given** interactive elements in AppShell (nav links, avatar button, dropdown)
+- **When** this story is complete
+- **Then** hover and focus-visible styles are applied via CSS classes (replacing inline styles where pseudo-classes are needed)
+
+### Story 35.6: AppShell Viewport Resize Fix
+
+As a clinician rotating a tablet,
+I want the mobile navigation drawer to close when the viewport crosses the desktop breakpoint,
+So that the nav doesn't unexpectedly reappear.
+
+**Acceptance Criteria:**
+
+- **Given** `mobileNavOpen` state is `true` and the viewport is resized above 641px
+- **When** a `matchMedia` listener fires
+- **Then** `mobileNavOpen` is reset to `false`
+
+- **Given** the viewport is resized back below 641px
+- **When** the user has not toggled the hamburger
+- **Then** the nav drawer remains closed (not auto-open)
+
+### Story 35.7: Consumer Theme Dark Mode Variant
+
+As a patient using the app at night,
+I want the consumer theme to support dark mode,
+So that the app is comfortable to use in low-light conditions.
+
+**Acceptance Criteria:**
+
+- **Given** the consumer theme has only light-mode HSL values
+- **When** this story is complete
+- **Then** dark-mode HSL values are defined for all consumer theme tokens
+
+- **Given** the `ThemeProvider` and `useTheme` hook exist (Story 18.11)
+- **When** the user selects dark mode
+- **Then** consumer-themed screens (patient app) apply dark mode tokens
+
+- **Given** `SAFETY_COLORS` uses flat light/dark keys
+- **When** this story is complete
+- **Then** they are restructured to match the per-theme pattern used by `healthCardColors`
+
+### Story 35.8: PWA Icon and Offline Fallback Polish
+
+As a clinician installing the PWA,
+I want proper app icons and an offline fallback page,
+So that the installed app looks professional and handles network loss gracefully.
+
+**Acceptance Criteria:**
+
+- **Given** `purpose: 'any maskable'` on placeholder icons causes poor Android cropping
+- **When** real branded icons are created
+- **Then** separate icon entries exist: one with `purpose: 'any'` and one with `purpose: 'maskable'` (with safe zone padding)
+
+- **Given** OPD-Lite has no offline navigation fallback page
+- **When** an uncached navigation request fails offline
+- **Then** a `/offline` route renders a graceful fallback: "You're offline — cached data is available"
+
+---
+
+## Epic 36: Data Integrity & Race Condition Fixes
+
+Eliminate data corruption and inconsistency from race conditions, partial failures, and stale state across all critical code paths.
+
+### Story 36.1: Transactional Integrity in recordDispense
+
+As a pharmacist,
+I want dispensing operations to be atomic,
+So that partial failures don't create orphan records or inconsistent state.
+
+**Acceptance Criteria:**
+
+- **Given** `recordDispense` currently inserts a dispense record before validating the prescription
+- **When** this story is complete
+- **Then** prescription lookup and validation occur BEFORE any insert
+- **And** the dispense insert and conflict log insert are wrapped in a database transaction
+
+- **Given** the conflict log insert fails
+- **When** the transaction catches the error
+- **Then** the entire transaction (including the dispense insert) is rolled back
+- **And** an operational error is logged
+
+- **Given** `confirmDispense` in pharmacy-lite processes multiple items in a loop
+- **When** item 3 of 5 fails
+- **Then** the store tracks per-item status: `{ itemId, status: 'dispensed'|'failed', error? }`
+- **And** the UI shows which items succeeded and which failed
+
+### Story 36.2: Auth Redirect Without Store Destruction
+
+As a clinician logging in,
+I want the login redirect to preserve the freshly populated session store,
+So that I don't need to re-authenticate or lose state.
+
+**Acceptance Criteria:**
+
+- **Given** OPD-Lite and Pharmacy-Lite use `window.location.href = '/'` after login
+- **When** this story is complete
+- **Then** login success triggers `router.push('/')` (Next.js router) instead of full page reload
+- **And** the Zustand session store survives the navigation
+
+- **Given** the Supabase `onAuthStateChange` fires `SIGNED_IN` during re-auth
+- **When** the event fires
+- **Then** registered listeners check if this is a re-auth (existing session) vs. fresh login
+- **And** re-auth does NOT re-run full login initialization logic
+
+### Story 36.3: Re-Auth Session Consistency
+
+As a clinician re-authenticating after timeout,
+I want my session metadata to be updated consistently,
+So that audit events reference the correct session.
+
+**Acceptance Criteria:**
+
+- **Given** `signInWithPassword` re-auth creates a new Supabase session
+- **When** re-auth succeeds
+- **Then** the Zustand auth store's `sessionId` is updated to match the new session
+- **And** the encryption key is re-derived if needed (from new JWT)
+
+- **Given** re-auth via the re-auth modal
+- **When** the modal closes after success
+- **Then** the app continues with the new session — no stale `sessionId` in flight
+
+- **Given** OPD-Lite `login/page.tsx` has a dangling session bug on null JWT post-MFA
+- **When** this story is complete
+- **Then** OPD-Lite calls `signOut()` when JWT is null after MFA verify success (matching the Pharmacy-Lite fix)
+
+### Story 36.4: signOut Error Handling in Auth Flows
+
+As a user,
+I want logout operations to complete gracefully even when Supabase errors,
+So that partial sessions don't persist.
+
+**Acceptance Criteria:**
+
+- **Given** Lab-Lite MFA rejection path calls `signOut()` without error handling
+- **When** `signOut()` throws
+- **Then** the error is caught, the local session state is cleared anyway, and the user is redirected to login
+
+- **Given** Lab-Lite "Back to sign in" handler has no try-catch
+- **When** `signOut()` throws
+- **Then** the error is caught and local state is cleared
+
+- **Given** any spoke app's `handleExpired` clears session before redirect
+- **When** `clearSession()` sets `isAuthenticated = false`
+- **Then** the redirect fires synchronously after state clear
+- **And** a brief flash of unauthenticated content is prevented via a loading overlay during cleanup
+
+### Story 36.5: Scanner Processing Lock Reset and Concurrent Verification Guard
+
+As a pharmacist scanning prescriptions,
+I want the scanner to recover from errors and prevent duplicate verification,
+So that I don't get stuck or accidentally verify twice.
+
+**Acceptance Criteria:**
+
+- **Given** `processingRef.current` stays `true` after `handleFetchKey` failure
+- **When** the error catch block executes
+- **Then** `processingRef.current` is reset to `false`
+
+- **Given** paste and camera verification can fire concurrently
+- **When** both trigger at the same time
+- **Then** a mutex (`processingRef`) prevents the second from executing
+- **And** the second attempt is silently dropped (not queued)
+
+- **Given** `confirmDispense` can be double-tapped
+- **When** the async gap between guard check and state set allows a second call
+- **Then** an optimistic lock (`phase` check inside `set()` callback) prevents double execution
+
+### Story 36.6: Flush Autosave Before Encounter End
+
+As a clinician ending an encounter,
+I want all pending autosave operations to complete before the encounter finalizes,
+So that the last few seconds of clinical notes are not lost.
+
+**Acceptance Criteria:**
+
+- **Given** `flushAutosave()` and `flushVitalsAutosave()` are called before `endEncounter()`
+- **When** they are async
+- **Then** `endEncounter()` awaits both flush calls before proceeding
+
+- **Given** a flush call fails
+- **When** `endEncounter()` catches the error
+- **Then** the clinician is warned: "Some recent changes may not have been saved"
+- **And** the encounter is still finalized (not blocked)
+
+### Story 36.7: Database Constraint and Cleanup for TOCTOU Races
+
+As a system developer,
+I want database-level constraints to prevent data corruption from race conditions,
+So that application-level TOCTOU gaps have a safety net.
+
+**Acceptance Criteria:**
+
+- **Given** `organizations.slug` has no UNIQUE constraint
+- **When** a migration adds `UNIQUE(slug)`
+- **Then** concurrent registration with the same org name gets a constraint violation
+- **And** the registration endpoint catches the violation and retries with an incremented slug suffix
+
+- **Given** org creation fails and the compensating DELETE also fails
+- **When** orphaned org rows exist
+- **Then** a daily cleanup job identifies orgs with no linked admin user
+- **And** orgs in `PENDING_VERIFICATION` status older than 24h with no admin are deleted
+
+- **Given** `(org_id, module_code)` has no unique constraint in subscriptions
+- **When** a migration adds `UNIQUE(org_id, module_code)` where `status != 'CANCELLED'`
+- **Then** concurrent `selectInitialModules` calls produce at most one active subscription per module
+
+### Story 36.8: handleInteractionOverride Form Preservation
+
+As a clinician overriding a drug interaction,
+I want my prescription data to be preserved if the override fails,
+So that I don't have to re-enter the entire prescription.
+
+**Acceptance Criteria:**
+
+- **Given** `handleInteractionOverride` closes the modal at line 250 before `await addPrescription()` at line 252
+- **When** this story is complete
+- **Then** `addPrescription()` is awaited FIRST
+- **And** the modal is only closed after successful prescription addition
+
+- **Given** `addPrescription()` fails
+- **When** the error is caught
+- **Then** the modal remains open with the override data intact
+- **And** an error message is shown within the modal
 

@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-18T22:00:00.000000'
+last_updated: '2026-05-18T23:59:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -296,3 +296,112 @@ development_status:
   27-11-freemium-tier-definition-feature-gating: done
   27-12-patient-in-app-upgrade-flow: done
   epic-27-retrospective: optional
+
+  # ============================================================
+  # DEFERRED WORK EPICS (28-36) — Generated 2026-05-18
+  # From comprehensive review of deferred-work.md (~172 items)
+  # ============================================================
+
+  # Priority: HIGH (regulatory)
+  epic-28: in-progress
+  28-1-encrypt-all-opd-lite-dexie-tables-via-crypto-proxy: ready-for-dev
+  28-2-comprehensive-phi-cleanup-on-session-end: ready-for-dev
+  28-3-sync-queue-phi-payload-encryption: ready-for-dev
+  28-4-key-derivation-from-supabase-jwt-pbkdf2: ready-for-dev
+  28-5-key-rotation-with-version-prefixed-payloads: ready-for-dev
+  28-6-search-encryption-strategy-for-indexed-patient-names: ready-for-dev
+  epic-28-retrospective: optional
+
+  # Priority: HIGH (compliance)
+  epic-29: backlog
+  29-1-hub-api-transactional-audit-on-all-phi-router-procedures: backlog
+  29-2-migrate-patient-lite-mobile-to-ultranos-audit-logger: backlog
+  29-3-migrate-lab-lite-to-ultranos-audit-logger: backlog
+  29-4-audit-dead-letter-queue-and-retry-mechanism: backlog
+  29-5-audit-event-pruning-with-configurable-retention: backlog
+  29-6-audit-security-events-session-auth-authorization: backlog
+  29-7-fix-audit-sync-client-event-outcome-preservation: backlog
+  epic-29-retrospective: optional
+
+  # Priority: HIGH (data loss)
+  epic-30: backlog
+  30-1-server-side-hlc-timestamp-generation: backlog
+  30-2-cross-tab-drain-mutex-via-web-lock-api: backlog
+  30-3-transactional-enqueue-deduplication: backlog
+  30-4-hub-sync-push-optimistic-locking: backlog
+  30-5-fix-hlc-lexicographic-comparison-in-sql: backlog
+  30-6-sync-queue-lifecycle-purge-and-retention: backlog
+  30-7-auth-token-refresh-integration-in-drain-worker: backlog
+  30-8-quota-exceeded-error-handling-and-recovery: backlog
+  30-9-sync-queue-entry-type-alignment: backlog
+  epic-30-retrospective: optional
+
+  # Priority: MEDIUM (standards)
+  epic-31: backlog
+  31-1-add-typescript-interfaces-for-all-fhir-resources: backlog
+  31-2-fhir-meta-fields-and-ultranos-namespace-migration: backlog
+  31-3-fhir-datetime-or-date-schema-adoption: backlog
+  31-4-hlc-timestamp-format-validation: backlog
+  31-5-fhir-reference-format-validation: backlog
+  31-6-fhir-detected-issue-mapping-for-interaction-overrides: backlog
+  31-7-standard-terminology-codes-for-formulary: backlog
+  epic-31-retrospective: optional
+
+  # Priority: CRITICAL (exploitable)
+  epic-32: backlog
+  32-1-server-derived-identity-for-all-mutations: backlog
+  32-2-record-dispense-validation-and-safety-gates: backlog
+  32-3-rate-limiting-on-sensitive-endpoints: backlog
+  32-4-input-sanitization-postgrest-wildcard-injection: backlog
+  32-5-practitioner-key-ttl-and-krl-cache-revalidation: backlog
+  32-6-jwk-cache-ttl-and-rotation-aware-refresh: backlog
+  32-7-server-side-ocr-proxy-remove-client-api-key: backlog
+  32-8-guardian-nonce-enforcement-fail-closed: backlog
+  32-9-webhook-signature-verification-apple-google: backlog
+  32-10-emergency-break-glass-access-model: backlog
+  epic-32-retrospective: optional
+
+  # Priority: CRITICAL (patient safety)
+  epic-33: backlog
+  33-1-interaction-check-against-full-active-medication-statements: backlog
+  33-2-coded-substance-model-for-allergy-matching: backlog
+  33-3-check-allergy-match-robustness-and-edge-cases: backlog
+  33-4-drug-interaction-test-coverage-all-mandatory-paths: backlog
+  33-5-add-prescribe-command-to-clinical-command-palette: backlog
+  33-6-sensitive-medication-privacy-mapping: backlog
+  epic-33-retrospective: optional
+
+  # Priority: MEDIUM (operational)
+  epic-34: backlog
+  34-1-dexie-schema-management-and-migration-framework: backlog
+  34-2-cron-job-wiring-for-monitoring-and-lifecycle-functions: backlog
+  34-3-module-level-singleton-hmr-safety: backlog
+  34-4-bounded-rate-limit-maps-with-ttl-eviction: backlog
+  34-5-case-transform-type-guards-and-safety: backlog
+  34-6-stale-data-banner-nan-guard-and-updated-at-triggers: backlog
+  34-7-redis-graceful-shutdown-and-connection-lifecycle: backlog
+  epic-34-retrospective: optional
+
+  # Priority: LOW-MEDIUM (polish)
+  epic-35: backlog
+  35-1-directional-icon-integration-across-all-apps: backlog
+  35-2-clinical-arabic-font-wiring-and-verification: backlog
+  35-3-patient-lite-mobile-i18n-initialization: backlog
+  35-4-rtl-snapshot-test-completion: backlog
+  35-5-admin-portal-dialog-accessibility: backlog
+  35-6-appshell-viewport-resize-fix: backlog
+  35-7-consumer-theme-dark-mode-variant: backlog
+  35-8-pwa-icon-and-offline-fallback-polish: backlog
+  epic-35-retrospective: optional
+
+  # Priority: HIGH (corruption)
+  epic-36: backlog
+  36-1-transactional-integrity-in-record-dispense: backlog
+  36-2-auth-redirect-without-store-destruction: backlog
+  36-3-re-auth-session-consistency: backlog
+  36-4-sign-out-error-handling-in-auth-flows: backlog
+  36-5-scanner-processing-lock-reset-and-concurrent-verification-guard: backlog
+  36-6-flush-autosave-before-encounter-end: backlog
+  36-7-database-constraint-and-cleanup-for-toctou-races: backlog
+  36-8-handle-interaction-override-form-preservation: backlog
+  epic-36-retrospective: optional

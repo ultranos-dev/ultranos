@@ -37,7 +37,8 @@ export type FreeFeatureId = (typeof FREE_FEATURES)[number]
 export type PremiumFeatureId = (typeof PREMIUM_FEATURES)[number]
 export type FeatureId = FreeFeatureId | PremiumFeatureId
 
-export type PatientTier = 'FREE' | 'PREMIUM'
+// PatientTier is exported from ./fhir/patient.ts
+import type { PatientTier } from './fhir/patient.js'
 
 const premiumSet = new Set<string>(PREMIUM_FEATURES)
 const safetyCriticalSet = new Set<string>(SAFETY_CRITICAL_FEATURES)
