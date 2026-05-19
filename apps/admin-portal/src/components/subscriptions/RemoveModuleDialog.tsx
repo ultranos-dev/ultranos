@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { ROLE_MODULE_MAP } from '@ultranos/shared-types'
 
 interface Subscription {
   id: string
@@ -25,6 +26,19 @@ function formatDate(iso: string | null | undefined): string {
 export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModuleRemoved }: RemoveModuleDialogProps) {
   const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [affectedUserCount, setAffectedUserCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    const affectedRoles = Object.entries(ROLE_MODULE_MAP)
+      .filter(([, mod]) => mod === subscription.moduleCode)
+      .map(([role]) => role)
+
+    if (affectedRoles.length === 0) return
+
+    trpc.admin.listUsers.query({ page: 1, pageSize: 1, roleFilter: affectedRoles[0], statusFilter: 'ACTIVE' })
+      .then((r) => setAffectedUserCount(r.totalCount))
+      .catch(() => {})
+  }, [subscription.moduleCode])
 
   async function handleCancel() {
     try {
@@ -50,6 +64,12 @@ export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModu
 
         {error && (
           <div className="mt-3 rounded-2xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+        )}
+
+        {affectedUserCount !== null && affectedUserCount > 0 && (
+          <div className="mt-3 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            {affectedUserCount} active user(s) with roles requiring this module will be suspended when the billing period ends.
+          </div>
         )}
 
         <p className="mt-4 text-sm text-text-secondary">
