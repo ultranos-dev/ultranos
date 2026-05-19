@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
@@ -83,6 +84,7 @@ export default function KycQueuePage() {
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [filter, setFilter] = useState<StatusFilter>('ALL')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -94,6 +96,7 @@ export default function KycQueuePage() {
         status: filter,
         cursor,
         limit: PAGE_SIZE,
+        search: search || undefined,
       })
       setSubmissions(result.submissions)
       setTotal(result.total)
@@ -102,7 +105,7 @@ export default function KycQueuePage() {
     } finally {
       setLoading(false)
     }
-  }, [filter, cursor])
+  }, [filter, cursor, search])
 
   useEffect(() => {
     fetchSubmissions()
@@ -113,6 +116,11 @@ export default function KycQueuePage() {
     setCursor(0)
   }
 
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    setCursor(0)
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
@@ -120,7 +128,7 @@ export default function KycQueuePage() {
     <>
       <TopHeader title="KYC Verification Queue" description="Review pending provider KYC submissions." />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        {/* Filter tabs + Export — AC #11 */}
+        {/* Filter tabs + Search + Export — AC #11 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
@@ -137,6 +145,13 @@ export default function KycQueuePage() {
               </button>
             ))}
           </div>
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
+          />
           <ExportButton exportFn={() => trpc.admin.exportKycSubmissions.query()} filters={{}} />
         </div>
 
@@ -176,7 +191,15 @@ export default function KycQueuePage() {
                           : 'hover:bg-accent-subtle'
                       }`}
                     >
-                      <td className="px-4 py-3 font-medium">{sub.providerName}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <Link
+                          href={`/providers/profile/${sub.practitionerId}`}
+                          className="text-black hover:text-brand-lime font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {sub.providerName}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-text-secondary">{formatDate(sub.submittedAt)}</td>
                       <td className="px-4 py-3 text-text-secondary">
                         {sub.licenseDocumentKey ? (

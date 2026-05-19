@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
 import { TopHeader } from '@/components/TopHeader'
@@ -38,6 +39,7 @@ export default function LicenseExpiryPage() {
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
   const [expiryWindow, setExpiryWindow] = useState<ExpiryWindow>('all')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [renewTarget, setRenewTarget] = useState<ExpiringProvider | null>(null)
@@ -47,7 +49,7 @@ export default function LicenseExpiryPage() {
     return () => { mounted.current = false }
   }, [])
 
-  const fetchData = useCallback(async (windowFilter: ExpiryWindow, page: number) => {
+  const fetchData = useCallback(async (windowFilter: ExpiryWindow, page: number, searchTerm: string) => {
     setLoading(true)
     setError(null)
     try {
@@ -55,6 +57,7 @@ export default function LicenseExpiryPage() {
         window: windowFilter,
         cursor: page,
         limit: PAGE_SIZE,
+        search: searchTerm || undefined,
       })
       if (!mounted.current) return
       setProviders(result.providers)
@@ -68,8 +71,8 @@ export default function LicenseExpiryPage() {
   }, [])
 
   useEffect(() => {
-    fetchData(expiryWindow, cursor)
-  }, [fetchData, expiryWindow, cursor])
+    fetchData(expiryWindow, cursor, search)
+  }, [fetchData, expiryWindow, cursor, search])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
@@ -79,7 +82,16 @@ export default function LicenseExpiryPage() {
       <TopHeader title="License Expiry" description="Providers approaching license expiry, sorted by urgency" />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-between mb-6">
-          <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
+          <div className="flex items-center gap-3">
+            <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
+            <input
+              type="text"
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
+              className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
+            />
+          </div>
           <div className="flex gap-2">
             {(['all', '60d', '30d', '7d'] as const).map((w) => (
               <button
@@ -138,7 +150,15 @@ export default function LicenseExpiryPage() {
                       className="border-b border-border hover:bg-accent-subtle cursor-pointer transition-colors"
                       onClick={() => setRenewTarget(p)}
                     >
-                      <td className="px-4 py-3 font-medium text-text-primary">{p.name}</td>
+                      <td className="px-4 py-3 font-medium text-text-primary">
+                        <Link
+                          href={`/providers/profile/${p.practitionerId}`}
+                          className="text-black hover:text-brand-lime font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {p.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3 text-text-secondary">{p.licenseNumber}</td>
                       <td className="px-4 py-3 text-text-secondary">{p.issuingBody}</td>
                       <td className="px-4 py-3 text-text-secondary">{p.expiryDate}</td>
@@ -203,7 +223,7 @@ export default function LicenseExpiryPage() {
             onClose={() => setRenewTarget(null)}
             onRenewed={() => {
               setRenewTarget(null)
-              fetchData(expiryWindow, cursor)
+              fetchData(expiryWindow, cursor, search)
             }}
           />
         )}
