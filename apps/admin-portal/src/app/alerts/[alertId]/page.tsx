@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { EscalationModal } from '@/components/alerts/EscalationModal'
+import { EscalationSection } from '@/components/alerts/EscalationSection'
 
 type ReviewAction = 'DISMISS' | 'ESCALATE' | 'SUSPEND_PROVIDER'
 
@@ -28,6 +31,14 @@ interface AlertDetail {
   reviewedAt: string | null
   reviewAction: string | null
   reviewReason: string | null
+  assigneeName: string | null
+  escalationPriority: string | null
+  escalationNote: string | null
+  escalatedByName: string | null
+  escalatedAt: string | null
+  resolutionNote: string | null
+  resolvedByName: string | null
+  resolvedAt: string | null
   prescribingSummary: {
     totalPrescriptions: number
     controlledSubstanceCount: number
@@ -173,6 +184,7 @@ export default function AlertDetailPage() {
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showEscalationModal, setShowEscalationModal] = useState(false)
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -228,7 +240,8 @@ export default function AlertDetailPage() {
 
   if (!alert) return null
 
-  const isReviewable = alert.status === 'UNREVIEWED' || alert.status === 'ESCALATED'
+  const isUnreviewed = alert.status === 'UNREVIEWED'
+  const showEscalationSection = alert.status === 'ESCALATED' || alert.status === 'RESOLVED'
   const maxTimelineCount = Math.max(...alert.timeline.map((t) => t.count), 1)
 
   return (
@@ -243,6 +256,13 @@ export default function AlertDetailPage() {
           <StatusBadge status={alert.status} />
         </div>
 
+        {/* Provider link */}
+        <div className="mt-2">
+          <Link href={`/providers/profile/${alert.practitionerId}`} className="text-sm font-medium text-accent hover:underline">
+            View provider profile
+          </Link>
+        </div>
+
         {/* Success toast */}
         {successMessage && (
           <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{successMessage}</div>
@@ -254,7 +274,7 @@ export default function AlertDetailPage() {
         )}
 
         {/* Action buttons — AC #5 */}
-        {isReviewable && (
+        {isUnreviewed && (
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => setPendingAction('DISMISS')}
@@ -263,7 +283,7 @@ export default function AlertDetailPage() {
               Dismiss
             </button>
             <button
-              onClick={() => setPendingAction('ESCALATE')}
+              onClick={() => setShowEscalationModal(true)}
               className="rounded-full px-6 py-2.5 text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Escalate
@@ -330,6 +350,26 @@ export default function AlertDetailPage() {
           </div>
         </div>
 
+        {/* Escalation section */}
+        {showEscalationSection && (
+          <div className="mt-6">
+            <EscalationSection
+              alertId={alert.id}
+              status={alert.status}
+              assigneeName={alert.assigneeName}
+              escalationPriority={alert.escalationPriority}
+              escalationNote={alert.escalationNote}
+              escalatedByName={alert.escalatedByName}
+              escalatedAt={alert.escalatedAt}
+              resolutionNote={alert.resolutionNote}
+              resolvedByName={alert.resolvedByName}
+              resolvedAt={alert.resolvedAt}
+              onResolve={fetchDetail}
+              onReassign={fetchDetail}
+            />
+          </div>
+        )}
+
         {/* Timeline visualization — AC #9: dates and counts, no patient identifiers */}
         {alert.timeline.length > 0 && (
           <div className="mt-6 rounded-2xl border border-border bg-surface-raised p-6 shadow-card">
@@ -383,6 +423,18 @@ export default function AlertDetailPage() {
             onConfirm={handleAction}
             onCancel={() => setPendingAction(null)}
             submitting={submitting}
+          />
+        )}
+
+        {/* Escalation Modal */}
+        {showEscalationModal && (
+          <EscalationModal
+            alertId={alertId}
+            onClose={() => setShowEscalationModal(false)}
+            onSuccess={() => {
+              setShowEscalationModal(false)
+              fetchDetail()
+            }}
           />
         )}
       </div>
