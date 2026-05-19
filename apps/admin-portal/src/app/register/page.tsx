@@ -132,12 +132,12 @@ export default function RegisterPage() {
   const stepLabels = ['Organization', 'Admin Account', 'Modules']
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
-        <h1 className="mb-2 text-center text-xl font-bold text-black">
+    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
+      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl">
+        <h1 className="mb-2 text-center text-xl font-bold text-text-primary">
           Register Your Organization
         </h1>
-        <p className="mb-6 text-center text-sm text-text-muted">
+        <p className="mb-6 text-center text-sm text-text-secondary">
           Get started with a 30-day free trial
         </p>
 
@@ -154,13 +154,13 @@ export default function RegisterPage() {
                     isActive
                       ? 'bg-black text-white'
                       : isComplete
-                        ? 'bg-brand-lime text-black'
-                        : 'bg-surface text-text-muted'
+                        ? 'bg-accent text-text-primary'
+                        : 'bg-surface text-text-secondary'
                   }`}
                 >
                   {isComplete ? '\u2713' : stepNum}
                 </div>
-                <span className="mt-1 text-xs text-text-muted">{label}</span>
+                <span className="mt-1 text-xs text-text-secondary">{label}</span>
               </div>
             )
           })}
@@ -170,7 +170,7 @@ export default function RegisterPage() {
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="mb-4 rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger"
           >
             {error}
           </div>
@@ -205,9 +205,9 @@ export default function RegisterPage() {
         )}
 
         {/* Sign-in link */}
-        <p className="mt-6 text-center text-xs text-text-muted">
+        <p className="mt-6 text-center text-xs text-text-secondary">
           Already have an account?{' '}
-          <a href="/login" className="font-medium text-black hover:text-brand-lime transition-colors">
+          <a href="/login" className="font-medium text-text-primary hover:text-accent transition-colors duration-200">
             Sign in
           </a>
         </p>

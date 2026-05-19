@@ -63,7 +63,7 @@ export function ModuleSelectionStep({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-text-secondary">
         Select the modules your organization needs. You can add or remove modules later from the Subscription Dashboard.
       </p>
 
@@ -73,10 +73,10 @@ export function ModuleSelectionStep({
           return (
             <label
               key={mod.code}
-              className={`flex cursor-pointer items-start gap-3 rounded-3xl border p-4 transition-colors ${
+              className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors duration-200 ${
                 isSelected
-                  ? 'border-brand-lime bg-brand-lime/10'
-                  : 'border-border hover:border-brand-lime'
+                  ? 'border-accent bg-accent-subtle'
+                  : 'border-border hover:border-accent'
               }`}
             >
               <input
@@ -86,8 +86,8 @@ export function ModuleSelectionStep({
                 className="mt-0.5 h-4 w-4 rounded border-border accent-[#D4FF00]"
               />
               <div>
-                <span className="text-sm font-medium text-black">{mod.name}</span>
-                <p className="mt-0.5 text-xs text-text-muted">{mod.description}</p>
+                <span className="text-sm font-medium text-text-primary">{mod.name}</span>
+                <p className="mt-0.5 text-xs text-text-secondary">{mod.description}</p>
               </div>
             </label>
           )
@@ -95,10 +95,10 @@ export function ModuleSelectionStep({
       </div>
 
       {error && (
-        <p className="text-xs text-red-600" role="alert">{error}</p>
+        <p className="text-xs text-danger" role="alert">{error}</p>
       )}
 
-      <p className="text-xs text-text-muted">
+      <p className="text-xs text-text-secondary">
         All modules include a 30-day free trial. No payment required during trial.
       </p>
 
@@ -107,14 +107,14 @@ export function ModuleSelectionStep({
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="flex-1 rounded-full border border-black px-4 py-2 text-sm font-medium text-text-muted hover:scale-[1.02] transition-all disabled:opacity-50"
+          className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           Back
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
+          className="flex-1 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           {loading ? 'Creating account\u2026' : 'Complete Registration'}
         </button>

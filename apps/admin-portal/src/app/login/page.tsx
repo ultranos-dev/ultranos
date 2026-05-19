@@ -210,16 +210,16 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
-        <h2 className="mb-6 text-center text-xl font-bold text-black">
+    <div className="flex min-h-screen items-center justify-center bg-canvas">
+      <div className="w-full max-w-sm rounded-2xl bg-surface-raised p-6 shadow-xl">
+        <h2 className="mb-6 text-center text-xl font-bold text-text-primary">
           Admin Portal Sign In
         </h2>
 
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="mb-4 rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger"
           >
             {error}
           </div>
@@ -228,7 +228,7 @@ export default function AdminLoginPage() {
         {step === 'credentials' && (
           <form onSubmit={handleCredentialSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-text-muted">
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-text-secondary">
                 Email
               </label>
               <input
@@ -237,13 +237,13 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
+                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 placeholder="admin@hospital.example"
                 autoComplete="email"
               />
             </div>
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-text-muted">
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-text-secondary">
                 Password
               </label>
               <input
@@ -252,14 +252,14 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
+                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 autoComplete="current-password"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-brand-lime px-4 py-2.5 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
             >
               {loading ? 'Signing in\u2026' : 'Sign In'}
             </button>
@@ -268,7 +268,7 @@ export default function AdminLoginPage() {
 
         {step === 'mfa' && (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-brand-lime/30 bg-brand-lime/10 px-4 py-3 text-sm text-black">
+            <div className="rounded-2xl border border-accent/30 bg-accent-subtle px-4 py-3 text-sm text-text-primary">
               <p className="font-medium">Hardware Security Key Required</p>
               <p className="mt-1">
                 Please tap your FIDO2 security key when prompted by your browser.
@@ -278,22 +278,22 @@ export default function AdminLoginPage() {
               type="button"
               onClick={handleMfaVerify}
               disabled={loading}
-              className="w-full rounded-full bg-brand-lime px-4 py-2.5 text-sm font-semibold text-black hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
             >
               {loading ? 'Verifying\u2026' : 'Verify Security Key'}
             </button>
             <button
               type="button"
               onClick={handleBackToSignIn}
-              className="w-full text-sm text-text-muted hover:text-black transition-colors"
+              className="w-full text-sm text-text-secondary hover:text-text-primary transition-colors duration-200"
             >
               Back to sign in
             </button>
           </div>
         )}
-        <p className="mt-6 text-center text-xs text-text-muted">
+        <p className="mt-6 text-center text-xs text-text-secondary">
           New to Ultranos?{' '}
-          <a href="/register" className="font-medium text-black hover:text-brand-lime transition-colors">
+          <a href="/register" className="font-medium text-text-primary hover:text-accent transition-colors duration-200">
             Register your organization
           </a>
         </p>
