@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
+import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES } from '@ultranos/shared-types'
+import crypto from 'crypto'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -1746,6 +1748,1245 @@ export const adminRouter = createTRPCRouter({
         total: count ?? 0,
       }
     }),
+
+  // ================================================================
+  // Task 2: User Management Procedures
+  // ================================================================
+
+  /**
+   * List users (practitioners) with pagination, role/status/search filters.
+   * Scoped to caller's org via org_id.
+   */
+  listUsers: adminProcedure
+    .input(
+      z.object({
+        role: z.string().optional(),
+        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING_INVITE']).default('ALL'),
+        search: z.string().max(200).optional(),
+        cursor: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(100).default(25),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('practitioners')
+        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, last_login_at, created_at, suspended_at, suspension_reason', { count: 'exact' })
+        .eq('org_id', ctx.user.orgId)
+        .order('created_at', { ascending: false })
+        .range(input.cursor, input.cursor + input.limit - 1)
+
+      if (input.status !== 'ALL') {
+        query = query.eq('status', input.status)
+      }
+
+      if (input.role) {
+        query = query.eq('role', input.role)
+      }
+
+      if (input.search && input.search.trim()) {
+        const term = `%${input.search.trim()}%`
+        query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`)
+      }
+
+      const { data: rows, error, count } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query users',
+        })
+      }
+
+      const users = (rows ?? []).map((row: Record<string, unknown>) => ({
+        id: row.id as string,
+        authUserId: (row.auth_user_id as string) ?? null,
+        name: `${(row.given_name as string) ?? ''} ${(row.family_name as string) ?? ''}`.trim(),
+        givenName: (row.given_name as string) ?? '',
+        familyName: (row.family_name as string) ?? '',
+        email: (row.telecom_email as string) ?? null,
+        role: (row.role as string) ?? '',
+        status: (row.status as string) ?? 'ACTIVE',
+        lastLoginAt: (row.last_login_at as string) ?? null,
+        createdAt: (row.created_at as string) ?? null,
+        suspendedAt: (row.suspended_at as string) ?? null,
+        suspensionReason: (row.suspension_reason as string) ?? null,
+      }))
+
+      // Audit PHI read — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: 'batch',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.listUsers', resultCount: users.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'USER_ACCOUNT', endpoint: 'listUsers' })
+      }
+
+      return {
+        users,
+        total: count ?? 0,
+        cursor: input.cursor,
+        limit: input.limit,
+      }
+    }),
+
+  /**
+   * Get single user detail by practitioner ID.
+   * Scoped to caller's org via org_id.
+   */
+  getUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: user, error } = await ctx.supabase
+        .from('practitioners')
+        .select('id, auth_user_id, given_name, family_name, role, status, telecom_email, last_login_at, created_at, suspended_at, suspension_reason, suspended_by, invited_by, pending_suspension_date')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (error || !user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      // Check MFA status via Supabase Auth if auth_user_id exists
+      let hasMfa = false
+      if (user.auth_user_id) {
+        try {
+          const { data: authUser } = await ctx.supabase.auth.admin.getUserById(user.auth_user_id as string)
+          const factors = (authUser?.user as any)?.factors ?? []
+          hasMfa = factors.some((f: any) => f.status === 'verified')
+        } catch {
+          // Best effort — MFA status is informational
+        }
+      }
+
+      // Audit PHI read
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.getUser' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return {
+        id: user.id as string,
+        authUserId: (user.auth_user_id as string) ?? null,
+        name: `${(user.given_name as string) ?? ''} ${(user.family_name as string) ?? ''}`.trim(),
+        givenName: (user.given_name as string) ?? '',
+        familyName: (user.family_name as string) ?? '',
+        email: (user.telecom_email as string) ?? null,
+        role: (user.role as string) ?? '',
+        status: (user.status as string) ?? 'ACTIVE',
+        lastLoginAt: (user.last_login_at as string) ?? null,
+        createdAt: (user.created_at as string) ?? null,
+        suspendedAt: (user.suspended_at as string) ?? null,
+        suspensionReason: (user.suspension_reason as string) ?? null,
+        suspendedBy: (user.suspended_by as string) ?? null,
+        invitedBy: (user.invited_by as string) ?? null,
+        pendingSuspensionDate: (user.pending_suspension_date as string) ?? null,
+        hasMfa,
+      }
+    }),
+
+  /**
+   * Create a new user: Supabase Auth user + practitioner record.
+   * Validates role against org subscriptions. Generates invite link.
+   */
+  createUser: adminProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        name: z.string().min(1).max(200),
+        role: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check for duplicate email within org
+      const { data: existingUser } = await ctx.supabase
+        .from('practitioners')
+        .select('id')
+        .eq('org_id', ctx.user.orgId)
+        .eq('telecom_email', input.email)
+        .maybeSingle()
+
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A user with this email already exists in your organization',
+        })
+      }
+
+      // Validate role is known
+      if (!(input.role in ROLE_MODULE_MAP)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Unknown role: ${input.role}`,
+        })
+      }
+
+      // Validate role against org subscriptions
+      const requiredModule = ROLE_MODULE_MAP[input.role]
+      if (requiredModule) {
+        const { data: sub } = await ctx.supabase
+          .from('org_subscriptions')
+          .select('id')
+          .eq('org_id', ctx.user.orgId)
+          .eq('module_code', requiredModule)
+          .in('status', ['ACTIVE', 'TRIAL'])
+          .maybeSingle()
+
+        if (!sub) {
+          const moduleName = MODULE_DISPLAY_NAMES[requiredModule] ?? requiredModule
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Subscribe to ${moduleName} to add ${input.role} users`,
+          })
+        }
+      }
+
+      // Split name into given_name / family_name
+      const nameParts = input.name.trim().split(/\s+/)
+      const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
+      const givenName = nameParts.join(' ')
+
+      // Generate secure random password (never sent to client)
+      const randomPassword = crypto.randomUUID() + crypto.randomUUID()
+
+      // Create Supabase Auth user
+      const { data: authResult, error: authError } = await ctx.supabase.auth.admin.createUser({
+        email: input.email,
+        password: randomPassword,
+        email_confirm: true,
+        user_metadata: {
+          role: input.role,
+          org_id: ctx.user.orgId,
+          given_name: givenName,
+          family_name: familyName,
+        },
+      })
+
+      if (authError || !authResult?.user) {
+        // Check for duplicate in Supabase Auth
+        if (authError?.message?.includes('already been registered')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A user with this email already exists',
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create auth user',
+        })
+      }
+
+      const authUserId = authResult.user.id
+
+      // Create practitioner record
+      const now = new Date().toISOString()
+      const { data: practitioner, error: practError } = await ctx.supabase
+        .from('practitioners')
+        .insert({
+          auth_user_id: authUserId,
+          given_name: givenName,
+          family_name: familyName,
+          telecom_email: input.email,
+          role: input.role,
+          org_id: ctx.user.orgId,
+          status: 'PENDING_INVITE',
+          invited_by: ctx.user.sub,
+          created_at: now,
+        })
+        .select('id')
+        .single()
+
+      if (practError || !practitioner) {
+        // Compensating action: remove auth user if practitioner creation fails
+        try {
+          await ctx.supabase.auth.admin.deleteUser(authUserId)
+        } catch {
+          console.warn('[COMPENSATION_FAILURE] Failed to delete auth user after practitioner creation failure', { authUserId })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create practitioner record',
+        })
+      }
+
+      // Generate invite link via recovery link
+      let setupLink: string | null = null
+      try {
+        const { data: linkData } = await ctx.supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: input.email,
+        })
+        setupLink = linkData?.properties?.action_link ?? null
+      } catch {
+        console.warn('[INVITE_LINK_FAILURE]', { email: '[REDACTED]' })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'USER_CREATED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: practitioner.id as string,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            role: input.role,
+            authUserId,
+            hasSetupLink: !!setupLink,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_CREATED', resourceType: 'USER_ACCOUNT', resourceId: practitioner.id })
+      }
+
+      return {
+        userId: practitioner.id as string,
+        name: input.name,
+        email: input.email,
+        role: input.role,
+        status: 'PENDING_INVITE',
+        setupLink,
+        emailSent: false,
+      }
+    }),
+
+  /**
+   * Update a user's name and/or role.
+   * Role changes validated against org subscriptions.
+   */
+  updateUser: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        name: z.string().min(1).max(200).optional(),
+        role: z.string().min(1).optional(),
+      }).refine(
+        (data) => data.name || data.role,
+        { message: 'At least one of name or role must be provided' },
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify user exists and belongs to org
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, given_name, family_name, role, status, auth_user_id')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      const updateData: Record<string, unknown> = {}
+
+      // Handle name change
+      if (input.name) {
+        const nameParts = input.name.trim().split(/\s+/)
+        const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
+        const givenName = nameParts.join(' ')
+        updateData.given_name = givenName
+        updateData.family_name = familyName
+      }
+
+      // Handle role change
+      if (input.role && input.role !== existing.role) {
+        if (!(input.role in ROLE_MODULE_MAP)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Unknown role: ${input.role}`,
+          })
+        }
+
+        const requiredModule = ROLE_MODULE_MAP[input.role]
+        if (requiredModule) {
+          const { data: sub } = await ctx.supabase
+            .from('org_subscriptions')
+            .select('id')
+            .eq('org_id', ctx.user.orgId)
+            .eq('module_code', requiredModule)
+            .in('status', ['ACTIVE', 'TRIAL'])
+            .maybeSingle()
+
+          if (!sub) {
+            const moduleName = MODULE_DISPLAY_NAMES[requiredModule] ?? requiredModule
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: `Subscribe to ${moduleName} to assign the ${input.role} role`,
+            })
+          }
+        }
+
+        updateData.role = input.role
+
+        // Update auth user metadata if auth_user_id exists
+        if (existing.auth_user_id) {
+          try {
+            await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+              user_metadata: { role: input.role },
+            })
+          } catch {
+            console.warn('[AUTH_METADATA_UPDATE_FAILURE]', { userId: input.userId })
+          }
+        }
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'No changes to apply',
+        })
+      }
+
+      const { error: updateError } = await ctx.supabase
+        .from('practitioners')
+        .update(updateData)
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update user',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'USER_UPDATED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            updatedFields: Object.keys(updateData),
+            ...(input.role ? { previousRole: existing.role, newRole: input.role } : {}),
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_UPDATED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return { success: true, userId: input.userId }
+    }),
+
+  /**
+   * Suspend a user: set status to SUSPENDED, ban in Supabase Auth.
+   */
+  suspendUser: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        reason: z.string().min(1).max(500),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, auth_user_id, role')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      if (existing.status === 'SUSPENDED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User is already suspended',
+        })
+      }
+
+      const now = new Date().toISOString()
+
+      // Update practitioner status with optimistic lock
+      const { error: updateError, count: updateCount } = await ctx.supabase
+        .from('practitioners')
+        .update({
+          status: 'SUSPENDED',
+          suspended_at: now,
+          suspension_reason: input.reason,
+          suspended_by: ctx.user.sub,
+        })
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .neq('status', 'SUSPENDED')
+        .select('id', { count: 'exact', head: true })
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to suspend user',
+        })
+      }
+
+      if ((updateCount ?? 0) === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User status was changed by another admin — please refresh',
+        })
+      }
+
+      // Ban in Supabase Auth
+      if (existing.auth_user_id) {
+        try {
+          await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+            ban_duration: 'none',
+            user_metadata: { status: 'SUSPENDED' },
+          })
+        } catch {
+          console.warn('[AUTH_BAN_FAILURE]', { userId: input.userId })
+        }
+      }
+
+      // Terminate active sessions
+      try {
+        await ctx.supabase
+          .from('active_sessions')
+          .delete()
+          .eq('practitioner_id', input.userId)
+      } catch {
+        console.warn('[SESSION_TERMINATION] Failed to clear sessions', { userId: input.userId })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'USER_SUSPENDED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { reason: input.reason },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_SUSPENDED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return { success: true, userId: input.userId, status: 'SUSPENDED' }
+    }),
+
+  /**
+   * Reactivate a suspended user: set status to ACTIVE, unban in Supabase Auth.
+   * Validates module subscription is still active for the user's role.
+   */
+  reactivateUser: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, auth_user_id, role')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      if (existing.status !== 'SUSPENDED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot reactivate a user with status ${existing.status} — expected SUSPENDED`,
+        })
+      }
+
+      // Validate role's module subscription is still active
+      const requiredModule = ROLE_MODULE_MAP[existing.role as string]
+      if (requiredModule) {
+        const { data: sub } = await ctx.supabase
+          .from('org_subscriptions')
+          .select('id')
+          .eq('org_id', ctx.user.orgId)
+          .eq('module_code', requiredModule)
+          .in('status', ['ACTIVE', 'TRIAL'])
+          .maybeSingle()
+
+        if (!sub) {
+          const moduleName = MODULE_DISPLAY_NAMES[requiredModule] ?? requiredModule
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Cannot reactivate — ${moduleName} subscription is not active`,
+          })
+        }
+      }
+
+      // Update practitioner status
+      const { error: updateError, count: updateCount } = await ctx.supabase
+        .from('practitioners')
+        .update({
+          status: 'ACTIVE',
+          suspended_at: null,
+          suspension_reason: null,
+          suspended_by: null,
+          pending_suspension_date: null,
+        })
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .eq('status', 'SUSPENDED')
+        .select('id', { count: 'exact', head: true })
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to reactivate user',
+        })
+      }
+
+      if ((updateCount ?? 0) === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User status was changed by another admin — please refresh',
+        })
+      }
+
+      // Unban in Supabase Auth
+      if (existing.auth_user_id) {
+        try {
+          await ctx.supabase.auth.admin.updateUserById(existing.auth_user_id as string, {
+            ban_duration: 'none',
+            user_metadata: { status: 'ACTIVE' },
+          })
+        } catch {
+          console.warn('[AUTH_UNBAN_FAILURE]', { userId: input.userId })
+        }
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'USER_REACTIVATED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { previousStatus: 'SUSPENDED' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'USER_REACTIVATED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return { success: true, userId: input.userId, status: 'ACTIVE' }
+    }),
+
+  /**
+   * Resend invitation for PENDING_INVITE users.
+   * Re-generates a password reset link.
+   */
+  resendInvitation: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, auth_user_id, telecom_email')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      if (existing.status !== 'PENDING_INVITE') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot resend invitation for a user with status ${existing.status} — expected PENDING_INVITE`,
+        })
+      }
+
+      if (!existing.telecom_email) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User has no email address on record',
+        })
+      }
+
+      let setupLink: string | null = null
+      try {
+        const { data: linkData } = await ctx.supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: existing.telecom_email as string,
+        })
+        setupLink = linkData?.properties?.action_link ?? null
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate invitation link',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'INVITATION_RESENT',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {},
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'INVITATION_RESENT', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return {
+        success: true,
+        userId: input.userId,
+        setupLink,
+        emailSent: false,
+      }
+    }),
+
+  /**
+   * Trigger password reset email for ACTIVE users.
+   */
+  resetUserPassword: adminProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, status, telecom_email')
+        .eq('id', input.userId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot reset password for a user with status ${existing.status} — expected ACTIVE`,
+        })
+      }
+
+      if (!existing.telecom_email) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User has no email address on record',
+        })
+      }
+
+      let resetLink: string | null = null
+      try {
+        const { data: linkData } = await ctx.supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: existing.telecom_email as string,
+        })
+        resetLink = linkData?.properties?.action_link ?? null
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to generate password reset link',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PASSWORD_RESET_TRIGGERED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: input.userId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {},
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PASSWORD_RESET_TRIGGERED', resourceType: 'USER_ACCOUNT', resourceId: input.userId })
+      }
+
+      return {
+        success: true,
+        userId: input.userId,
+        resetLink,
+        emailSent: false,
+      }
+    }),
+
+  // ================================================================
+  // Task 3: Organization & Notification Procedures
+  // ================================================================
+
+  /**
+   * Get current admin's profile from practitioners table.
+   */
+  getProfile: adminProcedure.query(async ({ ctx }) => {
+    const { data: profile, error } = await ctx.supabase
+      .from('practitioners')
+      .select('id, auth_user_id, given_name, family_name, role, telecom_email, created_at')
+      .eq('auth_user_id', ctx.user.sub)
+      .single()
+
+    if (error || !profile) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Admin profile not found',
+      })
+    }
+
+    return {
+      id: profile.id as string,
+      authUserId: (profile.auth_user_id as string) ?? null,
+      name: `${(profile.given_name as string) ?? ''} ${(profile.family_name as string) ?? ''}`.trim(),
+      givenName: (profile.given_name as string) ?? '',
+      familyName: (profile.family_name as string) ?? '',
+      email: (profile.telecom_email as string) ?? null,
+      role: (profile.role as string) ?? '',
+      createdAt: (profile.created_at as string) ?? null,
+    }
+  }),
+
+  /**
+   * Update the current admin's name.
+   */
+  updateAdminProfile: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(200),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const nameParts = input.name.trim().split(/\s+/)
+      const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
+      const givenName = nameParts.join(' ')
+
+      const { error } = await ctx.supabase
+        .from('practitioners')
+        .update({
+          given_name: givenName,
+          family_name: familyName,
+        })
+        .eq('auth_user_id', ctx.user.sub)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update admin profile',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PROFILE_UPDATED',
+          resourceType: 'USER_ACCOUNT',
+          resourceId: ctx.user.sub,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { updatedFields: ['given_name', 'family_name'] },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PROFILE_UPDATED', resourceType: 'USER_ACCOUNT' })
+      }
+
+      return { success: true, name: input.name }
+    }),
+
+  /**
+   * Get full organization details including timezone.
+   */
+  getOrganization: adminProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.orgId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'org_id not available from JWT',
+      })
+    }
+
+    const { data: org, error } = await ctx.supabase
+      .from('organizations')
+      .select('id, name, country_code, billing_email, status, trial_ends_at, timezone, created_at')
+      .eq('id', ctx.user.orgId)
+      .single()
+
+    if (error || !org) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Organization not found',
+      })
+    }
+
+    return {
+      id: org.id as string,
+      name: org.name as string,
+      countryCode: (org.country_code as string) ?? null,
+      billingEmail: (org.billing_email as string) ?? null,
+      status: org.status as string,
+      trialEndsAt: (org.trial_ends_at as string) ?? null,
+      timezone: (org.timezone as string) ?? 'UTC',
+      createdAt: (org.created_at as string) ?? null,
+    }
+  }),
+
+  /**
+   * Update organization details (name, country_code, billing_email, timezone).
+   * All changes are audit logged.
+   */
+  updateOrganization: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(200).optional(),
+        countryCode: z.string().min(2).max(3).optional(),
+        billingEmail: z.string().email().optional(),
+        timezone: z.string().min(1).max(100).optional(),
+      }).refine(
+        (data) => data.name || data.countryCode || data.billingEmail || data.timezone,
+        { message: 'At least one field must be provided' },
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id not available from JWT',
+        })
+      }
+
+      const updateData: Record<string, unknown> = {}
+      if (input.name !== undefined) updateData.name = input.name
+      if (input.countryCode !== undefined) updateData.country_code = input.countryCode
+      if (input.billingEmail !== undefined) updateData.billing_email = input.billingEmail
+      if (input.timezone !== undefined) updateData.timezone = input.timezone
+
+      const { error } = await ctx.supabase
+        .from('organizations')
+        .update(updateData)
+        .eq('id', ctx.user.orgId)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update organization',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'ORGANIZATION_UPDATED',
+          resourceType: 'ORGANIZATION',
+          resourceId: ctx.user.orgId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { updatedFields: Object.keys(updateData) },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ORGANIZATION_UPDATED', resourceType: 'ORGANIZATION', resourceId: ctx.user.orgId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Get notification preferences for the current admin user.
+   * Returns defaults if no preferences are saved.
+   */
+  getNotificationPreferences: adminProcedure.query(async ({ ctx }) => {
+    const { data: prefs } = await ctx.supabase
+      .from('notification_preferences')
+      .select('preferences, updated_at')
+      .eq('admin_user_id', ctx.user.sub)
+      .maybeSingle()
+
+    const DEFAULT_PREFERENCES = {
+      kycSubmission: true,
+      labRegistration: true,
+      anomalyAlert: true,
+      licenseExpiry: true,
+      auditChainFailure: true,
+      userSuspension: true,
+      subscriptionChange: true,
+    }
+
+    if (!prefs) {
+      return {
+        preferences: DEFAULT_PREFERENCES,
+        updatedAt: null,
+      }
+    }
+
+    return {
+      preferences: { ...DEFAULT_PREFERENCES, ...(prefs.preferences as Record<string, boolean>) },
+      updatedAt: prefs.updated_at as string,
+    }
+  }),
+
+  /**
+   * Upsert notification preferences for the current admin user.
+   */
+  updateNotificationPreferences: adminProcedure
+    .input(
+      z.object({
+        preferences: z.record(z.string(), z.boolean()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+
+      const { error } = await ctx.supabase
+        .from('notification_preferences')
+        .upsert({
+          admin_user_id: ctx.user.sub,
+          preferences: input.preferences,
+          updated_at: now,
+        }, { onConflict: 'admin_user_id' })
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update notification preferences',
+        })
+      }
+
+      return { success: true, updatedAt: now }
+    }),
+
+  // ================================================================
+  // Task 4: Dashboard Stats Extension & Recent Activity
+  // ================================================================
+
+  /**
+   * Extended dashboard stats: includes SLA-breached KYC count, oldest pending lab,
+   * high-severity alert count, audit chain health, and user counts breakdown.
+   */
+  dashboardStatsExtended: adminProcedure.query(async ({ ctx }) => {
+    // --- Existing stats (replicated from dashboardStats) ---
+    const { count: pendingLabApprovals } = await ctx.supabase
+      .from('labs')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'PENDING')
+
+    const { count: pendingKycReviews } = await ctx.supabase
+      .from('kyc_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'PENDING')
+
+    const { count: unreviewedAlerts } = await ctx.supabase
+      .from('prescribing_anomalies')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['UNREVIEWED', 'ESCALATED'])
+
+    // --- SLA-breached KYC count ---
+    const { data: pendingKycRows } = await ctx.supabase
+      .from('kyc_submissions')
+      .select('submitted_at')
+      .eq('status', 'PENDING_VERIFICATION')
+
+    let slaBreachedKycCount = 0
+    for (const row of (pendingKycRows ?? [])) {
+      const sla = calculateSlaDeadline((row as Record<string, unknown>).submitted_at as string)
+      if (sla.breached) slaBreachedKycCount++
+    }
+
+    // --- Oldest pending lab (days) ---
+    const { data: oldestLab } = await ctx.supabase
+      .from('labs')
+      .select('created_at')
+      .eq('status', 'PENDING')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    let oldestPendingLabDays: number | null = null
+    if (oldestLab) {
+      const labCreated = new Date((oldestLab as Record<string, unknown>).created_at as string)
+      oldestPendingLabDays = Math.floor((Date.now() - labCreated.getTime()) / 86_400_000)
+    }
+
+    // --- High severity alert count ---
+    const { count: highSeverityAlertCount } = await ctx.supabase
+      .from('prescribing_anomalies')
+      .select('id', { count: 'exact', head: true })
+      .eq('severity', 'HIGH')
+      .in('status', ['UNREVIEWED', 'ESCALATED'])
+
+    // --- Audit chain health ---
+    const { data: latestVerification } = await ctx.supabase
+      .from('audit_chain_verifications')
+      .select('valid')
+      .order('verified_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const auditChainHealthy = latestVerification
+      ? (latestVerification as Record<string, unknown>).valid === true
+      : null
+
+    // --- User counts breakdown ---
+    const { count: totalUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+
+    const { count: activeUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'ACTIVE')
+
+    const { count: suspendedUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'SUSPENDED')
+
+    const { count: pendingInviteUsers } = await ctx.supabase
+      .from('practitioners')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', ctx.user.orgId)
+      .eq('status', 'PENDING_INVITE')
+
+    // MFA count: query auth users for practitioners in this org
+    // Best-effort — count practitioners with auth_user_id and check MFA
+    const { data: orgPractitioners } = await ctx.supabase
+      .from('practitioners')
+      .select('auth_user_id')
+      .eq('org_id', ctx.user.orgId)
+      .not('auth_user_id', 'is', null)
+
+    let withoutMfa = 0
+    for (const p of (orgPractitioners ?? [])) {
+      try {
+        const { data: authUser } = await ctx.supabase.auth.admin.getUserById(
+          (p as Record<string, unknown>).auth_user_id as string,
+        )
+        const factors = (authUser?.user as any)?.factors ?? []
+        const hasVerifiedMfa = factors.some((f: any) => f.status === 'verified')
+        if (!hasVerifiedMfa) withoutMfa++
+      } catch {
+        // Best effort — count as without MFA on error
+        withoutMfa++
+      }
+    }
+
+    return {
+      pendingKycReviews: pendingKycReviews ?? 0,
+      pendingLabApprovals: pendingLabApprovals ?? 0,
+      activeAlerts: unreviewedAlerts ?? 0,
+      recentAuditEvents: 0,
+      slaBreachedKycCount,
+      oldestPendingLabDays,
+      highSeverityAlertCount: highSeverityAlertCount ?? 0,
+      auditChainHealthy,
+      userCounts: {
+        total: totalUsers ?? 0,
+        active: activeUsers ?? 0,
+        suspended: suspendedUsers ?? 0,
+        pendingInvite: pendingInviteUsers ?? 0,
+        withoutMfa,
+      },
+    }
+  }),
+
+  /**
+   * Recent admin activity from audit_log.
+   * Returns last N admin-initiated actions with human-readable descriptions.
+   */
+  recentActivity: adminProcedure
+    .input(
+      z.object({
+        limit: z.number().int().min(1).max(100).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Query audit_log for admin-initiated actions
+      const { data: rows, error } = await ctx.supabase
+        .from('audit_log')
+        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome, metadata')
+        .eq('actor_role', 'ADMIN')
+        .eq('org_id', ctx.user.orgId)
+        .order('timestamp', { ascending: false })
+        .limit(input.limit)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query recent activity',
+        })
+      }
+
+      const activities = (rows ?? []).map((row: Record<string, unknown>) => ({
+        id: row.id as string,
+        timestamp: row.timestamp as string,
+        actorId: row.actor_id as string,
+        action: row.action as string,
+        resourceType: row.resource_type as string,
+        resourceId: row.resource_id as string,
+        outcome: row.outcome as string,
+        description: describeAuditAction(
+          row.action as string,
+          row.resource_type as string,
+          row.metadata as Record<string, unknown> | null,
+        ),
+      }))
+
+      return { activities }
+    }),
 })
 
 // ================================================================
@@ -1862,6 +3103,44 @@ async function emitKycListAudit(ctx: { supabase: SupabaseClient; user: { sub: st
 let _controlledCodesCache: string[] | null = null
 let _controlledCodesCacheTs = 0
 const CACHE_TTL_MS = 60_000
+
+/**
+ * Generate a human-readable description from an audit log action.
+ */
+function describeAuditAction(
+  action: string,
+  resourceType: string,
+  metadata: Record<string, unknown> | null,
+): string {
+  const DESCRIPTIONS: Record<string, string> = {
+    'USER_CREATED': 'Created a new user',
+    'USER_UPDATED': 'Updated user details',
+    'USER_SUSPENDED': 'Suspended a user',
+    'USER_REACTIVATED': 'Reactivated a user',
+    'INVITATION_RESENT': 'Resent user invitation',
+    'PASSWORD_RESET_TRIGGERED': 'Triggered password reset',
+    'PROFILE_UPDATED': 'Updated admin profile',
+    'ORGANIZATION_UPDATED': 'Updated organization settings',
+    'KYC_APPROVED': 'Approved KYC submission',
+    'KYC_REJECTED': 'Rejected KYC submission',
+    'KYC_MORE_INFO_REQUESTED': 'Requested more KYC info',
+    'LAB_APPROVED': 'Approved lab registration',
+    'LAB_SUSPENDED': 'Suspended a lab',
+    'LAB_REACTIVATED': 'Reactivated a lab',
+    'LICENSE_RENEWED': 'Renewed a provider license',
+    'ANOMALY_ALERT_DISMISSED': 'Dismissed an anomaly alert',
+    'ANOMALY_ALERT_ESCALATED': 'Escalated an anomaly alert',
+    'ANOMALY_PROVIDER_SUSPENDED': 'Suspended a provider due to anomaly',
+    'LOGIN': 'Admin login',
+  }
+
+  const base = DESCRIPTIONS[action] ?? `${action} on ${resourceType}`
+
+  // Enrich with metadata if available
+  if (metadata?.role) return `${base} (role: ${metadata.role})`
+  if (metadata?.reason) return `${base}: ${metadata.reason}`
+  return base
+}
 
 async function getControlledCodes(supabase: SupabaseClient): Promise<string[]> {
   const now = Date.now()
