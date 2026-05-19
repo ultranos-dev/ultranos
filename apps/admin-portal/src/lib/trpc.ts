@@ -32,6 +32,8 @@ export const trpc = createTRPCClient<AppRouter>({
 type AdminAuthEventType =
   | 'ADMIN_LOGIN_SUCCESS'
   | 'ADMIN_LOGIN_FAILURE'
+  | 'ADMIN_PASSWORD_CHANGED'
+  | 'ADMIN_SESSION_REVOKED'
 
 /**
  * Fire-and-forget admin audit event reporting to Hub API via tRPC client.

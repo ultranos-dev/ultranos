@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { reportAdminAuthEvent } from '@/lib/trpc'
+import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
+
+/* ─── Types ─── */
 
 type Factor = {
   id: string
@@ -13,45 +16,193 @@ type Factor = {
   created_at?: string
 }
 
-export default function SettingsPage() {
-  const [factors, setFactors] = useState<Factor[]>([])
-  const [loading, setLoading] = useState(true)
-  const [enrolling, setEnrolling] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+interface AdminProfile {
+  name: string
+  email: string
+  role: string
+  createdAt: string
+}
 
+interface OrgData {
+  id: string
+  name: string
+  country: string
+  billingEmail: string
+  timezone: string
+}
+
+/* ─── Constants ─── */
+
+const MENA_COUNTRIES = [
+  'Afghanistan', 'Bahrain', 'Egypt', 'Iran', 'Iraq', 'Jordan', 'Kuwait',
+  'Kazakhstan', 'Kyrgyzstan', 'Lebanon', 'Oman', 'Pakistan', 'Palestine',
+  'Qatar', 'Saudi Arabia', 'Syria', 'Tajikistan', 'Turkey', 'Turkmenistan',
+  'UAE', 'Uzbekistan', 'Yemen',
+]
+
+const IANA_TIMEZONES = [
+  'Africa/Cairo', 'Asia/Aden', 'Asia/Almaty', 'Asia/Amman', 'Asia/Ashgabat',
+  'Asia/Baghdad', 'Asia/Bahrain', 'Asia/Bishkek', 'Asia/Damascus',
+  'Asia/Dubai', 'Asia/Dushanbe', 'Asia/Gaza', 'Asia/Kabul', 'Asia/Karachi',
+  'Asia/Kuwait', 'Asia/Muscat', 'Asia/Qatar', 'Asia/Riyadh', 'Asia/Tashkent',
+  'Asia/Tehran',
+]
+
+const NAV_ITEMS = [
+  { id: 'my-account', label: 'My Account' },
+  { id: 'organization', label: 'Organization' },
+  { id: 'notifications', label: 'Notifications' },
+] as const
+
+/* ─── Page Component ─── */
+
+export default function SettingsPage() {
   const supabase = getSupabaseBrowserClient()
 
+  /* Profile state */
+  const [profile, setProfile] = useState<AdminProfile | null>(null)
+  const [profileName, setProfileName] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null)
+  const [profileError, setProfileError] = useState<string | null>(null)
+
+  /* Password state */
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+
+  /* FIDO2 state */
+  const [factors, setFactors] = useState<Factor[]>([])
+  const [fidoLoading, setFidoLoading] = useState(true)
+  const [enrolling, setEnrolling] = useState(false)
+  const [fidoError, setFidoError] = useState<string | null>(null)
+  const [fidoSuccess, setFidoSuccess] = useState<string | null>(null)
+
+  /* Sessions state */
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const [sessionsMsg, setSessionsMsg] = useState<string | null>(null)
+
+  /* Organization state */
+  const [org, setOrg] = useState<OrgData | null>(null)
+  const [orgDraft, setOrgDraft] = useState<Omit<OrgData, 'id'> | null>(null)
+  const [orgSaving, setOrgSaving] = useState(false)
+  const [orgSuccess, setOrgSuccess] = useState<string | null>(null)
+  const [orgError, setOrgError] = useState<string | null>(null)
+
+  /* ─── Load data on mount ─── */
+
   useEffect(() => {
+    loadProfile()
     loadFactors()
+    loadOrg()
   }, [])
 
+  /* ─── Profile ─── */
+
+  async function loadProfile() {
+    try {
+      const data = await trpc.admin.getAdminProfile.query()
+      setProfile(data as AdminProfile)
+      setProfileName((data as AdminProfile).name ?? '')
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  async function handleSaveProfile() {
+    setProfileSaving(true)
+    setProfileError(null)
+    setProfileSuccess(null)
+    try {
+      await trpc.admin.updateAdminProfile.mutate({ name: profileName })
+      setProfileSuccess('Profile updated.')
+      setTimeout(() => setProfileSuccess(null), 3000)
+    } catch {
+      setProfileError('Failed to update profile.')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
+
+  /* ─── Change Password ─── */
+
+  async function handleChangePassword() {
+    setPasswordError(null)
+    setPasswordSuccess(null)
+
+    if (newPassword.length < 12) {
+      setPasswordError('New password must be at least 12 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+
+    setPasswordSaving(true)
+    try {
+      // Re-authenticate with current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: profile?.email ?? '',
+        password: currentPassword,
+      })
+      if (signInError) {
+        setPasswordError('Current password is incorrect.')
+        setPasswordSaving(false)
+        return
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+      if (updateError) {
+        setPasswordError(`Failed to update password: ${updateError.message}`)
+        setPasswordSaving(false)
+        return
+      }
+
+      reportAdminAuthEvent('ADMIN_PASSWORD_CHANGED')
+      setPasswordSuccess('Password changed successfully.')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setPasswordSuccess(null), 3000)
+    } catch {
+      setPasswordError('An unexpected error occurred.')
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
+  /* ─── FIDO2 Security Keys (preserved from original) ─── */
+
   async function loadFactors() {
-    setLoading(true)
+    setFidoLoading(true)
     try {
       const { data, error: factorsError } = await supabase.auth.mfa.listFactors()
       if (factorsError) {
-        setError('Failed to load MFA factors')
+        setFidoError('Failed to load MFA factors')
         return
       }
       setFactors(
         (data.all ?? []).filter((f) => f.factor_type === 'webauthn') as Factor[],
       )
     } catch {
-      setError('Failed to load MFA factors')
+      setFidoError('Failed to load MFA factors')
     } finally {
-      setLoading(false)
+      setFidoLoading(false)
     }
   }
 
   async function handleEnroll() {
-    setError(null)
-    setSuccess(null)
+    setFidoError(null)
+    setFidoSuccess(null)
     setEnrolling(true)
 
     try {
       if (typeof window !== 'undefined' && !window.PublicKeyCredential) {
-        setError('WebAuthn is not supported in this browser. Use a modern browser with FIDO2 support.')
+        setFidoError('WebAuthn is not supported in this browser. Use a modern browser with FIDO2 support.')
         setEnrolling(false)
         return
       }
@@ -61,7 +212,7 @@ export default function SettingsPage() {
       })
 
       if (enrollError) {
-        setError(`Enrollment failed: ${enrollError.message}`)
+        setFidoError(`Enrollment failed: ${enrollError.message}`)
         setEnrolling(false)
         return
       }
@@ -71,7 +222,7 @@ export default function SettingsPage() {
         await supabase.auth.mfa.challenge({ factorId: data.id })
 
       if (challengeError) {
-        setError('Failed to initiate verification challenge')
+        setFidoError('Failed to initiate verification challenge')
         setEnrolling(false)
         return
       }
@@ -83,24 +234,24 @@ export default function SettingsPage() {
       })
 
       if (verifyError) {
-        setError('Key verification failed. Please try again.')
+        setFidoError('Key verification failed. Please try again.')
         setEnrolling(false)
         return
       }
 
       reportAdminAuthEvent('ADMIN_MFA_ENROLLED', { factorId: data.id })
-      setSuccess('Security key enrolled successfully.')
+      setFidoSuccess('Security key enrolled successfully.')
       await loadFactors()
     } catch {
-      setError('An unexpected error occurred during enrollment')
+      setFidoError('An unexpected error occurred during enrollment')
     } finally {
       setEnrolling(false)
     }
   }
 
   async function handleUnenroll(factorId: string) {
-    setError(null)
-    setSuccess(null)
+    setFidoError(null)
+    setFidoSuccess(null)
 
     try {
       const { error: unenrollError } = await supabase.auth.mfa.unenroll({
@@ -108,15 +259,80 @@ export default function SettingsPage() {
       })
 
       if (unenrollError) {
-        setError(`Failed to remove key: ${unenrollError.message}`)
+        setFidoError(`Failed to remove key: ${unenrollError.message}`)
         return
       }
 
       reportAdminAuthEvent('ADMIN_MFA_UNENROLLED', { factorId })
-      setSuccess('Security key removed.')
+      setFidoSuccess('Security key removed.')
       await loadFactors()
     } catch {
-      setError('An unexpected error occurred')
+      setFidoError('An unexpected error occurred')
+    }
+  }
+
+  /* ─── Active Sessions ─── */
+
+  async function handleSignOutOtherSessions() {
+    setSessionsLoading(true)
+    setSessionsMsg(null)
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'others' })
+      if (error) {
+        setSessionsMsg('Failed to sign out other sessions.')
+        return
+      }
+      reportAdminAuthEvent('ADMIN_SESSION_REVOKED')
+      setSessionsMsg('All other sessions have been signed out.')
+      setTimeout(() => setSessionsMsg(null), 3000)
+    } catch {
+      setSessionsMsg('An unexpected error occurred.')
+    } finally {
+      setSessionsLoading(false)
+    }
+  }
+
+  /* ─── Organization ─── */
+
+  async function loadOrg() {
+    try {
+      const data = await trpc.admin.getOrganization.query()
+      const orgData = data as OrgData
+      setOrg(orgData)
+      setOrgDraft({ name: orgData.name, country: orgData.country, billingEmail: orgData.billingEmail, timezone: orgData.timezone })
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  const orgDirty =
+    org && orgDraft
+      ? org.name !== orgDraft.name ||
+        org.country !== orgDraft.country ||
+        org.billingEmail !== orgDraft.billingEmail ||
+        org.timezone !== orgDraft.timezone
+      : false
+
+  async function handleSaveOrg() {
+    if (!orgDraft || !org) return
+    setOrgSaving(true)
+    setOrgError(null)
+    setOrgSuccess(null)
+    try {
+      const changes: Record<string, string> = {}
+      if (orgDraft.name !== org.name) changes.name = orgDraft.name
+      if (orgDraft.country !== org.country) changes.country = orgDraft.country
+      if (orgDraft.billingEmail !== org.billingEmail) changes.billingEmail = orgDraft.billingEmail
+      if (orgDraft.timezone !== org.timezone) changes.timezone = orgDraft.timezone
+
+      await trpc.admin.updateOrganization.mutate(changes)
+      setOrg({ ...org, ...orgDraft })
+      setOrgSuccess('Organization updated.')
+      setTimeout(() => setOrgSuccess(null), 3000)
+    } catch {
+      setOrgError('Failed to update organization.')
+    } finally {
+      setOrgSaving(false)
     }
   }
 
@@ -124,80 +340,313 @@ export default function SettingsPage() {
 
   return (
     <>
-      <TopHeader title="Settings" description="Manage your account security settings." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
-        <section>
-          <div className="max-w-2xl rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Security Keys (FIDO2)</h2>
-            <p className="mt-2 text-text-secondary text-sm">
-              Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
-              Once enrolled, you will be prompted for your key on every sign-in.
-            </p>
+      <TopHeader title="Settings" description="Manage your account, organization, and notification preferences." />
 
-            {error && (
-              <div role="alert" className="mt-4 rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">
-                {error}
+      {/* Section Navigation (sticky top) */}
+      <div className="sticky top-0 z-10 bg-surface border-b border-border">
+        <div className="mx-auto max-w-7xl px-8">
+          <nav className="flex gap-2 py-3" aria-label="Settings sections">
+            {NAV_ITEMS.map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className="rounded-full px-4 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary transition-colors"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-8 py-6 space-y-8">
+
+        {/* ═══ Section 1: My Account ═══ */}
+        <section id="my-account" className="scroll-mt-24">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">My Account</h2>
+          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-0">
+
+            {/* a. Profile */}
+            <div className="space-y-4 py-4">
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Profile</h3>
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Full Name</span>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => { setProfileName(e.target.value); setProfileSuccess(null) }}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
+                <div>
+                  <span className="text-xs font-medium text-text-secondary">Email</span>
+                  <p className="mt-1 text-sm text-text-primary">{profile?.email ?? '...'}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-text-secondary">Role</span>
+                  <p className="mt-1 text-sm text-text-primary">{profile?.role ?? '...'}</p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-text-secondary">Created</span>
+                  <p className="mt-1 text-sm text-text-primary">
+                    {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '...'}
+                  </p>
+                </div>
               </div>
-            )}
+              {profileError && (
+                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{profileError}</div>
+              )}
+              {profileSuccess && (
+                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{profileSuccess}</div>
+              )}
+              <button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={profileSaving || profileName === (profile?.name ?? '')}
+                className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+              >
+                {profileSaving ? 'Saving...' : 'Save Profile'}
+              </button>
+            </div>
 
-            {success && (
-              <div role="status" className="mt-4 rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
-                {success}
+            <hr className="border-border" />
+
+            {/* b. Change Password */}
+            <div className="space-y-4 py-4">
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Change Password</h3>
+              <div className="space-y-3">
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Current Password</span>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">New Password (min 12 characters)</span>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Confirm New Password</span>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
               </div>
-            )}
+              {passwordError && (
+                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{passwordError}</div>
+              )}
+              {passwordSuccess && (
+                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{passwordSuccess}</div>
+              )}
+              <button
+                type="button"
+                onClick={handleChangePassword}
+                disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
+                className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+              >
+                {passwordSaving ? 'Changing...' : 'Change Password'}
+              </button>
+            </div>
 
-            {loading ? (
-              <p className="mt-4 text-sm text-text-secondary">Loading...</p>
-            ) : (
-              <>
-                {verifiedFactors.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {verifiedFactors.map((factor) => (
-                      <div
-                        key={factor.id}
-                        className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <KeyIcon className="h-5 w-5 text-text-secondary" />
-                          <div>
-                            <p className="text-sm font-medium text-text-primary">
-                              {factor.friendly_name || 'Security Key'}
-                            </p>
-                            {factor.created_at && (
-                              <p className="text-xs text-text-secondary">
-                                Added {new Date(factor.created_at).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleUnenroll(factor.id)}
-                          className="rounded-full text-sm text-danger hover:text-danger font-medium"
+            <hr className="border-border" />
+
+            {/* c. Security Keys (FIDO2) — preserved from original */}
+            <div className="space-y-4 py-4">
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Security Keys (FIDO2)</h3>
+              <p className="text-text-secondary text-sm">
+                Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
+                Once enrolled, you will be prompted for your key on every sign-in.
+              </p>
+
+              {fidoError && (
+                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">
+                  {fidoError}
+                </div>
+              )}
+
+              {fidoSuccess && (
+                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+                  {fidoSuccess}
+                </div>
+              )}
+
+              {fidoLoading ? (
+                <p className="text-sm text-text-secondary">Loading...</p>
+              ) : (
+                <>
+                  {verifiedFactors.length > 0 && (
+                    <div className="space-y-3">
+                      {verifiedFactors.map((factor) => (
+                        <div
+                          key={factor.id}
+                          className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
                         >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <div className="flex items-center gap-3">
+                            <KeyIcon className="h-5 w-5 text-text-secondary" />
+                            <div>
+                              <p className="text-sm font-medium text-text-primary">
+                                {factor.friendly_name || 'Security Key'}
+                              </p>
+                              {factor.created_at && (
+                                <p className="text-xs text-text-secondary">
+                                  Added {new Date(factor.created_at).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleUnenroll(factor.id)}
+                            className="rounded-full text-sm text-danger hover:text-danger font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                {verifiedFactors.length === 0 && (
-                  <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-subtle px-4 py-3 text-sm text-warning">
-                    No security key enrolled. We recommend adding one for stronger account protection.
-                  </div>
+                  {verifiedFactors.length === 0 && (
+                    <div className="rounded-2xl border border-warning/20 bg-warning-subtle px-4 py-3 text-sm text-warning">
+                      No security key enrolled. We recommend adding one for stronger account protection.
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                    className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                  >
+                    {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            <hr className="border-border" />
+
+            {/* d. Active Sessions */}
+            <div className="space-y-4 py-4">
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Active Sessions</h3>
+              <p className="text-text-secondary text-sm">
+                Sign out of all other browser sessions. Your current session will remain active.
+              </p>
+              {sessionsMsg && (
+                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+                  {sessionsMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSignOutOtherSessions}
+                disabled={sessionsLoading}
+                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+              >
+                {sessionsLoading ? 'Signing out...' : 'Sign Out All Other Sessions'}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ Section 2: Organization ═══ */}
+        <section id="organization" className="scroll-mt-24">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Organization</h2>
+          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-4">
+            {orgDraft ? (
+              <>
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Organization Name</span>
+                  <input
+                    type="text"
+                    value={orgDraft.name}
+                    onChange={(e) => setOrgDraft({ ...orgDraft, name: e.target.value })}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Country</span>
+                  <select
+                    value={orgDraft.country}
+                    onChange={(e) => setOrgDraft({ ...orgDraft, country: e.target.value })}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select a country</option>
+                    {MENA_COUNTRIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Billing Email</span>
+                  <input
+                    type="email"
+                    value={orgDraft.billingEmail}
+                    onChange={(e) => setOrgDraft({ ...orgDraft, billingEmail: e.target.value })}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs font-medium text-text-secondary">Timezone</span>
+                  <select
+                    value={orgDraft.timezone}
+                    onChange={(e) => setOrgDraft({ ...orgDraft, timezone: e.target.value })}
+                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select a timezone</option>
+                    {IANA_TIMEZONES.map((tz) => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <div>
+                  <span className="text-xs font-medium text-text-secondary">Org ID</span>
+                  <p className="mt-1 text-sm font-mono text-text-primary">{org?.id ?? '...'}</p>
+                </div>
+
+                {orgError && (
+                  <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{orgError}</div>
+                )}
+                {orgSuccess && (
+                  <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{orgSuccess}</div>
                 )}
 
                 <button
                   type="button"
-                  onClick={handleEnroll}
-                  disabled={enrolling}
-                  className="mt-4 rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                  onClick={handleSaveOrg}
+                  disabled={orgSaving || !orgDirty}
+                  className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
-                  {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
+                  {orgSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </>
+            ) : (
+              <p className="text-sm text-text-secondary">Loading organization...</p>
             )}
+          </div>
+        </section>
+
+        {/* ═══ Section 3: Notifications ═══ */}
+        <section id="notifications" className="scroll-mt-24">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Notifications</h2>
+          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+            <NotificationPreferences email={profile?.email} />
           </div>
         </section>
       </div>
