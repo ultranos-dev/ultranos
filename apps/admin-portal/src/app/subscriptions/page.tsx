@@ -189,6 +189,15 @@ export default function SubscriptionsPage() {
             onModuleRemoved={fetchData}
           />
         )}
+
+        <div className="mt-6 flex gap-6">
+          <a href="/subscriptions/billing" className="text-sm text-text-muted hover:text-black transition-colors">
+            Manage Billing →
+          </a>
+          <a href="/subscriptions/invoices" className="text-sm text-text-muted hover:text-black transition-colors">
+            View Invoices →
+          </a>
+        </div>
       </div>
     </>
   )
