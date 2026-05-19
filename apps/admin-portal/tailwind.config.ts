@@ -8,6 +8,13 @@ const config: Config = {
         sans: ["'Inter'", 'system-ui', '-apple-system', "'Segoe UI'", 'Roboto', 'sans-serif'],
       },
       colors: {
+        brand: {
+          lime: '#D4FF00',
+        },
+        surface: '#F3F4F6',
+        border: '#E5E7EB',
+        'text-muted': '#6B7280',
+        'success-green': '#A3E635',
         primary: {
           50: 'var(--color-primary-50)',
           100: 'var(--color-primary-100)',
@@ -21,6 +28,9 @@ const config: Config = {
           900: 'var(--color-primary-900)',
         },
         danger: 'var(--color-danger)',
+      },
+      borderRadius: {
+        '4xl': '2rem',
       },
     },
   },
