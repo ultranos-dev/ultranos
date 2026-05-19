@@ -5,6 +5,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
+import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
+import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
 
 /* ─── Types ─── */
 
@@ -52,6 +54,8 @@ const NAV_ITEMS = [
   { id: 'my-account', label: 'My Account' },
   { id: 'organization', label: 'Organization' },
   { id: 'notifications', label: 'Notifications' },
+  { id: 'thresholds', label: 'Thresholds' },
+  { id: 'modules', label: 'Modules' },
 ] as const
 
 /* ─── Page Component ─── */
@@ -85,6 +89,9 @@ export default function SettingsPage() {
   const [sessionsLoading, setSessionsLoading] = useState(false)
   const [sessionsMsg, setSessionsMsg] = useState<string | null>(null)
 
+  /* Subscribed modules state */
+  const [subscribedModules, setSubscribedModules] = useState<{ moduleCode: string; moduleName: string }[]>([])
+
   /* Organization state */
   const [org, setOrg] = useState<OrgData | null>(null)
   const [orgDraft, setOrgDraft] = useState<Omit<OrgData, 'id'> | null>(null)
@@ -98,7 +105,17 @@ export default function SettingsPage() {
     loadProfile()
     loadFactors()
     loadOrg()
+    loadSubscribedModules()
   }, [])
+
+  async function loadSubscribedModules() {
+    try {
+      const data = await trpc.subscription.getOrgSubscriptions.query()
+      setSubscribedModules(data as { moduleCode: string; moduleName: string }[])
+    } catch {
+      // Non-blocking
+    }
+  }
 
   /* ─── Profile ─── */
 
@@ -647,6 +664,30 @@ export default function SettingsPage() {
           <h2 className="text-lg font-semibold text-text-primary mb-4">Notifications</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
             <NotificationPreferences email={profile?.email} />
+          </div>
+        </section>
+
+        {/* ═══ Section 4: Thresholds ═══ */}
+        <section id="thresholds" className="scroll-mt-24">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Thresholds</h2>
+          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+            <ThresholdSettings />
+          </div>
+        </section>
+
+        {/* ═══ Section 5: Modules ═══ */}
+        <section id="modules" className="scroll-mt-24 mb-12">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Modules</h2>
+          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+            {subscribedModules.length === 0 ? (
+              <p className="text-sm text-text-secondary">No modules configured. Subscribe to a module to see its settings.</p>
+            ) : (
+              <div className="space-y-4">
+                {subscribedModules.map((mod) => (
+                  <ModuleSettingsCard key={mod.moduleCode} moduleCode={mod.moduleCode} moduleName={mod.moduleName} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>
