@@ -37,42 +37,34 @@ vi.mock('@/components/SessionTimer', () => ({
 
 const { Sidebar } = await import('../components/Sidebar')
 
-describe('Sidebar', () => {
-  it('renders all 5 navigation sections', () => {
+describe('Sidebar — updated nav items and footer', () => {
+  it('renders "Users" nav item', () => {
     render(<Sidebar collapsed={false} onToggle={() => {}} />)
-
-    expect(screen.getByText('Dashboard')).toBeTruthy()
-    expect(screen.getByText('Providers')).toBeTruthy()
-    expect(screen.getByText('Labs')).toBeTruthy()
-    expect(screen.getByText('Alerts')).toBeTruthy()
-    expect(screen.getByText('Audit Log')).toBeTruthy()
+    expect(screen.getByText('Users')).toBeTruthy()
   })
 
-  it('renders the Ultranos Admin heading', () => {
+  it('renders "Subscriptions" nav item', () => {
     render(<Sidebar collapsed={false} onToggle={() => {}} />)
-    expect(screen.getByText(/ltranos Admin/)).toBeTruthy()
+    expect(screen.getByText('Subscriptions')).toBeTruthy()
   })
 
-  it('highlights the active section', () => {
+  it('renders "Sign Out" button', () => {
     render(<Sidebar collapsed={false} onToggle={() => {}} />)
-    const dashboardLink = screen.getByText('Dashboard').closest('a')
-    expect(dashboardLink?.getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeTruthy()
   })
 
-  it('renders navigation links with correct hrefs', () => {
+  it('displays admin email in footer', () => {
     render(<Sidebar collapsed={false} onToggle={() => {}} />)
+    expect(screen.getByText('admin@ultranos.com')).toBeTruthy()
+  })
 
-    const links = [
-      { text: 'Dashboard', href: '/dashboard' },
-      { text: 'Providers', href: '/providers' },
-      { text: 'Labs', href: '/labs' },
-      { text: 'Alerts', href: '/alerts' },
-      { text: 'Audit Log', href: '/audit' },
-    ]
+  it('renders "Create User" nav item', () => {
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
+    expect(screen.getByText('Create User')).toBeTruthy()
+  })
 
-    for (const link of links) {
-      const el = screen.getByText(link.text).closest('a')
-      expect(el?.getAttribute('href')).toBe(link.href)
-    }
+  it('renders session timer in footer', () => {
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
+    expect(screen.getByTestId('session-timer')).toBeTruthy()
   })
 })
