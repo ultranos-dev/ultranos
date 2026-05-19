@@ -61,25 +61,25 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+        className="rounded-3xl bg-white p-6 shadow-xl w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-neutral-200">
-          <h2 className="text-lg font-semibold text-neutral-900">Renew License</h2>
-          <p className="text-sm text-neutral-500 mt-1">
+        <div className="pb-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-black">Renew License</h2>
+          <p className="text-sm text-text-muted mt-1">
             {provider.name} — {provider.licenseNumber}
           </p>
         </div>
 
-        <div className="px-6 py-4 space-y-4">
+        <div className="pt-4 space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-700 px-3 py-2 rounded text-sm">
+            <div className="rounded-2xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
           {showConfirmation ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <p className="text-sm text-amber-800 font-medium mb-2">
                 Confirm License Renewal
               </p>
@@ -91,14 +91,14 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                 <button
                   onClick={handleConfirm}
                   disabled={submitting}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
                 >
                   {submitting ? 'Renewing...' : 'Confirm Renewal'}
                 </button>
                 <button
                   onClick={() => setShowConfirmation(false)}
                   disabled={submitting}
-                  className="px-4 py-2 bg-white text-neutral-700 text-sm rounded-md border border-neutral-300 hover:bg-neutral-50 disabled:opacity-50"
+                  className="rounded-full border border-black px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-50 hover:scale-[1.02] transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -107,7 +107,7 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
           ) : (
             <>
               <div>
-                <p className="text-sm text-neutral-600 mb-2">
+                <p className="text-sm text-text-muted mb-2">
                   Current status: <strong>{provider.kycStatus}</strong>
                   {provider.daysRemaining !== null && (
                     <> — {provider.daysRemaining <= 0 ? 'Expired' : `${provider.daysRemaining} days remaining`}</>
@@ -116,7 +116,7 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
               </div>
 
               <div>
-                <label htmlFor="expiry-date" className="block text-sm font-medium text-neutral-700 mb-1">
+                <label htmlFor="expiry-date" className="block text-sm font-medium text-text-muted mb-1">
                   New Expiry Date
                 </label>
                 <input
@@ -125,12 +125,12 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                   value={newExpiryDate}
                   onChange={(e) => setNewExpiryDate(e.target.value)}
                   min={new Date().toLocaleDateString('sv')}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
                 />
               </div>
 
               <div>
-                <label htmlFor="document-url" className="block text-sm font-medium text-neutral-700 mb-1">
+                <label htmlFor="document-url" className="block text-sm font-medium text-text-muted mb-1">
                   Renewal Document URL
                 </label>
                 <input
@@ -139,7 +139,7 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                   value={documentUrl}
                   onChange={(e) => setDocumentUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
                 />
               </div>
             </>
@@ -147,17 +147,17 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
         </div>
 
         {!showConfirmation && (
-          <div className="px-6 py-4 border-t border-neutral-200 flex justify-end gap-2">
+          <div className="pt-4 border-t border-border mt-4 flex justify-end gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-white text-neutral-700 text-sm rounded-md border border-neutral-300 hover:bg-neutral-50"
+              className="rounded-full border border-black px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-50 hover:scale-[1.02] transition-all"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmitClick}
               disabled={!canSubmit}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Renew License
             </button>
