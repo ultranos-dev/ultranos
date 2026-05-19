@@ -144,45 +144,45 @@ export default function AuditChainPage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-2xl font-bold tracking-tight">Audit Log Integrity</h1>
-      <p className="mt-1 text-neutral-500">Monitor audit log hash chain integrity and verification history.</p>
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Audit Log Integrity</h1>
+      <p className="mt-4 text-text-muted">Monitor audit log hash chain integrity and verification history.</p>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-neutral-500">Loading audit chain status...</div>
+        <div className="mt-6 text-text-muted">Loading audit chain status...</div>
       ) : (
         <>
           {/* Status cards (AC #8) */}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <p className="text-sm font-medium text-neutral-500">Chain Status</p>
+            <div className="rounded-3xl bg-white p-4 border border-border">
+              <p className="text-sm font-medium text-text-muted">Chain Status</p>
               <div className="mt-2">
                 <ChainStatusBadge valid={status?.chainHealthy ?? null} />
               </div>
             </div>
 
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <p className="text-sm font-medium text-neutral-500">Last Verified</p>
+            <div className="rounded-3xl bg-white p-4 border border-border">
+              <p className="text-sm font-medium text-text-muted">Last Verified</p>
               <p className="mt-1 text-lg font-semibold">
                 {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
               </p>
               {status?.lastVerifiedAt && (
-                <p className="text-xs text-neutral-400">{formatDate(status.lastVerifiedAt)}</p>
+                <p className="text-xs text-text-muted">{formatDate(status.lastVerifiedAt)}</p>
               )}
             </div>
 
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <p className="text-sm font-medium text-neutral-500">Entries Verified</p>
+            <div className="rounded-3xl bg-white p-4 border border-border">
+              <p className="text-sm font-medium text-text-muted">Entries Verified</p>
               <p className="mt-1 text-lg font-semibold">
                 {status?.lastCheckedCount?.toLocaleString() ?? '0'}
               </p>
             </div>
 
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <p className="text-sm font-medium text-neutral-500">Consecutive Successes</p>
+            <div className="rounded-3xl bg-white p-4 border border-border">
+              <p className="text-sm font-medium text-text-muted">Consecutive Successes</p>
               <p className="mt-1 text-lg font-semibold">
                 {status?.consecutiveSuccesses ?? 0}
               </p>
@@ -192,7 +192,7 @@ export default function AuditChainPage() {
           {/* 30-day health trend (AC #8) */}
           {trendDays.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-sm font-medium text-neutral-600">30-Day Health Trend</h2>
+              <h2 className="text-sm font-medium text-text-muted">30-Day Health Trend</h2>
               <div className="mt-2 flex items-end gap-0.5">
                 {trendDays.map((day) => (
                   <div
@@ -207,7 +207,7 @@ export default function AuditChainPage() {
                   />
                 ))}
               </div>
-              <div className="mt-1 flex gap-4 text-xs text-neutral-500">
+              <div className="mt-1 flex gap-4 text-xs text-text-muted">
                 <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-emerald-500" /> Pass</span>
                 <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-red-500" /> Fail</span>
                 <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Error</span>
@@ -221,45 +221,45 @@ export default function AuditChainPage() {
             <button
               onClick={handleFullVerification}
               disabled={fullVerifyLoading}
-              className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 transition-colors"
+              className="rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 hover:scale-[1.02] disabled:opacity-50 transition-all"
             >
               {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
             </button>
             {fullVerifyResult && (
-              <p className="text-sm text-neutral-600">{fullVerifyResult}</p>
+              <p className="text-sm text-text-muted">{fullVerifyResult}</p>
             )}
           </div>
 
           {/* Verification history table (AC #6) */}
-          <div className="mt-6 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-6 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Date</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Result</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Entries Checked</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Duration</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Type</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Triggered By</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Broken Event ID</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Result</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Entries Checked</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Duration</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Triggered By</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Broken Event ID</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {verifications.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-neutral-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-text-muted">
                       No verification history found in the last 30 days.
                     </td>
                   </tr>
                 ) : (
                   verifications.map((v) => (
-                    <tr key={v.id} className="hover:bg-neutral-50 transition-colors">
+                    <tr key={v.id} className="hover:bg-brand-lime/5 transition-colors">
                       <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
                       <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
-                      <td className="px-4 py-3 text-neutral-600">{v.checkedCount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-neutral-600">{v.jobDurationMs}ms</td>
-                      <td className="px-4 py-3 text-neutral-600">{v.isFullVerification ? 'Full' : 'Daily'}</td>
-                      <td className="px-4 py-3 text-neutral-600">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
+                      <td className="px-4 py-3 text-text-muted">{v.checkedCount.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-text-muted">{v.jobDurationMs}ms</td>
+                      <td className="px-4 py-3 text-text-muted">{v.isFullVerification ? 'Full' : 'Daily'}</td>
+                      <td className="px-4 py-3 text-text-muted">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
                       <td className="px-4 py-3 text-neutral-400 font-mono text-xs">
                         {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
                       </td>
@@ -272,7 +272,7 @@ export default function AuditChainPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-neutral-600">
+            <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
               <span>
                 Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
               </span>
@@ -280,7 +280,7 @@ export default function AuditChainPage() {
                 <button
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
                 >
                   Previous
                 </button>
@@ -288,7 +288,7 @@ export default function AuditChainPage() {
                 <button
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
                 >
                   Next
                 </button>

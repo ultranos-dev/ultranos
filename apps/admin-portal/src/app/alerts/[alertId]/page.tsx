@@ -116,12 +116,12 @@ function ReviewDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">{c.title}</h2>
         <p className="mt-3 text-sm text-neutral-700">{c.description}</p>
 
         {action === 'SUSPEND_PROVIDER' && (
-          <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+          <div className="mt-3 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-800">
             Warning: This will immediately terminate the provider&apos;s active sessions and block clinical access.
           </div>
         )}
@@ -136,7 +136,7 @@ function ReviewDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="Enter a reason for this action (required)..."
           />
         </div>
@@ -144,14 +144,14 @@ function ReviewDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="rounded-full border border-neutral-300 px-6 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting || !reason.trim()}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors ${c.buttonColor}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -213,14 +213,14 @@ export default function AlertDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-neutral-500">Loading alert details...</div>
+    return <div className="text-text-muted">Loading alert details...</div>
   }
 
   if (error && !alert) {
     return (
       <div>
-        <button onClick={() => router.push('/alerts')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to Alerts</button>
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <button onClick={() => router.push('/alerts')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to Alerts</button>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       </div>
     )
   }
@@ -232,13 +232,13 @@ export default function AlertDetailPage() {
 
   return (
     <div className="max-w-4xl">
-      <button onClick={() => router.push('/alerts')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to Alerts</button>
+      <button onClick={() => router.push('/alerts')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to Alerts</button>
 
       {/* Header */}
       <div className="mt-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{alert.practitionerName}</h1>
-          <p className="mt-1 text-neutral-500">
+          <h1 className="text-4xl font-bold tracking-tight wavy-divider">{alert.practitionerName}</h1>
+          <p className="mt-4 text-text-muted">
             {ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType} — Detected {formatDate(alert.createdAt)}
           </p>
         </div>
@@ -250,12 +250,12 @@ export default function AlertDetailPage() {
 
       {/* Success toast */}
       {successMessage && (
-        <div className="mt-4 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
+        <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {/* Action buttons — AC #5 */}
@@ -263,19 +263,19 @@ export default function AlertDetailPage() {
         <div className="mt-6 flex gap-3">
           <button
             onClick={() => setPendingAction('DISMISS')}
-            className="rounded-md bg-neutral-600 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-neutral-600 text-white hover:bg-neutral-700 hover:scale-[1.02] transition-all"
           >
             Dismiss
           </button>
           <button
             onClick={() => setPendingAction('ESCALATE')}
-            className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.02] transition-all"
           >
             Escalate
           </button>
           <button
             onClick={() => setPendingAction('SUSPEND_PROVIDER')}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02] transition-all"
           >
             Suspend Provider
           </button>
@@ -285,34 +285,34 @@ export default function AlertDetailPage() {
       {/* Detail grid — AC #9 */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Prescribing Summary */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Prescribing Summary</h2>
+        <div className="rounded-3xl border border-border bg-white p-5">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Prescribing Summary</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Total Prescriptions</dt>
+              <dt className="text-text-muted">Total Prescriptions</dt>
               <dd className="font-medium">{alert.prescribingSummary.totalPrescriptions}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Controlled Substances</dt>
+              <dt className="text-text-muted">Controlled Substances</dt>
               <dd className="font-medium">{alert.prescribingSummary.controlledSubstanceCount}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Unique Patients</dt>
+              <dt className="text-text-muted">Unique Patients</dt>
               <dd className="font-medium">{alert.prescribingSummary.patientCount}</dd>
             </div>
           </dl>
         </div>
 
         {/* Flagged Pattern Details */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Flagged Pattern</h2>
+        <div className="rounded-3xl border border-border bg-white p-5">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Flagged Pattern</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Anomaly Type</dt>
+              <dt className="text-text-muted">Anomaly Type</dt>
               <dd className="font-medium">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Threshold</dt>
+              <dt className="text-text-muted">Threshold</dt>
               <dd className="font-medium">
                 {alert.anomalyType === 'CONTROLLED_SUBSTANCE_VOLUME'
                   ? `>${alert.threshold} Rx/day`
@@ -320,7 +320,7 @@ export default function AlertDetailPage() {
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Actual Value</dt>
+              <dt className="text-text-muted">Actual Value</dt>
               <dd className="font-medium text-red-700">
                 {alert.anomalyType === 'CONTROLLED_SUBSTANCE_VOLUME'
                   ? `${alert.actualValue} Rx/day`
@@ -328,7 +328,7 @@ export default function AlertDetailPage() {
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Date Range</dt>
+              <dt className="text-text-muted">Date Range</dt>
               <dd className="font-medium">{formatDate(alert.dateRangeStart)} – {formatDate(alert.dateRangeEnd)}</dd>
             </div>
           </dl>
@@ -337,15 +337,15 @@ export default function AlertDetailPage() {
 
       {/* Timeline visualization — AC #9: dates and counts, no patient identifiers */}
       {alert.timeline.length > 0 && (
-        <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Prescription Timeline</h2>
+        <div className="mt-6 rounded-3xl border border-border bg-white p-5">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Prescription Timeline</h2>
           <div className="mt-4 space-y-2">
             {alert.timeline.map((entry) => (
               <div key={entry.date} className="flex items-center gap-3">
-                <span className="w-28 text-xs text-neutral-500 shrink-0">{formatDate(entry.date)}</span>
+                <span className="w-28 text-xs text-text-muted shrink-0">{formatDate(entry.date)}</span>
                 <div className="flex-1 h-5 bg-neutral-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${entry.count > alert.threshold ? 'bg-red-400' : 'bg-blue-400'}`}
+                    className={`h-full rounded-full ${entry.count > alert.threshold ? 'bg-red-400' : 'bg-emerald-400'}`}
                     style={{ width: `${Math.max(4, (entry.count / maxTimelineCount) * 100)}%` }}
                   />
                 </div>
@@ -358,22 +358,22 @@ export default function AlertDetailPage() {
 
       {/* Review history (if already reviewed) */}
       {alert.reviewAction && (
-        <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Review History</h2>
+        <div className="mt-6 rounded-3xl border border-border bg-white p-5">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Review History</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Action Taken</dt>
+              <dt className="text-text-muted">Action Taken</dt>
               <dd className="font-medium">{alert.reviewAction}</dd>
             </div>
             {alert.reviewedAt && (
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Reviewed At</dt>
+                <dt className="text-text-muted">Reviewed At</dt>
                 <dd className="font-medium">{formatDateTime(alert.reviewedAt)}</dd>
               </div>
             )}
             {alert.reviewReason && (
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Reason</dt>
+                <dt className="text-text-muted">Reason</dt>
                 <dd className="font-medium">{alert.reviewReason}</dd>
               </div>
             )}

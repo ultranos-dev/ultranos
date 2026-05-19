@@ -110,13 +110,13 @@ function MetricCard({ label, value, status, detail }: {
   }
 
   return (
-    <div className={`rounded-lg border p-4 ${statusColor[status]}`}>
+    <div className={`rounded-3xl border p-4 ${statusColor[status]}`}>
       <div className="flex items-center gap-2">
         <div className={`h-2.5 w-2.5 rounded-full ${dotColor[status]}`} />
         <span className="text-sm font-medium text-neutral-700">{label}</span>
       </div>
       <p className="mt-2 text-2xl font-bold text-neutral-900">{value}</p>
-      {detail && <p className="mt-1 text-xs text-neutral-500">{detail}</p>}
+      {detail && <p className="mt-1 text-xs text-text-muted">{detail}</p>}
     </div>
   )
 }
@@ -161,8 +161,8 @@ function ClinicalSafetySection() {
     }
   }
 
-  if (loading) return <div className="mt-6 text-neutral-500">Loading clinical safety metrics...</div>
-  if (error) return <div className="mt-6 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+  if (loading) return <div className="mt-6 text-text-muted">Loading clinical safety metrics...</div>
+  if (error) return <div className="mt-6 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
   if (!metrics) return null
 
   return (
@@ -195,27 +195,27 @@ function ClinicalSafetySection() {
       <div>
         <h3 className="text-lg font-semibold text-neutral-900">Monthly Reports</h3>
         {reports.length === 0 ? (
-          <p className="mt-2 text-sm text-neutral-500">No monthly reports generated yet.</p>
+          <p className="mt-2 text-sm text-text-muted">No monthly reports generated yet.</p>
         ) : (
-          <div className="mt-2 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-2 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Period</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Generated</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Period</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Generated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {reports.map((r) => (
                   <tr
                     key={r.id}
                     onClick={() => viewReport(r.month, r.year)}
-                    className="cursor-pointer hover:bg-neutral-50 transition-colors"
+                    className="cursor-pointer hover:bg-brand-lime/5 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">
                       {new Date(r.year, r.month - 1).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">{formatDate(r.generatedAt)}</td>
+                    <td className="px-4 py-3 text-text-muted">{formatDate(r.generatedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -224,14 +224,14 @@ function ClinicalSafetySection() {
         )}
 
         {/* Report detail panel */}
-        {reportLoading && <p className="mt-3 text-sm text-neutral-500">Loading report...</p>}
+        {reportLoading && <p className="mt-3 text-sm text-text-muted">Loading report...</p>}
         {selectedReport && !reportLoading && (
-          <div className="mt-4 rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="mt-4 rounded-3xl border border-border bg-white p-4">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-neutral-900">Report Detail</h4>
               <button
                 onClick={() => setSelectedReport(null)}
-                className="text-sm text-neutral-500 hover:text-neutral-700"
+                className="text-sm text-text-muted hover:text-black transition-colors"
               >
                 Close
               </button>
@@ -290,17 +290,17 @@ export default function AlertsPage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-2xl font-bold tracking-tight">Alerts & Safety</h1>
-      <p className="mt-1 text-neutral-500">Review prescribing anomalies and clinical safety metrics.</p>
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Alerts & Safety</h1>
+      <p className="mt-4 text-text-muted">Review prescribing anomalies and clinical safety metrics.</p>
 
       {/* Section tabs — Story 23.2 AC #10 */}
-      <div className="mt-6 flex gap-1 border-b border-neutral-200">
+      <div className="mt-6 flex gap-1 border-b border-border">
         <button
           onClick={() => setActiveTab('anomalies')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'anomalies'
-              ? 'border-neutral-900 text-neutral-900'
-              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+              ? 'border-brand-lime text-black'
+              : 'border-transparent text-text-muted hover:text-black'
           }`}
         >
           Prescribing Anomalies
@@ -309,8 +309,8 @@ export default function AlertsPage() {
           onClick={() => setActiveTab('clinical-safety')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'clinical-safety'
-              ? 'border-neutral-900 text-neutral-900'
-              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+              ? 'border-brand-lime text-black'
+              : 'border-transparent text-text-muted hover:text-black'
           }`}
         >
           Clinical Safety
@@ -322,15 +322,15 @@ export default function AlertsPage() {
       ) : (
       <>
       {/* Filter tabs — AC #11 */}
-      <div className="mt-6 flex gap-1 rounded-lg bg-neutral-100 p-1 w-fit">
+      <div className="mt-6 flex gap-1 rounded-full bg-black p-1 w-fit">
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => handleFilterChange(s)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === s
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-brand-lime text-black'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
             {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -339,41 +339,41 @@ export default function AlertsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-neutral-500">Loading anomaly alerts...</div>
+        <div className="mt-6 text-text-muted">Loading anomaly alerts...</div>
       ) : alerts.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-          <p className="text-neutral-500">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
+        <div className="mt-6 rounded-3xl border-2 border-dashed border-border bg-neutral-50 p-8 text-center">
+          <p className="text-text-muted">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
         </div>
       ) : (
         <>
           {/* Alert queue table — AC #1, #2 */}
-          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-4 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Provider Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Anomaly Type</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Threshold Breached</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Date Range</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Severity</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Provider Name</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Anomaly Type</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Threshold Breached</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Date Range</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Severity</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {alerts.map((alert) => (
                   <tr
                     key={alert.id}
                     onClick={() => router.push(`/alerts/${alert.id}`)}
-                    className="cursor-pointer hover:bg-neutral-50 transition-colors"
+                    className="cursor-pointer hover:bg-brand-lime/5 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">{alert.practitionerName}</td>
-                    <td className="px-4 py-3 text-neutral-600">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</td>
-                    <td className="px-4 py-3 text-neutral-600">{formatThreshold(alert.anomalyType, alert.threshold, alert.actualValue)}</td>
-                    <td className="px-4 py-3 text-neutral-600">{formatDateRange(alert.dateRangeStart, alert.dateRangeEnd)}</td>
+                    <td className="px-4 py-3 text-text-muted">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</td>
+                    <td className="px-4 py-3 text-text-muted">{formatThreshold(alert.anomalyType, alert.threshold, alert.actualValue)}</td>
+                    <td className="px-4 py-3 text-text-muted">{formatDateRange(alert.dateRangeStart, alert.dateRangeEnd)}</td>
                     <td className="px-4 py-3"><SeverityBadge severity={alert.severity} /></td>
                     <td className="px-4 py-3"><StatusBadge status={alert.status} /></td>
                   </tr>
@@ -384,7 +384,7 @@ export default function AlertsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-neutral-600">
+            <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
               <span>
                 Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
               </span>
@@ -392,7 +392,7 @@ export default function AlertsPage() {
                 <button
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
                 >
                   Previous
                 </button>
@@ -400,7 +400,7 @@ export default function AlertsPage() {
                 <button
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
                 >
                   Next
                 </button>
