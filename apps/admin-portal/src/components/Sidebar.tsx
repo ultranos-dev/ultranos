@@ -14,37 +14,72 @@ const navItems = [
   { label: 'Settings', href: '/settings', icon: GearIcon },
 ] as const
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean
+  onToggle: () => void
+}
+
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="w-60 bg-black text-neutral-400 flex flex-col shrink-0 min-h-screen">
+    <aside
+      className={`${collapsed ? 'w-16' : 'w-60'} bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 ease-out`}
+    >
+      {/* Logo */}
       <div className="p-4 border-b border-white/10">
-        <h1 className="text-lg font-bold tracking-tight text-white">
-          <span className="text-brand-lime">U</span>ltranos Admin
-        </h1>
+        {collapsed ? (
+          <span className="flex items-center justify-center text-lg font-bold text-accent">U</span>
+        ) : (
+          <h1 className="text-lg font-bold tracking-tight text-text-on-dark">
+            <span className="text-accent">U</span>ltranos Admin
+          </h1>
+        )}
       </div>
+
+      {/* Navigation */}
       <nav className="flex-1 py-4" aria-label="Admin navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`)
           const indent = 'indent' in item && item.indent
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 ${indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
-                isActive
-                  ? 'bg-brand-lime/10 text-brand-lime font-medium border-s-2 border-brand-lime'
-                  : 'text-neutral-400 hover:bg-white/5 hover:text-white'
-              }`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
+            <div key={item.href} className="relative group">
+              <Link
+                href={item.href}
+                className={`flex items-center gap-3 ${collapsed ? 'justify-center px-2' : indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
+                  isActive
+                    ? 'bg-accent-subtle text-accent font-medium border-s-2 border-accent'
+                    : 'text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark'
+                }`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {!collapsed && item.label}
+              </Link>
+              {/* Tooltip when collapsed */}
+              {collapsed && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-lg bg-surface-raised text-text-primary text-xs font-medium shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
+                  {item.label}
+                </div>
+              )}
+            </div>
           )
         })}
       </nav>
+
+      {/* Collapse toggle */}
+      <div className="p-4 border-t border-white/10">
+        <button
+          onClick={onToggle}
+          className="flex items-center justify-center w-full py-2 rounded-xl text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark transition-colors"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg className={`h-4 w-4 transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
     </aside>
   )
 }
