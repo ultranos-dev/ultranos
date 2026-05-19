@@ -40,7 +40,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`${collapsed ? 'w-16' : 'w-60'} bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 ease-out`}
+      className={`${collapsed ? 'w-16' : 'w-60'} relative bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 ease-out`}
     >
       {/* Logo */}
       <div className="p-4 border-b border-white/10">
@@ -68,7 +68,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 className={`flex items-center gap-3 ${collapsed ? 'justify-center px-2' : indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
                   isActive
                     ? 'bg-white/[0.12] text-accent font-medium'
-                    : 'text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark'
+                    : 'text-white/80 hover:bg-white/[0.08] hover:text-white'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
@@ -90,13 +90,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="border-t border-white/10 p-4 space-y-3">
         {!collapsed && session && (
           <div className="space-y-1">
-            <p className="text-xs text-text-on-dark/60 truncate">{session.email}</p>
+            <p className="text-xs text-white/60 truncate">{session.email}</p>
             <SessionTimer />
           </div>
         )}
         <button
           onClick={handleSignOut}
-          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2'} w-full py-2 rounded-xl text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark transition-colors text-sm`}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2'} w-full py-2 rounded-xl text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors text-sm`}
           aria-label="Sign Out"
         >
           <SignOutIcon className="h-4 w-4 shrink-0" />
@@ -104,18 +104,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
       </div>
 
-      {/* Collapse toggle */}
-      <div className="p-4 border-t border-white/10">
-        <button
-          onClick={onToggle}
-          className="flex items-center justify-center w-full py-2 rounded-xl text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark transition-colors"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <svg className={`h-4 w-4 transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
+      {/* Collapse toggle — floating on sidebar edge */}
+      <button
+        onClick={onToggle}
+        className="absolute top-1/2 -translate-y-1/2 -right-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface-raised text-text-secondary shadow-card hover:bg-accent-subtle hover:text-text-primary transition-colors duration-200"
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <svg className={`h-3 w-3 transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+        </svg>
+      </button>
     </aside>
   )
 }
