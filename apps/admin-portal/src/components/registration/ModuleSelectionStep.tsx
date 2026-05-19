@@ -83,7 +83,7 @@ export function ModuleSelectionStep({
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleModule(mod.code)}
-                className="mt-0.5 h-4 w-4 rounded border-border accent-[#D4FF00]"
+                className="mt-0.5 h-4 w-4 rounded border-border accent-accent"
               />
               <div>
                 <span className="text-sm font-medium text-text-primary">{mod.name}</span>
