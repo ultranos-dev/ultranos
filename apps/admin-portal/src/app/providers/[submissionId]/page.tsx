@@ -133,12 +133,12 @@ function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">{c.title}</h2>
         <p className="mt-3 text-sm text-neutral-700">{c.description}</p>
 
         <div className="mt-4">
-          <label htmlFor="reason" className="block text-sm font-medium text-neutral-700">
+          <label htmlFor="reason" className="block text-sm font-medium text-text-muted">
             {c.reasonLabel}
           </label>
           <textarea
@@ -147,7 +147,7 @@ function ConfirmationDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder={c.reasonRequired ? 'Enter the reason for rejection...' : 'Enter a message...'}
           />
         </div>
@@ -155,14 +155,14 @@ function ConfirmationDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="rounded-full border border-black px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-50 hover:scale-[1.02] transition-all"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting || !canSubmit}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors ${c.buttonColor}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -233,8 +233,8 @@ export default function KycSubmissionDetailPage() {
   if (error && !detail) {
     return (
       <div>
-        <button onClick={() => router.push('/providers')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to KYC Queue</button>
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <button onClick={() => router.push('/providers')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to KYC Queue</button>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       </div>
     )
   }
@@ -245,13 +245,13 @@ export default function KycSubmissionDetailPage() {
 
   return (
     <div className="max-w-6xl">
-      <button onClick={() => router.push('/providers')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to KYC Queue</button>
+      <button onClick={() => router.push('/providers')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to KYC Queue</button>
 
       {/* Header */}
       <div className="mt-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{detail.providerName}</h1>
-          <p className="mt-1 text-neutral-500">
+          <h1 className="text-4xl font-bold tracking-tight">{detail.providerName}</h1>
+          <p className="mt-1 text-text-muted">
             Submitted {formatDateTime(detail.submission.submittedAt)}
             {detail.slaBreached && (
               <span className="ms-2 inline-block rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">SLA Breached</span>
@@ -263,12 +263,12 @@ export default function KycSubmissionDetailPage() {
 
       {/* Success toast */}
       {successMessage && (
-        <div className="mt-4 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
+        <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {/* Action buttons — AC #4 */}
@@ -276,19 +276,19 @@ export default function KycSubmissionDetailPage() {
         <div className="mt-6 flex gap-3">
           <button
             onClick={() => setPendingAction('APPROVE')}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+            className="rounded-full bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-all"
           >
             Approve
           </button>
           <button
             onClick={() => setPendingAction('REJECT')}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+            className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-all"
           >
             Reject
           </button>
           <button
             onClick={() => setPendingAction('REQUEST_MORE_INFO')}
-            className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 transition-colors"
+            className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 hover:scale-[1.02] transition-all"
           >
             Request More Info
           </button>
@@ -298,8 +298,8 @@ export default function KycSubmissionDetailPage() {
       {/* Side-by-side: Document viewer + OCR fields — AC #3 */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left panel: Document viewer */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Submitted Documents</h2>
+        <div className="rounded-3xl bg-white p-5 border border-border">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Submitted Documents</h2>
           {detail.documentUrls.length === 0 ? (
             <p className="mt-3 text-sm text-neutral-500">No documents available.</p>
           ) : (
@@ -331,8 +331,8 @@ export default function KycSubmissionDetailPage() {
         </div>
 
         {/* Right panel: OCR-extracted fields — AC #3 */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">OCR-Extracted Fields</h2>
+        <div className="rounded-3xl bg-white p-5 border border-border">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">OCR-Extracted Fields</h2>
           {detail.ocrFields.length === 0 ? (
             <p className="mt-3 text-sm text-neutral-500">No OCR data available.</p>
           ) : (
@@ -345,7 +345,7 @@ export default function KycSubmissionDetailPage() {
                   ) : (
                     <dl className="space-y-2">
                       {section.fields.map((field, i) => (
-                        <div key={i} className="flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2">
+                        <div key={i} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
                           <div>
                             <dt className="text-xs text-neutral-500">{field.name}</dt>
                             <dd className="text-sm font-medium">{field.value}</dd>
@@ -363,44 +363,44 @@ export default function KycSubmissionDetailPage() {
       </div>
 
       {/* Submission metadata */}
-      <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Submission Details</h2>
+      <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Submission Details</h2>
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt className="text-neutral-500">Registry Number</dt>
+            <dt className="text-text-muted">Registry Number</dt>
             <dd className="font-medium">{detail.submission.registryNumber}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-neutral-500">Submission Status</dt>
+            <dt className="text-text-muted">Submission Status</dt>
             <dd className="font-medium">{detail.submission.status}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-neutral-500">SLA Deadline</dt>
+            <dt className="text-text-muted">SLA Deadline</dt>
             <dd className={`font-medium ${detail.slaBreached ? 'text-red-600' : ''}`}>
               {formatDateTime(detail.slaDeadline)}
             </dd>
           </div>
           {detail.submission.reviewedBy && (
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Reviewed By</dt>
+              <dt className="text-text-muted">Reviewed By</dt>
               <dd className="font-medium">{detail.submission.reviewedBy}</dd>
             </div>
           )}
           {detail.submission.reviewedAt && (
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Reviewed At</dt>
+              <dt className="text-text-muted">Reviewed At</dt>
               <dd className="font-medium">{formatDateTime(detail.submission.reviewedAt)}</dd>
             </div>
           )}
           {detail.submission.rejectionReason && (
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Rejection Reason</dt>
+              <dt className="text-text-muted">Rejection Reason</dt>
               <dd className="font-medium text-red-600">{detail.submission.rejectionReason}</dd>
             </div>
           )}
           {detail.submission.adminMessage && (
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Admin Message</dt>
+              <dt className="text-text-muted">Admin Message</dt>
               <dd className="font-medium">{detail.submission.adminMessage}</dd>
             </div>
           )}
