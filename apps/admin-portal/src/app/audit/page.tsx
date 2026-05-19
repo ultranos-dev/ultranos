@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { EventBrowser } from '@/components/audit/EventBrowser'
 
 interface Verification {
   id: string
@@ -73,6 +74,7 @@ function ResultIcon({ valid }: { valid: boolean | null }) {
 const PAGE_SIZE = 30
 
 export default function AuditChainPage() {
+  const [tab, setTab] = useState<'integrity' | 'events'>('integrity')
   const [status, setStatus] = useState<ChainStatus | null>(null)
   const [verifications, setVerifications] = useState<Verification[]>([])
   const [total, setTotal] = useState(0)
@@ -147,8 +149,31 @@ export default function AuditChainPage() {
     <>
       <TopHeader title="Audit Log Integrity" description="Monitor audit log hash chain integrity and verification history." />
       <div className="mx-auto max-w-7xl px-8 py-6">
+        {/* Tab bar */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTab('integrity')}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              tab === 'integrity' ? 'bg-brand-lime text-black' : 'border border-border text-text-muted hover:bg-surface'
+            }`}
+          >
+            Chain Integrity
+          </button>
+          <button
+            onClick={() => setTab('events')}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              tab === 'events' ? 'bg-brand-lime text-black' : 'border border-border text-text-muted hover:bg-surface'
+            }`}
+          >
+            Event Browser
+          </button>
+        </div>
+
+        {tab === 'events' && <EventBrowser />}
+
+        {tab === 'integrity' && (<>
         {error && (
-          <div className="rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
         )}
 
         {loading ? (
@@ -297,6 +322,7 @@ export default function AuditChainPage() {
             )}
           </>
         )}
+        </>)}
       </div>
     </>
   )
