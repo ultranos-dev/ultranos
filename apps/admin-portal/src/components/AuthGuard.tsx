@@ -5,6 +5,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken } from '@/lib/trpc'
 import { Sidebar } from '@/components/Sidebar'
+import { useSidebarCollapse } from '@/hooks/useSidebarCollapse'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
 
@@ -106,10 +107,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (state === 'access-denied') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        <div className="w-full max-w-md rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
-          <h1 className="text-xl font-bold text-red-800">Access Denied</h1>
-          <p className="mt-2 text-sm text-red-700">
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
+        <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-danger-subtle p-8 text-center">
+          <h1 className="text-xl font-bold text-danger">Access Denied</h1>
+          <p className="mt-2 text-sm text-text-secondary">
             You do not have admin privileges. This portal is restricted to users with the ADMIN role.
           </p>
           <button
@@ -120,7 +121,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="mt-4 rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-all"
+            className="mt-4 rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
           >
             Sign Out
           </button>
@@ -134,9 +135,19 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   return (
+    <AuthenticatedShell>{children}</AuthenticatedShell>
+  )
+}
+
+function AuthenticatedShell({ children }: { children: ReactNode }) {
+  const { collapsed, toggle } = useSidebarCollapse()
+
+  return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6 lg:p-8">{children}</main>
+      <Sidebar collapsed={collapsed} onToggle={toggle} />
+      <div className="flex-1 flex flex-col min-w-0">
+        {children}
+      </div>
     </div>
   )
 }
