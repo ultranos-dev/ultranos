@@ -11,15 +11,18 @@ const navItems = [
   { label: 'AI Models', href: '/ai-models', icon: CpuIcon },
   { label: 'Alerts', href: '/alerts', icon: BellIcon },
   { label: 'Audit Log', href: '/audit', icon: ScrollIcon },
+  { label: 'Settings', href: '/settings', icon: GearIcon },
 ] as const
 
 export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-60 bg-neutral-900 text-neutral-100 flex flex-col shrink-0">
-      <div className="p-4 border-b border-neutral-700">
-        <h1 className="text-lg font-bold tracking-tight">Ultranos Admin</h1>
+    <aside className="w-60 bg-black text-neutral-400 flex flex-col shrink-0 min-h-screen">
+      <div className="p-4 border-b border-white/10">
+        <h1 className="text-lg font-bold tracking-tight text-white">
+          <span className="text-brand-lime">U</span>ltranos Admin
+        </h1>
       </div>
       <nav className="flex-1 py-4" aria-label="Admin navigation">
         {navItems.map((item) => {
@@ -29,10 +32,10 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 ${indent ? 'px-8' : 'px-4'} py-2.5 text-sm transition-colors ${
+              className={`flex items-center gap-3 ${indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
                 isActive
-                  ? 'bg-neutral-800 text-white font-medium'
-                  : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
+                  ? 'bg-brand-lime/10 text-brand-lime font-medium border-s-2 border-brand-lime'
+                  : 'text-neutral-400 hover:bg-white/5 hover:text-white'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
@@ -99,6 +102,14 @@ function ClockIcon({ className }: { className?: string }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.993 6.993 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
     </svg>
   )
 }
