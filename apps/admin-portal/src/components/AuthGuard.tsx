@@ -4,8 +4,9 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken } from '@/lib/trpc'
+import { Sidebar } from '@/components/Sidebar'
 
-type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied'
+type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
 
 /** Admin session max age: 4 hours per NFR9. */
 const SESSION_MAX_AGE_S = 4 * 60 * 60
@@ -19,7 +20,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     const isPublicPage = PUBLIC_PATHS.includes(window.location.pathname)
 
     if (isPublicPage) {
-      setState('authenticated') // render children immediately for public pages
+      setState('public') // render children without sidebar for public pages
       return
     }
 
@@ -105,8 +106,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (state === 'access-denied') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="w-full max-w-md rounded-3xl border border-red-200 bg-red-50 p-8 text-center">
           <h1 className="text-xl font-bold text-red-800">Access Denied</h1>
           <p className="mt-2 text-sm text-red-700">
             You do not have admin privileges. This portal is restricted to users with the ADMIN role.
@@ -119,7 +120,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="mt-4 rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-all"
           >
             Sign Out
           </button>
@@ -128,5 +129,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     )
   }
 
-  return <>{children}</>
+  if (state === 'public') {
+    return <>{children}</>
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 p-6 lg:p-8">{children}</main>
+    </div>
+  )
 }
