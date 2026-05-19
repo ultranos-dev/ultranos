@@ -76,8 +76,8 @@ export default function LicenseExpiryPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">License Expiry</h1>
-          <p className="text-sm text-neutral-500 mt-1">
+          <h1 className="text-4xl font-bold text-black tracking-tight wavy-divider">License Expiry</h1>
+          <p className="text-sm text-text-muted mt-4">
             Providers approaching license expiry, sorted by urgency
           </p>
         </div>
@@ -86,10 +86,10 @@ export default function LicenseExpiryPage() {
             <button
               key={w}
               onClick={() => { setExpiryWindow(w); setCursor(0) }}
-              className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+              className={`px-4 py-1.5 text-sm rounded-full border transition-all ${
                 expiryWindow === w
-                  ? 'bg-neutral-900 text-white border-neutral-900'
-                  : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
+                  ? 'bg-brand-lime text-black border-brand-lime'
+                  : 'bg-white text-black border-black hover:bg-neutral-50 hover:scale-[1.02]'
               }`}
             >
               {w === 'all' ? 'All' : `≤ ${w.replace('d', '')} days`}
@@ -99,22 +99,22 @@ export default function LicenseExpiryPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-md mb-4">
+        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-2xl mb-4">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">Provider Name</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">License Number</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">Issuing Body</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">Expiry Date</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">Days Remaining</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">KYC Status</th>
-              <th className="text-start px-4 py-3 font-medium text-neutral-600">Action</th>
+            <tr className="bg-black">
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">Provider Name</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">License Number</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">Issuing Body</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">Expiry Date</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">Days Remaining</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">KYC Status</th>
+              <th className="text-start px-4 py-3 font-medium text-white text-xs uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +136,7 @@ export default function LicenseExpiryPage() {
                 return (
                   <tr
                     key={p.practitionerId}
-                    className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer"
+                    className="border-b border-border hover:bg-brand-lime/5 cursor-pointer transition-colors"
                     onClick={() => setRenewTarget(p)}
                   >
                     <td className="px-4 py-3 font-medium text-neutral-900">{p.name}</td>
@@ -160,7 +160,7 @@ export default function LicenseExpiryPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={(e) => { e.stopPropagation(); setRenewTarget(p) }}
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-sm text-black hover:text-brand-lime font-medium transition-colors"
                       >
                         Renew
                       </button>
@@ -174,7 +174,7 @@ export default function LicenseExpiryPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-surface">
             <span className="text-sm text-neutral-600">
               Page {currentPage} of {totalPages} ({total} providers)
             </span>
@@ -182,14 +182,14 @@ export default function LicenseExpiryPage() {
               <button
                 disabled={cursor === 0}
                 onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                className="px-3 py-1 text-sm rounded border border-neutral-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                className="px-4 py-1.5 text-sm rounded-full border border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 hover:scale-[1.02] transition-all"
               >
                 Previous
               </button>
               <button
                 disabled={currentPage >= totalPages}
                 onClick={() => setCursor(cursor + PAGE_SIZE)}
-                className="px-3 py-1 text-sm rounded border border-neutral-300 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
+                className="px-4 py-1.5 text-sm rounded-full border border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 hover:scale-[1.02] transition-all"
               >
                 Next
               </button>

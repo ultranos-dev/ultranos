@@ -78,19 +78,19 @@ export default function LabsPage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-2xl font-bold tracking-tight">Lab Registrations</h1>
-      <p className="mt-1 text-neutral-500">Review and manage lab registration approvals.</p>
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Lab Registrations</h1>
+      <p className="mt-4 text-text-muted">Review and manage lab registration approvals.</p>
 
       {/* Filter tabs — AC #7 */}
-      <div className="mt-6 flex gap-1 rounded-lg bg-neutral-100 p-1 w-fit">
+      <div className="mt-6 flex gap-1 rounded-full bg-black p-1 w-fit">
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => handleFilterChange(s)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === s
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-brand-lime text-black'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
             {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -105,30 +105,30 @@ export default function LabsPage() {
       {loading ? (
         <div className="mt-6 text-neutral-500">Loading lab registrations...</div>
       ) : labs.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-          <p className="text-neutral-500">No lab registrations found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
+        <div className="mt-6 rounded-3xl border-2 border-dashed border-border p-8 text-center">
+          <p className="text-text-muted">No lab registrations found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
         </div>
       ) : (
         <>
           {/* Lab queue table — AC #1, #2 */}
-          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Lab Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">License Ref</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Accreditation</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Technician</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Registered</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Lab Name</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">License Ref</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Accreditation</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Technician</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Registered</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {labs.map((lab) => (
                   <tr
                     key={lab.id}
                     onClick={() => router.push(`/labs/${lab.id}`)}
-                    className="cursor-pointer hover:bg-neutral-50 transition-colors"
+                    className="cursor-pointer hover:bg-brand-lime/5 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">{lab.labName}</td>
                     <td className="px-4 py-3 text-neutral-600">{lab.licenseReference}</td>
@@ -152,7 +152,7 @@ export default function LabsPage() {
                 <button
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
                 >
                   Previous
                 </button>
@@ -160,7 +160,7 @@ export default function LabsPage() {
                 <button
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
                 >
                   Next
                 </button>
