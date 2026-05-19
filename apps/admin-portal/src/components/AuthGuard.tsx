@@ -3,11 +3,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { setAccessToken } from '@/lib/trpc'
+import { setAccessToken, trpc } from '@/lib/trpc'
 import { Sidebar } from '@/components/Sidebar'
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
+
+/** Paths that bypass the trial-expired interstitial so the admin can set up billing. */
+const TRIAL_BYPASS_PATHS = ['/subscriptions', '/subscriptions/billing']
 
 /** Admin session max age: 4 hours per NFR9. */
 const SESSION_MAX_AGE_S = 4 * 60 * 60
@@ -16,6 +19,7 @@ const PUBLIC_PATHS = ['/', '/login', '/register']
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GuardState>('loading')
+  const [trialExpired, setTrialExpired] = useState(false)
 
   useEffect(() => {
     const isPublicPage = PUBLIC_PATHS.includes(window.location.pathname)
@@ -75,6 +79,24 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         // Store token in memory (never sessionStorage/localStorage)
         setAccessToken(jwt)
         setState('authenticated')
+
+        // Check if the org's trial has expired
+        trpc.subscription.getOrgSubscriptions
+          .query()
+          .then((r) => {
+            const org = r.organization as {
+              status: string
+              trialEndsAt?: string | null
+            }
+            if (
+              org.status === 'TRIAL' &&
+              org.trialEndsAt &&
+              new Date(org.trialEndsAt) < new Date()
+            ) {
+              setTrialExpired(true)
+            }
+          })
+          .catch(() => {})
       } catch {
         const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
         window.location.href = `/login?returnUrl=${returnUrl}`
@@ -134,8 +156,46 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return <>{children}</>
   }
 
+  // Trial-expired interstitial — allow subscription pages through so admin can set up billing
+  if (trialExpired && !TRIAL_BYPASS_PATHS.includes(window.location.pathname)) {
+    return <TrialExpiredInterstitial />
+  }
+
   return (
     <AuthenticatedShell>{children}</AuthenticatedShell>
+  )
+}
+
+function TrialExpiredInterstitial() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-surface">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-surface-raised p-8 text-center shadow-card">
+        <h1 className="text-xl font-bold text-text-primary">Your free trial has expired</h1>
+        <p className="mt-2 text-sm text-text-secondary">
+          Add a payment method to continue using Ultranos.
+        </p>
+        <a
+          href="/subscriptions/billing"
+          className="mt-6 inline-block rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-text-primary hover:opacity-90 transition-opacity"
+        >
+          Set Up Billing
+        </a>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => {
+              useAuthSessionStore.getState().clearSession()
+              setAccessToken(null)
+              getSupabaseBrowserClient().auth.signOut()
+              window.location.href = '/login'
+            }}
+            className="text-sm text-text-secondary underline hover:text-text-primary transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

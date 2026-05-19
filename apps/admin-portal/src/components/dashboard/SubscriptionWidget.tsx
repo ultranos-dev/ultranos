@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 
 interface OrgSubscriptionData {
@@ -9,6 +10,8 @@ interface OrgSubscriptionData {
     status: string
     trialEndsAt: string | null
     name: string
+    paymentFailureReason?: string | null
+    gracePeriodEndsAt?: string | null
   }
   subscriptions: Array<{ id: string; moduleName: string }>
   totalMonthlyCostUsd: number
@@ -42,6 +45,29 @@ export function SubscriptionWidget() {
   // Trial is 30 days; progress bar shows how much time is left
   const trialProgressPct = Math.min(100, Math.max(0, (trialDaysRemaining / 30) * 100))
 
+  // Payment failed but not yet suspended
+  if (organization.paymentFailureReason && status !== 'SUSPENDED') {
+    const graceDays = organization.gracePeriodEndsAt
+      ? Math.max(0, Math.ceil((new Date(organization.gracePeriodEndsAt).getTime() - Date.now()) / 86_400_000))
+      : null
+    return (
+      <div className="rounded-2xl bg-amber-50 p-6 border border-amber-200 shadow-card flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Payment Failed</p>
+          {graceDays !== null && (
+            <p className="text-xs text-amber-700 mt-1">{graceDays} day(s) until suspension</p>
+          )}
+        </div>
+        <Link
+          href="/subscriptions/billing"
+          className="rounded-full bg-brand-lime text-text-primary font-semibold px-5 py-2 text-sm hover:brightness-95 transition-all"
+        >
+          Update Payment
+        </Link>
+      </div>
+    )
+  }
+
   if (status === 'TRIAL') {
     return (
       <div className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card">
@@ -57,7 +83,7 @@ export function SubscriptionWidget() {
           />
         </div>
         <button
-          onClick={() => router.push('/subscriptions')}
+          onClick={() => router.push('/subscriptions/billing')}
           className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-text-primary hover:opacity-90 transition-opacity"
         >
           Set Up Billing
@@ -78,15 +104,18 @@ export function SubscriptionWidget() {
   }
 
   if (status === 'SUSPENDED') {
+    const isPaymentSuspended = !!organization.paymentFailureReason
     return (
       <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-6 shadow-card">
         <p className="text-sm font-medium text-text-secondary">Subscription</p>
-        <p className="mt-2 text-lg font-semibold text-danger">Suspended</p>
+        <p className="mt-2 text-lg font-semibold text-danger">
+          {isPaymentSuspended ? 'Suspended — Payment Failed' : 'Suspended'}
+        </p>
         <button
-          onClick={() => router.push('/subscriptions')}
+          onClick={() => router.push(isPaymentSuspended ? '/subscriptions/billing' : '/subscriptions')}
           className="mt-4 rounded-xl bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
         >
-          Manage Subscription
+          {isPaymentSuspended ? 'Update Payment Method' : 'Manage Subscription'}
         </button>
       </div>
     )

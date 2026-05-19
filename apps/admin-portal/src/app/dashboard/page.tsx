@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { DunningBanner } from '@/components/subscriptions/DunningBanner'
 import { SubscriptionWidget } from '@/components/dashboard/SubscriptionWidget'
 import { UserSummaryWidget } from '@/components/dashboard/UserSummaryWidget'
 import { RecentActivityFeed } from '@/components/dashboard/RecentActivityFeed'
@@ -41,6 +42,8 @@ export default function DashboardPage() {
     <>
       <TopHeader title="Dashboard" description="Overview of pending actions and system health." />
       <div className="mx-auto max-w-7xl px-8 py-6">
+        <DunningBanner />
+
         {statsError && (
           <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">
             Failed to load dashboard stats. Data shown may be stale.
