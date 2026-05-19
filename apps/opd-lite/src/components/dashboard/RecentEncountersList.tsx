@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
@@ -41,6 +42,7 @@ function getStatusBadgeClasses(status: string): string {
 }
 
 export function RecentEncountersList() {
+  const t = useTranslations('dashboard')
   const [encounters, setEncounters] = useState<RecentEncounter[]>([])
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
@@ -96,9 +98,9 @@ export function RecentEncountersList() {
   if (encounters.length === 0) {
     return (
       <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-        <h3 className="text-lg font-black text-neutral-900">Recent Encounters</h3>
+        <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
         <p className="mt-3 text-sm font-semibold text-neutral-400">
-          No encounters recorded yet
+          {t('noEncountersYet')}
         </p>
       </div>
     )
@@ -106,7 +108,7 @@ export function RecentEncountersList() {
 
   return (
     <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-lg font-black text-neutral-900">Recent Encounters</h3>
+      <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
       <ul className="mt-3 divide-y divide-neutral-100" role="list" aria-label="Recent encounters">
         {encounters.map((enc) => (
           <li key={enc.id}>
@@ -135,7 +137,7 @@ export function RecentEncountersList() {
               className="block text-end text-xs font-semibold text-primary-500 hover:underline pe-2 pb-1 -mt-1"
               aria-label="View patient chart"
             >
-              View Chart
+              {t('viewChart')}
             </Link>
           </li>
         ))}

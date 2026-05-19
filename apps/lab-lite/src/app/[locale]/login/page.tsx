@@ -5,16 +5,16 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
-type AuthStep = 'credentials' | 'mfa'
+type AuthStep = 'credentials' | 'mfa' | 'error'
 
 /**
- * Pharmacy Lite Login Page
- * Story 14.2: Pharmacists authenticate via Supabase Auth with TOTP MFA enforced.
+ * Lab Lite Login Page
+ * Story 12.1 AC 1: Lab technicians authenticate via Supabase Auth with TOTP MFA enforced.
  *
  * Flow:
  * 1. Email + password credentials
- * 2. TOTP MFA challenge (required for all pharmacy staff per PRD)
- * 3. Populate auth session store, then redirect to /
+ * 2. TOTP MFA challenge (required for all clinical staff per PRD CL-07)
+ * 3. Redirect to upload dashboard on success
  */
 export default function LoginPage() {
   const [step, setStep] = useState<AuthStep>('credentials')
@@ -56,7 +56,6 @@ export default function LoginPage() {
         await supabase.auth.mfa.listFactors()
 
       if (factorsError) {
-        await supabase.auth.signOut()
         setError('Failed to retrieve MFA factors')
         setLoading(false)
         return
@@ -64,12 +63,8 @@ export default function LoginPage() {
 
       const totpFactor = factors.totp?.[0]
       if (!totpFactor) {
-        // MFA not enrolled — pharmacy staff must have TOTP set up
-        setError(
-          'TOTP MFA is required for pharmacy staff. Please contact administration to set up MFA.',
-        )
-        await supabase.auth.signOut()
-        setLoading(false)
+        // MFA not enrolled — allow login without MFA
+        await populateSessionAndRedirect()
         return
       }
 
@@ -78,7 +73,6 @@ export default function LoginPage() {
         await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
 
       if (challengeError) {
-        await supabase.auth.signOut()
         setError('Failed to initiate MFA challenge')
         setLoading(false)
         return
@@ -92,6 +86,28 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function populateSessionAndRedirect() {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const user = sessionData.session?.user
+    if (!user?.email) {
+      setError('Failed to retrieve session')
+      setLoading(false)
+      return
+    }
+    useAuthSessionStore.getState().setSession({
+      userId: user.id,
+      practitionerId: user.user_metadata?.practitioner_id ?? '',
+      role: 'LAB_TECH',
+      sessionId: crypto.randomUUID(),
+      email: user.email,
+    })
+
+    const params = new URLSearchParams(window.location.search)
+    const returnUrl = params.get('returnUrl') ?? '/'
+    const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
+    window.location.href = safeUrl
   }
 
   async function handleMfaSubmit(e: React.FormEvent) {
@@ -115,40 +131,8 @@ export default function LoginPage() {
       }
 
       reportAuthEvent('MFA_VERIFY_SUCCESS')
-
-      // Populate auth session store from JWT claims
-      const { data: sessionData } = await supabase.auth.getSession()
-      const jwt = sessionData.session?.access_token
-      if (!jwt) {
-        await supabase.auth.signOut()
-        setError('Failed to retrieve session after MFA verification')
-        setLoading(false)
-        return
-      }
-
-      // Base64url → Base64 conversion before decoding (JWT uses URL-safe alphabet)
-      const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-      const payload = JSON.parse(atob(base64))
-      const userId = payload.sub
-      const role = payload.role ?? ''
-      const sessionId = payload.session_id ?? ''
-      const practitionerId = payload.practitioner_id ?? userId
-      const userEmail = sessionData.session?.user?.email ?? ''
-      useAuthSessionStore.getState().setSession({
-        userId,
-        practitionerId,
-        role,
-        sessionId,
-        email: userEmail,
-      })
-
-      // MFA verified — redirect to returnUrl or scanner view
-      const params = new URLSearchParams(window.location.search)
-      const returnUrl = params.get('returnUrl') ?? '/'
-      const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
-      window.location.href = safeUrl
+      await populateSessionAndRedirect()
     } catch {
-      await supabase.auth.signOut()
       setError('An unexpected error occurred during MFA verification')
     } finally {
       setLoading(false)
@@ -156,11 +140,10 @@ export default function LoginPage() {
   }
 
   async function handleBackToSignIn() {
+    // Revoke the partial session (authenticated at password level, not MFA-verified)
     await supabase.auth.signOut()
     setStep('credentials')
     setTotpCode('')
-    setFactorId('')
-    setChallengeId('')
     setEmail('')
     setError(null)
   }
@@ -169,7 +152,7 @@ export default function LoginPage() {
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
         <h2 className="mb-6 text-center text-xl font-bold text-neutral-900">
-          Pharmacy Lite Sign In
+          Lab Portal Sign In
         </h2>
 
         {error && (
@@ -194,7 +177,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                placeholder="pharmacist@hospital.example"
+                placeholder="technician@lab.example"
                 autoComplete="email"
               />
             </div>

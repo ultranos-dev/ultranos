@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { deserializeHlc } from '@ultranos/sync-engine'
@@ -11,6 +12,8 @@ interface TodayStats {
 }
 
 export function TodayEncountersCard() {
+  const t = useTranslations('dashboard')
+  const tEnc = useTranslations('encounter')
   const [stats, setStats] = useState<TodayStats>({ total: 0, hasActive: false })
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
@@ -55,13 +58,13 @@ export function TodayEncountersCard() {
   return (
     <div className="rounded-xl bg-card-bg p-5 shadow-sm">
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
-        Today&apos;s Encounters
+        {t('todayEncounters')}
       </h3>
       <p className="mt-2 text-3xl font-black text-neutral-900">{stats.total}</p>
       {stats.hasActive && (
         <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pill-text">
           <span className="inline-block h-2 w-2 rounded-full bg-pill-green animate-pulse" />
-          Active encounter
+          {tEnc('activeConsultation')}
         </span>
       )}
     </div>

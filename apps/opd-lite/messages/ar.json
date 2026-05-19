@@ -334,7 +334,12 @@
     "unresolvedConflicts": "تعارضات غير محلولة",
     "recentEncounters": "الزيارات الأخيرة",
     "noEncountersYet": "لم تُسجَّل زيارات بعد",
-    "viewChart": "عرض السجل"
+    "viewChart": "عرض السجل",
+    "unreadResults": "نتائج غير مقروءة في انتظار المراجعة",
+    "unavailableOffline": "غير متاح دون اتصال",
+    "physicianReview": "مراجعة الطبيب مطلوبة ←",
+    "conflictCheckUnavailable": "فحص التعارضات غير متاح",
+    "noResults": "لم يُعثر على مرضى"
   },
   "install": {
     "prompt": "ثبّت عيادة خارجية للاستخدام دون اتصال",

@@ -851,11 +851,11 @@ export const adminRouter = createTRPCRouter({
           .from('kyc_submissions')
           .select(`
             id, practitioner_id, status, registry_number, submitted_at,
-            registry_verification_status, documents,
-            practitioners!inner(name, identifier, _ultranos)
+            documents,
+            practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id)
           `)
           .eq('status', 'PENDING')
-          .eq('org_id', ctx.user.orgId)
+          .eq('practitioners.org_id', ctx.user.orgId)
           .order('submitted_at', { ascending: true })
 
         // Epic C: search filter — filter by practitioner name/email via the joined practitioners
@@ -894,10 +894,10 @@ export const adminRouter = createTRPCRouter({
         .from('kyc_submissions')
         .select(`
           id, practitioner_id, status, registry_number, submitted_at,
-          registry_verification_status, documents,
-          practitioners!inner(name, identifier, _ultranos)
+          documents,
+          practitioners!inner(given_name, family_name, telecom_email, kyc_status, org_id)
         `, { count: 'exact' })
-        .eq('org_id', ctx.user.orgId)
+        .eq('practitioners.org_id', ctx.user.orgId)
         .order('submitted_at', { ascending: true })
         .range(input.cursor, input.cursor + input.limit - 1)
 
@@ -2110,6 +2110,7 @@ export const adminRouter = createTRPCRouter({
         email: z.string().email(),
         name: z.string().min(1).max(200),
         role: z.string().min(1),
+        password: z.string().min(8).max(128),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -2161,13 +2162,10 @@ export const adminRouter = createTRPCRouter({
       const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
       const givenName = nameParts.join(' ')
 
-      // Generate secure random password (never sent to client)
-      const randomPassword = crypto.randomUUID() + crypto.randomUUID()
-
-      // Create Supabase Auth user
+      // Create Supabase Auth user with admin-provided password
       const { data: authResult, error: authError } = await ctx.supabase.auth.admin.createUser({
         email: input.email,
-        password: randomPassword,
+        password: input.password,
         email_confirm: true,
         user_metadata: {
           role: input.role,
@@ -2193,6 +2191,13 @@ export const adminRouter = createTRPCRouter({
 
       const authUserId = authResult.user.id
 
+      // Resolve admin's practitioner ID for the invited_by FK
+      const { data: adminPractitioner } = await ctx.supabase
+        .from('practitioners')
+        .select('id')
+        .eq('auth_user_id', ctx.user.sub)
+        .single()
+
       // Create practitioner record
       const now = new Date().toISOString()
       const { data: practitioner, error: practError } = await ctx.supabase
@@ -2205,8 +2210,9 @@ export const adminRouter = createTRPCRouter({
           role: input.role,
           org_id: ctx.user.orgId,
           status: 'PENDING_INVITE',
-          invited_by: ctx.user.sub,
+          invited_by: adminPractitioner?.id ?? null,
           created_at: now,
+          password_hash: 'SUPABASE_AUTH_MANAGED',
         })
         .select('id')
         .single()
@@ -2230,6 +2236,9 @@ export const adminRouter = createTRPCRouter({
         const { data: linkData } = await ctx.supabase.auth.admin.generateLink({
           type: 'recovery',
           email: input.email,
+          options: {
+            redirectTo: process.env.ADMIN_PORTAL_URL ?? 'http://localhost:3003',
+          },
         })
         setupLink = linkData?.properties?.action_link ?? null
       } catch {
@@ -4029,12 +4038,14 @@ function calculateSlaDeadline(submittedAt: string): {
  */
 function mapKycQueueEntry(row: Record<string, unknown>) {
   const practitioner = row.practitioners as {
-    name: Array<{ family: string; given: string[]; text?: string }>
-    identifier: Array<{ system: string; value: string }>
-    _ultranos: { kycStatus: string }
-  }
-  const pName = practitioner?.name?.[0]
-  const providerName = pName?.text ?? `${pName?.given?.join(' ') ?? ''} ${pName?.family ?? ''}`.trim()
+    given_name: string
+    family_name: string
+    telecom_email: string
+    kyc_status: string
+  } | null
+  const providerName = practitioner
+    ? `${practitioner.given_name ?? ''} ${practitioner.family_name ?? ''}`.trim()
+    : 'Unknown'
 
   const submittedAt = row.submitted_at as string
   const sla = calculateSlaDeadline(submittedAt)
@@ -4049,9 +4060,9 @@ function mapKycQueueEntry(row: Record<string, unknown>) {
     providerName,
     submittedAt,
     registryNumber: row.registry_number as string,
-    registryVerificationStatus: (row as Record<string, unknown>).registry_verification_status as string | null ?? null,
+    registryVerificationStatus: null as string | null,
     licenseDocumentKey: licenseDoc?.storageKey ?? null,
-    kycStatus: practitioner?._ultranos?.kycStatus ?? 'PENDING_VERIFICATION',
+    kycStatus: practitioner?.kyc_status ?? 'PENDING_VERIFICATION',
     slaDeadline: sla.deadline,
     slaBreached: sla.breached,
     slaRemainingHours: sla.remainingHours,

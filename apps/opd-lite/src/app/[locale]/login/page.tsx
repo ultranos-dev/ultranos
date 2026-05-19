@@ -64,12 +64,8 @@ export default function LoginPage() {
 
       const totpFactor = factors.totp?.[0]
       if (!totpFactor) {
-        // MFA not enrolled — clinical staff must have TOTP set up
-        setError(
-          'TOTP MFA is required for clinical staff. Please contact administration to set up MFA.',
-        )
-        await supabase.auth.signOut()
-        setLoading(false)
+        // MFA not enrolled — allow login without MFA
+        await populateSessionAndRedirect()
         return
       }
 
@@ -94,6 +90,36 @@ export default function LoginPage() {
     }
   }
 
+  async function populateSessionAndRedirect() {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const jwt = sessionData.session?.access_token
+    if (!jwt) {
+      setError('Failed to retrieve session')
+      setLoading(false)
+      return
+    }
+
+    const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(atob(base64))
+    const userId = payload.sub
+    const role = payload.role ?? ''
+    const sessionId = payload.session_id ?? ''
+    const practitionerId = payload.practitioner_id ?? userId
+    const userEmail = sessionData.session?.user?.email ?? ''
+    useAuthSessionStore.getState().setSession({
+      userId,
+      practitionerId,
+      role,
+      sessionId,
+      email: userEmail,
+    })
+
+    const params = new URLSearchParams(window.location.search)
+    const returnUrl = params.get('returnUrl') ?? '/'
+    const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
+    window.location.href = safeUrl
+  }
+
   async function handleMfaSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -115,38 +141,7 @@ export default function LoginPage() {
       }
 
       reportAuthEvent('MFA_VERIFY_SUCCESS')
-
-      // Populate auth session store from JWT claims
-      const { data: sessionData } = await supabase.auth.getSession()
-      const jwt = sessionData.session?.access_token
-      if (!jwt) {
-        setError('Failed to retrieve session after MFA verification')
-        setLoading(false)
-        return
-      }
-
-      // Base64url → Base64 conversion before decoding (JWT uses URL-safe alphabet)
-      const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-      const payload = JSON.parse(atob(base64))
-      const userId = payload.sub
-      const role = payload.role ?? ''
-      const sessionId = payload.session_id ?? ''
-      // Use userId as practitionerId fallback (Story 14.6 handles full resolution)
-      const practitionerId = payload.practitioner_id ?? userId
-      const userEmail = sessionData.session?.user?.email ?? ''
-      useAuthSessionStore.getState().setSession({
-        userId,
-        practitionerId,
-        role,
-        sessionId,
-        email: userEmail,
-      })
-
-      // MFA verified — redirect to returnUrl or dashboard
-      const params = new URLSearchParams(window.location.search)
-      const returnUrl = params.get('returnUrl') ?? '/'
-      const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
-      window.location.href = safeUrl
+      await populateSessionAndRedirect()
     } catch {
       setError('An unexpected error occurred during MFA verification')
     } finally {

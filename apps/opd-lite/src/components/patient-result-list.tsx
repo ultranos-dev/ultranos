@@ -7,6 +7,7 @@ interface PatientResultListProps {
   results: FhirPatient[]
   isSearching: boolean
   onSelect: (patient: FhirPatient) => void
+  query?: string
 }
 
 function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
@@ -37,7 +38,7 @@ function getIdentifier(patient: FhirPatient): string | null {
   return `${natId.system}: ***${natId.value.slice(-4)}`
 }
 
-export function PatientResultList({ results, isSearching, onSelect }: PatientResultListProps) {
+export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
   if (isSearching) {
     return (
       <div className="flex items-center justify-center py-8" role="status">
@@ -47,7 +48,12 @@ export function PatientResultList({ results, isSearching, onSelect }: PatientRes
   }
 
   if (results.length === 0) {
-    return null
+    if (!query) return null
+    return (
+      <div className="py-8 text-center text-sm text-neutral-500">
+        No patients found
+      </div>
+    )
   }
 
   return (

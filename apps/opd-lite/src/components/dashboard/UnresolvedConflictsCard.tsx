@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { TIER_1_RESOURCE_TYPES } from '@/lib/conflict-resolution'
 
 export function UnresolvedConflictsCard() {
+  const t = useTranslations('dashboard')
   const [count, setCount] = useState<number | null>(0)
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function UnresolvedConflictsCard() {
   return (
     <div className="rounded-xl bg-card-bg p-5 shadow-sm">
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
-        Unresolved Conflicts
+        {t('unresolvedConflicts')}
       </h3>
       <div className="mt-2 flex items-center gap-2">
         <p className="text-3xl font-black text-neutral-900">{count ?? '—'}</p>
@@ -48,12 +50,12 @@ export function UnresolvedConflictsCard() {
           href="/conflicts"
           className="mt-2 inline-block text-sm font-semibold text-conflict-red hover:underline"
         >
-          Physician review required &rarr;
+          {t('physicianReview')}
         </Link>
       )}
       {count === null && (
         <p className="mt-2 text-sm font-semibold text-conflict-red">
-          Conflict check unavailable
+          {t('conflictCheckUnavailable')}
         </p>
       )}
     </div>

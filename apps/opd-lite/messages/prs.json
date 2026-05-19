@@ -334,7 +334,12 @@
     "unresolvedConflicts": "تعارضات حل نشده",
     "recentEncounters": "ویزیت‌های اخیر",
     "noEncountersYet": "هنوز ویزیتی ثبت نشده است",
-    "viewChart": "مشاهده چارت"
+    "viewChart": "مشاهده چارت",
+    "unreadResults": "نتایج خوانده نشده در انتظار بررسی",
+    "unavailableOffline": "در حالت آفلاین در دسترس نیست",
+    "physicianReview": "بررسی داکتر ضروری است ←",
+    "conflictCheckUnavailable": "بررسی تعارض در دسترس نیست",
+    "noResults": "مریضی یافت نشد"
   },
   "install": {
     "prompt": "نصب کلینیک سرپایی برای دسترسی آفلاین",

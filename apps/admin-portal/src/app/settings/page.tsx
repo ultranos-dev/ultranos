@@ -111,7 +111,8 @@ export default function SettingsPage() {
   async function loadSubscribedModules() {
     try {
       const data = await trpc.subscription.getOrgSubscriptions.query()
-      setSubscribedModules(data as { moduleCode: string; moduleName: string }[])
+      const subs = (data as any)?.subscriptions ?? []
+      setSubscribedModules(subs as { moduleCode: string; moduleName: string }[])
     } catch {
       // Non-blocking
     }

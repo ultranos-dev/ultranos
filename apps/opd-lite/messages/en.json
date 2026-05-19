@@ -334,7 +334,12 @@
     "unresolvedConflicts": "Unresolved Conflicts",
     "recentEncounters": "Recent Encounters",
     "noEncountersYet": "No encounters recorded yet",
-    "viewChart": "View Chart"
+    "viewChart": "View Chart",
+    "unreadResults": "Unread results awaiting review",
+    "unavailableOffline": "Unavailable offline",
+    "physicianReview": "Physician review required →",
+    "conflictCheckUnavailable": "Conflict check unavailable",
+    "noResults": "No patients found"
   },
   "install": {
     "prompt": "Install OPD Lite for offline access",

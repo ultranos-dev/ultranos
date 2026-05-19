@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
@@ -24,6 +25,7 @@ function formatRole(role: string): string {
 
 export function ClinicalDashboard() {
   const router = useRouter()
+  const t = useTranslations('dashboard')
   const session = useAuthSessionStore((s) => s.session)
   const { query, results, isSearching, selectPatient } = usePatientStore()
   const { search } = usePatientSearch()
@@ -57,7 +59,7 @@ export function ClinicalDashboard() {
       <header className="mb-8 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-neutral-900">
-            Welcome, {displayName}
+            {t('welcome', { name: displayName })}
           </h1>
           <p className="mt-1 text-sm font-semibold text-neutral-500">
             {displayRole}
@@ -73,19 +75,20 @@ export function ClinicalDashboard() {
       {/* Primary CTA */}
       <div className="mb-8">
         <PillButton onClick={handleStartEncounter}>
-          Start New Encounter
+          {t('startEncounter')}
         </PillButton>
       </div>
 
       {/* Inline patient search */}
       <section className="mb-8" ref={searchRef}>
         <SearchInput value={query} onChange={handleQueryChange} />
-        {(results.length > 0 || isSearching) && (
+        {(results.length > 0 || isSearching || query.length > 0) && (
           <div className="mt-2">
             <PatientResultList
               results={results}
               isSearching={isSearching}
               onSelect={handleSelect}
+              query={query}
             />
           </div>
         )}

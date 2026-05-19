@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { fetchNotifications } from '@/lib/notification-api'
 
 export function PendingLabResultsCard() {
+  const t = useTranslations('dashboard')
   const [count, setCount] = useState<number | null>(null)
 
   useEffect(() => {
@@ -27,17 +29,17 @@ export function PendingLabResultsCard() {
   return (
     <div className="rounded-xl bg-card-bg p-5 shadow-sm">
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
-        Pending Lab Results
+        {t('pendingLabResults')}
       </h3>
       <p className="mt-2 text-3xl font-black text-neutral-900">{count ?? '—'}</p>
       {count !== null && count > 0 && (
         <p className="mt-2 text-sm font-semibold text-neutral-500">
-          Unread results awaiting review
+          {t('unreadResults')}
         </p>
       )}
       {count === null && (
         <p className="mt-2 text-sm font-semibold text-neutral-400">
-          Unavailable offline
+          {t('unavailableOffline')}
         </p>
       )}
     </div>

@@ -25,6 +25,8 @@ export default function CreateUserPage() {
 
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -54,6 +56,16 @@ export default function CreateUserPage() {
     setSubmitError(null)
     setSubmitSuccess(false)
 
+    // Client-side password validation
+    if (password.length < 8) {
+      setSubmitError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setSubmitError('Passwords do not match.')
+      return
+    }
+
     // Client-side guard: prevent submission of unavailable role
     const isAvailable = availableRoles.some((r) => r.role === selectedRole)
     if (!isAvailable) {
@@ -70,7 +82,7 @@ export default function CreateUserPage() {
         return
       }
 
-      const result = await trpc.admin.createUser.mutate({ name, email, role: selectedRole })
+      const result = await trpc.admin.createUser.mutate({ name, email, role: selectedRole, password })
       setCreatedUser(result)
       setSubmitSuccess(true)
     } catch (err: any) {
@@ -125,6 +137,42 @@ export default function CreateUserPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             />
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimum 8 characters"
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+          </div>
+
+          {/* Confirm Password Field */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              required
+              minLength={8}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-1.5 text-sm text-red-600">Passwords do not match</p>
+            )}
           </div>
 
           {/* Role Selector */}
@@ -215,6 +263,8 @@ export default function CreateUserPage() {
                   setSubmitSuccess(false)
                   setName('')
                   setEmail('')
+                  setPassword('')
+                  setConfirmPassword('')
                   setSelectedRole('')
                   setSubmitError(null)
                 }}
@@ -236,7 +286,7 @@ export default function CreateUserPage() {
           <div className="mt-6 flex gap-3">
             <button
               type="submit"
-              disabled={submitting || !selectedRole || !name || !email}
+              disabled={submitting || !selectedRole || !name || !email || !password || password !== confirmPassword}
               className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Creating...' : 'Create User'}
