@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "کلینیک سرپایی",
+    "loading": "در حال بارگذاری..."
+  },
+  "nav": {
+    "patients": "مریضان",
+    "encounters": "ویزیت‌ها",
+    "settings": "تنظیمات"
+  },
+  "auth": {
+    "loginRequired": "ورود لازم است",
+    "sessionExpired": "جلسه شما منقضی شده است. لطفاً دوباره وارد شوید."
+  },
+  "patient": {
+    "search": "جستجوی مریضان...",
+    "noResults": "هیچ مریضی یافت نشد",
+    "newPatient": "مریض جدید"
+  },
+  "encounter": {
+    "active": "ویزیت فعال",
+    "history": "تاریخچه",
+    "newEncounter": "ویزیت جدید"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "language": "زبان",
+    "restartRequired": "برای اعمال تغییرات چیدمان، بازراه‌اندازی برنامه لازم است"
+  },
+  "common": {
+    "cancel": "لغو",
+    "save": "ذخیره",
+    "delete": "حذف",
+    "confirm": "تأیید",
+    "back": "بازگشت",
+    "close": "بستن",
+    "error": "خطایی رخ داد",
+    "retry": "تلاش دوباره"
+  }
+}

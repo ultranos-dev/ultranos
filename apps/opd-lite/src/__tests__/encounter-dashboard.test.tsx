@@ -346,3 +346,7 @@ describe('Encounter Dashboard', () => {
     )
   })
 })
+
+// EncounterDashboard RTL snapshot tests deferred — pre-existing render issue with isActive dependency.
+// RTL CSS verified via CSS property audit (Task 2). See deferred-work.md D-RTL4.
+it.todo('matches snapshot in RTL mode')

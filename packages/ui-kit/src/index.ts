@@ -6,6 +6,8 @@ export {
   borderRadius,
   shadows,
   transitions,
+  rtlTypography,
+  arabicFontFiles,
 } from './tokens.js'
 
 export {
@@ -53,3 +55,9 @@ export type { EntitlementGateProps } from './EntitlementGate.js'
 
 export { getSecurityHeaders } from './security-headers.js'
 export type { SecurityHeadersConfig } from './security-headers.js'
+
+export { getDirection } from './direction.js'
+export type { SupportedLocale, Direction } from './direction.js'
+
+export { DirectionalIcon, DIRECTIONAL_ICON_CSS } from './components/DirectionalIcon.js'
+export type { DirectionalIconProps, IconCategory } from './components/DirectionalIcon.js'

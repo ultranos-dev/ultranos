@@ -52,8 +52,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
             "elevation": 2,
@@ -75,17 +73,11 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
     >
       <Text
         style={
-          [
-            {
-              "color": "hsl(270, 10%, 45%)",
-              "fontSize": 16,
-              "fontWeight": "400",
-              "lineHeight": 24,
-            },
-            {
-              "color": "hsl(270, 50%, 30%)",
-            },
-          ]
+          {
+            "color": "hsl(270, 50%, 30%)",
+            "fontSize": 16,
+            "lineHeight": 24,
+          }
         }
       >
         By default, your data is restricted. Toggle on to allow healthcare providers to view specific categories of your medical information.
@@ -93,21 +85,25 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
     </View>
     <View
       style={
-        {
-          "backgroundColor": "hsl(0, 0%, 100%)",
-          "borderColor": "hsl(270, 15%, 88%)",
-          "borderRadius": 16,
-          "borderWidth": 1,
-          "elevation": 2,
-          "padding": 20,
-          "shadowColor": "#000",
-          "shadowOffset": {
-            "height": 2,
-            "width": 0,
+        [
+          {
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
           },
-          "shadowOpacity": 0.06,
-          "shadowRadius": 8,
-        }
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+          },
+        ]
       }
       testID="consent-toggles-card"
     >
@@ -129,15 +125,19 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </Text>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-FULL_RECORD"
       >
@@ -155,7 +155,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -194,15 +193,19 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-PRESCRIPTIONS"
       >
@@ -220,7 +223,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -239,16 +241,11 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
           </Text>
           <Text
             style={
-              [
-                {
-                  "color": "hsl(270, 8%, 60%)",
-                  "fontSize": 13,
-                },
-                {
-                  "color": "hsl(270, 8%, 60%)",
-                  "fontStyle": "italic",
-                },
-              ]
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+                "fontStyle": "italic",
+              }
             }
             testID="consent-updated-PRESCRIPTIONS"
           >
@@ -277,15 +274,19 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-LABS"
       >
@@ -303,7 +304,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -342,15 +342,19 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-VITALS"
       >
@@ -368,7 +372,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -407,15 +410,19 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-CLINICAL_NOTES"
       >
@@ -433,7 +440,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -472,6 +478,126 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </View>
     </View>
     <View
+      style={
+        [
+          {
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+          },
+        ]
+      }
+      testID="guardian-section"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "marginBottom": 12,
+            },
+          ]
+        }
+      >
+        Guardian
+      </Text>
+      <View
+        testID="guardian-not-linked"
+      >
+        <Text
+          style={
+            {
+              "color": "hsl(270, 10%, 45%)",
+              "fontSize": 16,
+              "lineHeight": 24,
+            }
+          }
+        >
+          No guardian linked. Link a guardian to let them manage your privacy settings on your behalf.
+        </Text>
+        <View
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 12,
+                "justifyContent": "center",
+                "marginTop": 12,
+                "minHeight": 48,
+                "paddingVertical": 12,
+              },
+              {
+                "backgroundColor": "hsl(270, 45%, 48%)",
+              },
+            ]
+          }
+          testID="link-guardian-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                },
+                {
+                  "color": "#FFFFFF",
+                },
+              ]
+            }
+          >
+            Link Guardian
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
       accessibilityLabel="Show consent history"
       accessibilityRole="button"
       accessibilityState={
@@ -506,8 +632,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
             "elevation": 2,
@@ -519,6 +643,10 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
             },
             "shadowOpacity": 0.06,
             "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "alignItems": "center",
@@ -535,7 +663,6 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
           {
             "color": "hsl(270, 10%, 45%)",
             "fontSize": 16,
-            "fontWeight": "400",
             "lineHeight": 24,
           }
         }
@@ -545,10 +672,14 @@ exports[`PrivacySettingsScreen renders correctly in LTR layout (snapshot) 1`] = 
       </Text>
       <Text
         style={
-          {
-            "color": "hsl(270, 8%, 60%)",
-            "fontSize": 14,
-          }
+          [
+            {
+              "fontSize": 14,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
         }
       >
         ▼
@@ -610,8 +741,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
             "elevation": 2,
@@ -633,17 +762,11 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
     >
       <Text
         style={
-          [
-            {
-              "color": "hsl(270, 10%, 45%)",
-              "fontSize": 16,
-              "fontWeight": "400",
-              "lineHeight": 24,
-            },
-            {
-              "color": "hsl(270, 50%, 30%)",
-            },
-          ]
+          {
+            "color": "hsl(270, 50%, 30%)",
+            "fontSize": 16,
+            "lineHeight": 24,
+          }
         }
       >
         By default, your data is restricted. Toggle on to allow healthcare providers to view specific categories of your medical information.
@@ -651,21 +774,25 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
     </View>
     <View
       style={
-        {
-          "backgroundColor": "hsl(0, 0%, 100%)",
-          "borderColor": "hsl(270, 15%, 88%)",
-          "borderRadius": 16,
-          "borderWidth": 1,
-          "elevation": 2,
-          "padding": 20,
-          "shadowColor": "#000",
-          "shadowOffset": {
-            "height": 2,
-            "width": 0,
+        [
+          {
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
           },
-          "shadowOpacity": 0.06,
-          "shadowRadius": 8,
-        }
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+          },
+        ]
       }
       testID="consent-toggles-card"
     >
@@ -687,15 +814,19 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </Text>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-FULL_RECORD"
       >
@@ -713,7 +844,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -752,15 +882,19 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-PRESCRIPTIONS"
       >
@@ -778,7 +912,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -797,16 +930,11 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
           </Text>
           <Text
             style={
-              [
-                {
-                  "color": "hsl(270, 8%, 60%)",
-                  "fontSize": 13,
-                },
-                {
-                  "color": "hsl(270, 8%, 60%)",
-                  "fontStyle": "italic",
-                },
-              ]
+              {
+                "color": "hsl(270, 8%, 60%)",
+                "fontSize": 13,
+                "fontStyle": "italic",
+              }
             }
             testID="consent-updated-PRESCRIPTIONS"
           >
@@ -835,15 +963,19 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-LABS"
       >
@@ -861,7 +993,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -900,15 +1031,19 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-VITALS"
       >
@@ -926,7 +1061,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -965,15 +1099,19 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </View>
       <View
         style={
-          {
-            "alignItems": "center",
-            "borderBottomColor": "hsl(270, 15%, 88%)",
-            "borderBottomWidth": 1,
-            "flexDirection": "row",
-            "justifyContent": "space-between",
-            "minHeight": 48,
-            "paddingVertical": 12,
-          }
+          [
+            {
+              "alignItems": "center",
+              "borderBottomWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "minHeight": 48,
+              "paddingVertical": 12,
+            },
+            {
+              "borderBottomColor": "hsl(270, 15%, 88%)",
+            },
+          ]
         }
         testID="consent-row-CLINICAL_NOTES"
       >
@@ -991,7 +1129,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
               {
                 "color": "hsl(270, 10%, 45%)",
                 "fontSize": 16,
-                "fontWeight": "400",
                 "lineHeight": 24,
               }
             }
@@ -1030,6 +1167,126 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </View>
     </View>
     <View
+      style={
+        [
+          {
+            "borderRadius": 16,
+            "borderWidth": 1,
+            "elevation": 2,
+            "padding": 20,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
+          },
+        ]
+      }
+      testID="guardian-section"
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontSize": 20,
+              "fontWeight": "600",
+            },
+            {
+              "marginBottom": 12,
+            },
+          ]
+        }
+      >
+        Guardian
+      </Text>
+      <View
+        testID="guardian-not-linked"
+      >
+        <Text
+          style={
+            {
+              "color": "hsl(270, 10%, 45%)",
+              "fontSize": 16,
+              "lineHeight": 24,
+            }
+          }
+        >
+          No guardian linked. Link a guardian to let them manage your privacy settings on your behalf.
+        </Text>
+        <View
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 12,
+                "justifyContent": "center",
+                "marginTop": 12,
+                "minHeight": 48,
+                "paddingVertical": 12,
+              },
+              {
+                "backgroundColor": "hsl(270, 45%, 48%)",
+              },
+            ]
+          }
+          testID="link-guardian-button"
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 16,
+                  "fontWeight": "600",
+                },
+                {
+                  "color": "#FFFFFF",
+                },
+              ]
+            }
+          >
+            Link Guardian
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
       accessibilityLabel="Show consent history"
       accessibilityRole="button"
       accessibilityState={
@@ -1064,8 +1321,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
             "elevation": 2,
@@ -1077,6 +1332,10 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
             },
             "shadowOpacity": 0.06,
             "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "alignItems": "center",
@@ -1093,7 +1352,6 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
           {
             "color": "hsl(270, 10%, 45%)",
             "fontSize": 16,
-            "fontWeight": "400",
             "lineHeight": 24,
           }
         }
@@ -1103,10 +1361,14 @@ exports[`PrivacySettingsScreen renders correctly in RTL layout (snapshot) 1`] = 
       </Text>
       <Text
         style={
-          {
-            "color": "hsl(270, 8%, 60%)",
-            "fontSize": 14,
-          }
+          [
+            {
+              "fontSize": 14,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
         }
       >
         ▼

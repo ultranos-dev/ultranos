@@ -11,17 +11,17 @@
  * - Button hidden when AI_PROCESSING consent not granted
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import { useAudioPlayback } from '@/hooks/useAudioPlayback'
 import { generatePrescriptionAudio, logPlaybackCompletion } from '@/lib/tts-api'
 import { getStitchableFragments, FRAGMENT_GAP_MS } from '@/lib/tts-fragment-stitcher'
 import {
-  consumerColors,
   consumerSpacing,
   consumerBorderRadius,
   consumerTypography,
 } from '@/theme/consumer'
+import { useTheme } from '@/theme/ThemeProvider'
 
 export type ListenDialect = 'AR_LEVANTINE' | 'AR_GULF' | 'DARI' | 'EN'
 
@@ -51,8 +51,17 @@ export function ListenButton({
   authToken,
   isOnline = true,
 }: ListenButtonProps) {
+  const { colors } = useTheme()
   const [showPlayer, setShowPlayer] = useState(false)
   const [audioSource, setAudioSource] = useState<'CLOUD_TTS' | 'OFFLINE_FRAGMENT' | null>(null)
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clean up auto-dismiss timer on unmount
+  useEffect(() => {
+    return () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    }
+  }, [])
 
   const onPlaybackComplete = useCallback(() => {
     // AC #7: Log playback completion (fire-and-forget)
@@ -60,7 +69,7 @@ export function ListenButton({
       logPlaybackCompletion(medicationRequestId, patientId, dialect, audioSource, authToken)
     }
     // Auto-dismiss after a short delay
-    setTimeout(() => {
+    dismissTimer.current = setTimeout(() => {
       setShowPlayer(false)
     }, 1500)
   }, [medicationRequestId, patientId, dialect, audioSource, authToken])
@@ -133,38 +142,42 @@ export function ListenButton({
     return (
       <Pressable
         onPress={handleListenPress}
-        style={({ pressed }) => [styles.listenBtn, pressed && styles.listenBtnPressed]}
+        style={({ pressed }) => [
+          styles.listenBtn,
+          { backgroundColor: colors.primary[50], borderColor: colors.primary[200] },
+          pressed && { backgroundColor: colors.primary[100] },
+        ]}
         accessibilityRole="button"
         accessibilityLabel="Listen to medication instructions"
         testID="listen-button"
       >
         <Text style={styles.listenIcon}>🔊</Text>
-        <Text style={styles.listenText}>Listen</Text>
+        <Text style={[styles.listenText, { color: colors.primary[700] }]}>Listen</Text>
       </Pressable>
     )
   }
 
   return (
-    <View style={styles.playerContainer} testID="audio-player">
+    <View style={[styles.playerContainer, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]} testID="audio-player">
       {/* Disclaimer — AC #6 */}
-      <Text style={styles.disclaimer} testID="tts-disclaimer">
+      <Text style={[styles.disclaimer, { color: colors.textMuted }]} testID="tts-disclaimer">
         {DISCLAIMER_BY_DIALECT[dialect]}
       </Text>
 
       {state.isLoading && (
         <View style={styles.loadingRow}>
-          <ActivityIndicator size="small" color={consumerColors.primary[600]} />
-          <Text style={styles.loadingText}>Preparing audio...</Text>
+          <ActivityIndicator size="small" color={colors.primary[600]} />
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Preparing audio...</Text>
         </View>
       )}
 
       {(state.error || fallbackError) && (
         <View testID="audio-error">
-          <Text style={styles.errorText}>
+          <Text style={[styles.errorText, { color: colors.error }]}>
             {state.error ?? fallbackError}
           </Text>
           <Pressable onPress={handleDismiss} style={styles.dismissBtn} testID="dismiss-button">
-            <Text style={styles.dismissText}>Close</Text>
+            <Text style={[styles.dismissText, { color: colors.primary[600] }]}>Close</Text>
           </Pressable>
         </View>
       )}
@@ -174,7 +187,7 @@ export function ListenButton({
           {/* Play/Pause button */}
           <Pressable
             onPress={state.isPlaying ? pause : resume}
-            style={styles.playPauseBtn}
+            style={[styles.playPauseBtn, { backgroundColor: colors.primary[100] }]}
             accessibilityRole="button"
             accessibilityLabel={state.isPlaying ? 'Pause' : 'Play'}
             testID="play-pause-button"
@@ -186,15 +199,15 @@ export function ListenButton({
 
           {/* Progress bar */}
           <View style={styles.progressContainer}>
-            <View style={styles.progressTrack}>
+            <View style={[styles.progressTrack, { backgroundColor: colors.secondary[100] }]}>
               <View
-                style={[styles.progressFill, { width: `${Math.round(state.progress * 100)}%` }]}
+                style={[styles.progressFill, { width: `${Math.round(state.progress * 100)}%`, backgroundColor: colors.primary[500] }]}
                 testID="progress-bar"
               />
             </View>
             <View style={styles.timeRow}>
-              <Text style={styles.timeText}>{formatTime(state.positionMs)}</Text>
-              <Text style={styles.timeText}>{formatTime(state.durationMs)}</Text>
+              <Text style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.positionMs)}</Text>
+              <Text style={[styles.timeText, { color: colors.textMuted }]}>{formatTime(state.durationMs)}</Text>
             </View>
           </View>
 
@@ -206,13 +219,13 @@ export function ListenButton({
             accessibilityLabel="Close audio player"
             testID="dismiss-button"
           >
-            <Text style={styles.dismissIcon}>✕</Text>
+            <Text style={[styles.dismissIcon, { color: colors.textMuted }]}>✕</Text>
           </Pressable>
         </View>
       )}
 
       {state.isComplete && (
-        <Text style={styles.completeText} testID="playback-complete">
+        <Text style={[styles.completeText, { color: colors.textMuted }]} testID="playback-complete">
           Playback complete
         </Text>
       )}
@@ -225,15 +238,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: consumerColors.primary[50],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: consumerBorderRadius.badge,
     borderWidth: 1,
-    borderColor: consumerColors.primary[200],
-  },
-  listenBtnPressed: {
-    backgroundColor: consumerColors.primary[100],
   },
   listenIcon: {
     fontSize: 16,
@@ -241,19 +249,15 @@ const styles = StyleSheet.create({
   listenText: {
     fontSize: consumerTypography.captionSize,
     fontWeight: consumerTypography.fontWeightLabel,
-    color: consumerColors.primary[700],
   },
   playerContainer: {
-    backgroundColor: consumerColors.surfaceElevated,
     borderRadius: consumerBorderRadius.card,
     padding: consumerSpacing.cardPadding,
     gap: 8,
     borderWidth: 1,
-    borderColor: consumerColors.border,
   },
   disclaimer: {
     fontSize: consumerTypography.captionSize - 1,
-    color: consumerColors.textMuted,
     fontStyle: 'italic',
     textAlign: 'center',
   },
@@ -265,7 +269,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.textMuted,
   },
   controlsRow: {
     flexDirection: 'row',
@@ -276,7 +279,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: consumerColors.primary[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -289,13 +291,11 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 4,
-    backgroundColor: consumerColors.secondary[100],
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: consumerColors.primary[500],
     borderRadius: 2,
   },
   timeRow: {
@@ -304,29 +304,24 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 10,
-    color: consumerColors.textMuted,
   },
   dismissBtn: {
     padding: 4,
   },
   dismissIcon: {
     fontSize: 16,
-    color: consumerColors.textMuted,
   },
   dismissText: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.primary[600],
     textAlign: 'center',
     paddingVertical: 4,
   },
   errorText: {
     fontSize: consumerTypography.captionSize,
-    color: 'hsl(0, 70%, 50%)',
     textAlign: 'center',
   },
   completeText: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.textMuted,
     textAlign: 'center',
   },
 })

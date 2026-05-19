@@ -13,6 +13,9 @@ export default defineConfig({
       '@ultranos/audit-logger': path.resolve(__dirname, '../../packages/audit-logger/src/index.ts'),
       '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
       '@ultranos/sync-engine': path.resolve(__dirname, '../../packages/sync-engine/src/index.ts'),
+      '@ultranos/crypto/server-crypto': path.resolve(__dirname, '../../packages/crypto/src/server-crypto.ts'),
+      '@ultranos/crypto/server': path.resolve(__dirname, '../../packages/crypto/src/server-crypto.ts'),
+      '@ultranos/crypto': path.resolve(__dirname, '../../packages/crypto/src/index.ts'),
     },
   },
 })

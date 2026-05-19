@@ -1,8 +1,8 @@
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
-import type { FhirPatient, FhirConsent } from '@ultranos/shared-types'
+import type { FhirPatient, FhirConsent, FhirAllergyIntolerance } from '@ultranos/shared-types'
 import type { FhirEncounterZod, FhirMedicationRequestZod } from '@ultranos/shared-types'
-import { FhirPatientSchema, FhirEncounterSchema, FhirMedicationRequestSchema } from '@ultranos/shared-types'
+import { FhirPatientSchema, FhirEncounterSchema, FhirMedicationRequestSchema, FhirAllergyIntoleranceSchema } from '@ultranos/shared-types'
 import { z } from 'zod'
 
 /**
@@ -83,6 +83,7 @@ const MEDICAL_HISTORY_KEY_PREFIX = 'ultranos_medical_history_'
 export interface StoredMedicalHistory {
   encounters: FhirEncounterZod[]
   medications: FhirMedicationRequestZod[]
+  allergies?: FhirAllergyIntolerance[]
 }
 
 export async function saveMedicalHistory(
@@ -117,6 +118,7 @@ export async function loadMedicalHistory(
   const StoredMedicalHistorySchema = z.object({
     encounters: z.array(FhirEncounterSchema),
     medications: z.array(FhirMedicationRequestSchema),
+    allergies: z.array(FhirAllergyIntoleranceSchema).optional(),
   })
 
   try {

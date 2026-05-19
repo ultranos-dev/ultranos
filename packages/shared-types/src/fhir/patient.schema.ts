@@ -22,6 +22,8 @@ const IdentifierSchema = z.object({
   value: z.string(),
 })
 
+const PatientTierSchema = z.enum(['FREE', 'PREMIUM'])
+
 const PatientUltranosExtSchema = z.object({
   nameLocal: z.string(),
   nameLatin: z.string().optional(),
@@ -29,6 +31,8 @@ const PatientUltranosExtSchema = z.object({
   nationalIdHash: z.string().optional(),
   guardianId: z.string().uuid().optional(),
   consentVersion: z.string().optional(),
+  patient_tier: PatientTierSchema,
+  preferredLanguage: z.string().optional(),
   isActive: z.boolean(),
   createdBy: z.string().uuid().optional(),
   createdAt: z.string().datetime(),

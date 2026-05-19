@@ -1,0 +1,181 @@
+name: RTL Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.tsx'
+      - '**/*.ts'
+      - '**/*.css'
+      - '**/tailwind.config.*'
+      - 'tests/rtl/**'
+      - 'playwright.config.ts'
+
+concurrency:
+  group: rtl-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snapshot-commit-check:
+    name: Snapshot Commit Tag Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check snapshot file changes have [rtl-snapshots] tag
+        run: |
+          # Get list of commits in this PR
+          COMMITS=$(git log --format="%H" origin/main..HEAD)
+          FAIL=0
+          for COMMIT in $COMMITS; do
+            # Check if this commit modifies snapshot files
+            # -m ensures merge commits show changes from all parents
+            SNAPSHOT_FILES=$(git diff-tree -m --no-commit-id --name-only -r "$COMMIT" | grep -E 'tests/rtl/__snapshots__/' | sort -u || true)
+            if [ -n "$SNAPSHOT_FILES" ]; then
+              MSG=$(git log -1 --format="%s" "$COMMIT")
+              if ! echo "$MSG" | grep -q '\[rtl-snapshots\]'; then
+                echo "ERROR: Commit $COMMIT modifies RTL snapshots but message lacks [rtl-snapshots] tag"
+                echo "  Message: $MSG"
+                echo "  Files: $SNAPSHOT_FILES"
+                FAIL=1
+              fi
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            echo ""
+            echo "Snapshot updates must be in dedicated commits with [rtl-snapshots] in the message."
+            exit 1
+          fi
+          echo "Snapshot commit check passed."
+
+  rtl-lint:
+    name: Physical CSS Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint for physical CSS properties
+        run: pnpm lint
+
+  rtl-snapshots:
+    name: RTL Snapshot Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: rtl-lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build shared packages
+        run: pnpm build
+
+      - name: Run RTL snapshot tests
+        run: pnpm rtl:test
+        env:
+          CI: true
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-for-ci
+
+      - name: Upload visual diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtl-visual-diff-report
+          path: tests/rtl/html-report/
+          retention-days: 14
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtl-test-results
+          path: tests/rtl/test-results/
+          retention-days: 14
+
+      - name: Comment on PR with failure notice
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '## RTL Validation Failed',
+              '',
+              'RTL snapshot tests detected visual regressions. Please review the visual diff report.',
+              '',
+              '**Actions:**',
+              '- Download the `rtl-visual-diff-report` artifact for a detailed HTML comparison',
+              '- If the changes are intentional, update baselines with: `pnpm rtl:update-snapshots`',
+              '- Commit updated snapshots in a dedicated commit with `[rtl-snapshots]` in the message',
+              '',
+              '> Threshold: 0.1% pixel difference tolerance',
+            ].join('\n')
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            })
+
+  rtl-mobile:
+    name: Mobile RTL Snapshot Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: rtl-lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: |
+          pnpm -F @ultranos/shared-types build
+          pnpm -F @ultranos/ui-kit build
+          pnpm -F @ultranos/sync-engine build
+          pnpm -F @ultranos/audit-logger build
+
+      - name: Run Patient Lite Mobile RTL tests
+        run: pnpm -F @ultranos/patient-lite-mobile test -- --testPathPattern="rtl-snapshots"
+        env:
+          CI: true

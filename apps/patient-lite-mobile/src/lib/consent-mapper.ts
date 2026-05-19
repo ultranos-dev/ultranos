@@ -55,6 +55,8 @@ interface CreateConsentInput {
   purpose: ConsentPurpose
   hlcTimestamp: string
   grantorRole: GrantorRole
+  /** When grantorRole is GUARDIAN, this is the guardian's user ID */
+  grantorUserId?: string
 }
 
 interface WithdrawConsentInput extends CreateConsentInput {
@@ -98,7 +100,7 @@ export async function createConsent(input: CreateConsentInput): Promise<FhirCons
       period: { start: now },
     },
     _ultranos: {
-      grantorId: input.patientId,
+      grantorId: input.grantorUserId ?? input.patientId,
       grantorRole: input.grantorRole,
       purpose: input.purpose,
       validFrom: now,
@@ -151,7 +153,7 @@ export async function withdrawConsent(input: WithdrawConsentInput): Promise<Fhir
       period: { start: now, end: now },
     },
     _ultranos: {
-      grantorId: input.patientId,
+      grantorId: input.grantorUserId ?? input.patientId,
       grantorRole: input.grantorRole,
       purpose: input.purpose,
       validFrom: now,

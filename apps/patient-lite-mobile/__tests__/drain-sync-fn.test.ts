@@ -1,9 +1,12 @@
 import type { SyncQueueEntry } from '@ultranos/sync-engine'
 import { createDrainSyncFn } from '@/lib/drain-sync-fn'
 
-// Mock global fetch
-const mockFetch = jest.fn()
-global.fetch = mockFetch
+// Mock hubFetch — drain-sync-fn now uses certificate-pinned fetch (Story 21.5)
+const mockHubFetch = jest.fn()
+jest.mock('@/lib/hub-fetch', () => ({
+  hubFetch: (...args: unknown[]) => mockHubFetch(...args),
+  CompromisedDeviceError: class extends Error { name = 'CompromisedDeviceError' },
+}))
 
 function makeEntry(overrides: Partial<SyncQueueEntry> = {}): SyncQueueEntry {
   return {
@@ -36,20 +39,21 @@ describe('drain-sync-fn', () => {
 
     expect(result.success).toBe(false)
     expect(result.error).toBe('AUTH_EXPIRED')
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(mockHubFetch).not.toHaveBeenCalled()
   })
 
   it('routes Consent to consent.sync endpoint', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: () => Promise.resolve({}),
     })
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
     await syncFn(makeEntry({ resourceType: 'Consent' }))
 
-    expect(mockFetch).toHaveBeenCalledWith(
+    expect(mockHubFetch).toHaveBeenCalledWith(
       'https://hub.ultranos.test/api/consent.sync',
       expect.objectContaining({
         method: 'POST',
@@ -61,41 +65,44 @@ describe('drain-sync-fn', () => {
   })
 
   it('routes Patient to patient.update endpoint', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: () => Promise.resolve({}),
     })
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
     await syncFn(makeEntry({ resourceType: 'Patient' }))
 
-    expect(mockFetch).toHaveBeenCalledWith(
+    expect(mockHubFetch).toHaveBeenCalledWith(
       'https://hub.ultranos.test/api/patient.update',
       expect.any(Object),
     )
   })
 
   it('routes unknown resource types to sync.push endpoint', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: () => Promise.resolve({}),
     })
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
     await syncFn(makeEntry({ resourceType: 'Encounter' }))
 
-    expect(mockFetch).toHaveBeenCalledWith(
+    expect(mockHubFetch).toHaveBeenCalledWith(
       'https://hub.ultranos.test/api/sync.push',
       expect.any(Object),
     )
   })
 
   it('returns success on 200 response', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: () => Promise.resolve({}),
     })
 
@@ -106,10 +113,11 @@ describe('drain-sync-fn', () => {
   })
 
   it('returns AUTH_EXPIRED on 401 response', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: false,
       status: 401,
       statusText: 'Unauthorized',
+      headers: new Headers(),
     })
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
@@ -120,10 +128,11 @@ describe('drain-sync-fn', () => {
   })
 
   it('returns failure on non-OK response', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
+      headers: new Headers(),
     })
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
@@ -134,9 +143,10 @@ describe('drain-sync-fn', () => {
   })
 
   it('returns conflict when Hub reports one', async () => {
-    mockFetch.mockResolvedValue({
+    mockHubFetch.mockResolvedValue({
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: () => Promise.resolve({
         conflict: {
           remoteVersion: { id: 'remote-1', data: {}, hlcTimestamp: { wallMs: 1, counter: 0, nodeId: 'hub' }, version: '2' },
@@ -153,7 +163,7 @@ describe('drain-sync-fn', () => {
   })
 
   it('handles network errors gracefully', async () => {
-    mockFetch.mockRejectedValue(new Error('Network request failed'))
+    mockHubFetch.mockRejectedValue(new Error('Network request failed'))
 
     const syncFn = createDrainSyncFn({ getAuthToken, getHubUrl })
     const result = await syncFn(makeEntry())

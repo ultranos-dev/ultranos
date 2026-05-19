@@ -14,6 +14,7 @@ import {
   deleteEcdsaKeyPair,
 } from '@ultranos/crypto/mobile'
 import * as SecureStore from 'expo-secure-store'
+import { hubFetch } from '@/lib/hub-fetch'
 
 const REGISTRATION_STATUS_KEY = 'ultranos_ecdsa_key_registered'
 const PENDING_PUBLIC_KEY = 'ultranos_ecdsa_pending_public_key'
@@ -148,7 +149,7 @@ async function registerPublicKeyWithHub(
     const url = new URL(baseUrl)
     url.pathname = url.pathname.replace(/\/$/, '') + '/patientKey.register'
 
-    const res = await fetch(url.toString(), {
+    const res = await hubFetch(url.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

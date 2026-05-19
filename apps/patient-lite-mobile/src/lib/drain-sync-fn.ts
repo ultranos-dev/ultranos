@@ -10,6 +10,7 @@
  * so the drain worker pauses without exhausting retries.
  */
 import type { SyncQueueEntry, SyncResult } from '@ultranos/sync-engine'
+import { hubFetch, CompromisedDeviceError } from '@/lib/hub-fetch'
 
 /** Auth token provider — returns the current OTP session token or null if expired. */
 export type GetAuthToken = () => Promise<string | null>
@@ -52,7 +53,7 @@ export function createDrainSyncFn(
     const url = `${hubUrl}${endpoint}`
 
     try {
-      const response = await fetch(url, {
+      const response = await hubFetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,6 +100,14 @@ export function createDrainSyncFn(
 
       return { success: true }
     } catch (err) {
+      // Compromised device — non-retryable, pause drain like auth-expired
+      if (err instanceof CompromisedDeviceError) {
+        return {
+          success: false,
+          error: 'DEVICE_COMPROMISED',
+          authExpired: true, // Reuse pause mechanism — drain worker stops retrying
+        }
+      }
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Network error',

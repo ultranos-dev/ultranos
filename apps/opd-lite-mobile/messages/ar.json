@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "العيادات الخارجية",
+    "loading": "جاري التحميل..."
+  },
+  "nav": {
+    "patients": "المرضى",
+    "encounters": "الزيارات",
+    "settings": "الإعدادات"
+  },
+  "auth": {
+    "loginRequired": "تسجيل الدخول مطلوب",
+    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى."
+  },
+  "patient": {
+    "search": "بحث عن مرضى...",
+    "noResults": "لم يتم العثور على مرضى",
+    "newPatient": "مريض جديد"
+  },
+  "encounter": {
+    "active": "الزيارة الحالية",
+    "history": "السجل",
+    "newEncounter": "زيارة جديدة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "restartRequired": "يلزم إعادة تشغيل التطبيق لتطبيق تغييرات التخطيط"
+  },
+  "common": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "error": "حدث خطأ",
+    "retry": "إعادة المحاولة"
+  }
+}

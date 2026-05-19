@@ -18,6 +18,19 @@
 
 - **W1: `@ultranos/audit-logger` undeclared in hub-api `package.json`** — Pre-existing: AuditLogger is imported across many hub-api files without being declared in `package.json`. Works via pnpm workspace hoisting but will break if hoisting behavior changes. Add `"@ultranos/audit-logger": "workspace:*"` to dependencies.
 - **W2: Module-level `cachedMap` in drug-db checker has no invalidation strategy** — The interaction vocabulary cache in `checker.ts` persists in process memory indefinitely. If `vocab_interactions` is updated without restarting the server, stale data is served. Requires an ops-level cache invalidation mechanism (e.g., `invalidateCache()` call after vocab sync).
+
+## Deferred from: code review of 1-4-mobile-identity-verification-sqlcipher-persistence (2026-05-18)
+
+- **W1: `mergeAppendOnly` uses string equality for deduplication** — Allergies/meds stored as flat strings; case-sensitive Set means "Penicillin" and "penicillin" are treated as different entries. Proper fix requires structured allergy model (FHIR AllergyIntolerance).
+- **W2: No schema migration versioning (PRAGMA user_version)** — Future schema changes will break existing installs silently. Needs a migration mechanism (versioned schema with ALTER TABLE) before next schema change.
+- **W3: No <500ms performance test with 1000 records (NFR4)** — All tests mock the DB. Requires device-level integration testing infrastructure to validate.
+
+## Deferred from: code review of 18-6-patient-notification-center (2026-05-18)
+
+- **W1: Module-level `pollInterval` singleton can leak on HMR/testing** — `notification-store.ts:38`: `pollInterval` is a module-scope `let`. If store is recreated (HMR, tests), old interval keeps firing but variable is reset, leaking the timer.
+- **W2: `markAsRead` fire-and-forget API call has no offline queue/retry** — `notification-store.ts:146`: Comment says "will sync later" but no sync mechanism exists. Needs integration with the sync-engine's offline queue.
+- **W3: `isDatabaseOpen()` returns stale true during concurrent `closeDatabase()`** — `encrypted-db.ts:231`: Race window between close start and `dbInstance = null` allows queries on a closing connection.
+- **W4: tRPC response parsing assumes exact envelope shape with no validation** — `notification-api.ts:57-59`: Response cast as `{ result: { data: { json: T } } }` with no runtime check. Different error envelope or tRPC version change causes silent failure.
 - **W3: No pagination on `getInteractions()` — loads entire vocab table** — `supabase-drug-adapter.ts` `getInteractions()` does `select(...)` with no limit. Large interaction databases could cause memory pressure. Consider pagination or streaming.
 
 ## Deferred from: code review of 1-3-pwa-identity-verification-dexie-persistence (2026-04-28)
@@ -725,3 +738,99 @@
 - **W22: Staleness banner not wired into any UI component** — `getStalenessBannerMessage()` exported from model-staleness-checker.ts but no .tsx consumer renders it. UI integration belongs to a frontend wiring task.
 - **W23: `startModelUpdateScheduler` never called from app entry points** — Scheduler exported but never imported by app layout or root component. App initialization wiring is separate integration work.
 - **W24: `isDrugDatabaseStale` never called from prescription workflow** — Function exists but PrescriptionEntry doesn't gate on it. Prescription workflow integration belongs to drug-interaction story wiring.
+
+## Deferred from: code review of 18-4-patient-home-dashboard (2026-05-18)
+
+- **W25: Audit event resourceType 'Encounter' on generic failure** — useMedicalHistory.ts catch block always logs `resourceType: 'Encounter'` even when the actual failure may be in medication loading. Should use 'Bundle' or emit type-specific events.
+- **W26: birthYearOnly on patient root vs _ultranos** — `patient.birthYearOnly` is not a standard FHIR field. If it's an Ultranos extension, it should be in `patient._ultranos.birthYearOnly`. Pre-existing type design decision.
+- **W27: PatientQRCode hardcoded English strings** — "Unverified" and "Valid for X hours" in PatientQRCode.tsx are raw English strings not passed through i18n. Pre-existing component not modified by this story.
+- **W28: Duplicate unverified badge rendering** — Both PatientQRCode and QRValidityIndicator render separate "Unverified" badges with same testID. User sees double indicator in QR section.
+- **W29: marginBottom/marginTop physical properties** — Vertical spacing in HomeDashboardScreen.tsx and QRFullScreen.tsx uses physical not logical CSS properties. Low RTL impact since vertical margins don't flip.
+- **W30: Allergy severity not shown for non-high criticality** — Only `'high'` criticality allergies get a severity subtitle label. Medium/low criticality allergies show no subtitle. Enhancement beyond current AC scope.
+- **W31: QR signature verification not wired up** — `hasSignature` hardcoded to `false` in HomeDashboardScreen.tsx. Epic 25 ECDSA-P256 is done but end-to-end signing flow needs integration. Spec says "if not yet available, show Unverified gracefully."
+- **W32: QR expiry semantics mismatch (30-day vs 24-hour)** — Dashboard displays "Valid for 30 days" but PatientQRCode uses 24-hour expiry. PRD says "30-day expiry auto-renewed on sync." Needs design decision on actual QR expiry policy.
+
+## Deferred from: code review of 18-3-language-onboarding-gateway (2026-05-18)
+
+- **W33: Auth phase / store state desync on session expiry** — `authPhase` state in AuthNavigator initializes once and has no `useEffect` to reset when `isAuthenticated` flips to false (e.g., session expiry). Render-time guard catches it, but `authPhase` stays stale. Pre-existing from Story 18.2.
+- **W34: Deep link timing gap — brief TabNavigator flash before onboarding redirect** — `authPhase` initializes to `'app'` for authenticated users, then async `isOnboardingComplete()` check may redirect to `'onboarding'`. Between initial render and async resolution, deep links can land in TabNavigator. Pre-existing architectural issue.
+- **W35: `biometricEnrolled` stale in `handleLoginSuccess` closure** — `handleLoginSuccess` captures `biometricEnrolled` from render time via `useCallback([biometricEnrolled])`. If login process itself changes biometric state, callback holds stale value. Pre-existing from Story 18.2.
+- **W36: `authPhase` initializer can't synchronously check async onboarding state** — Initial state function can only read sync values (`isAuthenticated`, `biometricEnrolled`). Can't call `isOnboardingComplete()` synchronously. Returning authenticated user briefly sees TabNavigator before `useEffect` redirects to onboarding. React Native platform limitation.
+- **W37: `NotoSansArabic-Bold` font loading not verified in VisualLanguageGateway** — `fontFamily: 'NotoSansArabic-Bold'` referenced for Arabic/Dari buttons but no font-loading guard (no `useFonts` hook). If font isn't loaded, silently falls back to system font. Epic 11 infrastructure concern.
+
+## Deferred from: code review of 18-7-guardian-linking-consent-delegation (2026-05-18)
+
+- **W38: `audit.ts` in-memory queue unbounded, lost on crash** — `auditQueue` array at `audit.ts:24-34` has no max size or TTL, and is never persisted to disk. App crash loses all queued audit events. Pre-existing issue amplified by new guardian audit event types.
+- **W39: HLC timestamp may not be parseable by `new Date()`** — `useConsentSettings.ts:111` sets `consent.dateTime` to serialized HLC. If HLC format includes logical counter (e.g., `1716019200000-0-patient-lite`), `new Date()` returns NaN, breaking date display and toggle state derivation in PrivacySettingsScreen. Pre-existing pattern.
+- **W40: `NotificationIndicator` silent no-op on null parent navigator** — `NotificationIndicator.tsx:22-26` guards `navigation.getParent()` returning null but provides no user feedback. Bell icon becomes a dead button. Pre-existing.
+
+## Deferred from: code review of 18-7a-hub-api-guardian-endpoints (2026-05-18)
+
+- **W41: `[AUTH_DEBUG]` console.log in `init.ts` leaks JWT `sub` to logs** — Pre-existing: `createTRPCContext` in `init.ts` contains debug console.log statements that dump `payload.sub`, `payload.iss`, `payload.aud`, and the full resolved user object. Affects all endpoints including guardian. Remove before production.
+- **W42: No rate limiting on `guardian.verifyOtp` — 6-digit OTP brute-forceable** — A 6-digit OTP has 1M combinations. The `patient.ts` router uses `rateLimitMiddleware` but `verifyOtp` has none. If Supabase Admin SDK bypasses client-side rate limits, this is exploitable. Add rate limiting at the endpoint or infrastructure level.
+- **W43: `createLink` input schema doesn't reference shared `GuardianLink` type** — The input uses an inline Zod schema rather than the `GuardianLink` type from `@ultranos/shared-types`. If the shared type evolves, this inline schema will silently drift.
+
+## Deferred from: code review of 18-11-dark-mode-theme-toggle Chunk 1 (2026-05-18)
+
+- **W44: `consumerStyles` in `consumer.ts` bakes light-mode colors at module load** — Pre-existing: `consumerStyles` uses static `consumerColors` from ui-kit. Components still referencing these will ignore dark mode. Deprecate in favor of theme-aware patterns.
+- **W45: `SAFETY_COLORS` uses flat light/dark keys** — Inconsistent with per-theme structure used by `healthCardColors` and `notificationTypeColors`. Functional but increases maintenance burden. Refactor when safety color system is revisited.
+- **W46: `Appearance.getColorScheme()` returns `null` on some Android devices** — Known React Native limitation. Causes brief light-mode flash before listener corrects. Accept or defer render until first listener event.
+- **W47: `defaultContextValue.setMode` is a silent no-op** — `useTheme()` outside `ThemeProvider` silently fails to change theme. Add `__DEV__` warning for misuse detection.
+- **W48: ThemeToggle uses emoji icons instead of vector icons** — Emoji rendering varies across Android versions/devices. Replace with SVG/icon library components for consistency.
+
+## Deferred from: code review of 18-5-allergy-display-integration (2026-05-18)
+
+- **W49: Hardcoded English strings in MedicalTimeline.tsx** — Multiple untranslated strings ("Loading your medical history...", "No medical history yet", "My Health History", "Timeline", "Visit Details", "Medicine Details", "Private Health Matter", etc.) are not wrapped in `t()` calls. Pre-existing before Story 18.5. Belongs to Epic 11 i18n stories.
+
+## Deferred from: code review of 18-11-dark-mode-theme-toggle Chunks 2-4 (2026-05-18)
+
+- **W50: OnboardingFlow `handleNext` reads stale `step` closure** — Pre-existing from Story 11.7. Works by coincidence but fragile.
+- **W51: PatientQRCode generates payload twice on mount** — Pre-existing from Story 5.1.
+- **W52: PatientSummaryCard `calculateAge` birthYearOnly doesn't guard future years** — Displays negative age.
+- **W53: PatientQRCode hooks run with empty `patientId`** — Early return doesn't prevent hooks from executing.
+- **W54: QRFullScreen hardcoded dark bg** — Intentional for scanning, acceptable design.
+- **W55: AsyncStorage manual mock leaks state between test files** — Module-scoped `store` not cleared.
+
+## Deferred from: code review of 18-8-fhir-r4-bundle-export (2026-05-18)
+
+- **W56: Uses local `@/lib/audit` instead of `@ultranos/audit-logger`** — Pre-existing pattern across patient-lite-mobile. CLAUDE.md requires `@ultranos/audit-logger` but all audit calls in this app use the local module.
+- **W57: Local audit logger lacks SHA-256 hash chaining** — Pre-existing architectural gap. CLAUDE.md requires append-only with SHA-256 hash chaining.
+- **W58: No `patient_id` filter on DB queries in bundle builder** — Single-patient app by design (LIMIT 1 on profiles confirms). Add filter if multi-patient support is added.
+- **W59: Unbounded queries / memory pressure on large datasets** — `getAllAsync` has no LIMIT clause. Unlikely for single patient history but could OOM on low-resource devices with extensive records.
+- **W60: `parseJsonSafe` doesn't report count of skipped records** — Malformed rows silently skipped. User has no indication export may be incomplete.
+- **W61: Progress text shows per-type messages, not running record count** — AC #7 says "Preparing 42 records..." but implementation shows "Preparing Encounter records..." during generation.
+
+## Deferred from: code review of 18-9-sensitive-medication-privacy-flagging (2026-05-18)
+
+- **W62: Dose/frequency not shown for medications** — AC #7 references "full name, dose, frequency" but neither sensitive nor non-sensitive medication paths display dose/frequency separately. Pre-existing gap in medication display model.
+- **W63: Duplicate biometric/audit/timer logic between TimelineItem and SensitiveMedicationItem** — Both components independently implement identical biometric unlock, PHI_UNMASK audit, and 30-second auto-hide logic. Maintenance risk — changes in one won't propagate to the other. Consider extracting a shared hook.
+- **W64: Overly aggressive sensitivity on free-text encounter reasons** — `humanizeEncounter()` marks all text-only reasons (no ICD-10 code) as sensitive, including benign encounters like "Routine checkup". Pre-existing from the original sensitivity implementation.
+- **W62: Export button uses emoji instead of proper icon component** — `📄` renders inconsistently across platforms; rest of app uses icon components.
+- **W63: `meta.tag.system` is bare string `'ultranos'` not a URI** — FHIR R4 `Coding.system` should be a URI (e.g., `https://ultranos.com/tags`).
+
+## Deferred from: code review of 27-10-patient-self-registration-flow (2026-05-18)
+
+- **W1: Device security check blocks registration on first app launch** — `hubFetch` blocks all non-GET when device security `!checked`. New installs can't register until check completes. Pre-existing guard in hubFetch. [hub-fetch.ts:43]
+- **W2: No proactive network connectivity check before registration** — Errors are caught but user gets generic message, not "you're offline." UX enhancement. [PhoneInputScreen.tsx:69]
+- **W3: Hardcoded `'self-registration'` as audit sessionId** — Pre-existing audit pattern. All self-registrations share one session ID, making forensic correlation harder. [patient-registration.ts:160]
+- **W4: Error overlay positioned absolutely — may be hidden by keyboard on small devices** — UX polish, not a functional bug. [RegistrationNavigator.tsx:131-141]
+- **W5: Client exposes raw server error messages to user** — Currently safe (server uses generic messages), but pattern is fragile for future changes. [RegistrationNavigator.tsx:76-83]
+
+## Deferred from: code review of 27-11-freemium-tier-definition-feature-gating (2026-05-18)
+
+- **W1: PRIORITY_SUPPORT feature defined but ungated everywhere** — Listed in AC #2 as a premium feature but has no endpoint, no screen, and no PremiumGate wrapping. No implementation target exists yet.
+- **W2: Guardian nonce bypass when Redis unavailable** — `guardian.ts:95-98,151-163`. Without Redis, `createLink` skips OTP nonce verification entirely. Fail-open is active in all environments, not just dev. Pre-existing Story 18.7a behavior — security follow-up needed to enforce nonce validation or require Redis.
+
+## Deferred from: code review of 27-12-patient-in-app-upgrade-flow (2026-05-18)
+
+- **D1: Purchase and restore flows bypass Hub API — AC3 unimplemented.** `handleSubscribe` comments out the tRPC call to `patient.updateTier`; `handleRestore` also sets tier locally without server validation. `acknowledgePurchase` fires before server confirmation. Reason: bundled with D2/D3 as a single production-hardening task — server-side security pipeline is scaffolded but not connected. [SubscriptionScreen.tsx:109-116, 136-141]
+- **D2: `validatePurchaseReceipt` stub fails open — accepts all non-empty tokens.** The function returns `true` unconditionally when store API env vars are not configured. Production must fail closed. Reason: requires GOOGLE_PLAY_SERVICE_ACCOUNT_KEY / APPLE_APP_STORE_SERVER_KEY and actual store API integration. [patient.ts:606-633]
+- **D3: Webhook has no signature verification — unauthenticated tier manipulation possible.** Apple JWS not verified, Google Pub/Sub push token not checked. Reason: requires Apple root cert chain and Google Pub/Sub audience configuration. [webhook/route.ts:27-283]
+- **D4: Settings → Subscription navigation path absent — AC1 partially unmet.** AC1 specifies Settings → Subscription but no Settings screen exists. SubscriptionScreen is reachable via PremiumGate CTAs. Reason: Settings screen is likely a separate story/epic concern.
+
+## Deferred from: code review of 1-5-rtl-global-context-mirroring (2026-05-18)
+
+- **D-RTL1: DirectionalIcon exported but never used in any app component.** The component is built, tested, and exported from `@ultranos/ui-kit` but zero app-level `.tsx` files import it. AC#4 (icon mirroring) is structurally ready but not wired. Needs a dedicated icon migration pass.
+- **D-RTL2: `Noto Naskh Arabic` (clinical serif font) declared but never applied.** `--font-family-serif-ar` is defined in `tokens.css` but no component references it. AC#5 (clinical font switching) is partially unmet. Blocked until clinical document views are implemented.
+- **D-RTL3: `patient-lite-mobile` never calls `initI18n()`.** The i18n module exists at `src/i18n/index.ts` but `App.tsx` never invokes it. Pre-existing issue not introduced by Story 1-5.
+- **D-RTL4: RTL snapshot test gaps.** EncounterDashboard (pre-existing render issue), PatientSearchScreen, PatientResultList (OPD-Lite), and LabelPreviewPanel (Pharmacy-Lite, missing `dir="rtl"` container wrapper) lack proper RTL direction snapshot tests. AC#8 partially unmet.

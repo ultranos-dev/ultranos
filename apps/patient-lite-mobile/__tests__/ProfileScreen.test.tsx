@@ -17,6 +17,10 @@ jest.mock('@/components/PatientQRCode', () => ({
   },
 }))
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
+}))
+
 jest.mock('@/hooks/usePatientProfile')
 
 const mockUsePatientProfile = jest.spyOn(usePatientProfileModule, 'usePatientProfile')

@@ -6,6 +6,7 @@ import {
   type LocalModelMetadata,
 } from '@ultranos/shared-types'
 import { getEncryptedDbConnection } from './encrypted-db'
+import { hubFetch } from './hub-fetch'
 
 /**
  * Model Staleness Checker for Patient Lite Mobile — Story 24.4
@@ -131,7 +132,7 @@ export async function checkAllModelsStaleness(hubApiBaseUrl?: string): Promise<S
     }))
 
     try {
-      await fetch(`${hubApiBaseUrl}/api/trpc/ai.reportModelUpdateEvents`, {
+      await hubFetch(`${hubApiBaseUrl}/api/trpc/ai.reportModelUpdateEvents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ json: { events } }),

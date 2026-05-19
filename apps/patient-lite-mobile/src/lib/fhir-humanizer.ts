@@ -8,7 +8,13 @@
  *
  * Privacy guardrail: Sensitive categories (mental health, HIV/STI)
  * are flagged so the timeline can hide them behind an explicit tap.
+ *
+ * Medication privacy: ATC code classification detects sensitive
+ * medications (antiretrovirals, psychiatric, opioid substitution)
+ * and flags them for privacy gating (Story 18.9).
  */
+
+import { isSensitiveMedication, extractAtcCode } from '@/utils/medication-privacy'
 
 export type IconCategory =
   | 'stethoscope'
@@ -24,6 +30,7 @@ export type IconCategory =
   | 'bandage'
   | 'thermometer'
   | 'clipboard'
+  | 'warning'
 
 export type SupportedLocale = 'en' | 'ar' | 'fa-AF'
 
@@ -221,18 +228,29 @@ export function humanizeEncounter(
 /**
  * Generate a simple label for a medication.
  * Prefers the CodeableConcept text, falling back to generic "Medicine" label.
+ *
+ * ATC-based sensitivity: checks coding entries for ATC/WHO-ATC system codes
+ * and flags medications in sensitive categories (HIV, psychiatric, opioid).
+ *
+ * NOTE: When `isSensitive` is true, `label` still contains the real medication
+ * name — UI consumers MUST check `isSensitive` and mask the label themselves.
+ * This differs from `humanizeIcd10()` which returns a masked label directly.
+ * The real name is needed for the biometric reveal flow.
  */
 export function humanizeMedication(
-  medicationConcept: { coding?: Array<{ display?: string }>; text?: string } | undefined,
+  medicationConcept: { coding?: Array<{ system?: string; code?: string; display?: string }>; text?: string } | undefined,
   locale: SupportedLocale = 'en',
 ): HumanizedLabel {
   const displayText =
     medicationConcept?.text ??
     medicationConcept?.coding?.[0]?.display
 
+  const atcCode = extractAtcCode(medicationConcept?.coding)
+  const sensitive = isSensitiveMedication(atcCode)
+
   return {
     label: displayText ?? MEDICATION_LABELS[locale],
     icon: 'pill',
-    isSensitive: false,
+    isSensitive: sensitive,
   }
 }

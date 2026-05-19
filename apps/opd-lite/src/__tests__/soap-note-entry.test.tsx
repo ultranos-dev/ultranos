@@ -81,4 +81,24 @@ describe('SOAPNoteEntry component', () => {
     expect(screen.getByLabelText(/subjective/i).getAttribute('placeholder')).toBeTruthy()
     expect(screen.getByLabelText(/objective/i).getAttribute('placeholder')).toBeTruthy()
   })
+
+  describe('RTL snapshot tests', () => {
+    it('matches snapshot in LTR mode', () => {
+      const { container } = render(
+        <div dir="ltr">
+          <SOAPNoteEntry {...defaultProps} />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
+    })
+
+    it('matches snapshot in RTL mode', () => {
+      const { container } = render(
+        <div dir="rtl">
+          <SOAPNoteEntry {...defaultProps} />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
+    })
+  })
 })

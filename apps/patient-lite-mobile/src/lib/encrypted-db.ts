@@ -176,6 +176,51 @@ async function applyMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
       PRAGMA user_version = 2;
     `)
   }
+
+  if (user_version < 3) {
+    // Story 18.6: Notification cache for offline viewing
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL DEFAULT '',
+        metadata TEXT NOT NULL DEFAULT '{}',
+        is_read INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        acknowledged_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+
+      PRAGMA user_version = 3;
+    `)
+  }
+
+  if (user_version < 4) {
+    // Story 18.7: Guardian linking — guardian_links table
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS guardian_links (
+        id TEXT PRIMARY KEY,
+        patient_id TEXT NOT NULL,
+        guardian_user_id TEXT NOT NULL,
+        guardian_phone TEXT NOT NULL,
+        guardian_phone_hint TEXT NOT NULL DEFAULT '',
+        role TEXT NOT NULL DEFAULT 'GUARDIAN',
+        linked_at TEXT NOT NULL,
+        linked_by TEXT NOT NULL DEFAULT 'PATIENT',
+        status TEXT NOT NULL DEFAULT 'active',
+        revoked_at TEXT,
+        FOREIGN KEY (patient_id) REFERENCES patient_profiles(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_guardian_links_patient_active ON guardian_links(patient_id, status);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_guardian_links_patient_active_unique ON guardian_links(patient_id) WHERE status = 'active';
+
+      PRAGMA user_version = 4;
+    `)
+  }
 }
 
 /**

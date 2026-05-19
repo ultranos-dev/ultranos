@@ -113,4 +113,23 @@
   /* ── Transitions ── */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+
+  /* ── Arabic font family stacks ── */
+  --font-family-sans-ar: 'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif;
+  --font-family-serif-ar: 'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif;
+
+  /* ── RTL Typography defaults (LTR values) ── */
+  --text-size-multiplier: 1;
+  --line-height-body: 1.5;
+
+  /* ── Directional Icon ── */
+  --directional-icon-transform: none;
+}
+
+/* ── RTL overrides ── */
+[dir="rtl"] {
+  --font-family-sans: var(--font-family-sans-ar);
+  --text-size-multiplier: 1.15;
+  --line-height-body: 1.8;
+  --directional-icon-transform: scaleX(-1);
 }

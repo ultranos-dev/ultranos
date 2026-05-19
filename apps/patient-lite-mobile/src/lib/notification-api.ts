@@ -4,16 +4,28 @@
  *
  * Polls Hub API for notifications. Offline-tolerant: errors are
  * silently caught and empty results returned.
+ *
+ * Uses hubFetch for certificate-pinned connections (Story 21.5 AC#3).
  */
+import { hubFetch } from '@/lib/hub-fetch'
+
+export type NotificationType =
+  | 'LAB_RESULT_AVAILABLE'
+  | 'LAB_RESULT_ESCALATION'
+  | 'PRESCRIPTION_READY'
+  | 'CONSENT_CHANGE'
 
 export interface NotificationItem {
   id: string
-  type: string
+  type: NotificationType | string
+  title: string
+  body: string
   payload: {
     testCategory?: string
     labName?: string
     uploadTimestamp?: string
     diagnosticReportId?: string
+    prescriptionId?: string
     message?: string
   }
   status: string
@@ -40,7 +52,7 @@ async function trpcQuery<T>(path: string, input?: object, token?: string): Promi
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(url.toString(), { method: 'GET', headers })
+  const res = await hubFetch(url.toString(), { method: 'GET', headers })
   if (!res.ok) {
     throw new Error(`Hub API error: ${res.status}`)
   }
@@ -59,7 +71,7 @@ async function trpcMutation<T>(path: string, input: object, token?: string): Pro
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await hubFetch(url.toString(), {
     method: 'POST',
     headers,
     body: JSON.stringify({ json: input }),

@@ -10,6 +10,20 @@ jest.mock('@/hooks/useConsentSettings', () => ({
   useConsentSettings: jest.fn(),
 }))
 
+jest.mock('@/hooks/useGuardianLink', () => ({
+  useGuardianLink: jest.fn().mockReturnValue({
+    guardianLink: null,
+    isLoading: false,
+    error: null,
+    unlinkCurrentGuardian: jest.fn(),
+    refresh: jest.fn(),
+  }),
+}))
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
+}))
+
 import { PrivacySettingsScreen } from '@/screens/PrivacySettingsScreen'
 import { usePatientProfile } from '@/hooks/usePatientProfile'
 import { useConsentSettings } from '@/hooks/useConsentSettings'

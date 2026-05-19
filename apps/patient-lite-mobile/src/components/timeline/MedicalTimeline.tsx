@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,21 +7,27 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { TimelineIcon } from './TimelineIcon'
 import { ActiveMedications } from './ActiveMedications'
+import { AllergyBanner } from '@/components/AllergyBanner'
 import type { TimelineEvent } from '@/hooks/useMedicalHistory'
+import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
+import type { TimelineStackParamList } from '@/navigation/types'
 import { emitAuditEvent } from '@/lib/audit'
+import { unlockWithBiometrics } from '@/lib/mobile-key-service'
+import { useTheme } from '@/theme/ThemeProvider'
 import {
-  consumerColors,
   consumerSpacing,
   consumerBorderRadius,
   consumerTypography,
-  consumerStyles,
 } from '@/theme/consumer'
 
 interface MedicalTimelineProps {
   events: TimelineEvent[]
   activeMedications: TimelineEvent[]
+  activeAllergies?: FhirAllergyIntolerance[]
   isLoading: boolean
   error: string | null
   patientId?: string
@@ -43,7 +49,7 @@ function formatDate(dateStr: string): string {
 }
 
 /** Status color coding: green for completed, blue for active/in-progress */
-function getStatusColor(status: string): string {
+function getStatusColor(status: string, colors: { secondary: { 500: string }; textMuted: string; textSecondary: string }): string {
   switch (status) {
     case 'finished':
     case 'completed':
@@ -51,15 +57,17 @@ function getStatusColor(status: string): string {
     case 'active':
     case 'in-progress':
     case 'arrived':
-      return consumerColors.secondary[500]
+      return colors.secondary[500]
     case 'cancelled':
     case 'stopped':
     case 'entered-in-error':
-      return consumerColors.textMuted
+      return colors.textMuted
     default:
-      return consumerColors.textSecondary
+      return colors.textSecondary
   }
 }
+
+const MEDICATION_AUTO_HIDE_MS = 30_000
 
 function TimelineItem({
   event,
@@ -71,10 +79,70 @@ function TimelineItem({
   patientId?: string
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authenticating, setAuthenticating] = useState(false)
+  const autoHideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { colors } = useTheme()
+  const navigation = useNavigation<NativeStackNavigationProp<TimelineStackParamList>>()
 
-  const handlePress = useCallback(() => {
+  // Clean up auto-hide timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoHideRef.current) clearTimeout(autoHideRef.current)
+    }
+  }, [])
+
+  const handlePress = useCallback(async () => {
+    if (authenticating) return
+
+    // Allergy items navigate to detail screen
+    if (event.type === 'allergy') {
+      navigation.navigate('AllergyDetailScreen', { allergyId: event.id })
+      return
+    }
+
+    // Sensitive medications require biometric confirmation (Story 18.9)
+    if (event.isSensitive && event.type === 'medication' && !expanded) {
+      if (!patientId) return
+      setAuthError(null)
+      setAuthenticating(true)
+
+      try {
+        const result = await unlockWithBiometrics()
+        if (!result.success) {
+          setAuthError('Authentication failed')
+          setAuthenticating(false)
+          return
+        }
+
+        // AC #4: Emit PHI_UNMASK audit event
+        emitAuditEvent({
+          action: 'PHI_UNMASK',
+          resourceType: 'MedicationRequest',
+          resourceId: event.id,
+          patientId,
+          outcome: 'success',
+          metadata: { unmaskedBy: patientId },
+        })
+
+        setExpanded(true)
+        setAuthenticating(false)
+
+        // AC #5: Auto-hide after 30 seconds
+        if (autoHideRef.current) clearTimeout(autoHideRef.current)
+        autoHideRef.current = setTimeout(() => {
+          setExpanded(false)
+          autoHideRef.current = null
+        }, MEDICATION_AUTO_HIDE_MS)
+      } catch {
+        setAuthError('Authentication failed')
+        setAuthenticating(false)
+      }
+      return
+    }
+
+    // Non-medication sensitive items: simple tap-to-reveal (encounters)
     if (event.isSensitive && !expanded) {
-      // Block sensitive reveal without a patient context — audit is mandatory
       if (!patientId) return
       emitAuditEvent({
         action: 'PHI_DISPLAY',
@@ -85,8 +153,17 @@ function TimelineItem({
         metadata: { sensitive: 'true' },
       })
     }
+
+    // Collapsing a sensitive medication clears the auto-hide timer
+    if (event.isSensitive && event.type === 'medication' && expanded) {
+      if (autoHideRef.current) {
+        clearTimeout(autoHideRef.current)
+        autoHideRef.current = null
+      }
+    }
+
     setExpanded((prev) => !prev)
-  }, [event.id, event.isSensitive, event.type, expanded, patientId])
+  }, [event.id, event.isSensitive, event.type, expanded, patientId, navigation, authenticating])
 
   return (
     <View style={styles.itemRow} testID={`timeline-item-${event.id}`}>
@@ -97,14 +174,23 @@ function TimelineItem({
           isActive={event.status === 'active'}
           testID={`timeline-icon-${event.id}`}
         />
-        {!isLast && <View style={styles.connectorLine} />}
+        {!isLast && <View style={[styles.connectorLine, { backgroundColor: colors.border }]} />}
       </View>
 
       {/* Content */}
       <Pressable
         style={({ pressed }) => [
           styles.contentCard,
-          pressed && styles.contentCardPressed,
+          {
+            backgroundColor: colors.surfaceElevated,
+            borderColor: colors.border,
+            shadowColor: colors.shadow,
+          },
+          event.type === 'allergy' && [styles.allergyCard, { borderStartColor: colors.error, backgroundColor: colors.dangerBg ?? '#FEF2F2' }],
+          pressed && {
+            backgroundColor: colors.primary[50],
+            borderColor: colors.primary[200],
+          },
         ]}
         onPress={handlePress}
         accessibilityRole="button"
@@ -117,12 +203,12 @@ function TimelineItem({
         testID={`timeline-card-${event.id}`}
       >
         {/* Date marker */}
-        <Text style={styles.dateText}>{formatDate(event.date)}</Text>
+        <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatDate(event.date)}</Text>
 
         {/* Label — hide real label for sensitive entries */}
-        <Text style={styles.labelText}>
+        <Text style={[styles.labelText, { color: colors.textPrimary }]}>
           {event.isSensitive && !expanded
-            ? 'Private Health Matter'
+            ? '\uD83D\uDD12 Private Health Matter'
             : event.label}
         </Text>
 
@@ -131,27 +217,34 @@ function TimelineItem({
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: getStatusColor(event.status) },
+              { backgroundColor: getStatusColor(event.status, colors) },
             ]}
           />
-          <Text style={[styles.statusText, { color: getStatusColor(event.status) }]}>
+          <Text style={[styles.statusText, { color: getStatusColor(event.status, colors) }]}>
             {event.status}
           </Text>
         </View>
 
+        {/* Auth error for sensitive medication biometric failure */}
+        {authError && (
+          <Text style={[styles.authErrorText, { color: colors.error }]} testID={`auth-error-${event.id}`}>
+            {authError}
+          </Text>
+        )}
+
         {/* Expanded simple view */}
         {expanded && (
-          <View style={styles.detailSection} testID={`timeline-detail-${event.id}`}>
-            <Text style={styles.detailLabel}>
-              {event.type === 'encounter' ? 'Visit Details' : 'Medicine Details'}
+          <View style={[styles.detailSection, { borderTopColor: colors.border }]} testID={`timeline-detail-${event.id}`}>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>
+              {event.type === 'encounter' ? 'Visit Details' : event.type === 'allergy' ? 'Allergy Recorded' : 'Medicine Details'}
             </Text>
             {event.isSensitive && (
-              <Text style={styles.sensitiveNote}>
+              <Text style={[styles.sensitiveNote, { color: colors.sensitiveText }]}>
                 Sensitive — shown only on your request
               </Text>
             )}
-            <Text style={styles.detailText}>{event.label}</Text>
-            <Text style={styles.detailDate}>Date: {formatDate(event.date)}</Text>
+            <Text style={[styles.detailText, { color: colors.textPrimary }]}>{event.label}</Text>
+            <Text style={[styles.detailDate, { color: colors.textSecondary }]}>Date: {formatDate(event.date)}</Text>
           </View>
         )}
       </Pressable>
@@ -162,15 +255,18 @@ function TimelineItem({
 export function MedicalTimeline({
   events,
   activeMedications,
+  activeAllergies = [],
   isLoading,
   error,
   patientId,
 }: MedicalTimelineProps) {
+  const { colors } = useTheme()
+
   if (isLoading) {
     return (
-      <View style={[consumerStyles.screen, styles.centered]} testID="timeline-loading">
-        <ActivityIndicator size="large" color={consumerColors.primary[500]} />
-        <Text style={[consumerStyles.bodyText, styles.loadingText]}>
+      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="timeline-loading">
+        <ActivityIndicator size="large" color={colors.primary[500]} />
+        <Text style={[styles.bodyText, { color: colors.textSecondary }, styles.loadingText]}>
           Loading your medical history...
         </Text>
       </View>
@@ -179,19 +275,23 @@ export function MedicalTimeline({
 
   if (error) {
     return (
-      <View style={[consumerStyles.screen, styles.centered]} testID="timeline-error">
-        <Text style={consumerStyles.subheaderText}>Unable to load history</Text>
-        <Text style={consumerStyles.bodyText}>{error}</Text>
+      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="timeline-error">
+        <Text style={[styles.subheaderText, { color: colors.textPrimary }]}>Unable to load history</Text>
+        <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{error}</Text>
       </View>
     )
   }
 
   if (events.length === 0) {
     return (
-      <View style={[consumerStyles.screen, styles.centered]} testID="timeline-empty">
+      <View style={[styles.screen, { backgroundColor: colors.surface }, styles.centered]} testID="timeline-empty">
+        {/* AC #6: Show allergy indicator even when no timeline events */}
+        <View style={styles.allergySection}>
+          <AllergyBanner allergies={activeAllergies} />
+        </View>
         <Text style={styles.emptyEmoji}>📋</Text>
-        <Text style={consumerStyles.subheaderText}>No medical history yet</Text>
-        <Text style={consumerStyles.bodyText}>
+        <Text style={[styles.subheaderText, { color: colors.textPrimary }]}>No medical history yet</Text>
+        <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
           Your visits and medicines will appear here
         </Text>
       </View>
@@ -211,19 +311,24 @@ export function MedicalTimeline({
       )}
       ListHeaderComponent={
         <View style={styles.header}>
-          <Text style={consumerStyles.headerText}>My Health History</Text>
-          <Text style={consumerStyles.captionText}>
+          <Text style={[styles.headerText, { color: colors.textPrimary }]}>My Health History</Text>
+          <Text style={[styles.captionText, { color: colors.textMuted }]}>
             Your visits and medicines
           </Text>
 
+          {/* ALLERGY BANNER — ALWAYS FIRST per CLAUDE.md rule #4 */}
+          <View style={styles.allergySection}>
+            <AllergyBanner allergies={activeAllergies} />
+          </View>
+
           {activeMedications.length > 0 && (
             <View style={styles.activeMedsSection}>
-              <ActiveMedications medications={activeMedications} />
+              <ActiveMedications medications={activeMedications} patientId={patientId} />
             </View>
           )}
 
           <Text
-            style={[consumerStyles.subheaderText, styles.timelineLabel]}
+            style={[styles.subheaderText, { color: colors.textPrimary }, styles.timelineLabel]}
             accessibilityRole="header"
           >
             Timeline
@@ -237,6 +342,26 @@ export function MedicalTimeline({
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    paddingHorizontal: consumerSpacing.screenPadding,
+    paddingVertical: consumerSpacing.sectionGap,
+  },
+  bodyText: {
+    fontSize: consumerTypography.bodySize,
+    lineHeight: 22,
+  },
+  subheaderText: {
+    fontSize: consumerTypography.subheaderSize,
+    fontWeight: consumerTypography.fontWeightHeader,
+  },
+  headerText: {
+    fontSize: consumerTypography.headerSize,
+    fontWeight: consumerTypography.fontWeightHeader,
+  },
+  captionText: {
+    fontSize: consumerTypography.captionSize,
+  },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -251,6 +376,9 @@ const styles = StyleSheet.create({
   header: {
     gap: 4,
     marginBottom: 16,
+  },
+  allergySection: {
+    marginTop: 12,
   },
   activeMedsSection: {
     marginTop: 16,
@@ -274,39 +402,32 @@ const styles = StyleSheet.create({
   connectorLine: {
     flex: 1,
     width: 2,
-    backgroundColor: consumerColors.border,
     marginVertical: 4,
   },
   contentCard: {
     flex: 1,
-    backgroundColor: consumerColors.surfaceElevated,
     borderRadius: consumerBorderRadius.card,
     padding: consumerSpacing.cardPadding,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: consumerColors.border,
     gap: 6,
     // Touch target >= 44px enforced by minHeight + padding
     minHeight: 48,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
   },
-  contentCardPressed: {
-    backgroundColor: consumerColors.primary[50],
-    borderColor: consumerColors.primary[200],
+  allergyCard: {
+    borderStartWidth: 4,
   },
   dateText: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.textMuted,
     fontWeight: consumerTypography.fontWeightLabel,
   },
   labelText: {
     fontSize: consumerTypography.bodySize,
     fontWeight: consumerTypography.fontWeightHeader,
-    color: consumerColors.textPrimary,
     lineHeight: 24,
   },
   statusRow: {
@@ -328,28 +449,27 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: consumerColors.border,
     gap: 4,
   },
   detailLabel: {
     fontSize: consumerTypography.captionSize,
     fontWeight: consumerTypography.fontWeightLabel,
-    color: consumerColors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sensitiveNote: {
     fontSize: consumerTypography.captionSize,
-    color: 'hsl(30, 80%, 40%)',
     fontStyle: 'italic',
+  },
+  authErrorText: {
+    fontSize: consumerTypography.captionSize,
+    textAlign: 'center',
   },
   detailText: {
     fontSize: consumerTypography.bodySize,
-    color: consumerColors.textPrimary,
     lineHeight: 22,
   },
   detailDate: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.textSecondary,
   },
 })

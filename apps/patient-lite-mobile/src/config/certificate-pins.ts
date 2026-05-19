@@ -47,3 +47,35 @@ export const MIN_TLS_VERSION = 'TLSv1.3' as const
 
 /** Last pin rotation date for tracking */
 export const LAST_ROTATED = '2026-05-12'
+
+/**
+ * Runtime validation: ensure placeholder pins are not deployed to production.
+ * Throws at app startup if pins haven't been replaced.
+ */
+export function validatePins(): void {
+  if (__DEV__) return // Placeholder pins are acceptable in development
+
+  // A valid SHA-256 SPKI pin is exactly 44 characters of base64 (32 bytes → 44 chars with padding).
+  // Additionally, a real hash has high entropy — placeholder values like AAAA... have < 4 unique chars.
+  const validBase64Pin = /^[A-Za-z0-9+/]{43}=$/
+
+  for (const pin of HUB_API_PINS) {
+    if (!validBase64Pin.test(pin.hash)) {
+      throw new Error(
+        `FATAL: Certificate pin "${pin.label}" has invalid hash format. ` +
+        'Expected a 44-character base64-encoded SHA-256 SPKI hash. ' +
+        'See certificate-pins.ts for the pin generation procedure.',
+      )
+    }
+
+    // Entropy check: a real SHA-256 hash has high character diversity.
+    // Placeholder values (AAAA..., BBBB...) use < 4 unique characters.
+    const uniqueChars = new Set(pin.hash.replace(/=+$/, '')).size
+    if (uniqueChars < 4) {
+      throw new Error(
+        `FATAL: Certificate pin "${pin.label}" appears to be a placeholder (low entropy). ` +
+        'Replace with a real SHA-256 SPKI hash before deploying to production.',
+      )
+    }
+  }
+}

@@ -1,5 +1,8 @@
 import type { AdministrativeGender } from '../enums.js'
 
+/** Patient subscription tier. Defaults to FREE on self-registration. */
+export type PatientTier = 'FREE' | 'PREMIUM'
+
 // FHIR R4 Patient resource + Ultranos extensions
 // Ref: https://hl7.org/fhir/R4/patient.html
 export interface FhirPatient {
@@ -36,6 +39,10 @@ export interface FhirPatient {
     nationalIdHash?: string  // SHA-256 of national ID for MPI matching
     guardianId?: string      // UUID → another Patient (guardian)
     consentVersion?: string  // version of consent terms at registration
+    /** Subscription tier — defaults to 'FREE' on self-registration */
+    patient_tier: PatientTier
+    /** Patient's preferred language (ISO 639 code: 'en', 'ar', 'prs') */
+    preferredLanguage?: string
     isActive: boolean
     createdBy?: string       // practitioner UUID
     createdAt: string        // ISO 8601 — Ultranos extension

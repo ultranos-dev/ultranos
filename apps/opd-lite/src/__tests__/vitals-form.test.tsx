@@ -131,4 +131,24 @@ describe('VitalsForm', () => {
     const tempInput = screen.getByLabelText(/temperature/i)
     expect(tempInput).toHaveAttribute('step', '0.1')
   })
+
+  describe('RTL snapshot tests', () => {
+    it('matches snapshot in LTR mode', () => {
+      const { container } = render(
+        <div dir="ltr">
+          <VitalsForm {...defaultProps} />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
+    })
+
+    it('matches snapshot in RTL mode', () => {
+      const { container } = render(
+        <div dir="rtl">
+          <VitalsForm {...defaultProps} />
+        </div>,
+      )
+      expect(container).toMatchSnapshot()
+    })
+  })
 })

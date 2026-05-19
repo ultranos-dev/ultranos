@@ -26,9 +26,40 @@ jest.mock('expo-local-authentication', () => ({
 // Mock expo-file-system
 jest.mock('expo-file-system', () => ({
   documentDirectory: '/mock/documents/',
+  cacheDirectory: '/mock/cache/',
   getInfoAsync: jest.fn().mockResolvedValue({ exists: false }),
   deleteAsync: jest.fn().mockResolvedValue(undefined),
   copyAsync: jest.fn().mockResolvedValue(undefined),
+  writeAsStringAsync: jest.fn().mockResolvedValue(undefined),
+  EncodingType: { UTF8: 'utf8' },
+}))
+
+// Mock expo-sharing
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  shareAsync: jest.fn().mockResolvedValue(undefined),
+}))
+
+// Mock expo-clipboard
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn().mockResolvedValue(true),
+  getStringAsync: jest.fn().mockResolvedValue(''),
+}))
+
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  NotificationFeedbackType: {
+    Success: 'success',
+    Warning: 'warning',
+    Error: 'error',
+  },
+  impactAsync: jest.fn().mockResolvedValue(undefined),
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium',
+    Heavy: 'heavy',
+  },
 }))
 
 // Mock expo-sqlite

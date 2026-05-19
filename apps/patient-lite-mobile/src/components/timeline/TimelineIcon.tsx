@@ -22,6 +22,7 @@ const ICON_MAP: Record<IconCategory, { emoji: string; label: string }> = {
   bandage: { emoji: '🩹', label: 'Injury or skin' },
   thermometer: { emoji: '🌡️', label: 'General health' },
   clipboard: { emoji: '📋', label: 'Health record' },
+  warning: { emoji: '⚠️', label: 'Allergy warning' },
 }
 
 interface TimelineIconProps {

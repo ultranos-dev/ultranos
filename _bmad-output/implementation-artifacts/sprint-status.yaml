@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-16T22:00:00.000000'
+last_updated: '2026-05-18T22:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -42,12 +42,12 @@ development_status:
   # Cross-cutting infrastructure
   0-1-ecosystem-package-rename: done
 
-  epic-1: in-progress
+  epic-1: done
   1-1-monorepo-foundation-shared-contracts: done
   1-2-hub-api-trpc-scaffolding: done
   1-3-pwa-identity-verification-dexie-persistence: done
-  1-4-mobile-identity-verification-sqlcipher-persistence: backlog
-  1-5-rtl-global-context-mirroring: backlog
+  1-4-mobile-identity-verification-sqlcipher-persistence: done
+  1-5-rtl-global-context-mirroring: done
   1-6-opd-lite-mobile-scaffold: done
   1-7-lab-lite-pwa-scaffold: done
   epic-1-retrospective: optional
@@ -109,8 +109,15 @@ development_status:
   10-3-terminology-service-migration-dexie-vocabulary: done
   epic-10-retrospective: optional
 
-  epic-11: backlog
-  11-1-global-rtl-i18n-framework: backlog
+  epic-11: done
+  11-1-i18n-framework-setup: done
+  11-2-rtl-layout-mirroring-logical-css-audit: done
+  11-3-translation-key-extraction-message-catalogs: done
+  11-4-arabic-dari-font-embedding-typography: done
+  11-5-language-selector-locale-persistence: done
+  11-6-wcag-accessibility-hardening: done
+  11-7-low-literacy-icon-first-patient-passport-ui: done
+  11-8-rtl-ci-pipeline-snapshot-tests: done
   epic-11-retrospective: optional
 
   epic-12: done
@@ -181,18 +188,19 @@ development_status:
   epic-17-retrospective: optional
 
   # Phase 1: Patient Lite Mobile — Complete UI/UX
-  epic-18: backlog
-  18-1-tab-navigation-screen-routing: backlog
-  18-2-otp-authentication-login-screen: backlog
-  18-3-language-onboarding-gateway: backlog
-  18-4-patient-home-dashboard: backlog
-  18-5-allergy-display-integration: backlog
-  18-6-patient-notification-center: backlog
-  18-7-guardian-linking-consent-delegation: backlog
-  18-8-fhir-r4-bundle-export: backlog
-  18-9-sensitive-medication-privacy-flagging: backlog
-  18-10-react-error-boundaries: backlog
-  18-11-dark-mode-theme-toggle: backlog
+  epic-18: done
+  18-1-tab-navigation-screen-routing: done
+  18-2-otp-authentication-login-screen: done
+  18-3-language-onboarding-gateway: done
+  18-4-patient-home-dashboard: done
+  18-5-allergy-display-integration: done
+  18-6-patient-notification-center: done
+  18-7-guardian-linking-consent-delegation: done
+  18-7a-hub-api-guardian-endpoints: done
+  18-8-fhir-r4-bundle-export: done
+  18-9-sensitive-medication-privacy-flagging: done
+  18-10-react-error-boundaries: done
+  18-11-dark-mode-theme-toggle: done
   epic-18-retrospective: optional
 
   # Phase 2: Sync Queue Reliability & Offline Resilience
@@ -229,13 +237,13 @@ development_status:
   epic-26-retrospective: optional
 
   # Phase 3: API Security Hardening
-  epic-21: in-progress
+  epic-21: done
   21-1-global-redis-backed-rate-limiting: done
   21-2-qr-signature-verification-enforcement: done
   21-3-consent-authorization-identity-trust-fixes: done
   21-4-hub-api-security-headers-cors: done
   21-4a-pwa-security-headers-via-next-config: done
-  21-5-mobile-device-security-root-detection-certificate-pinning: in-progress
+  21-5-mobile-device-security-root-detection-certificate-pinning: done
   21-6-audit-hash-chain-race-condition-fix: done
   epic-21-retrospective: optional
 
@@ -270,7 +278,7 @@ development_status:
   # ============================================================
 
   # Track A — Platform Foundation
-  epic-27: in-progress
+  epic-27: done
   27-1-tenant-organization-data-model: done
   27-2-module-catalog-subscription-state: done
   27-3-hub-api-entitlement-middleware: done
@@ -284,7 +292,7 @@ development_status:
   27-9-subscription-lifecycle-tier-transitions: done
 
   # Track C — Consumer / Patient Freemium
-  27-10-patient-self-registration-flow: ready-for-dev
-  27-11-freemium-tier-definition-feature-gating: ready-for-dev
-  27-12-patient-in-app-upgrade-flow: ready-for-dev
+  27-10-patient-self-registration-flow: done
+  27-11-freemium-tier-definition-feature-gating: done
+  27-12-patient-in-app-upgrade-flow: done
   epic-27-retrospective: optional

@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "OPD Lite",
+    "loading": "Loading..."
+  },
+  "nav": {
+    "patients": "Patients",
+    "encounters": "Encounters",
+    "settings": "Settings"
+  },
+  "auth": {
+    "loginRequired": "Login required",
+    "sessionExpired": "Your session has expired. Please log in again."
+  },
+  "patient": {
+    "search": "Search patients...",
+    "noResults": "No patients found",
+    "newPatient": "New Patient"
+  },
+  "encounter": {
+    "active": "Active Encounter",
+    "history": "History",
+    "newEncounter": "New Encounter"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "restartRequired": "App restart required for layout changes to take effect"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "close": "Close",
+    "error": "An error occurred",
+    "retry": "Retry"
+  }
+}

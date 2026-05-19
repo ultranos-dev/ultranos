@@ -1,0 +1,275 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="space-y-6"
+    >
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Weight
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Weight"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-weight"
+            max="500"
+            min="0.5"
+            placeholder="0"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            kg
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Height
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Height"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-height"
+            max="300"
+            min="20"
+            placeholder="0"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            cm
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Blood Pressure
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Systolic"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-systolic"
+            max="300"
+            min="40"
+            placeholder="Sys"
+            step="1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-lg font-bold text-neutral-400"
+          >
+            /
+          </span>
+          <input
+            aria-label="Diastolic"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-diastolic"
+            max="200"
+            min="20"
+            placeholder="Dia"
+            step="1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            mmHg
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Temperature
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Temperature"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-temperature"
+            max="47"
+            min="25"
+            placeholder="36.5"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            °C
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="space-y-6"
+    >
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Weight
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Weight"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-weight"
+            max="500"
+            min="0.5"
+            placeholder="0"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            kg
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Height
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Height"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-height"
+            max="300"
+            min="20"
+            placeholder="0"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            cm
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Blood Pressure
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Systolic"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-systolic"
+            max="300"
+            min="40"
+            placeholder="Sys"
+            step="1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-lg font-bold text-neutral-400"
+          >
+            /
+          </span>
+          <input
+            aria-label="Diastolic"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-diastolic"
+            max="200"
+            min="20"
+            placeholder="Dia"
+            step="1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            mmHg
+          </span>
+        </div>
+      </div>
+      <div>
+        <h3
+          class="text-2xl font-black tracking-tight text-neutral-900"
+        >
+          Temperature
+        </h3>
+        <div
+          class="mt-2 flex items-center gap-3"
+        >
+          <input
+            aria-label="Temperature"
+            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            id="vital-temperature"
+            max="47"
+            min="25"
+            placeholder="36.5"
+            step="0.1"
+            type="number"
+            value=""
+          />
+          <span
+            class="text-sm font-semibold text-neutral-500"
+          >
+            °C
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

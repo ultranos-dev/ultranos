@@ -1,0 +1,1683 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard allergy card renders correctly in LTR 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.warningTriangle: allergy title, allergy subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#FEE2E2",
+          "borderColor": "#FECACA",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.warningTriangle"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(220, 38, 38, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#DC2626",
+                },
+              ]
+            }
+          >
+            ⚠️
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#DC2626",
+            },
+          ]
+        }
+      >
+        allergy title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        allergy subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard allergy card renders correctly in RTL 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.warningTriangle: allergy title, allergy subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#FEE2E2",
+          "borderColor": "#FECACA",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.warningTriangle"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(220, 38, 38, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#DC2626",
+                },
+              ]
+            }
+          >
+            ⚠️
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#DC2626",
+            },
+          ]
+        }
+      >
+        allergy title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        allergy subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard consent card renders correctly in LTR 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.shield: consent title, consent subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#D1FAE5",
+          "borderColor": "#A7F3D0",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.shield"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(5, 150, 105, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#059669",
+                },
+              ]
+            }
+          >
+            🛡️
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#059669",
+            },
+          ]
+        }
+      >
+        consent title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        consent subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard consent card renders correctly in RTL 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.shield: consent title, consent subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#D1FAE5",
+          "borderColor": "#A7F3D0",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.shield"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(5, 150, 105, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#059669",
+                },
+              ]
+            }
+          >
+            🛡️
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#059669",
+            },
+          ]
+        }
+      >
+        consent title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        consent subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard medication card renders correctly in LTR 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.pill: medication title, medication subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#DBEAFE",
+          "borderColor": "#BFDBFE",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.pill"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(37, 99, 235, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#2563EB",
+                },
+              ]
+            }
+          >
+            💊
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#2563EB",
+            },
+          ]
+        }
+      >
+        medication title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        medication subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots PatientHealthCard medication card renders correctly in RTL 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={false}
+>
+  <View
+    accessibilityLabel="icons.pill: medication title, medication subtitle"
+    accessibilityRole="button"
+    style={
+      [
+        {
+          "alignItems": "center",
+          "borderRadius": 16,
+          "borderWidth": 1,
+          "flexDirection": "row",
+          "gap": 12,
+          "minHeight": 72,
+          "paddingHorizontal": 16,
+          "paddingVertical": 12,
+        },
+        {
+          "backgroundColor": "#DBEAFE",
+          "borderColor": "#BFDBFE",
+        },
+      ]
+    }
+  >
+    <View>
+      <View
+        accessibilityHint="icons.pill"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+      >
+        <View
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 22,
+                "height": 44,
+                "justifyContent": "center",
+                "width": 44,
+              },
+              {
+                "backgroundColor": "rgba(37, 99, 235, 0.12)",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 24,
+                  "writingDirection": "ltr",
+                },
+                {
+                  "color": "#2563EB",
+                },
+              ]
+            }
+          >
+            💊
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 2,
+        }
+      }
+    >
+      <Text
+        numberOfLines={2}
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+            },
+            {
+              "color": "#2563EB",
+            },
+          ]
+        }
+      >
+        medication title
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 10%, 45%)",
+            },
+          ]
+        }
+      >
+        medication subtitle
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots VisualLanguageGateway renders correctly in LTR 1`] = `
+<View
+  style={
+    [
+      {
+        "alignItems": "center",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingHorizontal": 32,
+      },
+      {
+        "backgroundColor": "hsl(270, 20%, 98%)",
+      },
+    ]
+  }
+  testID="visual-language-gateway"
+>
+  <Text
+    style={
+      {
+        "fontSize": 64,
+        "marginBottom": 40,
+        "writingDirection": "ltr",
+      }
+    }
+  >
+    🌐
+  </Text>
+  <View
+    style={
+      {
+        "gap": 16,
+        "width": "100%",
+      }
+    }
+  >
+    <View
+      accessibilityLabel="English"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-en"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-en"
+      >
+        Aa
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": undefined,
+              "fontSize": 24,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        English
+      </Text>
+    </View>
+    <View
+      accessibilityLabel="العربية"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-ar"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-ar"
+      >
+        ع
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": "NotoSansArabic-Bold",
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        العربية
+      </Text>
+    </View>
+    <View
+      accessibilityLabel="دری"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-prs"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-prs"
+      >
+        د
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": "NotoSansArabic-Bold",
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        دری
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Patient Lite Mobile — RTL Snapshots VisualLanguageGateway renders correctly in RTL 1`] = `
+<View
+  style={
+    [
+      {
+        "alignItems": "center",
+        "flex": 1,
+        "justifyContent": "center",
+        "paddingHorizontal": 32,
+      },
+      {
+        "backgroundColor": "hsl(270, 20%, 98%)",
+      },
+    ]
+  }
+  testID="visual-language-gateway"
+>
+  <Text
+    style={
+      {
+        "fontSize": 64,
+        "marginBottom": 40,
+        "writingDirection": "ltr",
+      }
+    }
+  >
+    🌐
+  </Text>
+  <View
+    style={
+      {
+        "gap": 16,
+        "width": "100%",
+      }
+    }
+  >
+    <View
+      accessibilityLabel="English"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-en"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-en"
+      >
+        Aa
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": undefined,
+              "fontSize": 24,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        English
+      </Text>
+    </View>
+    <View
+      accessibilityLabel="العربية"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-ar"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-ar"
+      >
+        ع
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": "NotoSansArabic-Bold",
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        العربية
+      </Text>
+    </View>
+    <View
+      accessibilityLabel="دری"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        [
+          {
+            "alignItems": "center",
+            "borderRadius": 16,
+            "borderWidth": 2,
+            "elevation": 2,
+            "flexDirection": "row",
+            "gap": 12,
+            "justifyContent": "center",
+            "minHeight": 80,
+            "paddingHorizontal": 24,
+            "paddingVertical": 16,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": 2,
+              "width": 0,
+            },
+            "shadowOpacity": 0.06,
+            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 45%, 82%)",
+          },
+          false,
+          undefined,
+        ]
+      }
+      testID="language-button-prs"
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "600",
+              "opacity": 0.6,
+              "textAlign": "center",
+              "width": 28,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
+        }
+        testID="script-hint-prs"
+      >
+        د
+      </Text>
+      <Text
+        style={
+          [
+            {
+              "flex": 1,
+              "textAlign": "center",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+              "fontFamily": "NotoSansArabic-Bold",
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+          ]
+        }
+      >
+        دری
+      </Text>
+    </View>
+  </View>
+</View>
+`;

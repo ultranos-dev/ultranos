@@ -8,6 +8,7 @@ import {
 import NetInfo from '@react-native-community/netinfo'
 import * as FileSystem from 'expo-file-system'
 import { getEncryptedDbConnection } from './encrypted-db'
+import { hubFetch } from './hub-fetch'
 
 /**
  * Model Update Manager for Patient Lite Mobile — Story 24.4
@@ -32,7 +33,7 @@ export async function isOnWifi(): Promise<boolean> {
 
 /** Fetch model manifest from Hub API. */
 export async function fetchManifest(hubApiBaseUrl: string): Promise<AIModelManifestEntry[]> {
-  const res = await fetch(`${hubApiBaseUrl}/api/trpc/ai.getModelManifest`, {
+  const res = await hubFetch(`${hubApiBaseUrl}/api/trpc/ai.getModelManifest`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
@@ -172,7 +173,7 @@ async function reportEvents(
   const payload = events.map((e) => ({ ...e, deviceId }))
 
   try {
-    await fetch(`${hubApiBaseUrl}/api/trpc/ai.reportModelUpdateEvents`, {
+    await hubFetch(`${hubApiBaseUrl}/api/trpc/ai.reportModelUpdateEvents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ json: { events: payload } }),

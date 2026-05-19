@@ -1,0 +1,61 @@
+/*
+ * Arabic Font Declarations — Ultranos
+ *
+ * Self-hosted Noto Arabic fonts for offline-first RTL support.
+ * font-display: swap prevents FOIT (Flash of Invisible Text).
+ * unicode-range enables browser-level subsetting so these fonts
+ * are only downloaded when Arabic characters are present.
+ */
+
+/* ══════════════════════════════════════════════════════════════
+   Noto Sans Arabic — UI text (body, labels, buttons)
+   ══════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/NotoSansArabic-Regular.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0000-007F;
+}
+
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/NotoSansArabic-Medium.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0000-007F;
+}
+
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/NotoSansArabic-Bold.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0000-007F;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Noto Naskh Arabic — formal/clinical content (reports, notes)
+   ══════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/NotoNaskhArabic-Regular.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0000-007F;
+}
+
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/NotoNaskhArabic-Bold.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0000-007F;
+}

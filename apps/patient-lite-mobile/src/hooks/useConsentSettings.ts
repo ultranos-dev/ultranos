@@ -47,8 +47,15 @@ function deriveToggleStates(consents: FhirConsent[]): Map<ConsentScope, { enable
   return states
 }
 
+/**
+ * @param grantorRole - Who is making the consent change (defaults to SELF).
+ *                      When a guardian manages consent, pass GrantorRole.GUARDIAN.
+ * @param grantorUserId - The user ID of the person making the change.
+ */
 export function useConsentSettings(
   patientId: string | undefined,
+  grantorRole: GrantorRole = GrantorRole.SELF,
+  grantorUserId?: string,
 ): UseConsentSettingsResult {
   const [consents, setConsents] = useState<FhirConsent[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -103,26 +110,35 @@ export function useConsentSettings(
 
     const hlcTs = serializeHlc(hlc.now())
 
-    // Derive current state before optimistic update
-    // Use functional updater for setConsents to avoid stale closure on rapid toggles
-    const currentToggleStates = deriveToggleStates(consents)
-    const currentState = currentToggleStates.get(scope)
-    const isCurrentlyEnabled = currentState?.enabled ?? false
+    // Derive current state from latest consents via functional updater
+    // to avoid stale closure on rapid toggles
+    let newConsent: FhirConsent
+    let isCurrentlyEnabled = false
 
-    const newConsent = isCurrentlyEnabled
+    // Read current state synchronously from a snapshot
+    setConsents((prev) => {
+      const currentToggleStates = deriveToggleStates(prev)
+      const currentState = currentToggleStates.get(scope)
+      isCurrentlyEnabled = currentState?.enabled ?? false
+      return prev // no change — just reading
+    })
+
+    newConsent = isCurrentlyEnabled
       ? await withdrawConsent({
           patientId,
           scope,
           purpose: ConsentPurpose.TREATMENT,
           hlcTimestamp: hlcTs,
-          grantorRole: GrantorRole.SELF,
+          grantorRole,
+          grantorUserId,
         })
       : await createConsent({
           patientId,
           scope,
           purpose: ConsentPurpose.TREATMENT,
           hlcTimestamp: hlcTs,
-          grantorRole: GrantorRole.SELF,
+          grantorRole,
+          grantorUserId,
         })
 
     // Optimistic update using functional form to avoid stale closure
@@ -172,7 +188,7 @@ export function useConsentSettings(
 
       setError('Failed to save privacy setting')
     }
-  }, [patientId])
+  }, [patientId, grantorRole, grantorUserId])
 
   const toggleStates = deriveToggleStates(consents)
 

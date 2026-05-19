@@ -51,6 +51,23 @@ describe('useDeviceSecurityStore', () => {
     expect(state.checkedAt).not.toBeNull()
   })
 
+  it('never downgrades isCompromised from true to false (monotonic)', () => {
+    // First check: compromised
+    useDeviceSecurityStore.getState().setResult({
+      isCompromised: true,
+      reasons: ['rooted'],
+    })
+    expect(useDeviceSecurityStore.getState().isCompromised).toBe(true)
+
+    // Second check: clean — should NOT downgrade
+    useDeviceSecurityStore.getState().setResult({
+      isCompromised: false,
+      reasons: [],
+    })
+    expect(useDeviceSecurityStore.getState().isCompromised).toBe(true)
+    expect(useDeviceSecurityStore.getState().reasons).toEqual(['rooted'])
+  })
+
   it('records checkedAt as ISO timestamp', () => {
     const before = new Date().toISOString()
 

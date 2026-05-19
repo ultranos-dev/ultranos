@@ -169,5 +169,65 @@ describe('fhir-humanizer', () => {
       const result = humanizeMedication(undefined, 'fa-AF')
       expect(result.label).toBe('دارو')
     })
+
+    // Story 18.9: ATC-based medication sensitivity
+    it('flags antiretroviral medication as sensitive via ATC code', () => {
+      const result = humanizeMedication({
+        text: 'Tenofovir 300mg',
+        coding: [
+          { system: 'http://www.whocc.no/atc', code: 'J05AF01', display: 'Tenofovir' },
+        ],
+      })
+      expect(result.isSensitive).toBe(true)
+      expect(result.label).toBe('Tenofovir 300mg')
+      expect(result.icon).toBe('pill')
+    })
+
+    it('flags antipsychotic medication as sensitive via ATC code', () => {
+      const result = humanizeMedication({
+        coding: [
+          { system: 'http://www.whocc.no/atc', code: 'N05AH03', display: 'Olanzapine' },
+        ],
+      })
+      expect(result.isSensitive).toBe(true)
+    })
+
+    it('flags antidepressant medication as sensitive via ATC code', () => {
+      const result = humanizeMedication({
+        coding: [
+          { system: 'http://www.whocc.no/WHO-ATC', code: 'N06AB03', display: 'Fluoxetine' },
+        ],
+      })
+      expect(result.isSensitive).toBe(true)
+    })
+
+    it('flags opioid substitution medication as sensitive via ATC code', () => {
+      const result = humanizeMedication({
+        coding: [
+          { system: 'http://www.whocc.no/atc', code: 'N07BC02', display: 'Methadone' },
+        ],
+      })
+      expect(result.isSensitive).toBe(true)
+    })
+
+    it('returns isSensitive false for cardiovascular medication', () => {
+      const result = humanizeMedication({
+        text: 'Captopril 25mg',
+        coding: [
+          { system: 'http://www.whocc.no/atc', code: 'C09AA01', display: 'Captopril' },
+        ],
+      })
+      expect(result.isSensitive).toBe(false)
+    })
+
+    it('returns isSensitive false when no ATC coding present', () => {
+      const result = humanizeMedication({
+        text: 'Amoxicillin 500mg',
+        coding: [
+          { system: 'http://www.nlm.nih.gov/research/umls/rxnorm', code: '313782', display: 'Amoxicillin' },
+        ],
+      })
+      expect(result.isSensitive).toBe(false)
+    })
   })
 })

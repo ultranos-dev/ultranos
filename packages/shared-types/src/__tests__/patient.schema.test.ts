@@ -14,6 +14,7 @@ describe('FhirPatientSchema', () => {
     _ultranos: {
       nameLocal: 'أحمد الراشد',
       nameLatin: 'Ahmad Al-Rashid',
+      patient_tier: 'FREE' as const,
       isActive: true,
       createdBy: '550e8400-e29b-41d4-a716-446655440001',
       createdAt: '2025-01-15T10:30:00Z',
@@ -53,6 +54,34 @@ describe('FhirPatientSchema', () => {
     const result = FhirPatientSchema.safeParse({
       ...validPatient,
       _ultranos: noActive,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('requires _ultranos.patient_tier (Story 27.10)', () => {
+    const { patient_tier: _, ...noTier } = validPatient._ultranos
+    const result = FhirPatientSchema.safeParse({
+      ...validPatient,
+      _ultranos: noTier,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts patient_tier FREE and PREMIUM (Story 27.10)', () => {
+    const free = FhirPatientSchema.safeParse(validPatient)
+    expect(free.success).toBe(true)
+
+    const premium = FhirPatientSchema.safeParse({
+      ...validPatient,
+      _ultranos: { ...validPatient._ultranos, patient_tier: 'PREMIUM' },
+    })
+    expect(premium.success).toBe(true)
+  })
+
+  it('rejects invalid patient_tier values', () => {
+    const result = FhirPatientSchema.safeParse({
+      ...validPatient,
+      _ultranos: { ...validPatient._ultranos, patient_tier: 'ENTERPRISE' },
     })
     expect(result.success).toBe(false)
   })

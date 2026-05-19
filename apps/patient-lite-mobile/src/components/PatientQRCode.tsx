@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import QRCode from 'react-native-qrcode-svg'
-import { consumerColors, consumerBorderRadius, consumerTypography } from '@/theme/consumer'
+import { consumerBorderRadius, consumerTypography } from '@/theme/consumer'
+import { useTheme } from '@/theme/ThemeProvider'
+import { QR_COLORS } from '@/theme/colors'
 
 /**
  * Identity QR payload — per CLAUDE.md:
@@ -54,6 +56,7 @@ function generatePayload(patientId: string, signature?: string): string {
 }
 
 export function PatientQRCode({ patientId, signature }: PatientQRCodeProps) {
+  const { theme, colors } = useTheme()
   const [payload, setPayload] = useState(() => generatePayload(patientId, signature))
 
   const refresh = useCallback(() => {
@@ -79,21 +82,22 @@ export function PatientQRCode({ patientId, signature }: PatientQRCodeProps) {
 
   return (
     <View style={styles.container} testID="patient-qr-code">
-      <View style={styles.qrWrapper}>
+      {/* AC #10: QR always renders black-on-white, never inverted */}
+      <View style={[styles.qrWrapper, { borderColor: theme === 'dark' ? QR_COLORS.wrapperBorderDark : QR_COLORS.wrapperBorderLight }]}>
         <QRCode
           value={payload}
           size={QR_SIZE}
-          color="#000000"
-          backgroundColor="#FFFFFF"
+          color={QR_COLORS.foreground}
+          backgroundColor={QR_COLORS.background}
           ecl="M"
         />
       </View>
       {isUnsigned && (
-        <View style={styles.unverifiedBadge} testID="qr-unverified-badge">
-          <Text style={styles.unverifiedText}>Unverified</Text>
+        <View style={[styles.unverifiedBadge, { backgroundColor: colors.warningBg, borderColor: colors.warningBorder }]} testID="qr-unverified-badge">
+          <Text style={[styles.unverifiedText, { color: colors.warningText }]}>Unverified</Text>
         </View>
       )}
-      <Text style={styles.hint} accessibilityRole="text">
+      <Text style={[styles.hint, { color: colors.textMuted }]} accessibilityRole="text">
         Valid for {QR_EXPIRY_HOURS} hours
       </Text>
     </View>
@@ -107,13 +111,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   qrWrapper: {
-    // High-contrast: pure white background with dark border
-    backgroundColor: '#FFFFFF',
+    // AC #10: White background always — QR scannability requirement
+    backgroundColor: QR_COLORS.background,
     padding: 16,
     borderRadius: consumerBorderRadius.qrContainer,
     borderWidth: 2,
-    borderColor: '#1A1A1A',
-    // Shadow for depth
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -121,21 +123,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   unverifiedBadge: {
-    backgroundColor: 'hsl(45, 100%, 90%)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'hsl(45, 80%, 60%)',
   },
   unverifiedText: {
     fontSize: consumerTypography.captionSize,
     fontWeight: '600',
-    color: 'hsl(30, 80%, 30%)',
   },
   hint: {
     fontSize: consumerTypography.captionSize,
-    color: consumerColors.textMuted,
     textAlign: 'center',
   },
 })

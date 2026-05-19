@@ -3,7 +3,10 @@
  *
  * Calls Hub API to generate dialect-tuned prescription audio.
  * Also handles playback completion logging (fire-and-forget).
+ *
+ * Uses hubFetch for certificate-pinned connections (Story 21.5 AC#3).
  */
+import { hubFetch } from '@/lib/hub-fetch'
 
 function getHubApiUrl(): string {
   return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
@@ -39,7 +42,7 @@ export async function generatePrescriptionAudio(
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await hubFetch(url.toString(), {
     method: 'POST',
     headers,
     body: JSON.stringify({ json: { medicationRequestId, dialect, patientId } }),
@@ -74,7 +77,7 @@ export function logPlaybackCompletion(
   }
 
   // Fire-and-forget: don't await, don't throw
-  fetch(url.toString(), {
+  hubFetch(url.toString(), {
     method: 'POST',
     headers,
     body: JSON.stringify({

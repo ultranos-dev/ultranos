@@ -9,11 +9,15 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
     }
   }
   style={
-    {
-      "backgroundColor": "hsl(270, 20%, 98%)",
-      "flex": 1,
-      "paddingHorizontal": 20,
-    }
+    [
+      {
+        "flex": 1,
+        "paddingHorizontal": 20,
+      },
+      {
+        "backgroundColor": "hsl(270, 20%, 98%)",
+      },
+    ]
   }
   testID="profile-screen"
 >
@@ -28,43 +32,45 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
     >
       <Text
         style={
-          {
-            "color": "hsl(270, 30%, 15%)",
-            "fontSize": 28,
-            "fontWeight": "700",
-          }
+          [
+            {
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+            },
+          ]
         }
       >
-        My Passport
+        passport.title
       </Text>
       <Text
         style={
-          {
-            "color": "hsl(270, 8%, 60%)",
-            "fontSize": 13,
-          }
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
         }
       >
-        Your health identity card
+        passport.subtitle
       </Text>
     </View>
     <View
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
-            "elevation": 2,
             "padding": 20,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": 2,
-              "width": 0,
-            },
-            "shadowOpacity": 0.06,
-            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "gap": 20,
@@ -83,17 +89,20 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Name
+          passport.fieldName
         </Text>
         <View
           style={
@@ -105,14 +114,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Name: Fatima Al-Rashid"
+            accessibilityLabel="passport.fieldName: Fatima Al-Rashid"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-name"
           >
@@ -130,17 +141,20 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Name (Local)
+          passport.fieldNameLocal
         </Text>
         <View
           style={
@@ -152,14 +166,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Name (Local): فاطمة الرشيد"
+            accessibilityLabel="passport.fieldNameLocal: فاطمة الرشيد"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-name-local"
           >
@@ -177,17 +193,20 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Age
+          passport.fieldAge
         </Text>
         <View
           style={
@@ -199,14 +218,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Age: 36"
+            accessibilityLabel="passport.fieldAge: 36"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-age"
           >
@@ -224,17 +245,20 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Gender
+          passport.fieldGender
         </Text>
         <View
           style={
@@ -246,14 +270,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Gender: female"
+            accessibilityLabel="passport.fieldGender: female"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-gender"
           >
@@ -271,17 +297,20 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          National ID
+          passport.fieldNationalId
         </Text>
         <View
           style={
@@ -293,14 +322,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="National ID: hidden"
+            accessibilityLabel="passport.fieldNationalId: hidden"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-national-id"
           >
@@ -339,24 +370,32 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "hsl(270, 50%, 97%)",
-                "borderRadius": 8,
-                "minWidth": 48,
-                "paddingHorizontal": 12,
-                "paddingVertical": 6,
-              }
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "minWidth": 48,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 6,
+                },
+                {
+                  "backgroundColor": "hsl(270, 50%, 97%)",
+                },
+              ]
             }
             testID="toggle-national-id"
           >
             <Text
               style={
-                {
-                  "color": "hsl(270, 48%, 38%)",
-                  "fontSize": 13,
-                  "fontWeight": "600",
-                }
+                [
+                  {
+                    "fontSize": 13,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "hsl(270, 48%, 38%)",
+                  },
+                ]
               }
             >
               Show
@@ -369,19 +408,13 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
-            "elevation": 2,
             "padding": 20,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": 2,
-              "width": 0,
-            },
-            "shadowOpacity": 0.06,
-            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "alignItems": "center",
@@ -395,9 +428,11 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         style={
           [
             {
-              "color": "hsl(270, 30%, 15%)",
               "fontSize": 20,
-              "fontWeight": "600",
+              "fontWeight": "700",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
             },
             {
               "textAlign": "center",
@@ -405,14 +440,16 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        Your Medical ID
+        passport.qrTitle
       </Text>
       <Text
         style={
           [
             {
-              "color": "hsl(270, 8%, 60%)",
               "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
             },
             {
               "marginBottom": 8,
@@ -421,7 +458,7 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
           ]
         }
       >
-        Show this QR code to your healthcare provider
+        passport.qrSubtitle
       </Text>
       <View
         testID="patient-qr-code"
@@ -429,6 +466,154 @@ exports[`ProfileScreen RTL layout renders correctly in LTR mode (CLAUDE.md: RTL 
         <Text>
           550e8400-e29b-41d4-a716-446655440000
         </Text>
+      </View>
+    </View>
+    <View
+      accessibilityLabel="Premium feature, upgrade required"
+      accessibilityRole="none"
+      style={
+        [
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "justifyContent": "center",
+            "paddingHorizontal": 20,
+          },
+          {
+            "backgroundColor": "hsl(270, 20%, 98%)",
+          },
+        ]
+      }
+      testID="premium-gate-MEDICAL_HISTORY_EXPORT"
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderRadius": 16,
+              "borderWidth": 1,
+              "gap": 16,
+              "padding": 40,
+              "width": "100%",
+            },
+            {
+              "backgroundColor": "hsl(0, 0%, 100%)",
+              "borderColor": "hsl(270, 15%, 88%)",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityElementsHidden={true}
+          style={
+            [
+              {
+                "fontSize": 48,
+                "marginBottom": 8,
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
+          }
+        >
+          🔒
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontSize": 20,
+                "fontWeight": "700",
+                "textAlign": "center",
+              },
+              {
+                "color": "hsl(270, 30%, 15%)",
+              },
+            ]
+          }
+        >
+          Medical History Export
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 22,
+                "paddingHorizontal": 8,
+                "textAlign": "center",
+              },
+              {
+                "color": "hsl(270, 10%, 45%)",
+              },
+            ]
+          }
+        >
+          Download your complete medical history as a FHIR-standard health record bundle.
+        </Text>
+        <View
+          accessibilityLabel="Upgrade to Premium"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "minWidth": 96,
+                "paddingHorizontal": 32,
+                "paddingVertical": 14,
+              },
+              {
+                "backgroundColor": "hsl(270, 45%, 48%)",
+              },
+            ]
+          }
+          testID="premium-upgrade-cta"
+        >
+          <Text
+            style={
+              {
+                "color": "#FFFFFF",
+                "fontSize": 16,
+                "fontWeight": "700",
+              }
+            }
+          >
+            Upgrade to Premium
+          </Text>
+        </View>
       </View>
     </View>
   </View>
@@ -444,11 +629,15 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
     }
   }
   style={
-    {
-      "backgroundColor": "hsl(270, 20%, 98%)",
-      "flex": 1,
-      "paddingHorizontal": 20,
-    }
+    [
+      {
+        "flex": 1,
+        "paddingHorizontal": 20,
+      },
+      {
+        "backgroundColor": "hsl(270, 20%, 98%)",
+      },
+    ]
   }
   testID="profile-screen"
 >
@@ -463,43 +652,45 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
     >
       <Text
         style={
-          {
-            "color": "hsl(270, 30%, 15%)",
-            "fontSize": 28,
-            "fontWeight": "700",
-          }
+          [
+            {
+              "fontSize": 28,
+              "fontWeight": "700",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
+            },
+          ]
         }
       >
-        My Passport
+        passport.title
       </Text>
       <Text
         style={
-          {
-            "color": "hsl(270, 8%, 60%)",
-            "fontSize": 13,
-          }
+          [
+            {
+              "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
+            },
+          ]
         }
       >
-        Your health identity card
+        passport.subtitle
       </Text>
     </View>
     <View
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
-            "elevation": 2,
             "padding": 20,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": 2,
-              "width": 0,
-            },
-            "shadowOpacity": 0.06,
-            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "gap": 20,
@@ -518,17 +709,20 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Name
+          passport.fieldName
         </Text>
         <View
           style={
@@ -540,14 +734,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Name: Fatima Al-Rashid"
+            accessibilityLabel="passport.fieldName: Fatima Al-Rashid"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-name"
           >
@@ -565,17 +761,20 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Name (Local)
+          passport.fieldNameLocal
         </Text>
         <View
           style={
@@ -587,14 +786,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Name (Local): فاطمة الرشيد"
+            accessibilityLabel="passport.fieldNameLocal: فاطمة الرشيد"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-name-local"
           >
@@ -612,17 +813,20 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Age
+          passport.fieldAge
         </Text>
         <View
           style={
@@ -634,14 +838,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Age: 36"
+            accessibilityLabel="passport.fieldAge: 36"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-age"
           >
@@ -659,17 +865,20 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          Gender
+          passport.fieldGender
         </Text>
         <View
           style={
@@ -681,14 +890,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="Gender: female"
+            accessibilityLabel="passport.fieldGender: female"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-gender"
           >
@@ -706,17 +917,20 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text
           accessibilityRole="text"
           style={
-            {
-              "color": "hsl(270, 8%, 60%)",
-              "fontSize": 13,
-              "fontWeight": "600",
-              "letterSpacing": 0.5,
-              "marginBottom": 4,
-              "textTransform": "uppercase",
-            }
+            [
+              {
+                "fontSize": 13,
+                "fontWeight": "600",
+                "letterSpacing": 0.5,
+                "textTransform": "uppercase",
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
           }
         >
-          National ID
+          passport.fieldNationalId
         </Text>
         <View
           style={
@@ -728,14 +942,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           }
         >
           <Text
-            accessibilityLabel="National ID: hidden"
+            accessibilityLabel="passport.fieldNationalId: hidden"
             style={
-              {
-                "color": "hsl(270, 10%, 45%)",
-                "fontSize": 16,
-                "fontWeight": "400",
-                "lineHeight": 24,
-              }
+              [
+                {
+                  "fontSize": 16,
+                },
+                {
+                  "color": "hsl(270, 10%, 45%)",
+                },
+              ]
             }
             testID="patient-national-id"
           >
@@ -774,24 +990,32 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "hsl(270, 50%, 97%)",
-                "borderRadius": 8,
-                "minWidth": 48,
-                "paddingHorizontal": 12,
-                "paddingVertical": 6,
-              }
+              [
+                {
+                  "alignItems": "center",
+                  "borderRadius": 8,
+                  "minWidth": 48,
+                  "paddingHorizontal": 12,
+                  "paddingVertical": 6,
+                },
+                {
+                  "backgroundColor": "hsl(270, 50%, 97%)",
+                },
+              ]
             }
             testID="toggle-national-id"
           >
             <Text
               style={
-                {
-                  "color": "hsl(270, 48%, 38%)",
-                  "fontSize": 13,
-                  "fontWeight": "600",
-                }
+                [
+                  {
+                    "fontSize": 13,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "hsl(270, 48%, 38%)",
+                  },
+                ]
               }
             >
               Show
@@ -804,19 +1028,13 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
       style={
         [
           {
-            "backgroundColor": "hsl(0, 0%, 100%)",
-            "borderColor": "hsl(270, 15%, 88%)",
             "borderRadius": 16,
             "borderWidth": 1,
-            "elevation": 2,
             "padding": 20,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": 2,
-              "width": 0,
-            },
-            "shadowOpacity": 0.06,
-            "shadowRadius": 8,
+          },
+          {
+            "backgroundColor": "hsl(0, 0%, 100%)",
+            "borderColor": "hsl(270, 15%, 88%)",
           },
           {
             "alignItems": "center",
@@ -830,9 +1048,11 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         style={
           [
             {
-              "color": "hsl(270, 30%, 15%)",
               "fontSize": 20,
-              "fontWeight": "600",
+              "fontWeight": "700",
+            },
+            {
+              "color": "hsl(270, 30%, 15%)",
             },
             {
               "textAlign": "center",
@@ -840,14 +1060,16 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        Your Medical ID
+        passport.qrTitle
       </Text>
       <Text
         style={
           [
             {
-              "color": "hsl(270, 8%, 60%)",
               "fontSize": 13,
+            },
+            {
+              "color": "hsl(270, 8%, 60%)",
             },
             {
               "marginBottom": 8,
@@ -856,7 +1078,7 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
           ]
         }
       >
-        Show this QR code to your healthcare provider
+        passport.qrSubtitle
       </Text>
       <View
         testID="patient-qr-code"
@@ -864,6 +1086,154 @@ exports[`ProfileScreen RTL layout renders correctly in RTL mode (CLAUDE.md: RTL 
         <Text>
           550e8400-e29b-41d4-a716-446655440000
         </Text>
+      </View>
+    </View>
+    <View
+      accessibilityLabel="Premium feature, upgrade required"
+      accessibilityRole="none"
+      style={
+        [
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "justifyContent": "center",
+            "paddingHorizontal": 20,
+          },
+          {
+            "backgroundColor": "hsl(270, 20%, 98%)",
+          },
+        ]
+      }
+      testID="premium-gate-MEDICAL_HISTORY_EXPORT"
+    >
+      <View
+        style={
+          [
+            {
+              "alignItems": "center",
+              "borderRadius": 16,
+              "borderWidth": 1,
+              "gap": 16,
+              "padding": 40,
+              "width": "100%",
+            },
+            {
+              "backgroundColor": "hsl(0, 0%, 100%)",
+              "borderColor": "hsl(270, 15%, 88%)",
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityElementsHidden={true}
+          style={
+            [
+              {
+                "fontSize": 48,
+                "marginBottom": 8,
+              },
+              {
+                "color": "hsl(270, 8%, 60%)",
+              },
+            ]
+          }
+        >
+          🔒
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontSize": 20,
+                "fontWeight": "700",
+                "textAlign": "center",
+              },
+              {
+                "color": "hsl(270, 30%, 15%)",
+              },
+            ]
+          }
+        >
+          Medical History Export
+        </Text>
+        <Text
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 22,
+                "paddingHorizontal": 8,
+                "textAlign": "center",
+              },
+              {
+                "color": "hsl(270, 10%, 45%)",
+              },
+            ]
+          }
+        >
+          Download your complete medical history as a FHIR-standard health record bundle.
+        </Text>
+        <View
+          accessibilityLabel="Upgrade to Premium"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            [
+              {
+                "alignItems": "center",
+                "borderRadius": 8,
+                "marginTop": 8,
+                "minWidth": 96,
+                "paddingHorizontal": 32,
+                "paddingVertical": 14,
+              },
+              {
+                "backgroundColor": "hsl(270, 45%, 48%)",
+              },
+            ]
+          }
+          testID="premium-upgrade-cta"
+        >
+          <Text
+            style={
+              {
+                "color": "#FFFFFF",
+                "fontSize": 16,
+                "fontWeight": "700",
+              }
+            }
+          >
+            Upgrade to Premium
+          </Text>
+        </View>
       </View>
     </View>
   </View>

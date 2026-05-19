@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { getLocale } from 'next-intl/server'
+import { getDirection } from '@ultranos/ui-kit'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import './globals.css'
@@ -21,9 +23,16 @@ export const metadata: Metadata = {
   description: 'Ultranos Lab Lite PWA for diagnostic result upload',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+  const dir = getDirection(locale)
+  const isRtl = dir === 'rtl'
+
   return (
-    <html lang="en" dir="auto" className={inter.variable}>
+    <html lang={locale} dir={dir} className={inter.variable}>
+      <head>
+        {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+      </head>
       <body className="font-sans bg-neutral-50 text-neutral-900 antialiased">
         <ClientErrorBoundary>
           <header className="border-b border-neutral-200 bg-white px-6 py-3">

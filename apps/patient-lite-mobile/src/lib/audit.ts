@@ -13,7 +13,7 @@
 export interface AuditEntry {
   id: string
   timestamp: string
-  action: 'PHI_READ' | 'PHI_WRITE' | 'PHI_DELETE' | 'PHI_DISPLAY' | 'PHI_UNMASK' | 'DEVICE_INTEGRITY_CHECK'
+  action: 'PHI_READ' | 'PHI_WRITE' | 'PHI_DELETE' | 'PHI_DISPLAY' | 'PHI_UNMASK' | 'DEVICE_INTEGRITY_CHECK' | 'PATIENT_OTP_SENT' | 'PATIENT_LOGIN_SUCCESS' | 'PATIENT_LOGIN_FAILURE' | 'PATIENT_BIOMETRIC_ENROLLED' | 'GUARDIAN_LINK_CREATED' | 'GUARDIAN_LINK_REVOKED' | 'GUARDIAN_ACTION' | 'PATIENT_DATA_EXPORT'
   resourceType: string
   resourceId: string
   patientId: string

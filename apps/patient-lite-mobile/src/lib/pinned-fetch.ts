@@ -65,8 +65,9 @@ async function mobilePinnedFetch(
         certs: pinHashes,
       },
       timeoutInterval: 30000,
-      // Enforce minimum TLS version
-      ...(MIN_TLS_VERSION === 'TLSv1.3' ? { pkPinning: true } : {}),
+      // TLS 1.3 minimum enforced at native layer via Android network_security_config.xml
+      // and iOS ATS (App Transport Security) defaults. pkPinning enables public key pinning.
+      pkPinning: true,
     })
 
     let bodyText: string

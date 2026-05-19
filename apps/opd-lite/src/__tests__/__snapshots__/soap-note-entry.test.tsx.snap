@@ -1,0 +1,217 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SOAPNoteEntry component > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex items-center gap-3"
+      >
+        <span
+          class="inline-flex items-center gap-2 rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-semibold text-neutral-600"
+        >
+          <span
+            aria-hidden="true"
+          >
+            📋
+          </span>
+          Template Assist
+        </span>
+        <span
+          class="text-xs text-amber-600 font-semibold"
+        >
+          AI unavailable offline — use template macros
+        </span>
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-subjective"
+        >
+          Subjective
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-subjective"
+          maxlength="10000"
+          placeholder="Patient's chief complaint, history of present illness, symptoms..."
+          rows="5"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-objective"
+        >
+          Objective
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-objective"
+          maxlength="10000"
+          placeholder="Physical examination findings, vital signs, lab results..."
+          rows="5"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-assessment"
+        >
+          Assessment
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-assessment"
+          maxlength="10000"
+          placeholder="Clinical impression, diagnosis or differential..."
+          rows="4"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-plan"
+        >
+          Plan
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-plan"
+          maxlength="10000"
+          placeholder="Treatment plan, medications, follow-up instructions..."
+          rows="4"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SOAPNoteEntry component > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex items-center gap-3"
+      >
+        <span
+          class="inline-flex items-center gap-2 rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-semibold text-neutral-600"
+        >
+          <span
+            aria-hidden="true"
+          >
+            📋
+          </span>
+          Template Assist
+        </span>
+        <span
+          class="text-xs text-amber-600 font-semibold"
+        >
+          AI unavailable offline — use template macros
+        </span>
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-subjective"
+        >
+          Subjective
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-subjective"
+          maxlength="10000"
+          placeholder="Patient's chief complaint, history of present illness, symptoms..."
+          rows="5"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-objective"
+        >
+          Objective
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-objective"
+          maxlength="10000"
+          placeholder="Physical examination findings, vital signs, lab results..."
+          rows="5"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-assessment"
+        >
+          Assessment
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-assessment"
+          maxlength="10000"
+          placeholder="Clinical impression, diagnosis or differential..."
+          rows="4"
+        />
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-semibold text-neutral-700"
+          for="soap-plan"
+        >
+          Plan
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
+    text-base text-neutral-900 placeholder:text-neutral-400
+    focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+    transition-colors"
+          dir="auto"
+          id="soap-plan"
+          maxlength="10000"
+          placeholder="Treatment plan, medications, follow-up instructions..."
+          rows="4"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;

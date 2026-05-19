@@ -26,10 +26,12 @@ export const useDeviceSecurityStore = create<DeviceSecurityState>((set) => ({
   reasons: [],
   checkedAt: null,
   setResult: (result) =>
-    set({
+    set((state) => ({
       checked: true,
-      isCompromised: result.isCompromised,
-      reasons: result.reasons,
+      // Monotonic: once compromised, never downgraded within session.
+      // Prevents root-cloaking tools (Magisk Hide) from bypassing detection on re-check.
+      isCompromised: state.isCompromised || result.isCompromised,
+      reasons: state.isCompromised ? state.reasons : result.reasons,
       checkedAt: new Date().toISOString(),
-    }),
+    })),
 }))

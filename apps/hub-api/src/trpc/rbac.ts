@@ -37,11 +37,13 @@ export const ROLE_PERMISSIONS: Record<string, Set<string>> = {
     'Patient',
     'Consent',
     'MedicationStatement',
+    'GuardianLink',
   ]),
   GUARDIAN: new Set([
     'Patient',
     'Consent',
     'MedicationStatement',
+    'GuardianLink',
   ]),
   LAB_TECH: new Set([
     'DiagnosticReport',

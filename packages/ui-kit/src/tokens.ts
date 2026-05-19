@@ -7,6 +7,8 @@ export const typography = {
   fontFamily: {
     sans: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     mono: "'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace",
+    'sans-ar': "'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif",
+    'serif-ar': "'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif",
   },
   fontSize: {
     xs: '0.75rem',
@@ -101,3 +103,22 @@ export const transitions = {
   fast: '150ms ease',
   normal: '250ms ease',
 } as const
+
+/** RTL typography overrides for Arabic/Dari */
+export const rtlTypography = {
+  textSizeMultiplier: 1.15,
+  lineHeightBody: 1.8,
+  ltr: {
+    textSizeMultiplier: 1,
+    lineHeightBody: 1.5,
+  },
+} as const
+
+/** Arabic font file names for self-hosted loading */
+export const arabicFontFiles = [
+  'NotoSansArabic-Regular.woff2',
+  'NotoSansArabic-Medium.woff2',
+  'NotoSansArabic-Bold.woff2',
+  'NotoNaskhArabic-Regular.woff2',
+  'NotoNaskhArabic-Bold.woff2',
+] as const

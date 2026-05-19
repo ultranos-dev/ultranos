@@ -4,7 +4,7 @@ import { useMedicalHistory } from '@/hooks/useMedicalHistory'
 
 export function TimelineScreen() {
   const { patient, isLoading: profileLoading } = usePatientProfile()
-  const { events, activeMedications, isLoading, error } = useMedicalHistory(
+  const { events, activeMedications, activeAllergies, isLoading, error } = useMedicalHistory(
     patient?.id,
   )
 
@@ -12,6 +12,7 @@ export function TimelineScreen() {
     <MedicalTimeline
       events={events}
       activeMedications={activeMedications}
+      activeAllergies={activeAllergies}
       isLoading={profileLoading || isLoading}
       error={error}
       patientId={patient?.id}

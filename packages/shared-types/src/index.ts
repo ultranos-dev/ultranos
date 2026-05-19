@@ -43,3 +43,9 @@ export * from './admin/anomaly-alert.js'
 
 // AI model registry types (Story 24.4)
 export * from './ai-model.js'
+
+// Guardian link types (Story 18.7)
+export * from './fhir/guardian-link.js'
+
+// Feature tier definitions (Story 27.11)
+export * from './feature-tiers.js'
