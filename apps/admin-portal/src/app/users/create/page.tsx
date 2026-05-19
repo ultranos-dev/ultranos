@@ -29,6 +29,9 @@ export default function CreateUserPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [createdUser, setCreatedUser] = useState<{
+    userId: string; name: string; email: string; role: string; setupLink: string | null; emailSent: boolean
+  } | null>(null)
 
   useEffect(() => {
     async function fetchRoles() {
@@ -67,8 +70,8 @@ export default function CreateUserPage() {
         return
       }
 
-      // TODO: Call user creation endpoint when Epic 22 user management is implemented.
-      // For now, validation passes — the form is ready for integration.
+      const result = await trpc.admin.createUser.mutate({ name, email, role: selectedRole })
+      setCreatedUser(result)
       setSubmitSuccess(true)
     } catch (err: any) {
       setSubmitError(err?.message ?? 'Failed to validate role')
@@ -187,27 +190,65 @@ export default function CreateUserPage() {
           </div>
         )}
 
-        {submitSuccess && (
+        {submitSuccess && createdUser && (
           <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-            Role validated successfully. User creation will be available when user management is fully implemented.
+            <p className="font-semibold text-base mb-2">User created successfully</p>
+            <p><span className="font-medium">Name:</span> {createdUser.name}</p>
+            <p><span className="font-medium">Email:</span> {createdUser.email}</p>
+            <p><span className="font-medium">Role:</span> {createdUser.role}</p>
+            {createdUser.emailSent && (
+              <p className="mt-2">An invitation email has been sent to {createdUser.email}.</p>
+            )}
+            {!createdUser.emailSent && createdUser.setupLink && (
+              <div className="mt-2">
+                <p>Email delivery is not configured. Share this setup link manually:</p>
+                <code className="mt-1 block break-all rounded-lg bg-green-100 px-3 py-2 font-mono text-xs text-green-900">
+                  {createdUser.setupLink}
+                </code>
+              </div>
+            )}
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setCreatedUser(null)
+                  setSubmitSuccess(false)
+                  setName('')
+                  setEmail('')
+                  setSelectedRole('')
+                  setSubmitError(null)
+                }}
+                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all"
+              >
+                Create Another User
+              </button>
+              <a
+                href="/users"
+                className="rounded-full border border-border text-text-primary px-6 py-2.5 hover:bg-surface hover:scale-[1.02] transition-all"
+              >
+                View All Users
+              </a>
+            </div>
           </div>
         )}
 
-        <div className="mt-6 flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting || !selectedRole || !name || !email}
-            className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? 'Validating...' : 'Create User'}
-          </button>
-          <a
-            href="/users"
-            className="rounded-full border border-border text-text-primary px-6 py-2.5 hover:bg-surface hover:scale-[1.02] transition-all"
-          >
-            Cancel
-          </a>
-        </div>
+        {!submitSuccess && (
+          <div className="mt-6 flex gap-3">
+            <button
+              type="submit"
+              disabled={submitting || !selectedRole || !name || !email}
+              className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Creating...' : 'Create User'}
+            </button>
+            <a
+              href="/users"
+              className="rounded-full border border-border text-text-primary px-6 py-2.5 hover:bg-surface hover:scale-[1.02] transition-all"
+            >
+              Cancel
+            </a>
+          </div>
+        )}
       </form>
     </div>
   )
