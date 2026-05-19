@@ -1,16 +1,22 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { SessionTimer } from '@/components/SessionTimer'
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { label: 'Providers', href: '/providers', icon: UserIcon },
   { label: 'License Expiry', href: '/providers/expiry', icon: ClockIcon, indent: true },
   { label: 'Labs', href: '/labs', icon: FlaskIcon },
+  { label: 'Users', href: '/users', icon: UsersGroupIcon },
+  { label: 'Create User', href: '/users/create', icon: PlusIcon, indent: true },
   { label: 'AI Models', href: '/ai-models', icon: CpuIcon },
   { label: 'Alerts', href: '/alerts', icon: BellIcon },
   { label: 'Audit Log', href: '/audit', icon: ScrollIcon },
+  { label: 'Subscriptions', href: '/subscriptions', icon: CreditCardIcon },
   { label: 'Settings', href: '/settings', icon: GearIcon },
 ] as const
 
@@ -21,6 +27,16 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const session = useAuthSessionStore((s) => s.session)
+  const clearSession = useAuthSessionStore((s) => s.clearSession)
+
+  const handleSignOut = async () => {
+    const supabase = getSupabaseBrowserClient()
+    await supabase.auth.signOut()
+    clearSession()
+    router.push('/login')
+  }
 
   return (
     <aside
@@ -40,8 +56,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4" aria-label="Admin navigation">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`)
           const indent = 'indent' in item && item.indent
+          const isActive = indent
+            ? pathname === item.href
+            : pathname === item.href || pathname?.startsWith(`${item.href}/`)
 
           return (
             <div key={item.href} className="relative group">
@@ -49,7 +67,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 href={item.href}
                 className={`flex items-center gap-3 ${collapsed ? 'justify-center px-2' : indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
                   isActive
-                    ? 'bg-accent-subtle text-accent font-medium border-s-2 border-accent'
+                    ? 'bg-white/[0.12] text-accent font-medium'
                     : 'text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
@@ -67,6 +85,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* Footer */}
+      <div className="border-t border-white/10 p-4 space-y-3">
+        {!collapsed && session && (
+          <div className="space-y-1">
+            <p className="text-xs text-text-on-dark/60 truncate">{session.email}</p>
+            <SessionTimer />
+          </div>
+        )}
+        <button
+          onClick={handleSignOut}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2'} w-full py-2 rounded-xl text-text-on-dark/60 hover:bg-white/[0.08] hover:text-text-on-dark transition-colors text-sm`}
+          aria-label="Sign Out"
+        >
+          <SignOutIcon className="h-4 w-4 shrink-0" />
+          {!collapsed && 'Sign Out'}
+        </button>
+      </div>
 
       {/* Collapse toggle */}
       <div className="p-4 border-t border-white/10">
@@ -145,6 +181,39 @@ function GearIcon({ className }: { className?: string }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.993 6.993 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function UsersGroupIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 18a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" />
+    </svg>
+  )
+}
+
+function PlusIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+    </svg>
+  )
+}
+
+function CreditCardIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M2.5 4A1.5 1.5 0 0 0 1 5.5V6h18v-.5A1.5 1.5 0 0 0 17.5 4h-15ZM19 8.5H1v6A1.5 1.5 0 0 0 2.5 16h15a1.5 1.5 0 0 0 1.5-1.5v-6ZM3 13.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm4.75-.75a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function SignOutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd" />
+      <path fillRule="evenodd" d="M19 10a.75.75 0 0 0-.75-.75H8.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 19 10Z" clipRule="evenodd" />
     </svg>
   )
 }
