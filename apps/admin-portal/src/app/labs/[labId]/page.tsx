@@ -97,13 +97,13 @@ function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold">{c.title}</h2>
-        <p className="mt-3 text-sm text-neutral-700">{c.description}</p>
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-black">{c.title}</h2>
+        <p className="mt-3 text-sm text-text-muted">{c.description}</p>
 
         <div className="mt-4">
-          <label htmlFor="reason" className="block text-sm font-medium text-neutral-700">
-            Reason <span className="text-neutral-400">(optional)</span>
+          <label htmlFor="reason" className="block text-sm font-medium text-text-muted">
+            Reason <span className="text-text-muted/60">(optional)</span>
           </label>
           <textarea
             id="reason"
@@ -111,7 +111,7 @@ function ConfirmationDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="Enter a reason for this action..."
           />
         </div>
@@ -119,14 +119,14 @@ function ConfirmationDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="rounded-full border border-black text-black px-6 py-2.5 text-sm hover:bg-neutral-50 hover:scale-[1.02] transition-all"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors ${c.buttonColor}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -188,14 +188,14 @@ export default function LabDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-neutral-500">Loading lab details...</div>
+    return <div className="text-text-muted">Loading lab details...</div>
   }
 
   if (error && !lab) {
     return (
       <div>
-        <button onClick={() => router.push('/labs')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to Labs</button>
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <button onClick={() => router.push('/labs')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to Labs</button>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       </div>
     )
   }
@@ -204,25 +204,25 @@ export default function LabDetailPage() {
 
   return (
     <div className="max-w-4xl">
-      <button onClick={() => router.push('/labs')} className="text-sm text-blue-600 hover:text-blue-800">&larr; Back to Labs</button>
+      <button onClick={() => router.push('/labs')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to Labs</button>
 
       {/* Header */}
       <div className="mt-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{lab.labName}</h1>
-          <p className="mt-1 text-neutral-500">Registered {formatDate(lab.registeredAt)}</p>
+          <h1 className="text-4xl font-bold tracking-tight text-black">{lab.labName}</h1>
+          <p className="mt-4 text-text-muted">Registered {formatDate(lab.registeredAt)}</p>
         </div>
         <StatusBadge status={lab.status} />
       </div>
 
       {/* Success toast */}
       {successMessage && (
-        <div className="mt-4 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
+        <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
       {/* Action buttons — AC #3, status-dependent */}
@@ -230,7 +230,7 @@ export default function LabDetailPage() {
         {lab.status === 'PENDING' && (
           <button
             onClick={() => setPendingAction('APPROVE')}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-green-600 text-white hover:brightness-95 hover:scale-[1.02] transition-all"
           >
             Approve
           </button>
@@ -238,7 +238,7 @@ export default function LabDetailPage() {
         {lab.status === 'ACTIVE' && (
           <button
             onClick={() => setPendingAction('SUSPEND')}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-red-600 text-white hover:brightness-95 hover:scale-[1.02] transition-all"
           >
             Suspend
           </button>
@@ -246,7 +246,7 @@ export default function LabDetailPage() {
         {lab.status === 'SUSPENDED' && (
           <button
             onClick={() => setPendingAction('REACTIVATE')}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-blue-600 text-white hover:brightness-95 hover:scale-[1.02] transition-all"
           >
             Reactivate
           </button>
@@ -256,57 +256,57 @@ export default function LabDetailPage() {
       {/* Lab details grid — AC #9 */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Registration Documents */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Registration Details</h2>
+        <div className="rounded-3xl bg-white p-5 border border-border">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Registration Details</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-neutral-500">License Reference</dt>
-              <dd className="font-medium">{lab.licenseReference}</dd>
+              <dt className="text-text-muted">License Reference</dt>
+              <dd className="font-medium text-black">{lab.licenseReference}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Accreditation (ISO 15189)</dt>
-              <dd className="font-medium">{lab.accreditationReference ?? '—'}</dd>
+              <dt className="text-text-muted">Accreditation (ISO 15189)</dt>
+              <dd className="font-medium text-black">{lab.accreditationReference ?? '—'}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500">Upload History</dt>
-              <dd className="font-medium">{lab.uploadCount} result{lab.uploadCount !== 1 ? 's' : ''}</dd>
+              <dt className="text-text-muted">Upload History</dt>
+              <dd className="font-medium text-black">{lab.uploadCount} result{lab.uploadCount !== 1 ? 's' : ''}</dd>
             </div>
           </dl>
         </div>
 
         {/* Technician Credentials */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Technician</h2>
+        <div className="rounded-3xl bg-white p-5 border border-border">
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Technician</h2>
           {lab.technician ? (
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Name</dt>
-                <dd className="font-medium">{lab.technician.name}</dd>
+                <dt className="text-text-muted">Name</dt>
+                <dd className="font-medium text-black">{lab.technician.name}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Email</dt>
-                <dd className="font-medium">{lab.technician.email ?? '—'}</dd>
+                <dt className="text-text-muted">Email</dt>
+                <dd className="font-medium text-black">{lab.technician.email ?? '—'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Credential Ref</dt>
-                <dd className="font-medium">{lab.technician.credentialRef}</dd>
+                <dt className="text-text-muted">Credential Ref</dt>
+                <dd className="font-medium text-black">{lab.technician.credentialRef}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Qualification</dt>
-                <dd className="font-medium">{lab.technician.qualification ?? '—'}</dd>
+                <dt className="text-text-muted">Qualification</dt>
+                <dd className="font-medium text-black">{lab.technician.qualification ?? '—'}</dd>
               </div>
             </dl>
           ) : (
-            <p className="mt-3 text-sm text-neutral-500">No technician associated.</p>
+            <p className="mt-3 text-sm text-text-muted">No technician associated.</p>
           )}
         </div>
       </div>
 
       {/* Status Transition History — AC #9 */}
-      <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">Status History</h2>
+      <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Status History</h2>
         {lab.statusHistory.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-500">No status transitions recorded.</p>
+          <p className="mt-3 text-sm text-text-muted">No status transitions recorded.</p>
         ) : (
           <div className="mt-3 space-y-3">
             {lab.statusHistory.map((entry, i) => (
@@ -315,12 +315,12 @@ export default function LabDetailPage() {
                   <div className="flex items-center gap-2">
                     <StatusBadge status={entry.status} />
                     {entry.changedByName && (
-                      <span className="text-xs font-medium text-neutral-600">{entry.changedByName}</span>
+                      <span className="text-xs font-medium text-black">{entry.changedByName}</span>
                     )}
-                    <span className="text-xs text-neutral-400">{formatDateTime(entry.changedAt)}</span>
+                    <span className="text-xs text-text-muted">{formatDateTime(entry.changedAt)}</span>
                   </div>
                   {entry.reason && (
-                    <p className="mt-1 text-sm text-neutral-600">{entry.reason}</p>
+                    <p className="mt-1 text-sm text-text-muted">{entry.reason}</p>
                   )}
                 </div>
               </div>

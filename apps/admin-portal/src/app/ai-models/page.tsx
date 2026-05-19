@@ -92,19 +92,23 @@ export default function AIModelsPage() {
   }, [fetchData])
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">AI Models</h1>
+    <div className="space-y-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-black">AI Models</h1>
+          <div className="wavy-divider mt-2" />
+          <p className="mt-4 text-text-muted">Manage offline model bundles distributed to spoke devices.</p>
+        </div>
         <button
           onClick={() => setShowPublishForm(!showPublishForm)}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 transition-colors"
+          className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all"
         >
           {showPublishForm ? 'Cancel' : 'Publish New Version'}
         </button>
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -112,19 +116,19 @@ export default function AIModelsPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-lg border border-neutral-200 p-4">
-            <p className="text-sm text-neutral-500">Registered Models</p>
-            <p className="text-2xl font-bold text-neutral-900">{models.length}</p>
+          <div className="rounded-3xl bg-white p-5 border border-border">
+            <p className="text-sm font-medium text-text-muted">Registered Models</p>
+            <p className="text-2xl font-bold text-black mt-1">{models.length}</p>
           </div>
-          <div className="rounded-lg border border-neutral-200 p-4">
-            <p className="text-sm text-neutral-500">Stale Device Events (30d)</p>
-            <p className={`text-2xl font-bold ${stats.totalStaleDeviceEvents > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+          <div className="rounded-3xl bg-white p-5 border border-border">
+            <p className="text-sm font-medium text-text-muted">Stale Device Events (30d)</p>
+            <p className={`text-2xl font-bold mt-1 ${stats.totalStaleDeviceEvents > 0 ? 'text-amber-600' : 'text-green-600'}`}>
               {stats.totalStaleDeviceEvents}
             </p>
           </div>
-          <div className="rounded-lg border border-neutral-200 p-4">
-            <p className="text-sm text-neutral-500">Drug DB Staleness Incidents</p>
-            <p className={`text-2xl font-bold ${stats.drugDbStalenessIncidents > 0 ? 'text-red-600' : 'text-green-600'}`}>
+          <div className="rounded-3xl bg-white p-5 border border-border">
+            <p className="text-sm font-medium text-text-muted">Drug DB Staleness Incidents</p>
+            <p className={`text-2xl font-bold mt-1 ${stats.drugDbStalenessIncidents > 0 ? 'text-red-600' : 'text-green-600'}`}>
               {stats.drugDbStalenessIncidents}
             </p>
           </div>
@@ -142,63 +146,66 @@ export default function AIModelsPage() {
       )}
 
       {/* Model Registry Table */}
-      <div className="rounded-lg border border-neutral-200 overflow-hidden">
-        <table className="min-w-full divide-y divide-neutral-200">
-          <thead className="bg-neutral-50">
-            <tr>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Model</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Type</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Version</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Size</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Released</th>
-              <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase tracking-wider">Delta From</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-neutral-200">
-            {loading ? (
+      <div>
+        <h2 className="text-sm font-semibold text-black uppercase tracking-wide mb-3">Model Manifest</h2>
+        <div className="rounded-2xl border border-border overflow-hidden">
+          <table className="min-w-full">
+            <thead className="bg-black">
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-500">Loading...</td>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Model</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Type</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Version</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Size</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Released</th>
+                <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Delta From</th>
               </tr>
-            ) : models.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-500">No models registered yet.</td>
-              </tr>
-            ) : (
-              models.map((model) => (
-                <tr key={`${model.modelId}-${model.currentVersion}`} className="hover:bg-neutral-50">
-                  <td className="px-4 py-3 text-sm font-medium text-neutral-900">{model.modelId}</td>
-                  <td className="px-4 py-3 text-sm"><ModelTypeBadge type={model.modelType} /></td>
-                  <td className="px-4 py-3 text-sm text-neutral-700 font-mono">{model.currentVersion}</td>
-                  <td className="px-4 py-3 text-sm text-neutral-500">{formatBytes(model.fileSize)}</td>
-                  <td className="px-4 py-3 text-sm text-neutral-500">{formatDate(model.releasedAt)}</td>
-                  <td className="px-4 py-3 text-sm text-neutral-500 font-mono">{model.deltaFromVersion ?? '—'}</td>
+            </thead>
+            <tbody className="divide-y divide-border bg-white">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-text-muted">Loading...</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : models.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-text-muted">No models registered yet.</td>
+                </tr>
+              ) : (
+                models.map((model) => (
+                  <tr key={`${model.modelId}-${model.currentVersion}`} className="hover:bg-brand-lime/5 transition-colors">
+                    <td className="px-4 py-3 text-sm font-medium text-black">{model.modelId}</td>
+                    <td className="px-4 py-3 text-sm"><ModelTypeBadge type={model.modelType} /></td>
+                    <td className="px-4 py-3 text-sm text-black font-mono">{model.currentVersion}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{formatBytes(model.fileSize)}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{formatDate(model.releasedAt)}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted font-mono">{model.deltaFromVersion ?? '—'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Update Stats Table */}
       {stats && stats.modelStats.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-neutral-900">Update Statistics (Last 30 days)</h2>
-          <div className="rounded-lg border border-neutral-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-neutral-50">
+        <div>
+          <h2 className="text-sm font-semibold text-black uppercase tracking-wide mb-3">Update Statistics (Last 30 Days)</h2>
+          <div className="rounded-2xl border border-border overflow-hidden">
+            <table className="min-w-full">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Model</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Success Rate</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Started</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Completed</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Failed</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-neutral-500 uppercase">Stale</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Model</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Success Rate</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Started</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Completed</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Failed</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-white uppercase tracking-wider">Stale</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-neutral-200">
+              <tbody className="divide-y divide-border bg-white">
                 {stats.modelStats.map((s) => (
-                  <tr key={s.modelId}>
-                    <td className="px-4 py-3 text-sm font-medium text-neutral-900">{s.modelId}</td>
+                  <tr key={s.modelId} className="hover:bg-brand-lime/5 transition-colors">
+                    <td className="px-4 py-3 text-sm font-medium text-black">{s.modelId}</td>
                     <td className="px-4 py-3 text-sm">
                       {s.successRate !== null ? (
                         <span className={s.successRate >= 90 ? 'text-green-600' : s.successRate >= 70 ? 'text-amber-600' : 'text-red-600'}>
@@ -206,10 +213,10 @@ export default function AIModelsPage() {
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-neutral-500">{s.started}</td>
-                    <td className="px-4 py-3 text-sm text-neutral-500">{s.completed}</td>
-                    <td className="px-4 py-3 text-sm text-neutral-500">{s.failed}</td>
-                    <td className="px-4 py-3 text-sm text-neutral-500">{s.staleDegraded}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{s.started}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{s.completed}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{s.failed}</td>
+                    <td className="px-4 py-3 text-sm text-text-muted">{s.staleDegraded}</td>
                   </tr>
                 ))}
               </tbody>
@@ -258,31 +265,31 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-neutral-200 p-6 space-y-4 bg-neutral-50">
-      <h2 className="text-lg font-semibold text-neutral-900">Publish New Model Version</h2>
+    <form onSubmit={handleSubmit} className="rounded-3xl bg-white border border-border p-6 space-y-4">
+      <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Publish New Model Version</h2>
 
       {formError && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">{formError}</div>
+        <div className="rounded-2xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{formError}</div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Model ID</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Model ID</label>
           <input
             type="text"
             required
             value={formData.modelId}
             onChange={(e) => setFormData((p) => ({ ...p, modelId: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="e.g., soap-macros"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Model Type</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Model Type</label>
           <select
             value={formData.modelType}
             onChange={(e) => setFormData((p) => ({ ...p, modelType: e.target.value as (typeof MODEL_TYPES)[number] }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           >
             {MODEL_TYPES.map((t) => (
               <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
@@ -290,56 +297,56 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Version</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Version</label>
           <input
             type="text"
             required
             value={formData.version}
             onChange={(e) => setFormData((p) => ({ ...p, version: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="e.g., 2.1.0"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">File Size (bytes)</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">File Size (bytes)</label>
           <input
             type="number"
             required
             min="1"
             value={formData.fileSize}
             onChange={(e) => setFormData((p) => ({ ...p, fileSize: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Download URL</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Download URL</label>
           <input
             type="url"
             required
             value={formData.downloadUrl}
             onChange={(e) => setFormData((p) => ({ ...p, downloadUrl: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">SHA-256 Checksum</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">SHA-256 Checksum</label>
           <input
             type="text"
             required
             pattern="[a-f0-9]{64}"
             value={formData.checksum}
             onChange={(e) => setFormData((p) => ({ ...p, checksum: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm font-mono"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-mono focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="64-character hex string"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">Delta From Version (optional)</label>
+          <label className="block text-sm font-medium text-text-muted mb-1">Delta From Version (optional)</label>
           <input
             type="text"
             value={formData.deltaFromVersion}
             onChange={(e) => setFormData((p) => ({ ...p, deltaFromVersion: e.target.value }))}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
             placeholder="e.g., 2.0.0"
           />
         </div>
@@ -349,7 +356,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 transition-colors"
+          className="rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
         >
           {submitting ? 'Publishing...' : 'Publish'}
         </button>
