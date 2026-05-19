@@ -345,7 +345,7 @@ export default function AlertsPage() {
       {loading ? (
         <div className="mt-6 text-text-muted">Loading anomaly alerts...</div>
       ) : alerts.length === 0 ? (
-        <div className="mt-6 rounded-3xl border-2 border-dashed border-border bg-neutral-50 p-8 text-center">
+        <div className="mt-6 rounded-3xl border-2 border-dashed border-border p-8 text-center">
           <p className="text-text-muted">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
         </div>
       ) : (
