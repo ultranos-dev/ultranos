@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { ExportButton } from '@/components/ExportButton'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'SLA_BREACHED'
 
@@ -119,21 +120,24 @@ export default function KycQueuePage() {
     <>
       <TopHeader title="KYC Verification Queue" description="Review pending provider KYC submissions." />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        {/* Filter tabs — AC #11 */}
-        <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              onClick={() => handleFilterChange(s)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                filter === s
-                  ? 'bg-accent text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              {FILTER_LABELS[s]}
-            </button>
-          ))}
+        {/* Filter tabs + Export — AC #11 */}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+            {STATUS_FILTERS.map((s) => (
+              <button
+                key={s}
+                onClick={() => handleFilterChange(s)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filter === s
+                    ? 'bg-accent text-text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {FILTER_LABELS[s]}
+              </button>
+            ))}
+          </div>
+          <ExportButton exportFn={() => trpc.admin.exportKycSubmissions.query()} filters={{}} />
         </div>
 
         {error && (

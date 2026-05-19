@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc'
 import { AddModuleDialog } from '@/components/subscriptions/AddModuleDialog'
 import { RemoveModuleDialog } from '@/components/subscriptions/RemoveModuleDialog'
 import { TopHeader } from '@/components/TopHeader'
+import { ExportButton } from '@/components/ExportButton'
 
 interface OrgInfo {
   id: string
@@ -111,12 +112,15 @@ export default function SubscriptionsPage() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Modules</h2>
-            <button
-              onClick={() => setShowAddDialog(true)}
-              className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
-            >
-              Add Module
-            </button>
+            <div className="flex items-center gap-3">
+              <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
+              <button
+                onClick={() => setShowAddDialog(true)}
+                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
+              >
+                Add Module
+              </button>
+            </div>
           </div>
 
           {subscriptions.length === 0 ? (

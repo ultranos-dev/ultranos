@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
 import { TopHeader } from '@/components/TopHeader'
+import { ExportButton } from '@/components/ExportButton'
 
 type ExpiryWindow = '7d' | '30d' | '60d' | 'all'
 
@@ -78,7 +79,7 @@ export default function LicenseExpiryPage() {
       <TopHeader title="License Expiry" description="Providers approaching license expiry, sorted by urgency" />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-between mb-6">
-          <div />
+          <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
           <div className="flex gap-2">
             {(['all', '60d', '30d', '7d'] as const).map((w) => (
               <button

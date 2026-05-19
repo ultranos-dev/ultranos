@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { ExportButton } from '@/components/ExportButton'
 
 type AlertTab = 'anomalies' | 'clinical-safety'
 type StatusFilter = 'ALL' | 'UNREVIEWED' | 'ESCALATED' | 'DISMISSED' | 'SUSPENDED'
@@ -321,21 +322,24 @@ export default function AlertsPage() {
           <ClinicalSafetySection />
         ) : (
         <>
-        {/* Filter tabs — AC #11 */}
-        <div className="mt-6 flex gap-1 rounded-full bg-surface p-1 w-fit">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              onClick={() => handleFilterChange(s)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                filter === s
-                  ? 'bg-accent text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
-            </button>
-          ))}
+        {/* Filter tabs + Export — AC #11 */}
+        <div className="mt-6 flex items-center gap-3">
+          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+            {STATUS_FILTERS.map((s) => (
+              <button
+                key={s}
+                onClick={() => handleFilterChange(s)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filter === s
+                    ? 'bg-accent text-text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+          <ExportButton exportFn={() => trpc.admin.exportAlerts.query()} filters={{}} />
         </div>
 
         {error && (

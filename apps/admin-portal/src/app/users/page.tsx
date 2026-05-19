@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { ExportButton } from '@/components/ExportButton'
 
 type RoleFilter = 'ALL' | 'ADMIN' | 'CLINICIAN' | 'DOCTOR' | 'PHARMACIST' | 'LAB_TECH'
 type StatusFilter = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE'
@@ -170,13 +171,16 @@ export default function UsersPage() {
             />
           </div>
 
-          {/* Create User CTA */}
-          <Link
-            href="/users/create"
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
-            Create User
-          </Link>
+          {/* Export + Create User CTA */}
+          <div className="flex items-center gap-3">
+            <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
+            <Link
+              href="/users/create"
+              className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
+            >
+              Create User
+            </Link>
+          </div>
         </div>
 
         {error && (
