@@ -116,19 +116,19 @@ export default function KycQueuePage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="text-2xl font-bold tracking-tight">KYC Verification Queue</h1>
-      <p className="mt-1 text-neutral-500">Review pending provider KYC submissions.</p>
+      <h1 className="text-4xl font-bold tracking-tight wavy-divider">KYC Verification Queue</h1>
+      <p className="mt-4 text-text-muted">Review pending provider KYC submissions.</p>
 
       {/* Filter tabs — AC #11 */}
-      <div className="mt-6 flex gap-1 rounded-lg bg-neutral-100 p-1 w-fit">
+      <div className="mt-6 flex gap-1 rounded-full bg-black p-1 w-fit">
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => handleFilterChange(s)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === s
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-brand-lime text-black'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
             {FILTER_LABELS[s]}
@@ -143,25 +143,25 @@ export default function KycQueuePage() {
       {loading ? (
         <div className="mt-6 text-neutral-500">Loading KYC submissions...</div>
       ) : submissions.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-          <p className="text-neutral-500">No pending KYC submissions{filter !== 'ALL' ? ` matching filter "${FILTER_LABELS[filter]}"` : ''}.</p>
+        <div className="mt-6 rounded-3xl border-2 border-dashed border-border p-8 text-center">
+          <p className="text-text-muted">No pending KYC submissions{filter !== 'ALL' ? ` matching filter "${FILTER_LABELS[filter]}"` : ''}.</p>
         </div>
       ) : (
         <>
           {/* KYC queue table — AC #1, #2, #7 */}
-          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="bg-black">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Provider Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Submitted Date</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">License Doc</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Registry Status</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">SLA Countdown</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">KYC Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Provider Name</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Submitted Date</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">License Doc</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Registry Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">SLA Countdown</th>
+                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">KYC Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border bg-white">
                 {submissions.map((sub) => (
                   <tr
                     key={sub.submissionId}
@@ -169,7 +169,7 @@ export default function KycQueuePage() {
                     className={`cursor-pointer transition-colors ${
                       sub.slaBreached
                         ? 'bg-red-50 hover:bg-red-100'
-                        : 'hover:bg-neutral-50'
+                        : 'hover:bg-brand-lime/5'
                     }`}
                   >
                     <td className="px-4 py-3 font-medium">{sub.providerName}</td>
@@ -205,7 +205,7 @@ export default function KycQueuePage() {
                 <button
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
                 >
                   Previous
                 </button>
@@ -213,7 +213,7 @@ export default function KycQueuePage() {
                 <button
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 transition-colors"
+                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-neutral-50 hover:scale-[1.02] transition-all"
                 >
                   Next
                 </button>
