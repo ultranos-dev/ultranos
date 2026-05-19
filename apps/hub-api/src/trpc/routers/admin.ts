@@ -48,6 +48,23 @@ function checkRateLimit(key: string): boolean {
 }
 
 // ================================================================
+// EPIC C: Default Thresholds & Module Settings
+// ================================================================
+
+const DEFAULT_THRESHOLDS = {
+  kycReviewSlaDays: 7,
+  controlledSubstanceDailyLimit: 10,
+  drugFrequencyThresholdPct: 20,
+  licenseExpiryWarningDays: [60, 30, 7],
+}
+
+const DEFAULT_MODULE_SETTINGS: Record<string, Record<string, unknown>> = {
+  OPD_LITE: { consultationLanguages: ['en'], defaultSoapTemplate: 'Standard', aiAssistedNotes: true },
+  PHARMACY_LITE: { requireSignatureOnDispense: true, allowPartialDispense: false, controlledSubstanceDoubleVerify: true },
+  LAB_LITE: { autoNotifyProviderOnResult: true, resultRetentionDays: 365 },
+}
+
+// ================================================================
 // Helpers — Task 3 & 4: Audit browsing, data exports
 // ================================================================
 
@@ -596,6 +613,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         window: z.enum(['7d', '30d', '60d', 'all']).default('all'),
+        search: z.string().optional(),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
       }),
@@ -623,6 +641,12 @@ export const adminRouter = createTRPCRouter({
         const todayDate = now.toISOString().split('T')[0]
         query = query.lte('_ultranos->>licenseExpiry', windowDate)
           .gte('_ultranos->>licenseExpiry', todayDate)
+      }
+
+      // Epic C: search filter — filter by practitioner name/email
+      if (input.search) {
+        const term = `%${input.search}%`
+        query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`)
       }
 
       const { data: rows, error, count } = await query
@@ -813,6 +837,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         status: z.enum(['ALL', 'PENDING', 'SLA_BREACHED']).default('ALL'),
+        search: z.string().optional(),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
       }),
@@ -822,7 +847,7 @@ export const adminRouter = createTRPCRouter({
       // For PENDING, filter by status=PENDING. For ALL, no status filter.
       if (input.status === 'SLA_BREACHED') {
         // Fetch all PENDING submissions (no pagination) to compute SLA breach server-side
-        const { data: allRows, error: allError } = await ctx.supabase
+        let slaQuery = ctx.supabase
           .from('kyc_submissions')
           .select(`
             id, practitioner_id, status, registry_number, submitted_at,
@@ -832,6 +857,14 @@ export const adminRouter = createTRPCRouter({
           .eq('status', 'PENDING')
           .eq('org_id', ctx.user.orgId)
           .order('submitted_at', { ascending: true })
+
+        // Epic C: search filter — filter by practitioner name/email via the joined practitioners
+        if (input.search) {
+          const term = `%${input.search}%`
+          slaQuery = slaQuery.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`, { referencedTable: 'practitioners' })
+        }
+
+        const { data: allRows, error: allError } = await slaQuery
 
         if (allError) {
           throw new TRPCError({
@@ -870,6 +903,12 @@ export const adminRouter = createTRPCRouter({
 
       if (input.status === 'PENDING') {
         query = query.eq('status', 'PENDING')
+      }
+
+      // Epic C: search filter — filter by practitioner name/email via the joined practitioners
+      if (input.search) {
+        const term = `%${input.search}%`
+        query = query.or(`given_name.ilike.${term},family_name.ilike.${term},telecom_email.ilike.${term}`, { referencedTable: 'practitioners' })
       }
 
       const { data: rows, error, count } = await query
@@ -1308,6 +1347,24 @@ export const adminRouter = createTRPCRouter({
         .map(([date, count]) => ({ date, count }))
         .sort((a, b) => a.date.localeCompare(b.date))
 
+      // Epic C: Resolve assignee/escalator/resolver names from practitioners
+      const escalationUserIds = [
+        r.assignedTo as string | null,
+        r.escalatedBy as string | null,
+        r.resolvedBy as string | null,
+      ].filter(Boolean) as string[]
+
+      const escalationNames: Record<string, string> = {}
+      if (escalationUserIds.length > 0) {
+        const { data: nameRows } = await ctx.supabase
+          .from('practitioners')
+          .select('id, given_name, family_name')
+          .in('id', escalationUserIds)
+        for (const nr of (nameRows ?? []) as Array<Record<string, unknown>>) {
+          escalationNames[nr.id as string] = `${nr.given_name ?? ''} ${nr.family_name ?? ''}`.trim()
+        }
+      }
+
       const result = {
         id: r.id as string,
         practitionerId,
@@ -1324,6 +1381,15 @@ export const adminRouter = createTRPCRouter({
         reviewedAt: (r.reviewedAt as string) ?? null,
         reviewAction: (r.reviewAction as string) ?? null,
         reviewReason: (r.reviewReason as string) ?? null,
+        // Epic C: Escalation fields
+        assigneeName: r.assignedTo ? (escalationNames[r.assignedTo as string] ?? null) : null,
+        escalationPriority: (r.escalationPriority as string) ?? null,
+        escalationNote: (r.escalationNote as string) ?? null,
+        escalatedByName: r.escalatedBy ? (escalationNames[r.escalatedBy as string] ?? null) : null,
+        escalatedAt: (r.escalatedAt as string) ?? null,
+        resolutionNote: (r.resolutionNote as string) ?? null,
+        resolvedByName: r.resolvedBy ? (escalationNames[r.resolvedBy as string] ?? null) : null,
+        resolvedAt: (r.resolvedAt as string) ?? null,
         prescribingSummary: {
           totalPrescriptions: totalPrescriptions ?? 0,
           controlledSubstanceCount: controlledCount ?? 0,
@@ -3400,6 +3466,511 @@ export const adminRouter = createTRPCRouter({
 
     return buildCsvExport(headers, csvRows, 'prescribing-alerts')
   }),
+
+  // ===== EPIC C: Provider Profile =====
+
+  /**
+   * Get aggregated provider profile: identity, KYC history, anomaly alerts, and summary counts.
+   * Epic C Task 2: Provider profile drill-down view.
+   */
+  getProviderProfile: adminProcedure
+    .input(z.object({ practitionerId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Practitioner identity (org-scoped)
+      const { data: practitioner, error: practErr } = await ctx.supabase
+        .from('practitioners')
+        .select('id, given_name, family_name, telecom_email, telecom_phone, role, kyc_status, license_expiry, status, created_at')
+        .eq('id', input.practitionerId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (practErr || !practitioner) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Practitioner not found in this organization',
+        })
+      }
+
+      const p = practitioner as Record<string, unknown>
+
+      // All KYC submissions for this practitioner
+      const { data: kycRows } = await ctx.supabase
+        .from('kyc_submissions')
+        .select('id, status, submitted_at, reviewed_at, reviewer_id')
+        .eq('practitioner_id', input.practitionerId)
+        .eq('org_id', ctx.user.orgId)
+        .order('submitted_at', { ascending: false })
+
+      // All prescribing anomaly alerts for this practitioner
+      const { data: alertRows } = await ctx.supabase
+        .from('prescribing_anomalies')
+        .select('id, anomaly_type, severity, status, created_at, review_action')
+        .eq('practitioner_id', input.practitionerId)
+        .order('created_at', { ascending: false })
+
+      // Alert summary counts
+      const alerts = (alertRows ?? []) as Array<Record<string, unknown>>
+      const alertSummary = {
+        total: alerts.length,
+        dismissed: alerts.filter(a => a.review_action === 'DISMISS' || a.status === 'DISMISSED').length,
+        escalated: alerts.filter(a => a.status === 'ESCALATED').length,
+        resolved: alerts.filter(a => a.status === 'RESOLVED').length,
+        unreviewed: alerts.filter(a => a.status === 'UNREVIEWED').length,
+      }
+
+      // License days remaining
+      const licenseExpiry = p.license_expiry as string | null
+      let licenseDaysRemaining: number | null = null
+      if (licenseExpiry) {
+        const today = new Date().toISOString().split('T')[0]
+        licenseDaysRemaining = Math.ceil(
+          (new Date(licenseExpiry).getTime() - new Date(today).getTime()) / 86_400_000,
+        )
+      }
+
+      // Audit PHI read — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PROVIDER_PROFILE_VIEWED',
+          resourceType: 'PRACTITIONER',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.getProviderProfile' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PROVIDER_PROFILE_VIEWED', resourceType: 'PRACTITIONER', resourceId: input.practitionerId })
+      }
+
+      return {
+        practitioner: {
+          id: p.id as string,
+          givenName: p.given_name as string,
+          familyName: p.family_name as string,
+          email: p.telecom_email as string | null,
+          phone: p.telecom_phone as string | null,
+          role: p.role as string,
+          kycStatus: p.kyc_status as string,
+          licenseExpiry,
+          licenseDaysRemaining,
+          status: p.status as string,
+          createdAt: p.created_at as string,
+        },
+        kycSubmissions: (kycRows ?? []).map((row: Record<string, unknown>) => ({
+          id: row.id as string,
+          status: row.status as string,
+          submittedAt: row.submitted_at as string,
+          reviewedAt: (row.reviewed_at as string) ?? null,
+          reviewerId: (row.reviewer_id as string) ?? null,
+        })),
+        alerts: alerts.map(a => ({
+          id: a.id as string,
+          anomalyType: a.anomaly_type as string,
+          severity: a.severity as string,
+          status: a.status as string,
+          createdAt: a.created_at as string,
+          reviewAction: (a.review_action as string) ?? null,
+        })),
+        alertSummary,
+      }
+    }),
+
+  // ===== EPIC C: Escalation =====
+
+  /**
+   * Escalate an anomaly alert — assigns to an admin and sets priority.
+   * Epic C Task 3: Optimistic lock on status='UNREVIEWED'.
+   */
+  escalateAnomaly: adminProcedure
+    .input(
+      z.object({
+        alertId: z.string().uuid(),
+        assigneeId: z.string().uuid().optional(),
+        priority: z.enum(['URGENT', 'NORMAL']),
+        note: z.string().min(1).max(1000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+
+      const updateData: Record<string, unknown> = {
+        status: 'ESCALATED',
+        escalation_priority: input.priority,
+        escalation_note: input.note,
+        escalated_by: ctx.user.sub,
+        escalated_at: now,
+      }
+
+      if (input.assigneeId) {
+        updateData.assigned_to = input.assigneeId
+      }
+
+      // Optimistic lock: only escalate if currently UNREVIEWED
+      const { error: updateError, count: updateCount } = await ctx.supabase
+        .from('prescribing_anomalies')
+        .update(updateData)
+        .eq('id', input.alertId)
+        .eq('status', 'UNREVIEWED')
+        .select('id', { count: 'exact', head: true })
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to escalate anomaly alert',
+        })
+      }
+
+      if ((updateCount ?? 0) === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Alert is not in UNREVIEWED status — it may have been modified by another admin',
+        })
+      }
+
+      // Audit — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'ANOMALY_ESCALATED',
+          resourceType: 'PRESCRIBING_ANOMALY',
+          resourceId: input.alertId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            priority: input.priority,
+            assigneeId: input.assigneeId ?? null,
+            endpoint: 'admin.escalateAnomaly',
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ANOMALY_ESCALATED', resourceId: input.alertId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Resolve an escalated anomaly alert.
+   * Epic C Task 3: Validates status='ESCALATED' before resolving.
+   */
+  resolveAnomaly: adminProcedure
+    .input(
+      z.object({
+        alertId: z.string().uuid(),
+        resolutionNote: z.string().min(1).max(1000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+
+      // Optimistic lock: only resolve if currently ESCALATED
+      const { error: updateError, count: updateCount } = await ctx.supabase
+        .from('prescribing_anomalies')
+        .update({
+          status: 'RESOLVED',
+          resolution_note: input.resolutionNote,
+          resolved_by: ctx.user.sub,
+          resolved_at: now,
+        })
+        .eq('id', input.alertId)
+        .eq('status', 'ESCALATED')
+        .select('id', { count: 'exact', head: true })
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to resolve anomaly alert',
+        })
+      }
+
+      if ((updateCount ?? 0) === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Alert is not in ESCALATED status — it may have been modified by another admin',
+        })
+      }
+
+      // Audit — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'ANOMALY_RESOLVED',
+          resourceType: 'PRESCRIBING_ANOMALY',
+          resourceId: input.alertId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.resolveAnomaly' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ANOMALY_RESOLVED', resourceId: input.alertId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Reassign an escalated anomaly alert to a different admin.
+   * Epic C Task 3: Validates status='ESCALATED'.
+   */
+  reassignAnomaly: adminProcedure
+    .input(
+      z.object({
+        alertId: z.string().uuid(),
+        assigneeId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Optimistic lock: only reassign if currently ESCALATED
+      const { error: updateError, count: updateCount } = await ctx.supabase
+        .from('prescribing_anomalies')
+        .update({ assigned_to: input.assigneeId })
+        .eq('id', input.alertId)
+        .eq('status', 'ESCALATED')
+        .select('id', { count: 'exact', head: true })
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to reassign anomaly alert',
+        })
+      }
+
+      if ((updateCount ?? 0) === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Alert is not in ESCALATED status — it may have been modified by another admin',
+        })
+      }
+
+      // Audit — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'ANOMALY_REASSIGNED',
+          resourceType: 'PRESCRIBING_ANOMALY',
+          resourceId: input.alertId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { assigneeId: input.assigneeId, endpoint: 'admin.reassignAnomaly' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ANOMALY_REASSIGNED', resourceId: input.alertId })
+      }
+
+      return { success: true }
+    }),
+
+  // ===== EPIC C: Thresholds & Module Settings =====
+
+  /**
+   * Get org thresholds merged with defaults.
+   * Epic C Task 4: Returns merged thresholds config.
+   */
+  getOrgThresholds: adminProcedure.query(async ({ ctx }) => {
+    const { data: org, error } = await ctx.supabase
+      .from('organizations')
+      .select('thresholds')
+      .eq('id', ctx.user.orgId)
+      .single()
+
+    if (error || !org) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Organization not found',
+      })
+    }
+
+    const stored = (org as Record<string, unknown>).thresholds as Record<string, unknown> ?? {}
+    return { ...DEFAULT_THRESHOLDS, ...stored }
+  }),
+
+  /**
+   * Update org thresholds.
+   * Epic C Task 4: Validates with Zod, emits ORG_THRESHOLDS_UPDATED audit event.
+   */
+  updateOrgThresholds: adminProcedure
+    .input(
+      z.object({
+        kycReviewSlaDays: z.number().int().min(1).max(90).optional(),
+        controlledSubstanceDailyLimit: z.number().int().min(1).max(100).optional(),
+        drugFrequencyThresholdPct: z.number().min(1).max(100).optional(),
+        licenseExpiryWarningDays: z.array(z.number().int().min(1).max(365)).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Build partial update — only include provided fields
+      const updates: Record<string, unknown> = {}
+      if (input.kycReviewSlaDays !== undefined) updates.kycReviewSlaDays = input.kycReviewSlaDays
+      if (input.controlledSubstanceDailyLimit !== undefined) updates.controlledSubstanceDailyLimit = input.controlledSubstanceDailyLimit
+      if (input.drugFrequencyThresholdPct !== undefined) updates.drugFrequencyThresholdPct = input.drugFrequencyThresholdPct
+      if (input.licenseExpiryWarningDays !== undefined) updates.licenseExpiryWarningDays = input.licenseExpiryWarningDays
+
+      // Read current thresholds, merge, and write back
+      const { data: org, error: readError } = await ctx.supabase
+        .from('organizations')
+        .select('thresholds')
+        .eq('id', ctx.user.orgId)
+        .single()
+
+      if (readError || !org) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Organization not found',
+        })
+      }
+
+      const current = (org as Record<string, unknown>).thresholds as Record<string, unknown> ?? {}
+      const merged = { ...current, ...updates }
+
+      const { error: updateError } = await ctx.supabase
+        .from('organizations')
+        .update({ thresholds: merged })
+        .eq('id', ctx.user.orgId)
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update organization thresholds',
+        })
+      }
+
+      // Audit — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'ORG_THRESHOLDS_UPDATED',
+          resourceType: 'ORGANIZATION',
+          resourceId: ctx.user.orgId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { updatedKeys: Object.keys(updates), endpoint: 'admin.updateOrgThresholds' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'ORG_THRESHOLDS_UPDATED', resourceId: ctx.user.orgId })
+      }
+
+      return { ...DEFAULT_THRESHOLDS, ...merged }
+    }),
+
+  /**
+   * Get module settings for a specific module, merged with defaults.
+   * Epic C Task 4: Reads org_module_settings, merges with DEFAULT_MODULE_SETTINGS.
+   */
+  getModuleSettings: adminProcedure
+    .input(z.object({ moduleCode: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const { data: row } = await ctx.supabase
+        .from('org_module_settings')
+        .select('settings')
+        .eq('org_id', ctx.user.orgId)
+        .eq('module_code', input.moduleCode)
+        .maybeSingle()
+
+      const defaults = DEFAULT_MODULE_SETTINGS[input.moduleCode] ?? {}
+      const stored = (row as Record<string, unknown> | null)?.settings as Record<string, unknown> ?? {}
+
+      return {
+        moduleCode: input.moduleCode,
+        settings: { ...defaults, ...stored },
+      }
+    }),
+
+  /**
+   * Update module settings for a specific module.
+   * Epic C Task 4: Validates org has active subscription, upserts settings.
+   */
+  updateModuleSettings: adminProcedure
+    .input(
+      z.object({
+        moduleCode: z.string().min(1),
+        settings: z.record(z.unknown()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Validate org has active subscription for this module
+      const { data: sub } = await ctx.supabase
+        .from('org_subscriptions')
+        .select('id')
+        .eq('org_id', ctx.user.orgId)
+        .eq('module_code', input.moduleCode)
+        .eq('status', 'ACTIVE')
+        .maybeSingle()
+
+      if (!sub) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Organization does not have an active subscription for module ${input.moduleCode}`,
+        })
+      }
+
+      // Read current settings, merge, and upsert
+      const { data: existing } = await ctx.supabase
+        .from('org_module_settings')
+        .select('settings')
+        .eq('org_id', ctx.user.orgId)
+        .eq('module_code', input.moduleCode)
+        .maybeSingle()
+
+      const current = (existing as Record<string, unknown> | null)?.settings as Record<string, unknown> ?? {}
+      const merged = { ...current, ...input.settings }
+
+      const { error: upsertError } = await ctx.supabase
+        .from('org_module_settings')
+        .upsert(
+          {
+            org_id: ctx.user.orgId,
+            module_code: input.moduleCode,
+            settings: merged,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'org_id,module_code' },
+        )
+
+      if (upsertError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update module settings',
+        })
+      }
+
+      // Audit — CLAUDE.md rule 6
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'MODULE_SETTINGS_UPDATED',
+          resourceType: 'MODULE_SETTINGS',
+          resourceId: `${ctx.user.orgId}:${input.moduleCode}`,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            moduleCode: input.moduleCode,
+            updatedKeys: Object.keys(input.settings),
+            endpoint: 'admin.updateModuleSettings',
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'MODULE_SETTINGS_UPDATED', resourceId: `${ctx.user.orgId}:${input.moduleCode}` })
+      }
+
+      const defaults = DEFAULT_MODULE_SETTINGS[input.moduleCode] ?? {}
+      return {
+        moduleCode: input.moduleCode,
+        settings: { ...defaults, ...merged },
+      }
+    }),
 })
 
 // ================================================================
