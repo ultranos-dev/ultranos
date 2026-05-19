@@ -47,6 +47,52 @@ function checkRateLimit(key: string): boolean {
   return true
 }
 
+// ================================================================
+// Helpers — Task 3 & 4: Audit browsing, data exports
+// ================================================================
+
+/**
+ * PHI keys that must be redacted from audit metadata before returning to the client.
+ * CLAUDE.md rule 1: PHI must never appear in logs, error messages, or output.
+ */
+const PHI_METADATA_KEYS = new Set([
+  'patient_name', 'diagnosis', 'medication_name', 'allergy',
+  'note_content', 'clinical_note', 'prescription_content',
+])
+
+/**
+ * Sanitize audit event metadata by redacting PHI keys and truncating long freeform text.
+ */
+function sanitizeMetadata(metadata: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!metadata) return null
+
+  const sanitized: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(metadata)) {
+    if (PHI_METADATA_KEYS.has(key)) {
+      sanitized[key] = '[REDACTED]'
+    } else if (typeof value === 'string' && value.length > 100) {
+      sanitized[key] = '[REDACTED — freeform text]'
+    } else {
+      sanitized[key] = value
+    }
+  }
+  return sanitized
+}
+
+/**
+ * Build a base64-encoded CSV export from headers and row data.
+ * Shared by all export procedures.
+ */
+function buildCsvExport(headers: string[], rows: string[][], prefix: string) {
+  const esc = (s: string) => `"${(s ?? '').replace(/"/g, '""')}"`
+  const csv = [headers.join(','), ...rows.map(r => r.map(esc).join(','))].join('\n')
+  return {
+    data: Buffer.from(csv).toString('base64'),
+    filename: `${prefix}-${new Date().toISOString().split('T')[0]}.csv`,
+    mimeType: 'text/csv',
+  }
+}
+
 /**
  * Admin domain router — Story 22.1.
  * All procedures (except reportAuthEvent) require ADMIN role.
@@ -2935,6 +2981,425 @@ export const adminRouter = createTRPCRouter({
 
       return { activities }
     }),
+
+  // ================================================================
+  // Task 3: Audit Event Browsing & Export
+  // ================================================================
+
+  /**
+   * List audit events with pagination, date range, action type, and outcome filters.
+   * Scoped to org by filtering actor_id IN (practitioners for this org).
+   * Joins with practitioners to resolve actor names.
+   * Metadata is sanitized to strip PHI — CLAUDE.md rule 1.
+   */
+  listAuditEvents: adminProcedure
+    .input(
+      z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+        action: z.string().optional(),
+        outcome: z.enum(['ALL', 'SUCCESS', 'FAILURE']).default('ALL'),
+        cursor: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(100).default(25),
+      }).refine(
+        (data) => {
+          const start = new Date(data.startDate)
+          const end = new Date(data.endDate)
+          const diffDays = (end.getTime() - start.getTime()) / 86_400_000
+          return diffDays >= 0 && diffDays <= 90
+        },
+        { message: 'Date range must be between 0 and 90 days' },
+      ),
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id not available from JWT',
+        })
+      }
+
+      // Get practitioner IDs for this org to scope the audit query
+      const { data: orgPractitioners, error: practError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, given_name, family_name')
+        .eq('org_id', orgId)
+
+      if (practError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query org practitioners',
+        })
+      }
+
+      const practitionerIds = (orgPractitioners ?? []).map((p) => (p as Record<string, unknown>).id as string)
+      const practitionerNameMap = new Map<string, string>()
+      for (const p of orgPractitioners ?? []) {
+        const pr = p as Record<string, unknown>
+        const name = `${(pr.given_name as string) ?? ''} ${(pr.family_name as string) ?? ''}`.trim()
+        practitionerNameMap.set(pr.id as string, name)
+      }
+
+      if (practitionerIds.length === 0) {
+        return { events: [], total: 0, cursor: input.cursor, limit: input.limit }
+      }
+
+      // Build audit_log query
+      let query = ctx.supabase
+        .from('audit_log')
+        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome, metadata', { count: 'exact' })
+        .in('actor_id', practitionerIds)
+        .gte('timestamp', input.startDate)
+        .lte('timestamp', input.endDate)
+        .order('timestamp', { ascending: false })
+        .range(input.cursor, input.cursor + input.limit - 1)
+
+      if (input.action) {
+        query = query.eq('action', input.action)
+      }
+
+      if (input.outcome !== 'ALL') {
+        query = query.eq('outcome', input.outcome)
+      }
+
+      const { data: rows, error, count } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query audit events',
+        })
+      }
+
+      const events = (rows ?? []).map((row: Record<string, unknown>) => ({
+        id: row.id as string,
+        timestamp: row.timestamp as string,
+        actorId: row.actor_id as string,
+        actorName: practitionerNameMap.get(row.actor_id as string) ?? 'Unknown',
+        actorRole: row.actor_role as string,
+        action: row.action as string,
+        resourceType: row.resource_type as string,
+        resourceId: row.resource_id as string,
+        outcome: row.outcome as string,
+        metadata: sanitizeMetadata(row.metadata as Record<string, unknown> | null),
+      }))
+
+      return {
+        events,
+        total: count ?? 0,
+        cursor: input.cursor,
+        limit: input.limit,
+      }
+    }),
+
+  /**
+   * Export audit events as base64 CSV. Same query logic as listAuditEvents.
+   * Max 10,000 rows. Emits AUDIT_EVENTS_EXPORTED audit event.
+   */
+  exportAuditEvents: adminProcedure
+    .input(
+      z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+        action: z.string().optional(),
+        outcome: z.enum(['ALL', 'SUCCESS', 'FAILURE']).default('ALL'),
+      }).refine(
+        (data) => {
+          const start = new Date(data.startDate)
+          const end = new Date(data.endDate)
+          const diffDays = (end.getTime() - start.getTime()) / 86_400_000
+          return diffDays >= 0 && diffDays <= 90
+        },
+        { message: 'Date range must be between 0 and 90 days' },
+      ),
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id not available from JWT',
+        })
+      }
+
+      // Get practitioner IDs for this org
+      const { data: orgPractitioners, error: practError } = await ctx.supabase
+        .from('practitioners')
+        .select('id, given_name, family_name')
+        .eq('org_id', orgId)
+
+      if (practError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query org practitioners',
+        })
+      }
+
+      const practitionerIds = (orgPractitioners ?? []).map((p) => (p as Record<string, unknown>).id as string)
+      const practitionerNameMap = new Map<string, string>()
+      for (const p of orgPractitioners ?? []) {
+        const pr = p as Record<string, unknown>
+        const name = `${(pr.given_name as string) ?? ''} ${(pr.family_name as string) ?? ''}`.trim()
+        practitionerNameMap.set(pr.id as string, name)
+      }
+
+      if (practitionerIds.length === 0) {
+        return buildCsvExport(
+          ['ID', 'Timestamp', 'Actor', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Outcome'],
+          [],
+          'audit-events',
+        )
+      }
+
+      // Build query — max 10,000 rows
+      let query = ctx.supabase
+        .from('audit_log')
+        .select('id, timestamp, actor_id, actor_role, action, resource_type, resource_id, outcome')
+        .in('actor_id', practitionerIds)
+        .gte('timestamp', input.startDate)
+        .lte('timestamp', input.endDate)
+        .order('timestamp', { ascending: false })
+        .limit(10000)
+
+      if (input.action) {
+        query = query.eq('action', input.action)
+      }
+
+      if (input.outcome !== 'ALL') {
+        query = query.eq('outcome', input.outcome)
+      }
+
+      const { data: rows, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to query audit events for export',
+        })
+      }
+
+      const headers = ['ID', 'Timestamp', 'Actor', 'Role', 'Action', 'Resource Type', 'Resource ID', 'Outcome']
+      const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
+        row.id as string,
+        row.timestamp as string,
+        practitionerNameMap.get(row.actor_id as string) ?? 'Unknown',
+        row.actor_role as string,
+        row.action as string,
+        row.resource_type as string,
+        row.resource_id as string,
+        row.outcome as string,
+      ])
+
+      // Emit export audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'AUDIT_EVENTS_EXPORTED',
+          resourceType: 'AUDIT_LOG',
+          resourceId: 'batch',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            startDate: input.startDate,
+            endDate: input.endDate,
+            rowCount: csvRows.length,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'AUDIT_EVENTS_EXPORTED' })
+      }
+
+      return buildCsvExport(headers, csvRows, 'audit-events')
+    }),
+
+  // ================================================================
+  // Task 4: Data Export Procedures
+  // ================================================================
+
+  /**
+   * Export practitioners (users) as CSV. Org-scoped.
+   */
+  exportUsers: adminProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.user.orgId
+    if (!orgId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'org_id not available from JWT',
+      })
+    }
+
+    const { data: rows, error } = await ctx.supabase
+      .from('practitioners')
+      .select('id, given_name, family_name, telecom_email, role, status, created_at, last_login_at')
+      .eq('org_id', orgId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to query users for export',
+      })
+    }
+
+    const headers = ['ID', 'Given Name', 'Family Name', 'Email', 'Role', 'Status', 'Created At', 'Last Login']
+    const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
+      row.id as string,
+      (row.given_name as string) ?? '',
+      (row.family_name as string) ?? '',
+      (row.telecom_email as string) ?? '',
+      (row.role as string) ?? '',
+      (row.status as string) ?? '',
+      (row.created_at as string) ?? '',
+      (row.last_login_at as string) ?? '',
+    ])
+
+    return buildCsvExport(headers, csvRows, 'users')
+  }),
+
+  /**
+   * Export KYC submissions as CSV. Org-scoped.
+   */
+  exportKycSubmissions: adminProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.user.orgId
+    if (!orgId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'org_id not available from JWT',
+      })
+    }
+
+    const { data: rows, error } = await ctx.supabase
+      .from('kyc_submissions')
+      .select('id, practitioner_id, status, submitted_at, reviewed_at, reviewer_id')
+      .eq('org_id', orgId)
+      .order('submitted_at', { ascending: false })
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to query KYC submissions for export',
+      })
+    }
+
+    const headers = ['ID', 'Practitioner ID', 'Status', 'Submitted At', 'Reviewed At', 'Reviewer ID']
+    const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
+      row.id as string,
+      (row.practitioner_id as string) ?? '',
+      (row.status as string) ?? '',
+      (row.submitted_at as string) ?? '',
+      (row.reviewed_at as string) ?? '',
+      (row.reviewer_id as string) ?? '',
+    ])
+
+    return buildCsvExport(headers, csvRows, 'kyc-submissions')
+  }),
+
+  /**
+   * Export providers with expiring licenses as CSV. Org-scoped.
+   */
+  exportExpiringProviders: adminProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.user.orgId
+    if (!orgId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'org_id not available from JWT',
+      })
+    }
+
+    const { data: rows, error } = await ctx.supabase
+      .from('practitioners')
+      .select('id, given_name, family_name, telecom_email, role, _ultranos')
+      .eq('org_id', orgId)
+      .not('_ultranos->>licenseExpiry', 'is', null)
+      .order('_ultranos->>licenseExpiry', { ascending: true })
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to query expiring providers for export',
+      })
+    }
+
+    const headers = ['ID', 'Given Name', 'Family Name', 'Email', 'Role', 'License Expiry', 'KYC Status']
+    const csvRows = (rows ?? []).map((row: Record<string, unknown>) => {
+      const ultranos = (row._ultranos as Record<string, unknown>) ?? {}
+      return [
+        row.id as string,
+        (row.given_name as string) ?? '',
+        (row.family_name as string) ?? '',
+        (row.telecom_email as string) ?? '',
+        (row.role as string) ?? '',
+        (ultranos.licenseExpiry as string) ?? '',
+        (ultranos.kycStatus as string) ?? '',
+      ]
+    })
+
+    return buildCsvExport(headers, csvRows, 'expiring-providers')
+  }),
+
+  /**
+   * Export labs as CSV.
+   * Labs are global (not org-scoped) — follows existing listLabs pattern.
+   */
+  exportLabs: adminProcedure.query(async ({ ctx }) => {
+    const { data: rows, error } = await ctx.supabase
+      .from('labs')
+      .select('id, name, license_ref, accreditation_ref, status, created_at, verified_at')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to query labs for export',
+      })
+    }
+
+    const headers = ['ID', 'Name', 'License Ref', 'Accreditation Ref', 'Status', 'Created At', 'Verified At']
+    const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
+      row.id as string,
+      (row.name as string) ?? '',
+      (row.license_ref as string) ?? '',
+      (row.accreditation_ref as string) ?? '',
+      (row.status as string) ?? '',
+      (row.created_at as string) ?? '',
+      (row.verified_at as string) ?? '',
+    ])
+
+    return buildCsvExport(headers, csvRows, 'labs')
+  }),
+
+  /**
+   * Export prescribing anomaly alerts as CSV.
+   */
+  exportAlerts: adminProcedure.query(async ({ ctx }) => {
+    const { data: rows, error } = await ctx.supabase
+      .from('prescribing_anomalies')
+      .select('id, anomaly_type, severity, status, threshold_value, actual_value, created_at')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to query alerts for export',
+      })
+    }
+
+    const headers = ['ID', 'Anomaly Type', 'Severity', 'Status', 'Threshold', 'Actual Value', 'Created At']
+    const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
+      row.id as string,
+      (row.anomaly_type as string) ?? '',
+      (row.severity as string) ?? '',
+      (row.status as string) ?? '',
+      String(row.threshold_value ?? ''),
+      String(row.actual_value ?? ''),
+      (row.created_at as string) ?? '',
+    ])
+
+    return buildCsvExport(headers, csvRows, 'prescribing-alerts')
+  }),
 })
 
 // ================================================================

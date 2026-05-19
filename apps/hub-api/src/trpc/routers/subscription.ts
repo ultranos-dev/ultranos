@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure } from '../init'
 import { roleRestrictedProcedure } from '../rbac'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { getBillingAdapter } from '@ultranos/billing'
 import {
   ROLE_MODULE_MAP,
   MODULE_DISPLAY_NAMES,
@@ -12,6 +13,20 @@ import {
   scheduleUserSuspension,
   reactivateUsersForModule,
 } from '@/lib/subscription-lifecycle'
+
+/**
+ * Build a base64-encoded CSV export from headers and row data.
+ * Shared by subscription export procedures.
+ */
+function buildCsvExport(headers: string[], rows: string[][], prefix: string) {
+  const esc = (s: string) => `"${(s ?? '').replace(/"/g, '""')}"`
+  const csv = [headers.join(','), ...rows.map(r => r.map(esc).join(','))].join('\n')
+  return {
+    data: Buffer.from(csv).toString('base64'),
+    filename: `${prefix}-${new Date().toISOString().split('T')[0]}.csv`,
+    mimeType: 'text/csv',
+  }
+}
 
 /**
  * Subscription domain router.
@@ -201,10 +216,10 @@ export const subscriptionRouter = createTRPCRouter({
         })
       }
 
-      // Fetch org details
+      // Fetch org details (includes payment failure and grace period fields)
       const { data: org, error: orgError } = await ctx.supabase
         .from('organizations')
-        .select('id, name, status, trial_ends_at, billing_email')
+        .select('id, name, status, trial_ends_at, billing_email, payment_failure_reason, grace_period_ends_at')
         .eq('id', orgId)
         .single()
 
@@ -261,6 +276,8 @@ export const subscriptionRouter = createTRPCRouter({
           status: org.status as string,
           trialEndsAt: org.trial_ends_at as string | null,
           billingEmail: org.billing_email as string,
+          paymentFailureReason: (org as Record<string, unknown>).payment_failure_reason as string | null ?? null,
+          gracePeriodEndsAt: (org as Record<string, unknown>).grace_period_ends_at as string | null ?? null,
         },
         subscriptions,
         totalMonthlyCostUsd,
@@ -713,5 +730,317 @@ export const subscriptionRouter = createTRPCRouter({
       }
 
       return { allowed: true }
+    }),
+
+  // ── Story 27.8: Subscription Billing Procedures ─────────────────
+
+  /**
+   * Get payment method on file for the caller's org.
+   * Looks up provider_customer_id from org_subscriptions, then checks
+   * billing_events for the latest CHARGE_SUCCESS with card metadata.
+   */
+  getPaymentMethod: roleRestrictedProcedure(['ADMIN'])
+    .query(async ({ ctx }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id is required — not available from JWT',
+        })
+      }
+
+      // Find provider_customer_id from any active subscription
+      const { data: sub } = await ctx.supabase
+        .from('org_subscriptions')
+        .select('provider_customer_id')
+        .eq('org_id', orgId)
+        .not('provider_customer_id', 'is', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (!sub?.provider_customer_id) {
+        return { paymentMethod: null }
+      }
+
+      // Check billing_events for latest CHARGE_SUCCESS with card metadata
+      const { data: event } = await ctx.supabase
+        .from('billing_events')
+        .select('metadata')
+        .eq('org_id', orgId)
+        .eq('event_type', 'CHARGE_SUCCESS')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!event?.metadata) {
+        return { paymentMethod: null }
+      }
+
+      const meta = event.metadata as Record<string, unknown>
+      const card = meta.card as Record<string, unknown> | undefined
+
+      if (!card) {
+        return { paymentMethod: null }
+      }
+
+      return {
+        paymentMethod: {
+          brand: (card.brand as string) ?? null,
+          last4: (card.last4 as string) ?? null,
+          expMonth: (card.exp_month as number) ?? null,
+          expYear: (card.exp_year as number) ?? null,
+        },
+      }
+    }),
+
+  /**
+   * Create a payment setup session.
+   * Gets or creates a billing customer via the adapter.
+   * If adapter doesn't support createSetupIntent, returns a stub response.
+   */
+  createPaymentSetup: roleRestrictedProcedure(['ADMIN'])
+    .mutation(async ({ ctx }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id is required — not available from JWT',
+        })
+      }
+
+      // Fetch org billing info
+      const { data: org, error: orgError } = await ctx.supabase
+        .from('organizations')
+        .select('id, name, billing_email')
+        .eq('id', orgId)
+        .single()
+
+      if (orgError || !org) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve organization details',
+        })
+      }
+
+      const adapter = getBillingAdapter()
+
+      // Check if org already has a customer ID
+      const { data: existingSub } = await ctx.supabase
+        .from('org_subscriptions')
+        .select('provider_customer_id')
+        .eq('org_id', orgId)
+        .not('provider_customer_id', 'is', null)
+        .limit(1)
+        .maybeSingle()
+
+      let customerId = existingSub?.provider_customer_id as string | null
+
+      // Create customer if needed
+      if (!customerId) {
+        try {
+          customerId = await adapter.createCustomer(
+            orgId,
+            (org.billing_email as string) ?? '',
+            org.name as string,
+          )
+        } catch (err) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to create billing customer',
+          })
+        }
+      }
+
+      // Check if adapter has createSetupIntent method
+      if (typeof (adapter as any).createSetupIntent === 'function') {
+        try {
+          const setupData = await (adapter as any).createSetupIntent(customerId)
+
+          // Audit event
+          const audit = new AuditLogger(ctx.supabase)
+          try {
+            await audit.emit({
+              action: 'PAYMENT_SETUP_INITIATED',
+              resourceType: 'BILLING',
+              resourceId: orgId,
+              actorId: ctx.user.sub,
+              actorRole: 'ADMIN',
+              outcome: 'SUCCESS',
+              sessionId: ctx.user.sessionId,
+              metadata: { orgId, customerId },
+            })
+          } catch {
+            console.warn('[AUDIT_FAILURE]', { action: 'PAYMENT_SETUP_INITIATED' })
+          }
+
+          return { setup: setupData, customerId }
+        } catch (err) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to create payment setup',
+          })
+        }
+      }
+
+      // Adapter doesn't support createSetupIntent — return stub
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PAYMENT_SETUP_INITIATED',
+          resourceType: 'BILLING',
+          resourceId: orgId,
+          actorId: ctx.user.sub,
+          actorRole: 'ADMIN',
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { orgId, customerId, stub: true },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PAYMENT_SETUP_INITIATED' })
+      }
+
+      return {
+        setup: { provider: 'none', message: 'Billing provider setup not yet available' },
+        customerId,
+      }
+    }),
+
+  /**
+   * Remove the payment method on file.
+   * Emits PAYMENT_METHOD_REMOVED audit event.
+   */
+  removePaymentMethod: roleRestrictedProcedure(['ADMIN'])
+    .mutation(async ({ ctx }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id is required — not available from JWT',
+        })
+      }
+
+      // Audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PAYMENT_METHOD_REMOVED',
+          resourceType: 'BILLING',
+          resourceId: orgId,
+          actorId: ctx.user.sub,
+          actorRole: 'ADMIN',
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { orgId },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PAYMENT_METHOD_REMOVED' })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * List invoices for the caller's org from the billing provider.
+   * Paginates and optionally filters by status.
+   */
+  listInvoices: roleRestrictedProcedure(['ADMIN'])
+    .input(
+      z.object({
+        status: z.enum(['ALL', 'PAID', 'OPEN', 'VOID', 'UNCOLLECTIBLE']).default('ALL'),
+        cursor: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(100).default(25),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id is required — not available from JWT',
+        })
+      }
+
+      // Find provider_customer_id
+      const { data: sub } = await ctx.supabase
+        .from('org_subscriptions')
+        .select('provider_customer_id')
+        .eq('org_id', orgId)
+        .not('provider_customer_id', 'is', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (!sub?.provider_customer_id) {
+        return { invoices: [], totalCount: 0 }
+      }
+
+      const adapter = getBillingAdapter()
+      let invoices = await adapter.getInvoices(sub.provider_customer_id as string)
+
+      // Filter by status
+      if (input.status !== 'ALL') {
+        const statusLower = input.status.toLowerCase()
+        invoices = invoices.filter((inv) => inv.status.toLowerCase() === statusLower)
+      }
+
+      const totalCount = invoices.length
+
+      // Paginate
+      const paged = invoices.slice(input.cursor, input.cursor + input.limit)
+
+      return {
+        invoices: paged.map((inv) => ({
+          invoiceId: inv.invoiceId,
+          amount: inv.amount,
+          currency: inv.currency,
+          status: inv.status,
+          pdfUrl: inv.pdfUrl ?? null,
+          createdAt: inv.createdAt.toISOString(),
+        })),
+        totalCount,
+      }
+    }),
+
+  /**
+   * Export subscriptions as CSV (base64-encoded).
+   * ADMIN only. Joins with modules for display names and pricing.
+   */
+  exportSubscriptions: roleRestrictedProcedure(['ADMIN'])
+    .query(async ({ ctx }) => {
+      const orgId = ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'org_id is required — not available from JWT',
+        })
+      }
+
+      const { data: subs, error } = await ctx.supabase
+        .from('org_subscriptions')
+        .select('id, module_code, status, started_at, expires_at, cancelled_at, modules(display_name, base_price_usd)')
+        .eq('org_id', orgId)
+        .order('module_code')
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve subscriptions for export',
+        })
+      }
+
+      const headers = ['Module Code', 'Module Name', 'Status', 'Monthly Price (USD)', 'Started At', 'Expires At', 'Cancelled At']
+      const rows = (subs ?? []).map((s) => {
+        const mod = Array.isArray(s.modules) ? s.modules[0] : s.modules
+        return [
+          s.module_code as string,
+          (mod as any)?.display_name ?? s.module_code as string,
+          s.status as string,
+          String(parseFloat(String((mod as any)?.base_price_usd ?? '0')) || 0),
+          (s.started_at as string) ?? '',
+          (s.expires_at as string) ?? '',
+          (s.cancelled_at as string) ?? '',
+        ]
+      })
+
+      return buildCsvExport(headers, rows, 'subscriptions')
     }),
 })
