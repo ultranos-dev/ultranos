@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
+import { TopHeader } from '@/components/TopHeader'
 
 interface Verification {
   id: string
@@ -41,32 +42,32 @@ function timeAgo(iso: string): string {
 function ChainStatusBadge({ valid }: { valid: boolean | null }) {
   if (valid === true) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
-        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-success-subtle px-3 py-1 text-sm font-medium text-success">
+        <span className="h-2 w-2 rounded-full bg-success" />
         Healthy
       </span>
     )
   }
   if (valid === false) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800">
-        <span className="h-2 w-2 rounded-full bg-red-500" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-subtle px-3 py-1 text-sm font-medium text-danger">
+        <span className="h-2 w-2 rounded-full bg-danger" />
         Broken
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-600">
-      <span className="h-2 w-2 rounded-full bg-neutral-400" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-sm font-medium text-text-secondary">
+      <span className="h-2 w-2 rounded-full bg-text-secondary" />
       Unknown
     </span>
   )
 }
 
 function ResultIcon({ valid }: { valid: boolean | null }) {
-  if (valid === true) return <span className="text-emerald-600" title="Pass">&#10003;</span>
-  if (valid === false) return <span className="text-red-600" title="Fail">&#10007;</span>
-  return <span className="text-neutral-400" title="Job failed">&#8212;</span>
+  if (valid === true) return <span className="text-success" title="Pass">&#10003;</span>
+  if (valid === false) return <span className="text-danger" title="Fail">&#10007;</span>
+  return <span className="text-text-secondary" title="Job failed">&#8212;</span>
 }
 
 const PAGE_SIZE = 30
@@ -143,161 +144,161 @@ export default function AuditChainPage() {
   const trendDays = buildTrend(trendData)
 
   return (
-    <div className="max-w-6xl">
-      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Audit Log Integrity</h1>
-      <p className="mt-4 text-text-muted">Monitor audit log hash chain integrity and verification history.</p>
+    <>
+      <TopHeader title="Audit Log Integrity" description="Monitor audit log hash chain integrity and verification history." />
+      <div className="mx-auto max-w-7xl px-8 py-6">
+        {error && (
+          <div className="rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        )}
 
-      {error && (
-        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
-      )}
+        {loading ? (
+          <div className="mt-6 text-text-secondary">Loading audit chain status...</div>
+        ) : (
+          <>
+            {/* Status cards (AC #8) */}
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-text-secondary">Chain Status</p>
+                <div className="mt-2">
+                  <ChainStatusBadge valid={status?.chainHealthy ?? null} />
+                </div>
+              </div>
 
-      {loading ? (
-        <div className="mt-6 text-text-muted">Loading audit chain status...</div>
-      ) : (
-        <>
-          {/* Status cards (AC #8) */}
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-3xl bg-white p-4 border border-border">
-              <p className="text-sm font-medium text-text-muted">Chain Status</p>
-              <div className="mt-2">
-                <ChainStatusBadge valid={status?.chainHealthy ?? null} />
+              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-text-secondary">Last Verified</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
+                </p>
+                {status?.lastVerifiedAt && (
+                  <p className="text-xs text-text-secondary">{formatDate(status.lastVerifiedAt)}</p>
+                )}
+              </div>
+
+              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-text-secondary">Entries Verified</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {status?.lastCheckedCount?.toLocaleString() ?? '0'}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-text-secondary">Consecutive Successes</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {status?.consecutiveSuccesses ?? 0}
+                </p>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-4 border border-border">
-              <p className="text-sm font-medium text-text-muted">Last Verified</p>
-              <p className="mt-1 text-lg font-semibold">
-                {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
-              </p>
-              {status?.lastVerifiedAt && (
-                <p className="text-xs text-text-muted">{formatDate(status.lastVerifiedAt)}</p>
+            {/* 30-day health trend (AC #8) */}
+            {trendDays.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-sm font-medium text-text-secondary">30-Day Health Trend</h2>
+                <div className="mt-2 flex items-end gap-0.5">
+                  {trendDays.map((day) => (
+                    <div
+                      key={day.date}
+                      title={`${day.date}: ${day.status}`}
+                      className={`h-6 w-2 rounded-sm ${
+                        day.status === 'pass' ? 'bg-success' :
+                        day.status === 'fail' ? 'bg-danger' :
+                        day.status === 'error' ? 'bg-warning' :
+                        'bg-border'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="mt-1 flex gap-4 text-xs text-text-secondary">
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success" /> Pass</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-danger" /> Fail</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-warning" /> Error</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-border" /> No data</span>
+                </div>
+              </div>
+            )}
+
+            {/* Full verification button (AC #9) */}
+            <div className="mt-6 flex items-center gap-4">
+              <button
+                onClick={handleFullVerification}
+                disabled={fullVerifyLoading}
+                className="rounded-full bg-text-primary px-6 py-2.5 text-sm font-semibold text-canvas hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 transition-transform duration-200"
+              >
+                {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
+              </button>
+              {fullVerifyResult && (
+                <p className="text-sm text-text-secondary">{fullVerifyResult}</p>
               )}
             </div>
 
-            <div className="rounded-3xl bg-white p-4 border border-border">
-              <p className="text-sm font-medium text-text-muted">Entries Verified</p>
-              <p className="mt-1 text-lg font-semibold">
-                {status?.lastCheckedCount?.toLocaleString() ?? '0'}
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-white p-4 border border-border">
-              <p className="text-sm font-medium text-text-muted">Consecutive Successes</p>
-              <p className="mt-1 text-lg font-semibold">
-                {status?.consecutiveSuccesses ?? 0}
-              </p>
-            </div>
-          </div>
-
-          {/* 30-day health trend (AC #8) */}
-          {trendDays.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-sm font-medium text-text-muted">30-Day Health Trend</h2>
-              <div className="mt-2 flex items-end gap-0.5">
-                {trendDays.map((day) => (
-                  <div
-                    key={day.date}
-                    title={`${day.date}: ${day.status}`}
-                    className={`h-6 w-2 rounded-sm ${
-                      day.status === 'pass' ? 'bg-emerald-500' :
-                      day.status === 'fail' ? 'bg-red-500' :
-                      day.status === 'error' ? 'bg-amber-400' :
-                      'bg-neutral-200'
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="mt-1 flex gap-4 text-xs text-text-muted">
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-emerald-500" /> Pass</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-red-500" /> Fail</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-amber-400" /> Error</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-neutral-200" /> No data</span>
-              </div>
-            </div>
-          )}
-
-          {/* Full verification button (AC #9) */}
-          <div className="mt-6 flex items-center gap-4">
-            <button
-              onClick={handleFullVerification}
-              disabled={fullVerifyLoading}
-              className="rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 hover:scale-[1.02] disabled:opacity-50 transition-all"
-            >
-              {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
-            </button>
-            {fullVerifyResult && (
-              <p className="text-sm text-text-muted">{fullVerifyResult}</p>
-            )}
-          </div>
-
-          {/* Verification history table (AC #6) */}
-          <div className="mt-6 rounded-2xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-black">
-                <tr>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Date</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Result</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Entries Checked</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Duration</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Triggered By</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wider">Broken Event ID</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-white">
-                {verifications.length === 0 ? (
+            {/* Verification history table (AC #6) */}
+            <div className="mt-6 rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-surface">
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-text-muted">
-                      No verification history found in the last 30 days.
-                    </td>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Result</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Entries Checked</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Duration</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Type</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Triggered By</th>
+                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Broken Event ID</th>
                   </tr>
-                ) : (
-                  verifications.map((v) => (
-                    <tr key={v.id} className="hover:bg-brand-lime/5 transition-colors">
-                      <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
-                      <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
-                      <td className="px-4 py-3 text-text-muted">{v.checkedCount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-text-muted">{v.jobDurationMs}ms</td>
-                      <td className="px-4 py-3 text-text-muted">{v.isFullVerification ? 'Full' : 'Daily'}</td>
-                      <td className="px-4 py-3 text-text-muted">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
-                      <td className="px-4 py-3 text-neutral-400 font-mono text-xs">
-                        {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
+                </thead>
+                <tbody className="divide-y divide-border bg-surface-raised">
+                  {verifications.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-8 text-center text-text-secondary">
+                        No verification history found in the last 30 days.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
-              <span>
-                Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                  disabled={cursor === 0}
-                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
-                >
-                  Previous
-                </button>
-                <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                <button
-                  onClick={() => setCursor(cursor + PAGE_SIZE)}
-                  disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-full border border-black px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-all"
-                >
-                  Next
-                </button>
-              </div>
+                  ) : (
+                    verifications.map((v) => (
+                      <tr key={v.id} className="hover:bg-accent-subtle transition-colors">
+                        <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
+                        <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
+                        <td className="px-4 py-3 text-text-secondary">{v.checkedCount.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-text-secondary">{v.jobDurationMs}ms</td>
+                        <td className="px-4 py-3 text-text-secondary">{v.isFullVerification ? 'Full' : 'Daily'}</td>
+                        <td className="px-4 py-3 text-text-secondary">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
+                        <td className="px-4 py-3 text-text-secondary font-mono text-xs">
+                          {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </>
-      )}
-    </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+                <span>
+                  Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
+                    disabled={cursor === 0}
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+                  >
+                    Previous
+                  </button>
+                  <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+                  <button
+                    onClick={() => setCursor(cursor + PAGE_SIZE)}
+                    disabled={cursor + PAGE_SIZE >= total}
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
   )
 }
 

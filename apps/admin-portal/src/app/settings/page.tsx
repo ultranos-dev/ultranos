@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
+import { TopHeader } from '@/components/TopHeader'
 
 type Factor = {
   id: string
@@ -122,85 +123,85 @@ export default function SettingsPage() {
   const verifiedFactors = factors.filter((f) => f.status === 'verified')
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="text-4xl font-bold tracking-tight wavy-divider">Settings</h1>
-      <p className="mt-4 text-text-muted">Manage your account security settings.</p>
+    <>
+      <TopHeader title="Settings" description="Manage your account security settings." />
+      <div className="mx-auto max-w-7xl px-8 py-6">
+        <section>
+          <div className="max-w-2xl rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Security Keys (FIDO2)</h2>
+            <p className="mt-2 text-text-secondary text-sm">
+              Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
+              Once enrolled, you will be prompted for your key on every sign-in.
+            </p>
 
-      <section className="mt-8">
-        <div className="rounded-3xl bg-white p-5 border border-border">
-          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Security Keys (FIDO2)</h2>
-          <p className="mt-2 text-text-muted text-sm">
-            Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
-            Once enrolled, you will be prompted for your key on every sign-in.
-          </p>
+            {error && (
+              <div role="alert" className="mt-4 rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div role="alert" className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              {error}
-            </div>
-          )}
+            {success && (
+              <div role="status" className="mt-4 rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+                {success}
+              </div>
+            )}
 
-          {success && (
-            <div role="status" className="mt-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              {success}
-            </div>
-          )}
-
-          {loading ? (
-            <p className="mt-4 text-sm text-text-muted">Loading...</p>
-          ) : (
-            <>
-              {verifiedFactors.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {verifiedFactors.map((factor) => (
-                    <div
-                      key={factor.id}
-                      className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <KeyIcon className="h-5 w-5 text-text-muted" />
-                        <div>
-                          <p className="text-sm font-medium text-black">
-                            {factor.friendly_name || 'Security Key'}
-                          </p>
-                          {factor.created_at && (
-                            <p className="text-xs text-text-muted">
-                              Added {new Date(factor.created_at).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleUnenroll(factor.id)}
-                        className="rounded-full text-sm text-red-600 hover:text-red-800 font-medium"
+            {loading ? (
+              <p className="mt-4 text-sm text-text-secondary">Loading...</p>
+            ) : (
+              <>
+                {verifiedFactors.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {verifiedFactors.map((factor) => (
+                      <div
+                        key={factor.id}
+                        className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
                       >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        <div className="flex items-center gap-3">
+                          <KeyIcon className="h-5 w-5 text-text-secondary" />
+                          <div>
+                            <p className="text-sm font-medium text-text-primary">
+                              {factor.friendly_name || 'Security Key'}
+                            </p>
+                            {factor.created_at && (
+                              <p className="text-xs text-text-secondary">
+                                Added {new Date(factor.created_at).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUnenroll(factor.id)}
+                          className="rounded-full text-sm text-danger hover:text-danger font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              {verifiedFactors.length === 0 && (
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  No security key enrolled. We recommend adding one for stronger account protection.
-                </div>
-              )}
+                {verifiedFactors.length === 0 && (
+                  <div className="mt-4 rounded-2xl border border-warning/20 bg-warning-subtle px-4 py-3 text-sm text-warning">
+                    No security key enrolled. We recommend adding one for stronger account protection.
+                  </div>
+                )}
 
-              <button
-                type="button"
-                onClick={handleEnroll}
-                disabled={enrolling}
-                className="mt-4 rounded-full bg-brand-lime text-black font-semibold px-6 py-2.5 hover:brightness-95 hover:scale-[1.02] transition-all disabled:opacity-50"
-              >
-                {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
-              </button>
-            </>
-          )}
-        </div>
-      </section>
-    </div>
+                <button
+                  type="button"
+                  onClick={handleEnroll}
+                  disabled={enrolling}
+                  className="mt-4 rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                >
+                  {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
+                </button>
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
   )
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { TopHeader } from '@/components/TopHeader'
 
 type KycAction = 'APPROVE' | 'REJECT' | 'REQUEST_MORE_INFO'
 
@@ -45,10 +46,10 @@ interface SubmissionDetail {
 
 function KycStatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    PENDING_VERIFICATION: 'bg-amber-100 text-amber-800',
-    ACTIVE: 'bg-green-100 text-green-800',
-    REJECTED: 'bg-red-100 text-red-800',
-    REQUEST_MORE_INFO: 'bg-amber-100 text-amber-800',
+    PENDING_VERIFICATION: 'bg-warning-subtle text-warning',
+    ACTIVE: 'bg-success-subtle text-success',
+    REJECTED: 'bg-danger-subtle text-danger',
+    REQUEST_MORE_INFO: 'bg-warning-subtle text-warning',
   }
 
   const labelMap: Record<string, string> = {
@@ -59,7 +60,7 @@ function KycStatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-neutral-100 text-neutral-600'}`}>
+    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
       {labelMap[status] ?? status}
     </span>
   )
@@ -67,7 +68,7 @@ function KycStatusBadge({ status }: { status: string }) {
 
 function ConfidenceIndicator({ confidence }: { confidence: number }) {
   const pct = Math.round(confidence * 100)
-  const color = confidence >= 0.85 ? 'text-green-600' : confidence >= 0.6 ? 'text-amber-600' : 'text-red-600'
+  const color = confidence >= 0.85 ? 'text-success' : confidence >= 0.6 ? 'text-warning' : 'text-danger'
   return <span className={`text-xs font-medium ${color}`}>{pct}%</span>
 }
 
@@ -133,12 +134,12 @@ function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">{c.title}</h2>
-        <p className="mt-3 text-sm text-neutral-700">{c.description}</p>
+        <p className="mt-3 text-sm text-text-primary">{c.description}</p>
 
         <div className="mt-4">
-          <label htmlFor="reason" className="block text-sm font-medium text-text-muted">
+          <label htmlFor="reason" className="block text-sm font-medium text-text-secondary">
             {c.reasonLabel}
           </label>
           <textarea
@@ -147,7 +148,7 @@ function ConfirmationDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-brand-lime focus:outline-none focus:ring-2 focus:ring-brand-lime/30"
+            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             placeholder={c.reasonRequired ? 'Enter the reason for rejection...' : 'Enter a message...'}
           />
         </div>
@@ -155,14 +156,14 @@ function ConfirmationDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-full border border-black px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-50 hover:scale-[1.02] transition-all"
+            className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting || !canSubmit}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-all ${c.buttonColor}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -227,14 +228,14 @@ export default function KycSubmissionDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-neutral-500">Loading submission details...</div>
+    return <div className="text-text-secondary">Loading submission details...</div>
   }
 
   if (error && !detail) {
     return (
       <div>
-        <button onClick={() => router.push('/providers')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to KYC Queue</button>
-        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
+        <button onClick={() => router.push('/providers')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to KYC Queue</button>
+        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
       </div>
     )
   }
@@ -244,180 +245,179 @@ export default function KycSubmissionDetailPage() {
   const isPending = detail.submission.status === 'PENDING'
 
   return (
-    <div className="max-w-6xl">
-      <button onClick={() => router.push('/providers')} className="text-sm text-text-muted hover:text-black transition-colors">&larr; Back to KYC Queue</button>
+    <>
+      <TopHeader title={detail.providerName} description={`Submitted ${formatDateTime(detail.submission.submittedAt)}`} />
+      <div className="mx-auto max-w-7xl px-8 py-6">
+        <button onClick={() => router.push('/providers')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to KYC Queue</button>
 
-      {/* Header */}
-      <div className="mt-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">{detail.providerName}</h1>
-          <p className="mt-1 text-text-muted">
-            Submitted {formatDateTime(detail.submission.submittedAt)}
+        {/* Header */}
+        <div className="mt-4 flex items-center justify-between">
+          <div>
             {detail.slaBreached && (
-              <span className="ms-2 inline-block rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">SLA Breached</span>
+              <span className="inline-block rounded bg-danger-subtle px-2 py-0.5 text-xs font-semibold text-danger">SLA Breached</span>
             )}
-          </p>
+          </div>
+          <KycStatusBadge status={detail.kycStatus} />
         </div>
-        <KycStatusBadge status={detail.kycStatus} />
-      </div>
 
-      {/* Success toast */}
-      {successMessage && (
-        <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 p-3 text-sm text-green-800">{successMessage}</div>
-      )}
+        {/* Success toast */}
+        {successMessage && (
+          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+        )}
 
-      {/* Error */}
-      {error && (
-        <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div>
-      )}
+        {/* Error */}
+        {error && (
+          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        )}
 
-      {/* Action buttons — AC #4 */}
-      {isPending && (
-        <div className="mt-6 flex gap-3">
-          <button
-            onClick={() => setPendingAction('APPROVE')}
-            className="rounded-full bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-all"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => setPendingAction('REJECT')}
-            className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-all"
-          >
-            Reject
-          </button>
-          <button
-            onClick={() => setPendingAction('REQUEST_MORE_INFO')}
-            className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 hover:scale-[1.02] transition-all"
-          >
-            Request More Info
-          </button>
-        </div>
-      )}
+        {/* Action buttons — AC #4 */}
+        {isPending && (
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => setPendingAction('APPROVE')}
+              className="rounded-full bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => setPendingAction('REJECT')}
+              className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-transform duration-200"
+            >
+              Reject
+            </button>
+            <button
+              onClick={() => setPendingAction('REQUEST_MORE_INFO')}
+              className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 hover:scale-[1.02] transition-transform duration-200"
+            >
+              Request More Info
+            </button>
+          </div>
+        )}
 
-      {/* Side-by-side: Document viewer + OCR fields — AC #3 */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Left panel: Document viewer */}
-        <div className="rounded-3xl bg-white p-5 border border-border">
-          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Submitted Documents</h2>
-          {detail.documentUrls.length === 0 ? (
-            <p className="mt-3 text-sm text-neutral-500">No documents available.</p>
-          ) : (
-            <div className="mt-3 space-y-4">
-              {detail.documentUrls.map((doc) => (
-                <div key={doc.type}>
-                  <p className="text-sm font-medium text-neutral-700 mb-2">{DOC_TYPE_LABELS[doc.type] ?? doc.type}</p>
-                  {doc.url ? (
-                    doc.url.endsWith('.pdf') ? (
-                      <iframe
-                        src={doc.url}
-                        title={`${doc.type} document`}
-                        className="w-full h-64 rounded border border-neutral-200"
-                      />
+        {/* Side-by-side: Document viewer + OCR fields — AC #3 */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Left panel: Document viewer */}
+          <div className="rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Submitted Documents</h2>
+            {detail.documentUrls.length === 0 ? (
+              <p className="mt-3 text-sm text-text-secondary">No documents available.</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {detail.documentUrls.map((doc) => (
+                  <div key={doc.type}>
+                    <p className="text-sm font-medium text-text-primary mb-2">{DOC_TYPE_LABELS[doc.type] ?? doc.type}</p>
+                    {doc.url ? (
+                      doc.url.endsWith('.pdf') ? (
+                        <iframe
+                          src={doc.url}
+                          title={`${doc.type} document`}
+                          className="w-full h-64 rounded border border-border"
+                        />
+                      ) : (
+                        <img
+                          src={doc.url}
+                          alt={`${DOC_TYPE_LABELS[doc.type]} document`}
+                          className="w-full rounded border border-border object-contain max-h-80"
+                        />
+                      )
                     ) : (
-                      <img
-                        src={doc.url}
-                        alt={`${DOC_TYPE_LABELS[doc.type]} document`}
-                        className="w-full rounded border border-neutral-200 object-contain max-h-80"
-                      />
-                    )
-                  ) : (
-                    <p className="text-sm text-neutral-400">Document URL unavailable</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                      <p className="text-sm text-text-secondary">Document URL unavailable</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Right panel: OCR-extracted fields — AC #3 */}
-        <div className="rounded-3xl bg-white p-5 border border-border">
-          <h2 className="text-sm font-semibold text-black uppercase tracking-wide">OCR-Extracted Fields</h2>
-          {detail.ocrFields.length === 0 ? (
-            <p className="mt-3 text-sm text-neutral-500">No OCR data available.</p>
-          ) : (
-            <div className="mt-3 space-y-6">
-              {detail.ocrFields.map((section) => (
-                <div key={section.documentType}>
-                  <p className="text-sm font-medium text-neutral-700 mb-2">{DOC_TYPE_LABELS[section.documentType] ?? section.documentType}</p>
-                  {section.fields.length === 0 ? (
-                    <p className="text-sm text-neutral-400">No fields extracted.</p>
-                  ) : (
-                    <dl className="space-y-2">
-                      {section.fields.map((field, i) => (
-                        <div key={i} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
-                          <div>
-                            <dt className="text-xs text-neutral-500">{field.name}</dt>
-                            <dd className="text-sm font-medium">{field.value}</dd>
+          {/* Right panel: OCR-extracted fields — AC #3 */}
+          <div className="rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">OCR-Extracted Fields</h2>
+            {detail.ocrFields.length === 0 ? (
+              <p className="mt-3 text-sm text-text-secondary">No OCR data available.</p>
+            ) : (
+              <div className="mt-3 space-y-6">
+                {detail.ocrFields.map((section) => (
+                  <div key={section.documentType}>
+                    <p className="text-sm font-medium text-text-primary mb-2">{DOC_TYPE_LABELS[section.documentType] ?? section.documentType}</p>
+                    {section.fields.length === 0 ? (
+                      <p className="text-sm text-text-secondary">No fields extracted.</p>
+                    ) : (
+                      <dl className="space-y-2">
+                        {section.fields.map((field, i) => (
+                          <div key={i} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2">
+                            <div>
+                              <dt className="text-xs text-text-secondary">{field.name}</dt>
+                              <dd className="text-sm font-medium">{field.value}</dd>
+                            </div>
+                            <ConfidenceIndicator confidence={field.confidence} />
                           </div>
-                          <ConfidenceIndicator confidence={field.confidence} />
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Submission metadata */}
-      <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
-        <h2 className="text-sm font-semibold text-black uppercase tracking-wide">Submission Details</h2>
-        <dl className="mt-3 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-text-muted">Registry Number</dt>
-            <dd className="font-medium">{detail.submission.registryNumber}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-text-muted">Submission Status</dt>
-            <dd className="font-medium">{detail.submission.status}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-text-muted">SLA Deadline</dt>
-            <dd className={`font-medium ${detail.slaBreached ? 'text-red-600' : ''}`}>
-              {formatDateTime(detail.slaDeadline)}
-            </dd>
-          </div>
-          {detail.submission.reviewedBy && (
+        {/* Submission metadata */}
+        <div className="mt-6 rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
+          <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Submission Details</h2>
+          <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-text-muted">Reviewed By</dt>
-              <dd className="font-medium">{detail.submission.reviewedBy}</dd>
+              <dt className="text-text-secondary">Registry Number</dt>
+              <dd className="font-medium">{detail.submission.registryNumber}</dd>
             </div>
-          )}
-          {detail.submission.reviewedAt && (
             <div className="flex justify-between">
-              <dt className="text-text-muted">Reviewed At</dt>
-              <dd className="font-medium">{formatDateTime(detail.submission.reviewedAt)}</dd>
+              <dt className="text-text-secondary">Submission Status</dt>
+              <dd className="font-medium">{detail.submission.status}</dd>
             </div>
-          )}
-          {detail.submission.rejectionReason && (
             <div className="flex justify-between">
-              <dt className="text-text-muted">Rejection Reason</dt>
-              <dd className="font-medium text-red-600">{detail.submission.rejectionReason}</dd>
+              <dt className="text-text-secondary">SLA Deadline</dt>
+              <dd className={`font-medium ${detail.slaBreached ? 'text-danger' : ''}`}>
+                {formatDateTime(detail.slaDeadline)}
+              </dd>
             </div>
-          )}
-          {detail.submission.adminMessage && (
-            <div className="flex justify-between">
-              <dt className="text-text-muted">Admin Message</dt>
-              <dd className="font-medium">{detail.submission.adminMessage}</dd>
-            </div>
-          )}
-        </dl>
-      </div>
+            {detail.submission.reviewedBy && (
+              <div className="flex justify-between">
+                <dt className="text-text-secondary">Reviewed By</dt>
+                <dd className="font-medium">{detail.submission.reviewedBy}</dd>
+              </div>
+            )}
+            {detail.submission.reviewedAt && (
+              <div className="flex justify-between">
+                <dt className="text-text-secondary">Reviewed At</dt>
+                <dd className="font-medium">{formatDateTime(detail.submission.reviewedAt)}</dd>
+              </div>
+            )}
+            {detail.submission.rejectionReason && (
+              <div className="flex justify-between">
+                <dt className="text-text-secondary">Rejection Reason</dt>
+                <dd className="font-medium text-danger">{detail.submission.rejectionReason}</dd>
+              </div>
+            )}
+            {detail.submission.adminMessage && (
+              <div className="flex justify-between">
+                <dt className="text-text-secondary">Admin Message</dt>
+                <dd className="font-medium">{detail.submission.adminMessage}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
 
-      {/* Confirmation Dialog — AC #4 */}
-      {pendingAction && (
-        <ConfirmationDialog
-          key={pendingAction}
-          action={pendingAction}
-          providerName={detail.providerName}
-          onConfirm={handleAction}
-          onCancel={() => setPendingAction(null)}
-          submitting={submitting}
-        />
-      )}
-    </div>
+        {/* Confirmation Dialog — AC #4 */}
+        {pendingAction && (
+          <ConfirmationDialog
+            key={pendingAction}
+            action={pendingAction}
+            providerName={detail.providerName}
+            onConfirm={handleAction}
+            onCancel={() => setPendingAction(null)}
+            submitting={submitting}
+          />
+        )}
+      </div>
+    </>
   )
 }
