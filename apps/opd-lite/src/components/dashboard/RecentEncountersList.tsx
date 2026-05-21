@@ -41,6 +41,21 @@ function getStatusBadgeClasses(status: string): string {
   }
 }
 
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case 'in-progress':
+      return 'In Progress'
+    case 'finished':
+      return 'Completed'
+    case 'cancelled':
+      return 'Cancelled'
+    case 'entered-in-error':
+      return 'Error'
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1)
+  }
+}
+
 export function RecentEncountersList() {
   const t = useTranslations('dashboard')
   const [encounters, setEncounters] = useState<RecentEncounter[]>([])
@@ -114,7 +129,7 @@ export function RecentEncountersList() {
           <li key={enc.id}>
             <Link
               href={`/encounter/${enc.patientId}`}
-              className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-neutral-50 rounded-lg ps-2 pe-2 -ms-2 -me-2"
+              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 rounded-lg ps-2 pe-2 -ms-2 -me-2"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-neutral-900">
@@ -128,7 +143,7 @@ export function RecentEncountersList() {
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${getStatusBadgeClasses(enc.status)}`}
                 >
-                  {enc.status}
+                  {getStatusLabel(enc.status)}
                 </span>
               </div>
             </Link>
