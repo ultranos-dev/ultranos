@@ -34,7 +34,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   if (isLoading) {
     return (
       <div
-        className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600"
+        className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600 transition-colors duration-200"
         role="alert"
         aria-live="polite"
         data-testid="allergy-banner"
@@ -49,7 +49,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   if (loadError) {
     return (
       <div
-        className="sticky top-0 z-50 bg-yellow-400 ps-4 pe-4 py-3 text-center text-sm font-bold text-yellow-900"
+        className="sticky top-0 z-50 bg-yellow-400 ps-4 pe-4 py-3 text-center text-sm font-bold text-yellow-900 transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -68,7 +68,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
 
     return (
       <div
-        className="sticky top-0 z-50 bg-red-600 ps-4 pe-4 py-3 text-center text-sm font-bold text-white"
+        className="sticky top-0 z-50 bg-red-600 ps-4 pe-4 py-3 text-center text-sm font-bold text-white transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
@@ -84,7 +84,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   // Neutral state: no known allergies
   return (
     <div
-      className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600"
+      className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600 transition-colors duration-200"
       role="alert"
       aria-live="polite"
       data-testid="allergy-banner"
