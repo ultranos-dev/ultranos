@@ -439,7 +439,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   if (loading) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-neutral-500">Loading patient...</p>
+        <div className="flex items-center gap-3">
+          <svg className="h-5 w-5 animate-spin text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
+          </svg>
+          <p className="font-semibold text-neutral-500">Loading patient...</p>
+        </div>
       </main>
     )
   }
@@ -461,7 +467,20 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const isActive = activeEncounter?.status === 'in-progress'
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
+    <>
+      {isActive && (
+        <style>{`
+          @keyframes sectionFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .encounter-section {
+            animation: sectionFadeIn 250ms ease-out forwards;
+            opacity: 0;
+          }
+        `}</style>
+      )}
+      <main className="mx-auto max-w-2xl px-4 py-8">
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
 
@@ -469,7 +488,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       <header className="mb-8">
         <button
           onClick={() => router.push('/')}
-          className="mb-4 text-sm font-semibold text-primary-500 hover:underline"
+          className="mb-4 text-sm font-semibold text-primary-500 [@media(hover:hover)and(pointer:fine)]:hover:underline"
           aria-label="Back to search"
         >
           ← Back to Search
@@ -521,7 +540,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             </p>
             <button
               onClick={handleEndEncounter}
-              className="mt-4 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-300"
+              className="mt-4 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
             >
               End Encounter
             </button>
@@ -534,7 +553,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             <button
               onClick={handleStartEncounter}
               disabled={isStarting || !isAuthenticated}
-              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-all duration-150 hover:bg-green-700 active:scale-[0.97] disabled:opacity-50"
             >
               {isStarting ? 'Starting...' : 'Start Encounter'}
             </button>
@@ -545,7 +564,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {/* Allergies — visible only during active encounter */}
       {isActive && (
         <section
-          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          style={{ animationDelay: '0ms' }}
           aria-label="Allergies"
           data-section="allergies"
           tabIndex={-1}
@@ -557,7 +577,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {/* Vital Signs — visible only during active encounter */}
       {isActive && (
         <section
-          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          style={{ animationDelay: '50ms' }}
           aria-label="Vital signs"
           data-section="vitals"
           tabIndex={-1}
@@ -586,7 +607,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {/* SOAP Note Entry — visible only during active encounter */}
       {isActive && (
         <section
-          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          style={{ animationDelay: '100ms' }}
           aria-label="SOAP note entry"
         >
           <div className="mb-4 flex items-center justify-between">
@@ -613,7 +635,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {/* Prescriptions — visible only during active encounter */}
       {isActive && (
         <section
-          className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+          style={{ animationDelay: '150ms' }}
           aria-label="Prescriptions"
           data-section="prescriptions"
           tabIndex={-1}
@@ -761,5 +784,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       )}
 
     </main>
+    </>
   )
 }
