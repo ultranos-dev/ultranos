@@ -49,10 +49,13 @@ export function VitalsForm({
     <div className="space-y-6">
       {/* Weight */}
       <div>
-        <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+        <label
+          htmlFor="vital-weight"
+          className="mb-1 block text-sm font-semibold text-neutral-700"
+        >
           Weight
-        </h3>
-        <div className="mt-2 flex items-center gap-3">
+        </label>
+        <div className="mt-1 flex items-center gap-3">
           <input
             id="vital-weight"
             aria-label="Weight"
@@ -71,10 +74,13 @@ export function VitalsForm({
 
       {/* Height */}
       <div>
-        <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+        <label
+          htmlFor="vital-height"
+          className="mb-1 block text-sm font-semibold text-neutral-700"
+        >
           Height
-        </h3>
-        <div className="mt-2 flex items-center gap-3">
+        </label>
+        <div className="mt-1 flex items-center gap-3">
           <input
             id="vital-height"
             aria-label="Height"
@@ -112,10 +118,13 @@ export function VitalsForm({
 
       {/* Blood Pressure */}
       <div>
-        <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+        <label
+          htmlFor="vital-systolic"
+          className="mb-1 block text-sm font-semibold text-neutral-700"
+        >
           Blood Pressure
-        </h3>
-        <div className="mt-2 flex items-center gap-3">
+        </label>
+        <div className="mt-1 flex items-center gap-3">
           <input
             id="vital-systolic"
             aria-label="Systolic"
@@ -147,10 +156,13 @@ export function VitalsForm({
 
       {/* Temperature */}
       <div>
-        <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+        <label
+          htmlFor="vital-temperature"
+          className="mb-1 block text-sm font-semibold text-neutral-700"
+        >
           Temperature
-        </h3>
-        <div className="mt-2 flex items-center gap-3">
+        </label>
+        <div className="mt-1 flex items-center gap-3">
           <input
             id="vital-temperature"
             aria-label="Temperature"
