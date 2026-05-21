@@ -80,7 +80,7 @@ export function UserDropdown() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="User menu"
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -90,35 +90,53 @@ export function UserDropdown() {
       </button>
 
       {isOpen && (
-        <div
-          role="menu"
-          className="absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
-          data-testid="user-dropdown-menu"
-        >
-          <div className="border-b border-neutral-100 px-4 py-3">
-            <p className="text-sm font-medium text-neutral-900">{displayName}</p>
-            <p className="text-xs text-neutral-500">{session.email}</p>
+        <>
+          <style>{`
+            @keyframes dropdownIn {
+              from {
+                opacity: 0;
+                transform: scale(0.95);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+            .dropdown-enter {
+              animation: dropdownIn 150ms ease-out forwards;
+              transform-origin: top right;
+            }
+          `}</style>
+          <div
+            role="menu"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
+            data-testid="user-dropdown-menu"
+          >
+            <div className="border-b border-neutral-100 px-4 py-3">
+              <p className="text-sm font-medium text-neutral-900">{displayName}</p>
+              <p className="text-xs text-neutral-500">{session.email}</p>
+            </div>
+            <div className="py-1">
+              <a
+                href="/settings"
+                role="menuitem"
+                className="block px-4 py-2 text-sm text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                data-testid="settings-link"
+              >
+                Settings
+              </a>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleLogout}
+                className="block w-full px-4 py-2 text-start text-sm text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                data-testid="logout-btn"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-          <div className="py-1">
-            <a
-              href="/settings"
-              role="menuitem"
-              className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
-              data-testid="settings-link"
-            >
-              Settings
-            </a>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={handleLogout}
-              className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-neutral-50"
-              data-testid="logout-btn"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
