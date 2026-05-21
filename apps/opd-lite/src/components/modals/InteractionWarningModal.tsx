@@ -104,12 +104,28 @@ export function InteractionWarningModal({
   return (
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="interaction-warning-title"
     >
-      <div className="mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-white shadow-2xl">
+      <style>{`
+        @keyframes backdropFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes modalSlideIn {
+          from { opacity: 0; transform: scale(0.97); }
+          to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 animate-[backdropFadeIn_150ms_ease-out_forwards]"
+        aria-hidden="true"
+      />
+      {/* Modal panel */}
+      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-white shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
         {/* Header */}
         <div className="rounded-t-xl border-b border-red-200 bg-red-50 px-6 py-4">
           <h2
@@ -175,7 +191,7 @@ export function InteractionWarningModal({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-300"
+            className="rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
             aria-label="Cancel prescription"
           >
             Cancel Prescription
@@ -184,7 +200,7 @@ export function InteractionWarningModal({
             type="button"
             onClick={handleOverride}
             disabled={justification.trim().length === 0}
-            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 hover:bg-red-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Proceed anyway"
           >
             Proceed Anyway
