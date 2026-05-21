@@ -183,7 +183,7 @@ export function SOAPNoteEntry({
             <button
               type="button"
               onClick={discardAIDiff}
-              className="mt-2 text-sm font-semibold text-amber-700 underline"
+              className="mt-2 text-sm font-semibold text-amber-700 underline transition-opacity duration-150 active:opacity-70"
             >
               Return to manual editing
             </button>
@@ -230,14 +230,14 @@ export function SOAPNoteEntry({
               <button
                 type="button"
                 onClick={handleConfirmSave}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-700"
+                className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-all duration-150 hover:bg-green-700 active:scale-[0.97]"
               >
                 Confirm &amp; Save (Ctrl+Enter)
               </button>
               <button
                 type="button"
                 onClick={discardAIDiff}
-                className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-300"
+                className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
               >
                 Discard AI
               </button>
@@ -263,7 +263,7 @@ export function SOAPNoteEntry({
                 ? 'Patient has not consented to AI processing'
                 : 'Parse notes with AI (Ctrl+K)'
             }
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-blue-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span aria-hidden="true">✦</span>
             AI Assist
@@ -298,7 +298,7 @@ export function SOAPNoteEntry({
                 key={template.keyword}
                 type="button"
                 onClick={() => applyMacro(template)}
-                className="block w-full rounded-md px-3 py-2 text-start text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-100"
+                className="block w-full rounded-md px-3 py-2 text-start text-sm font-semibold text-neutral-800 transition-all duration-100 hover:bg-neutral-100 active:scale-[0.98]"
               >
                 {template.label}
               </button>
