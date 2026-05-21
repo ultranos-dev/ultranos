@@ -41,7 +41,11 @@ function getIdentifier(patient: FhirPatient): string | null {
 export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
   if (isSearching) {
     return (
-      <div className="flex items-center justify-center py-8" role="status">
+      <div className="flex items-center justify-center gap-2 py-8" role="status">
+        <svg className="h-4 w-4 animate-spin text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
+        </svg>
         <span className="font-semibold text-neutral-500">Searching...</span>
       </div>
     )
@@ -57,14 +61,26 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
   }
 
   return (
-    <ul className="divide-y divide-neutral-100" role="list" aria-label="Patient search results">
-      {results.map((patient) => {
-        const identifier = getIdentifier(patient)
-        return (
-          <li
-            key={patient.id}
-            className="flex items-center justify-between gap-4 px-4 py-3"
-          >
+    <>
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .result-item {
+          animation: fadeInUp 200ms ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
+      <ul className="divide-y divide-neutral-100" role="list" aria-label="Patient search results">
+        {results.map((patient, index) => {
+          const identifier = getIdentifier(patient)
+          return (
+            <li
+              key={patient.id}
+              className="result-item flex items-center justify-between gap-4 px-4 py-3"
+              style={{ animationDelay: `${index * 40}ms` }}
+            >
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-semibold text-neutral-900">
                 {getDisplayName(patient)}
@@ -81,7 +97,8 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
             </PillButton>
           </li>
         )
-      })}
-    </ul>
+        })}
+      </ul>
+    </>
   )
 }
