@@ -90,9 +90,16 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
       className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
       onKeyDown={handleDialogKeyDown}
     >
+      <style>{`
+        @keyframes backdropIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+
       {/* Backdrop with glassmorphism blur */}
       <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
@@ -119,7 +126,7 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
                 value={cmd.id}
                 keywords={[cmd.label]}
                 onSelect={handleSelect}
-                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
               >
                 <span>{cmd.label}</span>
                 <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500">
