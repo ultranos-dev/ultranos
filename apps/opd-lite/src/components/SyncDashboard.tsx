@@ -255,16 +255,26 @@ export function SyncDashboard() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" data-testid="sync-dashboard">
+      <style>{`
+        @keyframes syncBackdropIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes syncPanelIn {
+          from { opacity: 0; transform: scale(0.97) translateY(-4px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-[syncBackdropIn_100ms_ease-out_forwards]"
         onClick={() => setDashboardOpen(false)}
         aria-hidden="true"
       />
 
       {/* Panel */}
       <div
-        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl"
+        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
         role="dialog"
         aria-label="Sync Dashboard"
       >
@@ -275,7 +285,7 @@ export function SyncDashboard() {
             <button
               type="button"
               onClick={() => setDashboardOpen(false)}
-              className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+              className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-transform duration-100 active:scale-90"
               aria-label="Close sync dashboard"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
@@ -309,7 +319,7 @@ export function SyncDashboard() {
               type="button"
               onClick={handleSyncNow}
               disabled={!isOnline || isDraining}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-150 active:scale-[0.97]"
               title={!isOnline ? 'No network connection' : undefined}
               data-testid="sync-now-btn"
             >
@@ -331,7 +341,7 @@ export function SyncDashboard() {
               <button
                 type="button"
                 onClick={handleRetryAllFailed}
-                className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
+                className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200 transition-all duration-150 active:scale-[0.97]"
                 data-testid="retry-all-btn"
               >
                 Retry All Failed
@@ -386,7 +396,7 @@ export function SyncDashboard() {
                         <button
                           type="button"
                           onClick={() => handleRetry(item.id)}
-                          className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                          className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-all duration-100 active:scale-[0.97]"
                           data-testid="retry-btn"
                         >
                           Retry
@@ -422,7 +432,7 @@ export function SyncDashboard() {
                               <button
                                 type="button"
                                 onClick={() => handleDiscard(item.id)}
-                                className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
+                                className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 transition-all duration-100 active:scale-[0.97]"
                                 data-testid="confirm-discard-btn"
                               >
                                 Confirm
@@ -430,7 +440,7 @@ export function SyncDashboard() {
                               <button
                                 type="button"
                                 onClick={() => setDiscardingId(null)}
-                                className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200"
+                                className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-all duration-100 active:scale-[0.97]"
                               >
                                 Cancel
                               </button>
@@ -439,7 +449,7 @@ export function SyncDashboard() {
                             <button
                               type="button"
                               onClick={() => setDiscardingId(item.id)}
-                              className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-500 hover:bg-neutral-200"
+                              className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-500 hover:bg-neutral-200 transition-all duration-100 active:scale-[0.97]"
                               data-testid="discard-btn"
                             >
                               Discard
