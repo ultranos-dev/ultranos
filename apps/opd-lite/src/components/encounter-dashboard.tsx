@@ -63,6 +63,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const startEncounter = useEncounterStore((s) => s.startEncounter)
   const endEncounter = useEncounterStore((s) => s.endEncounter)
   const loadActiveEncounter = useEncounterStore((s) => s.loadActiveEncounter)
+  const isActive = activeEncounter?.status === 'in-progress'
 
   // SOAP note state
   const subjective = useSoapNoteStore((s) => s.subjective)
@@ -463,8 +464,6 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       </main>
     )
   }
-
-  const isActive = activeEncounter?.status === 'in-progress'
 
   return (
     <>
