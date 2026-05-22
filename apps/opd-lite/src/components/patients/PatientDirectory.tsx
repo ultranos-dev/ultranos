@@ -1,0 +1,447 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslations, useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { db } from '@/lib/db'
+import type { LocalPatient } from '@/lib/db'
+
+type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status'
+type SortDir = 'asc' | 'desc'
+type StatusFilter = 'all' | 'active' | 'inactive'
+type AllergyFilter = 'all' | 'yes' | 'no'
+type VisitFilter = 'all' | 'today' | 'week' | 'month'
+
+interface PatientRow {
+  id: string
+  name: string
+  age: number | null
+  gender: string
+  phone: string
+  lastVisit: string | null
+  status: string
+  hasAllergies: boolean
+}
+
+const PAGE_SIZE = 25
+
+function calculateAge(birthDate?: string, birthYear?: number): number | null {
+  const now = new Date()
+  if (birthDate) {
+    const birth = new Date(birthDate)
+    let age = now.getFullYear() - birth.getFullYear()
+    const monthDiff = now.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+  if (birthYear) {
+    return now.getFullYear() - birthYear
+  }
+  return null
+}
+
+function getPatientName(patient: LocalPatient): string {
+  const given = patient._ultranos?.nameGiven ?? patient.name?.[0]?.given?.[0] ?? ''
+  const father = patient._ultranos?.nameFather ?? ''
+  return [given, father].filter(Boolean).join(' ') || patient._ultranos?.nameLocal || ''
+}
+
+function getPatientPhone(patient: LocalPatient): string {
+  const phoneTelecom = patient.telecom?.find((t) => t.system === 'phone')
+  return phoneTelecom?.value ?? ''
+}
+
+export function PatientDirectory() {
+  const t = useTranslations('patients')
+  const router = useRouter()
+  const locale = useLocale()
+
+  const [patients, setPatients] = useState<LocalPatient[]>([])
+  const [allergyPatientIds, setAllergyPatientIds] = useState<Set<string>>(new Set())
+  const [lastVisitMap, setLastVisitMap] = useState<Map<string, string>>(new Map())
+  const [loading, setLoading] = useState(true)
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [allergyFilter, setAllergyFilter] = useState<AllergyFilter>('all')
+  const [visitFilter, setVisitFilter] = useState<VisitFilter>('all')
+
+  // Sort
+  const [sortField, setSortField] = useState<SortField>('name')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  // Pagination
+  const [page, setPage] = useState(1)
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Load data on mount
+  useEffect(() => {
+    let cancelled = false
+    async function loadData() {
+      try {
+        const allPatients = await db.patients.toArray()
+        if (cancelled) return
+        setPatients(allPatients)
+
+        // Load allergy data — we only need to know which patients have any
+        const allergies = await db.allergyIntolerances.toArray()
+        if (cancelled) return
+        const allergyIds = new Set<string>()
+        for (const a of allergies) {
+          // patient.reference is "Patient/<id>"
+          const ref = (a as { patient?: { reference?: string } }).patient?.reference
+          if (ref) {
+            const pid = ref.replace('Patient/', '')
+            allergyIds.add(pid)
+          }
+        }
+        setAllergyPatientIds(allergyIds)
+
+        // Load last visit dates from encounters
+        const encounters = await db.encounters.toArray()
+        if (cancelled) return
+        const visitMap = new Map<string, string>()
+        for (const enc of encounters) {
+          const ref = (enc as { subject?: { reference?: string } }).subject?.reference
+          if (!ref) continue
+          const pid = ref.replace('Patient/', '')
+          const ts = (enc as { _ultranos?: { hlcTimestamp?: string } })._ultranos?.hlcTimestamp
+            ?? (enc as { meta?: { lastUpdated?: string } }).meta?.lastUpdated
+            ?? ''
+          const existing = visitMap.get(pid)
+          if (!existing || ts > existing) {
+            visitMap.set(pid, ts)
+          }
+        }
+        setLastVisitMap(visitMap)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    loadData()
+    return () => { cancelled = true }
+  }, [])
+
+  // Build rows
+  const rows: PatientRow[] = useMemo(() => {
+    return patients.map((p) => ({
+      id: p.id,
+      name: getPatientName(p),
+      age: calculateAge(p.birthDate, p._ultranos?.birthYear),
+      gender: p.gender ?? '',
+      phone: getPatientPhone(p),
+      lastVisit: lastVisitMap.get(p.id) ?? null,
+      status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
+      hasAllergies: allergyPatientIds.has(p.id),
+    }))
+  }, [patients, allergyPatientIds, lastVisitMap])
+
+  // Filter
+  const filtered = useMemo(() => {
+    let result = rows
+
+    // Text search
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase()
+      result = result.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.phone.toLowerCase().includes(q)
+      )
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter((r) => r.status === statusFilter)
+    }
+
+    // Allergy filter
+    if (allergyFilter === 'yes') {
+      result = result.filter((r) => r.hasAllergies)
+    } else if (allergyFilter === 'no') {
+      result = result.filter((r) => !r.hasAllergies)
+    }
+
+    // Visit filter
+    if (visitFilter !== 'all') {
+      const now = new Date()
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()).toISOString()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+      result = result.filter((r) => {
+        if (!r.lastVisit) return false
+        if (visitFilter === 'today') return r.lastVisit >= startOfDay
+        if (visitFilter === 'week') return r.lastVisit >= startOfWeek
+        if (visitFilter === 'month') return r.lastVisit >= startOfMonth
+        return true
+      })
+    }
+
+    return result
+  }, [rows, debouncedSearch, statusFilter, allergyFilter, visitFilter])
+
+  // Sort
+  const sorted = useMemo(() => {
+    const copy = [...filtered]
+    copy.sort((a, b) => {
+      let cmp = 0
+      const valA = a[sortField]
+      const valB = b[sortField]
+
+      if (valA == null && valB == null) cmp = 0
+      else if (valA == null) cmp = 1
+      else if (valB == null) cmp = -1
+      else if (typeof valA === 'number' && typeof valB === 'number') cmp = valA - valB
+      else if (typeof valA === 'boolean' && typeof valB === 'boolean') cmp = Number(valA) - Number(valB)
+      else cmp = String(valA).localeCompare(String(valB))
+
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+    return copy
+  }, [filtered, sortField, sortDir])
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const handleSort = useCallback((field: SortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+        return prev
+      }
+      setSortDir('asc')
+      return field
+    })
+    setPage(1)
+  }, [])
+
+  const handleRowClick = useCallback(
+    (id: string) => {
+      router.push(`/${locale}/patient/${id}`)
+    },
+    [router, locale]
+  )
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-gray-500">{t('title')}...</p>
+      </div>
+    )
+  }
+
+  const showRegisterButton = sorted.length < 3
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {t('title')}
+        </h1>
+        {showRegisterButton && (
+          <Link
+            href={`/${locale}/register-patient`}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            {t('registerNew')}
+          </Link>
+        )}
+      </div>
+
+      {/* Search and Filters */}
+      <div className="mb-4 flex flex-wrap gap-3">
+        <input
+          type="text"
+          placeholder={t('searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="min-w-[200px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          aria-label={t('searchPlaceholder')}
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1) }}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          aria-label={t('status')}
+        >
+          <option value="all">{t('all')}</option>
+          <option value="active">{t('active')}</option>
+          <option value="inactive">{t('inactive')}</option>
+        </select>
+
+        <select
+          value={allergyFilter}
+          onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          aria-label={t('hasAllergies')}
+        >
+          <option value="all">{t('hasAllergies')}: {t('all')}</option>
+          <option value="yes">{t('hasAllergies')}: {t('yes')}</option>
+          <option value="no">{t('hasAllergies')}: {t('no')}</option>
+        </select>
+
+        <select
+          value={visitFilter}
+          onChange={(e) => { setVisitFilter(e.target.value as VisitFilter); setPage(1) }}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          aria-label={t('lastVisitFilter')}
+        >
+          <option value="all">{t('lastVisitFilter')}: {t('all')}</option>
+          <option value="today">{t('lastVisitFilter')}: {t('today')}</option>
+          <option value="week">{t('lastVisitFilter')}: {t('thisWeek')}</option>
+          <option value="month">{t('lastVisitFilter')}: {t('thisMonth')}</option>
+        </select>
+      </div>
+
+      {/* Empty states */}
+      {rows.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-16 dark:border-gray-600">
+          <p className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            {t('noPatients')}
+          </p>
+          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            {t('noPatientsDescription')}
+          </p>
+          <Link
+            href={`/${locale}/register-patient`}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {t('registerNew')}
+          </Link>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-16 dark:border-gray-600">
+          <p className="text-lg font-medium text-gray-900 dark:text-white">
+            {t('noResults')}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  {(
+                    [
+                      ['name', t('name')],
+                      ['age', t('age')],
+                      ['gender', t('gender')],
+                      ['phone', t('phone')],
+                      ['lastVisit', t('lastVisit')],
+                      ['status', t('status')],
+                    ] as [SortField, string][]
+                  ).map(([field, label]) => (
+                    <th
+                      key={field}
+                      className="cursor-pointer px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      onClick={() => handleSort(field)}
+                    >
+                      {label}
+                      {sortField === field && (
+                        <span className="ms-1">
+                          {sortDir === 'asc' ? '\u2191' : '\u2193'}
+                        </span>
+                      )}
+                    </th>
+                  ))}
+                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    {t('allergies')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                {paginated.map((row) => (
+                  <tr
+                    key={row.id}
+                    onClick={() => handleRowClick(row.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                    data-testid={`patient-row-${row.id}`}
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                      {row.name}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {row.age ?? '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {row.gender}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400" dir="ltr">
+                      {row.phone || '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {row.lastVisit
+                        ? new Date(row.lastVisit).toLocaleDateString()
+                        : '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                          row.status === 'active'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {row.status === 'active' ? t('active') : t('inactive')}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      {row.hasAllergies && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full bg-red-500"
+                          aria-label={t('allergyFlag')}
+                          role="img"
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600 dark:text-white"
+              >
+                {t('previous')}
+              </button>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('pageOf', { current: page, total: totalPages })}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600 dark:text-white"
+              >
+                {t('next')}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
