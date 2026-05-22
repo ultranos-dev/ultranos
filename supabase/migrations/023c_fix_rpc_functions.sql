@@ -1,22 +1,20 @@
--- Migration 023b: Correct create_patient_with_consent() to target consent_records.
--- Migration 023 created the function targeting a non-existent 'consents' table.
--- This replaces it with the correct implementation against consent_records.
+-- Migration 023c: Fix critical issues in create_patient_with_consent and fetch_mpi_candidates.
 --
--- NOTE: Further corrected in 023c:
---   - Replaced jsonb_populate_record mass-assignment with explicit column list
---   - Added grantor_id NULL guard
---   - Fixed scope defaulting to handle JSON null safely
---   See 023c_fix_rpc_functions.sql for the authoritative version.
+-- Fixes applied:
+--   1. Replace jsonb_populate_record mass-assignment with explicit column list in patients INSERT
+--      (prevents caller injection of id, is_active, mpi_score, mpi_warn, created_at, updated_at)
+--   2. Add grantor_id NULL guard before consent_records INSERT
+--   3. Fix scope defaulting to handle JSON null without crashing
+--   4. fetch_mpi_candidates: return '[]'::JSONB instead of NULL when no candidates found
+--   5. Add comment to fetch_mpi_candidates clarifying phonetic field semantics
 --
--- p_consent expected keys:
---   consent_method     TEXT   — WRITTEN | VERBAL_WITNESSED | SELF_REGISTERED
---   witnessed_by       TEXT   — UUID string (optional, required for VERBAL_WITNESSED)
---   consent_language   TEXT   — en | ar | prs
---   consent_version    TEXT   — e.g. 'v1.0-en' (defaults to 'v1.0-en')
---   grantor_id         TEXT   — UUID string of the practitioner or auth user granting consent
---   grantor_role       TEXT   — e.g. 'PATIENT', 'PRACTITIONER' (defaults to 'PATIENT')
---   scope              JSONB  — text array, defaults to ['patient-privacy']
+-- Skipped from requested column list (columns do not exist on patients table):
+--   - name_local_enc
+--   - mpi_proceed_token_jti
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Function 1: create_patient_with_consent (corrected)
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION create_patient_with_consent(
   p_patient JSONB,
   p_consent  JSONB
@@ -185,3 +183,84 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION create_patient_with_consent(JSONB, JSONB) TO authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Function 2: fetch_mpi_candidates (corrected)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- NOTE: name_given, name_father, name_grandfather in the return payload are
+-- normalized phonetic forms for MPI scoring only — NOT display names.
+-- Display names are in the encrypted _enc columns (fetch separately).
+CREATE OR REPLACE FUNCTION fetch_mpi_candidates(
+  p_input JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_phonetic_given        TEXT[];
+  v_phonetic_father       TEXT[];
+  v_national_id_hash      TEXT;
+  v_tazkira_paper_hash    TEXT;
+  v_biometric_hash        TEXT;
+  v_birth_year            SMALLINT;
+  v_district_origin       TEXT;
+  v_phone                 TEXT;
+BEGIN
+  SELECT
+    ARRAY(SELECT jsonb_array_elements_text(p_input->'phoneticGiven')),
+    ARRAY(SELECT jsonb_array_elements_text(p_input->'phoneticFather')),
+    p_input->>'nationalIdHash',
+    p_input->>'tazkiraPaperHash',
+    p_input->>'biometricFingerprintHash',
+    (p_input->>'birthYear')::SMALLINT,
+    p_input->>'addressDistrictOrigin',
+    p_input->>'phone'
+  INTO
+    v_phonetic_given, v_phonetic_father,
+    v_national_id_hash, v_tazkira_paper_hash, v_biometric_hash,
+    v_birth_year, v_district_origin, v_phone;
+
+  -- Issue 4: Return empty array instead of NULL when no candidates match
+  RETURN COALESCE(
+    (
+      SELECT jsonb_agg(row_to_json(c))
+      FROM (
+        SELECT
+          id,
+          name_given,
+          name_father,
+          name_grandfather,
+          name_phonetic_given,
+          name_phonetic_father,
+          name_phonetic_grandfather,
+          birth_year,
+          gender,
+          address_district_origin,
+          address_province_origin,
+          telecom_phone    AS phone,
+          national_id_hash,
+          tazkira_paper_hash,
+          biometric_fingerprint_hash
+        FROM patients
+        WHERE is_active = TRUE
+          AND (
+            (v_phonetic_given  IS NOT NULL AND array_length(v_phonetic_given,  1) > 0 AND name_phonetic_given  && v_phonetic_given)
+            OR (v_phonetic_father IS NOT NULL AND array_length(v_phonetic_father, 1) > 0 AND name_phonetic_father && v_phonetic_father)
+            OR (v_national_id_hash   IS NOT NULL AND national_id_hash        = v_national_id_hash)
+            OR (v_tazkira_paper_hash IS NOT NULL AND tazkira_paper_hash      = v_tazkira_paper_hash)
+            OR (v_biometric_hash     IS NOT NULL AND biometric_fingerprint_hash = v_biometric_hash)
+            OR (v_birth_year IS NOT NULL AND v_district_origin IS NOT NULL
+                AND birth_year = v_birth_year AND address_district_origin = v_district_origin)
+            OR (v_phone IS NOT NULL AND telecom_phone = v_phone)
+          )
+        LIMIT 50
+      ) c
+    ),
+    '[]'::JSONB
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION fetch_mpi_candidates(JSONB) TO authenticated;
