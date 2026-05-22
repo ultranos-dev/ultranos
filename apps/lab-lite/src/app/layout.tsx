@@ -3,7 +3,6 @@ import localFont from 'next/font/local'
 import { getLocale } from 'next-intl/server'
 import { getDirection } from '@ultranos/ui-kit'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
-import { InstallPrompt } from '@/components/InstallPrompt'
 import './globals.css'
 
 const inter = localFont({
@@ -19,7 +18,7 @@ const inter = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Lab Diagnostics Portal — Ultranos',
+  title: 'Lab Diagnostics Portal \u2014 Ultranos',
   description: 'Ultranos Lab Lite PWA for diagnostic result upload',
 }
 
@@ -34,16 +33,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
       </head>
       <body className="font-sans bg-neutral-50 text-neutral-900 antialiased">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary-700 focus:px-4 focus:py-2 focus:text-white focus:outline-none"
+        >
+          Skip to main content
+        </a>
         <ClientErrorBoundary>
-          <header className="border-b border-neutral-200 bg-white px-6 py-3">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold text-primary-700">Lab Diagnostics Portal</h1>
-            </div>
-          </header>
-          <main className="mx-auto max-w-2xl px-4 py-6">
+          <main id="main-content">
             {children}
           </main>
-          <InstallPrompt />
         </ClientErrorBoundary>
       </body>
     </html>

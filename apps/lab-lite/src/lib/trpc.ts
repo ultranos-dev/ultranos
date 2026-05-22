@@ -202,4 +202,84 @@ export async function uploadResult(
   return body.result.data.json
 }
 
+// ── Notifications (Story 17.4) ──────────────────────────────
+
+export interface NotificationItem {
+  id: string
+  type: string
+  payload: {
+    testCategory?: string
+    labName?: string
+    diagnosticReportId?: string
+    uploadTimestamp?: string
+    message?: string
+    status?: string
+  }
+  status: string
+  createdAt: string
+  deliveredAt: string | null
+  acknowledgedAt: string | null
+}
+
+/**
+ * Fetch unread notification count from Hub API.
+ * Used by NotificationBell for badge polling.
+ */
+export async function getUnreadCount(token: string): Promise<number> {
+  try {
+    const input = encodeURIComponent(JSON.stringify({ json: { unreadOnly: true } }))
+    const res = await fetch(`${getHubApiUrl()}/lab.getNotificationCount?input=${input}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return 0
+    const body = await res.json() as { result: { data: { json: { count: number } } } }
+    return body.result.data.json.count
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Fetch all notifications from Hub API.
+ * Returns newest-first list of NotificationItems.
+ */
+export async function listNotifications(token: string): Promise<NotificationItem[]> {
+  const res = await fetch(`${getHubApiUrl()}/lab.listNotifications`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error('Failed to fetch notifications')
+  const body = await res.json() as { result: { data: { json: NotificationItem[] } } }
+  return body.result.data.json
+}
+
+/**
+ * Mark a single notification as acknowledged.
+ */
+export async function acknowledgeNotification(id: string, token: string): Promise<void> {
+  await fetch(`${getHubApiUrl()}/lab.acknowledgeNotification`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { notificationId: id } }),
+  })
+}
+
+/**
+ * Mark all notifications as acknowledged (bulk).
+ */
+export async function acknowledgeAllNotifications(token: string): Promise<void> {
+  await fetch(`${getHubApiUrl()}/lab.acknowledgeAllNotifications`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: {} }),
+  })
+}
+
 export { getHubApiUrl }
