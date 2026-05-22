@@ -6,14 +6,38 @@ export interface ReAuthModalProps {
   userEmail: string
   onReAuth: (password: string) => Promise<boolean>
   onSignOut: () => void
+  /** Seconds until automatic sign-out. Defaults to 300 (5 minutes). */
+  autoSignOutSeconds?: number
 }
 
-export function ReAuthModal({ userEmail, onReAuth, onSignOut }: ReAuthModalProps) {
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+export function ReAuthModal({ userEmail, onReAuth, onSignOut, autoSignOutSeconds = 300 }: ReAuthModalProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [countdown, setCountdown] = useState(autoSignOutSeconds)
   const modalRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto sign-out countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          onSignOut()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [onSignOut])
 
   // Focus the password input on mount
   useEffect(() => {
@@ -116,11 +140,24 @@ export function ReAuthModal({ userEmail, onReAuth, onSignOut }: ReAuthModalProps
           style={{
             fontSize: '0.875rem',
             color: '#525252',
-            marginBottom: '1rem',
+            marginBottom: '0.5rem',
           }}
         >
           Please re-enter your password to continue as{' '}
           <strong>{userEmail}</strong>
+        </p>
+        <p
+          aria-live="polite"
+          aria-atomic="true"
+          style={{
+            fontSize: '0.8125rem',
+            color: countdown <= 60 ? '#dc2626' : '#b45309',
+            fontVariantNumeric: 'tabular-nums',
+            marginBottom: '1rem',
+          }}
+        >
+          You will be signed out in{' '}
+          <strong>{formatCountdown(countdown)}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>

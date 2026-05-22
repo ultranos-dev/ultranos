@@ -1,5 +1,6 @@
-// If the import below fails, try: import { doubleMetaphone } from 'double-metaphone'
-// The package exports differ between CJS and ESM builds.
+// double-metaphone@1.x is CJS — default import works via Node ESM interop.
+// double-metaphone@2.x is pure ESM — use named import: import { doubleMetaphone } from 'double-metaphone'
+// This package is pinned to 1.x; do not bump to 2.x without updating this import.
 import doubleMetaphone from 'double-metaphone'
 
 /**

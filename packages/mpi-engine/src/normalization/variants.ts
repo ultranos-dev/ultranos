@@ -62,6 +62,9 @@ export const NAME_VARIANTS: Readonly<Record<string, string>> = {
   // ── Female names ──────────────────────────────────────────────
   'fatema': 'fatimah',
   'fatma': 'fatimah',
+  // NOTE (REVIEW NEEDED): Fatiha (فاتحة, "the opener") and Fatima (فاطمة)
+  // are distinct names. This mapping may cause false-positive MPI matches.
+  // Flagged for native Dari/Pashto speaker review.
   'fatiha': 'fatimah',
   'aisha': 'ayisha',
   'ayesha': 'ayisha',
@@ -70,6 +73,10 @@ export const NAME_VARIANTS: Readonly<Record<string, string>> = {
   'zainab': 'zaynab',
   'zeynab': 'zaynab',
   // ── Abdul compounds — normalize prefix ────────────────────────
+  // NOTE: These single-word entries only match when the FULL name component
+  // is exactly this token (e.g. nameGiven = 'Abdel'). They do NOT apply to
+  // 'Abdel Ali' because applyVariants does whole-string lookup only.
+  // Compound names with Abdul prefix are handled via the full-compound entries below.
   'abdel': 'abd',
   'abdal': 'abd',
   'abdur': 'abd',

@@ -63,6 +63,15 @@ describe('normalizeNameComponent', () => {
     expect(normalizeNameComponent('')).toBe('')
     expect(normalizeNameComponent('   ')).toBe('')
   })
+
+  it('returns empty string for input with only digits', () => {
+    expect(normalizeNameComponent('123')).toBe('')
+  })
+
+  it('passes digits through in Latin names (not stripped at normalization stage)', () => {
+    const result = normalizeNameComponent('Ahmad4')
+    expect(result).toBe('ahmad4')
+  })
 })
 
 describe('computePhoneticTokens', () => {

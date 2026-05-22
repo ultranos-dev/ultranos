@@ -26,6 +26,8 @@ export function normalizeNameComponent(input: string): string {
   } else if (script === 'mixed') {
     // Romanize Arabic characters; Latin characters pass through unchanged
     latin = [...nfd].map(ch => (isArabicChar(ch) ? romanizeArabic(ch) : ch)).join('')
+  } else if (script === 'empty') {
+    return ''
   } else {
     latin = nfd
   }

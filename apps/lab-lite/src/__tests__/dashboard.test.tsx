@@ -68,7 +68,7 @@ function setAuthSession() {
 
 // Lazy import to ensure mocks are set up first
 async function renderDashboard() {
-  const { default: LabHomePage } = await import('../app/page')
+  const { default: LabHomePage } = await import('../app/[locale]/page')
   return render(<LabHomePage />)
 }
 

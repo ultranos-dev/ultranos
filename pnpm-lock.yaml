@@ -722,7 +722,7 @@ importers:
   packages/mpi-engine:
     dependencies:
       double-metaphone:
-        specifier: ^1.0.4
+        specifier: 1.0.5
         version: 1.0.5
     devDependencies:
       vitest:

@@ -21,7 +21,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "double-metaphone": "^1.0.4"
+    "double-metaphone": "1.0.5"
   },
   "devDependencies": {
     "vitest": "^1.6.0"

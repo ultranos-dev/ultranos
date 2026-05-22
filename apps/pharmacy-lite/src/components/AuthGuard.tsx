@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
@@ -9,8 +10,8 @@ import { EntitlementGate } from '@ultranos/ui-kit'
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
 
-  const isLoginPage =
-    typeof window !== 'undefined' && window.location.pathname === '/login'
+  const pathname = usePathname()
+  const isLoginPage = pathname === '/login'
 
   useEffect(() => {
     if (isLoginPage) return

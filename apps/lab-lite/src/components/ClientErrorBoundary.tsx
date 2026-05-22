@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
 import { SessionTimeoutWrapper } from './SessionTimeoutWrapper'
@@ -23,8 +23,15 @@ function AsyncErrorBridge({ children }: { children: ReactNode }) {
 }
 
 function SyncAwareStaleDataBanner() {
+  const [mounted, setMounted] = useState(false)
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
   const failedCount = useSyncStore((s) => s.failedCount)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
 
   return (
     <StaleDataBanner
