@@ -349,5 +349,44 @@
     "back": "بازگشت",
     "printAllLabels": "چاپ همه لیبل‌ها",
     "dosageTiming": "زمان‌بندی دوز"
+  },
+  "sidebar": {
+    "dashboard": "داشبورد",
+    "scanRx": "نسخه سکن",
+    "paperRx": "کاغذي نسخه",
+    "queue": "د انتظار لیست",
+    "history": "د ورکولو تاریخچه",
+    "controlled": "کنترول شوي مواد",
+    "unverified": "نه تایید شوي ورکول",
+    "syncQueue": "د همغږۍ لیست",
+    "settings": "تنظیمات"
+  },
+  "controlled": {
+    "title": "د کنترول شویو موادو ریکارد",
+    "noRecords": "د کنترول شویو موادو هیڅ ریکارد نشته",
+    "date": "نیټه/وخت",
+    "patient": "ناروغ",
+    "medication": "درمل",
+    "schedule": "مهال ویش",
+    "prescriber": "نسخه لیکونکی",
+    "status": "حالت",
+    "dispensed": "ورکړل شوی",
+    "flagged": "نښه شوی",
+    "underReview": "د بیاکتنې لاندې"
+  },
+  "unverified": {
+    "title": "نه تایید شوي ورکول",
+    "noRecords": "هیڅ نه تایید شوي ورکول نشته",
+    "pending": "معلق",
+    "resolved": "حل شوی",
+    "date": "نیټه/وخت",
+    "patient": "ناروغ",
+    "medication": "درمل",
+    "reason": "د تساهل دلیل",
+    "supervisor": "سرپرست",
+    "approve": "تایید",
+    "flag": "نښه کول",
+    "approved": "تایید شوی",
+    "flagged": "نښه شوی"
   }
 }

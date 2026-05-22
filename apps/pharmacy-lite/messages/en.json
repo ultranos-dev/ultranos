@@ -349,5 +349,44 @@
     "back": "Back",
     "printAllLabels": "Print All Labels",
     "dosageTiming": "Dosage timing"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "scanRx": "Scan Rx",
+    "paperRx": "Paper Rx",
+    "queue": "Queue",
+    "history": "Dispensing History",
+    "controlled": "Controlled Substances",
+    "unverified": "Unverified Dispenses",
+    "syncQueue": "Sync Queue",
+    "settings": "Settings"
+  },
+  "controlled": {
+    "title": "Controlled Substances Log",
+    "noRecords": "No controlled substance dispenses recorded",
+    "date": "Date/Time",
+    "patient": "Patient",
+    "medication": "Medication",
+    "schedule": "Schedule",
+    "prescriber": "Prescriber",
+    "status": "Status",
+    "dispensed": "Dispensed",
+    "flagged": "Flagged",
+    "underReview": "Under Review"
+  },
+  "unverified": {
+    "title": "Unverified Dispenses",
+    "noRecords": "No unverified dispenses pending",
+    "pending": "Pending",
+    "resolved": "Resolved",
+    "date": "Date/Time",
+    "patient": "Patient",
+    "medication": "Medication",
+    "reason": "Grace Reason",
+    "supervisor": "Supervisor",
+    "approve": "Approve",
+    "flag": "Flag",
+    "approved": "Approved",
+    "flagged": "Flagged"
   }
 }

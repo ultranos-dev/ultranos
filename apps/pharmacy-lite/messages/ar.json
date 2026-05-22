@@ -349,5 +349,44 @@
     "back": "رجوع",
     "printAllLabels": "طباعة جميع الملصقات",
     "dosageTiming": "مواعيد الجرعات"
+  },
+  "sidebar": {
+    "dashboard": "لوحة المعلومات",
+    "scanRx": "مسح الوصفة",
+    "paperRx": "وصفة ورقية",
+    "queue": "قائمة الانتظار",
+    "history": "سجل الصرف",
+    "controlled": "المواد الخاضعة للرقابة",
+    "unverified": "صرف غير موثق",
+    "syncQueue": "قائمة المزامنة",
+    "settings": "الإعدادات"
+  },
+  "controlled": {
+    "title": "سجل المواد الخاضعة للرقابة",
+    "noRecords": "لا توجد سجلات صرف مواد خاضعة للرقابة",
+    "date": "التاريخ/الوقت",
+    "patient": "المريض",
+    "medication": "الدواء",
+    "schedule": "الجدول",
+    "prescriber": "الواصف",
+    "status": "الحالة",
+    "dispensed": "تم الصرف",
+    "flagged": "مُبلَّغ",
+    "underReview": "قيد المراجعة"
+  },
+  "unverified": {
+    "title": "صرف غير موثق",
+    "noRecords": "لا توجد عمليات صرف غير موثقة معلقة",
+    "pending": "معلق",
+    "resolved": "تم الحل",
+    "date": "التاريخ/الوقت",
+    "patient": "المريض",
+    "medication": "الدواء",
+    "reason": "سبب التساهل",
+    "supervisor": "المشرف",
+    "approve": "موافقة",
+    "flag": "إبلاغ",
+    "approved": "تمت الموافقة",
+    "flagged": "مُبلَّغ"
   }
 }
