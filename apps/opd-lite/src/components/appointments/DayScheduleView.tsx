@@ -6,6 +6,8 @@ import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { AppointmentSlot } from './AppointmentSlot'
 import { PatientSummaryPopup } from './PatientSummaryPopup'
+import { WalkInQueue } from './WalkInQueue'
+import { BookingModal } from './BookingModal'
 import type { FhirAppointmentZod } from '@ultranos/shared-types'
 
 /** Clinic hours: 08:00–17:00, 30-minute slots */
@@ -44,11 +46,15 @@ export function DayScheduleView() {
   const t = useTranslations('appointments')
   const { selectedDate, setSelectedDate, prevDay, nextDay } =
     useAppointmentStore()
-  const { appointments, loading, updateStatus, addWalkIn } =
+  const { appointments, loading, updateStatus } =
     useAppointments(selectedDate)
 
   const [selectedAppointment, setSelectedAppointment] =
     useState<FhirAppointmentZod | null>(null)
+  const [bookingModalOpen, setBookingModalOpen] = useState(false)
+  const [bookingPrefilledTime, setBookingPrefilledTime] = useState<
+    string | undefined
+  >(undefined)
 
   // Map appointments to time slots by HH:MM
   const appointmentsByTime = useMemo(() => {
@@ -62,27 +68,13 @@ export function DayScheduleView() {
     return map
   }, [appointments])
 
-  // Walk-in queue
-  const walkIns = useMemo(
-    () =>
-      appointments
-        .filter((a) => a._ultranos.walkIn)
-        .sort(
-          (a, b) =>
-            (a._ultranos.queuePosition ?? 0) -
-            (b._ultranos.queuePosition ?? 0),
-        ),
-    [appointments],
-  )
-
   const handleSlotClick = (time: string) => {
     const apt = appointmentsByTime.get(time)
     if (apt) {
       setSelectedAppointment(apt)
     } else {
-      // Placeholder — real booking modal in Task 5
-      // eslint-disable-next-line no-console
-      console.log('Open booking modal for slot:', time)
+      setBookingPrefilledTime(time)
+      setBookingModalOpen(true)
     }
   }
 
@@ -93,12 +85,6 @@ export function DayScheduleView() {
       const [y, m, d] = val.split('-').map(Number)
       setSelectedDate(new Date(y, m - 1, d))
     }
-  }
-
-  const handleAddWalkIn = () => {
-    // Placeholder — real walk-in form in Task 5
-    // eslint-disable-next-line no-console
-    console.log('Open walk-in form')
   }
 
   if (loading) {
@@ -184,50 +170,8 @@ export function DayScheduleView() {
         })}
       </div>
 
-      {/* Walk-in queue section */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-bold text-neutral-900">
-            {t('walkInQueue')}
-          </h3>
-          <button
-            type="button"
-            onClick={handleAddWalkIn}
-            className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
-          >
-            {t('addWalkIn')}
-          </button>
-        </div>
-
-        {walkIns.length === 0 ? (
-          <p className="text-sm text-neutral-500">{t('noWalkIns')}</p>
-        ) : (
-          <div className="space-y-2">
-            {walkIns.map((walkIn) => (
-              <button
-                key={walkIn.id}
-                type="button"
-                onClick={() => setSelectedAppointment(walkIn)}
-                className="w-full rounded-lg border border-purple-200 bg-purple-50 p-3 text-start hover:bg-purple-100 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-purple-800">
-                    {t('queueNumber', {
-                      number: walkIn._ultranos.queuePosition ?? 0,
-                    })}
-                  </span>
-                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800">
-                    {t('walkIn')}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-neutral-900">
-                  {walkIn.participant?.[0]?.actor?.display ?? '—'}
-                </p>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Walk-in queue */}
+      <WalkInQueue />
 
       {/* Patient summary popup */}
       {selectedAppointment && (
@@ -237,6 +181,17 @@ export function DayScheduleView() {
           onStatusChange={updateStatus}
         />
       )}
+
+      {/* Booking modal */}
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => {
+          setBookingModalOpen(false)
+          setBookingPrefilledTime(undefined)
+        }}
+        prefilledDate={selectedDate}
+        prefilledTime={bookingPrefilledTime}
+      />
     </div>
   )
 }
