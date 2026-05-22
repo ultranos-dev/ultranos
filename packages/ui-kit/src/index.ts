@@ -50,6 +50,9 @@ export type { SessionManagerProviderProps } from './SessionManagerProvider.js'
 export { AppShell } from './AppShell.js'
 export type { AppShellProps, AppShellUser, NavItem } from './AppShell.js'
 
+export { Sidebar } from './Sidebar.js'
+export type { SidebarProps, SidebarUser, SidebarNavItem } from './Sidebar.js'
+
 export { EntitlementGate } from './EntitlementGate.js'
 export type { EntitlementGateProps } from './EntitlementGate.js'
 
