@@ -96,7 +96,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           className="h-2 w-full overflow-hidden rounded-full bg-primary-100"
         >
           <div
-            className="h-full rounded-full bg-primary-600 transition-all"
+            className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out"
             style={{ width: `${progress ?? 0}%` }}
           />
         </div>

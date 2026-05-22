@@ -44,10 +44,12 @@ export function scoreCandidate(input: MpiInput, candidate: MpiCandidate): MpiCan
     else if (diff <= 2) birthYear = WEIGHTS.BIRTH_YEAR_NEAR
   }
 
+  // NOTE: gender is compared as raw string — caller must normalize to lowercase before passing (e.g. 'male', 'female', 'other', 'unknown')
   const gender =
     input.gender && candidate.gender && input.gender === candidate.gender
       ? WEIGHTS.GENDER_EXACT : 0
 
+  // District match subsumes province — district names can repeat across provinces in Afghanistan
   let districtOrigin = 0
   let provinceOrigin = 0
   if (input.addressDistrictOrigin && candidate.addressDistrictOrigin &&
@@ -64,10 +66,12 @@ export function scoreCandidate(input: MpiInput, candidate: MpiCandidate): MpiCan
     input.phone && candidate.phone && input.phone === candidate.phone
       ? WEIGHTS.PHONE_EXACT : 0
 
+  const total = givenName + fatherName + grandfatherName + birthYear + gender + districtOrigin + provinceOrigin + phone
+
   const breakdown: MpiScoreBreakdown = {
     givenName, fatherName, grandfatherName, birthYear, gender, districtOrigin, provinceOrigin, phone,
-    total: givenName + fatherName + grandfatherName + birthYear + gender + districtOrigin + provinceOrigin + phone,
+    total,
   }
 
-  return { candidate, score: breakdown.total, breakdown, hardIdMatch: false }
+  return { candidate, score: total, breakdown, hardIdMatch: false }
 }

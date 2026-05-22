@@ -28,7 +28,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
             <div className="flex flex-col items-center">
               <div
                 aria-label={`Step ${i + 1}: ${step.label}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200 ${
                   isCompleted
                     ? 'bg-green-600 text-white'
                     : isCurrent

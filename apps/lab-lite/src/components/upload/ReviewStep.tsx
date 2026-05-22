@@ -62,7 +62,7 @@ export function ReviewStep({
         type="button"
         onClick={onSubmit}
         disabled={submitting}
-        className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {submitting ? 'Submitting...' : 'Confirm & Submit'}
       </button>

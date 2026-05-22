@@ -88,6 +88,24 @@ describe('scoreCandidate — hard identifier BLOCK', () => {
     )
     expect(result.hardIdMatch).toBe(false)
   })
+
+  it('biometricFingerprintHash exact match → hardIdMatch=true', () => {
+    const result = scoreCandidate(
+      { biometricFingerprintHash: 'bio-hash-001' },
+      { id: 'p10', biometricFingerprintHash: 'bio-hash-001' },
+    )
+    expect(result.hardIdMatch).toBe(true)
+    expect(result.score).toBe(999)
+  })
+
+  it('patientId (Health Passport QR) exact match → hardIdMatch=true', () => {
+    const result = scoreCandidate(
+      { patientId: 'patient-uuid-qr-scan' },
+      { id: 'patient-uuid-qr-scan' },
+    )
+    expect(result.hardIdMatch).toBe(true)
+    expect(result.score).toBe(999)
+  })
 })
 
 describe('scoreCandidate — soft scoring', () => {

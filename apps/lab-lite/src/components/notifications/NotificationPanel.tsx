@@ -101,20 +101,32 @@ export function NotificationPanel({
   }, [onCountChange])
 
   return (
-    <div
-      ref={panelRef}
-      className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
-      role="dialog"
-      aria-label="Notifications"
-      data-testid="notification-panel"
-    >
+    <>
+      <style>{`
+  @keyframes notifBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes notifPanelIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+`}</style>
+      <div className="fixed inset-0 z-40 animate-[notifBackdropIn_100ms_ease-out_forwards]" />
+      <div
+        ref={panelRef}
+        className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg animate-[notifPanelIn_150ms_ease-out_forwards] [transform-origin:top_right]"
+        role="dialog"
+        aria-label="Notifications"
+        data-testid="notification-panel"
+      >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
         <h3 className="text-sm font-semibold text-neutral-900">Notifications</h3>
         <button
           type="button"
           onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-600"
+          className="p-2 text-neutral-400 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-600 active:brightness-[0.88] transition-all duration-150"
           aria-label="Close notifications"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
@@ -127,7 +139,13 @@ export function NotificationPanel({
       <div className="max-h-96 overflow-y-auto">
         {loading && (
           <div className="px-4 py-8 text-center text-sm text-neutral-500">
-            Loading...
+            <span className="flex items-center gap-2 justify-center">
+              <svg className="animate-spin h-4 w-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
+              </svg>
+              Loading...
+            </span>
           </div>
         )}
 
@@ -153,5 +171,6 @@ export function NotificationPanel({
           ))}
       </div>
     </div>
+    </>
   )
 }

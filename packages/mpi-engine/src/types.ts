@@ -56,7 +56,8 @@ export interface MpiCandidateScore {
 export interface MpiResult {
   decision: MpiDecision
   topScore: number
-  candidates: MpiCandidateScore[]  // top 5, sorted by score desc
+  /** Top 5 scored candidates sorted by score desc. Present even on ALLOW decisions for auditing. */
+  candidates: MpiCandidateScore[]
 }
 
 /**

@@ -46,7 +46,7 @@ export function RecentUploadsList({ items }: RecentUploadsListProps) {
         {items.map((item) => {
           const cfg = statusConfig[item.status]
           return (
-            <li key={item.id} className="flex items-center justify-between py-2.5">
+            <li key={item.id} className="flex items-center justify-between py-2.5 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 transition-colors duration-150">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-neutral-900">
                   {item.loincDisplay}

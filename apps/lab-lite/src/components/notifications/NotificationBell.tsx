@@ -52,7 +52,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative rounded-full p-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="relative rounded-full p-2 text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-900 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
       >
         {/* Bell SVG */}

@@ -71,7 +71,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
           <button
             type="submit"
             disabled={loading || !nationalId.trim()}
-            className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Verifying...' : 'Look Up Patient'}
           </button>
@@ -92,14 +92,14 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-green-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Confirm Patient
             </button>
             <button
               type="button"
               onClick={handleReset}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] transition-all duration-150"
             >
               Try Again
             </button>
