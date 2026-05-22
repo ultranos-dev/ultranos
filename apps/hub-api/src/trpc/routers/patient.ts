@@ -68,7 +68,12 @@ export const patientRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from('patients')
         .select(
-          'id, name, gender, birth_date, birth_year_only, identifier, meta_last_updated, meta_version_id, ultranos_name_local, ultranos_name_latin, ultranos_name_phonetic, ultranos_national_id_hash, ultranos_is_active, ultranos_created_at'
+          'id, name, gender, birth_date, birth_year_only, birth_year, identifier, ' +
+          'meta_last_updated, meta_version_id, ' +
+          'ultranos_name_local, ultranos_name_latin, ultranos_national_id_hash, ultranos_is_active, ultranos_created_at, ' +
+          'name_given, name_father, name_grandfather, ' +
+          'address_district_origin, address_province_origin, ' +
+          'mpi_score, mpi_warn'
         )
         .or(orFilter)
         .eq('ultranos_is_active', true)
@@ -113,17 +118,122 @@ export const patientRouter = createTRPCRouter({
           birthYearOnly: row.birth_year_only,
           identifier: row.identifier,
           _ultranos: {
-            nameLocal: row.ultranos_name_local,
-            nameLatin: row.ultranos_name_latin,
-            namePhonetic: row.ultranos_name_phonetic,
+            nameLocal:    row.ultranos_name_local,
+            nameLatin:    row.ultranos_name_latin,
             nationalIdHash: row.ultranos_national_id_hash,
-            isActive: row.ultranos_is_active,
-            createdAt: row.ultranos_created_at,
+            isActive:     row.ultranos_is_active,
+            createdAt:    row.ultranos_created_at,
+            // MPI Phase 1 additions
+            nameGiven:           row.name_given,
+            nameFather:          row.name_father,
+            nameGrandfather:     row.name_grandfather,
+            birthYear:           row.birth_year,
+            addressDistrictOrigin: row.address_district_origin,
+            addressProvinceOrigin: row.address_province_origin,
+            mpiScore:    row.mpi_score,
+            mpiWarn:     row.mpi_warn ?? false,
           },
           meta: {
             lastUpdated: row.meta_last_updated,
-            versionId: row.meta_version_id,
+            versionId:   row.meta_version_id,
           },
+        })),
+      }
+    }),
+
+  // ── patient.checkDuplicates ─────────────────────────────────
+  checkDuplicates: protectedProcedure
+    .use(rateLimitMiddleware({ limit: 20, windowSec: 60 }, 'mpiCheck'))
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        nameGiven:             z.string().min(1).max(200).optional(),
+        nameFather:            z.string().min(1).max(200).optional(),
+        nameGrandfather:       z.string().min(1).max(200).optional(),
+        birthYear:             z.number().int().min(1900).optional(),
+        gender:                z.enum(['male', 'female', 'other', 'unknown']).optional(),
+        addressDistrictOrigin: z.string().max(100).optional(),
+        addressProvinceOrigin: z.string().max(100).optional(),
+        phone:                 z.string().max(50).optional(),
+        nationalId:            z.string().max(200).optional(),
+        tazkiraPaperHash:      z.string().max(500).optional(),
+        biometricFingerprintHash: z.string().max(500).optional(),
+      }).refine(
+        (val) => val.nameGiven || val.nameFather || val.nationalId || val.tazkiraPaperHash || val.biometricFingerprintHash,
+        { message: 'At least one identity field (name or hard identifier) is required' }
+      )
+    )
+    .query(async ({ ctx, input }) => {
+      const { hmacKey } = getFieldEncryptionKeys()
+
+      const nationalIdHash = input.nationalId
+        ? generateBlindIndex(input.nationalId, hmacKey)
+        : undefined
+
+      const candidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven:             input.nameGiven,
+        nameFather:            input.nameFather,
+        nationalId:            input.nationalId,
+        tazkiraPaperHash:      input.tazkiraPaperHash,
+        biometricFingerprintHash: input.biometricFingerprintHash,
+        birthYear:             input.birthYear,
+        addressDistrictOrigin: input.addressDistrictOrigin,
+        phone:                 input.phone,
+      })
+
+      const mpiResult = computeMpiResult(candidates, {
+        nameGiven:                input.nameGiven,
+        nameFather:               input.nameFather,
+        nameGrandfather:          input.nameGrandfather,
+        birthYear:                input.birthYear,
+        gender:                   input.gender,
+        addressDistrictOrigin:    input.addressDistrictOrigin,
+        addressProvinceOrigin:    input.addressProvinceOrigin,
+        phone:                    input.phone,
+        nationalIdHash:           nationalIdHash,
+        tazkiraPaperHash:         input.tazkiraPaperHash,
+        biometricFingerprintHash: input.biometricFingerprintHash,
+      })
+
+      // Issue a proceedToken on WARN so the clinician can pass it directly to patient.create
+      let proceedToken: string | undefined
+      if (mpiResult.decision === 'WARN') {
+        proceedToken = await signProceedToken({
+          candidateIds: mpiResult.candidates.map(c => c.candidate.id),
+          maxScore: mpiResult.topScore,
+          issuedTo: ctx.user.sub,
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: 'mpi-check',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'mpi_check', decision: mpiResult.decision, topScore: mpiResult.topScore },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'mpi-check' })
+      }
+
+      return {
+        decision: mpiResult.decision,
+        topScore: mpiResult.topScore,
+        proceedToken,
+        candidates: mpiResult.candidates.map(c => ({
+          id:             c.candidate.id,
+          nameGiven:      c.candidate.nameGiven,
+          nameFather:     c.candidate.nameFather,
+          birthYear:      c.candidate.birthYear,
+          gender:         c.candidate.gender,
+          districtOrigin: c.candidate.addressDistrictOrigin,
+          mpiScore:       c.score,
+          scoreBreakdown: c.breakdown,
         })),
       }
     }),

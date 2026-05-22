@@ -59,6 +59,9 @@ vi.mock('@/lib/mpi-proceed-token', () => ({
   consumeProceedToken: vi.fn().mockResolvedValue(undefined),
 }))
 
+const mockComputeMpiResult = vi.mocked((await import('@ultranos/mpi-engine')).computeMpiResult)
+const mockFetchMpiCandidates = vi.mocked((await import('@/lib/mpi-candidate-query')).fetchMpiCandidates)
+
 const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
@@ -605,5 +608,143 @@ describe('patient.update', () => {
         lastKnownUpdate: '2026-06-01T00:00:00Z',
       })
     ).rejects.toThrow(/no fields/i)
+  })
+})
+
+describe('patient.search — phonetic results', () => {
+  const createCaller = createCallerFactory(appRouter)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns mpiScore and nameGiven fields in results', async () => {
+    const mockFrom = createMockFrom()
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        or: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({
+              data: [{
+                id: PATIENT_UUID,
+                name: [{ given: ['Ahmad'], text: 'Ahmad Mohammad' }],
+                gender: 'male',
+                birth_date: null,
+                birth_year_only: true,
+                birth_year: 1985,
+                identifier: null,
+                meta_last_updated: new Date().toISOString(),
+                meta_version_id: '1',
+                ultranos_name_local: 'Ahmad Mohammad',
+                ultranos_name_latin: 'Ahmad Mohammad',
+                ultranos_national_id_hash: null,
+                ultranos_is_active: true,
+                ultranos_created_at: new Date().toISOString(),
+                name_given: 'Ahmad',
+                name_father: 'Mohammad',
+                name_grandfather: null,
+                address_district_origin: 'Kabul',
+                address_province_origin: 'Kabul',
+                mpi_score: 85,
+                mpi_warn: true,
+              }],
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    })
+
+    const ctx = createTestContext(mockFrom)
+    const caller = createCaller(ctx)
+    const result = await caller.patient.search({ query: 'Ahmad' })
+
+    expect(result.patients).toHaveLength(1)
+    expect(result.patients[0]).toHaveProperty('_ultranos')
+    const ult = result.patients[0]!._ultranos as Record<string, unknown>
+    expect(ult).toHaveProperty('nameGiven', 'Ahmad')
+    expect(ult).toHaveProperty('nameFather', 'Mohammad')
+    expect(ult).toHaveProperty('mpiScore', 85)
+    expect(ult).toHaveProperty('mpiWarn', true)
+  })
+})
+
+describe('patient.checkDuplicates', () => {
+  const createCaller = createCallerFactory(appRouter)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockComputeMpiResult.mockReturnValue({ decision: 'ALLOW', topScore: 0, candidates: [] })
+    mockFetchMpiCandidates.mockResolvedValue([])
+  })
+
+  it('returns ALLOW decision with empty candidates for unique patient', async () => {
+    const mockFrom = createMockFrom()
+    const ctx = { ...createTestContext(mockFrom), supabase: { from: mockFrom, rpc: vi.fn().mockResolvedValue({ data: null, error: null }) } as never }
+    const caller = createCaller(ctx)
+
+    const result = await caller.patient.checkDuplicates({ nameGiven: 'UniqueName' })
+    expect(result.decision).toBe('ALLOW')
+    expect(result.candidates).toHaveLength(0)
+    expect(result.proceedToken).toBeUndefined()
+  })
+
+  it('returns WARN decision with proceedToken when score 60–89', async () => {
+    mockFetchMpiCandidates.mockResolvedValue([{ id: 'p1', nameGiven: 'Ahmad' }])
+    mockComputeMpiResult.mockReturnValue({
+      decision: 'WARN',
+      topScore: 75,
+      candidates: [{
+        candidate: { id: 'p1', nameGiven: 'Ahmad' },
+        score: 75,
+        breakdown: { givenName: 30, fatherName: 30, grandfatherName: 0, birthYear: 15, gender: 0, districtOrigin: 0, provinceOrigin: 0, phone: 0, total: 75 },
+        hardIdMatch: false,
+      }],
+    })
+
+    const mockFrom = createMockFrom()
+    const ctx = { ...createTestContext(mockFrom), supabase: { from: mockFrom, rpc: vi.fn().mockResolvedValue({ data: null, error: null }) } as never }
+    const caller = createCaller(ctx)
+
+    const result = await caller.patient.checkDuplicates({
+      nameGiven: 'Ahmad',
+      nameFather: 'Mohammad',
+      birthYear: 1985,
+    })
+    expect(result.decision).toBe('WARN')
+    expect(result.proceedToken).toBeTruthy()
+    expect(result.candidates[0]).toHaveProperty('scoreBreakdown')
+    expect(result.candidates[0]!.scoreBreakdown).toHaveProperty('givenName', 30)
+  })
+
+  it('returns BLOCK without proceedToken (clinician must dismiss)', async () => {
+    mockFetchMpiCandidates.mockResolvedValue([{ id: 'p2', nameGiven: 'Ahmad' }])
+    mockComputeMpiResult.mockReturnValue({
+      decision: 'BLOCK',
+      topScore: 95,
+      candidates: [{ candidate: { id: 'p2' }, score: 95, breakdown: {}, hardIdMatch: false }],
+    })
+
+    const mockFrom = createMockFrom()
+    const ctx = { ...createTestContext(mockFrom), supabase: { from: mockFrom, rpc: vi.fn().mockResolvedValue({ data: null, error: null }) } as never }
+    const caller = createCaller(ctx)
+
+    const result = await caller.patient.checkDuplicates({ nameGiven: 'Ahmad', nameFather: 'Mohammad', birthYear: 1985 })
+    expect(result.decision).toBe('BLOCK')
+    expect(result.proceedToken).toBeUndefined()
+  })
+
+  it('emits PHI_READ audit for mpi_check', async () => {
+    const mockFrom = createMockFrom()
+    const ctx = { ...createTestContext(mockFrom), supabase: { from: mockFrom, rpc: vi.fn().mockResolvedValue({ data: null, error: null }) } as never }
+    const caller = createCaller(ctx)
+    await caller.patient.checkDuplicates({ nameGiven: 'Ahmad' })
+
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'PHI_READ',
+        metadata: expect.objectContaining({ operation: 'mpi_check' }),
+      }),
+    )
   })
 })
