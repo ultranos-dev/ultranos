@@ -25,6 +25,7 @@ export * from './fhir/allergy-intolerance.schema.js'
 export * from './fhir/medication-statement.schema.js'
 export * from './fhir/diagnostic-report.schema.js'
 export * from './fhir/medication-dispense.schema.js'
+export * from './fhir/appointment.schema.js'
 
 // SOAP ledger AI types
 export * from './fhir/soap-ledger.js'
