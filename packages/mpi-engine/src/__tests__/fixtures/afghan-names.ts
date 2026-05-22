@@ -78,7 +78,7 @@ export const SCORING_SCENARIOS: ScoringScenario[] = [
   {
     description: 'Full name triplet exact + different birth year (father–son scenario) → WARN',
     input:     { nameGiven: 'Ahmad', nameFather: 'Mohammad', nameGrandfather: 'Karim', birthYear: 2010, gender: 'male' },
-    candidate: { id: 'c2', nameGiven: 'Ahmad', nameFather: 'Mohammad', nameGrandfather: 'Karim', birthYear: 1985, gender: 'male' },
+    candidate: { id: 'c2', nameGiven: 'Ahmad', nameFather: 'Mohammad', nameGrandfather: 'Karim', birthYear: 1985 },
     expectedDecision: 'WARN',
     minScore: 60,
     maxScore: 89,
