@@ -372,7 +372,18 @@
     "status": "Status",
     "dispensed": "Dispensed",
     "flagged": "Flagged",
-    "underReview": "Under Review"
+    "underReview": "Under Review",
+    "loading": "Loading dispenses...",
+    "error": "Failed to load dispenses. Please retry.",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "notAvailable": "N/A",
+    "page": "Page",
+    "of": "of",
+    "records": "{count} record(s) found",
+    "previous": "Previous",
+    "next": "Next",
+    "scheduleNote": "Controlled substance classification not yet available in dispense schema"
   },
   "unverified": {
     "title": "Unverified Dispenses",
@@ -387,6 +398,13 @@
     "approve": "Approve",
     "flag": "Flag",
     "approved": "Approved",
-    "flagged": "Flagged"
+    "flagged": "Flagged",
+    "loading": "Loading reviews...",
+    "error": "Failed to load reviews. Please retry.",
+    "reviewedBy": "Reviewed By",
+    "reviewedAt": "Reviewed At",
+    "dispenseId": "Dispense ID",
+    "reviewNotConnected": "Review endpoint not connected yet",
+    "offlineWarning": "Review actions require an internet connection"
   }
 }
