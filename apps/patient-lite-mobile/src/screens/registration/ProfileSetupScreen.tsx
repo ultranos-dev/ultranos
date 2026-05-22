@@ -33,9 +33,20 @@ const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
   { code: 'prs', nativeLabel: '\u062F\u0631\u06CC' },
 ]
 
+const GENDERS = [
+  { value: 'male' as const, labelKey: 'registration.genderMale' },
+  { value: 'female' as const, labelKey: 'registration.genderFemale' },
+  { value: 'other' as const, labelKey: 'registration.genderOther' },
+  { value: 'unknown' as const, labelKey: 'registration.genderUnknown' },
+]
+
+export type Gender = 'male' | 'female' | 'other' | 'unknown'
+
 export interface ProfileSetupScreenProps {
   onComplete: (profile: {
     firstName: string
+    nameFather: string
+    gender: Gender
     dateOfBirth: string
     preferredLanguage: string
   }) => void
@@ -47,6 +58,8 @@ export function ProfileSetupScreen({ onComplete, onBack }: ProfileSetupScreenPro
   const { colors } = useTheme()
 
   const [firstName, setFirstName] = useState('')
+  const [nameFather, setNameFather] = useState('')
+  const [gender, setGender] = useState<Gender | null>(null)
   const [dateOfBirth, setDateOfBirth] = useState('')
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLocale>('en')
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +70,7 @@ export function ProfileSetupScreen({ onComplete, onBack }: ProfileSetupScreenPro
     const date = new Date(y, m - 1, d)
     return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d && date <= new Date()
   })()
-  const isFormValid = firstName.trim().length >= 1 && isDateValid
+  const isFormValid = firstName.trim().length >= 1 && nameFather.trim().length >= 1 && gender !== null && isDateValid
 
   const handleDateInput = useCallback((value: string) => {
     // Auto-format: insert dashes as user types digits
@@ -84,10 +97,12 @@ export function ProfileSetupScreen({ onComplete, onBack }: ProfileSetupScreenPro
 
     onComplete({
       firstName: firstName.trim(),
+      nameFather: nameFather.trim(),
+      gender: gender!,
       dateOfBirth,
       preferredLanguage: selectedLanguage,
     })
-  }, [isFormValid, firstName, dateOfBirth, selectedLanguage, t, onComplete])
+  }, [isFormValid, firstName, nameFather, gender, dateOfBirth, selectedLanguage, t, onComplete])
 
   return (
     <KeyboardAvoidingView
@@ -132,6 +147,67 @@ export function ProfileSetupScreen({ onComplete, onBack }: ProfileSetupScreenPro
           maxLength={200}
           accessibilityLabel={t('registration.firstNameLabel')}
         />
+
+        {/* Father's name */}
+        <Text style={[styles.label, { color: colors.textMuted }]}>
+          {t('registration.fatherNameLabel')}
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surfaceElevated,
+              color: colors.textPrimary,
+              borderColor: colors.border,
+            },
+          ]}
+          value={nameFather}
+          onChangeText={setNameFather}
+          placeholder={t('registration.fatherNamePlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="words"
+          maxLength={200}
+          accessibilityLabel={t('registration.fatherNameLabel')}
+        />
+
+        {/* Gender */}
+        <Text style={[styles.label, { color: colors.textMuted }]}>
+          {t('registration.genderLabel')}
+        </Text>
+        <View style={styles.languageRow}>
+          {GENDERS.map((g) => (
+            <Pressable
+              key={g.value}
+              style={[
+                styles.languageOption,
+                {
+                  borderColor: colors.border,
+                  backgroundColor:
+                    gender === g.value
+                      ? colors.primary[500]
+                      : colors.surfaceElevated,
+                },
+              ]}
+              onPress={() => setGender(g.value)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: gender === g.value }}
+            >
+              <Text
+                style={[
+                  styles.languageOptionText,
+                  {
+                    color:
+                      gender === g.value
+                        ? colors.onPrimary
+                        : colors.textPrimary,
+                  },
+                ]}
+              >
+                {t(g.labelKey)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
         {/* Date of birth */}
         <Text style={[styles.label, { color: colors.textMuted }]}>

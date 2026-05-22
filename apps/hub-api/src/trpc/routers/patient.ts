@@ -448,6 +448,148 @@ export const patientRouter = createTRPCRouter({
       }
     }),
 
+  // ── patient.syncCreate ─────────────────────────────────────
+  // MPI Phase 2 — accepts offline-created patients without MPI blocking.
+  // Pass 1 of two-pass sync: always succeeds. Pass 2 (async MPI scoring) fires after.
+  syncCreate: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(CreatePatientMpiInputSchema.and(z.object({
+      offlineCreatedAt: z.string().datetime(),
+    })))
+    .mutation(async ({ ctx, input }) => {
+      const { hmacKey } = getFieldEncryptionKeys()
+      const now = new Date().toISOString()
+      const patientId = crypto.randomUUID()
+
+      const nameGiven = input.nameGiven ?? null
+      const nameFather = input.nameFather ?? null
+      const nameGrandfather = input.nameGrandfather ?? null
+
+      const phoneticGiven       = nameGiven       ? computePhoneticTokens(normalizeNameComponent(nameGiven))       : []
+      const phoneticFather      = nameFather      ? computePhoneticTokens(normalizeNameComponent(nameFather))      : []
+      const phoneticGrandfather = nameGrandfather ? computePhoneticTokens(normalizeNameComponent(nameGrandfather)) : []
+
+      const nationalIdHash = input.nationalId
+        ? generateBlindIndex(input.nationalId, hmacKey)
+        : null
+      const tazkiraId = input.identifiers?.find(id => id.system === 'AFGHAN_TAZKIRA_PAPER')
+      const tazkiraPaperHash = tazkiraId?.valueHash ?? null
+
+      const birthYear = input.birthYear
+        ?? (input.birthDate ? parseInt(input.birthDate.slice(0, 4), 10) : null)
+
+      const row = db.toRow({
+        id: patientId,
+        nameLocal:        input.nameLocal,
+        nameLocalEnc:     input.nameLocal,
+        nameLatin:        input.nameLatin ?? null,
+        nameLatinEnc:     input.nameLatin ?? null,
+        name_given:             nameGiven,
+        name_father:            nameFather,
+        name_grandfather:       nameGrandfather,
+        name_given_enc:         nameGiven   ?? null,
+        name_father_enc:        nameFather  ?? null,
+        name_grandfather_enc:   nameGrandfather ?? null,
+        name_phonetic_given:       phoneticGiven,
+        name_phonetic_father:      phoneticFather,
+        name_phonetic_grandfather: phoneticGrandfather,
+        gender:         input.gender ?? null,
+        birth_date:     input.birthDate ?? null,
+        birth_date_enc: input.birthDate ?? null,
+        birth_year:     birthYear,
+        birth_year_only: input.birthYearOnly ?? false,
+        telecom_phone:  input.phone ?? null,
+        national_id_hash:              nationalIdHash,
+        tazkira_paper_hash:            tazkiraPaperHash,
+        biometric_fingerprint_hash:    input.biometricFingerprintHash ?? null,
+        biometric_algorithm_version:   input.biometricAlgorithmVersion ?? null,
+        identifiers:    input.identifiers ? JSON.stringify(input.identifiers) : null,
+        address_province_origin:  input.addressOrigin?.province ?? null,
+        address_district_origin:  input.addressOrigin?.district ?? null,
+        address_village_origin:   input.addressOrigin?.village  ?? null,
+        address_province_current: input.addressCurrent?.province ?? null,
+        address_district_current: input.addressCurrent?.district ?? null,
+        address_village_current:  input.addressCurrent?.village  ?? null,
+        is_nomadic: input.isNomadic ?? false,
+        // syncCreate: no MPI scoring, set NULL
+        mpi_warn:  false,
+        mpi_score: null,
+        is_active:              true,
+        patient_tier:           'FREE',
+        preferred_language:     null,
+        created_by:             ctx.user.sub,
+        created_at:             input.offlineCreatedAt,
+        updated_at:             now,
+        guardian_id:            input.guardianId ?? null,
+      })
+
+      const consentRow = {
+        consent_method:   input.consent.method,
+        witnessed_by:     input.consent.witnessedBy ?? null,
+        consent_language: input.consent.language,
+        consent_version:  input.consent.version,
+        grantor_id:       ctx.user.sub,
+        grantor_role:     ctx.user.role ?? 'PRACTITIONER',
+      }
+
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
+        'create_patient_with_consent',
+        { p_patient: row, p_consent: consentRow },
+      )
+
+      if (rpcError || !rpcData) {
+        console.error('[PATIENT_SYNC_CREATE] RPC error:', { code: rpcError?.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to sync-create patient' })
+      }
+
+      const confirmedPatientId: string =
+        (rpcData as Record<string, unknown>)['patientId'] as string ?? patientId
+
+      // Pass 2: fire-and-forget async MPI scoring
+      const { runAsyncMpiScoring } = await import('@/lib/async-mpi-scoring')
+      void runAsyncMpiScoring(confirmedPatientId, {
+        nameGiven: nameGiven ?? undefined,
+        nameFather: nameFather ?? undefined,
+        nameGrandfather: nameGrandfather ?? undefined,
+        birthYear: birthYear ?? undefined,
+        gender: input.gender ?? undefined,
+        phone: input.phone ?? undefined,
+        nationalIdHash: nationalIdHash ?? undefined,
+        tazkiraPaperHash: tazkiraPaperHash ?? undefined,
+        biometricFingerprintHash: input.biometricFingerprintHash ?? undefined,
+        addressDistrictOrigin: input.addressOrigin?.district,
+        addressProvinceOrigin: input.addressOrigin?.province,
+      }, ctx.supabase).catch(() => {
+        console.error('[ASYNC_MPI] Fire-and-forget failed:', { patientId: confirmedPatientId })
+      })
+
+      // Audit
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: confirmedPatientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            operation: 'sync_create',
+            offlineCreatedAt: input.offlineCreatedAt,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: confirmedPatientId })
+      }
+
+      return {
+        id: confirmedPatientId,
+        resourceType: 'Patient' as const,
+        meta: { lastUpdated: now },
+      }
+    }),
+
   // ── patient.read ────────────────────────────────────────────
   // Story 16.2 — AC #3, #5
   read: protectedProcedure

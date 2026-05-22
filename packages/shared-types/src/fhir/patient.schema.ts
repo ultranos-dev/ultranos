@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { AdministrativeGender } from '../enums.js'
 import { FhirMetaSchema, FhirDateSchema } from './common.schema.js'
 import { AFGHAN_PROVINCES } from '../reference/afghanistan-geo.js'
+import { getDistrictsByProvince } from '../reference/afghanistan-districts.js'
 
 // FHIR R4 Patient Zod Schema
 // Ref: https://hl7.org/fhir/R4/patient.html
@@ -31,7 +32,10 @@ const PatientAddressSchema = z.object({
   province: z.enum(AFGHAN_PROVINCES),
   district: z.string().min(1).max(100),
   village: z.string().max(200).optional(),
-})
+}).refine(
+  (val) => getDistrictsByProvince(val.province).some(d => d.name === val.district),
+  { message: 'District must be valid for the selected province', path: ['district'] }
+)
 
 const PatientIdentifierInputSchema = z.object({
   system: z.enum(['AFGHAN_ETAZKIRA', 'AFGHAN_TAZKIRA_PAPER', 'PASSPORT', 'HEALTH_PASSPORT_QR']),

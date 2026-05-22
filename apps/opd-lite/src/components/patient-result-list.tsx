@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { PillButton } from './pill-button'
 
@@ -39,6 +41,8 @@ function getIdentifier(patient: FhirPatient): string | null {
 }
 
 export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
+  const t = useTranslations('registration')
+
   if (isSearching) {
     return (
       <div className="flex items-center justify-center gap-2 py-8" role="status">
@@ -99,6 +103,14 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
         )
         })}
       </ul>
+      {results.length < 3 && (
+        <Link
+          href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
+          className="mt-4 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[44px]"
+        >
+          {t('registerNew')}
+        </Link>
+      )}
     </>
   )
 }

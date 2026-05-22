@@ -16,6 +16,8 @@ export interface RegistrationInput {
   phone: string
   otpCode: string
   firstName: string
+  nameFather?: string
+  gender?: 'male' | 'female' | 'other' | 'unknown'
   dateOfBirth: string
   preferredLanguage: string
 }

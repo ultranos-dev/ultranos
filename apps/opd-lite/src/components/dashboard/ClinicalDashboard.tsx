@@ -11,10 +11,12 @@ import { PatientResultList } from '@/components/patient-result-list'
 import { NotificationBell } from '@/components/NotificationPanel'
 import { SyncPulse } from '@/components/SyncPulse'
 import { UserDropdown } from '@/components/UserDropdown'
+import Link from 'next/link'
 import { PillButton } from '@/components/pill-button'
 import { TodayEncountersCard } from './TodayEncountersCard'
 import { PendingLabResultsCard } from './PendingLabResultsCard'
 import { UnresolvedConflictsCard } from './UnresolvedConflictsCard'
+import { DuplicateReviewsCard } from './DuplicateReviewsCard'
 import { RecentEncountersList } from './RecentEncountersList'
 import type { FhirPatient } from '@ultranos/shared-types'
 
@@ -72,11 +74,17 @@ export function ClinicalDashboard() {
         </div>
       </header>
 
-      {/* Primary CTA */}
-      <div className="mb-8">
+      {/* Primary CTAs */}
+      <div className="mb-8 flex items-center gap-3">
         <PillButton onClick={handleStartEncounter}>
           {t('startEncounter')}
         </PillButton>
+        <Link
+          href="/register-patient"
+          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors min-h-[44px]"
+        >
+          {t('registerNew')}
+        </Link>
       </div>
 
       {/* Inline patient search */}
@@ -95,10 +103,11 @@ export function ClinicalDashboard() {
       </section>
 
       {/* Summary cards grid */}
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <TodayEncountersCard />
         <PendingLabResultsCard />
         <UnresolvedConflictsCard />
+        <DuplicateReviewsCard />
       </section>
 
       {/* Recent encounters */}

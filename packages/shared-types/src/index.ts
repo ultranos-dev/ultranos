@@ -53,3 +53,5 @@ export * from './feature-tiers.js'
 // Afghanistan geographic reference data
 export { AFGHAN_PROVINCES } from './reference/afghanistan-geo.js'
 export type { AfghanProvince } from './reference/afghanistan-geo.js'
+export { AFGHAN_DISTRICTS, getDistrictsByProvince } from './reference/afghanistan-districts.js'
+export type { AfghanDistrict } from './reference/afghanistan-districts.js'

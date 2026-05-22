@@ -103,6 +103,8 @@ export const patientRegistrationRouter = createTRPCRouter({
         phone: z.string().min(7).max(20).regex(/^\+\d+$/, 'Phone must be E.164 format'),
         otpCode: z.string().length(6).regex(/^\d{6}$/, 'OTP must be 6 digits'),
         firstName: z.string().min(1).max(200).transform((s) => s.trim()),
+        nameFather: z.string().min(1).max(200).transform((s) => s.trim()).optional(),
+        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
         dateOfBirth: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be YYYY-MM-DD')
@@ -139,14 +141,17 @@ export const patientRegistrationRouter = createTRPCRouter({
       const birthYear = Number(input.dateOfBirth.split('-')[0])
       const mpiCandidates = await fetchMpiCandidates(ctx.supabase, {
         nameGiven: input.firstName,
+        nameFather: input.nameFather,
         birthYear,
         phone: input.phone,
       })
 
       const mpiResult = computeMpiResult(mpiCandidates, {
         nameGiven: input.firstName,
+        nameFather: input.nameFather,
         birthYear,
         phone: input.phone,
+        gender: input.gender,
       })
 
       if (mpiResult.decision === 'BLOCK') {
@@ -165,7 +170,8 @@ export const patientRegistrationRouter = createTRPCRouter({
         id: patientId,
         nameLocal: input.firstName,
         nameLocalEnc: encryptField(input.firstName, encKey),
-        gender: null,
+        nameFather: input.nameFather ?? null,
+        gender: input.gender ?? null,
         birthDate: input.dateOfBirth,
         birthDateEnc: encryptField(input.dateOfBirth, encKey),
         birthYearOnly: false,

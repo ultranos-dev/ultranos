@@ -1,0 +1,573 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { z } from 'zod'
+import { AdministrativeGender } from '@ultranos/shared-types'
+import type { AfghanProvince } from '@ultranos/shared-types'
+import { NameInputSection } from './NameInputSection'
+import { GeographySection } from './GeographySection'
+import { ConsentSection } from './ConsentSection'
+import { MpiResultModal } from './MpiResultModal'
+
+// ── Hub API helpers ──────────────────────────────────────────────────────────
+// Raw fetch wrappers matching the existing pattern in @/lib/trpc.ts.
+// These call the hub-api tRPC endpoints directly.
+
+function getHubApiUrl(): string {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  }
+  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+}
+
+interface CheckDuplicatesResult {
+  decision: 'ALLOW' | 'WARN' | 'BLOCK'
+  candidates: Array<{
+    id: string
+    nameGiven?: string
+    nameFather?: string
+    birthYear?: number
+    gender?: string
+    districtOrigin?: string
+    mpiScore: number
+    scoreBreakdown: Record<string, number>
+  }>
+  proceedToken?: string
+}
+
+interface CreatePatientResult {
+  id: string
+}
+
+async function checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.checkDuplicates'
+
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ json: input }),
+  })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: CheckDuplicatesResult } } }
+  return body.result.data.json
+}
+
+async function createPatient(input: Record<string, unknown>): Promise<CreatePatientResult> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/patient.create'
+
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ json: input }),
+  })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: CreatePatientResult } } }
+  return body.result.data.json
+}
+
+// ── Local validation schema (client-side, mirrors server CreatePatientMpiInputSchema) ──
+
+const CURRENT_YEAR = new Date().getFullYear()
+
+const ClientRegistrationSchema = z.object({
+  nameGiven: z.string().min(1, 'required').max(200),
+  nameFather: z.string().max(200).optional(),
+  nameGrandfather: z.string().max(200).optional(),
+  gender: z.nativeEnum(AdministrativeGender, { required_error: 'required' }),
+  birthYearOnly: z.boolean(),
+  birthYear: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
+  birthDate: z.string().optional(),
+  phone: z.string().max(50).optional(),
+  addressOriginProvince: z.string().min(1, 'required'),
+  addressOriginDistrict: z.string().min(1, 'required'),
+  addressOriginVillage: z.string().max(200).optional(),
+  addressCurrentProvince: z.string().optional(),
+  addressCurrentDistrict: z.string().optional(),
+  addressCurrentVillage: z.string().max(200).optional(),
+  consentMethod: z.enum(['WRITTEN', 'VERBAL_WITNESSED'], { required_error: 'required' }),
+  consentWitnessedBy: z.string().optional(),
+  consentLanguage: z.enum(['en', 'ar', 'prs']),
+}).superRefine((val, ctx) => {
+  if (val.birthYearOnly && !val.birthYear) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthYear'], message: 'required' })
+  }
+  if (!val.birthYearOnly && !val.birthDate) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'required' })
+  }
+  if (val.consentMethod === 'VERBAL_WITNESSED' && !val.consentWitnessedBy) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consentWitnessedBy'], message: 'required' })
+  }
+})
+
+// ── Address state type ───────────────────────────────────────────────────────
+
+interface AddressFields {
+  province: AfghanProvince | ''
+  district: string
+  village: string
+}
+
+const EMPTY_ADDRESS: AddressFields = { province: '', district: '', village: '' }
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+interface PatientRegistrationFormProps {
+  prefilledNameGiven?: string
+}
+
+export function PatientRegistrationForm({
+  prefilledNameGiven = '',
+}: PatientRegistrationFormProps) {
+  const t = useTranslations('registration')
+  const locale = useLocale()
+  const isRtl = locale === 'ar' || locale === 'prs'
+  const router = useRouter()
+
+  // ── Form state ──
+  const [nameGiven, setNameGiven] = useState(prefilledNameGiven)
+  const [nameFather, setNameFather] = useState('')
+  const [nameGrandfather, setNameGrandfather] = useState('')
+  const [gender, setGender] = useState<AdministrativeGender | ''>('')
+  const [birthYearOnly, setBirthYearOnly] = useState(true)
+  const [birthYear, setBirthYear] = useState<string>('')
+  const [birthDate, setBirthDate] = useState('')
+  const [phone, setPhone] = useState('')
+
+  // Address
+  const [addressOrigin, setAddressOrigin] = useState<AddressFields>(EMPTY_ADDRESS)
+  const [addressCurrent, setAddressCurrent] = useState<AddressFields>(EMPTY_ADDRESS)
+  const [sameAsOrigin, setSameAsOrigin] = useState(false)
+
+  // Consent
+  const [consentMethod, setConsentMethod] = useState<'WRITTEN' | 'VERBAL_WITNESSED' | ''>('')
+  const [consentWitnessedBy, setConsentWitnessedBy] = useState('')
+  const [consentLanguage, setConsentLanguage] = useState<'en' | 'ar' | 'prs'>(
+    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : 'en',
+  )
+
+  // UI state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  // MPI modal state
+  const [mpiModalOpen, setMpiModalOpen] = useState(false)
+  const [mpiDecision, setMpiDecision] = useState<'WARN' | 'BLOCK'>('WARN')
+  const [mpiCandidates, setMpiCandidates] = useState<CheckDuplicatesResult['candidates']>([])
+  const [mpiProceedToken, setMpiProceedToken] = useState<string | undefined>()
+
+  // ── Build submission payload ──
+
+  const buildPayload = useCallback(
+    (proceedToken?: string) => {
+      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+        .filter(Boolean)
+        .join(' ')
+
+      const payload: Record<string, unknown> = {
+        nameLocal,
+        nameGiven,
+        nameFather: nameFather || undefined,
+        nameGrandfather: nameGrandfather || undefined,
+        gender: gender || undefined,
+        birthYearOnly,
+        birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
+        birthDate: birthDate || undefined,
+        phone: phone || undefined,
+        addressOrigin: addressOrigin.province
+          ? {
+              province: addressOrigin.province,
+              district: addressOrigin.district,
+              village: addressOrigin.village || undefined,
+            }
+          : undefined,
+        addressCurrent: sameAsOrigin
+          ? (addressOrigin.province
+              ? {
+                  province: addressOrigin.province,
+                  district: addressOrigin.district,
+                  village: addressOrigin.village || undefined,
+                }
+              : undefined)
+          : (addressCurrent.province
+              ? {
+                  province: addressCurrent.province,
+                  district: addressCurrent.district,
+                  village: addressCurrent.village || undefined,
+                }
+              : undefined),
+        consent: {
+          method: consentMethod,
+          witnessedBy: consentMethod === 'VERBAL_WITNESSED' ? consentWitnessedBy : undefined,
+          language: consentLanguage,
+          version: '1.0',
+        },
+      }
+
+      if (proceedToken) {
+        payload.mpiProceedToken = proceedToken
+      }
+
+      return payload
+    },
+    [
+      nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
+      birthYear, birthDate, phone, addressOrigin, addressCurrent,
+      sameAsOrigin, consentMethod, consentWitnessedBy, consentLanguage,
+    ],
+  )
+
+  // ── Validate ──
+
+  const validate = useCallback((): boolean => {
+    const result = ClientRegistrationSchema.safeParse({
+      nameGiven,
+      nameFather: nameFather || undefined,
+      nameGrandfather: nameGrandfather || undefined,
+      gender: gender || undefined,
+      birthYearOnly,
+      birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
+      birthDate: birthDate || undefined,
+      phone: phone || undefined,
+      addressOriginProvince: addressOrigin.province,
+      addressOriginDistrict: addressOrigin.district,
+      addressOriginVillage: addressOrigin.village || undefined,
+      addressCurrentProvince: addressCurrent.province || undefined,
+      addressCurrentDistrict: addressCurrent.district || undefined,
+      addressCurrentVillage: addressCurrent.village || undefined,
+      consentMethod: consentMethod || undefined,
+      consentWitnessedBy: consentWitnessedBy || undefined,
+      consentLanguage,
+    })
+
+    if (!result.success) {
+      const errors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        const key = issue.path.join('.')
+        if (!errors[key]) {
+          errors[key] = issue.message === 'required' ? t('fieldRequired') : issue.message
+        }
+      }
+      setFieldErrors(errors)
+      return false
+    }
+
+    setFieldErrors({})
+    return true
+  }, [
+    nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
+    birthYear, birthDate, phone, addressOrigin, addressCurrent,
+    consentMethod, consentWitnessedBy, consentLanguage, t,
+  ])
+
+  // ── Submit handler ──
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      setSubmitError('')
+
+      if (!validate()) return
+
+      setSubmitting(true)
+      try {
+        const payload = buildPayload()
+
+        // Step 1: Check for duplicates
+        const dupeResult = await checkDuplicates(payload)
+
+        if (dupeResult.decision === 'ALLOW') {
+          // Step 2a: No duplicates — create patient
+          const created = await createPatient(payload)
+          router.push(`/${locale}/patient/${created.id}`)
+        } else if (dupeResult.decision === 'WARN') {
+          // Step 2b: Possible duplicates — show modal with proceed option
+          setMpiDecision('WARN')
+          setMpiCandidates(dupeResult.candidates)
+          setMpiProceedToken(dupeResult.proceedToken)
+          setMpiModalOpen(true)
+        } else {
+          // Step 2c: Strong match — show modal with go-to-patient only
+          setMpiDecision('BLOCK')
+          setMpiCandidates(dupeResult.candidates)
+          setMpiProceedToken(undefined)
+          setMpiModalOpen(true)
+        }
+      } catch (err) {
+        setSubmitError(
+          err instanceof Error ? err.message : t('submitError'),
+        )
+      } finally {
+        setSubmitting(false)
+      }
+    },
+    [validate, buildPayload, router, locale, t],
+  )
+
+  // ── MPI modal handlers ──
+
+  const handleMpiProceed = useCallback(
+    async (token: string) => {
+      setMpiModalOpen(false)
+      setSubmitting(true)
+      setSubmitError('')
+
+      try {
+        const payload = buildPayload(token)
+        const created = await createPatient(payload)
+        router.push(`/${locale}/patient/${created.id}`)
+      } catch (err) {
+        setSubmitError(
+          err instanceof Error ? err.message : t('submitError'),
+        )
+      } finally {
+        setSubmitting(false)
+      }
+    },
+    [buildPayload, router, locale, t],
+  )
+
+  const handleMpiCancel = useCallback(() => {
+    setMpiModalOpen(false)
+  }, [])
+
+  const handleGoToPatient = useCallback(
+    (patientId: string) => {
+      setMpiModalOpen(false)
+      router.push(`/${locale}/patient/${patientId}`)
+    },
+    [router, locale],
+  )
+
+  return (
+    <>
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
+        {/* Name section */}
+        <NameInputSection
+          nameGiven={nameGiven}
+          nameFather={nameFather}
+          nameGrandfather={nameGrandfather}
+          onNameGivenChange={setNameGiven}
+          onNameFatherChange={setNameFather}
+          onNameGrandfatherChange={setNameGrandfather}
+          errors={{
+            nameGiven: fieldErrors.nameGiven,
+            nameFather: fieldErrors.nameFather,
+            nameGrandfather: fieldErrors.nameGrandfather,
+          }}
+        />
+
+        {/* Demographics section */}
+        <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
+          <legend className="text-base font-bold text-neutral-900 mb-4">
+            {t('demographicsSection')}
+          </legend>
+
+          <div className="space-y-4">
+            {/* Gender */}
+            <div>
+              <label
+                htmlFor="gender"
+                className="mb-1 block text-sm font-semibold text-neutral-700"
+              >
+                {t('gender')}
+                <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+              </label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) =>
+                  setGender(e.target.value as AdministrativeGender)
+                }
+                aria-invalid={!!fieldErrors.gender}
+                className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                  fieldErrors.gender
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                    : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                }`}
+              >
+                <option value="">{t('genderPlaceholder')}</option>
+                <option value={AdministrativeGender.MALE}>{t('genderMale')}</option>
+                <option value={AdministrativeGender.FEMALE}>{t('genderFemale')}</option>
+                <option value={AdministrativeGender.OTHER}>{t('genderOther')}</option>
+                <option value={AdministrativeGender.UNKNOWN}>{t('genderUnknown')}</option>
+              </select>
+              {fieldErrors.gender && (
+                <p className="mt-1 text-sm text-red-600" role="alert">
+                  {fieldErrors.gender}
+                </p>
+              )}
+            </div>
+
+            {/* Birth year or full date toggle */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 cursor-pointer min-h-[44px]">
+                <input
+                  type="checkbox"
+                  checked={birthYearOnly}
+                  onChange={(e) => {
+                    setBirthYearOnly(e.target.checked)
+                    if (e.target.checked) setBirthDate('')
+                    else setBirthYear('')
+                  }}
+                  className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+                />
+                <span className="text-sm font-medium text-neutral-700">
+                  {t('birthYearOnly')}
+                </span>
+              </label>
+
+              {birthYearOnly ? (
+                <div>
+                  <label
+                    htmlFor="birth-year"
+                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                  >
+                    {t('birthYear')}
+                    <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="birth-year"
+                    type="number"
+                    inputMode="numeric"
+                    min={1900}
+                    max={CURRENT_YEAR}
+                    aria-invalid={!!fieldErrors.birthYear}
+                    className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                      fieldErrors.birthYear
+                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                        : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
+                    placeholder={t('birthYearPlaceholder')}
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                  />
+                  {fieldErrors.birthYear && (
+                    <p className="mt-1 text-sm text-red-600" role="alert">
+                      {fieldErrors.birthYear}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor="birth-date"
+                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                  >
+                    {t('birthDate')}
+                    <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="birth-date"
+                    type="date"
+                    aria-invalid={!!fieldErrors.birthDate}
+                    className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+                      fieldErrors.birthDate
+                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                        : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                    }`}
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                  />
+                  {fieldErrors.birthDate && (
+                    <p className="mt-1 text-sm text-red-600" role="alert">
+                      {fieldErrors.birthDate}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label
+                htmlFor="phone"
+                className="mb-1 block text-sm font-semibold text-neutral-700"
+              >
+                {t('phone')}
+                <span className="ms-1 text-xs font-normal text-neutral-400">
+                  ({t('optional')})
+                </span>
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                dir="ltr"
+                inputMode="tel"
+                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                placeholder={t('phonePlaceholder')}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        {/* Geography section */}
+        <GeographySection
+          origin={addressOrigin}
+          current={addressCurrent}
+          sameAsOrigin={sameAsOrigin}
+          onOriginChange={setAddressOrigin}
+          onCurrentChange={setAddressCurrent}
+          onSameAsOriginChange={setSameAsOrigin}
+          errors={{
+            originProvince: fieldErrors.addressOriginProvince,
+            originDistrict: fieldErrors.addressOriginDistrict,
+            currentProvince: fieldErrors.addressCurrentProvince,
+            currentDistrict: fieldErrors.addressCurrentDistrict,
+          }}
+        />
+
+        {/* Consent section */}
+        <ConsentSection
+          method={consentMethod}
+          witnessedBy={consentWitnessedBy}
+          language={consentLanguage}
+          onMethodChange={setConsentMethod}
+          onWitnessedByChange={setConsentWitnessedBy}
+          onLanguageChange={setConsentLanguage}
+          errors={{
+            method: fieldErrors.consentMethod,
+            witnessedBy: fieldErrors.consentWitnessedBy,
+            language: fieldErrors.consentLanguage,
+          }}
+        />
+
+        {/* Submit error */}
+        {submitError && (
+          <div
+            className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+            role="alert"
+          >
+            {submitError}
+          </div>
+        )}
+
+        {/* Submit button */}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full min-h-[44px] rounded-lg bg-blue-600 px-6 py-3 text-base font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? t('submitting') : t('submitRegistration')}
+        </button>
+      </form>
+
+      {/* MPI duplicate result modal */}
+      <MpiResultModal
+        open={mpiModalOpen}
+        decision={mpiDecision}
+        candidates={mpiCandidates}
+        proceedToken={mpiProceedToken}
+        onProceed={handleMpiProceed}
+        onCancel={handleMpiCancel}
+        onGoToPatient={handleGoToPatient}
+      />
+    </>
+  )
+}
