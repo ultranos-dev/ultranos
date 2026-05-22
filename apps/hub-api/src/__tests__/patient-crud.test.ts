@@ -38,6 +38,27 @@ vi.mock('../trpc/middleware/enforceResourceAccess', () => ({
   enforceResourceAccess: vi.fn(() => async (opts: any) => opts.next({ ctx: opts.ctx })),
 }))
 
+// Mock MPI engine — always ALLOW for patient-crud tests
+vi.mock('@ultranos/mpi-engine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@ultranos/mpi-engine')>()
+  return {
+    ...actual,
+    computeMpiResult: vi.fn().mockReturnValue({ decision: 'ALLOW', topScore: 0, candidates: [] }),
+  }
+})
+
+// Mock MPI candidate query — no candidates
+vi.mock('@/lib/mpi-candidate-query', () => ({
+  fetchMpiCandidates: vi.fn().mockResolvedValue([]),
+}))
+
+// Mock MPI proceed-token helpers
+vi.mock('@/lib/mpi-proceed-token', () => ({
+  signProceedToken:    vi.fn().mockResolvedValue('signed-token'),
+  verifyProceedToken:  vi.fn().mockResolvedValue({ jti: 'test-jti', candidateIds: [], maxScore: 0, issuedTo: 'doctor-001', exp: 9999999999 }),
+  consumeProceedToken: vi.fn().mockResolvedValue(undefined),
+}))
+
 const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
@@ -56,6 +77,28 @@ function createTestContext(mockFrom: ReturnType<typeof vi.fn>) {
   }
 }
 
+/** Minimal valid MPI input — satisfies CreatePatientMpiInputSchema */
+const VALID_MPI_INPUT = {
+  nameLocal: 'Test Patient',
+  nameGiven: 'Test',
+  gender: 'male' as const,
+  birthYear: 1990,
+  birthYearOnly: true,
+  consent: { method: 'WRITTEN' as const, language: 'en' as const, version: 'v1.0-en' },
+}
+
+function createRpcContext(patientId = PATIENT_UUID) {
+  const mockRpc = vi.fn().mockResolvedValue({
+    data: { patientId, consentId: '22222222-2222-2222-2222-222222222222' },
+    error: null,
+  })
+  return {
+    supabase: { rpc: mockRpc } as never,
+    user: TEST_USER,
+    headers: new Headers(),
+  }
+}
+
 describe('patient.create', () => {
   const createCaller = createCallerFactory(appRouter)
 
@@ -66,50 +109,32 @@ describe('patient.create', () => {
   })
 
   it('creates a patient and returns the ID', async () => {
-    const mockFrom = createMockFrom()
-
-    // Mock insert (patients table)
-    mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      }),
-    })
-
-    const ctx = createTestContext(mockFrom)
+    const ctx = createRpcContext()
     const caller = createCaller(ctx)
 
     const result = await caller.patient.create({
-      nameLocal: 'Test Patient',
+      ...VALID_MPI_INPUT,
       nameLatin: 'Test Patient Latin',
-      gender: 'male',
-      birthDate: '1990-01-01',
     })
 
     expect(result).toHaveProperty('id')
     expect(result.resourceType).toBe('Patient')
-    expect(mockFrom).toHaveBeenCalledWith('patients')
+    expect((ctx.supabase as any).rpc).toHaveBeenCalledWith(
+      'create_patient_with_consent',
+      expect.any(Object),
+    )
   })
 
   it('uses db.toRow() to encrypt PHI fields', async () => {
-    const mockFrom = createMockFrom()
-    mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-      }),
-    })
-
-    const ctx = createTestContext(mockFrom)
+    const ctx = createRpcContext()
     const caller = createCaller(ctx)
 
     await caller.patient.create({
       nameLocal: 'Encrypted Name',
+      gender: 'male',
       birthDate: '1985-06-15',
+      birthYearOnly: false,
+      consent: { method: 'WRITTEN', language: 'en', version: 'v1.0-en' },
     })
 
     // Verify db.toRow() was called (mandatory encryption path)
@@ -117,90 +142,52 @@ describe('patient.create', () => {
     const rowArg = mockToRow.mock.calls[0][0]
     // Verify encrypted copies are included
     expect(rowArg).toHaveProperty('nameLocalEnc', 'Encrypted Name')
-    expect(rowArg).toHaveProperty('birthDateEnc', '1985-06-15')
+    expect(rowArg).toHaveProperty('birth_date_enc', '1985-06-15')
   })
 
   it('generates blind index for national ID', async () => {
-    const mockFrom = createMockFrom()
-
-    // First call: duplicate check (select on patients) → no match
-    // Second call: insert
-    let callCount = 0
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'patients') {
-        callCount++
-        if (callCount === 1) {
-          // Duplicate check
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-              }),
-            }),
-          }
-        }
-        // Insert
-        return {
-          insert: vi.fn().mockResolvedValue({ error: null }),
-        }
-      }
-      // Audit log
-      return {
-        insert: vi.fn().mockResolvedValue({ error: null }),
-      }
-    })
-
-    const ctx = createTestContext(mockFrom)
+    const ctx = createRpcContext()
     const caller = createCaller(ctx)
 
     await caller.patient.create({
-      nameLocal: 'Patient With ID',
+      ...VALID_MPI_INPUT,
       nationalId: 'ABC-123-456',
     })
 
     // Verify db.toRow() received a hashed national ID (64-char hex)
     expect(mockToRow).toHaveBeenCalled()
     const rowArg = mockToRow.mock.calls[0][0]
-    expect(rowArg.nationalIdHash).toMatch(/^[0-9a-f]{64}$/)
+    expect(rowArg.national_id_hash).toMatch(/^[0-9a-f]{64}$/)
     // Raw national ID should NOT be in the row
     expect(rowArg).not.toHaveProperty('nationalId')
   })
 
-  it('throws CONFLICT on duplicate national ID hash', async () => {
-    const mockFrom = createMockFrom()
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({
-            data: [{ id: 'existing-patient' }],
-            error: null,
-          }),
-        }),
-      }),
+  it('throws CONFLICT on BLOCK MPI decision (duplicate detection)', async () => {
+    const { computeMpiResult } = await import('@ultranos/mpi-engine')
+    vi.mocked(computeMpiResult).mockReturnValueOnce({
+      decision: 'BLOCK',
+      topScore: 95,
+      candidates: [{ candidate: { id: 'existing-1', nameGiven: 'Test' }, score: 95, breakdown: {}, hardIdMatch: false }],
     })
 
-    const ctx = createTestContext(mockFrom)
+    const ctx = createRpcContext()
     const caller = createCaller(ctx)
 
     await expect(
-      caller.patient.create({
-        nameLocal: 'Duplicate Patient',
-        nationalId: 'DUPLICATE-ID',
-      })
-    ).rejects.toThrow(/already exists/)
+      caller.patient.create(VALID_MPI_INPUT)
+    ).rejects.toThrow(/CONFLICT|duplicate/i)
   })
 
   it('emits audit event with action PHI_WRITE on create', async () => {
-    const mockFrom = createMockFrom()
-    mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    })
-
-    const ctx = createTestContext(mockFrom)
+    const ctx = createRpcContext()
     const caller = createCaller(ctx)
 
     await caller.patient.create({
       nameLocal: 'Audit Test Patient',
+      gender: 'male',
+      birthYear: 1990,
+      birthYearOnly: true,
+      consent: { method: 'WRITTEN', language: 'en', version: 'v1.0-en' },
     })
 
     expect(mockAuditEmit).toHaveBeenCalledWith(
@@ -210,7 +197,7 @@ describe('patient.create', () => {
         actorId: TEST_USER.sub,
         actorRole: TEST_USER.role,
         outcome: 'SUCCESS',
-        metadata: { operation: 'create' },
+        metadata: expect.objectContaining({ operation: 'create' }),
       })
     )
   })

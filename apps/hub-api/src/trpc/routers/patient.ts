@@ -8,6 +8,10 @@ import { generateBlindIndex } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
+import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
+import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
+import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
+import { CreatePatientMpiInputSchema } from '@ultranos/shared-types'
 
 function sanitizeFilterValue(value: string): string {
   // Strip dangerous chars, then escape SQL ILIKE wildcards
@@ -125,114 +129,201 @@ export const patientRouter = createTRPCRouter({
     }),
 
   // ── patient.create ──────────────────────────────────────────
-  // Story 16.2 — AC #1, #2, #5, #6
+  // MPI Phase 1 — AC #1–#8: MPI deduplication + atomic RPC insert with consent
   create: protectedProcedure
     .use(enforceResourceAccess('Patient'))
-    .input(
-      z.object({
-        nameLocal: z.string().min(1).max(500),
-        nameLatin: z.string().max(500).optional(),
-        namePhonetic: z.string().max(500).optional(),
-        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
-        birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'birthDate must be YYYY-MM-DD').optional(),
-        birthYearOnly: z.boolean().optional(),
-        telecomPhone: z.string().max(50).optional(),
-        nationalId: z.string().min(1).max(200).optional(),
-        guardianId: z.string().uuid().optional(),
-        consentVersion: z.string().optional(),
-      })
-    )
+    .input(CreatePatientMpiInputSchema)
     .mutation(async ({ ctx, input }) => {
+      const { encryptionKey, hmacKey } = getFieldEncryptionKeys()
       const now = new Date().toISOString()
       const patientId = crypto.randomUUID()
 
-      // Generate blind index for national ID (AC #2)
-      let nationalIdHash: string | null = null
-      if (input.nationalId) {
-        nationalIdHash = hashNationalId(input.nationalId)
+      // Step 1: Normalize name components and compute phonetic tokens
+      const nameGiven = input.nameGiven ?? null
+      const nameFather = input.nameFather ?? null
+      const nameGrandfather = input.nameGrandfather ?? null
 
-        // Duplicate detection via blind index (AC #6)
-        const { data: existing } = await ctx.supabase
-          .from('patients')
-          .select('id')
-          .eq('national_id_hash', nationalIdHash)
-          .limit(1)
+      const phoneticGiven       = nameGiven       ? computePhoneticTokens(normalizeNameComponent(nameGiven))       : []
+      const phoneticFather      = nameFather      ? computePhoneticTokens(normalizeNameComponent(nameFather))      : []
+      const phoneticGrandfather = nameGrandfather ? computePhoneticTokens(normalizeNameComponent(nameGrandfather)) : []
 
-        if (existing && existing.length > 0) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'A patient with this national ID already exists',
-          })
-        }
-      }
+      // Step 2: Hash hard identifiers
+      const nationalIdHash = input.nationalId
+        ? generateBlindIndex(input.nationalId, hmacKey)
+        : null
 
-      // Build row with dual-write: plain columns for search + encrypted _enc columns for read.
-      // db.toRow() encrypts fields in randomizedFields (the _enc columns) automatically.
-      const row = db.toRow({
-        id: patientId,
-        // Plain columns (searchable, not in encryption config)
-        nameLocal: input.nameLocal,
-        nameLatin: input.nameLatin ?? null,
-        namePhonetic: input.namePhonetic ?? null,
-        // Encrypted copies (in encryption config — AES-256-GCM)
-        nameLocalEnc: input.nameLocal,
-        nameLatinEnc: input.nameLatin ?? null,
-        namePhoneticEnc: input.namePhonetic ?? null,
-        birthDateEnc: input.birthDate ?? null,
-        // Standard fields
-        gender: input.gender ?? null,
-        birthDate: input.birthDate ?? null,
-        birthYearOnly: input.birthYearOnly ?? false,
-        telecomPhone: input.telecomPhone ?? null,
-        nationalIdHash,
-        guardianId: input.guardianId ?? null,
-        consentVersion: input.consentVersion ?? null,
-        isActive: true,
-        createdBy: ctx.user.sub,
-        createdAt: now,
-        updatedAt: now,
+      const tazkiraId = input.identifiers?.find(id => id.system === 'AFGHAN_TAZKIRA_PAPER')
+      const tazkiraPaperHash = tazkiraId?.valueHash ?? null
+
+      // Step 3: MPI candidate retrieval and scoring
+      const candidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven:                nameGiven  ?? undefined,
+        nameFather:               nameFather ?? undefined,
+        nationalId:               input.nationalId,
+        tazkiraPaperHash:         tazkiraPaperHash  ?? undefined,
+        biometricFingerprintHash: input.biometricFingerprintHash,
+        birthYear:                input.birthYear,
+        addressDistrictOrigin:    input.addressOrigin?.district,
+        phone:                    input.phone,
       })
 
-      const { error } = await ctx.supabase
-        .from('patients')
-        .insert(row)
+      const mpiResult = computeMpiResult(candidates, {
+        nameGiven:                nameGiven  ?? undefined,
+        nameFather:               nameFather ?? undefined,
+        nameGrandfather:          nameGrandfather ?? undefined,
+        birthYear:                input.birthYear,
+        gender:                   input.gender,
+        addressDistrictOrigin:    input.addressOrigin?.district,
+        addressProvinceOrigin:    input.addressOrigin?.province,
+        phone:                    input.phone,
+        nationalIdHash:           nationalIdHash  ?? undefined,
+        tazkiraPaperHash:         tazkiraPaperHash ?? undefined,
+        biometricFingerprintHash: input.biometricFingerprintHash,
+      })
 
-      if (error) {
-        // Check for unique constraint violation on national_id_hash
-        if (error.code === '23505' && error.message?.includes('national_id_hash')) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'A patient with this national ID already exists',
-          })
-        }
-        console.error('Patient create error:', { code: error.code })
+      // Step 4: Handle MPI decision
+      let mpiWarn = false
+      let consumeJti: string | null = null
+
+      if (mpiResult.decision === 'BLOCK') {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create patient',
+          code: 'CONFLICT',
+          message: 'Possible duplicate patient detected. Review candidates before creating a new record.',
+          cause: { candidates: mpiResult.candidates.slice(0, 5), topScore: mpiResult.topScore },
         })
       }
 
-      // Audit PHI write (CLAUDE.md Rule #6)
+      if (mpiResult.decision === 'WARN') {
+        if (!input.mpiProceedToken) {
+          const proceedToken = await signProceedToken({
+            candidateIds: mpiResult.candidates.map(c => c.candidate.id),
+            maxScore: mpiResult.topScore,
+            issuedTo: ctx.user.sub,
+          })
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'Possible duplicate detected. Include mpiProceedToken to confirm creation.',
+            cause: { candidates: mpiResult.candidates.slice(0, 5), proceedToken, topScore: mpiResult.topScore },
+          })
+        }
+
+        try {
+          const tokenPayload = await verifyProceedToken(input.mpiProceedToken)
+          consumeJti = tokenPayload.jti
+        } catch {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Proceed token is invalid, expired, or already used.',
+          })
+        }
+        mpiWarn = true
+      }
+
+      // Step 5: Build patient and consent rows
+      const birthYear = input.birthYear
+        ?? (input.birthDate ? parseInt(input.birthDate.slice(0, 4), 10) : null)
+
+      const row = db.toRow({
+        id: patientId,
+        nameLocal:        input.nameLocal,
+        nameLocalEnc:     input.nameLocal,
+        nameLatin:        input.nameLatin ?? null,
+        nameLatinEnc:     input.nameLatin ?? null,
+        name_given:             nameGiven,
+        name_father:            nameFather,
+        name_grandfather:       nameGrandfather,
+        name_given_enc:         nameGiven   ?? null,
+        name_father_enc:        nameFather  ?? null,
+        name_grandfather_enc:   nameGrandfather ?? null,
+        name_phonetic_given:       phoneticGiven,
+        name_phonetic_father:      phoneticFather,
+        name_phonetic_grandfather: phoneticGrandfather,
+        gender:         input.gender ?? null,
+        birth_date:     input.birthDate ?? null,
+        birth_date_enc: input.birthDate ?? null,
+        birth_year:     birthYear,
+        birth_year_only: input.birthYearOnly ?? false,
+        telecom_phone:  input.phone ?? null,
+        national_id_hash:              nationalIdHash,
+        tazkira_paper_hash:            tazkiraPaperHash,
+        biometric_fingerprint_hash:    input.biometricFingerprintHash ?? null,
+        biometric_algorithm_version:   input.biometricAlgorithmVersion ?? null,
+        identifiers:    input.identifiers ? JSON.stringify(input.identifiers) : null,
+        address_province_origin:  input.addressOrigin?.province ?? null,
+        address_district_origin:  input.addressOrigin?.district ?? null,
+        address_village_origin:   input.addressOrigin?.village  ?? null,
+        address_province_current: input.addressCurrent?.province ?? null,
+        address_district_current: input.addressCurrent?.district ?? null,
+        address_village_current:  input.addressCurrent?.village  ?? null,
+        is_nomadic: input.isNomadic ?? false,
+        mpi_warn:  mpiWarn,
+        mpi_score: mpiResult.topScore,
+        is_active:              true,
+        patient_tier:           'FREE',
+        preferred_language:     null,
+        created_by:             ctx.user.sub,
+        created_at:             now,
+        updated_at:             now,
+        guardian_id:            input.guardianId ?? null,
+      })
+
+      const consentRow = {
+        consent_method:   input.consent.method,
+        witnessed_by:     input.consent.witnessedBy ?? null,
+        consent_language: input.consent.language,
+        consent_version:  input.consent.version,
+        grantor_id:       ctx.user.sub,
+        grantor_role:     ctx.user.role ?? 'PRACTITIONER',
+      }
+
+      // Step 6: Atomic insert via RPC
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
+        'create_patient_with_consent',
+        { p_patient: row, p_consent: consentRow },
+      )
+
+      if (rpcError || !rpcData) {
+        console.error('[PATIENT_CREATE] RPC error:', { code: rpcError?.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create patient' })
+      }
+
+      // Use the patient ID returned by the RPC (authoritative from DB)
+      const confirmedPatientId: string =
+        (rpcData as Record<string, unknown>)['patientId'] as string ?? patientId
+
+      // Step 7: Consume proceedToken (WARN path only)
+      if (consumeJti) {
+        await consumeProceedToken(consumeJti)
+      }
+
+      // Step 8: Audit
       const audit = new AuditLogger(ctx.supabase)
       try {
         await audit.emit({
           action: 'PHI_WRITE',
           resourceType: 'PATIENT',
-          resourceId: patientId,
+          resourceId: confirmedPatientId,
           actorId: ctx.user.sub,
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { operation: 'create' },
+          metadata: {
+            operation: 'create',
+            mpiDecision: mpiResult.decision,
+            mpiScore: mpiResult.topScore,
+            mpiCandidateIds: mpiResult.candidates.map(c => c.candidate.id),
+            consentMethod: input.consent.method,
+          },
         })
       } catch {
-        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: patientId })
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceType: 'PATIENT', resourceId: confirmedPatientId })
       }
 
       return {
-        id: patientId,
+        id: confirmedPatientId,
         resourceType: 'Patient' as const,
         meta: { lastUpdated: now },
+        mpiWarn,
         _ultranos: { createdAt: now },
       }
     }),
