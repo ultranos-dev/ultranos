@@ -1,0 +1,559 @@
+'use client'
+
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { useAppointmentStore } from '@/stores/appointment-store'
+import { db } from '@/lib/db'
+import { BookingModal } from './BookingModal'
+import type { FhirAppointmentZod } from '@ultranos/shared-types'
+
+/** Configurable week start day. Saturday (6) is default for MENA. */
+const WEEK_START_DAY = parseInt(
+  process.env.NEXT_PUBLIC_WEEK_START ?? '6',
+  10,
+)
+
+/** Clinic hours: 08:00-17:00, 30-minute slots (matching DayScheduleView) */
+const CLINIC_START_HOUR = 8
+const CLINIC_END_HOUR = 17
+const SLOT_DURATION_MINUTES = 30
+
+function generateTimeSlots(): string[] {
+  const slots: string[] = []
+  for (let h = CLINIC_START_HOUR; h < CLINIC_END_HOUR; h++) {
+    for (let m = 0; m < 60; m += SLOT_DURATION_MINUTES) {
+      slots.push(
+        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`,
+      )
+    }
+  }
+  return slots
+}
+
+const TIME_SLOTS = generateTimeSlots()
+
+/** Get the start of the week containing `date`, based on configured start day */
+function getWeekStart(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  const dayOfWeek = d.getDay()
+  const diff = (dayOfWeek - WEEK_START_DAY + 7) % 7
+  d.setDate(d.getDate() - diff)
+  return d
+}
+
+/** Generate 7 consecutive days starting from weekStart */
+function getWeekDays(weekStart: Date): Date[] {
+  const days: Date[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i)
+    days.push(d)
+  }
+  return days
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+function formatShortDate(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+  })
+}
+
+function formatWeekRange(start: Date, end: Date): string {
+  return `${start.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })} \u2013 ${end.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })}`
+}
+
+const SERVICE_TYPE_COLORS: Record<string, string> = {
+  'new-consult': 'bg-green-500',
+  'follow-up': 'bg-blue-500',
+  urgent: 'bg-red-500',
+  'walk-in': 'bg-amber-500',
+}
+
+interface CellData {
+  total: number
+  byType: Record<string, number>
+}
+
+export function WeekScheduleView() {
+  const t = useTranslations('appointments')
+  const {
+    selectedDate,
+    setSelectedDate,
+    setViewMode,
+    nextWeek,
+    prevWeek,
+  } = useAppointmentStore()
+
+  const [weekAppointments, setWeekAppointments] = useState<
+    FhirAppointmentZod[]
+  >([])
+  const [loading, setLoading] = useState(true)
+  const [bookingModalOpen, setBookingModalOpen] = useState(false)
+  const [bookingDate, setBookingDate] = useState<Date | undefined>()
+  const [bookingTime, setBookingTime] = useState<string | undefined>()
+
+  const weekStart = useMemo(
+    () => getWeekStart(selectedDate),
+    [selectedDate],
+  )
+  const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart])
+  const weekEnd = weekDays[6]
+
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
+
+  // Load all appointments for the week
+  const loadWeek = useCallback(async () => {
+    setLoading(true)
+    try {
+      const start = new Date(weekStart)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(weekEnd)
+      end.setHours(23, 59, 59, 999)
+
+      const apts = (await db.appointments
+        .where('start')
+        .between(start.toISOString(), end.toISOString(), true, true)
+        .toArray()) as FhirAppointmentZod[]
+
+      setWeekAppointments(apts)
+    } catch {
+      // Keep existing state on Dexie failure
+    } finally {
+      setLoading(false)
+    }
+  }, [weekStart, weekEnd])
+
+  useEffect(() => {
+    void loadWeek()
+  }, [loadWeek])
+
+  // Build a lookup: dayIndex -> timeSlot -> CellData
+  const cellDataMap = useMemo(() => {
+    const map = new Map<string, CellData>()
+    for (const apt of weekAppointments) {
+      if (
+        apt.status === 'cancelled' ||
+        apt.status === 'noshow' ||
+        apt.status === 'entered-in-error'
+      )
+        continue
+
+      const startDate = new Date(apt.start)
+      const dayIndex = weekDays.findIndex((d) =>
+        isSameDay(d, startDate),
+      )
+      if (dayIndex === -1) continue
+
+      const timeKey = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
+      const cellKey = `${dayIndex}-${timeKey}`
+      const serviceCode =
+        apt.serviceType?.[0]?.code ?? 'new-consult'
+
+      const existing = map.get(cellKey) ?? {
+        total: 0,
+        byType: {},
+      }
+      existing.total++
+      existing.byType[serviceCode] =
+        (existing.byType[serviceCode] ?? 0) + 1
+      map.set(cellKey, existing)
+    }
+    return map
+  }, [weekAppointments, weekDays])
+
+  const handleDayClick = (day: Date) => {
+    setSelectedDate(day)
+    setViewMode('day')
+  }
+
+  const handleCellClick = (day: Date, time: string) => {
+    setBookingDate(day)
+    setBookingTime(time)
+    setBookingModalOpen(true)
+  }
+
+  // Responsive: track viewport width
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileDayOffset, setMobileDayOffset] = useState(0)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+      </div>
+    )
+  }
+
+  // Mobile: single-day list view with prev/next
+  if (isMobile) {
+    const currentDay = weekDays[mobileDayOffset] ?? weekDays[0]
+    return (
+      <div className="space-y-4">
+        {/* Week range header */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={prevWeek}
+            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
+            aria-label={t('previousWeek')}
+          >
+            <svg
+              className="h-5 w-5 rtl:rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
+            </svg>
+          </button>
+          <h2 className="text-base font-bold text-neutral-900">
+            {formatWeekRange(weekStart, weekEnd)}
+          </h2>
+          <button
+            type="button"
+            onClick={nextWeek}
+            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
+            aria-label={t('nextWeek')}
+          >
+            <svg
+              className="h-5 w-5 rtl:rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Day selector with prev/next */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() =>
+              setMobileDayOffset(Math.max(0, mobileDayOffset - 1))
+            }
+            disabled={mobileDayOffset === 0}
+            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
+            aria-label={t('previousDay')}
+          >
+            <svg
+              className="h-4 w-4 rtl:rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleDayClick(currentDay)}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+              isSameDay(currentDay, today)
+                ? 'bg-primary-100 text-primary-800'
+                : 'text-neutral-900'
+            }`}
+          >
+            {currentDay.toLocaleDateString(undefined, {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setMobileDayOffset(Math.min(6, mobileDayOffset + 1))
+            }
+            disabled={mobileDayOffset === 6}
+            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
+            aria-label={t('nextDay')}
+          >
+            <svg
+              className="h-4 w-4 rtl:rotate-180"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 4.5l7.5 7.5-7.5 7.5"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Time slots for selected day */}
+        <div className="space-y-1">
+          {TIME_SLOTS.map((time) => {
+            const cellKey = `${mobileDayOffset}-${time}`
+            const data = cellDataMap.get(cellKey)
+            return (
+              <button
+                key={time}
+                type="button"
+                onClick={() => handleCellClick(currentDay, time)}
+                className={`w-full rounded-lg border p-2.5 text-start transition-colors ${
+                  data
+                    ? 'border-blue-200 bg-blue-50 hover:bg-blue-100'
+                    : 'border-neutral-200 bg-white hover:bg-neutral-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold tabular-nums text-neutral-700">
+                    {time}
+                  </span>
+                  {data && (
+                    <div className="flex items-center gap-1">
+                      {Object.entries(data.byType).map(
+                        ([type, count]) => (
+                          <span
+                            key={type}
+                            className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                              SERVICE_TYPE_COLORS[type] ??
+                              'bg-neutral-500'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={() => {
+            setBookingModalOpen(false)
+            setBookingDate(undefined)
+            setBookingTime(undefined)
+          }}
+          prefilledDate={bookingDate}
+          prefilledTime={bookingTime}
+        />
+      </div>
+    )
+  }
+
+  // Desktop: full 7-day grid
+  return (
+    <div className="space-y-4">
+      {/* Week navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={prevWeek}
+          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
+          aria-label={t('previousWeek')}
+        >
+          <svg
+            className="h-5 w-5 rtl:rotate-180"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15.75 19.5L8.25 12l7.5-7.5"
+            />
+          </svg>
+        </button>
+
+        <h2 className="text-lg font-bold text-neutral-900">
+          {formatWeekRange(weekStart, weekEnd)}
+        </h2>
+
+        <button
+          type="button"
+          onClick={nextWeek}
+          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
+          aria-label={t('nextWeek')}
+        >
+          <svg
+            className="h-5 w-5 rtl:rotate-180"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.25 4.5l7.5 7.5-7.5 7.5"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-xs">
+        {[
+          { key: 'new-consult', label: t('newConsult') },
+          { key: 'follow-up', label: t('followUp') },
+          { key: 'urgent', label: t('urgent') },
+          { key: 'walk-in', label: t('walkIn') },
+        ].map(({ key, label }) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span
+              className={`inline-block h-3 w-3 rounded-full ${SERVICE_TYPE_COLORS[key]}`}
+            />
+            <span className="text-neutral-600">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              {/* Time column header */}
+              <th className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-neutral-100 px-2 py-2 text-start text-xs font-semibold text-neutral-600">
+                {t('time')}
+              </th>
+              {/* Day headers — flex-direction: row auto-reverses in RTL */}
+              {weekDays.map((day, idx) => {
+                const isToday = isSameDay(day, today)
+                return (
+                  <th
+                    key={idx}
+                    className={`border-b border-neutral-200 px-1 py-2 text-center text-xs font-semibold ${
+                      isToday
+                        ? 'bg-primary-50 text-primary-800'
+                        : 'bg-neutral-50 text-neutral-700'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleDayClick(day)}
+                      className="hover:underline"
+                    >
+                      {formatShortDate(day)}
+                    </button>
+                  </th>
+                )
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {TIME_SLOTS.map((time) => (
+              <tr key={time} className="group">
+                {/* Time label */}
+                <td className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-white px-2 py-1.5 text-xs font-medium tabular-nums text-neutral-600">
+                  {time}
+                </td>
+                {/* Cells for each day */}
+                {weekDays.map((day, dayIdx) => {
+                  const cellKey = `${dayIdx}-${time}`
+                  const data = cellDataMap.get(cellKey)
+                  const isToday = isSameDay(day, today)
+
+                  return (
+                    <td
+                      key={dayIdx}
+                      className={`border-b border-neutral-100 px-0.5 py-0.5 ${
+                        isToday ? 'bg-primary-50/30' : ''
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleCellClick(day, time)}
+                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded transition-colors ${
+                          data
+                            ? 'hover:bg-blue-100'
+                            : 'hover:bg-neutral-100'
+                        }`}
+                      >
+                        {data &&
+                          Object.entries(data.byType).map(
+                            ([type, count]) => (
+                              <span
+                                key={type}
+                                className={`inline-flex h-5 min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
+                                  SERVICE_TYPE_COLORS[type] ??
+                                  'bg-neutral-500'
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            ),
+                          )}
+                      </button>
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Booking modal */}
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => {
+          setBookingModalOpen(false)
+          setBookingDate(undefined)
+          setBookingTime(undefined)
+        }}
+        prefilledDate={bookingDate}
+        prefilledTime={bookingTime}
+      />
+    </div>
+  )
+}

@@ -6,6 +6,7 @@ import { AuthGuard } from '@/components/AuthGuard'
 import { SessionTimeoutWrapper } from '@/components/SessionTimeoutWrapper'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { DayScheduleView } from '@/components/appointments/DayScheduleView'
+import { WeekScheduleView } from '@/components/appointments/WeekScheduleView'
 
 export default function AppointmentsPage() {
   const t = useTranslations('appointments')
@@ -58,9 +59,7 @@ export default function AppointmentsPage() {
           {viewMode === 'day' ? (
             <DayScheduleView />
           ) : (
-            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-12 text-center text-sm text-neutral-500">
-              Week view coming soon
-            </div>
+            <WeekScheduleView />
           )}
         </main>
       </SessionTimeoutWrapper>
