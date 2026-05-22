@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -92,6 +92,12 @@ FR32: Monitoring, Alerting & Observability (clinical safety metrics, sync monito
 FR33: AI Clinical Intelligence (Clinical Scribe, Empathy Translation, Paper Rx OCR, Edge AI)
 FR34: Shared Package Completeness (drug-db package, DiagnosticReport/MedicationDispense types, mobile ECDSA-P256)
 
+### New Functional Requirements (Navigation & Scheduling Addendum — 2026-05-22)
+
+FR35: Collapsible Sidebar Navigation for All PWA Spoke Apps (OPD-Lite, Pharmacy-Lite, Lab-Lite with badge-driven urgency, sync footer, RTL support)
+FR36: Patient Directory & Browsing (searchable, filterable, sortable patient list for OPD-Lite clinicians)
+FR37: Appointment Scheduling & Walk-In Queue Management (FHIR R4 Appointment/Slot, day/week views, walk-in queue, offline-first, Hub API sync)
+
 ### New Non-Functional Requirements (Gap Analysis Addendum — 2026-05-02)
 
 NFR9: Session duration enforcement (8h GPs, 12h pharmacists, 4h admins, 90d patients)
@@ -144,6 +150,9 @@ NFR11: Epic 19 - Sync queue max size enforcement
 NFR12: Epic 25 - Drug interaction database staleness
 NFR13: Epic 21 - TLS 1.3 minimum
 NFR14: Epic 21 - Root/jailbreak detection
+FR35: Epic 37 - Collapsible Sidebar Navigation for All PWA Spoke Apps
+FR36: Epic 37 - Patient Directory & Browsing
+FR37: Epic 37 - Appointment Scheduling & Walk-In Queue Management
 
 ## Epic List
 
@@ -730,6 +739,11 @@ Fill the missing shared infrastructure: create the `drug-db` package, add Diagno
 Deliver a fully modern, intuitive pharmacist experience with a post-login dispensing dashboard, prescription queue, dispensing history, sync queue visualization, and labeling/printing workflow.
 **FRs covered:** FR9 (extension)
 **Gap coverage:** PH-G02, PH-G08, PH-G10
+
+### Epic 37: Navigation Systems & Appointment Scheduling
+Upgrade all three PWA spoke apps (OPD-Lite, Pharmacy-Lite, Lab-Lite) from basic header-only layouts to collapsible sidebar navigation with badge-driven urgency indicators, add a patient directory to OPD-Lite, and build a complete appointment scheduling system for OPD clinics including FHIR R4 Appointment/Slot types, offline-first IndexedDB storage, walk-in queue management, and Hub API sync.
+**FRs covered:** FR28 (extension), FR35, FR36, FR37
+**NFRs covered:** NFR2 (offline appointments), NFR5 (FHIR Appointment/Slot), NFR7 (accessible nav)
 
 ## Epic 14: Spoke App Authentication & App Shell
 Enable clinicians, pharmacists, and lab technicians to securely sign in, manage sessions, and navigate all PWA spoke apps with a consistent global app shell.
@@ -4014,3 +4028,512 @@ So that I can trigger re-enrolment for improved matching accuracy.
 | MPI-P3-5: Pharmacy Lite Manual Rx | ✅ Done | (UI components) |
 | MPI-P3-6: Consent Expiry Warning | ✅ Done | consent-expiry.test.ts (7) |
 | MPI-P3-7: Biometric Re-enrolment | ✅ Done | (endpoint + UI) |
+
+---
+
+# Addendum 11 — Navigation Systems & Appointment Scheduling
+
+**Date:** 2026-05-22
+**Branch:** `internationalization-01`
+
+## Context
+
+All three PWA spoke apps (OPD-Lite, Pharmacy-Lite, Lab-Lite) currently lack proper persistent navigation. OPD-Lite and Lab-Lite have header-only layouts with no sidebar. Pharmacy-Lite has a basic `AppShellWrapper` with a flat nav list but no badges, no collapsible state, and missing routes. OPD-Lite also lacks a patient directory (patients are only reachable via search) and has no appointment scheduling system — a critical gap for OPD clinic workflows.
+
+Story 14.4 created a basic `<AppShell>` component in `@ultranos/ui-kit` with a horizontal navbar. This epic replaces that with a collapsible sidebar pattern and extends all three apps with complete navigation, a patient directory, and an appointment scheduling system.
+
+## New Functional Requirements
+
+FR35: Collapsible Sidebar Navigation for All PWA Spoke Apps (OPD-Lite, Pharmacy-Lite, Lab-Lite with badge-driven urgency, sync footer, RTL support)
+FR36: Patient Directory & Browsing (searchable, filterable, sortable patient list for OPD-Lite clinicians)
+FR37: Appointment Scheduling & Walk-In Queue Management (FHIR R4 Appointment/Slot, day/week views, walk-in queue, offline-first, Hub API sync)
+
+## Stories
+
+## Epic 37: Navigation Systems & Appointment Scheduling
+
+Upgrade all three PWA spoke apps from basic header-only layouts to collapsible sidebar navigation with badge-driven urgency indicators, add a patient directory to OPD-Lite, and build a complete appointment scheduling system for OPD clinics including FHIR R4 types, offline-first storage, walk-in queue management, and Hub API sync.
+
+---
+
+### Story 37.1: Upgrade AppShell in ui-kit — Collapsible Sidebar with Badges
+
+As a developer,
+I want the shared `<AppShell>` component in `@ultranos/ui-kit` upgraded from a horizontal navbar to a collapsible sidebar with badge support,
+So that all PWA spoke apps can adopt a consistent, feature-rich navigation pattern.
+
+**Acceptance Criteria:**
+- **Given** `packages/ui-kit/src/components/AppShell.tsx` exists
+- **When** the component is upgraded
+- **Then** it renders a vertical collapsible sidebar instead of a horizontal navbar
+- **And** the sidebar supports two states: expanded (icons + labels) and collapsed (icons only)
+- **And** collapse/expand is toggled via a chevron button at the top of the sidebar
+- **And** collapse state is persisted via a `persistKey` prop (apps store in localStorage)
+- **And** each `NavItem` accepts an optional `badge?: number | null` prop, rendered as a count pill (red background, white text) next to the label
+- **And** badges with value `0` or `null` are hidden; badges > 99 render as "99+"
+- **And** `NavItem` accepts an optional `group?: string` prop for visual grouping with a subtle divider between groups
+- **And** the sidebar footer renders three slots: `syncIndicator`, `userSection`, and `languageSelector` (all via render props)
+- **And** the `userSection` slot shows user avatar/initials, name, role badge, and a sign-out button that fires `onSignOut`
+- **And** the sidebar flips to the right edge in RTL mode using logical CSS properties (`inset-inline-start`)
+- **And** the component is fully keyboard-navigable (Tab through items, Enter/Space to activate, Escape to collapse)
+- **And** ARIA attributes are correct: `nav` landmark, `aria-label="Main navigation"`, `aria-current="page"` on active item, `aria-expanded` on collapse toggle
+- **And** the component has snapshot tests in both LTR and RTL, and unit tests for collapse toggle, badge rendering, keyboard navigation, and group rendering
+- **And** the existing horizontal `AppShell` API is preserved as a deprecated `variant="horizontal"` prop for backward compatibility during migration
+
+---
+
+### Story 37.2: OPD-Lite — Adopt Sidebar Navigation
+
+As a clinician,
+I want a persistent sidebar in OPD-Lite with all clinical sections accessible in one click,
+So that I can navigate between dashboard, patients, appointments, and admin features without relying on dashboard cards or the back button.
+
+**Acceptance Criteria:**
+- **Given** the upgraded `<AppShell>` from Story 37.1
+- **When** the OPD-Lite locale layout (`apps/opd-lite/src/app/[locale]/layout.tsx`) is updated
+- **Then** it renders the sidebar `<AppShell>` with these nav items in order:
+
+| Group | Label | Icon | Route | Badge Source |
+|-------|-------|------|-------|-------------|
+| Core | Dashboard | `LayoutDashboard` | `/` | — |
+| Core | Appointments | `Calendar` | `/appointments` | — (placeholder until Story 37.9) |
+| Core | Patients | `Users` | `/patients` | — |
+| Core | Register Patient | `UserPlus` | `/register-patient` | — |
+| Clinical | Notifications | `Bell` | `/notifications` | Unread count from notification polling |
+| Clinical | Conflicts | `AlertTriangle` | `/conflicts` | Unresolved count from `patient.unresolvedConflictCount` |
+| Clinical | Duplicate Reviews | `UserSearch` | `/duplicate-review` | Pending count from `duplicateReview.pendingCount` |
+| Clinical | Expiring Consents | `FileWarning` | `/expiring-consents` | Expiring count from `consent.expiringCount` |
+| Admin | KYC Verification | `ShieldCheck` | `/kyc` | — |
+| System | Settings | `Settings` | `/settings` | — |
+
+- **And** the `AppHeader` is simplified to: app logo/name (left), patient search bar (center, keeping existing `SearchInput` + `PatientResultList`), and screen-sharing warning area (right)
+- **And** `NotificationBell` is removed from the header (its count drives the Notifications badge in sidebar)
+- **And** `SyncPulse` moves from the header to the sidebar footer `syncIndicator` slot
+- **And** `UserDropdown` is removed from the header; user info + logout moves to sidebar footer `userSection` slot
+- **And** the sidebar collapse state is persisted in localStorage under key `opd-lite-sidebar-collapsed`
+- **And** all existing i18n keys in `nav.*` namespace are extended with new keys for each sidebar item label (en/ar/prs)
+- **And** the sidebar is hidden on the `/login` route (layout checks pathname)
+- **And** context-dependent routes (`/encounter/[patientId]`, `/patient/[patientId]`) do NOT appear in the sidebar
+
+---
+
+### Story 37.3: OPD-Lite — Patient Directory Page
+
+As a clinician,
+I want a dedicated patient directory page where I can browse, search, filter, and sort all my patients,
+So that I can find patients without needing to remember their exact name for the search bar.
+
+**Acceptance Criteria:**
+- **Given** an authenticated clinician navigates to `/patients`
+- **When** the page loads
+- **Then** it displays a paginated table of all patients from the local IndexedDB patient store
+- **And** columns are: Name (given + father's name), Age/DOB, Gender, Phone, Last Visit Date, Status (Active/Inactive/Merged), Allergy Flag (red dot if allergies exist)
+- **And** the table supports sorting by any column (click column header to toggle asc/desc)
+- **And** a search input above the table filters by name or phone number (client-side, debounced 300ms)
+- **And** filter controls allow filtering by: Status (Active/Inactive/All), Has Allergies (yes/no/all), Last Visit (Today/This Week/This Month/All)
+- **And** each row is clickable and navigates to `/patient/[patientId]`
+- **And** when the table has fewer than 3 results, a "Register New Patient" dashed button appears below (consistent with existing `PatientResultList` pattern from MPI-P2-8)
+- **And** the table works fully offline (reads from IndexedDB)
+- **And** an "empty state" is shown when no patients exist: "No patients registered yet" with a CTA to `/register-patient`
+- **And** pagination shows 25 patients per page with Previous/Next controls
+- **And** the allergy flag column renders a red circle icon (not text) to maintain prominence per CLAUDE.md safety rule 4
+- **And** all text uses i18n keys in a new `patients` namespace (en/ar/prs)
+- **And** the table layout is RTL-safe with logical CSS properties
+
+---
+
+### Story 37.4: Pharmacy-Lite — Upgrade to Sidebar Navigation
+
+As a pharmacist,
+I want the existing Pharmacy-Lite navigation upgraded from a basic app shell to a collapsible sidebar with badges and missing routes,
+So that I can see actionable item counts at a glance and access all pharmacy workflows from one place.
+
+**Acceptance Criteria:**
+- **Given** the upgraded `<AppShell>` from Story 37.1
+- **When** `AppShellWrapper.tsx` in Pharmacy-Lite is refactored to use the new sidebar variant
+- **Then** it renders these nav items:
+
+| Group | Label | Icon | Route | Badge Source |
+|-------|-------|------|-------|-------------|
+| Primary | Dashboard | `LayoutDashboard` | `/` | — |
+| Primary | Scan Rx | `ScanLine` | `/scan` | — |
+| Primary | Paper Rx | `FileText` | `/paper-rx` | — |
+| Primary | Queue | `ClipboardList` | `/queue` | Active prescription count from queue store |
+| Clinical | Dispensing History | `History` | `/history` | — |
+| Clinical | Controlled Substances | `ShieldAlert` | `/controlled` | Flagged count (placeholder until page exists) |
+| Clinical | Unverified Dispenses | `AlertCircle` | `/unverified` | Pending count from `dispense_reviews` query |
+| System | Sync Queue | `RefreshCw` | `/sync` | Failed sync count from sync store |
+| System | Settings | `Settings` | `/settings` | — |
+
+- **And** the sidebar footer contains: `SyncPulse` in sync indicator slot, geofence status indicator (green circle if within 500m per PH-002, red if outside — reads from a new `useGeofenceStatus` hook that returns a boolean, defaulting to `true` until geofencing is implemented), user info (pharmacist name + pharmacy name from session store) + sign out in user section slot, and language selector
+- **And** the existing `AppShellWrapper` nav items array is replaced with the new configuration
+- **And** the header simplifies to: app logo and prescription search (if applicable)
+- **And** existing translation keys in `nav.*` are extended with new item labels (en/ar/prs)
+- **And** collapse state persists in localStorage under key `pharmacy-lite-sidebar-collapsed`
+
+---
+
+### Story 37.5: Pharmacy-Lite — Controlled Substances Log Page
+
+As a pharmacist,
+I want a dedicated page to view all controlled substance dispensing events,
+So that I can maintain regulatory compliance and review flagged transactions (per PRD PH-020).
+
+**Acceptance Criteria:**
+- **Given** an authenticated pharmacist navigates to `/controlled`
+- **When** the page loads
+- **Then** it displays a paginated table of all dispenses where the medication has a controlled substance schedule flag
+- **And** columns are: Date/Time, Patient (first name + DOB only per RBAC), Medication Name, Schedule Class, Prescriber, Status (Dispensed/Flagged/Under Review), Confirmation Required (boolean)
+- **And** flagged items (where additional confirmation was required per PH-020) are highlighted with an amber background
+- **And** a filter bar allows filtering by: Date Range, Schedule Class (I–V), Status
+- **And** each row expands to show: dispensing pharmacist, batch/lot number, prescription ID, and whether override confirmation was used
+- **And** the table reads from the local Dexie `dispenses` table filtered by a `controlledSubstanceSchedule` field
+- **And** an export button allows downloading the filtered list as CSV for regulatory reporting
+- **And** the page works fully offline
+- **And** all text uses i18n keys in a new `controlled` namespace (en/ar/prs)
+- **And** an empty state reads: "No controlled substance dispenses recorded"
+
+---
+
+### Story 37.6: Pharmacy-Lite — Unverified Dispenses Page
+
+As a pharmacist,
+I want a dedicated page listing all dispenses that were made under offline grace and require supervisor verification,
+So that I can systematically review and resolve unverified dispenses rather than only seeing a count on the dashboard card.
+
+**Acceptance Criteria:**
+- **Given** an authenticated pharmacist navigates to `/unverified`
+- **When** the page loads
+- **Then** it displays all dispenses from `dispense_reviews` with status `PENDING`
+- **And** columns are: Date/Time, Patient (first name + DOB), Medication, Grace Reason, Supervisor Name (entered at grace time), Status
+- **And** each row has two action buttons: "Approve" (sets status to `APPROVED`) and "Flag" (sets status to `FLAGGED` and requires a reason text input)
+- **And** approved/flagged items move to a "Resolved" tab below the pending list
+- **And** the `UnverifiedDispensesCard` on the dashboard links to this page
+- **And** badge count in the sidebar updates in real-time when items are resolved
+- **And** all actions emit audit events via `dispenseAuditService`
+- **And** the page works fully offline (writes to local Dexie, syncs when online)
+- **And** all text uses i18n keys in a new `unverified` namespace (en/ar/prs)
+
+---
+
+### Story 37.7: Lab-Lite — Adopt Sidebar Navigation
+
+As a lab technician,
+I want Lab-Lite to have proper sidebar navigation instead of just a header,
+So that I can quickly navigate between uploading results, viewing history, checking queue status, and managing settings.
+
+**Acceptance Criteria:**
+- **Given** the upgraded `<AppShell>` from Story 37.1
+- **When** the Lab-Lite locale layout (`apps/lab-lite/src/app/[locale]/layout.tsx`) is updated
+- **Then** it renders the sidebar `<AppShell>` with these nav items:
+
+| Group | Label | Icon | Route | Badge Source |
+|-------|-------|------|-------|-------------|
+| Primary | Dashboard | `LayoutDashboard` | `/` | — |
+| Primary | Upload Result | `Upload` | `/upload` | — |
+| Primary | Upload History | `History` | `/history` | — |
+| Clinical | Upload Queue | `Clock` | `/queue` | Pending + Failed count from queue store |
+| Clinical | Notifications | `Bell` | `/notifications` | Unread count from notification polling |
+| System | Settings | `Settings` | `/settings` | — |
+
+- **And** the root layout header (`apps/lab-lite/src/app/layout.tsx`) is simplified to: app logo/name only (the existing "Lab Diagnostics Portal" title)
+- **And** the existing `NotificationBell` component is removed from inline page usage; its unread count drives the sidebar Notifications badge
+- **And** `OnlineStatusIndicator` moves to the sidebar footer sync indicator slot
+- **And** `LabIdentityCard` information (lab name + technician name) moves to the sidebar footer user section slot with a sign-out button
+- **And** language selector (`LanguageSelectorClient`) moves to the sidebar footer
+- **And** the sidebar is hidden on the `/login` route
+- **And** collapse state persists in localStorage under key `lab-lite-sidebar-collapsed`
+- **And** all text uses i18n keys in an extended `nav.*` namespace (en/ar/prs)
+- **And** the `/offline` page continues to work without sidebar (it's a fallback page)
+
+---
+
+### Story 37.8: Lab-Lite — Dedicated Upload Queue Page
+
+As a lab technician,
+I want a dedicated page for managing my upload queue separate from the dashboard,
+So that I can focus on retrying failed uploads, discarding expired items, and monitoring upload progress without dashboard clutter.
+
+**Acceptance Criteria:**
+- **Given** an authenticated lab technician navigates to `/queue`
+- **When** the page loads
+- **Then** it displays the full upload queue from IndexedDB with tabs: Pending, Uploading, Failed, Expired
+- **And** each tab shows a count badge in the tab header
+- **And** each queue item shows: patient name + age (data-minimized per LAB-010), test category (LOINC label), file name + size, queued timestamp, status badge, and verification method (online/offline/cached via `OfflineVerificationBadge`)
+- **And** Failed items have a "Retry" button that resets status to `pending` and re-queues
+- **And** a "Retry All Failed" button appears when multiple failed items exist
+- **And** Expired items (>48 hours) have a "Re-upload" button that navigates to `/upload` with pre-populated patient info
+- **And** all items have a "Discard" button with a confirmation dialog
+- **And** all actions (retry, discard, re-upload) emit audit events
+- **And** the existing `UploadQueue` component is refactored to be reusable between dashboard (compact view) and this page (full view)
+- **And** all text uses i18n keys in a new `queuePage` namespace (en/ar/prs)
+
+---
+
+### Story 37.9: Lab-Lite — Notification Center Page
+
+As a lab technician,
+I want a dedicated notification center page,
+So that I can review all notifications including result upload confirmations, status changes, and system notices rather than only seeing them in a dropdown.
+
+**Acceptance Criteria:**
+- **Given** an authenticated lab technician navigates to `/notifications`
+- **When** the page loads
+- **Then** it displays a paginated list of all notifications fetched from the Hub API
+- **And** notifications are grouped by type with tab filters: All, Result Updates, System Notices
+- **And** each notification shows: type icon, message, timestamp (relative using existing `time.*` i18n keys), and read/unread status
+- **And** unread notifications have a subtle left border highlight
+- **And** clicking a notification marks it as read (calls acknowledge endpoint) and navigates to the relevant context if applicable (e.g., upload history for result notifications)
+- **And** a "Mark All Read" button appears when unread notifications exist
+- **And** the existing `NotificationPanel` dropdown is preserved for quick-view but adds a "See All" link to this page
+- **And** an empty state reads: "No notifications yet"
+- **And** all text uses i18n keys in the existing `notifications.*` namespace extended as needed (en/ar/prs)
+
+---
+
+### Story 37.10: Lab-Lite — Settings Page
+
+As a lab technician,
+I want a settings page in Lab-Lite,
+So that I can view my profile, lab affiliation, session info, MFA status, and manage preferences.
+
+**Acceptance Criteria:**
+- **Given** an authenticated lab technician navigates to `/settings`
+- **When** the page loads
+- **Then** it displays four cards following the same pattern as Pharmacy-Lite's `PharmacySettingsView`:
+  1. **Profile Card** — technician name, email, role badge ("Lab Technician"), practitioner ID
+  2. **Lab Info Card** — lab name, operating license status, ISO 15189 accreditation status (if available)
+  3. **Session Info Card** — session start time, time remaining (8h max for LAB_TECH), session ID (truncated)
+  4. **MFA Status Card** — TOTP enrollment status, last verified timestamp
+- **And** a language preference selector is included (switching updates locale cookie and redirects)
+- **And** a "Sign Out" button at the bottom clears the auth session, wipes the encryption key, and redirects to `/login`
+- **And** all text uses i18n keys in a new `settings` namespace (en/ar/prs)
+
+---
+
+### Story 37.11: FHIR R4 Appointment & Slot Types in shared-types
+
+As a developer,
+I want FHIR R4 `Appointment` and `Slot` type definitions in `@ultranos/shared-types`,
+So that the appointment scheduling system uses standardized types consistent with the rest of the ecosystem.
+
+**Acceptance Criteria:**
+- **Given** `packages/shared-types/src/fhir/`
+- **When** `appointment.ts` and `slot.ts` are created
+- **Then** `Appointment` includes: `id`, `status` (enum: `proposed | pending | booked | arrived | fulfilled | cancelled | noshow | entered-in-error`), `serviceType` (coded: new-consult, follow-up, urgent, walk-in), `start` (ISO 8601), `end` (ISO 8601), `participant` (array with patient ref + practitioner ref + status), `description`, `_ultranos.createdAt`, `_ultranos.walkIn` (boolean), `_ultranos.queuePosition` (number | null), `_ultranos.hlcTimestamp` (string), `meta.lastUpdated`, `meta.versionId`
+- **And** `Slot` includes: `id`, `schedule` (reference to practitioner), `status` (enum: `free | busy | busy-unavailable | busy-tentative | entered-in-error`), `start` (ISO 8601), `end` (ISO 8601), `_ultranos.slotDurationMinutes` (number), `_ultranos.hlcTimestamp` (string)
+- **And** both types are exported from `packages/shared-types/src/fhir/index.ts`
+- **And** a `AppointmentServiceType` enum is exported with values matching FHIR `service-type` value set subset relevant to OPD: `NEW_CONSULT`, `FOLLOW_UP`, `URGENT`, `WALK_IN`
+- **And** unit tests validate type guards for valid/invalid appointment and slot objects
+- **And** conflict resolution tier is documented in JSDoc: Appointments are Tier 3 (LWW), Walk-in queue positions are Tier 4 (HLC replay)
+
+---
+
+### Story 37.12: OPD-Lite — Appointment IndexedDB Store & Offline Queue
+
+As a clinician,
+I want appointments stored locally in IndexedDB with offline queue support,
+So that I can view and book appointments even without network connectivity.
+
+**Acceptance Criteria:**
+- **Given** the FHIR types from Story 37.11
+- **When** an `appointmentStore` is created in OPD-Lite using Dexie
+- **Then** it has two tables: `appointments` (indexed by `id`, `start`, `status`, `participant.patient`) and `slots` (indexed by `id`, `start`, `status`, `schedule`)
+- **And** both tables are encrypted via the existing Dexie encryption middleware (appointments contain patient refs which are PHI-adjacent)
+- **And** a sync adapter exists that pushes local appointment creates/updates to the Hub API when online
+- **And** the sync adapter pulls the practitioner's appointments for the current week from the Hub API on startup and on each sync cycle
+- **And** appointment creates and status changes are stamped with HLC timestamps
+- **And** double-booking detection runs locally: if a slot is `busy` and a new appointment targets that slot, the create is rejected with a user-visible warning
+- **And** when offline, appointments are queued in the existing sync engine queue with priority level below prescriptions but above metadata (per CLAUDE.md sync priority)
+- **And** post-sync double-booking conflicts (two devices booked same slot offline) are flagged for manual resolution rather than auto-rejected
+
+---
+
+### Story 37.13: OPD-Lite — Daily Schedule View
+
+As a clinician,
+I want to see my daily appointment schedule,
+So that I can plan my day, see who's checked in, and manage walk-ins alongside booked patients.
+
+**Acceptance Criteria:**
+- **Given** an authenticated clinician navigates to `/appointments`
+- **When** the page loads
+- **Then** it displays today's date prominently with Previous/Next day navigation arrows
+- **And** a date picker allows jumping to any date
+- **And** the day view shows a time-slot grid from clinic open to clinic close (default 08:00–17:00, configurable per deployment)
+- **And** each slot shows: time, patient name (or "Available" if free), appointment type badge (New Consult / Follow-up / Urgent / Walk-in), and status badge (Scheduled / Checked In / In Progress / Completed / No-Show / Cancelled)
+- **And** clicking an occupied slot opens a brief patient summary with: name, age, allergies (if any, in red per safety rule 4), appointment type, and two action buttons: "Start Encounter" (navigates to `/encounter/[patientId]`) and "Change Status" (dropdown: Checked In → In Progress → Completed / No-Show)
+- **And** clicking an "Available" slot opens a "Book Appointment" flow (Story 37.15)
+- **And** a "Walk-In Queue" section below the schedule grid shows today's walk-in patients ordered by queue position (Story 37.14)
+- **And** the view works fully offline (reads from IndexedDB)
+- **And** a "Week View" toggle switches to Story 37.16's week view
+- **And** all text uses i18n keys in a new `appointments` namespace (en/ar/prs)
+- **And** the daily view is RTL-safe (time column on the right in RTL)
+
+---
+
+### Story 37.14: OPD-Lite — Walk-In Queue Management
+
+As a clinician,
+I want to manage walk-in patients in a queue alongside my booked schedule,
+So that unscheduled patients are tracked, prioritized, and seen in order without losing their place.
+
+**Acceptance Criteria:**
+- **Given** the daily schedule view from Story 37.13
+- **When** a clinician clicks "Add Walk-In" on the appointments page
+- **Then** a modal opens with: patient search (existing `SearchInput` component), appointment type selector (defaults to "Walk-In", can be "Urgent"), and an optional notes field
+- **And** submitting creates a FHIR `Appointment` with `status: arrived`, `serviceType: WALK_IN`, `_ultranos.walkIn: true`, and `_ultranos.queuePosition` set to the next available integer
+- **And** the walk-in queue section on the daily view shows all walk-in appointments ordered by `queuePosition`
+- **And** each walk-in row shows: queue number (#1, #2...), patient name, wait time (calculated from `_ultranos.createdAt`), urgency badge (if type is Urgent, shown in red), and status
+- **And** drag-and-drop reordering is supported to reprioritize the queue (updates `queuePosition` values)
+- **And** "Urgent" walk-ins are visually distinguished (red left border) and sort to the top by default
+- **And** clicking a walk-in patient shows the same summary popup as booked patients with "Start Encounter" and "Change Status" actions
+- **And** when a walk-in is marked "In Progress", their row highlights to show they're being seen
+- **And** the walk-in queue persists in IndexedDB and works fully offline
+- **And** walk-in queue changes sync to Hub with Tier 4 HLC replay conflict resolution
+
+---
+
+### Story 37.15: OPD-Lite — Book Appointment Flow
+
+As a clinician,
+I want to book an appointment for a patient by selecting a date, time slot, and appointment type,
+So that patients have confirmed visit times and my schedule is organized.
+
+**Acceptance Criteria:**
+- **Given** a clinician clicks an "Available" slot on the daily/weekly view, or clicks a "Book Appointment" button
+- **When** the booking modal opens
+- **Then** it shows: a patient search field (uses existing `SearchInput`), a date picker (pre-filled with the selected date if coming from a slot), available time slots for the selected date (read from IndexedDB `slots` table, showing only `free` slots), appointment type selector (New Consult / Follow-up / Urgent), and an optional notes field
+- **And** selecting a patient shows their allergy status prominently (red banner if allergies exist)
+- **And** the "Confirm Booking" button creates a FHIR `Appointment` with `status: booked` and updates the corresponding `Slot` to `status: busy`
+- **And** if the patient doesn't exist yet, a "Register New Patient" link opens the registration page (consistent with existing pattern)
+- **And** double-booking prevention: if the slot status is already `busy` when confirming, the modal shows a warning "This slot has been taken" and refreshes available slots
+- **And** the booking is saved to IndexedDB immediately (optimistic UI) and queued for Hub sync
+- **And** a cancellation flow exists: from any booked appointment, "Cancel" sets status to `cancelled` and frees the slot
+- **And** all actions emit audit events (appointment booked, cancelled)
+- **And** all text uses i18n keys in the `appointments` namespace (en/ar/prs)
+
+---
+
+### Story 37.16: OPD-Lite — Weekly Schedule View
+
+As a clinician,
+I want a weekly view of my schedule,
+So that I can plan ahead, identify open slots, and see the overall week at a glance.
+
+**Acceptance Criteria:**
+- **Given** an authenticated clinician toggles to "Week View" on the appointments page
+- **When** the week view renders
+- **Then** it displays a 7-day grid (Saturday–Friday for MENA locale, configurable) with time rows
+- **And** each cell shows: appointment count for that slot, color-coded by type (green = New Consult, blue = Follow-up, red = Urgent, amber = Walk-in)
+- **And** clicking a day header navigates to the daily view for that day
+- **And** clicking a specific cell opens the booking modal pre-filled with that date/time
+- **And** today's column is highlighted with a subtle background color
+- **And** navigation arrows allow moving to previous/next week
+- **And** the view reads from IndexedDB and works fully offline
+- **And** the week starts on Saturday by default (configurable via a `NEXT_PUBLIC_WEEK_START` env var for different regions)
+- **And** the grid is responsive: on viewports < 1024px, it stacks to a list view showing one day at a time with swipe navigation
+- **And** the view is RTL-safe (days flow right-to-left in RTL mode)
+
+---
+
+### Story 37.17: Hub API — Appointment CRUD & Sync Endpoints
+
+As a developer,
+I want Hub API endpoints for appointment and slot CRUD operations,
+So that appointments sync between devices and the central hub maintains the authoritative schedule.
+
+**Acceptance Criteria:**
+- **Given** the FHIR types from Story 37.11
+- **When** a new `appointment` tRPC router is created in `apps/hub-api/`
+- **Then** it exposes these procedures:
+  1. `appointment.listByPractitioner` — returns appointments for a practitioner within a date range, paginated
+  2. `appointment.listByPatient` — returns appointments for a patient (used for encounter history context)
+  3. `appointment.create` — creates an appointment + updates slot status, with double-booking validation
+  4. `appointment.updateStatus` — transitions appointment status (booked → arrived → fulfilled, or booked → cancelled → slot freed)
+  5. `appointment.syncBatch` — accepts a batch of offline-created appointments with HLC timestamps, applies Tier 3 LWW resolution for status conflicts, flags double-booking conflicts for manual review
+  6. `slot.listByPractitioner` — returns slots for a practitioner on a given date
+  7. `slot.generateDaily` — generates slot entries for a practitioner's working day (called by a daily cron or on first query of a new day)
+- **And** all endpoints enforce RBAC: only the practitioner themselves or ADMIN can modify their appointments
+- **And** all endpoints emit audit events for PHI access (appointment references patient)
+- **And** the `patients` table is NOT joined — appointment responses contain only `patientRef` (opaque ID), not demographics
+- **And** the router has comprehensive tests covering: CRUD operations, double-booking rejection, offline batch sync with conflicts, RBAC enforcement, and audit event emission
+
+---
+
+### Story 37.18: OPD-Lite — Appointment Sync Integration
+
+As a clinician,
+I want my locally created appointments to sync to the Hub and remote appointments to appear locally,
+So that my schedule stays consistent across devices and is backed up centrally.
+
+**Acceptance Criteria:**
+- **Given** the IndexedDB store from Story 37.12 and the Hub API from Story 37.17
+- **When** the app comes online or the periodic sync cycle fires
+- **Then** all locally created/modified appointments with unsynced HLC timestamps are batched and sent to `appointment.syncBatch`
+- **And** the Hub response includes any conflicts (double-bookings detected across devices), which are surfaced as amber warning banners on the daily view: "Scheduling conflict detected for [time] — please review"
+- **And** the Hub's authoritative appointment list for the current week is pulled and merged into local IndexedDB (newer Hub entries overwrite local per Tier 3 LWW)
+- **And** deleted/cancelled appointments from the Hub are reflected locally
+- **And** the sync priority for appointments is: below prescriptions and consent, above demographics (added to the sync engine priority list)
+- **And** sync failures for appointments do not block higher-priority sync items (allergies, consent, prescriptions)
+- **And** the `SyncPulse` indicator in the sidebar footer reflects appointment sync status
+
+---
+
+### Story 37.19: OPD-Lite — Appointment Badge in Sidebar
+
+As a clinician,
+I want the Appointments sidebar item to show today's appointment count as a badge,
+So that I can see at a glance how many patients are on my schedule for today.
+
+**Acceptance Criteria:**
+- **Given** the sidebar from Story 37.2
+- **When** the appointments page or any page loads
+- **Then** the Appointments nav item badge shows the count of today's non-cancelled appointments (status: booked, arrived, or in-progress)
+- **And** the badge updates when appointments are created, cancelled, or their status changes
+- **And** the badge reads from a lightweight IndexedDB query (count only, not full records)
+- **And** if the count is 0, no badge is shown
+
+## Implementation Status
+
+| Story | Status | Tests |
+|-------|--------|-------|
+| 37.1: AppShell Sidebar Upgrade | Pending | — |
+| 37.2: OPD-Lite Sidebar Adoption | Pending | — |
+| 37.3: OPD-Lite Patient Directory | Pending | — |
+| 37.4: Pharmacy-Lite Sidebar Upgrade | Pending | — |
+| 37.5: Pharmacy Controlled Substances Page | Pending | — |
+| 37.6: Pharmacy Unverified Dispenses Page | Pending | — |
+| 37.7: Lab-Lite Sidebar Adoption | Pending | — |
+| 37.8: Lab-Lite Upload Queue Page | Pending | — |
+| 37.9: Lab-Lite Notification Center Page | Pending | — |
+| 37.10: Lab-Lite Settings Page | Pending | — |
+| 37.11: FHIR Appointment & Slot Types | Pending | — |
+| 37.12: OPD-Lite Appointment IndexedDB Store | Pending | — |
+| 37.13: OPD-Lite Daily Schedule View | Pending | — |
+| 37.14: OPD-Lite Walk-In Queue | Pending | — |
+| 37.15: OPD-Lite Book Appointment Flow | Pending | — |
+| 37.16: OPD-Lite Weekly Schedule View | Pending | — |
+| 37.17: Hub API Appointment Endpoints | Pending | — |
+| 37.18: OPD-Lite Appointment Sync | Pending | — |
+| 37.19: OPD-Lite Appointment Sidebar Badge | Pending | — |
+
+## Recommended Build Sequence
+
+**Phase 1 — Foundation (Stories 37.1, 37.11)**
+Build the shared AppShell sidebar component and FHIR types first. Everything else depends on these.
+
+**Phase 2 — Sidebar Adoption (Stories 37.2, 37.4, 37.7) — parallelizable**
+All three apps adopt the new sidebar simultaneously. These are independent and can be built in parallel by separate developers or agents.
+
+**Phase 3 — Missing Pages (Stories 37.3, 37.5, 37.6, 37.8, 37.9, 37.10) — parallelizable**
+New pages for each app. Patient directory (OPD), controlled substances + unverified dispenses (Pharmacy), queue + notifications + settings (Lab). All independent.
+
+**Phase 4 — Scheduling Backend (Stories 37.12, 37.17)**
+IndexedDB store and Hub API endpoints. 37.12 can start immediately after 37.11; 37.17 is independent.
+
+**Phase 5 — Scheduling UI (Stories 37.13, 37.14, 37.15, 37.16, 37.19)**
+Daily view, walk-in queue, booking flow, weekly view, and badge. Sequential — daily view first, then walk-in and booking in parallel, then weekly view.
+
+**Phase 6 — Sync Integration (Story 37.18)**
+Connects local scheduling to Hub API. Requires both 37.12 and 37.17 to be complete.
