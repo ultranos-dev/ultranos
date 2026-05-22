@@ -24,13 +24,33 @@ export interface UploadQueueEntry {
   lastAttemptAt: string | null
 }
 
+export interface PractitionerKeyCache {
+  practitionerId: string
+  publicKey: string // base64-encoded Ed25519 public key
+  cachedAt: string // ISO timestamp
+}
+
+export interface VerifiedPatientCache {
+  patientId: string
+  firstName: string // ONLY first name — CLAUDE.md Rule #7 (data minimization)
+  age: number // computed age, NOT DOB
+  verifiedAt: string
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
+  practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
+  verified_patients!: Dexie.Table<VerifiedPatientCache, string>
 
   constructor() {
     super('lab-lite-db')
     this.version(1).stores({
       uploadQueue: '++id, status, queuedAt',
+    })
+    this.version(2).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
     })
   }
 }

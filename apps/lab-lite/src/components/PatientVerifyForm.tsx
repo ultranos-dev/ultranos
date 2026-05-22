@@ -1,7 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { verifyPatient, type VerifyPatientResult } from '@/lib/trpc'
+import { cacheVerifiedPatient, getCachedPatient } from '@/lib/offline-verify'
+import { OfflineVerificationBadge } from './OfflineVerificationBadge'
+import { OnlineStatusIndicator } from './OnlineStatusIndicator'
+
+type VerificationSource = 'online' | 'cached'
 
 interface PatientVerifyFormProps {
   onVerified: (result: VerifyPatientResult) => void
@@ -14,12 +19,32 @@ interface PatientVerifyFormProps {
  * Displays a verification card with first name + age only (data minimization).
  * "Confirm Patient" proceeds to upload workflow with opaque patientRef.
  *
+ * When offline: checks Dexie patient cache (< 24h old) for matching entries.
+ * When online: verifies via Hub API and caches the result.
+ *
  * Story 12.2 — AC 2, 5
  */
 export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyFormProps) {
   const [nationalId, setNationalId] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifiedResult, setVerifiedResult] = useState<VerifyPatientResult | null>(null)
+  const [verificationSource, setVerificationSource] = useState<VerificationSource>('online')
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
+  )
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -30,8 +55,28 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
     setVerifiedResult(null)
 
     try {
-      const result = await verifyPatient(trimmed, 'NATIONAL_ID', token)
-      setVerifiedResult(result)
+      if (!isOnline) {
+        // Offline path: check Dexie cache using the national ID as patient ID
+        const cached = await getCachedPatient(trimmed)
+        if (cached) {
+          setVerifiedResult({
+            firstName: cached.firstName,
+            age: cached.age,
+            patientRef: trimmed,
+          })
+          setVerificationSource('cached')
+        } else {
+          onError('Use QR scan or retry when connected')
+        }
+      } else {
+        // Online path: verify via Hub API
+        const result = await verifyPatient(trimmed, 'NATIONAL_ID', token)
+        setVerifiedResult(result)
+        setVerificationSource('online')
+
+        // Cache for future offline use (Rule #7: firstName + age only)
+        await cacheVerifiedPatient(result.patientRef, result.firstName, result.age)
+      }
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Patient verification failed')
     } finally {
@@ -47,11 +92,14 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
 
   function handleReset() {
     setVerifiedResult(null)
+    setVerificationSource('online')
     setNationalId('')
   }
 
   return (
     <div className="flex flex-col gap-4">
+      <OnlineStatusIndicator />
+
       {/* National ID input */}
       {!verifiedResult && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -63,17 +111,23 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             type="text"
             value={nationalId}
             onChange={(e) => setNationalId(e.target.value)}
-            placeholder="Enter patient National ID"
+            placeholder={isOnline ? 'Enter patient National ID' : 'Enter cached patient ID'}
             disabled={loading}
             className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
             autoComplete="off"
           />
+          {!isOnline && (
+            <p className="text-xs text-amber-600">
+              Offline — only cached patients can be verified. Use QR scan for signature-based
+              verification.
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading || !nationalId.trim()}
             className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Verifying...' : 'Look Up Patient'}
+            {loading ? 'Verifying...' : isOnline ? 'Look Up Patient' : 'Check Cache'}
           </button>
         </form>
       )}
@@ -81,7 +135,10 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
       {/* Verification card — first name + age ONLY */}
       {verifiedResult && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-green-800">Patient Verified</h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-green-800">Patient Verified</h3>
+            <OfflineVerificationBadge source={verificationSource} />
+          </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="font-medium text-neutral-600">First Name</dt>
             <dd className="text-neutral-900">{verifiedResult.firstName}</dd>
