@@ -134,7 +134,7 @@ export const patientRouter = createTRPCRouter({
     .use(enforceResourceAccess('Patient'))
     .input(CreatePatientMpiInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const { encryptionKey, hmacKey } = getFieldEncryptionKeys()
+      const { hmacKey } = getFieldEncryptionKeys()
       const now = new Date().toISOString()
       const patientId = crypto.randomUUID()
 
@@ -189,7 +189,7 @@ export const patientRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'Possible duplicate patient detected. Review candidates before creating a new record.',
-          cause: { candidates: mpiResult.candidates.slice(0, 5), topScore: mpiResult.topScore },
+          cause: { candidateIds: mpiResult.candidates.slice(0, 5).map(c => c.candidate.id), topScore: mpiResult.topScore },
         })
       }
 
@@ -203,7 +203,7 @@ export const patientRouter = createTRPCRouter({
           throw new TRPCError({
             code: 'PRECONDITION_FAILED',
             message: 'Possible duplicate detected. Include mpiProceedToken to confirm creation.',
-            cause: { candidates: mpiResult.candidates.slice(0, 5), proceedToken, topScore: mpiResult.topScore },
+            cause: { candidateIds: mpiResult.candidates.slice(0, 5).map(c => c.candidate.id), proceedToken, topScore: mpiResult.topScore },
           })
         }
 
