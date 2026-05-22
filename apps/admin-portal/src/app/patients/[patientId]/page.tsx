@@ -85,18 +85,8 @@ export default function PatientDetailPage() {
     try {
       setLoading(true)
       setError(null)
-      const result = await trpc.patientAdmin.adminSearch.query({
-        query: patientId,
-        includeInactive: true,
-        limit: 100,
-      })
-      const patients = result.patients as PatientDetail[]
-      const match = patients.find((p) => p.id === patientId)
-      if (!match) {
-        setError('Patient not found')
-        return
-      }
-      setPatient(match)
+      const result = await trpc.patientAdmin.getById.query({ patientId })
+      setPatient(result.patient as PatientDetail)
     } catch (err: any) {
       setError(err?.message ?? 'Failed to load patient')
     } finally {

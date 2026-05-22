@@ -16,6 +16,49 @@ function sanitizeFilterValue(value: string): string {
  * All endpoints require ADMIN role.
  */
 export const patientAdminRouter = createTRPCRouter({
+  // ── getById ───────────────────────────────────────────────
+  getById: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(z.object({ patientId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role !== 'ADMIN') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin role required' })
+      }
+
+      const { data, error } = await ctx.supabase
+        .from('patients')
+        .select(
+          'id, name_given, name_father, name_grandfather, gender, birth_year, ' +
+          'address_district_origin, address_province_origin, ' +
+          'mpi_score, mpi_warn, patient_tier, is_active, created_at, created_by, ' +
+          'ultranos_is_active, merged_into'
+        )
+        .eq('id', input.patientId)
+        .single()
+
+      if (error || !data) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'admin_get_by_id' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.patientId })
+      }
+
+      return { patient: data }
+    }),
+
   // ── adminSearch ────────────────────────────────────────────
   adminSearch: protectedProcedure
     .use(enforceResourceAccess('Patient'))

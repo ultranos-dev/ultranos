@@ -90,18 +90,8 @@ export default function MergeWizardPage() {
       try {
         setLoadingSurvivor(true)
         setError(null)
-        const result = await trpc.patientAdmin.adminSearch.query({
-          query: survivorIdParam!,
-          includeInactive: true,
-          limit: 100,
-        })
-        const patients = result.patients as Patient[]
-        const match = patients.find((p) => p.id === survivorIdParam)
-        if (match) {
-          setSurvivor(match)
-        } else {
-          setError('Survivor patient not found')
-        }
+        const result = await trpc.patientAdmin.getById.query({ patientId: survivorIdParam! })
+        setSurvivor(result.patient as Patient)
       } catch (err: any) {
         setError(err?.message ?? 'Failed to load survivor patient')
       } finally {
