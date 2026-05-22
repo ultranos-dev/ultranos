@@ -1,5 +1,7 @@
 -- Migration 018: Patient MPI Phase 1 — new identity columns
 -- All new columns nullable to avoid breaking existing records.
+-- Note: birth_year_range constraint was corrected in 020b_patient_mpi_constraints_fix.sql
+-- Note: mpi_score_range constraint added in 020b_patient_mpi_constraints_fix.sql
 
 ALTER TABLE patients
   -- Structured patronymic name (plain-text, for MPI matching and display)
@@ -42,9 +44,9 @@ ALTER TABLE patients
   -- MPI score from last duplicate check (informational)
   ADD COLUMN IF NOT EXISTS mpi_score  INTEGER;
 
-COMMENT ON COLUMN patients.name_given IS 'First component of patronymic chain (given name)';
-COMMENT ON COLUMN patients.name_father IS 'Second component of patronymic chain (father name)';
-COMMENT ON COLUMN patients.name_grandfather IS 'Third component of patronymic chain (grandfather name)';
+COMMENT ON COLUMN patients.name_given IS 'Normalized plain-text for MPI phonetic indexing — NOT a display field. Display name is in name_given_enc. PHI: write phonetic form only.';
+COMMENT ON COLUMN patients.name_father IS 'Normalized plain-text for MPI phonetic indexing — NOT a display field. Display name is in name_father_enc. PHI: write phonetic form only.';
+COMMENT ON COLUMN patients.name_grandfather IS 'Normalized plain-text for MPI phonetic indexing — NOT a display field. Display name is in name_grandfather_enc. PHI: write phonetic form only.';
 COMMENT ON COLUMN patients.name_phonetic_given IS 'Double Metaphone tokens for given name — GIN indexed for MPI candidate retrieval';
 COMMENT ON COLUMN patients.tazkira_paper_hash IS 'HMAC(jild + | + safa + | + shumara) — blind index for paper Tazkira deduplication';
 COMMENT ON COLUMN patients.is_nomadic IS 'True for patients whose address changes seasonally — current address not a reliable MPI signal';
