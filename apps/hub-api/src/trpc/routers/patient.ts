@@ -971,6 +971,49 @@ export const patientRouter = createTRPCRouter({
         },
       }
     }),
+
+  // ── patient.updateBiometric ──────────────────────────────────
+  updateBiometric: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(z.object({
+      patientId: z.string().uuid(),
+      biometricFingerprintHash: z.string().min(1).max(500),
+      biometricAlgorithmVersion: z.string().min(1).max(50),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('patients')
+        .update({
+          biometric_fingerprint_hash: input.biometricFingerprintHash,
+          biometric_algorithm_version: input.biometricAlgorithmVersion,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', input.patientId)
+        .eq('is_active', true)
+
+      if (error) {
+        console.error('[PATIENT_UPDATE_BIOMETRIC] Error:', { code: error.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update biometric' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_WRITE',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'biometric_reenrolment' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_WRITE', resourceId: input.patientId })
+      }
+
+      return { success: true }
+    }),
 })
 
 /**
