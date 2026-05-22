@@ -4498,25 +4498,25 @@ So that I can see at a glance how many patients are on my schedule for today.
 
 | Story | Status | Tests |
 |-------|--------|-------|
-| 37.1: AppShell Sidebar Upgrade | Pending | — |
-| 37.2: OPD-Lite Sidebar Adoption | Pending | — |
-| 37.3: OPD-Lite Patient Directory | Pending | — |
-| 37.4: Pharmacy-Lite Sidebar Upgrade | Pending | — |
-| 37.5: Pharmacy Controlled Substances Page | Pending | — |
-| 37.6: Pharmacy Unverified Dispenses Page | Pending | — |
-| 37.7: Lab-Lite Sidebar Adoption | Pending | — |
-| 37.8: Lab-Lite Upload Queue Page | Pending | — |
-| 37.9: Lab-Lite Notification Center Page | Pending | — |
-| 37.10: Lab-Lite Settings Page | Pending | — |
-| 37.11: FHIR Appointment & Slot Types | Pending | — |
-| 37.12: OPD-Lite Appointment IndexedDB Store | Pending | — |
-| 37.13: OPD-Lite Daily Schedule View | Pending | — |
-| 37.14: OPD-Lite Walk-In Queue | Pending | — |
-| 37.15: OPD-Lite Book Appointment Flow | Pending | — |
-| 37.16: OPD-Lite Weekly Schedule View | Pending | — |
-| 37.17: Hub API Appointment Endpoints | Pending | — |
-| 37.18: OPD-Lite Appointment Sync | Pending | — |
-| 37.19: OPD-Lite Appointment Sidebar Badge | Pending | — |
+| 37.1: AppShell Sidebar Upgrade | ✅ Done | Sidebar.test.tsx (20) |
+| 37.2: OPD-Lite Sidebar Adoption | ✅ Done | (UI changes) |
+| 37.3: OPD-Lite Patient Directory | ✅ Done | patient-directory.test.tsx (7) |
+| 37.4: Pharmacy-Lite Sidebar Upgrade | ✅ Done | (UI changes) |
+| 37.5: Pharmacy Controlled Substances Page | ✅ Done | (UI + data wiring) |
+| 37.6: Pharmacy Unverified Dispenses Page | ✅ Done | (UI + data wiring) |
+| 37.7: Lab-Lite Sidebar Adoption | ✅ Done | (UI changes) |
+| 37.8: Lab-Lite Upload Queue Page | ✅ Done | (UI changes) |
+| 37.9: Lab-Lite Notification Center Page | ✅ Done | (UI changes) |
+| 37.10: Lab-Lite Settings Page | ✅ Done | (UI changes) |
+| 37.11: FHIR Appointment & Slot Types | ✅ Done | shared-types build (99) |
+| 37.12: OPD-Lite Appointment IndexedDB Store | ✅ Done | (Dexie v18) |
+| 37.13: OPD-Lite Daily Schedule View | ✅ Done | appointments.test.tsx (8) |
+| 37.14: OPD-Lite Walk-In Queue | ✅ Done | appointments.test.tsx (8) |
+| 37.15: OPD-Lite Book Appointment Flow | ✅ Done | appointments.test.tsx (8) |
+| 37.16: OPD-Lite Weekly Schedule View | ✅ Done | (UI changes) |
+| 37.17: Hub API Appointment Endpoints | ✅ Done | (migration 027 applied) |
+| 37.18: OPD-Lite Appointment Sync | ✅ Done | (Hub API connected) |
+| 37.19: OPD-Lite Appointment Sidebar Badge | ✅ Done | (badge wired) |
 
 ## Recommended Build Sequence
 

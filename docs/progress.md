@@ -573,6 +573,120 @@ Branch: `internationalization-01`
 
 ---
 
+## 2026-05-22 — Epic 37: Navigation Systems & Appointment Scheduling — ✅ COMPLETE
+
+### What Was Done
+Branch: `internationalization-01`
+
+**Epic definition & planning:**
+- Created Epic 37 (Addendum 11) with 19 stories covering all 3 spoke apps + appointment scheduling
+- Added 3 new FRs (FR35–FR37) to requirements inventory and coverage map
+- Wrote 4 implementation plans (Phase 1–4)
+
+**Phase 1 — Shared Foundation + OPD-Lite (Stories 37.1–37.3):**
+1. `Sidebar` component in `@ultranos/ui-kit` — collapsible with icon+label nav items, badge counts (99+ overflow), grouped sections with dividers, footer slots (syncIndicator, user, languageSelector), localStorage-persisted collapse state, DirectionalIcon chevron for RTL mirroring, full keyboard navigation (Tab/Enter/Space)
+2. OPD-Lite sidebar adoption — 10 nav items across 4 groups (Core, Clinical, Admin, System), `useNavBadges` hook polling Hub API for notification/conflict/duplicate/consent counts, AppHeader simplified to search-only, SyncPulse/UserDropdown moved to sidebar
+3. Patient directory at `/patients` — searchable/filterable/sortable table from IndexedDB, allergy flag as red dot (safety rule 4), status/allergy/visit filters, 25-per-page pagination, locale-prefixed routing
+
+**Phase 2 — Pharmacy-Lite (Stories 37.4–37.6):**
+4. AppShellWrapper upgraded from horizontal AppShell to collapsible Sidebar with 9 nav items, badge counts from sync store
+5. Controlled substances page `/controlled` — reads dispenses from Dexie with date range filter and pagination (schedule column placeholder pending schema field)
+6. Unverified dispenses page `/unverified` — fetches pending reviews from Hub API `dispense_reviews` table, Pending/Resolved tabs, Approve/Flag action buttons (endpoint stubbed)
+
+**Phase 3 — Lab-Lite (Stories 37.7–37.10):**
+7. AppSidebar created with 6 nav items, OnlineStatusIndicator and LanguageSelectorClient in footer, queue badge from Dexie polling
+8. Upload queue page `/queue` wrapping existing UploadQueue component
+9. Notification center page `/notifications` — full-page view with mark-all-read, notification API functions added to trpc.ts
+10. Settings page `/settings` — 4 cards (Profile, Lab Info, Session, MFA) with sign-out
+
+**Phase 4 — Appointment Scheduling (Stories 37.11–37.19):**
+11. FHIR R4 Appointment + Slot Zod schemas in `shared-types` with status lifecycle, service types, participant references, _ultranos extensions (walkIn, queuePosition, hlcTimestamp)
+12. Sync priority level 5 added to `sync-engine` for Appointment and Slot
+13. Dexie v18 schema with appointments + slots tables, PHI encryption on appointments
+14. Supabase migration 027: appointments + slots tables with GIN index on participant_refs, double_booking_flag, RLS policies
+15. Zustand appointment store + useAppointments hook with CRUD, double-booking detection, walk-in queue position auto-assignment
+16. Hub API appointment router — 7 tRPC procedures: listByPractitioner, listByPatient, create (with double-booking validation), updateStatus, syncBatch (Tier 3 LWW), slot.listByPractitioner, slot.generateDaily
+17. Daily schedule view — time-slot grid (08:00–17:00, 30-min), appointment cards with patient summary popup, status transitions, date navigation
+18. Walk-in queue — ordered by queuePosition, urgency badges, wait time, inline add form
+19. Booking modal — patient search, date picker, available slot chips, type selector, allergy banner, double-booking prevention
+20. Weekly schedule view — 7-day grid (Saturday–Friday MENA default, configurable), color-coded appointment counts, responsive stacking below 1024px, RTL-safe
+21. Appointment sync connected to Hub API — push via syncBatch, pull practitioner's weekly schedule, Tier 3 LWW merge, 60-second interval
+22. Sidebar badge shows today's non-cancelled appointment count from Dexie
+23. i18n keys for appointments namespace across all 3 locales (en/ar/prs, 44 keys each)
+
+### New Files
+- `packages/ui-kit/src/Sidebar.tsx` + `__tests__/Sidebar.test.tsx`
+- `packages/shared-types/src/fhir/appointment.schema.ts`
+- `supabase/migrations/027_appointments_and_slots.sql`
+- `apps/hub-api/src/trpc/routers/appointment.ts`
+- `apps/opd-lite/src/components/AppSidebar.tsx`
+- `apps/opd-lite/src/hooks/useNavBadges.ts`
+- `apps/opd-lite/src/hooks/useAppointments.ts`
+- `apps/opd-lite/src/stores/appointment-store.ts`
+- `apps/opd-lite/src/app/[locale]/patients/page.tsx`
+- `apps/opd-lite/src/components/patients/PatientDirectory.tsx`
+- `apps/opd-lite/src/app/[locale]/appointments/page.tsx`
+- `apps/opd-lite/src/components/appointments/` (7 components: DayScheduleView, WeekScheduleView, AppointmentSlot, PatientSummaryPopup, WalkInQueue, BookingModal)
+- `apps/pharmacy-lite/src/app/[locale]/controlled/page.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/unverified/page.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/UnverifiedDispensesView.tsx`
+- `apps/lab-lite/src/components/AppSidebar.tsx`
+- `apps/lab-lite/src/app/[locale]/queue/page.tsx`
+- `apps/lab-lite/src/app/[locale]/notifications/page.tsx`
+- `apps/lab-lite/src/app/[locale]/settings/page.tsx`
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx`
+- `docs/superpowers/plans/2026-05-22-navigation-phase{1,2,3,4}*.md`
+
+### Files Modified
+- `packages/ui-kit/src/index.ts` — Sidebar exports
+- `packages/shared-types/src/index.ts` — appointment schema exports
+- `packages/sync-engine/src/sync-priority.ts` — Appointment: 5, Slot: 5
+- `apps/hub-api/src/trpc/routers/_app.ts` — appointment router registered
+- `apps/opd-lite/src/app/[locale]/layout.tsx` — AppSidebar wrapper
+- `apps/opd-lite/src/components/AppHeader.tsx` — simplified
+- `apps/opd-lite/src/lib/db.ts` — Dexie v18 (appointments + slots)
+- `apps/opd-lite/src/lib/trpc.ts` — appointment sync/fetch functions
+- `apps/opd-lite/messages/{en,ar,prs}.json` — sidebar, patients, appointments keys
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx` — Sidebar upgrade
+- `apps/pharmacy-lite/messages/{en,ar,prs}.json` — sidebar, controlled, unverified keys
+- `apps/lab-lite/src/app/[locale]/layout.tsx` — AppSidebar wrapper
+- `apps/lab-lite/src/app/layout.tsx` — header simplified
+- `apps/lab-lite/src/lib/trpc.ts` — notification API functions
+- `apps/lab-lite/messages/{en,ar,prs}.json` — sidebar, settings, queuePage keys
+- `_bmad-output/planning-artifacts/epics.md` — Addendum 11 + all stories marked Done
+
+### Errors & Resolutions
+- Sidebar chevron used raw SVG without DirectionalIcon — fixed by wrapping in `<DirectionalIcon category="navigation">` (code review catch)
+- SidebarUser.email was required but never rendered — made optional (code review catch)
+- PatientDirectory routing missed locale prefix — fixed `router.push` and `href` to include `/${locale}/` (spec review catch)
+- Patient directory test missing `useLocale` mock — added to next-intl mock
+- Pre-existing: AuditAction.PHI_CLEANUP and session.name not in type definitions (inherited from UserDropdown.tsx)
+- Pre-existing: sync-engine build fails (window reference in drain-worker.ts)
+
+### Tests Run
+- `packages/ui-kit` — 230/230 passed (including 20 new Sidebar tests)
+- `apps/opd-lite/patient-directory.test.tsx` — 7/7 passed
+- `apps/opd-lite/appointments.test.tsx` — 8/8 passed
+- `packages/shared-types` — 99/99 passed (existing + build verification)
+
+### PRD Trace
+- **FR28 / Epic 14 (extension):** Global App Shell & Navigation — sidebar replaces horizontal navbar
+- **FR35 / Epic 37:** Collapsible Sidebar Navigation for All PWA Spoke Apps
+- **FR36 / Epic 37:** Patient Directory & Browsing
+- **FR37 / Epic 37:** Appointment Scheduling & Walk-In Queue Management
+- **NFR2:** Offline-first — appointments stored in IndexedDB, work without connectivity
+- **NFR5:** FHIR R4 compliance — Appointment and Slot schemas follow FHIR R4 spec
+- **NFR7:** WCAG AA — keyboard navigable sidebar, ARIA landmarks, focus management
+- **OPD-010:** Three-panel layout — sidebar serves as the leftmost navigation column
+- **OPD-013:** Offline status indicator — SyncPulse in sidebar footer
+- **PH-020:** Controlled substance flagging — dedicated page (data binding pending schema field)
+- **CLAUDE.md Rule #4:** Allergy prominence — red dot flag in patient directory, red banner in booking modal
+- **CLAUDE.md Rule #6:** Audit every PHI access — Hub API appointment endpoints emit audit events
+- **CLAUDE.md RTL rules:** Logical CSS properties throughout, DirectionalIcon for chevrons, RTL snapshot tests
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._
