@@ -601,11 +601,11 @@ export const patientRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
+      // First fetch: allow inactive patients so we can follow merged_into links
+      let { data, error } = await ctx.supabase
         .from('patients')
         .select('*')
         .eq('id', input.patientId)
-        .eq('is_active', true)
         .single()
 
       if (error || !data) {
@@ -619,6 +619,32 @@ export const patientRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to read patient',
+        })
+      }
+
+      // Follow merged_into link transparently — if this patient was merged,
+      // re-fetch the survivor record instead.
+      if (data.merged_into) {
+        const { data: survivorData, error: survivorErr } = await ctx.supabase
+          .from('patients')
+          .select('*')
+          .eq('id', data.merged_into)
+          .eq('is_active', true)
+          .single()
+
+        if (survivorErr || !survivorData) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Merged survivor patient not found',
+          })
+        }
+
+        data = survivorData
+      } else if (!data.is_active) {
+        // Not merged, just inactive — treat as not found
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Patient not found',
         })
       }
 
