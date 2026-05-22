@@ -13,6 +13,8 @@ const navItems = [
   { label: 'Labs', href: '/labs', icon: FlaskIcon },
   { label: 'Users', href: '/users', icon: UsersGroupIcon },
   { label: 'Create User', href: '/users/create', icon: PlusIcon, indent: true },
+  { label: 'Patients', href: '/patients', icon: UserIcon },
+  { label: 'Merge Tool', href: '/patients/merge', icon: PlusIcon, indent: true },
   { label: 'AI Models', href: '/ai-models', icon: CpuIcon },
   { label: 'Alerts', href: '/alerts', icon: BellIcon },
   { label: 'Audit Log', href: '/audit', icon: ScrollIcon },
