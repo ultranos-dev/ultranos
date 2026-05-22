@@ -42,6 +42,59 @@ export async function reportAuthEvent(
   }
 }
 
+/** Push locally modified appointments to Hub API */
+export async function syncAppointmentBatch(
+  appointments: Array<Record<string, unknown>>
+): Promise<{ synced: number; conflicts: Array<{ id: string; reason: string }> }> {
+  const hubUrl = getHubApiUrl()
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
+    if (!session?.access_token) return { synced: 0, conflicts: [] }
+
+    const res = await fetch(`${hubUrl}/appointment.syncBatch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ json: { appointments } }),
+    })
+
+    if (!res.ok) return { synced: 0, conflicts: [] }
+    const json = await res.json()
+    return json?.result?.data?.json ?? { synced: 0, conflicts: [] }
+  } catch {
+    return { synced: 0, conflicts: [] }
+  }
+}
+
+/** Pull practitioner's appointments for a date range from Hub API */
+export async function fetchPractitionerAppointments(
+  practitionerId: string,
+  startDate: string,
+  endDate: string,
+): Promise<Array<Record<string, unknown>>> {
+  const hubUrl = getHubApiUrl()
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
+    if (!session?.access_token) return []
+
+    const input = encodeURIComponent(JSON.stringify({ json: { practitionerId, startDate, endDate } }))
+    const res = await fetch(`${hubUrl}/appointment.listByPractitioner?input=${input}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    })
+
+    if (!res.ok) return []
+    const json = await res.json()
+    return json?.result?.data?.json?.appointments ?? []
+  } catch {
+    return []
+  }
+}
+
 /**
  * Type-safe wrapper for Hub API patient search.
  * Matches hub-api's patientRouter.search procedure signature.
@@ -55,9 +108,17 @@ export async function searchPatientsOnHub(query: string, signal?: AbortSignal): 
   url.pathname = url.pathname.replace(/\/$/, '') + '/patient.search'
   url.searchParams.set('input', JSON.stringify({ json: { query } }))
 
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    const token = data.session?.access_token
+    if (token) headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(url.toString(), {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     signal,
   })
 

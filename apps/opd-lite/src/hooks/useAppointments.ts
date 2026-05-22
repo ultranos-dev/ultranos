@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { db } from '@/lib/db'
+import { syncAppointmentBatch, fetchPractitionerAppointments } from '@/lib/trpc'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type {
   FhirAppointmentZod,
   FhirSlotZod,
@@ -273,6 +275,33 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     [loadData],
   )
 
+  const syncAppointments = useCallback(async (): Promise<void> => {
+    const session = useAuthSessionStore.getState().session
+    if (!session?.practitionerId) return
+
+    try {
+      await syncAppointmentsImpl(session.practitionerId)
+      await loadData()
+    } catch {
+      // Sync is best-effort — offline operation continues unaffected
+    }
+  }, [loadData])
+
+  // 60-second sync interval
+  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  useEffect(() => {
+    // Initial sync on mount
+    void syncAppointments()
+
+    syncIntervalRef.current = setInterval(() => {
+      void syncAppointments()
+    }, 60_000)
+
+    return () => {
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current)
+    }
+  }, [syncAppointments])
+
   return {
     appointments,
     slots,
@@ -285,15 +314,79 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
   }
 }
 
-// TODO: Implement full sync when Hub API is connected (Story 37.18)
 /**
- * Placeholder for appointment sync with the Hub API.
- * Will eventually call `appointment.syncBatch` on the Hub API to push
- * locally-created appointments and pull remote updates.
+ * Push local appointments to Hub API and pull the practitioner's
+ * weekly schedule. Remote records are merged using Tier 3 LWW
+ * (newer hlcTimestamp wins).
  */
-export async function syncAppointments(): Promise<void> {
-  // No-op stub — sync logic will be implemented when the Hub API
-  // appointment endpoints are available.
+async function syncAppointmentsImpl(
+  practitionerId: string,
+): Promise<{ conflicts: Array<{ id: string; reason: string }> }> {
+  // 1. Get all local appointments that might need syncing
+  const allLocal = await db.appointments.toArray()
+
+  // 2. Push local appointments to Hub
+  if (allLocal.length > 0) {
+    const result = await syncAppointmentBatch(
+      allLocal as unknown as Array<Record<string, unknown>>,
+    )
+    if (result.conflicts.length > 0) {
+      return { conflicts: result.conflicts }
+    }
+  }
+
+  // 3. Pull practitioner's appointments for current week from Hub
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - now.getDay()) // Start of week (Sunday)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 7)
+
+  const remoteAppointments = await fetchPractitionerAppointments(
+    practitionerId,
+    weekStart.toISOString(),
+    weekEnd.toISOString(),
+  )
+
+  // 4. Merge remote into local (Tier 3 LWW: newer hlcTimestamp wins)
+  for (const remote of remoteAppointments) {
+    const remoteId = remote.id as string
+    const local = (await db.appointments.get(remoteId)) as
+      | FhirAppointmentZod
+      | undefined
+    if (
+      !local ||
+      (remote.hlc_timestamp as string) > (local._ultranos?.hlcTimestamp ?? '')
+    ) {
+      // Remote is newer or doesn't exist locally — upsert
+      await db.appointments.put({
+        id: remoteId,
+        resourceType: 'Appointment',
+        status: remote.status as string,
+        serviceType: remote.service_type as FhirAppointmentZod['serviceType'],
+        start: remote.start as string,
+        end: remote.end as string,
+        participant:
+          remote.participant as FhirAppointmentZod['participant'],
+        description: remote.description as string | undefined,
+        _ultranos: {
+          walkIn: remote.walk_in as boolean,
+          queuePosition: (remote.queue_position as number | null) ?? null,
+          isOfflineCreated: remote.is_offline_created as boolean,
+          hlcTimestamp: remote.hlc_timestamp as string,
+          createdAt: remote.created_at as string,
+          clinicId: remote.clinic_id as string | undefined,
+        },
+        meta: {
+          lastUpdated: remote.last_updated as string,
+          versionId: '1',
+        },
+      } as FhirAppointmentZod)
+    }
+  }
+
+  return { conflicts: [] }
 }
 
 /**
