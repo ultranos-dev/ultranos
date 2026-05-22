@@ -142,6 +142,8 @@ class OpdLiteDatabase extends Dexie {
   vocabularyInteractions!: EntityTable<VocabInteractionEntry, 'id'>
   aiModels!: EntityTable<AIModelMetadataEntry, 'modelId'>
   modelDownloadProgress!: EntityTable<ModelDownloadProgress, 'modelId'>
+  appointments!: EntityTable<any, 'id'>
+  slots!: EntityTable<any, 'id'>
 
   constructor() {
     super('opd-lite')
@@ -499,6 +501,13 @@ class OpdLiteDatabase extends Dexie {
       modelDownloadProgress:
         '&modelId',
     })
+
+    // v18: Appointment and slot tables (Epic 37, Story 37.12)
+    // Encrypted — appointments reference patients via participant.
+    this.version(18).stores({
+      appointments: 'id, status, start, _ultranos.hlcTimestamp',
+      slots: 'id, status, start, _ultranos.hlcTimestamp',
+    })
   }
 }
 
@@ -599,6 +608,10 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
       'checkResult',
       'createdAt',
     ],
+  },
+  {
+    tableName: 'appointments',
+    indexedFields: ['id', 'status', 'start', '_ultranos.hlcTimestamp'],
   },
 ]
 
