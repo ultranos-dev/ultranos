@@ -170,7 +170,8 @@
     "resultEscalationMessage": "نتيجة بانتظار المراجعة — {testCategory}",
     "labStatusMessage": "حالة المختبر: {status}",
     "systemNotification": "إشعار نظام",
-    "unknownTest": "فحص غير معروف"
+    "unknownTest": "فحص غير معروف",
+    "markAllRead": "تعيين الكل كمقروء"
   },
   "queue": {
     "title": "قائمة انتظار الرفع",
@@ -212,5 +213,51 @@
   "offline": {
     "message": "أنت غير متصل بالإنترنت. يتطلب تطبيق المختبر اتصالاً بالشبكة لرفع الملفات. الصفحات المخزّنة مسبقاً لا تزال متاحة.",
     "tryAgain": "إعادة المحاولة"
+  },
+  "sidebar": {
+    "dashboard": "لوحة المعلومات",
+    "upload": "رفع نتيجة",
+    "history": "سجل التحميل",
+    "queue": "قائمة التحميل",
+    "notifications": "الإشعارات",
+    "settings": "الإعدادات"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "labInfo": "معلومات المختبر",
+    "sessionInfo": "معلومات الجلسة",
+    "mfaStatus": "حالة المصادقة",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "role": "الدور",
+    "labTechnician": "فني مختبر",
+    "practitionerId": "معرف الممارس",
+    "labName": "اسم المختبر",
+    "accreditation": "الاعتماد",
+    "sessionStart": "بدء الجلسة",
+    "timeRemaining": "الوقت المتبقي",
+    "sessionId": "معرف الجلسة",
+    "totpEnrolled": "مسجل في TOTP",
+    "lastVerified": "آخر تحقق",
+    "language": "اللغة",
+    "signOut": "تسجيل الخروج"
+  },
+  "queuePage": {
+    "title": "قائمة التحميل",
+    "pending": "معلق",
+    "uploading": "جارٍ التحميل",
+    "failed": "فشل",
+    "expired": "منتهي الصلاحية",
+    "retryAll": "إعادة محاولة الكل",
+    "retry": "إعادة محاولة",
+    "reupload": "إعادة تحميل",
+    "discard": "تجاهل",
+    "confirmDiscard": "هل أنت متأكد من تجاهل هذا التحميل؟",
+    "patient": "المريض",
+    "testCategory": "فئة الفحص",
+    "fileName": "الملف",
+    "queuedAt": "وقت الإضافة",
+    "verification": "التحقق"
   }
 }

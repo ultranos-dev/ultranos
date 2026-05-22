@@ -170,7 +170,8 @@
     "resultEscalationMessage": "Result awaiting review — {testCategory}",
     "labStatusMessage": "Lab status: {status}",
     "systemNotification": "System notification",
-    "unknownTest": "Unknown test"
+    "unknownTest": "Unknown test",
+    "markAllRead": "Mark All Read"
   },
   "queue": {
     "title": "Upload Queue",
@@ -212,5 +213,51 @@
   "offline": {
     "message": "You are offline. Lab Lite requires a network connection for uploads. Previously cached pages are still available.",
     "tryAgain": "Try Again"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "upload": "Upload Result",
+    "history": "Upload History",
+    "queue": "Upload Queue",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "labInfo": "Lab Information",
+    "sessionInfo": "Session Information",
+    "mfaStatus": "MFA Status",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "labTechnician": "Lab Technician",
+    "practitionerId": "Practitioner ID",
+    "labName": "Lab Name",
+    "accreditation": "Accreditation",
+    "sessionStart": "Session Start",
+    "timeRemaining": "Time Remaining",
+    "sessionId": "Session ID",
+    "totpEnrolled": "TOTP Enrolled",
+    "lastVerified": "Last Verified",
+    "language": "Language",
+    "signOut": "Sign Out"
+  },
+  "queuePage": {
+    "title": "Upload Queue",
+    "pending": "Pending",
+    "uploading": "Uploading",
+    "failed": "Failed",
+    "expired": "Expired",
+    "retryAll": "Retry All Failed",
+    "retry": "Retry",
+    "reupload": "Re-upload",
+    "discard": "Discard",
+    "confirmDiscard": "Are you sure you want to discard this upload?",
+    "patient": "Patient",
+    "testCategory": "Test Category",
+    "fileName": "File",
+    "queuedAt": "Queued",
+    "verification": "Verification"
   }
 }
