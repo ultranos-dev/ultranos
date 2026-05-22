@@ -1,61 +1,10 @@
 -- Migration 023: Two Postgres RPC functions for MPI Phase 1.
+-- Note: create_patient_with_consent was corrected in 023b to target consent_records.
+-- This file is preserved for migration history. The authoritative version is 023b.
 
--- Function 1: Atomic patient + consent insert
-CREATE OR REPLACE FUNCTION create_patient_with_consent(
-  p_patient JSONB,
-  p_consent  JSONB
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_patient_id UUID;
-  v_consent_id UUID;
-BEGIN
-  INSERT INTO patients
-  SELECT * FROM jsonb_populate_record(null::patients, p_patient)
-  RETURNING id INTO v_patient_id;
-
-  INSERT INTO consents (
-    id,
-    patient_id,
-    status,
-    scope,
-    provision_start,
-    provision_end,
-    consent_method,
-    witnessed_by,
-    consent_language,
-    consent_version,
-    created_at
-  ) VALUES (
-    gen_random_uuid(),
-    v_patient_id,
-    'active',
-    'patient-privacy',
-    NOW(),
-    NOW() + INTERVAL '3 years',
-    p_consent->>'consent_method',
-    NULLIF(p_consent->>'witnessed_by', '')::UUID,
-    p_consent->>'consent_language',
-    COALESCE(p_consent->>'consent_version', 'v1.0-en'),
-    NOW()
-  )
-  RETURNING id INTO v_consent_id;
-
-  RETURN jsonb_build_object(
-    'patientId',  v_patient_id,
-    'consentId',  v_consent_id
-  );
-
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE;
-END;
-$$;
-
+-- Function 1: Atomic patient + consent insert (see 023b for corrected version)
 -- Function 2: MPI candidate retrieval
+
 CREATE OR REPLACE FUNCTION fetch_mpi_candidates(
   p_input JSONB
 )
@@ -124,5 +73,4 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION create_patient_with_consent(JSONB, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION fetch_mpi_candidates(JSONB) TO authenticated;
