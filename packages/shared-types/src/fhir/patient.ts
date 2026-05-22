@@ -3,6 +3,32 @@ import type { AdministrativeGender } from '../enums.js'
 /** Patient subscription tier. Defaults to FREE on self-registration. */
 export type PatientTier = 'FREE' | 'PREMIUM'
 
+// ── New types for MPI Phase 1 ─────────────────────────────────────────
+
+export interface PatientAddress {
+  province: string
+  district: string
+  village?: string
+}
+
+export type PatientIdentifierSystem =
+  | 'AFGHAN_ETAZKIRA'
+  | 'AFGHAN_TAZKIRA_PAPER'
+  | 'PASSPORT'
+  | 'HEALTH_PASSPORT_QR'
+
+export interface PatientIdentifier {
+  system: PatientIdentifierSystem
+  valueHash: string      // HMAC blind index — never raw document number
+  displayType: string
+  /** Paper Tazkira only — AES-GCM encrypted Jild number */
+  jild?: string
+  /** Paper Tazkira only — AES-GCM encrypted Safa number */
+  safa?: string
+  /** Paper Tazkira only — AES-GCM encrypted Shumara number */
+  shumara?: string
+}
+
 // FHIR R4 Patient resource + Ultranos extensions
 // Ref: https://hl7.org/fhir/R4/patient.html
 export interface FhirPatient {
@@ -46,6 +72,28 @@ export interface FhirPatient {
     isActive: boolean
     createdBy?: string       // practitioner UUID
     createdAt: string        // ISO 8601 — Ultranos extension
+    // ── MPI Phase 1 additions ──────────────────────────────────
+    /** Structured patronymic chain (given name component) */
+    nameGiven?: string
+    /** Father's name (patronymic) */
+    nameFather?: string
+    /** Grandfather's name (patronymic) */
+    nameGrandfather?: string
+    /** Birth year when exact DOB is unknown */
+    birthYear?: number
+    /** Geographic origin (stable MPI signal) */
+    addressOrigin?: PatientAddress
+    /** Current residence (logistics only — not an MPI signal) */
+    addressCurrent?: PatientAddress
+    /** True for nomadic patients whose current address changes seasonally */
+    isNomadic: boolean
+    /** SHA-256 of biometric template — for exact-match hard identifier check */
+    biometricFingerprintHash?: string
+    biometricAlgorithmVersion?: string
+    /** Soft MPI score from last duplicate check */
+    mpiScore?: number
+    /** Structured document identifiers (Tazkira, passport, etc.) */
+    identifiers?: PatientIdentifier[]
   }
 
   // FHIR R4 Meta — canonical field names
@@ -57,12 +105,33 @@ export interface FhirPatient {
 
 // Shape used when creating a new patient via API
 export interface CreatePatientInput {
+  // ── Existing fields (unchanged) ──────────────────────────────
   nameLocal: string
   nameLatin?: string
   gender: AdministrativeGender
   birthDate?: string
   birthYearOnly?: boolean
   phone?: string
-  nationalId?: string // plaintext — hashed server-side, never stored raw
+  nationalId?: string
   guardianId?: string
+  // ── MPI Phase 1 additions ─────────────────────────────────────
+  /** firstName is a deprecated alias for nameGiven — accepted via Zod transform */
+  firstName?: string
+  nameGiven?: string
+  nameFather?: string
+  nameGrandfather?: string
+  birthYear?: number
+  addressOrigin?: PatientAddress
+  addressCurrent?: PatientAddress
+  isNomadic?: boolean
+  biometricFingerprintHash?: string
+  biometricAlgorithmVersion?: string
+  identifiers?: PatientIdentifier[]
+  mpiProceedToken?: string
+  consent: {
+    method: 'WRITTEN' | 'VERBAL_WITNESSED'
+    witnessedBy?: string
+    language: 'en' | 'ar' | 'prs'
+    version: string
+  }
 }

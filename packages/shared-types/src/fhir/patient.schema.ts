@@ -65,3 +65,77 @@ export const CreatePatientInputSchema = z.object({
 })
 
 export type CreatePatientInputZod = z.infer<typeof CreatePatientInputSchema>
+
+// ── MPI Phase 1: new input schema with cross-field validation ───────────────
+
+const PatientAddressSchema = z.object({
+  province: z.string().min(1).max(100),
+  district: z.string().min(1).max(100),
+  village: z.string().max(200).optional(),
+})
+
+const PatientIdentifierInputSchema = z.object({
+  system: z.enum(['AFGHAN_ETAZKIRA', 'AFGHAN_TAZKIRA_PAPER', 'PASSPORT', 'HEALTH_PASSPORT_QR']),
+  valueHash: z.string().min(1),
+  displayType: z.string().min(1),
+  jild: z.string().optional(),
+  safa: z.string().optional(),
+  shumara: z.string().optional(),
+})
+
+const ConsentInputSchema = z.object({
+  method: z.enum(['WRITTEN', 'VERBAL_WITNESSED']),
+  witnessedBy: z.string().uuid().optional(),
+  language: z.enum(['en', 'ar', 'prs']),
+  version: z.string().min(1),
+})
+
+const currentYear = new Date().getFullYear()
+
+export const CreatePatientMpiInputSchema = z
+  .object({
+    nameLocal:         z.string().min(1).max(500),
+    nameLatin:         z.string().max(500).optional(),
+    // firstName accepted as deprecated alias for nameGiven (Patient Lite backward compat)
+    firstName:         z.string().min(1).max(200).optional(),
+    nameGiven:         z.string().min(1).max(200).optional(),
+    nameFather:        z.string().min(1).max(200).optional(),
+    nameGrandfather:   z.string().min(1).max(200).optional(),
+    gender:            z.nativeEnum(AdministrativeGender).optional(),
+    birthDate:         FhirDateSchema.optional(),
+    birthYearOnly:     z.boolean().default(false),
+    birthYear:         z.number().int().min(1900).max(currentYear).optional(),
+    phone:             z.string().max(50).optional(),
+    nationalId:        z.string().max(200).optional(),
+    guardianId:        z.string().uuid().optional(),
+    addressOrigin:     PatientAddressSchema.optional(),
+    addressCurrent:    PatientAddressSchema.optional(),
+    isNomadic:         z.boolean().default(false),
+    biometricFingerprintHash:   z.string().max(500).optional(),
+    biometricAlgorithmVersion:  z.string().max(50).optional(),
+    identifiers:       z.array(PatientIdentifierInputSchema).optional(),
+    mpiProceedToken:   z.string().optional(),
+    consent:           ConsentInputSchema,
+  })
+  // Transform: firstName alias → nameGiven
+  .transform((val) => ({
+    ...val,
+    nameGiven: val.nameGiven ?? val.firstName,
+  }))
+  // Cross-field validation
+  .superRefine((val, ctx) => {
+    // birthDate and birthYearOnly=true cannot coexist
+    if (val.birthYearOnly && val.birthDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate must be absent when birthYearOnly is true' })
+    }
+    // At least one of birthDate or birthYear must be present
+    if (!val.birthDate && !val.birthYear) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthYear'], message: 'Either birthDate or birthYear is required' })
+    }
+    // VERBAL_WITNESSED consent requires a witness
+    if (val.consent.method === 'VERBAL_WITNESSED' && !val.consent.witnessedBy) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consent', 'witnessedBy'], message: 'witnessedBy is required for VERBAL_WITNESSED consent' })
+    }
+  })
+
+export type CreatePatientMpiInput = z.infer<typeof CreatePatientMpiInputSchema>
