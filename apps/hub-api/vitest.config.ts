@@ -16,6 +16,7 @@ export default defineConfig({
       '@ultranos/crypto/server-crypto': path.resolve(__dirname, '../../packages/crypto/src/server-crypto.ts'),
       '@ultranos/crypto/server': path.resolve(__dirname, '../../packages/crypto/src/server-crypto.ts'),
       '@ultranos/crypto': path.resolve(__dirname, '../../packages/crypto/src/index.ts'),
+      '@ultranos/mpi-engine': path.resolve(__dirname, '../../packages/mpi-engine/src/index.ts'),
     },
   },
 })
