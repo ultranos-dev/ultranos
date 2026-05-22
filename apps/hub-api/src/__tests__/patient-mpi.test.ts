@@ -96,7 +96,7 @@ describe('mpi-proceed-token', () => {
       expect.stringContaining(payload.jti),
       'consumed',
       'EX',
-      expect.any(Number),
+      600,
     )
   })
 
@@ -113,5 +113,15 @@ describe('mpi-proceed-token', () => {
   it('throws when MPI_TOKEN_PRIVATE_KEY is not set', async () => {
     vi.stubEnv('MPI_TOKEN_PRIVATE_KEY', '')
     await expect(signProceedToken({ candidateIds: [], maxScore: 0, issuedTo: 'u' })).rejects.toThrow(/MPI_TOKEN_PRIVATE_KEY/)
+  })
+
+  it('verifyProceedToken throws when Redis is unavailable', async () => {
+    vi.mocked(getRedisClient).mockReturnValue(null as never)
+    const token = await signProceedToken({
+      candidateIds: ['p6'],
+      maxScore: 65,
+      issuedTo: 'user-uuid-006',
+    })
+    await expect(verifyProceedToken(token)).rejects.toThrow(/Redis required/)
   })
 })

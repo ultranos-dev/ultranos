@@ -31,7 +31,7 @@ export async function fetchMpiCandidates(
   const rpcInput = {
     phoneticGiven,
     phoneticFather,
-    nationalIdHash:           nationalIdHash ?? undefined,
+    ...(nationalIdHash !== null ? { nationalIdHash } : {}),
     tazkiraPaperHash:         input.tazkiraPaperHash,
     biometricFingerprintHash: input.biometricFingerprintHash,
     birthYear:                input.birthYear,
