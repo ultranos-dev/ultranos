@@ -72,6 +72,17 @@ describe('CreatePatientMpiInputSchema — cross-field rules', () => {
     expect(result.success).toBe(true)
   })
 
+  it('rejects birthYearOnly=false with birthYear only (no birthDate)', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      nameLocal: 'Ahmad',
+      gender: 'male',
+      birthYearOnly: false,
+      birthYear: 1985,
+      consent: { method: 'WRITTEN', language: 'en', version: 'v1.0-en' },
+    })
+    expect(result.success).toBe(false)
+  })
+
   it('transforms firstName alias to nameGiven', () => {
     const result = CreatePatientMpiInputSchema.safeParse({
       nameLocal: 'Ahmad',

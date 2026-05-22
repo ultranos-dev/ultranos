@@ -1,4 +1,5 @@
 import type { AdministrativeGender } from '../enums.js'
+import type { AfghanProvince } from '../reference/afghanistan-geo.js'
 
 /** Patient subscription tier. Defaults to FREE on self-registration. */
 export type PatientTier = 'FREE' | 'PREMIUM'
@@ -6,7 +7,7 @@ export type PatientTier = 'FREE' | 'PREMIUM'
 // ── New types for MPI Phase 1 ─────────────────────────────────────────
 
 export interface PatientAddress {
-  province: string
+  province: AfghanProvince
   district: string
   village?: string
 }

@@ -49,3 +49,7 @@ export * from './fhir/guardian-link.js'
 
 // Feature tier definitions (Story 27.11)
 export * from './feature-tiers.js'
+
+// Afghanistan geographic reference data
+export { AFGHAN_PROVINCES } from './reference/afghanistan-geo.js'
+export type { AfghanProvince } from './reference/afghanistan-geo.js'

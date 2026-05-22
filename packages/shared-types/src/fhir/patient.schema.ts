@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { AdministrativeGender } from '../enums.js'
 import { FhirMetaSchema, FhirDateSchema } from './common.schema.js'
+import { AFGHAN_PROVINCES } from '../reference/afghanistan-geo.js'
 
 // FHIR R4 Patient Zod Schema
 // Ref: https://hl7.org/fhir/R4/patient.html
@@ -24,6 +25,23 @@ const IdentifierSchema = z.object({
 
 const PatientTierSchema = z.enum(['FREE', 'PREMIUM'])
 
+// ── MPI Phase 1 building blocks (defined before PatientUltranosExtSchema) ────
+
+const PatientAddressSchema = z.object({
+  province: z.enum(AFGHAN_PROVINCES),
+  district: z.string().min(1).max(100),
+  village: z.string().max(200).optional(),
+})
+
+const PatientIdentifierInputSchema = z.object({
+  system: z.enum(['AFGHAN_ETAZKIRA', 'AFGHAN_TAZKIRA_PAPER', 'PASSPORT', 'HEALTH_PASSPORT_QR']),
+  valueHash: z.string().min(1),
+  displayType: z.string().min(1),
+  jild: z.string().optional(),
+  safa: z.string().optional(),
+  shumara: z.string().optional(),
+})
+
 const PatientUltranosExtSchema = z.object({
   nameLocal: z.string(),
   nameLatin: z.string().optional(),
@@ -36,6 +54,18 @@ const PatientUltranosExtSchema = z.object({
   isActive: z.boolean(),
   createdBy: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
+  // ── MPI Phase 1 additions ──────────────────────────────────
+  nameGiven: z.string().optional(),
+  nameFather: z.string().optional(),
+  nameGrandfather: z.string().optional(),
+  birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
+  addressOrigin: PatientAddressSchema.optional(),
+  addressCurrent: PatientAddressSchema.optional(),
+  isNomadic: z.boolean().default(false),
+  biometricFingerprintHash: z.string().optional(),
+  biometricAlgorithmVersion: z.string().optional(),
+  mpiScore: z.number().optional(),
+  identifiers: z.array(PatientIdentifierInputSchema).optional(),
 })
 
 export const FhirPatientSchema = z.object({
@@ -53,6 +83,10 @@ export const FhirPatientSchema = z.object({
 
 export type FhirPatientZod = z.infer<typeof FhirPatientSchema>
 
+/**
+ * @deprecated Use CreatePatientMpiInputSchema for all new patient creation.
+ * This schema predates MPI Phase 1 and does not include consent or patronymic fields.
+ */
 export const CreatePatientInputSchema = z.object({
   nameLocal: z.string().min(1),
   nameLatin: z.string().optional(),
@@ -67,21 +101,6 @@ export const CreatePatientInputSchema = z.object({
 export type CreatePatientInputZod = z.infer<typeof CreatePatientInputSchema>
 
 // ── MPI Phase 1: new input schema with cross-field validation ───────────────
-
-const PatientAddressSchema = z.object({
-  province: z.string().min(1).max(100),
-  district: z.string().min(1).max(100),
-  village: z.string().max(200).optional(),
-})
-
-const PatientIdentifierInputSchema = z.object({
-  system: z.enum(['AFGHAN_ETAZKIRA', 'AFGHAN_TAZKIRA_PAPER', 'PASSPORT', 'HEALTH_PASSPORT_QR']),
-  valueHash: z.string().min(1),
-  displayType: z.string().min(1),
-  jild: z.string().optional(),
-  safa: z.string().optional(),
-  shumara: z.string().optional(),
-})
 
 const ConsentInputSchema = z.object({
   method: z.enum(['WRITTEN', 'VERBAL_WITNESSED']),
@@ -117,10 +136,10 @@ export const CreatePatientMpiInputSchema = z
     mpiProceedToken:   z.string().optional(),
     consent:           ConsentInputSchema,
   })
-  // Transform: firstName alias → nameGiven
-  .transform((val) => ({
-    ...val,
-    nameGiven: val.nameGiven ?? val.firstName,
+  // Transform: firstName alias → nameGiven (firstName stripped from output)
+  .transform(({ firstName, ...rest }) => ({
+    ...rest,
+    nameGiven: rest.nameGiven ?? firstName,
   }))
   // Cross-field validation
   .superRefine((val, ctx) => {
@@ -135,6 +154,10 @@ export const CreatePatientMpiInputSchema = z
     // VERBAL_WITNESSED consent requires a witness
     if (val.consent.method === 'VERBAL_WITNESSED' && !val.consent.witnessedBy) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consent', 'witnessedBy'], message: 'witnessedBy is required for VERBAL_WITNESSED consent' })
+    }
+    // birthYearOnly=false means caller is claiming full DOB — require birthDate
+    if (!val.birthYearOnly && !val.birthDate) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate is required when birthYearOnly is false' })
     }
   })
 
