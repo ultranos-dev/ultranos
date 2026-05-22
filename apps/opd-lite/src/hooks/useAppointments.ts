@@ -31,6 +31,7 @@ interface UseAppointmentsReturn {
     patientName: string,
     type: AppointmentServiceType,
   ) => Promise<FhirAppointmentZod>
+  syncAppointments: () => Promise<void>
 }
 
 function startOfDay(date: Date): Date {
@@ -280,7 +281,19 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     updateStatus,
     cancelAppointment,
     addWalkIn,
+    syncAppointments,
   }
+}
+
+// TODO: Implement full sync when Hub API is connected (Story 37.18)
+/**
+ * Placeholder for appointment sync with the Hub API.
+ * Will eventually call `appointment.syncBatch` on the Hub API to push
+ * locally-created appointments and pull remote updates.
+ */
+export async function syncAppointments(): Promise<void> {
+  // No-op stub — sync logic will be implemented when the Hub API
+  // appointment endpoints are available.
 }
 
 /**

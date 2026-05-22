@@ -139,7 +139,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
 
   const navItems: SidebarNavItem[] = [
     { label: t('dashboard'), href: '/', icon: icons.dashboard, active: pathname === '/', group: 'core' },
-    { label: t('appointments'), href: '/appointments', icon: icons.calendar, active: pathname === '/appointments', group: 'core' },
+    { label: t('appointments'), href: '/appointments', icon: icons.calendar, active: pathname === '/appointments', badge: badges.todayAppointments, group: 'core' },
     { label: t('patients'), href: '/patients', icon: icons.users, active: pathname === '/patients', group: 'core' },
     { label: t('registerPatient'), href: '/register-patient', icon: icons.userPlus, active: pathname === '/register-patient', group: 'core' },
     { label: t('notifications'), href: '/notifications', icon: icons.bell, active: pathname === '/notifications', badge: badges.notifications, group: 'clinical' },

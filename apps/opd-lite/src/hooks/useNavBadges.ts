@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchUnreadCount } from '@/lib/notification-api'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { db } from '@/lib/db'
 
 interface NavBadges {
   notifications: number
   conflicts: number
   duplicateReviews: number
   expiringConsents: number
+  todayAppointments: number
 }
 
 const POLL_INTERVAL_MS = 30_000
@@ -24,6 +26,7 @@ export function useNavBadges(): NavBadges {
     conflicts: 0,
     duplicateReviews: 0,
     expiringConsents: 0,
+    todayAppointments: 0,
   })
   const session = useAuthSessionStore((s) => s.session)
 
@@ -39,6 +42,25 @@ export function useNavBadges(): NavBadges {
         fetchTrpcCount('consent.expiringCount'),
       ])
 
+    // Count today's non-cancelled appointments from local Dexie store
+    let appointmentCount = 0
+    try {
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+      const todayEnd = new Date()
+      todayEnd.setHours(23, 59, 59, 999)
+      const all = await db.appointments
+        .where('start')
+        .between(todayStart.toISOString(), todayEnd.toISOString())
+        .toArray()
+      appointmentCount = all.filter(
+        (a: { status?: string }) =>
+          a.status !== 'cancelled' && a.status !== 'entered-in-error',
+      ).length
+    } catch {
+      // Dexie query failed — leave at 0
+    }
+
     setBadges({
       notifications:
         notifResult.status === 'fulfilled'
@@ -50,6 +72,7 @@ export function useNavBadges(): NavBadges {
         dupeResult.status === 'fulfilled' ? dupeResult.value : 0,
       expiringConsents:
         consentResult.status === 'fulfilled' ? consentResult.value : 0,
+      todayAppointments: appointmentCount,
     })
   }, [session])
 
