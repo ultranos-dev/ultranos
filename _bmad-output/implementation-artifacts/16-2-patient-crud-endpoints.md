@@ -79,6 +79,41 @@ so that new patients can be registered and existing records maintained.
   - [x] Test update: no fields to update throws BAD_REQUEST (PASS)
   - [x] Verify existing Hub API tests pass — no regressions from changes (pre-existing failures only)
 
+## MPI Phase 1 Additions (2026-05-22)
+
+Story 16.2 was extended by MPI Phase 1 (Addendum 8 in epics.md). Changes to patient.ts:
+
+- [x] Task 7: Rewrite `patient.create` with full MPI flow (AC: MPI-5)
+  - [x] Input changed from `CreatePatientInputSchema` to `CreatePatientMpiInputSchema`
+  - [x] Normalize name components via `normalizeNameComponent` + `computePhoneticTokens`
+  - [x] Hash nationalId + tazkiraPaperHash for blind index lookup
+  - [x] Fetch MPI candidates via `fetchMpiCandidates()` Supabase RPC
+  - [x] Score candidates via `computeMpiResult()` → BLOCK/WARN/ALLOW decision
+  - [x] BLOCK: throw CONFLICT with opaque candidateIds only (no PHI)
+  - [x] WARN without token: throw PRECONDITION_FAILED with proceedToken + candidateIds
+  - [x] WARN with token: verify issuedTo, consume token before insert, set mpi_warn=true
+  - [x] Insert via atomic `create_patient_with_consent` RPC (patient + consent in one transaction)
+  - [x] Audit with mpiDecision, mpiScore, mpiCandidateIds in metadata
+
+- [x] Task 8: Update `patient.search` with MPI fields (AC: MPI-5)
+  - [x] SELECT now includes: name_given, name_father, name_grandfather, birth_year, address_district_origin, address_province_origin, mpi_score, mpi_warn
+  - [x] Response mapping adds these to `_ultranos` namespace with camelCase keys
+  - [x] `ultranos_name_phonetic` removed from SELECT (placeholder, replaced by phonetic arrays)
+
+- [x] Task 9: Add `patient.checkDuplicates` procedure (AC: MPI-5)
+  - [x] Read-only `.query()` — not a mutation
+  - [x] Rate-limited: 20 req/60s with key 'mpiCheck'
+  - [x] Input: optional nameGiven, nameFather, nameGrandfather, birthYear, gender, addressDistrictOrigin, addressProvinceOrigin, phone, nationalId, tazkiraPaperHash, biometricFingerprintHash
+  - [x] `.refine()` requires at least one identity field
+  - [x] Returns `{ decision, topScore, proceedToken?, candidates[] }` with per-candidate scoreBreakdown
+  - [x] WARN issues proceedToken; BLOCK and ALLOW do not
+  - [x] Emits PHI_READ audit with resourceId='mpi-check'
+
+- [x] Task 10: Add MPI tests (AC: all)
+  - [x] patient-consent-atomic.test.ts: 12 tests (ALLOW RPC, BLOCK throw, WARN flow, RPC failure)
+  - [x] patient-crud.test.ts: 5 new tests (search phonetic, checkDuplicates ALLOW/WARN/BLOCK/audit)
+  - [x] patient-mpi.test.ts: 7 tests (token sign/verify, replay prevention, fail-closed Redis)
+
 ## Dev Notes
 
 ### Existing Patient Router (EXTEND IT)

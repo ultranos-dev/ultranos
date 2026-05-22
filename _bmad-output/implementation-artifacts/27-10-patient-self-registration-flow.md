@@ -94,6 +94,34 @@ so that I can view my health records without needing a clinic to create my accou
     - Successful registration flow
     - Network error handling
 
+## MPI Phase 1 Additions (2026-05-22)
+
+Story 27.10 was extended by MPI Phase 1 (Addendum 8 in epics.md). Changes to patient-registration.ts:
+
+- [x] Task 11: Add MPI deduplication to `register` mutation (AC: MPI-6)
+  - [x] Removed phone uniqueness check (lines 137–149 in original file) — MPI handles dedup
+  - [x] Added imports: `computeMpiResult` from `@ultranos/mpi-engine`, `fetchMpiCandidates` from `@/lib/mpi-candidate-query`
+  - [x] After OTP verification: extract birthYear, fetch MPI candidates, compute MPI result
+  - [x] BLOCK: return `{ blocked: true, message: 'You may already be registered. Please contact your clinic.' }` — no throw (anti-enumeration for patient-facing endpoint)
+  - [x] WARN: set `mpiWarn = true`, proceed with creation (no proceedToken needed for self-registration)
+  - [x] Replaced direct `supabase.from('patients').insert(row)` with `supabase.rpc('create_patient_with_consent', { p_patient: row, p_consent: { consent_method: 'SELF_REGISTERED', grantor_id: userId, grantor_role: 'PATIENT' } })`
+  - [x] Added `mpi_warn: mpiWarn` to the patient row passed to RPC
+
+- [x] Task 11b: Tests for MPI integration
+  - [x] Created `apps/hub-api/src/__tests__/patient-registration-mpi.test.ts` (5 tests):
+    - ALLOW path: calls RPC with consent_method SELF_REGISTERED
+    - ALLOW with phone match below threshold: still creates patient
+    - BLOCK: returns non-PHI `{ blocked: true, message }` (no candidateIds leaked)
+    - WARN: creates patient with mpi_warn=true
+    - Invalid OTP: never reaches MPI check
+
+### AC Changes from MPI Phase 1
+
+Original AC #8 ("duplicate phone returns generic error") is superseded:
+- Phone uniqueness is no longer checked — MPI scoring handles deduplication across multiple identity fields (name, birthYear, phone, nationalId, etc.)
+- BLOCK response is `{ blocked: true, message }` (anti-enumeration) instead of a thrown error
+- AC #2 (FHIR Patient creation) now uses atomic `create_patient_with_consent` RPC instead of direct insert
+
 ## Dev Notes
 
 ### Architecture & Patterns

@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -1009,6 +1009,18 @@ As a lab technician, I want to see a dashboard after login showing my lab's acti
 - **And** the dashboard auto-refreshes every 60 seconds
 - **And** the layout is responsive and uses `@ultranos/ui-kit` design tokens
 
+> **Implementation Notes (2026-05-22, branch `internationalization-01`):**
+> - All dashboard component text now uses `useTranslations()` from next-intl (en/ar/prs). No hard-coded strings remain.
+> - QueueStatusCard and ActivitySummaryCard badges have `role="status"` + `aria-label` for screen reader announcement (e.g., "2 Pending").
+> - Error banner includes a retry button (`useDashboardData.retry()`). Error role upgraded to `role="alert" aria-live="assertive"`.
+> - Loading state uses skeleton placeholder cards instead of spinner.
+> - AuthGuard shows skeleton loading instead of blank page during session check.
+> - Skip-to-main-content link added to root layout; `<main id="main-content">` wired.
+> - All action buttons meet 44px min touch target (WCAG 2.5.8).
+> - `motion-safe:` prefix on transitions; global `prefers-reduced-motion` safety net in globals.css.
+> - RecentUploadsList uses locale-aware `toLocaleString(locale, ...)` for timestamps.
+> - Tests updated: next-intl mock supports namespaced `useTranslations('dashboard')`, `useTranslations('status')`, `useLocale()`. 11/11 pass.
+
 ### Story 17.2: Upload Workflow Orchestrator Page
 As a lab technician, I want a guided step-by-step upload process, so that I can efficiently verify the patient, upload the file, tag metadata, and submit without confusion.
 
@@ -1790,6 +1802,96 @@ As a pharmacist, I want stale practitioner keys to be automatically revalidated,
 - **And** if the key is confirmed active by the Hub, the cache is refreshed with a new TTL
 - **And** if the key is revoked, the cache entry is deleted and the verification fails with `KEY_REVOKED`
 - **And** if the Hub is unreachable, the stale key is treated as untrusted (fail-closed) and the pharmacist is shown an offline verification warning
+
+---
+
+# Addendum 6: Pharmacy Lite Enterprise Readiness (2026-05-22)
+
+> Cross-cutting fixes surfaced by enterprise readiness audit of the Pharmacy Lite dashboard.
+> Addresses gaps across Epic 26 (Pharmacy UI), Epic 11 (i18n), Epic 29 (Audit), Epic 30 (Sync), Epic 13 (Resilience), Epic 14 (Auth Shell), Epic 19 (Sync Reliability), Epic 35 (UX Polish/A11y).
+
+## PE: Pharmacy Enterprise Readiness
+
+### Critical Fixes (PE-1 through PE-10)
+
+#### PE-1: Dashboard Error Surfacing (Epic 13)
+Silent `catch` in `PharmacyDashboard.refreshStats` replaced with `statsError` state and a visible `role="alert"` banner with Retry button. Prevents stale zeros from being mistaken for real data during shift handover — a patient safety risk if supervisors use the count to assess coverage.
+
+#### PE-2: Sync Queue Entry Type Alignment (Epic 30 / Story 30-9)
+Added `'synced'` to `SyncQueueEntry.status` union in `db.ts`. Fixes TypeScript type mismatch that caused the "Recently Synced" section in `SyncQueueDashboard` to be permanently empty. Synced entries previously fell through the `categorize()` switch statement and vanished from the UI.
+
+#### PE-3: Dashboard PHI Audit Event (Epic 29)
+Dashboard now emits `auditPhiAccess(READ, MEDICATION_DISPENSE)` once per session (via `auditedSessionRef`) when recent dispense records containing `patientRef` + `medicationName` are loaded. Satisfies CLAUDE.md Rule 6: "Every read, write, or access to patient data must emit a structured audit event."
+
+#### PE-4: Pharmacy i18n Wiring (Epic 11)
+Wired `useTranslations()` from `next-intl` into `PharmacyDashboard`, `RecentDispensingList`, `ShiftSummary`, and `SyncQueueDashboard`. All user-visible strings now sourced from translation catalogs (`messages/en.json`, `ar.json`, `prs.json`). The i18n infrastructure was already set up (Epic 11) but no pharmacy component was consuming it.
+
+#### PE-5: ShiftSummary Focus Trap & Restoration (Epic 26)
+Added WCAG 2.1 AA-compliant focus management to the `ShiftSummary` dialog:
+- `tabIndex={-1}` + `ref` on dialog panel for auto-focus on mount
+- Tab cycles trapped within the dialog (forward and backward)
+- Escape key closes the dialog
+- Focus returns to the previously-focused element on unmount
+Satisfies WCAG 2.1 SC 2.1.2 (No Keyboard Trap) and SC 2.4.3 (Focus Order).
+
+#### PE-6: SyncPulse Global Queue State (Epic 19)
+Rewrote `SyncPulse` to poll the global `syncQueue` Dexie table using indexed `where('status')` queries instead of reading only from the active fulfillment session store (`useFulfillmentStore`). Now shows:
+- Red + pulse: failed entries in queue
+- Amber + pulse: pending/in-flight entries
+- Green: all synced
+Polls every 10s and on visibility change. Accurate representation of actual sync health.
+
+#### PE-7: Dashboard Loading Skeleton (Epic 26)
+Added `isLoading` state with `aria-busy="true"` skeleton blocks (3 grey rectangles with pulse animation). Prevents the "instant zeros that flip to real numbers" UX pattern that was indistinguishable from "nothing happened today" on slow devices.
+
+#### PE-8: AuthGuard Loading State (Epic 14)
+Replaced `return null` during async session check with a centered spinner + "Loading..." text with `aria-busy`. Eliminates the blank page flash that appeared while Supabase session verification was in progress.
+
+#### PE-9: Indexed Sync Queue Queries (Epic 30)
+Added Dexie v5 schema version with `retryCount` index on `syncQueue`. Replaced the `toArray()` + JavaScript-side filter pattern with `where('status').anyOf(...)` indexed queries. Prevents memory/performance issues during extended offline periods where hundreds of queue entries accumulate.
+
+#### PE-10: Locale-Aware Time Formatting (Epic 11)
+`RecentDispensingList.formatTime()` now receives the app locale from `useLocale()` (next-intl) and passes it to `toLocaleTimeString()`. Previously used an empty locale array `[]` which defaulted to the OS locale rather than the app's configured language — a problem in multilingual deployments where the OS is in English but the app is set to Arabic.
+
+### Low-Priority Polish (PE-11 through PE-14)
+
+#### PE-11: React.memo on Display Components (Epic 26)
+Wrapped `DispensingSummaryCard` and `SyncQueueCard` with `React.memo`. Both are pure display components receiving only primitive props — they re-rendered on every parent state update (30s auto-refresh) without any prop changes. Minimal perf impact today but prevents future degradation.
+
+#### PE-12: Skip-to-Content Link (Epic 35)
+Added a `sr-only focus:not-sr-only` anchor link in `AppShellWrapper` targeting `#main-content`. Visible only on keyboard focus. The `<main>` element now has `id="main-content"`. Required for WCAG 2.4.1 (Bypass Blocks) — allows keyboard users to skip past the AppShell navigation directly to clinical content.
+
+#### PE-13: Focus-Visible Ring on Dashboard CTAs (Epic 26)
+Added `focus-visible:outline-2 focus-visible:outline-offset-2` to both quick-action `<Link>` elements ("Scan QR Prescription" and "Scan Paper Prescription"). The green CTA uses `outline-[#163300]` (dark green) and the orange CTA uses `outline-orange-700` for contrast. Required for WCAG 2.4.11 (Focus Appearance) — focus indicator must be visible on all interactive elements.
+
+#### PE-14: Axe-Core Tests for Clinical Components (Epic 35)
+Added 4 new axe-core tests to `accessibility.test.tsx` covering real pharmacy components:
+- `DispensingSummaryCard` with non-zero values
+- `SyncQueueCard` with pending items
+- `RecentDispensingList` with populated items (2 dispenses, mixed sync states)
+- `RecentDispensingList` empty state
+
+Previously, the accessibility test file only tested synthetic HTML fragments. These new tests run axe against the actual component output to catch structural violations (missing landmarks, label issues, color-only communication) in production code.
+
+---
+
+### Enterprise Readiness Status After PE Fixes
+
+| Dimension | Before | After |
+|-----------|--------|-------|
+| Error handling | Silent catch → stale zeros | Visible error banner + retry |
+| Sync type safety | TypeScript mismatch → broken UI | Full union, switch exhaustive |
+| PHI audit coverage | Dashboard reads unaudited | Once-per-session audit event |
+| i18n | Infrastructure only, no consumption | 4 core components wired |
+| Dialog a11y (WCAG) | No focus trap | Full trap + Escape + restore |
+| Sync indicator accuracy | Session-local only | Global queue state |
+| Loading UX | Instant zeros | Skeleton + aria-busy |
+| Auth loading UX | Blank page | Spinner |
+| Query performance | Full toArray → memory risk | Indexed where queries |
+| Locale correctness | OS default | App locale |
+| Re-render efficiency | No memoization | memo on pure components |
+| Keyboard navigation | No skip link, no focus ring | Both added |
+| Test coverage (a11y) | Synthetic HTML only | Real clinical components |
 
 ---
 
@@ -3243,6 +3345,58 @@ So that the installed app looks professional and handles network loss gracefully
 - **When** an uncached navigation request fails offline
 - **Then** a `/offline` route renders a graceful fallback: "You're offline — cached data is available"
 
+### Story 35.9: Lab Lite Dashboard i18n, Accessibility & UX Hardening
+
+As an Arabic or Dari-speaking lab technician,
+I want the Lab Lite dashboard and all supporting views to render in my language with proper accessibility,
+So that I can use the application natively without encountering hard-coded English strings or inaccessible controls.
+
+**Acceptance Criteria:**
+
+- **Given** dashboard components (LabIdentityCard, QueueStatusCard, ActivitySummaryCard, QuickActions, RecentUploadsList) contain hard-coded English strings
+- **When** this story is complete
+- **Then** all user-facing text uses `useTranslations()` from next-intl with keys from en.json/ar.json/prs.json
+
+- **Given** UploadQueue and UploadHistoryList contain hard-coded English strings for status labels, button text, confirmation prompts, and empty states
+- **When** this story is complete
+- **Then** all text uses `useTranslations('queue')` and `useTranslations('history')` respectively
+
+- **Given** InstallPrompt contains hard-coded English strings
+- **When** this story is complete
+- **Then** all text uses `useTranslations('install')`
+
+- **Given** layout.tsx has a hard-coded `<h1>Lab Diagnostics Portal</h1>`
+- **When** this story is complete
+- **Then** it uses the existing `LayoutHeaderTitleClient` component (which uses `useTranslations('app')`)
+
+- **Given** QueueStatusCard and ActivitySummaryCard badge counts are not announced by screen readers
+- **When** this story is complete
+- **Then** each badge has `role="status"` and `aria-label` (e.g., "2 Pending") with inner text marked `aria-hidden="true"`
+
+- **Given** no skip-to-content link exists
+- **When** this story is complete
+- **Then** a sr-only skip link targets `<main id="main-content">`
+
+- **Given** AuthGuard returns `null` (blank page) while checking session
+- **When** this story is complete
+- **Then** it renders skeleton loading cards with `aria-busy="true"`
+
+- **Given** the error banner has no retry action
+- **When** this story is complete
+- **Then** a "Try Again" button calls `useDashboardData.retry()` to re-fetch
+
+- **Given** action buttons in UploadQueue and UploadHistoryList use `px-2 py-1` (~28px height)
+- **When** this story is complete
+- **Then** all action buttons have `min-h-[44px]` for WCAG 2.5.8 touch target compliance
+
+- **Given** CSS transitions and animations run regardless of user motion preferences
+- **When** this story is complete
+- **Then** `motion-safe:` prefix is applied to all transition/animation classes in modified components
+- **And** a global `@media (prefers-reduced-motion: reduce)` rule exists in globals.css
+
+> **Status: ✅ COMPLETE (2026-05-22, branch `internationalization-01`)**
+> 14 files modified. 11/11 dashboard tests pass with updated i18n mock.
+
 ---
 
 ## Epic 36: Data Integrity & Race Condition Fixes
@@ -3409,4 +3563,128 @@ So that I don't have to re-enter the entire prescription.
 - **When** the error is caught
 - **Then** the modal remains open with the override data intact
 - **And** an error message is shown within the modal
+
+---
+
+# Addendum 8: MPI Phase 1 — Patient Identity & Deduplication (2026-05-22)
+
+> Afghan patronymic MPI deduplication engine, atomic consent-at-creation, and Hub API integration.
+> Extends Story 16.2 (Patient CRUD) and Story 27.10 (Patient Self-Registration).
+> New package: `packages/mpi-engine`. New migrations 018–023c. New Hub API endpoints.
+
+## MPI-1: mpi-engine Package — Normalization & Phonetic Tokenization
+
+As a Hub API developer,
+I want a pure TypeScript MPI engine that normalizes Afghan names and produces phonetic tokens,
+So that the Hub can perform fuzzy duplicate detection without external services.
+
+**Acceptance Criteria:**
+
+- **Given** an Arabic-script Afghan name (e.g., "احمد")
+- **When** `normalizeNameComponent()` is called
+- **Then** it performs NFD normalization → ALA-LC romanization → variant expansion → lowercase
+- **And** `computePhoneticTokens()` produces Double Metaphone codes for the romanized form
+
+- **Given** a Latin-script name with common Afghan variants (e.g., "Mohammad", "Mohammed", "Muhammed")
+- **When** normalized
+- **Then** all variants reduce to the same canonical form ("muhammad")
+- **And** produce identical phonetic tokens
+
+## MPI-2: mpi-engine Package — Scoring & Decision Engine
+
+As a Hub API developer,
+I want a weighted scoring system that compares input fields against candidate records,
+So that the system can classify matches as BLOCK (≥90), WARN (60–89), or ALLOW (<60).
+
+**Acceptance Criteria:**
+
+- **Given** an input patient and a list of candidate records from the DB
+- **When** `computeMpiResult()` is called
+- **Then** each candidate is scored using Jaro-Winkler similarity across weighted fields:
+  - givenName (30), fatherName (25), grandfatherName (10), birthYear (15), gender (5), districtOrigin (5), provinceOrigin (3), phone (7)
+- **And** hard identifier matches (nationalIdHash, tazkiraPaperHash, biometricHash) bypass scoring → immediate BLOCK (score 100)
+- **And** the result includes `{ decision: 'BLOCK'|'WARN'|'ALLOW', topScore, candidates[] }` with per-candidate scoreBreakdown
+
+## MPI-3: shared-types — Afghan Patient Data Model Extensions
+
+As a developer working with FHIR Patient resources,
+I want the shared types to include Afghan patronymic fields, address validation, and MPI input schemas,
+So that all apps share a single validated data model for MPI Phase 1.
+
+**Acceptance Criteria:**
+
+- **Given** `packages/shared-types/src/fhir/patient.ts`
+- **Then** `FhirPatient._ultranos` includes: nameGiven, nameFather, nameGrandfather, birthYear, addressOrigin (PatientAddress), addressCurrent, isNomadic, biometricFingerprintHash, biometricAlgorithmVersion, mpiScore, identifiers
+- **And** `PatientAddress.province` uses `z.enum(AFGHAN_PROVINCES)` — 34 provinces validated at parse time
+- **And** `CreatePatientMpiInputSchema` includes cross-field validation (birthDate/birthYear, verbal consent witness, birthYearOnly=false requires birthDate)
+- **And** `firstName` is accepted as a deprecated alias for `nameGiven` (Patient Lite backward compat)
+
+## MPI-4: Database Migrations — Patient MPI Fields & Atomic Consent RPC
+
+As a database administrator,
+I want the patients table extended with MPI fields and an atomic RPC for patient+consent creation,
+So that MPI scoring can operate on indexed phonetic data and consent is never orphaned from patient creation.
+
+**Acceptance Criteria:**
+
+- **Given** migrations 018–023c applied to the Supabase database
+- **Then** `patients` table has: name_given, name_father, name_grandfather, name_phonetic_given (TEXT[]), name_phonetic_father (TEXT[]), name_phonetic_grandfather (TEXT[]), birth_year (SMALLINT), address_province_origin, address_district_origin, address_village_origin, address_province_current, address_district_current, address_village_current, tazkira_paper_hash, biometric_fingerprint_hash, biometric_algorithm_version, mpi_score, mpi_warn, is_nomadic, name_given_enc, name_father_enc, name_grandfather_enc
+- **And** GIN indexes exist on phonetic array columns; scalar indexes on birth_year, address_district_origin, biometric_fingerprint_hash, tazkira_paper_hash, mpi_warn
+- **And** `consent_records` has: consent_method (WRITTEN|VERBAL_WITNESSED|SELF_REGISTERED), witnessed_by (FK→practitioners), consent_language (en|ar|prs), with VERBAL_WITNESSED requiring witnessed_by
+- **And** `create_patient_with_consent(p_patient JSONB, p_consent JSONB)` atomically inserts patient + consent, using explicit column list (no mass-assignment), grantor_id NULL guard, safe scope defaulting, SHA-256 audit_hash
+- **And** `fetch_mpi_candidates(p_input JSONB)` returns candidates matching phonetic overlap, hard ID match, birth_year+district combo, or phone match (LIMIT 50), returning `'[]'::JSONB` on empty
+
+## MPI-5: Hub API — MPI-Aware Patient Create, Search, and Duplicate Check
+
+As a clinician,
+I want patient creation to check for duplicates and require confirmation before creating potential duplicates,
+So that the MPI prevents accidental duplicate records.
+
+**Acceptance Criteria:**
+
+- **Given** a clinician calls `patient.create` with MPI input
+- **When** MPI scores ≥90 (BLOCK)
+- **Then** the endpoint throws CONFLICT with opaque candidateIds (no PHI in error payload)
+- **And** when MPI scores 60–89 (WARN) without proceedToken, throws PRECONDITION_FAILED with candidateIds + proceedToken
+- **And** when WARN + valid proceedToken provided, verifies issuedTo matches calling user, consumes token before insert, creates patient with mpi_warn=true via atomic RPC
+- **And** proceedToken is RS256 JWT (10-min TTL, one-time-use via Redis, fail-closed on Redis unavailable)
+
+- **Given** a clinician calls `patient.search`
+- **Then** the response includes MPI fields: nameGiven, nameFather, nameGrandfather, birthYear, addressDistrictOrigin, addressProvinceOrigin, mpiScore, mpiWarn in `_ultranos`
+
+- **Given** a clinician calls `patient.checkDuplicates` (new endpoint)
+- **Then** it returns `{ decision, topScore, proceedToken?, candidates[] }` with per-candidate scoreBreakdown
+- **And** the endpoint is rate-limited to 20 requests/minute
+- **And** emits PHI_READ audit with resourceId='mpi-check' (no PHI in audit metadata)
+
+## MPI-6: Patient Self-Registration — MPI Integration
+
+As a patient self-registering via Patient Lite Mobile,
+I want the system to check for duplicates before creating my record,
+So that I don't accidentally create a second record for myself.
+
+**Acceptance Criteria:**
+
+- **Given** a patient completes OTP verification and submits registration
+- **When** MPI scores ≥90 (BLOCK)
+- **Then** the endpoint returns `{ blocked: true, message: 'You may already be registered...' }` (no throw, anti-enumeration)
+- **And** when MPI scores 60–89 (WARN), the patient is created with mpi_warn=true (no proceedToken needed for self-registration)
+- **And** the phone uniqueness check is removed (MPI handles deduplication)
+- **And** patient creation uses atomic `create_patient_with_consent` RPC with `consent_method: 'SELF_REGISTERED'`
+
+## Implementation Status
+
+| Story | Status | Commits | Tests |
+|-------|--------|---------|-------|
+| MPI-1: Normalization & Phonetic | ✅ Done | 177fb92, efd77d2, cba17e7 | normalization.test.ts |
+| MPI-2: Scoring & Decision | ✅ Done | 66cbf7f, b336275, b4076dd | scoring.test.ts |
+| MPI-3: shared-types Extensions | ✅ Done | aa6d635, 4b5d6bf | (validated via typecheck) |
+| MPI-4: Database Migrations | ✅ Done | 9785304, fce20e6, db14d6e, 8ee2495, 7006cd1 | (applied via Supabase MCP) |
+| MPI-5: Hub API Integration | ✅ Done | dfe9eb4, bca2897, 2c86cb9, 9cc4a68, c81ed41, e17d554 | patient-mpi.test.ts (7), patient-consent-atomic.test.ts (12), patient-crud.test.ts (20) |
+| MPI-6: Self-Registration MPI | ✅ Done | (in patient-registration.ts) | patient-registration-mpi.test.ts (5) |
+
+## Known Gaps (Fast-Follow)
+
+1. **Audit failures silently swallowed:** All PHI access paths catch and console.warn audit failures. CLAUDE.md Rule #6 says "no exceptions." Needs durable audit fallback queue.
+2. **BLOCK/PRECONDITION_FAILED paths not audited:** When patient.create returns BLOCK or issues a proceedToken, no audit event is emitted for the attempted access.
 

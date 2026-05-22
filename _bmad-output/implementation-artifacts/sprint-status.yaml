@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-18T23:59:00.000000'
+last_updated: '2026-05-22T22:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -298,6 +298,17 @@ development_status:
   epic-27-retrospective: optional
 
   # ============================================================
+  # MPI PHASE 1 — Patient Identity & Deduplication (2026-05-22)
+  # Addendum 8 in epics.md. Extends 16-2 and 27-10.
+  # ============================================================
+  mpi-1-normalization-phonetic-tokenization: done
+  mpi-2-scoring-decision-engine: done
+  mpi-3-shared-types-afghan-data-model: done
+  mpi-4-database-migrations-consent-rpc: done
+  mpi-5-hub-api-mpi-create-search-checkduplicates: done
+  mpi-6-patient-self-registration-mpi: done
+
+  # ============================================================
   # DEFERRED WORK EPICS (28-36) — Generated 2026-05-18
   # From comprehensive review of deferred-work.md (~172 items)
   # ============================================================
@@ -333,7 +344,7 @@ development_status:
   30-6-sync-queue-lifecycle-purge-and-retention: backlog
   30-7-auth-token-refresh-integration-in-drain-worker: backlog
   30-8-quota-exceeded-error-handling-and-recovery: backlog
-  30-9-sync-queue-entry-type-alignment: backlog
+  30-9-sync-queue-entry-type-alignment: done  # completed via PE-2 (2026-05-22)
   epic-30-retrospective: optional
 
   # Priority: MEDIUM (standards)
@@ -405,3 +416,26 @@ development_status:
   36-7-database-constraint-and-cleanup-for-toctou-races: backlog
   36-8-handle-interaction-override-form-preservation: backlog
   epic-36-retrospective: optional
+
+  # ============================================================
+  # ENTERPRISE READINESS — Pharmacy Lite (2026-05-22)
+  # Cross-cutting fixes from enterprise audit of Pharmacy Lite dashboard.
+  # ============================================================
+
+  # Critical fixes (PE-1 through PE-10)
+  pe-1-dashboard-error-surfacing: done               # Epic 13 — visible error banner + retry
+  pe-2-sync-queue-entry-type-alignment: done         # Epic 30/30-9 — 'synced' added to status union
+  pe-3-dashboard-phi-audit-event: done               # Epic 29 — audit on dashboard dispense reads
+  pe-4-pharmacy-i18n-wiring: done                    # Epic 11 — useTranslations wired into 4 components
+  pe-5-shift-summary-focus-trap: done                # Epic 26 — WCAG focus trap + Escape + restore
+  pe-6-sync-pulse-global-queue: done                 # Epic 19 — polls Dexie syncQueue, not fulfillment store
+  pe-7-dashboard-loading-skeleton: done              # Epic 26 — skeleton with aria-busy
+  pe-8-auth-guard-loading-state: done                # Epic 14 — spinner replaces blank page
+  pe-9-sync-queue-indexed-query: done                # Epic 30 — Dexie v5, status-based indexed queries
+  pe-10-locale-aware-time-format: done               # Epic 11 — useLocale() in formatTime
+
+  # Low-priority polish (PE-11 through PE-14)
+  pe-11-react-memo-display-components: done          # Epic 26 — memo on DispensingSummaryCard, SyncQueueCard
+  pe-12-skip-to-content-link: done                   # Epic 35 — sr-only link in AppShellWrapper
+  pe-13-focus-visible-ring-cta: done                 # Epic 26 — focus-visible:outline on dashboard CTAs
+  pe-14-axe-core-clinical-component-tests: done      # Epic 35 — axe tests for real pharmacy components
