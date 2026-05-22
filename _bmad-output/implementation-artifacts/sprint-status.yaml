@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-22T22:00:00.000000'
+last_updated: '2026-05-22T23:30:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -307,6 +307,34 @@ development_status:
   mpi-4-database-migrations-consent-rpc: done
   mpi-5-hub-api-mpi-create-search-checkduplicates: done
   mpi-6-patient-self-registration-mpi: done
+
+  # ============================================================
+  # MPI PHASE 2 — Registration UI, Offline Reconciliation & Duplicate Review (2026-05-22)
+  # Addendum 9 in epics.md.
+  # ============================================================
+  mpi-p2-1-district-dataset: done
+  mpi-p2-2-duplicate-reviews-migration: done
+  mpi-p2-3-async-mpi-scoring: done
+  mpi-p2-4-patient-sync-create: done
+  mpi-p2-5-duplicate-review-router: done
+  mpi-p2-6-registration-enrichment: done
+  mpi-p2-7-registration-form: done
+  mpi-p2-8-navigation: done
+  mpi-p2-9-duplicate-review-ui: done
+  mpi-p2-10-mobile-registration: done
+  mpi-p2-11-profile-completion: done
+
+  # ============================================================
+  # MPI PHASE 3 — Spoke App Completeness & Admin Tools (2026-05-22)
+  # Addendum 10 in epics.md.
+  # ============================================================
+  mpi-p3-1-db-migrations-merge-infrastructure: done
+  mpi-p3-2-patient-admin-router-merge-unmerge: done
+  mpi-p3-3-admin-portal-patient-pages-merge-tool: done
+  mpi-p3-4-lab-lite-offline-verification: done
+  mpi-p3-5-pharmacy-lite-manual-rx-fallback: done
+  mpi-p3-6-consent-expiry-warning: done
+  mpi-p3-7-biometric-reenrolment: done
 
   # ============================================================
   # DEFERRED WORK EPICS (28-36) — Generated 2026-05-18

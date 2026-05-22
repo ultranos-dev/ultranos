@@ -498,6 +498,81 @@ Commit: `76a8eb8`
 
 ---
 
+## 2026-05-22 — MPI Phase 3: Spoke App Completeness & Admin Tools — ✅ COMPLETE
+
+### What Was Done
+Branch: `internationalization-01`
+
+**Phase A — Admin Portal Patient Management & Merge (Tasks 1–3):**
+1. Database migrations 025–026: `merged_into` column on `patients` + `merge_audits` table (72-hour reversible merge log), `dispense_reviews` table for unverified offline pharmacy dispenses
+2. Hub API `patient-admin` tRPC router: `getById` (admin-only patient fetch), `adminSearch` (name-based with MPI/inactive filters), `merge` (field-level resolution, duplicate deactivation, merge audit creation), `unmerge` (restores both patients within 72h window)
+3. `patient.read` updated to follow `merged_into` links transparently — merged patients redirect to survivor
+4. Admin Portal: 3 pages (patient search, patient detail, 3-step merge wizard with "type MERGE" confirmation gate) + 4 components (PatientComparisonTable, FieldResolutionRow, ConsentTimeline placeholder, MergePreview) + Sidebar navigation entries
+
+**Phase B — Lab Lite & Pharmacy Lite Offline (Tasks 4–5):**
+5. Lab Lite offline verification: Dexie v2 schema with `practitioner_keys` and `verified_patients` tables, Ed25519 signature verification via tweetnacl (iterates cached keys), 24-hour patient cache TTL, offline QR verification path in PatientVerifyScanner, cache lookup in PatientVerifyForm, OfflineVerificationBadge (online/offline/cached states), OnlineStatusIndicator
+6. Pharmacy Lite manual Rx fallback: ManualRxEntry component (online lookup / offline grace trigger), OfflineGraceForm (supervisor + reason, 5-per-shift limit in sessionStorage), UnverifiedDispensesCard (dashboard card matching DispensingSummaryCard pattern)
+
+**Phase C — Consent Expiry & Biometric Re-enrolment (Tasks 6–7):**
+7. Hub API consent router extended: `expiringCount` (90-day window count), `expiringSoon` (paginated list), `renew` (supersedes old consent, creates new 3-year consent with SHA-256 audit hash)
+8. OPD Lite consent expiry UI: ExpiringConsentsCard (dashboard, 30s auto-refresh), expiring-consents page (table with color-coded days-until-expiry), ConsentExpiryBanner (patient-level amber alert), ConsentRenewalModal (method/witness/language/version form)
+9. Hub API `patient.updateBiometric` mutation: updates fingerprint hash + algorithm version with audit logging
+10. OPD Lite BiometricStaleBanner: blue informational banner when algorithm version mismatches, "Update Biometric" trigger
+
+### New Files
+- `supabase/migrations/025_patient_merged_into.sql`
+- `supabase/migrations/026_dispense_reviews.sql`
+- `apps/hub-api/src/trpc/routers/patient-admin.ts`
+- `apps/hub-api/src/__tests__/patient-merge.test.ts` (5 tests)
+- `apps/hub-api/src/__tests__/consent-expiry.test.ts` (7 tests)
+- `apps/admin-portal/src/app/patients/page.tsx`
+- `apps/admin-portal/src/app/patients/[patientId]/page.tsx`
+- `apps/admin-portal/src/app/patients/merge/page.tsx`
+- `apps/admin-portal/src/components/patients/` (4 components)
+- `apps/lab-lite/src/lib/offline-verify.ts`
+- `apps/lab-lite/src/components/OfflineVerificationBadge.tsx`
+- `apps/lab-lite/src/components/OnlineStatusIndicator.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ManualRxEntry.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/OfflineGraceForm.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/UnverifiedDispensesCard.tsx`
+- `apps/opd-lite/src/components/dashboard/ExpiringConsentsCard.tsx`
+- `apps/opd-lite/src/app/[locale]/expiring-consents/page.tsx`
+- `apps/opd-lite/src/components/patient/ConsentExpiryBanner.tsx`
+- `apps/opd-lite/src/components/patient/ConsentRenewalModal.tsx`
+- `apps/opd-lite/src/components/patient/BiometricStaleBanner.tsx`
+
+### Files Modified
+- `apps/hub-api/src/trpc/routers/_app.ts` — register `patientAdmin` router
+- `apps/hub-api/src/trpc/routers/patient.ts` — `merged_into` follow in `read`, `updateBiometric` mutation
+- `apps/hub-api/src/trpc/routers/consent.ts` — `expiringCount`, `expiringSoon`, `renew` endpoints
+- `apps/lab-lite/src/lib/db.ts` — Dexie v2 with `practitioner_keys`, `verified_patients`
+- `apps/lab-lite/src/components/PatientVerifyScanner.tsx` — offline QR verification path
+- `apps/lab-lite/src/components/PatientVerifyForm.tsx` — cache lookup when offline
+- `apps/lab-lite/package.json` — added `tweetnacl` dependency
+- `apps/admin-portal/src/components/Sidebar.tsx` — Patients + Merge Tool nav items
+
+### Errors & Resolutions
+- Admin Portal detail page and merge wizard used `adminSearch` (name-based ilike) to fetch patients by UUID — added dedicated `patientAdmin.getById` endpoint and updated both pages
+- Lab Lite practitioner key caching requires Hub API to return signing keys during verification — deferred with TODO comment
+
+### Tests Run
+- `patient-merge.test.ts` — 5/5 passed (merge, admin role, unmerge within/after 72h, merged_into follow)
+- `consent-expiry.test.ts` — 7/7 passed (expiringCount, expiringSoon, renew + audit hash)
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity — Admin merge/unmerge tool, merged_into query resolution
+- **FR12 / Epic 1:** Consent Management — consent expiry monitoring, renewal flow
+- **FR22 / Epic 16:** Hub API Patient CRUD — updateBiometric endpoint
+- **Epic 12 — Lab Portal:** Offline verification fallback (data-minimized, Rule #7)
+- **Epic 4/26 — Pharmacy:** Manual Rx fallback, offline grace dispensing
+- **Epic 20 — OPD Lite:** Consent expiry dashboard card, biometric stale banner
+- **Epic 22 — Admin Portal:** Patient search, detail, merge tool
+- **CLAUDE.md Rule #1:** No PHI in logs — only error codes and opaque IDs logged
+- **CLAUDE.md Rule #6:** Audit every PHI access — all new endpoints emit audit events
+- **CLAUDE.md Rule #7:** Lab Portal data minimization — cache stores only firstName + age
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._
