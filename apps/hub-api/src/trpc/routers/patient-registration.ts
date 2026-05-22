@@ -6,6 +6,8 @@ import { rateLimitMiddleware, checkRateLimit } from '../middleware/rateLimit'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { encryptField } from '@ultranos/crypto/server'
 import { db } from '@/lib/supabase'
+import { computeMpiResult } from '@ultranos/mpi-engine'
+import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 
 /**
  * OTP rate limit: max 3 requests per phone per 10-minute window.
@@ -133,27 +135,33 @@ export const patientRegistrationRouter = createTRPCRouter({
 
       const userId = otpData.session.user.id
 
-      // Step 2: Check for duplicate phone — generic error if exists (AC #8)
-      const { data: existingPatient } = await ctx.supabase
-        .from('patients')
-        .select('id')
-        .eq('telecom_phone', input.phone)
-        .limit(1)
+      // Step 2: MPI deduplication check — fetch candidates and score (Task 11)
+      const birthYear = Number(input.dateOfBirth.split('-')[0])
+      const mpiCandidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven: input.firstName,
+        birthYear,
+        phone: input.phone,
+      })
 
-      if (existingPatient && existingPatient.length > 0) {
-        // Anti-enumeration: generic error, no indication phone is already registered
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Registration failed. Please try again.',
-        })
+      const mpiResult = computeMpiResult(mpiCandidates, {
+        nameGiven: input.firstName,
+        birthYear,
+        phone: input.phone,
+      })
+
+      if (mpiResult.decision === 'BLOCK') {
+        // Anti-enumeration: return non-throwing blocked response — no candidate IDs or PHI
+        return { blocked: true, message: 'You may already be registered. Please contact your clinic.' }
       }
 
-      // Step 3: Create FHIR Patient resource — FREE tier, no org_id (AC #2, #3)
+      const mpiWarn = mpiResult.decision === 'WARN'
+
+      // Step 3: Create FHIR Patient resource atomically with consent via RPC — FREE tier, no org_id (AC #2, #3)
       // P1: Encrypt PHI fields before storage
       const now = new Date().toISOString()
       const patientId = crypto.randomUUID()
 
-      const row = db.toRow({
+      const patientRow = db.toRow({
         id: patientId,
         nameLocal: input.firstName,
         nameLocalEnc: encryptField(input.firstName, encKey),
@@ -165,39 +173,50 @@ export const patientRegistrationRouter = createTRPCRouter({
         isActive: true,
         patientTier: 'FREE',
         preferredLanguage: input.preferredLanguage,
+        mpi_warn: mpiWarn,
         createdAt: now,
         updatedAt: now,
       })
 
-      const { error: insertError } = await ctx.supabase.from('patients').insert(row)
+      const consentRow = {
+        consent_method: 'SELF_REGISTERED' as const,
+        grantor_id: userId,
+        grantor_role: 'PATIENT' as const,
+      }
 
-      if (insertError) {
-        // P3: Handle unique constraint violation on telecom_phone gracefully
-        if (insertError.code === '23505') {
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc('create_patient_with_consent', {
+        p_patient: patientRow,
+        p_consent: consentRow,
+      })
+
+      if (rpcError) {
+        // Handle unique constraint violation on telecom_phone gracefully
+        if (rpcError.code === '23505') {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Registration failed. Please try again.',
           })
         }
-        console.error('[PATIENT_REGISTRATION] insert failed:', { code: insertError.code })
+        console.error('[PATIENT_REGISTRATION] RPC failed:', { code: rpcError.code })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Registration failed. Please try again.',
         })
       }
 
+      const createdPatientId: string = (rpcData as Record<string, string>)?.['patientId'] ?? patientId
+
       // Step 4: Update Supabase Auth user metadata to link patient record
       try {
         await ctx.supabase.auth.admin.updateUserById(userId, {
           user_metadata: {
             role: 'PATIENT',
-            patient_id: patientId,
+            patient_id: createdPatientId,
             preferred_language: input.preferredLanguage,
           },
         })
       } catch {
-        // P4: Rollback patient record AND revoke auth session on failure
-        await ctx.supabase.from('patients').delete().eq('id', patientId)
+        // P4: Rollback and revoke auth session on failure
         await ctx.supabase.auth.admin.deleteUser(userId).catch(() => {
           console.warn('[PATIENT_REGISTRATION] Failed to revoke auth user after rollback:', { userId })
         })
@@ -213,11 +232,11 @@ export const patientRegistrationRouter = createTRPCRouter({
       const auditEvent = {
         action: 'CREATE' as const,
         resourceType: 'PATIENT' as const,
-        resourceId: patientId,
+        resourceId: createdPatientId,
         actorId: userId,
         actorRole: 'PATIENT' as const,
         outcome: 'SUCCESS' as const,
-        sessionId: `self-reg:${patientId}`,
+        sessionId: `self-reg:${createdPatientId}`,
         metadata: { operation: 'self-registration' },
       }
       try {
@@ -230,7 +249,7 @@ export const patientRegistrationRouter = createTRPCRouter({
           console.error('[AUDIT_FAILURE] Audit event dropped after retry:', {
             action: 'CREATE',
             resourceType: 'PATIENT',
-            resourceId: patientId,
+            resourceId: createdPatientId,
           })
         }
       }
@@ -238,7 +257,7 @@ export const patientRegistrationRouter = createTRPCRouter({
       // Step 6: Return session tokens (AC #6 — 90-day session)
       return {
         success: true,
-        patientId,
+        patientId: createdPatientId,
         session: {
           accessToken: otpData.session.access_token,
           refreshToken: otpData.session.refresh_token,

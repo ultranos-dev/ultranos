@@ -319,8 +319,15 @@ export const patientRouter = createTRPCRouter({
 
         try {
           const tokenPayload = await verifyProceedToken(input.mpiProceedToken)
+          if (tokenPayload.issuedTo !== ctx.user.sub) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Proceed token was not issued to the current user.',
+            })
+          }
           consumeJti = tokenPayload.jti
-        } catch {
+        } catch (err) {
+          if (err instanceof TRPCError) throw err
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Proceed token is invalid, expired, or already used.',
@@ -386,7 +393,15 @@ export const patientRouter = createTRPCRouter({
         grantor_role:     ctx.user.role ?? 'PRACTITIONER',
       }
 
-      // Step 6: Atomic insert via RPC
+      // Step 6: Consume proceedToken before insert (WARN path only).
+      // Consuming first eliminates the replay window: if the RPC fails after consume,
+      // the patient is not created and the clinician must obtain a fresh token.
+      // This is safer than consuming after — a failed consume throws before any insert.
+      if (consumeJti) {
+        await consumeProceedToken(consumeJti)
+      }
+
+      // Step 7: Atomic insert via RPC
       const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(
         'create_patient_with_consent',
         { p_patient: row, p_consent: consentRow },
@@ -400,11 +415,6 @@ export const patientRouter = createTRPCRouter({
       // Use the patient ID returned by the RPC (authoritative from DB)
       const confirmedPatientId: string =
         (rpcData as Record<string, unknown>)['patientId'] as string ?? patientId
-
-      // Step 7: Consume proceedToken (WARN path only)
-      if (consumeJti) {
-        await consumeProceedToken(consumeJti)
-      }
 
       // Step 8: Audit
       const audit = new AuditLogger(ctx.supabase)
