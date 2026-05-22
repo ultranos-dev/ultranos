@@ -302,3 +302,4 @@ Use `db.toRow()` for all inserts/updates to ensure PHI encryption is mandatory. 
 ## Change Log
 
 - **2026-05-10:** Implemented patient CRUD endpoints (create, read, update) with Option A dual-column encryption, blind index uniqueness, consent enforcement, HLC conflict detection, and audit logging. 15 tests added, all passing.
+- **2026-05-22:** MPI Phase 2 — added `patient.syncCreate` mutation for offline record sync with two-pass MPI (insert first, async scoring after). 3 new tests (sync-create.test.ts), all 20 existing patient-crud tests pass.

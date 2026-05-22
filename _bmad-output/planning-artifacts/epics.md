@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -3687,4 +3687,199 @@ So that I don't accidentally create a second record for myself.
 
 1. **Audit failures silently swallowed:** All PHI access paths catch and console.warn audit failures. CLAUDE.md Rule #6 says "no exceptions." Needs durable audit fallback queue.
 2. **BLOCK/PRECONDITION_FAILED paths not audited:** When patient.create returns BLOCK or issues a proceedToken, no audit event is emitted for the attempted access.
+
+---
+
+# Addendum 9 — MPI Phase 2: Registration UI, Offline MPI Reconciliation & Duplicate Review
+
+**Date:** 2026-05-22
+**Branch:** `internationalization-01`
+**Commit:** 76a8eb8
+
+## Overview
+
+MPI Phase 2 extends Phase 1's deduplication engine with: OPD Lite patient registration UI, offline-first two-pass MPI reconciliation via `patient.syncCreate`, a clinician-facing duplicate review queue, and enriched Patient Lite Mobile registration (nameFather + gender).
+
+## MPI-P2-1: Afghan District Reference Dataset
+
+As a developer building geography-aware registration forms,
+I want a typed, validated Afghan district dataset,
+So that province/district cascading dropdowns are consistent across all apps.
+
+**Acceptance Criteria:**
+- `AFGHAN_DISTRICTS` exported from `@ultranos/shared-types` with 100+ districts across all 34 provinces
+- Each district has `name` (English), `nameLocal` (Dari/Pashto script), `province` (validated parent)
+- `getDistrictsByProvince(province)` helper returns filtered districts
+- `PatientAddressSchema` `.refine()` validates district belongs to selected province
+- All province names match the canonical `AFGHAN_PROVINCES` constant
+
+**Status:** ✅ Done — 7 tests pass
+
+## MPI-P2-2: Database Migration — `duplicate_reviews` Table
+
+As a clinician reviewing flagged duplicate patients,
+I want duplicate match records stored in a dedicated table,
+So that I can review, dismiss, or flag them for merge.
+
+**Acceptance Criteria:**
+- `duplicate_reviews` table with: patient_id (FK→patients), candidate_ids (UUID[]), top_score, mpi_decision (WARN/BLOCK), status (PENDING→DISMISSED|FLAGGED_FOR_MERGE→MERGED), reviewed_by, reviewed_at
+- Partial index on `status='PENDING'` for fast dashboard badge queries
+- Index on `patient_id` for inline banner lookups
+- RLS enabled with select/insert/update policies for authenticated users
+
+**Status:** ✅ Done — Migration 024 applied via Supabase MCP
+
+## MPI-P2-3: Async MPI Scoring Function
+
+As a system processing offline-synced patient records,
+I want MPI scoring to run asynchronously after record insertion,
+So that offline registration is never blocked by MPI.
+
+**Acceptance Criteria:**
+- `runAsyncMpiScoring(patientId, fields, supabase)` is fire-and-forget (never throws)
+- ALLOW: sets `mpi_score` on patient, no review created
+- WARN/BLOCK: sets `mpi_warn=true`, `mpi_score`, creates `duplicate_reviews` row with PENDING status
+- Self-exclusion: filters out the patient's own ID from candidates
+- Errors logged with opaque patientId only (no PHI)
+
+**Status:** ✅ Done — 4 tests pass
+
+## MPI-P2-4: `patient.syncCreate` Endpoint
+
+As a spoke app syncing offline-created patients to the Hub,
+I want a sync endpoint that always succeeds insertion,
+So that offline registration is reliable with post-hoc MPI scoring.
+
+**Acceptance Criteria:**
+- `patient.syncCreate` mutation accepts `CreatePatientMpiInputSchema` + `offlineCreatedAt`
+- Pass 1: inserts patient + consent atomically via `create_patient_with_consent` RPC (no MPI blocking)
+- Pass 2: fires `runAsyncMpiScoring` (fire-and-forget) after successful insert
+- Emits `PHI_WRITE` audit event with `operation: 'sync_create'`
+- Existing `patient.create` (with MPI blocking) is unmodified
+
+**Status:** ✅ Done — 3 tests pass, 20 existing patient-crud tests pass
+
+## MPI-P2-5: `duplicateReview` Router
+
+As a clinician managing duplicate patient records,
+I want API endpoints to list, dismiss, and flag duplicate reviews,
+So that I can resolve MPI-flagged records from the OPD Lite UI.
+
+**Acceptance Criteria:**
+- `duplicateReview.pendingCount` returns count of PENDING reviews
+- `duplicateReview.list` returns paginated reviews with optional status filter
+- `duplicateReview.dismiss` sets status=DISMISSED, clears `mpi_warn` on patient, emits audit
+- `duplicateReview.flagForMerge` sets status=FLAGGED_FOR_MERGE, emits audit
+- All endpoints protected with `enforceResourceAccess('Patient')`
+
+**Status:** ✅ Done — 4 tests pass
+
+## MPI-P2-6: Patient Self-Registration Enrichment
+
+As a patient self-registering via Patient Lite Mobile,
+I want to provide my father's name and gender during registration,
+So that MPI scoring is more accurate and my record is more complete.
+
+**Acceptance Criteria:**
+- `patientRegistration.register` input schema accepts optional `nameFather` and `gender`
+- `nameFather` passed to `fetchMpiCandidates` and `computeMpiResult`
+- `gender` passed to `computeMpiResult`
+- Both fields stored in patient row via `db.toRow()`
+- Backward compatible: existing registrations without these fields still work
+
+**Status:** ✅ Done — 2 new tests pass, 5 existing registration-mpi tests pass
+
+## MPI-P2-7: OPD Lite Registration Form
+
+As a clinician at an OPD desk,
+I want a patient registration form with MPI pre-flight checking,
+So that I can register new patients while preventing duplicates.
+
+**Acceptance Criteria:**
+- Registration page at `/register-patient` with optional `?nameGiven=` pre-fill from search
+- Form sections: name (given/father/grandfather), demographics (gender, DOB/birth year, phone), identity docs, geography (origin/current address with cascading province/district), consent
+- Province/district autocomplete dropdowns using Afghan district dataset
+- On submit: calls `patient.checkDuplicates`, then ALLOW→create, WARN→modal with proceed, BLOCK→modal with "Go to Patient"
+- MpiResultModal shows candidate comparison cards with score breakdown
+- All text via i18n keys (en/ar/prs)
+- RTL-safe with logical CSS properties
+
+**Status:** ✅ Done — 8 components created
+
+## MPI-P2-8: OPD Lite Navigation & "Register New Patient"
+
+As a clinician searching for a patient,
+I want a "Register New Patient" button when search results are sparse,
+So that I can quickly register a new patient when they're not found.
+
+**Acceptance Criteria:**
+- "Register New Patient" dashed button appears in PatientResultList when results < 3
+- Button passes current search query as `?nameGiven=` to registration page
+- "Register New Patient" CTA added to ClinicalDashboard header
+- i18n keys added to `dashboard` namespace (en/ar/prs)
+
+**Status:** ✅ Done
+
+## MPI-P2-9: OPD Lite Duplicate Review UI
+
+As a clinician reviewing MPI-flagged patients,
+I want a duplicate review page and dashboard indicator,
+So that I can resolve flagged records efficiently.
+
+**Acceptance Criteria:**
+- `DuplicateReviewsCard` on dashboard showing pending count (30s polling)
+- `/duplicate-review` page with expandable review table
+- Each row shows patient, score, decision, status; expanded view shows CandidateComparisonCard per candidate
+- Score badge color: green (<60), amber (60-89), red (>=90)
+- Action buttons: "Dismiss" and "Flag for Merge"
+- `MpiWarnBanner` inline amber alert for patient views when `mpi_warn=true`
+- All text via i18n keys (en/ar/prs)
+
+**Status:** ✅ Done — 5 components created
+
+## MPI-P2-10: Patient Lite Mobile — Registration Enrichment
+
+As a patient registering via the mobile app,
+I want to provide my father's name and gender,
+So that my MPI identity profile is more complete from the start.
+
+**Acceptance Criteria:**
+- `ProfileSetupScreen` adds: father's name (text input, required), gender (4-option selector, required)
+- `onComplete` callback includes `nameFather` and `gender`
+- `registration-api.ts` `RegistrationInput` interface includes optional `nameFather` and `gender`
+- Form validation requires both fields before submission
+
+**Status:** ✅ Done
+
+## MPI-P2-11: Patient Lite Mobile — Profile Completion
+
+As a patient with an incomplete profile,
+I want a dashboard nudge prompting me to complete optional fields,
+So that my record is enriched for better healthcare continuity.
+
+**Acceptance Criteria:**
+- `ProfileCompletionCard` shows on dashboard when profile fields are incomplete
+- Progress indicator: "X of Y fields completed" with progress bar
+- Dismissible up to 3 times (tracked in AsyncStorage), then hidden permanently
+- `ProfileCompletionScreen` collects: grandfather's name, origin address (province/district/village)
+- `ProvinceDistrictPicker` React Native cascading dropdown using Afghan district dataset
+- Pre-populates fields already present in patient record
+
+**Status:** ✅ Done — 3 components created
+
+## Implementation Status
+
+| Story | Status | Tests |
+|-------|--------|-------|
+| MPI-P2-1: District Dataset | ✅ Done | afghanistan-districts.test.ts (7) |
+| MPI-P2-2: duplicate_reviews Migration | ✅ Done | (applied via Supabase MCP) |
+| MPI-P2-3: Async MPI Scoring | ✅ Done | async-mpi-scoring.test.ts (4) |
+| MPI-P2-4: patient.syncCreate | ✅ Done | sync-create.test.ts (3) |
+| MPI-P2-5: duplicateReview Router | ✅ Done | duplicate-review.test.ts (4) |
+| MPI-P2-6: Registration Enrichment | ✅ Done | patient-registration-enrichment.test.ts (2) |
+| MPI-P2-7: Registration Form | ✅ Done | (UI components) |
+| MPI-P2-8: Navigation | ✅ Done | (UI changes) |
+| MPI-P2-9: Duplicate Review UI | ✅ Done | (UI components) |
+| MPI-P2-10: Mobile Registration | ✅ Done | (UI changes) |
+| MPI-P2-11: Profile Completion | ✅ Done | (UI components) |
 

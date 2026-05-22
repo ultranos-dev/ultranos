@@ -300,3 +300,4 @@ All 8 tasks implemented and tested:
 - 2026-05-18: Story 27.10 implemented — Patient self-registration flow with OTP, FREE tier, anti-enumeration, biometric setup, and 90-day session
 - 2026-05-18: Code review complete — 3 decision-needed, 15 patch, 5 deferred, 4 dismissed
 - 2026-05-18: All review findings resolved — 18 patches applied, story marked done
+- 2026-05-22: MPI Phase 2 — enriched `register` input with optional `nameFather` and `gender` fields. Both passed to MPI scoring and stored in patient row. 2 new tests (patient-registration-enrichment.test.ts), 5 existing registration-mpi tests pass.

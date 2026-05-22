@@ -413,6 +413,91 @@ Branch: `internationalization-01`
 
 ---
 
+## 2026-05-22 — MPI Phase 2: Registration UI, Offline Reconciliation & Duplicate Review — ✅ COMPLETE
+
+### What Was Done
+Branch: `internationalization-01`
+Commit: `76a8eb8`
+
+**Phase A — Shared Types, Hub API, Database (Tasks 1–6):**
+1. Afghan district reference dataset: 100+ districts across all 34 provinces with `getDistrictsByProvince()` helper and `.refine()` validation on `PatientAddressSchema`
+2. Database migration 024: `duplicate_reviews` table with PENDING→DISMISSED|FLAGGED_FOR_MERGE→MERGED lifecycle, partial index, RLS
+3. `runAsyncMpiScoring()` fire-and-forget function for post-sync MPI reconciliation — ALLOW sets score, WARN/BLOCK creates `duplicate_reviews` row
+4. `patient.syncCreate` endpoint: offline-created patients always succeed (Pass 1), async MPI scoring fires after (Pass 2)
+5. `duplicateReview` tRPC router: pendingCount, list, dismiss (clears `mpi_warn`), flagForMerge — all with audit logging
+6. `patientRegistration.register` enriched with optional `nameFather` and `gender` fields, passed to MPI scoring
+
+**Phase B — OPD Lite UI (Tasks 7–9):**
+7. Patient registration form: 8 components (page, form orchestrator, NameInputSection, GeographySection with cascading province/district autocompletes, ConsentSection, MpiResultModal with WARN/BLOCK flows)
+8. Navigation: "Register New Patient" button in search results (when <3 results) and dashboard CTA; i18n keys added to all 3 locales (en/ar/prs — registration + duplicateReview namespaces)
+9. Duplicate review UI: DuplicateReviewsCard on dashboard (30s polling), review page with expandable table, CandidateComparisonCard with color-coded score badges, MpiWarnBanner for patient views
+
+**Phase C — Patient Lite Mobile (Tasks 10–11):**
+10. ProfileSetupScreen enriched: father's name (required) and gender (4-option selector, required) added to registration flow and `registration-api.ts`
+11. Profile completion flow: ProvinceDistrictPicker (React Native cascading modal), ProfileCompletionScreen (grandfather + geography), ProfileCompletionCard dashboard nudge (dismissible 3x, progress bar)
+
+### New Files
+- `packages/shared-types/src/reference/afghanistan-districts.ts`
+- `packages/shared-types/src/__tests__/afghanistan-districts.test.ts`
+- `supabase/migrations/024_duplicate_reviews.sql`
+- `apps/hub-api/src/lib/async-mpi-scoring.ts`
+- `apps/hub-api/src/__tests__/async-mpi-scoring.test.ts`
+- `apps/hub-api/src/__tests__/sync-create.test.ts`
+- `apps/hub-api/src/__tests__/duplicate-review.test.ts`
+- `apps/hub-api/src/__tests__/patient-registration-enrichment.test.ts`
+- `apps/hub-api/src/trpc/routers/duplicate-review.ts`
+- `apps/opd-lite/src/app/[locale]/register-patient/page.tsx`
+- `apps/opd-lite/src/components/registration/` (5 components)
+- `apps/opd-lite/src/components/shared/ProvinceAutocomplete.tsx`
+- `apps/opd-lite/src/components/shared/DistrictAutocomplete.tsx`
+- `apps/opd-lite/src/app/[locale]/duplicate-review/page.tsx`
+- `apps/opd-lite/src/components/duplicate-review/` (2 components)
+- `apps/opd-lite/src/components/dashboard/DuplicateReviewsCard.tsx`
+- `apps/opd-lite/src/components/patient/MpiWarnBanner.tsx`
+- `apps/patient-lite-mobile/src/components/shared/ProvinceDistrictPicker.tsx`
+- `apps/patient-lite-mobile/src/screens/profile/ProfileCompletionScreen.tsx`
+- `apps/patient-lite-mobile/src/components/dashboard/ProfileCompletionCard.tsx`
+
+### Files Modified
+- `packages/shared-types/src/index.ts` — re-export districts
+- `packages/shared-types/src/fhir/patient.schema.ts` — `.refine()` district validation
+- `apps/hub-api/src/trpc/routers/patient.ts` — add `syncCreate` mutation
+- `apps/hub-api/src/trpc/routers/_app.ts` — register `duplicateReview` router
+- `apps/hub-api/src/trpc/routers/patient-registration.ts` — add `nameFather`, `gender` to input
+- `apps/opd-lite/messages/en.json` — registration + duplicateReview i18n namespaces
+- `apps/opd-lite/messages/ar.json` — Arabic translations
+- `apps/opd-lite/messages/prs.json` — Dari translations
+- `apps/opd-lite/src/components/patient-result-list.tsx` — "Register New Patient" button
+- `apps/opd-lite/src/components/dashboard/ClinicalDashboard.tsx` — register CTA + DuplicateReviewsCard
+- `apps/patient-lite-mobile/src/screens/registration/ProfileSetupScreen.tsx` — nameFather + gender fields
+- `apps/patient-lite-mobile/src/lib/registration-api.ts` — nameFather + gender in input
+
+### Errors & Resolutions
+- Plan used province names `Jowzjan`, `Sar-i-Pul`, `Uruzgan` — corrected to match canonical `AFGHAN_PROVINCES`: `Jawzjan`, `Sar-e-Pol`, `Urozgan`
+- DuplicateReviewsCard created by subagent but not wired into ClinicalDashboard — manually added import and grid slot
+
+### Tests Run
+- `afghanistan-districts` — 7/7 passed
+- `async-mpi-scoring` — 4/4 passed
+- `sync-create` — 3/3 passed
+- `duplicate-review` — 4/4 passed
+- `patient-registration-enrichment` — 2/2 passed
+- `patient-registration-mpi` (regression) — 5/5 passed
+- `patient-crud` (regression) — 20/20 passed
+- `patient.schema` (regression) — 24/24 passed
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity Verification — MPI Phase 2 async reconciliation + duplicate review
+- **FR22 / Epic 16:** Hub API Patient CRUD — syncCreate endpoint
+- **Story 16.2:** Patient CRUD Endpoints — extended with syncCreate
+- **Story 27.10:** Patient Self-Registration — nameFather + gender enrichment
+- **Epic 20 — OPD Lite:** Registration form, navigation, duplicate review UI
+- **Epic 11 — i18n:** 85+ new keys across 3 locales (registration + duplicateReview)
+- **CLAUDE.md Rule #1:** PHI never in logs — all new endpoints use opaque IDs
+- **CLAUDE.md Rule #6:** Audit every PHI access — all new endpoints emit audit events
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._
