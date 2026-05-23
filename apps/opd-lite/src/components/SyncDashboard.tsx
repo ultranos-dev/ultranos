@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
+import { pullPatientChanges } from '@/lib/sync-pull'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 
 // --- PHI-safe resource labels (AC: 9) ---
@@ -237,16 +238,29 @@ export function SyncDashboard() {
     loadItems()
   }, [loadItems])
 
+  const activePatientId = useSyncStore((s) => s.activePatientId)
+
   const handleSyncNow = useCallback(async () => {
     if (!navigator.onLine) return
     setIsDraining(true)
     try {
+      // Push pending local changes to Hub
       await triggerDrain()
+
+      // Pull remote changes for the active patient (if a chart is open)
+      if (activePatientId) {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+        const { data } = await getSupabaseBrowserClient().auth.getSession()
+        const token = data.session?.access_token ?? ''
+        if (token) {
+          await pullPatientChanges(activePatientId, () => token)
+        }
+      }
     } finally {
       setIsDraining(false)
       loadItems()
     }
-  }, [setIsDraining, loadItems])
+  }, [setIsDraining, loadItems, activePatientId])
 
   if (!isDashboardOpen) return null
 
