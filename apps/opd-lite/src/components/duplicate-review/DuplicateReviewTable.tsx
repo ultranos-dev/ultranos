@@ -30,13 +30,24 @@ function getHubApiUrl(): string {
   return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    if (data.session?.access_token) {
+      headers['Authorization'] = `Bearer ${data.session.access_token}`
+    }
+  } catch {
+    // Auth unavailable — proceed without token (Hub will reject if required)
+  }
+  return headers
+}
+
 async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {
-  // TODO: Replace with trpc.duplicateReview.list.useQuery()
+  const headers = await getAuthHeaders()
   const url = `${getHubApiUrl()}/duplicateReview.list?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  })
+  const res = await fetch(url, { method: 'GET', headers })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
   const body = (await res.json()) as {
     result: { data: { json: DuplicateReviewRow[] } }
@@ -48,11 +59,11 @@ async function submitDecision(
   reviewId: string,
   decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE'
 ): Promise<void> {
-  // TODO: Replace with trpc.duplicateReview.decide.useMutation()
+  const headers = await getAuthHeaders()
   const url = `${getHubApiUrl()}/duplicateReview.decide`
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ json: { reviewId, decision } }),
   })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
