@@ -26,6 +26,13 @@ export function usePatientSync(patientId: string): PatientSyncState {
   const [pullError, setPullError] = useState<string | null>(null)
   const pullingRef = useRef(false)
   const setConflictCount = useSyncStore((s) => s.setConflictCount)
+  const setActivePatientId = useSyncStore((s) => s.setActivePatientId)
+
+  // Track which patient chart is open for reconnect pull targeting
+  useEffect(() => {
+    setActivePatientId(patientId)
+    return () => setActivePatientId(null)
+  }, [patientId, setActivePatientId])
 
   const tokenRef = useRef('')
 
