@@ -61,13 +61,26 @@ export interface SyncQueueEntry {
   resourceId: string
   action: string
   payload: string
-  status: 'pending' | 'in-flight' | 'failed'
+  status: 'pending' | 'in-flight' | 'failed' | 'resolved'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
   conflictFlag?: boolean
   failureReason?: string
+  /** JSON-stringified remote version data from Hub conflict response */
+  conflictData?: string
+  /** FHIR reference to patient, e.g. "Patient/{uuid}" */
+  patientRef?: string
+  /** Conflict resolution metadata */
+  resolvedAt?: string
+  resolutionType?: string
+}
+
+export interface SyncMetaEntry {
+  patientId: string
+  lastPulledHlc: string
+  lastPulledAt: string
 }
 
 export interface PractitionerKeyEntry {
@@ -144,6 +157,7 @@ class OpdLiteDatabase extends Dexie {
   modelDownloadProgress!: EntityTable<ModelDownloadProgress, 'modelId'>
   appointments!: EntityTable<any, 'id'>
   slots!: EntityTable<any, 'id'>
+  syncMeta!: EntityTable<SyncMetaEntry, 'patientId'>
 
   constructor() {
     super('opd-lite')
@@ -507,6 +521,11 @@ class OpdLiteDatabase extends Dexie {
     this.version(18).stores({
       appointments: 'id, status, start, _ultranos.hlcTimestamp',
       slots: 'id, status, start, _ultranos.hlcTimestamp',
+    })
+
+    // v19: Sync metadata table for pull watermarks (Sync Engine Activation)
+    this.version(19).stores({
+      syncMeta: '&patientId',
     })
   }
 }
