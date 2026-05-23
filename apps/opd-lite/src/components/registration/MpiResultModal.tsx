@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 
 interface MpiCandidate {
@@ -35,6 +35,21 @@ export function MpiResultModal({
 }: MpiResultModalProps) {
   const t = useTranslations('registration')
   const dialogRef = useRef<HTMLDivElement>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  // Auto-expand first candidate when modal opens
+  useEffect(() => {
+    if (open && candidates.length > 0) {
+      setExpandedId(candidates[0].id)
+    } else {
+      setExpandedId(null)
+    }
+  }, [open, candidates])
+
+  // Accordion toggle — only one at a time
+  const toggleCandidate = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id))
+  }
 
   // Focus trap
   const handleKeyDown = useCallback(
@@ -123,45 +138,56 @@ export function MpiResultModal({
           </p>
         </div>
 
-        {/* Candidate list */}
-        <div className="max-h-80 overflow-y-auto px-6 py-4">
-          <ul className="space-y-3" aria-label={t('mpiCandidates')}>
-            {candidates.map((candidate) => (
-              <li
-                key={candidate.id}
-                className={`rounded-lg border p-4 ${
-                  isBlock ? 'border-red-200 bg-red-50/50' : 'border-amber-200 bg-amber-50/50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-neutral-900">
-                      {[candidate.nameGiven, candidate.nameFather]
-                        .filter(Boolean)
-                        .join(' ') || t('mpiUnknownName')}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
-                      {candidate.birthYear && (
-                        <span>
-                          {t('mpiBirthYear')}: {candidate.birthYear}
-                        </span>
-                      )}
-                      {candidate.gender && (
-                        <span>
-                          {t('mpiGender')}: {candidate.gender}
-                        </span>
-                      )}
-                      {candidate.districtOrigin && (
-                        <span>
-                          {t('mpiDistrict')}: {candidate.districtOrigin}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+        {/* Candidate list — accordion, one at a time */}
+        <div className="max-h-96 overflow-y-auto px-6 py-4">
+          <ul className="space-y-2" aria-label={t('mpiCandidates')}>
+            {candidates.map((candidate) => {
+              const isExpanded = expandedId === candidate.id
+              const name =
+                [candidate.nameGiven, candidate.nameFather]
+                  .filter(Boolean)
+                  .join(' ') || t('mpiUnknownName')
 
-                  <div className="text-end shrink-0">
+              return (
+                <li
+                  key={candidate.id}
+                  className={`rounded-lg border overflow-hidden transition-colors ${
+                    isBlock ? 'border-red-200' : 'border-amber-200'
+                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-white'}`}
+                >
+                  {/* Collapsible header — always visible */}
+                  <button
+                    type="button"
+                    onClick={() => toggleCandidate(candidate.id)}
+                    aria-expanded={isExpanded}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start transition-colors hover:bg-neutral-50"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Chevron */}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`shrink-0 text-neutral-400 transition-transform duration-200 ${
+                          isExpanded ? 'rotate-90' : ''
+                        }`}
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+
+                      <span className="text-sm font-bold text-neutral-900 truncate">
+                        {name}
+                      </span>
+                    </div>
+
+                    {/* Score badge */}
                     <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
+                      className={`shrink-0 inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
                         candidate.mpiScore >= 80
                           ? 'bg-red-100 text-red-800'
                           : candidate.mpiScore >= 60
@@ -171,40 +197,77 @@ export function MpiResultModal({
                     >
                       {t('mpiScore')}: {candidate.mpiScore}
                     </span>
-                  </div>
-                </div>
-
-                {/* Score breakdown */}
-                {Object.keys(candidate.scoreBreakdown).length > 0 && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs font-semibold text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700">
-                      {t('mpiScoreBreakdown')}
-                    </summary>
-                    <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-neutral-600">
-                      {Object.entries(candidate.scoreBreakdown).map(
-                        ([field, score]) => (
-                          <div key={field} className="flex justify-between">
-                            <span>{field}</span>
-                            <span className="font-mono">{score}</span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </details>
-                )}
-
-                {/* Go to patient button for BLOCK decision */}
-                {isBlock && (
-                  <button
-                    type="button"
-                    onClick={() => onGoToPatient(candidate.id)}
-                    className="mt-3 w-full min-h-[44px] rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.97]"
-                  >
-                    {t('mpiGoToPatient')}
                   </button>
-                )}
-              </li>
-            ))}
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="border-t border-neutral-100 px-4 pb-4 pt-3">
+                      {/* Patient details */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        {candidate.nameGiven && (
+                          <div>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameGiven', { fallback: 'Given Name' })}</span>
+                            <p className="font-semibold text-neutral-900">{candidate.nameGiven}</p>
+                          </div>
+                        )}
+                        {candidate.nameFather && (
+                          <div>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameFather', { fallback: "Father's Name" })}</span>
+                            <p className="font-semibold text-neutral-900">{candidate.nameFather}</p>
+                          </div>
+                        )}
+                        {candidate.birthYear && (
+                          <div>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiBirthYear')}</span>
+                            <p className="font-semibold text-neutral-900">{candidate.birthYear}</p>
+                          </div>
+                        )}
+                        {candidate.gender && (
+                          <div>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiGender')}</span>
+                            <p className="font-semibold text-neutral-900 capitalize">{candidate.gender}</p>
+                          </div>
+                        )}
+                        {candidate.districtOrigin && (
+                          <div>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiDistrict')}</span>
+                            <p className="font-semibold text-neutral-900">{candidate.districtOrigin}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Score breakdown */}
+                      {Object.keys(candidate.scoreBreakdown).length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-neutral-100">
+                          <p className="text-xs font-semibold text-neutral-500 mb-1">
+                            {t('mpiScoreBreakdown')}
+                          </p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-neutral-600">
+                            {Object.entries(candidate.scoreBreakdown).map(
+                              ([field, score]) => (
+                                <div key={field} className="flex justify-between">
+                                  <span>{field}</span>
+                                  <span className="font-mono font-semibold">{score}</span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Go to patient button */}
+                      <button
+                        type="button"
+                        onClick={() => onGoToPatient(candidate.id)}
+                        className="mt-3 w-full min-h-[44px] rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.97]"
+                      >
+                        {t('mpiGoToPatient')}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </div>
 
@@ -218,13 +281,13 @@ export function MpiResultModal({
             {t('cancel')}
           </button>
 
-          {decision === 'WARN' && proceedToken && (
+          {proceedToken && (
             <button
               type="button"
               onClick={() => onProceed(proceedToken)}
               className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
             >
-              {t('mpiProceedAnyway')}
+              {t('mpiAddAnyway')}
             </button>
           )}
         </div>
