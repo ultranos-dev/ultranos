@@ -12,11 +12,13 @@ interface SyncState extends SyncStatus {
   conflictCount: number
   isDraining: boolean
   isDashboardOpen: boolean
+  activePatientId: string | null
 
   updateSyncStatus: (status: SyncStatus) => void
   setConflictCount: (count: number) => void
   setIsDraining: (draining: boolean) => void
   setDashboardOpen: (open: boolean) => void
+  setActivePatientId: (id: string | null) => void
 }
 
 export const useSyncStore = create<SyncState>()((set) => ({
@@ -28,6 +30,7 @@ export const useSyncStore = create<SyncState>()((set) => ({
   conflictCount: 0,
   isDraining: false,
   isDashboardOpen: false,
+  activePatientId: null,
 
   updateSyncStatus: (status) => {
     set(status)
@@ -43,5 +46,9 @@ export const useSyncStore = create<SyncState>()((set) => ({
 
   setDashboardOpen: (open) => {
     set({ isDashboardOpen: open })
+  },
+
+  setActivePatientId: (id) => {
+    set({ activePatientId: id })
   },
 }))
