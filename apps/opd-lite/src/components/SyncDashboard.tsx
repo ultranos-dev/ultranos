@@ -172,6 +172,7 @@ export function SyncDashboard() {
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt, isDraining, setIsDraining } = useSyncStore()
   const [queueItems, setQueueItems] = useState<SyncQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<string | null>(null)
+  const [syncPhase, setSyncPhase] = useState<string | null>(null)
 
   // Load queue items from Dexie and subscribe to changes
   const loadItems = useCallback(async () => {
@@ -244,11 +245,14 @@ export function SyncDashboard() {
     if (!navigator.onLine) return
     setIsDraining(true)
     try {
-      // Push pending local changes to Hub
+      // Phase 1: Push pending local changes to Hub
+      const pendingCount = queueItems.filter(e => e.status === 'pending' || e.status === 'in-flight').length
+      setSyncPhase(pendingCount > 0 ? `Pushing ${pendingCount} pending change${pendingCount !== 1 ? 's' : ''} to Hub...` : 'Checking for pending changes...')
       await triggerDrain()
 
-      // Pull remote changes for the active patient (if a chart is open)
+      // Phase 2: Pull remote changes for the active patient (if a chart is open)
       if (activePatientId) {
+        setSyncPhase('Pulling latest patient data from Hub...')
         const { getSupabaseBrowserClient } = await import('@/lib/supabase')
         const { data } = await getSupabaseBrowserClient().auth.getSession()
         const token = data.session?.access_token ?? ''
@@ -256,11 +260,16 @@ export function SyncDashboard() {
           await pullPatientChanges(activePatientId, () => token)
         }
       }
+
+      setSyncPhase('Sync complete')
     } finally {
+      // Brief delay so "Sync complete" is visible
+      await new Promise(r => setTimeout(r, 600))
+      setSyncPhase(null)
       setIsDraining(false)
       loadItems()
     }
-  }, [setIsDraining, loadItems, activePatientId])
+  }, [setIsDraining, loadItems, activePatientId, queueItems])
 
   if (!isDashboardOpen) return null
 
@@ -277,6 +286,11 @@ export function SyncDashboard() {
         @keyframes syncPanelIn {
           from { opacity: 0; transform: scale(0.97) translateY(-4px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes syncProgress {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(0%); }
+          100% { transform: translateX(100%); }
         }
       `}</style>
       {/* Backdrop */}
@@ -325,6 +339,21 @@ export function SyncDashboard() {
               </span>
             )}
           </div>
+
+          {/* Sync progress bar — visible only during active sync */}
+          {isDraining && syncPhase && (
+            <div className="mt-3" data-testid="sync-progress">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ease-out ${
+                    syncPhase === 'Sync complete' ? 'w-full bg-green-500' : 'bg-blue-500 animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                  }`}
+                  style={syncPhase !== 'Sync complete' ? { width: '70%' } : undefined}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-neutral-500">{syncPhase}</p>
+            </div>
+          )}
 
           {/* Actions row */}
           <div className="mt-3 flex gap-2">
