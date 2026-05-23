@@ -12,6 +12,8 @@ import { LabResultsList } from '@/components/clinical/LabResultsList'
 import { LabResultDetail } from '@/components/clinical/LabResultDetail'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { fetchDiagnosticReportsForPatient } from '@/lib/trpc'
+import { ConflictBanner } from '@/components/sync/ConflictBanner'
+import { usePatientSync } from '@/hooks/usePatientSync'
 
 interface PatientChartPageProps {
   patientId: string
@@ -36,6 +38,8 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   const [patient, setPatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedLabReport, setSelectedLabReport] = useState<LocalDiagnosticReport | null>(null)
+
+  const { isSyncing } = usePatientSync(patientId)
 
   useEffect(() => {
     if (!UUID_REGEX.test(patientId)) {
@@ -96,6 +100,9 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
     <main className="mx-auto max-w-2xl px-4 py-8">
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
+
+      {/* Sync conflict banner — renders after allergies, before header */}
+      <ConflictBanner patientId={patientId} />
 
       <header className="mb-8">
         <button

@@ -28,6 +28,9 @@ import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkAIProcessingConsent } from '@/services/ai-scribe-service'
+import { ConflictBanner } from '@/components/sync/ConflictBanner'
+import { usePatientSync } from '@/hooks/usePatientSync'
+import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
 
 interface EncounterDashboardProps {
   patientId: string
@@ -56,6 +59,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const [dexiePatient, setDexiePatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const { isSyncing } = usePatientSync(patientId)
+  const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
 
   // Shallow selectors to prevent unnecessary re-renders (perf guardrail)
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
@@ -192,6 +198,18 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       window.removeEventListener('offline', goOffline)
     }
   }, [])
+
+  // Check for Tier 1 conflicts that block prescriptions
+  useEffect(() => {
+    let cancelled = false
+    async function checkConflicts() {
+      const blocked = await hasUnresolvedTier1Conflicts(patientId)
+      if (!cancelled) setPrescriptionBlocked(blocked)
+    }
+    checkConflicts()
+    const interval = setInterval(checkConflicts, 5_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [patientId])
 
   // Story 24.1: Check AI_PROCESSING consent when encounter loads
   useEffect(() => {
@@ -483,6 +501,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
 
+      <ConflictBanner patientId={patientId} />
+
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <header className="mb-8">
         <button
@@ -688,6 +708,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             onCancel={handleInteractionCancel}
             onOverride={handleInteractionOverride}
           />
+
+          {prescriptionBlocked && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3" role="alert">
+              <p className="text-sm font-semibold text-red-800">
+                Prescription creation blocked — resolve safety-critical conflicts first
+              </p>
+            </div>
+          )}
 
           <PrescriptionEntry onSubmit={handleAddPrescription} />
 
