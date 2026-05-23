@@ -12,8 +12,8 @@ import { runClinicalSafetyReport } from '@/jobs/clinical-safety-report'
  * On the 1st of each month, also generates the monthly report.
  *
  * Secured via CRON_SECRET header to prevent unauthorized invocations.
- * Configure in vercel.json:
- *   { "path": "/api/cron/clinical-safety", "schedule": "*/15 * * * *" }
+ * Configure in vercel.json with path "/api/cron/clinical-safety"
+ * and a 15-minute cron schedule.
  */
 
 const MONITOR_LOCK_TTL = 300 // 5 minutes

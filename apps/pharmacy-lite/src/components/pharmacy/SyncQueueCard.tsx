@@ -1,10 +1,12 @@
 'use client'
 
+import { memo } from 'react'
+
 interface SyncQueueCardProps {
   pendingCount: number
 }
 
-export function SyncQueueCard({ pendingCount }: SyncQueueCardProps) {
+export const SyncQueueCard = memo(function SyncQueueCard({ pendingCount }: SyncQueueCardProps) {
   const isAmber = pendingCount > 0
 
   return (
@@ -35,4 +37,4 @@ export function SyncQueueCard({ pendingCount }: SyncQueueCardProps) {
       </div>
     </div>
   )
-}
+})

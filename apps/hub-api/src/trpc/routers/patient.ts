@@ -52,14 +52,14 @@ export const patientRouter = createTRPCRouter({
       // Build OR filter: always search by name, only add national ID hash
       // lookup when the query looks like it could be an ID (alphanumeric).
       // This avoids crashing name-only searches if encryption env vars are missing.
-      const nameFilters = `ultranos_name_local.ilike.%${sanitized}%,ultranos_name_latin.ilike.%${sanitized}%`
+      const nameFilters = `name_local.ilike.%${sanitized}%,name_latin.ilike.%${sanitized}%`
       let orFilter = nameFilters
 
       const looksLikeId = /^[a-zA-Z0-9-]+$/.test(input.query.trim())
       if (looksLikeId) {
         try {
           const idHash = hashNationalId(input.query)
-          orFilter = `${nameFilters},ultranos_national_id_hash.eq.${idHash}`
+          orFilter = `${nameFilters},national_id_hash.eq.${idHash}`
         } catch {
           // Encryption keys not configured — skip national ID lookup
         }
@@ -68,15 +68,14 @@ export const patientRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from('patients')
         .select(
-          'id, name, gender, birth_date, birth_year_only, birth_year, identifier, ' +
-          'meta_last_updated, meta_version_id, ' +
-          'ultranos_name_local, ultranos_name_latin, ultranos_national_id_hash, ultranos_is_active, ultranos_created_at, ' +
+          'id, gender, birth_date, birth_year_only, birth_year, ' +
+          'name_local, name_latin, national_id_hash, is_active, created_at, ' +
           'name_given, name_father, name_grandfather, ' +
           'address_district_origin, address_province_origin, ' +
           'mpi_score, mpi_warn'
         )
         .or(orFilter)
-        .eq('ultranos_is_active', true)
+        .eq('is_active', true)
         .limit(20)
 
       if (error) {
@@ -109,21 +108,19 @@ export const patientRouter = createTRPCRouter({
       // (name, gender, birth_date, identifiers). No SENSITIVE_FIELDS are queried.
       // The _ultranos namespace fields require custom mapping that doesn't fit db.fromRowRaw().
       return {
-        patients: (data ?? []).map((row) => ({
+        patients: (data ?? []).map((row: Record<string, unknown>) => ({
           id: row.id,
           resourceType: 'Patient' as const,
-          name: row.name,
+          name: [{ text: row.name_local as string }],
           gender: row.gender,
           birthDate: row.birth_date,
           birthYearOnly: row.birth_year_only,
-          identifier: row.identifier,
           _ultranos: {
-            nameLocal:    row.ultranos_name_local,
-            nameLatin:    row.ultranos_name_latin,
-            nationalIdHash: row.ultranos_national_id_hash,
-            isActive:     row.ultranos_is_active,
-            createdAt:    row.ultranos_created_at,
-            // MPI Phase 1 additions
+            nameLocal:    row.name_local,
+            nameLatin:    row.name_latin,
+            nationalIdHash: row.national_id_hash,
+            isActive:     row.is_active,
+            createdAt:    row.created_at,
             nameGiven:           row.name_given,
             nameFather:          row.name_father,
             nameGrandfather:     row.name_grandfather,
@@ -131,11 +128,10 @@ export const patientRouter = createTRPCRouter({
             addressDistrictOrigin: row.address_district_origin,
             addressProvinceOrigin: row.address_province_origin,
             mpiScore:    row.mpi_score,
-            mpiWarn:     row.mpi_warn ?? false,
+            mpiWarn:     (row.mpi_warn as boolean) ?? false,
           },
           meta: {
-            lastUpdated: row.meta_last_updated,
-            versionId:   row.meta_version_id,
+            lastUpdated: row.created_at,
           },
         })),
       }
@@ -390,7 +386,7 @@ export const patientRouter = createTRPCRouter({
         consent_language: input.consent.language,
         consent_version:  input.consent.version,
         grantor_id:       ctx.user.sub,
-        grantor_role:     ctx.user.role ?? 'PRACTITIONER',
+        grantor_role:     'SELF',
       }
 
       // Step 6: Consume proceedToken before insert (WARN path only).
@@ -529,7 +525,7 @@ export const patientRouter = createTRPCRouter({
         consent_language: input.consent.language,
         consent_version:  input.consent.version,
         grantor_id:       ctx.user.sub,
-        grantor_role:     ctx.user.role ?? 'PRACTITIONER',
+        grantor_role:     'SELF',
       }
 
       const { data: rpcData, error: rpcError } = await ctx.supabase.rpc(

@@ -1,12 +1,14 @@
 'use client'
 
+import { memo } from 'react'
+
 interface DispensingSummaryCardProps {
   dispensedToday: number
   pendingSync: number
   failedSync: number
 }
 
-export function DispensingSummaryCard({
+export const DispensingSummaryCard = memo(function DispensingSummaryCard({
   dispensedToday,
   pendingSync,
   failedSync,
@@ -50,4 +52,4 @@ export function DispensingSummaryCard({
       </div>
     </div>
   )
-}
+})

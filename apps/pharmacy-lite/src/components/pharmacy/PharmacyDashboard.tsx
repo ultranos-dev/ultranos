@@ -185,7 +185,7 @@ export function PharmacyDashboard() {
         {/* Scan Prescription CTA — UX-DR2 primary action */}
         <Link
           href="/scan"
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#9fe870] px-4 py-3 text-sm font-bold text-[#163300] shadow-sm transition-transform hover:scale-105 active:scale-95"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#9fe870] px-4 py-3 text-sm font-bold text-[#163300] shadow-sm transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#163300]"
         >
           Scan QR Prescription
         </Link>
@@ -194,7 +194,7 @@ export function PharmacyDashboard() {
         <Link
           href="/paper-rx"
           data-testid="paper-rx-action-card"
-          className="flex items-center justify-center gap-2 rounded-xl border-2 border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-800 shadow-sm transition-transform hover:scale-105 active:scale-95"
+          className="flex items-center justify-center gap-2 rounded-xl border-2 border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-800 shadow-sm transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
         >
           Scan Paper Prescription
         </Link>

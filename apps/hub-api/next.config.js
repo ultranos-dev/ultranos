@@ -5,6 +5,14 @@ const nextConfig = {
   // Workspace packages are pre-built (dist/) — no transpilePackages needed.
   // Using transpilePackages with NodeNext .js extensions causes webpack resolution failures.
 
+  webpack: (config) => {
+    // NodeNext-style .js imports in source need to resolve to .ts/.tsx
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js', '.jsx'],
+    }
+    return config
+  },
+
   // Story 21.4: Security headers applied to ALL responses
   async headers() {
     return [

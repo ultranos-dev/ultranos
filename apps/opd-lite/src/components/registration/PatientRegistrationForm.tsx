@@ -10,6 +10,9 @@ import { NameInputSection } from './NameInputSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { db } from '@/lib/db'
+import type { FhirPatient } from '@ultranos/shared-types'
 
 // ── Hub API helpers ──────────────────────────────────────────────────────────
 // Raw fetch wrappers matching the existing pattern in @/lib/trpc.ts.
@@ -20,6 +23,17 @@ function getHubApiUrl(): string {
     return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
   }
   return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const supabase = getSupabaseBrowserClient()
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 interface CheckDuplicatesResult {
@@ -44,12 +58,10 @@ interface CreatePatientResult {
 async function checkDuplicates(input: Record<string, unknown>): Promise<CheckDuplicatesResult> {
   const url = new URL(getHubApiUrl())
   url.pathname = url.pathname.replace(/\/$/, '') + '/patient.checkDuplicates'
+  url.searchParams.set('input', JSON.stringify({ json: input }))
 
-  const res = await fetch(url.toString(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ json: input }),
-  })
+  const headers = await getAuthHeaders()
+  const res = await fetch(url.toString(), { headers })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
   const body = await res.json() as { result: { data: { json: CheckDuplicatesResult } } }
   return body.result.data.json
@@ -59,9 +71,10 @@ async function createPatient(input: Record<string, unknown>): Promise<CreatePati
   const url = new URL(getHubApiUrl())
   url.pathname = url.pathname.replace(/\/$/, '') + '/patient.create'
 
+  const headers = await getAuthHeaders()
   const res = await fetch(url.toString(), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ json: input }),
   })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
@@ -264,6 +277,51 @@ export function PatientRegistrationForm({
     consentMethod, consentWitnessedBy, consentLanguage, t,
   ])
 
+  // ── Persist to local IndexedDB so PatientChartPage can load immediately ──
+
+  const savePatientLocally = useCallback(
+    async (id: string, now: string) => {
+      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+        .filter(Boolean)
+        .join(' ')
+
+      const patient: FhirPatient = {
+        id,
+        resourceType: 'Patient',
+        name: [{ given: nameGiven ? [nameGiven] : [], text: nameLocal }],
+        gender: (gender as AdministrativeGender) || AdministrativeGender.UNKNOWN,
+        birthDate: birthDate || (birthYear ? birthYear : undefined) as string | undefined,
+        birthYearOnly,
+        telecom: phone ? [{ system: 'phone', value: phone }] : [],
+        _ultranos: {
+          nameLocal,
+          nameGiven: nameGiven || undefined,
+          nameFather: nameFather || undefined,
+          nameGrandfather: nameGrandfather || undefined,
+          birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
+          addressOrigin: addressOrigin.province
+            ? { province: addressOrigin.province, district: addressOrigin.district, village: addressOrigin.village || undefined }
+            : undefined,
+          addressCurrent: sameAsOrigin
+            ? (addressOrigin.province
+                ? { province: addressOrigin.province, district: addressOrigin.district, village: addressOrigin.village || undefined }
+                : undefined)
+            : (addressCurrent.province
+                ? { province: addressCurrent.province, district: addressCurrent.district, village: addressCurrent.village || undefined }
+                : undefined),
+          isNomadic: false,
+          isActive: true,
+          patient_tier: 'FREE',
+          createdAt: now,
+        },
+        meta: { lastUpdated: now },
+      }
+
+      await db.patients.put(patient)
+    },
+    [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, addressOrigin, addressCurrent, sameAsOrigin],
+  )
+
   // ── Submit handler ──
 
   const handleSubmit = useCallback(
@@ -283,6 +341,7 @@ export function PatientRegistrationForm({
         if (dupeResult.decision === 'ALLOW') {
           // Step 2a: No duplicates — create patient
           const created = await createPatient(payload)
+          await savePatientLocally(created.id, new Date().toISOString())
           router.push(`/${locale}/patient/${created.id}`)
         } else if (dupeResult.decision === 'WARN') {
           // Step 2b: Possible duplicates — show modal with proceed option
@@ -305,7 +364,7 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [validate, buildPayload, router, locale, t],
+    [validate, buildPayload, savePatientLocally, router, locale, t],
   )
 
   // ── MPI modal handlers ──
@@ -319,6 +378,7 @@ export function PatientRegistrationForm({
       try {
         const payload = buildPayload(token)
         const created = await createPatient(payload)
+        await savePatientLocally(created.id, new Date().toISOString())
         router.push(`/${locale}/patient/${created.id}`)
       } catch (err) {
         setSubmitError(
@@ -328,7 +388,7 @@ export function PatientRegistrationForm({
         setSubmitting(false)
       }
     },
-    [buildPayload, router, locale, t],
+    [buildPayload, savePatientLocally, router, locale, t],
   )
 
   const handleMpiCancel = useCallback(() => {
@@ -405,7 +465,7 @@ export function PatientRegistrationForm({
 
             {/* Birth year or full date toggle */}
             <div>
-              <label className="mb-2 flex items-center gap-2 cursor-pointer min-h-[44px]">
+              <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                 <input
                   type="checkbox"
                   checked={birthYearOnly}
@@ -414,7 +474,7 @@ export function PatientRegistrationForm({
                     if (e.target.checked) setBirthDate('')
                     else setBirthYear('')
                   }}
-                  className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+                  className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
                 />
                 <span className="text-sm font-medium text-neutral-700">
                   {t('birthYearOnly')}

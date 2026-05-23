@@ -16,11 +16,17 @@ export function ExpiringConsentsCard() {
   useEffect(() => {
     async function loadExpiringCount() {
       try {
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+        const { data: authData } = await getSupabaseBrowserClient().auth.getSession()
+        const token = authData.session?.access_token
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
+
         const hubUrl =
           process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
         const res = await fetch(
           `${hubUrl}/consent.expiringCount?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`,
-          { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+          { method: 'GET', headers }
         )
 
         if (!res.ok) throw new Error(`Hub API error: ${res.status}`)

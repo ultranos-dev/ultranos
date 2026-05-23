@@ -8,7 +8,7 @@
  * This cron replaces the unreliable in-process setTimeout approach
  * which cannot survive serverless function termination.
  *
- * Schedule: every 5 minutes — "*/5 * * * *"
+ * Schedule: every 5 minutes.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'

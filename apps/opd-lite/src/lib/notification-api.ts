@@ -27,11 +27,17 @@ function getHubApiUrl(): string {
   return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
 }
 
-function getAuthToken(): string | null {
-  // Access token stored in memory via auth session store
-  // This follows the project convention: JWT in memory only, never localStorage
-  if (typeof window === 'undefined') return null
-  return (window as unknown as { __ultranos_token?: string }).__ultranos_token ?? null
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (typeof window === 'undefined') return headers
+  const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+  const supabase = getSupabaseBrowserClient()
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return headers
 }
 
 async function trpcQuery<T>(path: string, input?: object): Promise<T> {
@@ -41,12 +47,7 @@ async function trpcQuery<T>(path: string, input?: object): Promise<T> {
     url.searchParams.set('input', JSON.stringify({ json: input }))
   }
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = getAuthToken()
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
+  const headers = await getAuthHeaders()
   const res = await fetch(url.toString(), { method: 'GET', headers })
   if (!res.ok) {
     throw new Error(`Hub API error: ${res.status}`)
@@ -60,12 +61,7 @@ async function trpcMutation<T>(path: string, input: object): Promise<T> {
   const url = new URL(getHubApiUrl())
   url.pathname = url.pathname.replace(/\/$/, '') + '/' + path
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = getAuthToken()
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
+  const headers = await getAuthHeaders()
   const res = await fetch(url.toString(), {
     method: 'POST',
     headers,

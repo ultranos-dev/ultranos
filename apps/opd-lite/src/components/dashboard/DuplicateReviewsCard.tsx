@@ -15,13 +15,17 @@ export function DuplicateReviewsCard() {
   useEffect(() => {
     async function loadPendingCount() {
       try {
-        // TODO: Replace with tRPC client call once wired up:
-        // const { data } = trpc.duplicateReview.pendingCount.useQuery()
+        const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+        const { data: authData } = await getSupabaseBrowserClient().auth.getSession()
+        const token = authData.session?.access_token
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
+
         const hubUrl =
           process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
         const res = await fetch(
           `${hubUrl}/duplicateReview.pendingCount?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`,
-          { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+          { method: 'GET', headers }
         )
 
         if (!res.ok) throw new Error(`Hub API error: ${res.status}`)

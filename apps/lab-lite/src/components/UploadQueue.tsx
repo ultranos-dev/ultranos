@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   getQueueItems,
   removeQueueItem,
@@ -10,11 +11,11 @@ import {
 } from '../lib/db'
 import { reportQueueAuditEvent } from '../lib/queue-audit'
 
-const STATUS_LABELS: Record<UploadQueueStatus, string> = {
-  pending: 'Pending',
-  uploading: 'Uploading',
-  expired: 'Expired',
-  failed: 'Failed',
+const STATUS_KEYS: Record<UploadQueueStatus, string> = {
+  pending: 'statusPending',
+  uploading: 'statusUploading',
+  expired: 'statusExpired',
+  failed: 'statusFailed',
 }
 
 const STATUS_STYLES: Record<UploadQueueStatus, string> = {
@@ -77,16 +78,18 @@ export function UploadQueue() {
     await refresh()
   }
 
+  const t = useTranslations('queue')
+
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
-        <p className="text-sm text-neutral-500"><span className="flex items-center gap-2">
-          <svg className="animate-spin h-4 w-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <div className="rounded-lg border border-neutral-200 bg-white p-6" aria-busy="true">
+        <div className="flex items-center gap-2 text-sm text-neutral-500">
+          <svg className="motion-safe:animate-spin h-4 w-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
           </svg>
-          Loading upload queue...
-        </span></p>
+          {t('loading')}
+        </div>
       </div>
     )
   }
@@ -94,8 +97,8 @@ export function UploadQueue() {
   if (items.length === 0) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">Upload Queue</h2>
-        <p className="text-sm text-neutral-500">No pending uploads</p>
+        <h2 className="mb-2 text-sm font-semibold text-neutral-700">{t('title')}</h2>
+        <p className="text-sm text-neutral-500">{t('empty')}</p>
       </div>
     )
   }
@@ -104,7 +107,7 @@ export function UploadQueue() {
     <div className="rounded-lg border border-neutral-200 bg-white">
       <div className="border-b border-neutral-200 px-4 py-3">
         <h2 className="text-sm font-semibold text-neutral-700">
-          Upload Queue ({items.length})
+          {t('titleWithCount', { count: items.length })}
         </h2>
       </div>
       <ul className="divide-y divide-neutral-100">
@@ -122,14 +125,14 @@ export function UploadQueue() {
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[item.status]}`}
                   >
-                    {STATUS_LABELS[item.status]}
+                    {t(STATUS_KEYS[item.status])}
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-neutral-600">
                   {item.metadata.loincDisplay}
                 </p>
                 <p className="mt-0.5 text-xs text-neutral-400">
-                  Queued: {formatTimestamp(item.queuedAt)}
+                  {t('queued', { timestamp: formatTimestamp(item.queuedAt) })}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
@@ -137,41 +140,41 @@ export function UploadQueue() {
                   <button
                     type="button"
                     onClick={() => handleReupload(item.id!)}
-                    aria-label="Re-upload"
-                    className="rounded-md px-2 py-1 text-xs font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] transition-all duration-150"
+                    aria-label={t('reuploadAriaLabel')}
+                    className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                   >
-                    Re-upload
+                    {t('reupload')}
                   </button>
                 )}
                 {(item.status === 'expired' || item.status === 'failed') && (
                   <>
                     {confirmingId === item.id ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-600">Are you sure?</span>
+                        <span className="text-xs text-neutral-600">{t('confirmPrompt')}</span>
                         <button
                           type="button"
                           onClick={() => handleDiscard(item.id!)}
-                          aria-label="Confirm discard"
-                          className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:brightness-[0.88] transition-all duration-150"
+                          aria-label={t('confirmDiscardAriaLabel')}
+                          className="min-h-[44px] rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                         >
-                          Confirm
+                          {t('confirm')}
                         </button>
                         <button
                           type="button"
                           onClick={() => setConfirmingId(null)}
-                          className="rounded-md px-2 py-1 text-xs font-medium text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 active:brightness-[0.88] transition-all duration-150"
+                          className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                         >
-                          Cancel
+                          {t('cancel')}
                         </button>
                       </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setConfirmingId(item.id!)}
-                        aria-label="Discard"
-                        className="rounded-md px-2 py-1 text-xs font-medium text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-50 active:brightness-[0.88] transition-all duration-150"
+                        aria-label={t('discardAriaLabel')}
+                        className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                       >
-                        Discard
+                        {t('discard')}
                       </button>
                     )}
                   </>

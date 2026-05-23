@@ -75,7 +75,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   if (isLoginPage) return <>{children}</>
-  if (!ready) return null
+  if (!ready) {
+    return (
+      <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse rounded-lg border border-neutral-200 bg-white p-4">
+            <div className="h-3 w-24 rounded bg-neutral-200" />
+            <div className="mt-3 h-5 w-48 rounded bg-neutral-100" />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <EntitlementGate

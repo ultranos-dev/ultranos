@@ -122,4 +122,56 @@ describe('Pharmacy Lite Accessibility (axe-core)', () => {
     const results = await axe(container, axeOptions)
     expect(results).toHaveNoViolations()
   })
+
+  it('DispensingSummaryCard has no A/AA violations', async () => {
+    const { DispensingSummaryCard } = await import(
+      '@/components/pharmacy/DispensingSummaryCard'
+    )
+    const { container } = render(
+      <DispensingSummaryCard dispensedToday={5} pendingSync={2} failedSync={1} />,
+    )
+    const results = await axe(container, axeOptions)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('SyncQueueCard has no A/AA violations', async () => {
+    const { SyncQueueCard } = await import('@/components/pharmacy/SyncQueueCard')
+    const { container } = render(<SyncQueueCard pendingCount={3} />)
+    const results = await axe(container, axeOptions)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('RecentDispensingList has no A/AA violations', async () => {
+    const { RecentDispensingList } = await import(
+      '@/components/pharmacy/RecentDispensingList'
+    )
+    const items = [
+      {
+        id: 'd1',
+        patientRef: 'Patient/abc',
+        medicationName: 'Amoxicillin 500mg',
+        whenHandedOver: '2026-05-22T10:30:00Z',
+        syncStatus: 'synced' as const,
+      },
+      {
+        id: 'd2',
+        patientRef: 'Patient/def',
+        medicationName: 'Ibuprofen 400mg',
+        whenHandedOver: '2026-05-22T11:00:00Z',
+        syncStatus: 'pending' as const,
+      },
+    ]
+    const { container } = render(<RecentDispensingList items={items} />)
+    const results = await axe(container, axeOptions)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('RecentDispensingList empty state has no A/AA violations', async () => {
+    const { RecentDispensingList } = await import(
+      '@/components/pharmacy/RecentDispensingList'
+    )
+    const { container } = render(<RecentDispensingList items={[]} />)
+    const results = await axe(container, axeOptions)
+    expect(results).toHaveNoViolations()
+  })
 })

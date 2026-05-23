@@ -8,9 +8,6 @@ import { usePatientStore } from '@/stores/patient-store'
 import { usePatientSearch } from '@/lib/use-patient-search'
 import { SearchInput } from '@/components/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
-import { NotificationBell } from '@/components/NotificationPanel'
-import { SyncPulse } from '@/components/SyncPulse'
-import { UserDropdown } from '@/components/UserDropdown'
 import Link from 'next/link'
 import { PillButton } from '@/components/pill-button'
 import { TodayEncountersCard } from './TodayEncountersCard'
@@ -57,22 +54,15 @@ export function ClinicalDashboard() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      {/* Header with sync/notification controls */}
-      <header className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-neutral-900">
-            {t('welcome', { name: displayName })}
-          </h1>
-          <p className="mt-1 text-sm font-semibold text-neutral-500">
-            {displayRole}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <SyncPulse />
-          <NotificationBell />
-          <UserDropdown />
-        </div>
-      </header>
+      {/* Welcome message */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
+          {t('welcome', { name: displayName })}
+        </h1>
+        <p className="mt-1 text-sm font-semibold text-neutral-500">
+          {displayRole}
+        </p>
+      </div>
 
       {/* Primary CTAs */}
       <div className="mb-8 flex items-center gap-3">

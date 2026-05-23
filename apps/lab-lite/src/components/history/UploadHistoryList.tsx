@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { removeQueueItem } from '@/lib/db'
 import { reportQueueAuditEvent } from '@/lib/audit-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -42,6 +43,7 @@ export function UploadHistoryList({
   loadingMore,
   onRefresh,
 }: UploadHistoryListProps) {
+  const t = useTranslations('history')
   const router = useRouter()
   const session = useAuthSessionStore((s) => s.session)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
@@ -78,9 +80,9 @@ export function UploadHistoryList({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search by patient name or test category..."
+          placeholder={t('searchPlaceholder')}
           className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          aria-label="Search uploads"
+          aria-label={t('searchAriaLabel')}
         />
       </div>
 
@@ -88,7 +90,7 @@ export function UploadHistoryList({
       {items.length === 0 ? (
         <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
           <p className="text-sm text-neutral-500">
-            {searchQuery ? 'No uploads match your search' : 'No upload history yet'}
+            {searchQuery ? t('noResults') : t('empty')}
           </p>
         </div>
       ) : (
@@ -128,9 +130,9 @@ export function UploadHistoryList({
                       <button
                         type="button"
                         onClick={() => handleReupload(item)}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] transition-all duration-150"
+                        className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                       >
-                        Re-upload
+                        {t('reupload')}
                       </button>
                     )}
                     {item.status === 'failed' && item.source === 'local' && (
@@ -138,32 +140,32 @@ export function UploadHistoryList({
                         {confirmingId === item.id ? (
                           <div className="flex items-center gap-1">
                             <span className="text-xs text-neutral-600">
-                              Discard this upload? This cannot be undone.
+                              {t('discardConfirm')}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleDiscard(item)}
-                              aria-label="Confirm discard"
-                              className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:brightness-[0.88] transition-all duration-150"
+                              aria-label={t('confirmDiscard')}
+                              className="min-h-[44px] rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                             >
-                              Confirm
+                              {t('confirm')}
                             </button>
                             <button
                               type="button"
                               onClick={() => setConfirmingId(null)}
-                              className="rounded-md px-2 py-1 text-xs font-medium text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 active:brightness-[0.88] transition-all duration-150"
+                              className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                             >
-                              Cancel
+                              {t('cancel')}
                             </button>
                           </div>
                         ) : (
                           <button
                             type="button"
                             onClick={() => setConfirmingId(item.id)}
-                            aria-label="Discard"
-                            className="rounded-md px-2 py-1 text-xs font-medium text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-50 active:brightness-[0.88] transition-all duration-150"
+                            aria-label={t('discard')}
+                            className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                           >
-                            Discard
+                            {t('discard')}
                           </button>
                         )}
                       </>
@@ -183,9 +185,9 @@ export function UploadHistoryList({
             type="button"
             onClick={onLoadMore}
             disabled={loadingMore}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] transition-all duration-150 disabled:opacity-50"
+            className="min-h-[44px] rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150 disabled:opacity-50"
           >
-            {loadingMore ? 'Loading...' : 'Load More'}
+            {loadingMore ? t('loadingMore') : t('loadMore')}
           </button>
         </div>
       )}

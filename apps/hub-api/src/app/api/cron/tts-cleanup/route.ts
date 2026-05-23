@@ -7,8 +7,8 @@ import { runTTSAudioCleanup } from '@/jobs/tts-audio-cleanup'
  *
  * Purges expired PHI audio files from Supabase Storage every 5 minutes.
  * Secured via CRON_SECRET header to prevent unauthorized invocations.
- * Configure in vercel.json or equivalent:
- *   { "path": "/api/cron/tts-cleanup", "schedule": "*/5 * * * *" }
+ * Configure in vercel.json with path "/api/cron/tts-cleanup"
+ * and a 5-minute cron schedule.
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const authHeader = request.headers.get('authorization')

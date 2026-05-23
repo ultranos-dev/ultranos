@@ -4,6 +4,47 @@ import 'fake-indexeddb/auto'
 import { getDb, addToQueue, type UploadQueueEntry } from '../lib/db'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
+// Mock next-intl — supports namespaced useTranslations('dashboard') and root useTranslations()
+const i18nMessages: Record<string, Record<string, string>> = {
+  common: { loading: 'Loading...', retry: 'Try Again' },
+  dashboard: {
+    labIdentity: 'Lab Identity',
+    defaultLabName: 'Lab',
+    defaultTechName: 'Technician',
+    uploadQueue: 'Upload Queue',
+    pending: 'Pending',
+    uploading: 'Uploading',
+    failed: 'Failed',
+    expired: 'Expired',
+    todaysActivity: "Today's Activity",
+    completed: 'Completed',
+    pendingReview: 'Pending Review',
+    recentUploads: 'Recent Uploads',
+    noUploadsYet: 'No uploads yet',
+    uploadNewResult: 'Upload New Result',
+  },
+  status: {
+    completed: 'Completed',
+    pending: 'Pending',
+    uploading: 'Uploading',
+    failed: 'Failed',
+    expired: 'Expired',
+  },
+}
+
+vi.mock('next-intl', () => ({
+  useTranslations: (namespace?: string) => (key: string) => {
+    if (namespace) {
+      return i18nMessages[namespace]?.[key] ?? `${namespace}.${key}`
+    }
+    // Root-level: key is "namespace.key"
+    const [ns, ...rest] = key.split('.')
+    const k = rest.join('.')
+    return i18nMessages[ns]?.[k] ?? key
+  },
+  useLocale: () => 'en',
+}))
+
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
@@ -41,7 +82,7 @@ function makeEntry(overrides: Partial<UploadQueueEntry> = {}): Omit<UploadQueueE
     fileType: 'application/pdf',
     metadata: {
       loincCode: '58410-2',
-      loincDisplay: 'Blood Work — CBC',
+      loincDisplay: 'Blood Work \u2014 CBC',
       collectionDate: '2026-04-30',
     },
     patientRef: 'pat-ref-123',
@@ -108,7 +149,6 @@ describe('Lab Dashboard (Story 17.1)', () => {
   it('shows correct queue counts from Dexie', async () => {
     const db = getDb()
     await db.uploadQueue.clear()
-    // Add entries sequentially to avoid transaction conflicts
     await addToQueue(makeEntry({ status: 'pending', queuedAt: '2026-05-11T01:00:00Z' }))
     await addToQueue(makeEntry({ status: 'pending', queuedAt: '2026-05-11T02:00:00Z' }))
     await addToQueue(makeEntry({ status: 'uploading', queuedAt: '2026-05-11T03:00:00Z' }))
@@ -118,14 +158,11 @@ describe('Lab Dashboard (Story 17.1)', () => {
     await renderDashboard()
 
     await waitFor(() => {
-      // Find counts within the queue status section
       const headings = screen.getAllByText('Pending')
       expect(headings.length).toBeGreaterThan(0)
     })
 
-    // Verify the count values
     await waitFor(() => {
-      // 2 pending, 1 uploading, 1 failed, 1 expired
       expect(screen.getByText('2')).toBeDefined()
       expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2)
     })
@@ -146,10 +183,8 @@ describe('Lab Dashboard (Story 17.1)', () => {
     await renderDashboard()
 
     await waitFor(() => {
-      // 2 completed today, 1 pending review — use getAllByText since "Completed" appears in both card and badges
       expect(screen.getAllByText('Completed').length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText('Pending Review')).toBeDefined()
-      // Verify the count values: 2 completed, 1 pending
       expect(screen.getByText('2')).toBeDefined()
     })
   })
@@ -170,7 +205,7 @@ describe('Lab Dashboard (Story 17.1)', () => {
     await addToQueue(
       makeEntry({
         status: 'pending',
-        metadata: { loincCode: '58410-2', loincDisplay: 'Blood Work — CBC', collectionDate: '2026-05-10' },
+        metadata: { loincCode: '58410-2', loincDisplay: 'Blood Work \u2014 CBC', collectionDate: '2026-05-10' },
         queuedAt: '2026-05-11T10:00:00Z',
       }),
     )
@@ -191,11 +226,10 @@ describe('Lab Dashboard (Story 17.1)', () => {
     await renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByText('Blood Work — CBC')).toBeDefined()
+      expect(screen.getByText('Blood Work \u2014 CBC')).toBeDefined()
       expect(screen.getByText('Lipid Panel')).toBeDefined()
     })
 
-    // Verify status badges — "Completed" appears in both activity card and badge
     await waitFor(() => {
       expect(screen.getAllByText('Completed').length).toBeGreaterThanOrEqual(1)
     })
@@ -209,7 +243,6 @@ describe('Lab Dashboard (Story 17.1)', () => {
     await renderDashboard()
 
     await waitFor(() => {
-      // "Failed" and "Expired" appear in both queue card labels and status badges
       expect(screen.getAllByText('Failed').length).toBeGreaterThanOrEqual(2)
       expect(screen.getAllByText('Expired').length).toBeGreaterThanOrEqual(2)
     })
@@ -225,14 +258,12 @@ describe('Lab Dashboard (Story 17.1)', () => {
       expect(mockListLabReports).toHaveBeenCalledTimes(1)
     })
 
-    // Advance timer by 60 seconds
     vi.advanceTimersByTime(60_000)
 
     await waitFor(() => {
       expect(mockListLabReports).toHaveBeenCalledTimes(2)
     })
 
-    // Advance another 60 seconds
     vi.advanceTimersByTime(60_000)
 
     await waitFor(() => {
@@ -242,7 +273,6 @@ describe('Lab Dashboard (Story 17.1)', () => {
 
   // AC #6: Recent uploads limited to 10
   it('limits recent uploads list to 10 items', async () => {
-    // Add 8 local items
     for (let i = 0; i < 8; i++) {
       await addToQueue(
         makeEntry({
@@ -253,7 +283,6 @@ describe('Lab Dashboard (Story 17.1)', () => {
       )
     }
 
-    // Add 5 remote items
     mockListLabReports.mockResolvedValue({
       reports: Array.from({ length: 5 }, (_, i) => ({
         id: `r${i}`,

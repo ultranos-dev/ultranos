@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getQueueItems, type UploadQueueEntry } from '@/lib/db'
 import { listLabReports, type LabReport } from '@/lib/trpc'
-import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 export interface QueueCounts {
@@ -20,6 +19,7 @@ export interface DashboardData {
   recentUploads: RecentUploadItem[]
   loading: boolean
   error: string | null
+  retry: () => void
 }
 
 export interface RecentUploadItem {
@@ -31,17 +31,30 @@ export interface RecentUploadItem {
 }
 
 const REFRESH_INTERVAL_MS = 60_000
+const MAX_LOINC_DISPLAY_LENGTH = 200
 
-function startOfToday(): string {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d.toISOString()
+/** UTC start of today \u2014 consistent regardless of device timezone. */
+function startOfTodayUTC(): string {
+  const now = new Date()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString()
+}
+
+/** Parse ISO timestamp to epoch ms; returns 0 for unparseable values. */
+function parseTimestamp(iso: string): number {
+  if (!iso) return 0
+  const ms = new Date(iso).getTime()
+  return isNaN(ms) ? 0 : ms
+}
+
+function clampLoincDisplay(raw: string | undefined): string {
+  if (!raw || raw.length === 0) return 'Unknown Test'
+  return raw.length > MAX_LOINC_DISPLAY_LENGTH ? raw.slice(0, MAX_LOINC_DISPLAY_LENGTH) + '\u2026' : raw
 }
 
 function mapQueueToRecent(items: UploadQueueEntry[]): RecentUploadItem[] {
   return items.map((item) => ({
     id: `local-${item.id}`,
-    loincDisplay: item.metadata.loincDisplay,
+    loincDisplay: clampLoincDisplay(item.metadata.loincDisplay),
     timestamp: item.queuedAt,
     status: item.status,
     source: 'local' as const,
@@ -51,7 +64,7 @@ function mapQueueToRecent(items: UploadQueueEntry[]): RecentUploadItem[] {
 function mapReportsToRecent(reports: LabReport[]): RecentUploadItem[] {
   return reports.map((r) => ({
     id: r.id,
-    loincDisplay: r.loincDisplay ?? 'Unknown Test',
+    loincDisplay: clampLoincDisplay(r.loincDisplay),
     timestamp: r.issued ?? r.collectionDate ?? '',
     status: (r.status === 'final' ? 'completed' : 'pending') as RecentUploadItem['status'],
     source: 'remote' as const,
@@ -72,67 +85,87 @@ export function useDashboardData(): DashboardData {
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
+  const inFlightRef = useRef(false)
 
   const fetchData = useCallback(async () => {
-    // Local queue counts — fetched independently so Hub API failure doesn't block
-    let items: UploadQueueEntry[] = []
-    try {
-      items = await getQueueItems()
-      if (cancelledRef.current) return
-      setQueueCounts({
-        pending: items.filter((i) => i.status === 'pending').length,
-        uploading: items.filter((i) => i.status === 'uploading').length,
-        expired: items.filter((i) => i.status === 'expired').length,
-        failed: items.filter((i) => i.status === 'failed').length,
-      })
-    } catch {
-      // IndexedDB unavailable (e.g., private browsing) — continue with empty local data
-    }
-
-    const localRecent = mapQueueToRecent(items)
-
-    // Hub API reports — fetched independently so local failure doesn't block
-    let remoteRecent: RecentUploadItem[] = []
-    let completedToday = 0
-    let pendingToday = 0
+    // [H3] Prevent concurrent in-flight fetches
+    if (inFlightRef.current) return
+    inFlightRef.current = true
 
     try {
-      const supabase = getSupabaseBrowserClient()
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
-      if (token) {
-        const result = await listLabReports(token, { limit: 20 })
-        remoteRecent = mapReportsToRecent(result.reports)
+      // Local queue counts \u2014 fetched independently so Hub API failure doesn't block
+      let items: UploadQueueEntry[] = []
+      try {
+        items = await getQueueItems()
+        if (cancelledRef.current) return
+        setQueueCounts({
+          pending: items.filter((i) => i.status === 'pending').length,
+          uploading: items.filter((i) => i.status === 'uploading').length,
+          expired: items.filter((i) => i.status === 'expired').length,
+          failed: items.filter((i) => i.status === 'failed').length,
+        })
+      } catch {
+        // IndexedDB unavailable (e.g., private browsing) \u2014 continue with empty local data
+      }
 
-        const todayStart = startOfToday()
-        for (const r of result.reports) {
-          const ts = r.issued ?? r.collectionDate ?? ''
-          if (ts >= todayStart) {
-            if (r.status === 'final') completedToday++
-            else pendingToday++
+      const localRecent = mapQueueToRecent(items)
+
+      // Hub API reports \u2014 fetched independently so local failure doesn't block
+      let remoteRecent: RecentUploadItem[] = []
+      let completedToday = 0
+      let pendingToday = 0
+      let remoteError = false
+
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const { data } = await supabase.auth.getSession()
+
+        // [C3] Handle expired/missing session explicitly
+        if (!data.session) {
+          remoteError = true
+          if (!cancelledRef.current) {
+            setError('Session expired \u2014 please sign in again')
+          }
+        } else {
+          const token = data.session.access_token
+          const result = await listLabReports(token, { limit: 20 })
+          remoteRecent = mapReportsToRecent(result.reports)
+
+          const todayStart = startOfTodayUTC()
+          for (const r of result.reports) {
+            const ts = r.issued ?? r.collectionDate ?? ''
+            if (ts >= todayStart) {
+              if (r.status === 'final') completedToday++
+              else pendingToday++
+            }
           }
         }
+      } catch {
+        remoteError = true
+        if (!cancelledRef.current) {
+          setError('Remote data unavailable \u2014 showing local queue only')
+        }
       }
-    } catch {
-      if (!cancelledRef.current) {
-        setError('Remote data unavailable — showing local queue only')
+
+      if (cancelledRef.current) return
+
+      setTodayUploadsCompleted(completedToday)
+      setTodayResultsPending(pendingToday)
+
+      // [H6] Merge local + remote, sort by parsed timestamp desc, limit to 10
+      const merged = [...localRecent, ...remoteRecent]
+        .sort((a, b) => parseTimestamp(b.timestamp) - parseTimestamp(a.timestamp))
+        .slice(0, 10)
+      setRecentUploads(merged)
+
+      // [H2] Only clear error if remote fetch actually succeeded
+      if (!remoteError) {
+        setError(null)
       }
+      setLoading(false)
+    } finally {
+      inFlightRef.current = false
     }
-
-    if (cancelledRef.current) return
-
-    setTodayUploadsCompleted(completedToday)
-    setTodayResultsPending(pendingToday)
-
-    // Merge local + remote, sort by timestamp desc, limit to 10
-    const merged = [...localRecent, ...remoteRecent]
-      .sort((a, b) => (b.timestamp > a.timestamp ? 1 : b.timestamp < a.timestamp ? -1 : 0))
-      .slice(0, 10)
-    setRecentUploads(merged)
-    if (remoteRecent.length > 0 || items.length > 0) {
-      setError(null)
-    }
-    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -145,5 +178,11 @@ export function useDashboardData(): DashboardData {
     }
   }, [fetchData])
 
-  return { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error }
+  const retry = useCallback(() => {
+    setError(null)
+    setLoading(true)
+    fetchData()
+  }, [fetchData])
+
+  return { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry }
 }

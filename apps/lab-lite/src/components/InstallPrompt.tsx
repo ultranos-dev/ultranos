@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -11,6 +12,7 @@ const DISMISS_KEY = 'lab-lite-install-dismissed'
 const SHOW_DELAY_MS = 2 * 60 * 1000 // 2 minutes
 
 export function InstallPrompt() {
+  const t = useTranslations('install')
   const [showBanner, setShowBanner] = useState(false)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const timerFiredRef = useRef(false)
@@ -76,20 +78,20 @@ export function InstallPrompt() {
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-lg">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
         <p className="text-sm text-neutral-700">
-          Install Lab Lite for quick access from your desktop or taskbar.
+          {t('message')}
         </p>
         <div className="flex shrink-0 gap-2">
           <button
             onClick={handleDismiss}
-            className="rounded-md px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
+            className="rounded-md px-3 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100"
           >
-            Dismiss
+            {t('dismiss')}
           </button>
           <button
             onClick={handleInstall}
-            className="rounded-md bg-primary-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-800"
+            className="rounded-md bg-primary-700 px-3 py-2.5 text-sm font-medium text-white hover:bg-primary-800"
           >
-            Install
+            {t('install')}
           </button>
         </div>
       </div>
