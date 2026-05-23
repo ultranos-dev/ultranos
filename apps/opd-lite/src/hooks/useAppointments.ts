@@ -287,20 +287,20 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     }
   }, [loadData])
 
-  // 60-second sync interval
-  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 60-second sync interval — use ref to avoid re-triggering on callback identity change
+  const syncRef = useRef(syncAppointments)
+  syncRef.current = syncAppointments
+
   useEffect(() => {
     // Initial sync on mount
-    void syncAppointments()
+    void syncRef.current()
 
-    syncIntervalRef.current = setInterval(() => {
-      void syncAppointments()
+    const interval = setInterval(() => {
+      void syncRef.current()
     }, 60_000)
 
-    return () => {
-      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current)
-    }
-  }, [syncAppointments])
+    return () => clearInterval(interval)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- syncRef.current is stable
 
   return {
     appointments,
