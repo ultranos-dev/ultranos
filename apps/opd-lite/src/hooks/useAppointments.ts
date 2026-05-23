@@ -52,9 +52,13 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
   const [appointments, setAppointments] = useState<FhirAppointmentZod[]>([])
   const [slots, setSlots] = useState<FhirSlotZod[]>([])
   const [loading, setLoading] = useState(true)
+  const initialLoadDone = useRef(false)
 
   const loadData = useCallback(async () => {
-    setLoading(true)
+    // Only show spinner on the very first load — subsequent refreshes are silent
+    if (!initialLoadDone.current) {
+      setLoading(true)
+    }
     try {
       const dayStart = startOfDay(date).toISOString()
       const dayEnd = endOfDay(date).toISOString()
@@ -76,6 +80,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       // Dexie failure — keep existing state
     } finally {
       setLoading(false)
+      initialLoadDone.current = true
     }
   }, [date])
 
