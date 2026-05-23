@@ -212,6 +212,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   }, [globalLastSyncedAt, loadFromDexie])
 
   const handleSyncNow = useCallback(async () => {
+    console.log('[EncounterHistoryList] handleSyncNow clicked, patientId=', patientId)
     // Use the sync engine pull path, then fall back to legacy revalidation
     try {
       const { getSupabaseBrowserClient } = await import('@/lib/supabase')
