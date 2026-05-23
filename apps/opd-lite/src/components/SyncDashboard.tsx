@@ -262,6 +262,13 @@ export function SyncDashboard() {
       }
 
       setSyncPhase('Sync complete')
+
+      // Always update lastSyncedAt — even if nothing was pushed/pulled,
+      // a successful sync check should clear the "never synced" state
+      useSyncStore.getState().updateSyncStatus({
+        ...useSyncStore.getState(),
+        lastSyncedAt: new Date().toISOString(),
+      })
     } finally {
       // Brief delay so "Sync complete" is visible
       await new Promise(r => setTimeout(r, 600))
