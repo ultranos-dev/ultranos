@@ -128,6 +128,8 @@ export function PatientDirectory() {
           }
         }
         setLastVisitMap(visitMap)
+      } catch {
+        // Encryption key not available or Dexie error — show empty state gracefully
       } finally {
         if (!cancelled) setLoading(false)
       }
