@@ -281,13 +281,15 @@ export function MpiResultModal({
             {t('cancel')}
           </button>
 
-          <button
-            type="button"
-            onClick={() => onProceed(proceedToken ?? '')}
-            className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
-          >
-            {t('mpiAddAnyway')}
-          </button>
+          {decision === 'WARN' && proceedToken && (
+            <button
+              type="button"
+              onClick={() => onProceed(proceedToken)}
+              className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
+            >
+              {t('mpiAddAnyway')}
+            </button>
+          )}
         </div>
       </div>
     </div>
