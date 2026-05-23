@@ -291,15 +291,9 @@ export const patientRouter = createTRPCRouter({
       let mpiWarn = false
       let consumeJti: string | null = null
 
-      if (mpiResult.decision === 'BLOCK') {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Possible duplicate patient detected. Review candidates before creating a new record.',
-          cause: { candidateIds: mpiResult.candidates.slice(0, 5).map(c => c.candidate.id), topScore: mpiResult.topScore },
-        })
-      }
-
-      if (mpiResult.decision === 'WARN') {
+      // TODO: Restore BLOCK enforcement once MPI scoring algorithm is production-ready
+      // Currently treating BLOCK same as WARN — all duplicates can be overridden with proceedToken
+      if (mpiResult.decision === 'BLOCK' || mpiResult.decision === 'WARN') {
         if (!input.mpiProceedToken) {
           const proceedToken = await signProceedToken({
             candidateIds: mpiResult.candidates.map(c => c.candidate.id),

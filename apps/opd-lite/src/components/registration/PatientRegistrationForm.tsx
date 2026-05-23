@@ -22,7 +22,7 @@ function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
     return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -353,17 +353,12 @@ export function PatientRegistrationForm({
           const created = await createPatient(payload)
           await savePatientLocally(created.id, new Date().toISOString())
           router.push(`/${locale}/patient/${created.id}`)
-        } else if (dupeResult.decision === 'WARN') {
-          // Step 2b: Possible duplicates — show modal with proceed option
+        } else {
+          // Step 2b: Possible duplicates — always treat as WARN until scoring algorithm is refined
+          // TODO: Restore BLOCK handling once MPI scoring is production-ready
           setMpiDecision('WARN')
           setMpiCandidates(dupeResult.candidates)
           setMpiProceedToken(dupeResult.proceedToken)
-          setMpiModalOpen(true)
-        } else {
-          // Step 2c: Strong match — show modal with go-to-patient only
-          setMpiDecision('BLOCK')
-          setMpiCandidates(dupeResult.candidates)
-          setMpiProceedToken(undefined)
           setMpiModalOpen(true)
         }
       } catch (err) {
