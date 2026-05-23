@@ -206,13 +206,13 @@ export function MpiResultModal({
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         {candidate.nameGiven && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameGiven', { fallback: 'Given Name' })}</span>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameGiven')}</span>
                             <p className="font-semibold text-neutral-900">{candidate.nameGiven}</p>
                           </div>
                         )}
                         {candidate.nameFather && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameFather', { fallback: "Father's Name" })}</span>
+                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameFather')}</span>
                             <p className="font-semibold text-neutral-900">{candidate.nameFather}</p>
                           </div>
                         )}
@@ -281,15 +281,13 @@ export function MpiResultModal({
             {t('cancel')}
           </button>
 
-          {proceedToken && (
-            <button
-              type="button"
-              onClick={() => onProceed(proceedToken)}
-              className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
-            >
-              {t('mpiAddAnyway')}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onProceed(proceedToken ?? '')}
+            className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
+          >
+            {t('mpiAddAnyway')}
+          </button>
         </div>
       </div>
     </div>
