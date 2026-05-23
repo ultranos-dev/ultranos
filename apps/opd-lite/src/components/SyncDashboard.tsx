@@ -242,25 +242,34 @@ export function SyncDashboard() {
   const activePatientId = useSyncStore((s) => s.activePatientId)
 
   const handleSyncNow = useCallback(async () => {
-    if (!navigator.onLine) return
+    console.log('[SyncDashboard] handleSyncNow called', { online: navigator.onLine, isDraining })
+    if (!navigator.onLine) {
+      console.log('[SyncDashboard] ABORT: offline')
+      return
+    }
     setIsDraining(true)
     try {
       // Phase 1: Push pending local changes to Hub
       const pendingCount = queueItems.filter(e => e.status === 'pending' || e.status === 'in-flight').length
+      console.log('[SyncDashboard] Phase 1: push drain, pendingCount=', pendingCount)
       setSyncPhase(pendingCount > 0 ? `Pushing ${pendingCount} pending change${pendingCount !== 1 ? 's' : ''} to Hub...` : 'Checking for pending changes...')
       await triggerDrain()
+      console.log('[SyncDashboard] Phase 1 complete')
 
       // Phase 2: Pull remote changes for the active patient (if a chart is open)
+      console.log('[SyncDashboard] Phase 2: pull, activePatientId=', activePatientId)
       if (activePatientId) {
         setSyncPhase('Pulling latest patient data from Hub...')
         const { getSupabaseBrowserClient } = await import('@/lib/supabase')
         const { data } = await getSupabaseBrowserClient().auth.getSession()
         const token = data.session?.access_token ?? ''
+        console.log('[SyncDashboard] Phase 2: token present=', !!token)
         if (token) {
           await pullPatientChanges(activePatientId, () => token)
         }
       }
 
+      console.log('[SyncDashboard] Sync complete, updating lastSyncedAt')
       setSyncPhase('Sync complete')
 
       // Always update lastSyncedAt — even if nothing was pushed/pulled,
@@ -273,7 +282,9 @@ export function SyncDashboard() {
         pendingCount: state.pendingCount,
         failedCount: state.failedCount,
       })
-    } catch {
+      console.log('[SyncDashboard] lastSyncedAt updated to', useSyncStore.getState().lastSyncedAt)
+    } catch (err) {
+      console.error('[SyncDashboard] Sync failed:', err)
       setSyncPhase('Sync failed — will retry')
     } finally {
       // Brief delay so final phase is visible
@@ -282,7 +293,7 @@ export function SyncDashboard() {
       setIsDraining(false)
       loadItems()
     }
-  }, [setIsDraining, loadItems, activePatientId, queueItems])
+  }, [setIsDraining, loadItems, activePatientId, queueItems, isDraining])
 
   if (!isDashboardOpen) return null
 

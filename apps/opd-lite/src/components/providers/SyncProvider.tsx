@@ -30,8 +30,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const startedRef = useRef(false)
 
   useEffect(() => {
+    console.log('[SyncProvider] effect fired, isAuthenticated=', isAuthenticated, 'startedRef=', startedRef.current)
     if (!isAuthenticated) {
       if (startedRef.current) {
+        console.log('[SyncProvider] stopping worker (logged out)')
         stopSyncWorker()
         startedRef.current = false
         cachedToken = ''
@@ -43,7 +45,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     startedRef.current = true
 
     // Seed the token cache before starting the worker
+    console.log('[SyncProvider] refreshing token and starting worker...')
     refreshToken().then(() => {
+      console.log('[SyncProvider] token refreshed, cachedToken present=', !!cachedToken, ', starting worker')
       startSyncWorker({
         hubBaseUrl: HUB_BASE_URL,
         getAuthToken: () => cachedToken,

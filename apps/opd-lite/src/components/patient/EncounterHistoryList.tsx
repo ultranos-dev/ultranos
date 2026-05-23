@@ -8,6 +8,7 @@ import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { listPatientEncounters } from '@/lib/trpc'
 import { StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
+import { pullPatientChanges } from '@/lib/sync-pull'
 
 interface EncounterSummary {
   encounter: LocalEncounter
@@ -210,9 +211,34 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
     }
   }, [globalLastSyncedAt, loadFromDexie])
 
-  const handleSyncNow = useCallback(() => {
+  const handleSyncNow = useCallback(async () => {
+    // Use the sync engine pull path, then fall back to legacy revalidation
+    try {
+      const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+      const { data } = await getSupabaseBrowserClient().auth.getSession()
+      const token = data.session?.access_token ?? ''
+      if (token) {
+        await pullPatientChanges(patientId, () => token)
+        await loadFromDexie(cancelledRef.current, { skipAudit: true })
+        setLocalLastSyncedAt(new Date().toISOString())
+        setRevalidationFailed(false)
+
+        // Update global store so other components see the sync
+        const state = useSyncStore.getState()
+        state.updateSyncStatus({
+          isPending: state.isPending,
+          isError: state.isError,
+          lastSyncedAt: new Date().toISOString(),
+          pendingCount: state.pendingCount,
+          failedCount: state.failedCount,
+        })
+        return
+      }
+    } catch {
+      // Sync engine pull failed — fall through to legacy path
+    }
     revalidateFromHub(cancelledRef.current)
-  }, [revalidateFromHub])
+  }, [patientId, loadFromDexie, revalidateFromHub])
 
   const handleToggleExpand = (encounterId: string) => {
     setExpandedId((prev) => (prev === encounterId ? null : encounterId))
