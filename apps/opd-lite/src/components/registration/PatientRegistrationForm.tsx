@@ -317,7 +317,12 @@ export function PatientRegistrationForm({
         meta: { lastUpdated: now },
       }
 
-      await db.patients.put(patient)
+      try {
+        await db.patients.put(patient)
+      } catch {
+        // Encryption key unavailable — patient created on Hub but not cached locally.
+        // Will sync from Hub on next login with encryption key.
+      }
     },
     [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, addressOrigin, addressCurrent, sameAsOrigin],
   )
