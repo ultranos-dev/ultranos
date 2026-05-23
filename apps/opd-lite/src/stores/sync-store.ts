@@ -33,7 +33,13 @@ export const useSyncStore = create<SyncState>()((set) => ({
   activePatientId: null,
 
   updateSyncStatus: (status) => {
-    set(status)
+    set((prev) => ({
+      ...status,
+      // Never regress lastSyncedAt to null — DrainWorker reports null
+      // when no queue entries have been synced, but a successful manual
+      // sync or pull should keep the timestamp
+      lastSyncedAt: status.lastSyncedAt ?? prev.lastSyncedAt,
+    }))
   },
 
   setConflictCount: (count) => {
