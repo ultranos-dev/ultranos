@@ -265,12 +265,18 @@ export function SyncDashboard() {
 
       // Always update lastSyncedAt — even if nothing was pushed/pulled,
       // a successful sync check should clear the "never synced" state
-      useSyncStore.getState().updateSyncStatus({
-        ...useSyncStore.getState(),
+      const state = useSyncStore.getState()
+      state.updateSyncStatus({
+        isPending: state.isPending,
+        isError: state.isError,
         lastSyncedAt: new Date().toISOString(),
+        pendingCount: state.pendingCount,
+        failedCount: state.failedCount,
       })
+    } catch {
+      setSyncPhase('Sync failed — will retry')
     } finally {
-      // Brief delay so "Sync complete" is visible
+      // Brief delay so final phase is visible
       await new Promise(r => setTimeout(r, 600))
       setSyncPhase(null)
       setIsDraining(false)
