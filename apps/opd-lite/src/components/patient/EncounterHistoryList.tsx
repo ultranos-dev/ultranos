@@ -7,6 +7,7 @@ import { EncounterDetail } from '@/components/patient/EncounterDetail'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { listPatientEncounters } from '@/lib/trpc'
 import { StaleDataBanner } from '@ultranos/ui-kit'
+import { useSyncStore } from '@/stores/sync-store'
 
 interface EncounterSummary {
   encounter: LocalEncounter
@@ -117,8 +118,10 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   const [summaries, setSummaries] = useState<EncounterSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [localLastSyncedAt, setLocalLastSyncedAt] = useState<string | null>(null)
   const [revalidationFailed, setRevalidationFailed] = useState(false)
+  const globalLastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
+  const lastSyncedAt = localLastSyncedAt ?? globalLastSyncedAt
   const cancelledRef = useRef({ current: false })
   const initialAuditFired = useRef(false)
 
@@ -169,7 +172,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
       // Re-load from Dexie to get merged view (skip duplicate audit)
       await loadFromDexie(cancelled, { skipAudit: true })
       if (!cancelled.current) {
-        setLastSyncedAt(new Date().toISOString())
+        setLocalLastSyncedAt(new Date().toISOString())
         setRevalidationFailed(false)
       }
     } catch {
@@ -198,6 +201,14 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
     init()
     return () => { cancelled.current = true }
   }, [loadFromDexie, revalidateFromHub])
+
+  // Reload from Dexie when the sync engine pulls new data
+  useEffect(() => {
+    if (globalLastSyncedAt) {
+      loadFromDexie(cancelledRef.current, { skipAudit: true })
+      setRevalidationFailed(false)
+    }
+  }, [globalLastSyncedAt, loadFromDexie])
 
   const handleSyncNow = useCallback(() => {
     revalidateFromHub(cancelledRef.current)
