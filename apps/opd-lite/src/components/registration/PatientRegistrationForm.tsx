@@ -335,8 +335,18 @@ export function PatientRegistrationForm({
       try {
         const payload = buildPayload()
 
-        // Step 1: Check for duplicates
-        const dupeResult = await checkDuplicates(payload)
+        // Step 1: Check for duplicates — map form fields to the flat shape the API expects
+        const dupeCheckInput: Record<string, unknown> = {
+          nameGiven: payload.nameGiven,
+          nameFather: payload.nameFather,
+          nameGrandfather: payload.nameGrandfather,
+          birthYear: payload.birthYear,
+          gender: payload.gender,
+          phone: payload.phone,
+          addressDistrictOrigin: (payload.addressOrigin as { district?: string } | undefined)?.district,
+          addressProvinceOrigin: (payload.addressOrigin as { province?: string } | undefined)?.province,
+        }
+        const dupeResult = await checkDuplicates(dupeCheckInput)
 
         if (dupeResult.decision === 'ALLOW') {
           // Step 2a: No duplicates — create patient

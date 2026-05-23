@@ -968,6 +968,23 @@ export const patientRouter = createTRPCRouter({
       }
     }),
 
+  // ── patient.unresolvedConflictCount ─────────────────────────
+  unresolvedConflictCount: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .query(async ({ ctx }) => {
+      const { count, error } = await ctx.supabase
+        .from('sync_conflicts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'UNRESOLVED')
+
+      if (error) {
+        console.error('[PATIENT] Unresolved conflict count error:', { code: error.code })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to count conflicts' })
+      }
+
+      return { count: count ?? 0 }
+    }),
+
   // ── patient.updateBiometric ──────────────────────────────────
   updateBiometric: protectedProcedure
     .use(enforceResourceAccess('Patient'))
