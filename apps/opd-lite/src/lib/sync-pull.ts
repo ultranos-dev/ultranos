@@ -93,7 +93,11 @@ export async function pullPatientChanges(
     }
 
     try {
-      const table = (db as Record<string, unknown>)[tableName] as import('dexie').Table
+      const table = (db as unknown as Record<string, import('dexie').Table>)[tableName]
+      if (!table) {
+        result.errors.push(`No local table for: ${tableName}`)
+        continue
+      }
       const localRecord = await table.get(change.resourceId)
 
       if (!localRecord) {
