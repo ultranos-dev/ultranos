@@ -55,7 +55,6 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
   const initialLoadDone = useRef(false)
 
   const loadData = useCallback(async () => {
-    // Only show spinner on the very first load — subsequent refreshes are silent
     if (!initialLoadDone.current) {
       setLoading(true)
     }
