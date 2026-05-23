@@ -45,22 +45,16 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     startedRef.current = true
 
     // Hydrate lastSyncedAt from Dexie so the banner reflects persisted state
-    db.syncMeta.toArray().then((metas) => {
-      if (metas.length > 0) {
-        // Use the most recent pull timestamp across all patients
-        const latest = metas.reduce((a, b) =>
-          (a.lastPulledAt ?? '') > (b.lastPulledAt ?? '') ? a : b
-        )
-        if (latest.lastPulledAt) {
-          const state = useSyncStore.getState()
-          state.updateSyncStatus({
-            isPending: state.isPending,
-            isError: state.isError,
-            lastSyncedAt: latest.lastPulledAt,
-            pendingCount: state.pendingCount,
-            failedCount: state.failedCount,
-          })
-        }
+    db.syncMeta.get('__global__').then((global) => {
+      if (global?.lastPulledAt) {
+        const state = useSyncStore.getState()
+        state.updateSyncStatus({
+          isPending: state.isPending,
+          isError: state.isError,
+          lastSyncedAt: global.lastPulledAt,
+          pendingCount: state.pendingCount,
+          failedCount: state.failedCount,
+        })
       }
     }).catch(() => { /* Dexie not ready yet — will hydrate on next cycle */ })
 

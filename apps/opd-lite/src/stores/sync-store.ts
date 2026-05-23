@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { db } from '@/lib/db'
 
 interface SyncStatus {
   isPending: boolean
@@ -21,7 +22,7 @@ interface SyncState extends SyncStatus {
   setActivePatientId: (id: string | null) => void
 }
 
-export const useSyncStore = create<SyncState>()((set) => ({
+export const useSyncStore = create<SyncState>()((set, get) => ({
   isPending: false,
   isError: false,
   lastSyncedAt: null,
@@ -33,13 +34,16 @@ export const useSyncStore = create<SyncState>()((set) => ({
   activePatientId: null,
 
   updateSyncStatus: (status) => {
-    set((prev) => ({
+    const prev = get().lastSyncedAt
+    const resolved = status.lastSyncedAt ?? prev
+    set({
       ...status,
-      // Never regress lastSyncedAt to null — DrainWorker reports null
-      // when no queue entries have been synced, but a successful manual
-      // sync or pull should keep the timestamp
-      lastSyncedAt: status.lastSyncedAt ?? prev.lastSyncedAt,
-    }))
+      lastSyncedAt: resolved,
+    })
+    // Persist to Dexie so it survives page loads
+    if (resolved && resolved !== prev) {
+      db.syncMeta.put({ patientId: '__global__', lastPulledHlc: '', lastPulledAt: resolved }).catch(() => {})
+    }
   },
 
   setConflictCount: (count) => {
