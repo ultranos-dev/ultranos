@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { LOINC_CATEGORIES } from '@/lib/loinc-categories'
+import { Button } from '@/components/ui/Button'
 import type { OcrSuggestion } from '@/lib/trpc'
 
 export interface MetadataFormValues {
@@ -34,14 +36,14 @@ function getConfidenceBadgeClasses(level: ConfidenceLevel): string {
   }
 }
 
-function getConfidenceLabel(level: ConfidenceLevel): string {
+function getConfidenceLabel(level: ConfidenceLevel, t: ReturnType<typeof useTranslations<'metadata'>>): string {
   switch (level) {
     case 'high':
-      return 'High confidence'
+      return t('confidenceHigh')
     case 'medium':
-      return 'Medium confidence'
+      return t('confidenceMedium')
     case 'low':
-      return 'Low confidence'
+      return t('confidenceLow')
   }
 }
 
@@ -67,6 +69,7 @@ interface MetadataFormProps {
  * Story 12.6 — AC 2, 3, 4, 5 (OCR auto-population, confidence badges, confirmation gate)
  */
 export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: MetadataFormProps) {
+  const t = useTranslations('metadata')
   const [loincCode, setLoincCode] = useState('')
   const [collectionDate, setCollectionDate] = useState('')
   const [errors, setErrors] = useState<{ category?: string; date?: string; confirm?: string }>({})
@@ -100,10 +103,10 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
     e.preventDefault()
 
     const newErrors: { category?: string; date?: string; confirm?: string } = {}
-    if (!loincCode) newErrors.category = 'Please select a test category.'
-    if (!collectionDate) newErrors.date = 'Please enter the sample collection date.'
+    if (!loincCode) newErrors.category = t('errorCategory')
+    if (!collectionDate) newErrors.date = t('errorDate')
     if (hasOcr && !confirmed) {
-      newErrors.confirm = 'Please review and confirm the metadata before submitting.'
+      newErrors.confirm = t('errorConfirm')
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -131,22 +134,22 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          Analyzing document with OCR...
+          {t('ocrAnalyzing')}
         </div>
       )}
 
       {ocrStatus && !ocrStatus.loading && !ocrStatus.available && (
         <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700" role="alert">
-          OCR unavailable — please enter metadata manually.
+          {t('ocrUnavailable')}
         </div>
       )}
 
       {ocrStatus && !ocrStatus.loading && ocrStatus.available && ocrStatus.processingTimeMs !== undefined && (
         <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700" role="status">
-          OCR analysis complete ({(ocrStatus.processingTimeMs / 1000).toFixed(1)}s)
+          {t('ocrComplete', { time: (ocrStatus.processingTimeMs / 1000).toFixed(1) })}
           {hasOcr
-            ? ` — ${ocrSuggestions.length} suggestion${ocrSuggestions.length > 1 ? 's' : ''} found.`
-            : ' — no suggestions found.'}
+            ? t('ocrSuggestionsFound', { count: ocrSuggestions.length })
+            : t('ocrNoSuggestions')}
         </div>
       )}
 
@@ -154,7 +157,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <label htmlFor="test-category" className="text-sm font-medium text-neutral-700">
-            Test Category
+            {t('testCategory')}
           </label>
           {ocrLoincSuggestion && (
             <span
@@ -162,7 +165,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
               title={`OCR confidence: ${ocrLoincSuggestion.confidence}%`}
               data-testid="confidence-badge-category"
             >
-              {getConfidenceLabel(getConfidenceLevel(ocrLoincSuggestion.confidence))}
+              {getConfidenceLabel(getConfidenceLevel(ocrLoincSuggestion.confidence), t)}
               {' '}({ocrLoincSuggestion.confidence}%)
             </span>
           )}
@@ -177,7 +180,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
           disabled={disabled}
           className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
-          <option value="">Select a test category...</option>
+          <option value="">{t('selectCategory')}</option>
           {LOINC_CATEGORIES.map((cat) => (
             <option key={cat.code} value={cat.code}>
               {cat.label}
@@ -186,7 +189,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
         </select>
         {ocrLoincSuggestion && ocrLoincSuggestion.confidence < CONFIDENCE_THRESHOLD && (
           <p className="text-xs text-amber-600">
-            OCR could not determine — enter manually.
+            {t('ocrLowConfidence')}
           </p>
         )}
         {errors.category && (
@@ -198,7 +201,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <label htmlFor="collection-date" className="text-sm font-medium text-neutral-700">
-            Sample Collection Date
+            {t('collectionDate')}
           </label>
           {ocrDateSuggestion && (
             <span
@@ -206,7 +209,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
               title={`OCR confidence: ${ocrDateSuggestion.confidence}%`}
               data-testid="confidence-badge-date"
             >
-              {getConfidenceLabel(getConfidenceLevel(ocrDateSuggestion.confidence))}
+              {getConfidenceLabel(getConfidenceLevel(ocrDateSuggestion.confidence), t)}
               {' '}({ocrDateSuggestion.confidence}%)
             </span>
           )}
@@ -224,7 +227,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
         />
         {ocrDateSuggestion && ocrDateSuggestion.confidence < CONFIDENCE_THRESHOLD && (
           <p className="text-xs text-amber-600">
-            OCR could not determine — enter manually.
+            {t('ocrLowConfidence')}
           </p>
         )}
         {errors.date && (
@@ -247,7 +250,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
               data-testid="ocr-confirm-checkbox"
             />
             <span className="text-neutral-700">
-              I have reviewed and confirm the metadata above is correct.
+              {t('confirmCheckbox')}
             </span>
           </label>
           {errors.confirm && (
@@ -257,13 +260,13 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       )}
 
       {/* Submit */}
-      <button
+      <Button
+        variant="primary"
         type="submit"
         disabled={disabled}
-        className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Submit Results
-      </button>
+        {t('submitResults')}
+      </Button>
     </form>
   )
 }

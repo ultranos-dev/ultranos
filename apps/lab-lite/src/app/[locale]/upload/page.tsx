@@ -2,6 +2,7 @@
 
 import { useReducer, useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { StepIndicator, type WizardStep } from '@/components/upload/StepIndicator'
 import { PatientVerifyForm } from '@/components/PatientVerifyForm'
 import { PatientVerifyScanner } from '@/components/PatientVerifyScanner'
@@ -10,6 +11,7 @@ import { MetadataForm, type MetadataFormValues, type OcrStatus } from '@/compone
 import { ReviewStep } from '@/components/upload/ReviewStep'
 import { addToQueue } from '@/lib/db'
 import { analyzeUpload, type OcrAnalysisResult, type VerifyPatientResult } from '@/lib/trpc'
+import { Button } from '@/components/ui/Button'
 import { reportQueueAuditEvent } from '@/lib/audit-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -79,6 +81,7 @@ const initialState: WizardState = {
 
 export default function UploadPage() {
   const router = useRouter()
+  const t = useTranslations()
   const session = useAuthSessionStore((s) => s.session)
   const [state, dispatch] = useReducer(wizardReducer, initialState)
   const [verifyMode, setVerifyMode] = useState<'manual' | 'qr'>('manual')
@@ -213,12 +216,12 @@ export default function UploadPage() {
 
       router.push('/?uploaded=true')
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to queue upload')
+      setSubmitError(err instanceof Error ? err.message : t('errors.queueFailed'))
     } finally {
       setSubmitting(false)
       submittingRef.current = false
     }
-  }, [state, session, token, router])
+  }, [state, session, token, router, t])
 
   // ── Derived State ───────────────────────────────────
 
@@ -238,7 +241,7 @@ export default function UploadPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-neutral-900">Upload Lab Result</h1>
+        <h1 className="text-xl font-bold text-neutral-900">{t('upload.title')}</h1>
       </div>
 
       <StepIndicator currentStep={state.step} />
@@ -257,7 +260,7 @@ export default function UploadPage() {
                   : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
               }`}
             >
-              Manual ID
+              {t('upload.manualId')}
             </button>
             <button
               type="button"
@@ -268,7 +271,7 @@ export default function UploadPage() {
                   : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
               }`}
             >
-              QR Scan
+              {t('upload.qrScan')}
             </button>
           </div>
 
@@ -281,11 +284,11 @@ export default function UploadPage() {
           {/* Render patient already verified state */}
           {state.patient && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-              <h3 className="mb-3 text-sm font-semibold text-green-800">Patient Verified</h3>
+              <h3 className="mb-3 text-sm font-semibold text-green-800">{t('verification.patientVerified')}</h3>
               <dl className="grid grid-cols-2 gap-2 text-sm">
-                <dt className="font-medium text-neutral-600">First Name</dt>
+                <dt className="font-medium text-neutral-600">{t('verification.firstName')}</dt>
                 <dd className="text-neutral-900">{state.patient.patientFirstName}</dd>
-                <dt className="font-medium text-neutral-600">Age</dt>
+                <dt className="font-medium text-neutral-600">{t('verification.age')}</dt>
                 <dd className="text-neutral-900">{state.patient.patientAge}</dd>
               </dl>
             </div>
@@ -348,38 +351,38 @@ export default function UploadPage() {
       {/* Navigation buttons */}
       {state.step !== 'VERIFY_PATIENT' && state.step !== 'REVIEW_SUBMIT' && (
         <div className="flex justify-between">
-          <button
+          <Button
+            variant="outline"
             type="button"
             onClick={() => dispatch({ type: 'PREV_STEP' })}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] transition-all duration-150"
-            aria-label="Back"
+            aria-label={t('upload.backAriaLabel')}
           >
-            Back
-          </button>
+            {t('upload.back')}
+          </Button>
 
           {state.step === 'UPLOAD_FILE' && state.file && (
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={() => dispatch({ type: 'NEXT_STEP' })}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150"
-              aria-label="Next"
+              aria-label={t('upload.nextAriaLabel')}
             >
-              Next
-            </button>
-          )}
+              {t('upload.next')}
+            </Button>
+          )}}
         </div>
       )}
 
       {/* Back button on review step */}
       {state.step === 'REVIEW_SUBMIT' && (
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={() => dispatch({ type: 'PREV_STEP' })}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] transition-all duration-150"
-          aria-label="Back"
+          aria-label={t('upload.backAriaLabel')}
         >
-          Back
-        </button>
+          {t('upload.back')}
+        </Button>
       )}
     </div>
   )
