@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { ErrorBoundary, useAsyncErrorBoundary, StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { triggerDrain } from '@/lib/sync-worker'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
@@ -28,6 +29,7 @@ function AsyncErrorBridge({ children }: { children: ReactNode }) {
 
 function SyncAwareStaleDataBanner() {
   const [mounted, setMounted] = useState(false)
+  const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
   const failedCount = useSyncStore((s) => s.failedCount)
 
@@ -35,7 +37,7 @@ function SyncAwareStaleDataBanner() {
     setMounted(true)
   }, [])
 
-  if (!mounted) return null
+  if (!mounted || !isAuthenticated) return null
 
   return (
     <StaleDataBanner
