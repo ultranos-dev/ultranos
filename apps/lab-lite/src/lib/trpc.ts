@@ -282,4 +282,33 @@ export async function acknowledgeAllNotifications(token: string): Promise<void> 
   })
 }
 
+// ── Patient Search (Task 7) ─────────────────────────────────
+
+export interface PatientSearchResult {
+  id: string
+  firstName: string
+  age: number
+  gender?: string
+  phone?: string
+}
+
+/**
+ * Search patients by name query via Hub API.
+ * Returns ONLY firstName, age, and opaque identifiers (data minimization).
+ * Requires valid LAB_TECH JWT in the Authorization header.
+ */
+export async function searchPatients(
+  query: string,
+  token: string,
+): Promise<PatientSearchResult[]> {
+  const url = `${getHubApiUrl()}/lab.searchPatients?input=${encodeURIComponent(JSON.stringify({ json: { query } }))}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`Search failed: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: { patients: PatientSearchResult[] } } } }
+  return body.result.data.json.patients ?? []
+}
+
 export { getHubApiUrl }
