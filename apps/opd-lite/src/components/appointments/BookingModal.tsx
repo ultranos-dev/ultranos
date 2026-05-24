@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
-import type { AppointmentServiceType } from '@ultranos/shared-types'
+import { db } from '@/lib/db'
+import { searchPatientsOnHub } from '@/lib/trpc'
+import { hashNationalId } from '@/lib/hash-national-id'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import type { AppointmentServiceType, FhirPatient } from '@ultranos/shared-types'
 
 /** Clinic hours: 08:00-17:00, 30-minute slots */
 const CLINIC_START_HOUR = 8
@@ -56,7 +61,6 @@ export function BookingModal({
 
   const initialDate = prefilledDate ?? selectedDate
   const [bookingDate, setBookingDate] = useState(initialDate)
-  const [patientName, setPatientName] = useState('')
   const [selectedTime, setSelectedTime] = useState(
     prefilledTime ?? '',
   )
@@ -65,8 +69,130 @@ export function BookingModal({
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  // Simplified allergy indicator for offline-first
-  const [hasAllergies] = useState(false)
+
+  // Patient search state (local to modal — avoids clashing with dashboard's global store)
+  const [patientQuery, setPatientQuery] = useState('')
+  const [patientResults, setPatientResults] = useState<FhirPatient[]>([])
+  const [isSearchingPatient, setIsSearchingPatient] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState<FhirPatient | null>(null)
+  const [hasAllergies, setHasAllergies] = useState(false)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Debounced local + Hub patient search
+  const handlePatientQueryChange = useCallback((value: string) => {
+    setPatientQuery(value)
+    // If user clears or edits after selecting, deselect
+    setSelectedPatient(null)
+    setHasAllergies(false)
+
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    if (!value.trim()) {
+      setPatientResults([])
+      setIsSearchingPatient(false)
+      return
+    }
+
+    setIsSearchingPatient(true)
+    searchTimerRef.current = setTimeout(async () => {
+      const trimmed = value.trim()
+      // Phase 1: Local Dexie search (wrapped in try/catch — decryption
+      // can fail if records were encrypted with a previous session key)
+      const localResults: FhirPatient[] = []
+      if (encryptionKeyStore.isReady()) {
+        try {
+          const seen = new Set<string>()
+          const byName = await db.patients
+            .where('_ultranos.nameLocal')
+            .startsWithIgnoreCase(trimmed)
+            .limit(20)
+            .toArray()
+          const byLatin = await db.patients
+            .where('_ultranos.nameLatin')
+            .startsWithIgnoreCase(trimmed)
+            .limit(20)
+            .toArray()
+          const idHash = await hashNationalId(trimmed)
+          const byId = await db.patients
+            .where('_ultranos.nationalIdHash')
+            .equals(idHash)
+            .limit(20)
+            .toArray()
+          for (const p of [...byName, ...byLatin, ...byId]) {
+            if (!seen.has(p.id)) {
+              seen.add(p.id)
+              localResults.push(p)
+            }
+          }
+        } catch {
+          // Decryption failed (key mismatch or corrupt data) — skip local results
+        }
+      }
+      setPatientResults(localResults)
+      setIsSearchingPatient(false)
+
+      // Phase 2: Background Hub revalidation
+      if (abortRef.current) abortRef.current.abort()
+      abortRef.current = new AbortController()
+      try {
+        const hubResult = await searchPatientsOnHub(trimmed, abortRef.current.signal)
+        if (hubResult.patients.length > 0) {
+          await db.patients.bulkPut(hubResult.patients)
+          // Re-search locally to merge
+          const merged: FhirPatient[] = []
+          const seen = new Set<string>()
+          const all = await db.patients
+            .where('_ultranos.nameLocal')
+            .startsWithIgnoreCase(trimmed)
+            .limit(20)
+            .toArray()
+          const allLatin = await db.patients
+            .where('_ultranos.nameLatin')
+            .startsWithIgnoreCase(trimmed)
+            .limit(20)
+            .toArray()
+          for (const p of [...all, ...allLatin]) {
+            if (!seen.has(p.id)) {
+              seen.add(p.id)
+              merged.push(p)
+            }
+          }
+          setPatientResults(merged)
+        }
+      } catch {
+        // Hub unavailable or decryption error — local results are sufficient
+      }
+    }, 250)
+  }, [])
+
+  // Handle patient selection — load allergies
+  const handleSelectPatient = useCallback(async (patient: FhirPatient) => {
+    setSelectedPatient(patient)
+    setPatientQuery(patient._ultranos?.nameLocal || patient.name?.[0]?.text || '')
+    setPatientResults([])
+
+    // Check if this patient has allergies in local IndexedDB
+    try {
+      const allergies = await db.allergyIntolerances
+        .filter((a) => {
+          const ref = (a as { patient?: { reference?: string } }).patient?.reference
+          return ref === `Patient/${patient.id}`
+        })
+        .first()
+      setHasAllergies(!!allergies)
+    } catch {
+      // Decryption error — can't determine allergy status, default to safe display
+      setHasAllergies(false)
+    }
+  }, [])
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+      if (abortRef.current) abortRef.current.abort()
+    }
+  }, [])
 
   const { appointments, slots, createAppointment } =
     useAppointments(bookingDate)
@@ -106,7 +232,7 @@ export function BookingModal({
   }
 
   const handleSubmit = async () => {
-    if (!patientName.trim() || !selectedTime) return
+    if (!selectedPatient || !selectedTime) return
 
     setSubmitting(true)
     setError('')
@@ -131,8 +257,8 @@ export function BookingModal({
       })
 
       await createAppointment({
-        patientRef: crypto.randomUUID(), // Offline-first: real patient lookup TBD
-        patientName: patientName.trim(),
+        patientRef: selectedPatient.id,
+        patientName: selectedPatient._ultranos?.nameLocal || selectedPatient.name?.[0]?.text || patientQuery.trim(),
         slotId: matchingSlot?.id ?? crypto.randomUUID(),
         serviceType,
         start: start.toISOString(),
@@ -141,7 +267,10 @@ export function BookingModal({
       })
 
       // Success — reset & close
-      setPatientName('')
+      setPatientQuery('')
+      setSelectedPatient(null)
+      setPatientResults([])
+      setHasAllergies(false)
       setSelectedTime('')
       setNotes('')
       setServiceType('new-consult')
@@ -170,11 +299,11 @@ export function BookingModal({
           <h2 className="text-lg font-bold text-neutral-900">
             {t('bookAppointment')}
           </h2>
-          <button
+          <Button
+            variant="icon"
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
-            aria-label="Close"
+            aria-label="Close modal"
           >
             <svg
               className="h-5 w-5"
@@ -189,7 +318,7 @@ export function BookingModal({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Safety Rule 4: Allergy banner at highest prominence */}
@@ -200,18 +329,62 @@ export function BookingModal({
         )}
 
         <div className="space-y-4">
-          {/* Patient search */}
-          <div>
+          {/* Patient search with autocomplete */}
+          <div className="relative">
             <label className="mb-1 block text-sm font-medium text-neutral-700">
               {t('patient')}
             </label>
             <input
               type="text"
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
+              value={patientQuery}
+              onChange={(e) => handlePatientQueryChange(e.target.value)}
               placeholder={t('selectPatient')}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+                selectedPatient
+                  ? 'border-green-400 bg-green-50'
+                  : 'border-neutral-300'
+              }`}
             />
+            {selectedPatient && (
+              <span className="absolute end-3 top-[2.1rem] text-xs text-green-600">
+                {selectedPatient.gender ?? ''} &middot; {selectedPatient.birthDate ? `${new Date().getFullYear() - new Date(selectedPatient.birthDate).getFullYear()}y` : ''}
+              </span>
+            )}
+            {/* Dropdown results */}
+            {patientResults.length > 0 && !selectedPatient && (
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-lg">
+                <ul className="divide-y divide-neutral-100" role="listbox" aria-label={t('selectPatient')}>
+                  {patientResults.map((patient) => (
+                    <li
+                      key={patient.id}
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => handleSelectPatient(patient)}
+                      className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-primary-50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-neutral-900">
+                          {patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown'}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          {patient.gender ?? ''} &middot; {patient.birthDate ? `${new Date().getFullYear() - new Date(patient.birthDate).getFullYear()}y` : ''}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {isSearchingPatient && (
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-center text-sm text-neutral-400 shadow-lg">
+                Searching...
+              </div>
+            )}
+            {patientQuery.trim() && patientResults.length === 0 && !isSearchingPatient && !selectedPatient && (
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-center text-sm text-neutral-400 shadow-lg">
+                {t('noResults')}
+              </div>
+            )}
           </div>
 
           {/* Date picker */}
@@ -223,7 +396,7 @@ export function BookingModal({
               type="date"
               value={formatDateInput(bookingDate)}
               onChange={handleDateChange}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
@@ -237,12 +410,13 @@ export function BookingModal({
                 const isBusy = busyTimes.has(time)
                 const isSelected = selectedTime === time
                 return (
-                  <button
+                  <Button
                     key={time}
+                    variant="ghost"
                     type="button"
                     disabled={isBusy}
                     onClick={() => setSelectedTime(time)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                       isBusy
                         ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
                         : isSelected
@@ -251,7 +425,7 @@ export function BookingModal({
                     }`}
                   >
                     {time}
-                  </button>
+                  </Button>
                 )
               })}
             </div>
@@ -291,7 +465,7 @@ export function BookingModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
@@ -304,23 +478,24 @@ export function BookingModal({
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={handleSubmit}
               disabled={
-                !patientName.trim() || !selectedTime || submitting
+                !selectedPatient || !selectedTime || submitting
               }
-              className="flex-1 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1"
             >
               {t('confirmBooking')}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               {t('cancelAppointment')}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

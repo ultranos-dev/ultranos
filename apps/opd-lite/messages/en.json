@@ -811,6 +811,7 @@
     "noAppointments": "No appointments scheduled",
     "noWalkIns": "No walk-in patients",
     "schedulingConflict": "Scheduling conflict detected — please review",
-    "doubleBookWarning": "Double-booking detected for this time slot"
+    "doubleBookWarning": "Double-booking detected for this time slot",
+    "noResults": "No patients found"
   }
 }
