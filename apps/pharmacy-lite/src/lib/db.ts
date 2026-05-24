@@ -71,6 +71,20 @@ export interface RevokedKeyEntry {
   revokedAt: string          // ISO 8601 timestamp
 }
 
+export interface LocalPatient {
+  id: string
+  nameGiven: string
+  nameFather?: string
+  gender: 'male' | 'female' | 'other' | 'unknown'
+  birthYear?: number
+  birthDate?: string
+  phone?: string
+  preferredLanguage?: string
+  allergies?: string[]
+  createdAt: string
+  source: 'registered' | 'qr-verified' | 'hub-synced'
+}
+
 class PharmacyLiteDatabase extends Dexie {
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
   revokedKeys!: EntityTable<RevokedKeyEntry, 'publicKey'>
@@ -79,6 +93,7 @@ class PharmacyLiteDatabase extends Dexie {
   syncQueue!: EntityTable<SyncQueueEntry, 'id'>
   pendingAuditEvents!: EntityTable<PendingAuditEvent, 'id'>
   clientAuditLog!: EntityTable<ClientAuditEvent, 'id'>
+  patients!: EntityTable<LocalPatient, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -108,6 +123,11 @@ class PharmacyLiteDatabase extends Dexie {
     // Not encrypted — contains only opaque IDs, no PHI.
     this.version(4).stores({
       clientAuditLog: 'id, status, queuedAt, [status+queuedAt]',
+    })
+
+    // v5: Local patient registry for pharmacy-managed patients
+    this.version(5).stores({
+      patients: 'id, nameGiven, phone, createdAt',
     })
   }
 }
@@ -143,6 +163,10 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
       'action',
       'createdAt',
     ],
+  },
+  {
+    tableName: 'patients',
+    indexedFields: ['id', 'nameGiven', 'phone', 'createdAt'],
   },
 ]
 
