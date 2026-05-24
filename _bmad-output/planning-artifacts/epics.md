@@ -4760,6 +4760,249 @@ As a developer, I want consistent input styling and no duplicate utilities, so t
 | **5. Efficiency** | 38.12 | Escape key shortcut for wizard navigation |
 | **6. Polish** | 38.13 | Unified styling, shared utilities, settings cleanup |
 
+---
+
+# Addendum 13: Pharmacy Lite Enterprise UX Overhaul (Epic 39)
+
+**Date:** 2026-05-24
+**Branch:** `ux-v1.0`
+**Commits:** `bd59eff` through `b240b31` (9 commits)
+**Plan:** `docs/superpowers/plans/2026-05-24-pharmacy-lite-enterprise-ux.md`
+
+**Trigger:** `/impeccable critique` design review scored the app 20/40 on Nielsen's heuristics. Critical gaps identified: no patient intake workflow (P0), no dispensing safety gates (P1), cramped content width (P2), dead-end empty states (P3), no keyboard shortcuts (P4).
+
+## Epic 39: Pharmacy Lite Enterprise UX Overhaul
+
+Transform pharmacy-lite from a functional prototype into an enterprise-grade pharmacy workstation with patient intake, dispensing safety gates, responsive layouts, confident visual identity, meaningful onboarding, and power-user efficiency. Standalone pharmacies can now operate independently without OPD-Lite.
+
+### Story 39.1: Button Component Accessibility
+As a pharmacist using keyboard navigation, I want focus rings only visible on keyboard use and smooth transitions scoped to intended properties, so that mouse users aren't distracted and animations are performant.
+
+**Acceptance Criteria:**
+- `focus:` classes replaced with `focus-visible:` globally via Button component
+- `transition-all` replaced with `transition-[transform,filter,background-color]`
+- Default `ease-out` replaced with custom Ultranos easing `cubic-bezier(0.23,1,0.32,1)`
+- `motion-reduce:transition-none` replaces verbose per-property motion guards
+
+> **Status:** ✅ Done — Commit `bd59eff`
+
+### Story 39.2: Motion-Reduce Guards & Design Token Usage
+As a user with motion sensitivity, I want animations to respect `prefers-reduced-motion`, and I want the codebase to use design tokens consistently.
+
+**Acceptance Criteria:**
+- `animate-pulse` and `animate-spin` in QueueItemCard and SyncPulse get `motion-reduce:animate-none`
+- `bg-black/40` replaced with `bg-neutral-900/40` (DESIGN.md compliance)
+- Hardcoded `#163300` replaced with `pill-text` design token
+
+> **Status:** ✅ Done — Commit `6b79a82`
+
+### Story 39.3: Responsive Content Width & Dark Mode Cleanup
+As a pharmacist reviewing controlled substance logs on a wide monitor, I want table-heavy pages to use available screen width.
+
+**Acceptance Criteria:**
+- Table pages (`/controlled`, `/unverified`, `/history`, `/sync`, `/queue`) get `max-w-5xl`
+- Form pages (scan, settings, dashboard) remain `max-w-2xl`
+- All incomplete `dark:*` classes removed from ControlledSubstancesView and UnverifiedDispensesView
+- `alert()` calls replaced with inline `setError()` state
+
+> **Status:** ✅ Done — Commit `784824a`
+
+### Story 39.4: Patient Database Schema & Store
+As a standalone pharmacy, I need a local patient registry so I can serve walk-in patients without requiring them to have a QR code.
+
+**Acceptance Criteria:**
+- Dexie v5 migration adds `patients` table (indexed: id, nameGiven, phone, createdAt)
+- `LocalPatient` interface: id, nameGiven, nameFather, gender, birthYear, phone, allergies, source
+- PHI encryption configured for patients table
+- Zustand `usePatientStore` with activePatient state
+
+> **Status:** ✅ Done — Commit `6646684`
+
+### Story 39.5: Two-Phase Patient Search Hook
+As a pharmacist searching for a returning patient, I want instant local results with background Hub enrichment.
+
+**Acceptance Criteria:**
+- `searchPatientsLocal()`: Dexie filter, case-insensitive name prefix + phone prefix, limit 20
+- `searchPatientsHub()`: Hub API call with abort signal, returns additional matches
+- `usePatientSearch` hook: 300ms debounce, local-first, background Hub merge, deduped by ID
+- Graceful offline fallback (Hub phase skipped when offline)
+
+> **Status:** ✅ Done — Commit `6646684`
+
+### Story 39.6: Patient Search UI Components
+As a pharmacist, I want to search patients by name/phone with inline results and a register option.
+
+**Acceptance Criteria:**
+- `PatientSearchBar`: input with spinner, results dropdown, accessibility (focus-visible)
+- `PatientSearchResults`: list with patient info, allergy badge (red "ALLERGIES" tag), "Register new patient" link when <5 results or no results
+- Keyboard accessible (Enter/Space to select)
+
+> **Status:** ✅ Done — Commit `bd3a0c1`
+
+### Story 39.7: Patient Registration Form
+As a pharmacist registering a walk-in patient, I want a minimal form that captures essential info including allergies.
+
+**Acceptance Criteria:**
+- Fields: name (required), father's name, gender (required), birth year, phone, allergies
+- Allergy input styled in red (CLAUDE.md rule #4), tag-based with add/remove
+- Saves to local Dexie + enqueues sync to Hub
+- Prefills name from search query when no results found
+
+> **Status:** ✅ Done — Commit `bd3a0c1`
+
+### Story 39.8: Multi-Entry Dashboard Action Hub
+As a pharmacist, I want the dashboard to clearly present all entry paths: patient search, QR scan, paper Rx, and walk-in registration.
+
+**Acceptance Criteria:**
+- Patient search bar as primary action (search → select → navigate to scan)
+- Three action cards below: Scan QR Rx (from OPD-Lite), Paper Rx (OCR), Walk-in (new patient)
+- Registration form inline when "Walk-in" is selected
+- Patient set in store before navigation to scan page
+
+> **Status:** ✅ Done — Commit `39c218e`
+
+### Story 39.9: Allergy Banner (Safety-Critical)
+As a pharmacist about to dispense medication, I want patient allergies prominently displayed in red so I never miss them.
+
+**Acceptance Criteria:**
+- Red border-2, bg-red-50, `role="alert"`, `aria-live="assertive"`
+- Warning icon + "KNOWN ALLERGIES" uppercase heading
+- Allergy tags as red pills (bg-red-200, font-bold)
+- Never collapsed, never behind a tab (CLAUDE.md rule #4)
+
+> **Status:** ✅ Done — Commit `a70f0f4`
+
+### Story 39.10: Drug Interaction Check Banner
+As a pharmacist, I want clear feedback on drug interaction status so I never unknowingly dispense a contraindicated combination.
+
+**Acceptance Criteria:**
+- 5 states: checking, clear, warning, contraindicated, unavailable
+- "Unavailable" state explicitly warns (CLAUDE.md rule #3: never default to "no interactions")
+- "Contraindicated" blocks dispensing with imperative messaging
+- Exported `InteractionStatus` type for integration
+
+> **Status:** ✅ Done — Commit `a70f0f4`
+
+### Story 39.11: Dispensing Confirmation Modal
+As a pharmacist, I want a confirmation gate before final dispensing that re-displays allergies and requires acknowledgement.
+
+**Acceptance Criteria:**
+- Modal with patient allergies (AllergyBanner), medication summary, and pharmacist acknowledgement checkbox
+- "Dispense Medication" button disabled until checkbox checked
+- Integrated into FulfillmentChecklist (replaces direct onConfirm call)
+- AllergyBanner also shown inline in FulfillmentChecklist above medication list
+
+> **Status:** ✅ Done — Commit `a70f0f4`
+
+### Story 39.12: Reusable Empty State Component
+As a new pharmacy onboarding, I want meaningful empty states with guidance and CTAs instead of dead-end gray text.
+
+**Acceptance Criteria:**
+- `EmptyState` component with 6 icon variants, title, description, optional action button/link
+- Deployed to PrescriptionQueueView (active tab: "Scan Prescription" CTA) and RecentDispensingList ("Start Scanning" CTA)
+- Green circle icon container matching brand
+
+> **Status:** ✅ Done — Commit `941b432`
+
+### Story 39.13: Dispensing Summary Card Visual Hierarchy
+As a pharmacist glancing at the dashboard, I want the primary metric (dispensed today) visually distinct from secondary metrics (pending/failed).
+
+**Acceptance Criteria:**
+- Primary metric: large card, `text-3xl`, green-tinted border, descriptive subtitle
+- Secondary metrics: smaller two-column row, `text-lg`
+- Failed metric turns red when non-zero (border-red-300, bg-red-50)
+- Pending turns amber when non-zero
+- `tabular-nums` on all numeric values
+
+> **Status:** ✅ Done — Commit `941b432`
+
+### Story 39.14: Session Expiry Warning Banner
+As a pharmacist mid-shift, I want a proactive warning when my session is about to expire so I can save work.
+
+**Acceptance Criteria:**
+- `useSessionExpiryWarning` hook: polls every 30s, warns at 15 minutes remaining
+- Amber banner with `role="alert"` shows ceiling-rounded minutes
+- Rendered in AppShellWrapper between SyncCapacityBanner and page content
+
+> **Status:** ✅ Done — Commit `b240b31`
+
+### Story 39.15: Keyboard Shortcuts System
+As a pharmacist dispensing 80+ prescriptions per shift, I want keyboard shortcuts for primary navigation.
+
+**Acceptance Criteria:**
+- Alt+1: Dashboard, Alt+2: Scan, Alt+3: Queue, Alt+4: History
+- Shortcuts disabled when focus is in input/textarea/select
+- `useKeyboardShortcuts` hook registered in AppShellWrapper
+
+> **Status:** ✅ Done — Commit `b240b31`
+
+### Story 39.16: Login Page Branding
+As a pharmacist signing in, I want the login page to feel branded and professional.
+
+**Acceptance Criteria:**
+- "Pharmacy Lite" heading + "Powered by Ultranos" above the card
+- "Sign In" heading (not "Pharmacy Lite Sign In" — redundant)
+- Footer: "Secure healthcare platform"
+- All inputs use `focus-visible:` instead of `focus:`
+
+> **Status:** ✅ Done — Commit `b240b31`
+
+### Story 39.17: Patient Name Display in Recent Dispensing
+As a pharmacist reviewing recent activity, I want to see patient names instead of FHIR UUIDs.
+
+**Acceptance Criteria:**
+- `RecentDispenseItem` interface extended with optional `patientName`
+- `queryDashboardStats()` enriches dispenses with names from local `db.patients`
+- Display falls back to `patientRef` when name unavailable
+
+> **Status:** ✅ Done — Commit `b240b31`
+
+## Implementation Summary
+
+| Phase | Stories | What it delivers |
+|-------|---------|-----------------|
+| **1. Foundation** | 39.1–39.3 | Button a11y, motion guards, responsive width, dark mode cleanup |
+| **2. Patient Intake (P0)** | 39.4–39.8 | DB schema, search, registration, multi-entry dashboard hub |
+| **3. Safety Gates (P1)** | 39.9–39.11 | Allergy banner, interaction check, confirmation modal |
+| **4. Onboarding (P3)** | 39.12 | EmptyState component with CTAs |
+| **5. Visual (P4)** | 39.13–39.14 | Summary card hierarchy, session expiry warning |
+| **6. Efficiency (P4)** | 39.15 | Alt+1-4 keyboard shortcuts |
+| **7. Polish** | 39.16–39.17 | Login branding, patient name display |
+
+### New Files Created
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchBar.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchResults.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientRegistrationForm.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DashboardActionHub.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/AllergyBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/InteractionCheckBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingConfirmationModal.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/EmptyState.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SessionExpiryBanner.tsx`
+- `apps/pharmacy-lite/src/hooks/usePatientSearch.ts`
+- `apps/pharmacy-lite/src/hooks/useKeyboardShortcuts.ts`
+- `apps/pharmacy-lite/src/hooks/useSessionExpiryWarning.ts`
+- `apps/pharmacy-lite/src/lib/patient-search.ts`
+- `apps/pharmacy-lite/src/lib/patient-register.ts`
+- `apps/pharmacy-lite/src/stores/patient-store.ts`
+- `apps/pharmacy-lite/src/__tests__/button-accessibility.test.tsx`
+
+### Files Modified
+- `apps/pharmacy-lite/src/components/ui/Button.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingSummaryCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/FulfillmentChecklist.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/QueueItemCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SyncPulse.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ShiftSummary.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PrescriptionQueueView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/RecentDispensingList.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/UnverifiedDispensesView.tsx`
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/login/page.tsx`
+- `apps/pharmacy-lite/src/lib/db.ts`
+
 ### New Files Created
 - `apps/lab-lite/src/components/dashboard/UploadSuccessBanner.tsx`
 - `apps/lab-lite/src/components/dashboard/DashboardHeader.tsx`

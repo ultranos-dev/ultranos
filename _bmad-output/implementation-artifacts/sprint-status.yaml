@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-22T23:30:00.000000'
+last_updated: '2026-05-24T12:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -467,3 +467,27 @@ development_status:
   pe-12-skip-to-content-link: done                   # Epic 35 — sr-only link in AppShellWrapper
   pe-13-focus-visible-ring-cta: done                 # Epic 26 — focus-visible:outline on dashboard CTAs
   pe-14-axe-core-clinical-component-tests: done      # Epic 35 — axe tests for real pharmacy components
+
+  # ============================================================
+  # EPIC 39: Pharmacy Lite Enterprise UX Overhaul (2026-05-24)
+  # Addendum 13 in epics.md. Design critique → full P0-P4 fix.
+  # ============================================================
+  epic-39: done
+  39-1-button-accessibility-focus-visible-transitions: done
+  39-2-motion-reduce-guards-design-tokens: done
+  39-3-responsive-content-width-dark-mode-cleanup: done
+  39-4-patient-db-schema-v5-store: done
+  39-5-two-phase-patient-search-hook: done
+  39-6-patient-search-ui-components: done
+  39-7-patient-registration-form-allergy-capture: done
+  39-8-dashboard-multi-entry-action-hub: done
+  39-9-allergy-banner-safety-critical: done
+  39-10-interaction-check-banner: done
+  39-11-dispensing-confirmation-modal: done
+  39-12-reusable-empty-state-component: done
+  39-13-dispensing-summary-visual-hierarchy: done
+  39-14-session-expiry-warning-banner: done
+  39-15-keyboard-shortcuts-system: done
+  39-16-login-page-branding: done
+  39-17-patient-name-display-recent-dispensing: done
+  epic-39-retrospective: optional

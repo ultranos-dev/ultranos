@@ -829,6 +829,96 @@ Plan: `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
 
 ---
 
+## 2026-05-24 — Pharmacy Lite Enterprise UX Overhaul (Epic 39) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `bd59eff` through `b240b31` (9 commits)
+Plan: `docs/superpowers/plans/2026-05-24-pharmacy-lite-enterprise-ux.md`
+
+**Design critique** of pharmacy-lite using `/impeccable critique` scored it 20/40 on Nielsen's heuristics. Identified 5 priority issues: no patient intake workflow (P0), no dispensing safety gates (P1), cramped content width (P2), dead-end empty states (P3), no keyboard shortcuts (P4). All addressed across 7 phases, 17 tasks.
+
+**Phase 1 — Foundation Fixes (Tasks 1–3):**
+1. Button component: `focus:` → `focus-visible:`, `transition-all` → scoped transitions, `ease-out` → custom cubic-bezier, `motion-reduce:transition-none`
+2. Motion guards: `animate-pulse`/`animate-spin` gated with `motion-reduce:animate-none`, `bg-black` → `bg-neutral-900`, hardcoded `#163300` → `pill-text` token
+3. Responsive width: table pages `max-w-5xl`, form pages `max-w-2xl`; all incomplete `dark:` classes stripped; `alert()` → inline `setError()`
+
+**Phase 2 — Patient Intake Hub (P0, Tasks 4–8):**
+4. Dexie v5 `patients` table with PHI encryption; Zustand `usePatientStore`
+5. Two-phase search: fast local Dexie + background Hub API revalidation, 300ms debounce, deduped merge
+6. PatientSearchBar + PatientSearchResults UI with allergy badges and "Register new" CTA
+7. PatientRegistrationForm: minimal pharmacy fields + red-styled allergy capture (CLAUDE.md rule #4)
+8. DashboardActionHub: multi-entry with search-first, Scan QR, Paper Rx, Walk-in paths — replaces old 2-button quick actions
+
+**Phase 3 — Dispensing Safety Gates (P1, Tasks 9–11):**
+9. AllergyBanner: `role="alert"`, `aria-live="assertive"`, red border-2, never collapsed (CLAUDE.md rule #4)
+10. InteractionCheckBanner: 5 states including explicit "unavailable" warning (CLAUDE.md rule #3)
+11. DispensingConfirmationModal: allergy re-display + medication summary + pharmacist acknowledgement checkbox + integrated into FulfillmentChecklist
+
+**Phase 4 — Empty States (P3, Task 12):**
+12. Reusable EmptyState component with 6 icon variants + CTAs; deployed to queue + recent dispensing views
+
+**Phase 5 — Visual Hierarchy (P4, Tasks 13–14):**
+13. DispensingSummaryCard redesigned: large primary metric, smaller secondary row, red/amber attention states
+14. SessionExpiryBanner: proactive amber warning at 15 minutes remaining
+
+**Phase 6 — Keyboard Shortcuts (P4, Task 15):**
+15. Alt+1–4 navigation shortcuts (Dashboard, Scan, Queue, History); disabled in input fields
+
+**Phase 7 — Polish (Tasks 16–17):**
+16. Login page branding: "Pharmacy Lite / Powered by Ultranos" heading, `focus-visible:` on inputs
+17. Patient names in recent dispensing: enriched from local Dexie instead of showing FHIR UUIDs
+
+### New Files (16)
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchBar.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchResults.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientRegistrationForm.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DashboardActionHub.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/AllergyBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/InteractionCheckBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingConfirmationModal.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/EmptyState.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SessionExpiryBanner.tsx`
+- `apps/pharmacy-lite/src/hooks/usePatientSearch.ts`
+- `apps/pharmacy-lite/src/hooks/useKeyboardShortcuts.ts`
+- `apps/pharmacy-lite/src/hooks/useSessionExpiryWarning.ts`
+- `apps/pharmacy-lite/src/lib/patient-search.ts`
+- `apps/pharmacy-lite/src/lib/patient-register.ts`
+- `apps/pharmacy-lite/src/stores/patient-store.ts`
+- `apps/pharmacy-lite/src/__tests__/button-accessibility.test.tsx`
+
+### Files Modified (14)
+- `apps/pharmacy-lite/src/components/ui/Button.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingSummaryCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/FulfillmentChecklist.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/QueueItemCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SyncPulse.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ShiftSummary.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PrescriptionQueueView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/RecentDispensingList.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/UnverifiedDispensesView.tsx`
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/login/page.tsx`
+- `apps/pharmacy-lite/src/lib/db.ts`
+
+### Errors & Resolutions
+- None. All tasks completed without blockers.
+
+### Tests Run
+- `button-accessibility.test.tsx` — 4/4 passed (focus-visible, scoped transitions, custom easing, motion-reduce)
+
+### PRD Trace
+- **FR9 / Epic 4 & 26:** Pharmacy fulfillment — patient intake + dispensing safety gates
+- **CLAUDE.md Rule #3:** Drug interaction check never skipped silently — InteractionCheckBanner "unavailable" state
+- **CLAUDE.md Rule #4:** Allergy highest prominence — AllergyBanner (red, never collapsed, renders first)
+- **NFR2:** Offline-first — patient search works offline (local Dexie), registration queues sync
+- **NFR7:** WCAG AA — focus-visible, motion-reduce, keyboard shortcuts, semantic ARIA
+- **Epic 26 extension:** Stories 39.1–39.17 extend pharmacy UX beyond v1 baseline
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._

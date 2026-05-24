@@ -69,9 +69,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       </div>
 
       {/* Allergy banner — SAFETY-CRITICAL: highest display prominence */}
-      {activePatient?.allergies && activePatient.allergies.length > 0 && (
-        <AllergyBanner allergies={activePatient.allergies} patientName={activePatient.nameGiven} />
-      )}
+      <AllergyBanner allergies={activePatient?.allergies} patientName={activePatient?.nameGiven} />
 
       {/* Medication items */}
       <ul className="space-y-3" role="list">

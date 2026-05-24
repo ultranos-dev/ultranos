@@ -33,11 +33,9 @@ export function DispensingConfirmationModal({
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-neutral-900 mb-4">Confirm Dispensing</h3>
 
-        {patientAllergies && patientAllergies.length > 0 && (
-          <div className="mb-4">
-            <AllergyBanner allergies={patientAllergies} patientName={patientName} />
-          </div>
-        )}
+        <div className="mb-4">
+          <AllergyBanner allergies={patientAllergies} patientName={patientName} />
+        </div>
 
         <div className="mb-4">
           <p className="text-xs font-medium text-neutral-500 mb-2 uppercase tracking-wide">
