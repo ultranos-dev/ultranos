@@ -41,6 +41,8 @@ class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
   verified_patients!: Dexie.Table<VerifiedPatientCache, string>
+  patients!: Dexie.Table<any, string>
+  syncQueue!: Dexie.Table<any, string>
 
   constructor() {
     super('lab-lite-db')
@@ -51,6 +53,13 @@ class LabLiteDatabase extends Dexie {
       uploadQueue: '++id, status, queuedAt',
       practitioner_keys: '&practitionerId, cachedAt',
       verified_patients: '&patientId, verifiedAt',
+    })
+    this.version(3).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
     })
   }
 }
@@ -119,4 +128,34 @@ export async function updateQueueItemStatus(
 export async function removeQueueItem(id: number): Promise<void> {
   const db = getDb()
   await db.uploadQueue.delete(id)
+}
+
+// ---------------------------------------------------------------------------
+// Patient cache helpers (v3)
+// Patient objects follow FHIR Patient structure with _ultranos extensions.
+// Using `any` until shared-types is directly importable from lab-lite.
+// ---------------------------------------------------------------------------
+
+/** Return all cached patients. */
+export async function getPatients(): Promise<any[]> {
+  const db = getDb()
+  return db.table('patients').toArray()
+}
+
+/** Upsert a single patient into the local cache. */
+export async function putPatient(patient: any): Promise<void> {
+  const db = getDb()
+  await db.table('patients').put(patient)
+}
+
+/** Bulk-upsert an array of patients into the local cache. */
+export async function putPatients(patients: any[]): Promise<void> {
+  const db = getDb()
+  await db.table('patients').bulkPut(patients)
+}
+
+/** Look up a cached patient by FHIR id. Returns undefined if not found. */
+export async function getPatientById(id: string): Promise<any | undefined> {
+  const db = getDb()
+  return db.table('patients').get(id)
 }
