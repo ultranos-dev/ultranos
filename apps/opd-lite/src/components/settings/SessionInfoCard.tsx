@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Card } from '@/components/Card'
 
 function parseJwtPayload(token: string): { exp?: number; iat?: number } | null {
   try {
@@ -47,7 +48,7 @@ export function SessionInfoCard() {
   const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : 'Unknown'
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <Card>
       <h2 className="mb-4 text-sm font-semibold text-neutral-900">Session Info</h2>
 
       <div className="space-y-3">
@@ -70,6 +71,6 @@ export function SessionInfoCard() {
           )}
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 
 interface MpiCandidate {
   id: string
@@ -156,11 +157,12 @@ export function MpiResultModal({
                   } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-white'}`}
                 >
                   {/* Collapsible header — always visible */}
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => toggleCandidate(candidate.id)}
                     aria-expanded={isExpanded}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start transition-colors hover:bg-neutral-50"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start hover:bg-neutral-50"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Chevron */}
@@ -197,7 +199,7 @@ export function MpiResultModal({
                     >
                       {t('mpiScore')}: {candidate.mpiScore}
                     </span>
-                  </button>
+                  </Button>
 
                   {/* Expanded details */}
                   {isExpanded && (
@@ -256,13 +258,15 @@ export function MpiResultModal({
                       )}
 
                       {/* Go to patient button */}
-                      <button
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        className="mt-3"
                         type="button"
                         onClick={() => onGoToPatient(candidate.id)}
-                        className="mt-3 w-full min-h-[44px] rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.97]"
                       >
                         {t('mpiGoToPatient')}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </li>
@@ -273,22 +277,22 @@ export function MpiResultModal({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={onCancel}
-            className="min-h-[44px] rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-300 active:scale-[0.97]"
           >
             {t('cancel')}
-          </button>
+          </Button>
 
           {decision === 'WARN' && proceedToken && (
-            <button
+            <Button
+              variant="warning"
               type="button"
               onClick={() => onProceed(proceedToken)}
-              className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
             >
               {t('mpiAddAnyway')}
-            </button>
+            </Button>
           )}
         </div>
       </div>

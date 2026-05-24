@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -63,10 +64,11 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="icon"
         type="button"
+        className="relative p-2"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative rounded-full p-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
       >
         {/* Bell icon (SVG) */}
@@ -91,7 +93,7 @@ export function NotificationBell() {
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </Button>
 
       {isOpen && (
         <NotificationDropdown
@@ -153,20 +155,20 @@ function NotificationDropdown({
   }, [onCountChange])
 
   return (
-    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
         <h3 className="text-sm font-semibold text-neutral-900">Notifications</h3>
-        <button
+        <Button
+          variant="icon"
           type="button"
           onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-600"
           aria-label="Close notifications"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
@@ -226,13 +228,14 @@ function NotificationRow({
         </div>
 
         {isUnread && notification.payload.diagnosticReportId && (
-          <button
+          <Button
+            variant="primary"
+            className="shrink-0"
             type="button"
             onClick={() => onAcknowledge(notification.id)}
-            className="shrink-0 rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
           >
             View Report
-          </button>
+          </Button>
         )}
       </div>
     </div>

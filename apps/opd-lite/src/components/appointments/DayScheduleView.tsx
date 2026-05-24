@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { AppointmentSlot } from './AppointmentSlot'
@@ -99,10 +100,10 @@ export function DayScheduleView() {
     <div className="space-y-6">
       {/* Date navigation */}
       <div className="flex items-center justify-between gap-4">
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={prevDay}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('previousDay')}
         >
           <svg
@@ -118,7 +119,7 @@ export function DayScheduleView() {
               d="M15.75 19.5L8.25 12l7.5-7.5"
             />
           </svg>
-        </button>
+        </Button>
 
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-bold text-neutral-900">
@@ -128,15 +129,15 @@ export function DayScheduleView() {
             type="date"
             value={formatDate(selectedDate)}
             onChange={handleDateInput}
-            className="rounded-md border border-neutral-300 px-2 py-1 text-sm"
+            className="rounded-xl border border-neutral-300 px-2 py-1 text-sm"
             aria-label={t('datePicker')}
           />
         </div>
 
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={nextDay}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('nextDay')}
         >
           <svg
@@ -152,7 +153,7 @@ export function DayScheduleView() {
               d="M8.25 4.5l7.5 7.5-7.5 7.5"
             />
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Time grid */}

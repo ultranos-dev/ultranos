@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import type { VerifyPatientResult } from '@/lib/trpc'
 import { verifyQrOffline, cacheVerifiedPatient, getCachedPatient } from '@/lib/offline-verify'
 import type { QrPayload } from '@/lib/offline-verify'
+import { Button } from '@/components/ui/Button'
 import { OfflineVerificationBadge } from './OfflineVerificationBadge'
 import { OnlineStatusIndicator } from './OnlineStatusIndicator'
 
@@ -213,36 +214,38 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
             <dd className="text-neutral-900">{verifiedResult.age}</dd>
           </dl>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="primary"
+              className="flex-1"
               type="button"
               onClick={handleConfirm}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Confirm Patient
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               type="button"
               onClick={handleReset}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {!scanning && !loading && !verifiedResult && (
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={startScanner}
-          className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           Scan Patient QR Code
-        </button>
+        </Button>
       )}
 
       {scanning && (
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={async () => {
             if (html5QrCodeRef.current) {
@@ -250,10 +253,9 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
             }
             setScanning(false)
           }}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
         >
           Cancel Scan
-        </button>
+        </Button>
       )}
     </div>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
+import { Button } from '@/components/ui/Button'
 
 interface FulfillmentChecklistProps {
   onConfirm?: (selectedItems: FulfillmentItem[]) => void
@@ -42,22 +43,22 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           )}
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
             data-testid="select-all-btn"
             type="button"
             onClick={selectAll}
-            className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
           >
             Select All
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             data-testid="deselect-all-btn"
             type="button"
             onClick={deselectAll}
-            className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
           >
             Deselect All
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -138,7 +139,9 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       </ul>
 
       {/* Confirm Dispensing button — "Primary Green Pill" per UX spec */}
-      <button
+      <Button
+        variant="primary"
+        fullWidth
         data-testid="confirm-dispensing-btn"
         type="button"
         disabled={!hasSelection}
@@ -146,10 +149,9 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           const selected = items.filter((i) => i.selected)
           onConfirm?.(selected)
         }}
-        className="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Confirm Dispensing
-      </button>
+      </Button>
     </div>
   )
 }

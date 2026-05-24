@@ -1,6 +1,7 @@
 'use client'
 
 import type { QueueItem, FulfillmentPhaseBadge, SyncStatus } from '@/lib/queue-data'
+import { Button } from '@/components/ui/Button'
 
 interface QueueItemCardProps {
   item: QueueItem
@@ -123,9 +124,9 @@ export function QueueItemCard({
         )}
 
         {onRetry && item.syncStatus === 'failed' && (
-          <button
+          <Button
+            variant="danger"
             data-testid={`retry-btn-${item.id}`}
-            className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
             onClick={(e) => {
               e.stopPropagation()
               onRetry(item)
@@ -136,7 +137,7 @@ export function QueueItemCard({
               <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-300 border-t-red-700 me-1" />
             ) : null}
             Retry Sync
-          </button>
+          </Button>
         )}
       </div>
     </li>

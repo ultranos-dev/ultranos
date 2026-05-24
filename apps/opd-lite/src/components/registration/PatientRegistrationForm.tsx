@@ -6,12 +6,15 @@ import { useLocale, useTranslations } from 'next-intl'
 import { z } from 'zod'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { AfghanProvince } from '@ultranos/shared-types'
+import { Button } from '@/components/ui/Button'
 import { NameInputSection } from './NameInputSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
+import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 // ── Hub API helpers ──────────────────────────────────────────────────────────
@@ -319,9 +322,13 @@ export function PatientRegistrationForm({
 
       try {
         await db.patients.put(patient)
-      } catch {
-        // Encryption key unavailable — patient created on Hub but not cached locally.
-        // Will sync from Hub on next login with encryption key.
+      } catch (err) {
+        if (err instanceof EncryptionKeyNotAvailableError) {
+          // Re-throw — caller must handle this so the user isn't
+          // redirected to a page that can't load the patient.
+          throw err
+        }
+        // Other IndexedDB errors — patient exists on Hub, will sync later.
       }
     },
     [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, addressOrigin, addressCurrent, sameAsOrigin],
@@ -356,7 +363,17 @@ export function PatientRegistrationForm({
         if (dupeResult.decision === 'ALLOW') {
           // Step 2a: No duplicates — create patient
           const created = await createPatient(payload)
-          await savePatientLocally(created.id, new Date().toISOString())
+          try {
+            await savePatientLocally(created.id, new Date().toISOString())
+          } catch (saveErr) {
+            if (saveErr instanceof EncryptionKeyNotAvailableError) {
+              // Patient was created on Hub but can't be cached locally.
+              // Redirect to login so the encryption key is initialized.
+              const returnUrl = encodeURIComponent(`/${locale}/patient/${created.id}`)
+              window.location.href = `/${locale}/login?returnUrl=${returnUrl}`
+              return
+            }
+          }
           router.push(`/${locale}/patient/${created.id}`)
         } else {
           // Step 2b: Possible duplicates — always treat as WARN until scoring algorithm is refined
@@ -388,7 +405,15 @@ export function PatientRegistrationForm({
       try {
         const payload = buildPayload(token)
         const created = await createPatient(payload)
-        await savePatientLocally(created.id, new Date().toISOString())
+        try {
+          await savePatientLocally(created.id, new Date().toISOString())
+        } catch (saveErr) {
+          if (saveErr instanceof EncryptionKeyNotAvailableError) {
+            const returnUrl = encodeURIComponent(`/${locale}/patient/${created.id}`)
+            window.location.href = `/${locale}/login?returnUrl=${returnUrl}`
+            return
+          }
+        }
         router.push(`/${locale}/patient/${created.id}`)
       } catch (err) {
         setSubmitError(
@@ -432,7 +457,7 @@ export function PatientRegistrationForm({
         />
 
         {/* Demographics section */}
-        <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
+        <Card as="fieldset">
           <legend className="text-base font-bold text-neutral-900 mb-4">
             {t('demographicsSection')}
           </legend>
@@ -575,7 +600,7 @@ export function PatientRegistrationForm({
               />
             </div>
           </div>
-        </fieldset>
+        </Card>
 
         {/* Geography section */}
         <GeographySection
@@ -619,13 +644,9 @@ export function PatientRegistrationForm({
         )}
 
         {/* Submit button */}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full min-h-[44px] rounded-lg bg-blue-600 px-6 py-3 text-base font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button variant="primary" type="submit" disabled={submitting} fullWidth>
           {submitting ? t('submitting') : t('submitRegistration')}
-        </button>
+        </Button>
       </form>
 
       {/* MPI duplicate result modal */}

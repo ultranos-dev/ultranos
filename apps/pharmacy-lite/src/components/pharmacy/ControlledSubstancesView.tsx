@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
@@ -287,23 +288,23 @@ export function ControlledSubstancesView() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-4">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               >
                 {t('previous')}
-              </button>
+              </Button>
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 {t('page')} {page} {t('of')} {totalPages}
               </span>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               >
                 {t('next')}
-              </button>
+              </Button>
             </div>
           )}
         </>

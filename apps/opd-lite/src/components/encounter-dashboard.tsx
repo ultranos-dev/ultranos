@@ -29,6 +29,8 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkAIProcessingConsent } from '@/services/ai-scribe-service'
 import { ConflictBanner } from '@/components/sync/ConflictBanner'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
 import { usePatientSync } from '@/hooks/usePatientSync'
 import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
 
@@ -473,12 +475,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
         <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="mt-4 font-semibold text-primary-500 underline"
+          className="mt-4"
         >
           Return to Patient Search
-        </button>
+        </Button>
       </main>
     )
   }
@@ -505,20 +508,21 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <header className="mb-8">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="mb-4 text-sm font-semibold text-primary-500 [@media(hover:hover)and(pointer:fine)]:hover:underline"
+          className="mb-4"
           aria-label="Back to search"
         >
           ← Back to Search
-        </button>
+        </Button>
         <h1 className="text-3xl font-black tracking-tight text-neutral-900">
           Encounter Dashboard
         </h1>
       </header>
 
-      <section
-        className="rounded-lg border border-neutral-200 bg-white p-6"
+      <Card
+        as="section"
         aria-label="Patient information"
       >
         <h2 className="text-xl font-bold text-neutral-900">
@@ -534,11 +538,12 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           <span>{patient.gender ?? 'Unknown'}</span>
           <span>{formatAge(patient.birthDate, patient.birthYearOnly)}</span>
         </div>
-      </section>
+      </Card>
 
       {/* Encounter status + controls */}
-      <section
-        className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+      <Card
+        as="section"
+        className="mt-6"
         aria-label="Encounter status"
       >
         {isActive ? (
@@ -557,46 +562,49 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                 ? new Date(activeEncounter.period.start).toLocaleTimeString()
                 : 'Unknown'}
             </p>
-            <button
+            <Button
+              variant="secondary"
               onClick={handleEndEncounter}
-              className="mt-4 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
+              className="mt-4"
             >
               End Encounter
-            </button>
+            </Button>
           </>
         ) : (
           <>
             <p className="mb-4 font-semibold text-neutral-500">
               No active consultation
             </p>
-            <button
+            <Button
+              variant="primary"
               onClick={handleStartEncounter}
               disabled={isStarting || !isAuthenticated}
-              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-all duration-150 hover:bg-green-700 active:scale-[0.97] disabled:opacity-50"
             >
               {isStarting ? 'Starting...' : 'Start Encounter'}
-            </button>
+            </Button>
           </>
         )}
-      </section>
+      </Card>
 
       {/* Allergies — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '0ms' }}
           aria-label="Allergies"
           data-section="allergies"
           tabIndex={-1}
         >
           <AllergyEntry patientId={patientId} />
-        </section>
+        </Card>
       )}
 
       {/* Vital Signs — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '50ms' }}
           aria-label="Vital signs"
           data-section="vitals"
@@ -620,13 +628,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             bmi={getBmi()}
             rangeStatuses={getRangeStatuses()}
           />
-        </section>
+        </Card>
       )}
 
       {/* SOAP Note Entry — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '100ms' }}
           aria-label="SOAP note entry"
         >
@@ -648,13 +657,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             aiConsentGranted={aiConsentGranted}
             isOnline={isOnline}
           />
-        </section>
+        </Card>
       )}
 
       {/* Prescriptions — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '150ms' }}
           aria-label="Prescriptions"
           data-section="prescriptions"
@@ -735,7 +745,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                 {pendingPrescriptions.map((rx) => (
                   <li
                     key={rx.id}
-                    className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-3"
+                    className="flex items-center justify-between rounded-xl ring-[0.65px] ring-gray-400/40 bg-white ps-4 pe-4 py-3"
                   >
                     <div>
                       <span className="font-semibold text-neutral-900">
@@ -770,14 +780,15 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                       <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
                         Pending Fulfillment
                       </span>
-                      <button
+                      <Button
+                        variant="ghost"
                         type="button"
                         onClick={() => handleRemovePrescription(rx.id)}
-                        className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
+                        className="!text-red-500"
                         aria-label={`Cancel prescription for ${rx.medicationCodeableConcept.text}`}
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </li>
                 ))}
@@ -807,7 +818,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               )}
             </div>
           )}
-        </section>
+        </Card>
       )}
 
     </main>

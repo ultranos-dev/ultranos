@@ -95,6 +95,10 @@ export interface FhirPatient {
     mpiScore?: number
     /** Structured document identifiers (Tazkira, passport, etc.) */
     identifiers?: PatientIdentifier[]
+    /** Patient photo path in Supabase Storage (patient-photos bucket) */
+    photoUrl?: string
+    /** Blood group — write-once after first save */
+    bloodGroup?: string
   }
 
   // FHIR R4 Meta — canonical field names

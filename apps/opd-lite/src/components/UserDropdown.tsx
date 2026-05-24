@@ -13,6 +13,7 @@ import { clearSigningKeys } from '@/lib/signing-key-store'
 import { clearPhiTables } from '@/lib/phi-cleanup'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { Button } from '@/components/ui/Button'
 
 function getInitials(name: string): string {
   return name
@@ -77,17 +78,17 @@ export function UserDropdown() {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        type="button"
+      <Button
+        variant="icon"
+        className="h-9 w-9 bg-blue-100 text-sm font-bold text-blue-700 hover:bg-blue-200"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="User menu"
         aria-expanded={isOpen}
         aria-haspopup="menu"
         data-testid="user-dropdown-trigger"
       >
         {initials}
-      </button>
+      </Button>
 
       {isOpen && (
         <>
@@ -109,7 +110,7 @@ export function UserDropdown() {
           `}</style>
           <div
             role="menu"
-            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg"
             data-testid="user-dropdown-menu"
           >
             <div className="border-b border-neutral-100 px-4 py-3">
@@ -125,15 +126,15 @@ export function UserDropdown() {
               >
                 Settings
               </a>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 role="menuitem"
                 onClick={handleLogout}
-                className="block w-full px-4 py-2 text-start text-sm text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                className="w-full justify-start px-4 py-2 text-red-600 hover:bg-neutral-50"
                 data-testid="logout-btn"
               >
                 Logout
-              </button>
+              </Button>
             </div>
           </div>
         </>

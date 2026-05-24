@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { getHubApiUrl } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -283,20 +284,20 @@ export function UnverifiedDispensesView() {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-sm">
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={() => handleAction(r.id, 'APPROVED')}
                         disabled={actionInFlight === r.id}
-                        className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
                       >
                         {t('approve')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="danger"
                         onClick={() => handleAction(r.id, 'FLAGGED')}
                         disabled={actionInFlight === r.id}
-                        className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
                       >
                         {t('flag')}
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

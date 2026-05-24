@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
 /* ------------------------------------------------------------------ */
@@ -154,7 +155,7 @@ export function DuplicateReviewTable() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
@@ -245,30 +246,30 @@ function TableRow({
         <td className="px-4 py-3 text-end">
           {isPending && (
             <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 disabled={isBusy}
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDismiss()
                 }}
-                className="min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500 disabled:opacity-50"
                 aria-label={t('dismissAriaLabel', { patient: row.patientLabel })}
               >
                 {t('actionDismiss')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
                 disabled={isBusy}
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   onFlag()
                 }}
-                className="min-h-[44px] rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
                 aria-label={t('flagAriaLabel', { patient: row.patientLabel })}
               >
                 {t('actionFlagMerge')}
-              </button>
+              </Button>
             </div>
           )}
         </td>

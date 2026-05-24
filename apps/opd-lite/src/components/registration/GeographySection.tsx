@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { ProvinceAutocomplete } from '@/components/shared/ProvinceAutocomplete'
 import { DistrictAutocomplete } from '@/components/shared/DistrictAutocomplete'
 import type { AfghanProvince } from '@ultranos/shared-types'
+import { Card } from '@/components/Card'
 
 interface AddressFields {
   province: AfghanProvince | ''
@@ -38,7 +39,7 @@ export function GeographySection({
   const t = useTranslations('registration')
 
   return (
-    <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card as="fieldset">
       <legend className="text-base font-bold text-neutral-900 mb-4">
         {t('geographySection')}
       </legend>
@@ -174,6 +175,6 @@ export function GeographySection({
           </>
         )}
       </div>
-    </fieldset>
+    </Card>
   )
 }

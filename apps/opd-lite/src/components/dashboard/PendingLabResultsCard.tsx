@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { fetchNotifications } from '@/lib/notification-api'
+import { Card } from '@/components/Card'
 
 export function PendingLabResultsCard() {
   const t = useTranslations('dashboard')
@@ -27,7 +28,7 @@ export function PendingLabResultsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card>
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
         {t('pendingLabResults')}
       </h3>
@@ -42,6 +43,6 @@ export function PendingLabResultsCard() {
           {t('unavailableOffline')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

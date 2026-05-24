@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSyncStore } from '@/stores/sync-store'
 import { db } from '@/lib/db'
+import { Button } from '@/components/ui/Button'
 
 function formatSyncTime(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime()
@@ -73,10 +74,10 @@ export function SyncPulse() {
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="icon"
+      className="relative gap-2 rounded-lg p-2"
       onClick={() => setDashboardOpen(!isDashboardOpen)}
-      className="relative flex items-center gap-2 rounded-lg p-2 text-neutral-400 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
       aria-label={`Sync status: ${ariaStatus}`}
       data-testid="sync-pulse"
     >
@@ -104,6 +105,6 @@ export function SyncPulse() {
       <span className="text-xs text-neutral-400">
         {lastSyncedAt ? formatSyncTime(lastSyncedAt) : 'never synced'}
       </span>
-    </button>
+    </Button>
   )
 }

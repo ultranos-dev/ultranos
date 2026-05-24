@@ -71,7 +71,7 @@ export function ClinicalDashboard() {
         </PillButton>
         <Link
           href="/register-patient"
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors min-h-[44px]"
+          className="inline-flex items-center gap-2 rounded-pill bg-pill-green px-5 py-2 text-sm font-semibold text-pill-text transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2"
         >
           {t('registerNew')}
         </Link>

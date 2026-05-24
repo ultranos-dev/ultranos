@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/Button'
+
 interface BiometricStaleBannerProps {
   currentVersion: string | null
   expectedVersion: string // from NEXT_PUBLIC_BIOMETRIC_ALGORITHM_VERSION env var
@@ -30,13 +32,14 @@ export function BiometricStaleBanner({
           A newer biometric algorithm is available. Re-enrolling improves
           matching accuracy.
         </p>
-        <button
+        <Button
+          variant="primary"
+          className="shrink-0"
           type="button"
           onClick={onUpdateBiometric}
-          className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           Update Biometric
-        </button>
+        </Button>
       </div>
     </div>
   )

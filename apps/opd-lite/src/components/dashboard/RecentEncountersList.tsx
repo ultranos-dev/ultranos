@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { Card } from '@/components/Card'
 
 interface RecentEncounter {
   id: string
@@ -112,17 +113,17 @@ export function RecentEncountersList() {
 
   if (encounters.length === 0) {
     return (
-      <div className="rounded-xl bg-card-bg p-5 shadow-sm">
+      <Card>
         <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
         <p className="mt-3 text-sm font-semibold text-neutral-400">
           {t('noEncountersYet')}
         </p>
-      </div>
+      </Card>
     )
   }
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card>
       <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
       <ul className="mt-3 divide-y divide-neutral-100" role="list" aria-label="Recent encounters">
         {encounters.map((enc) => (
@@ -157,6 +158,6 @@ export function RecentEncountersList() {
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   )
 }

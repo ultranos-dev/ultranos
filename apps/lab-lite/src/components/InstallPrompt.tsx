@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -81,18 +82,18 @@ export function InstallPrompt() {
           {t('message')}
         </p>
         <div className="flex shrink-0 gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={handleDismiss}
-            className="rounded-md px-3 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100"
           >
             {t('dismiss')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleInstall}
-            className="rounded-md bg-primary-700 px-3 py-2.5 text-sm font-medium text-white hover:bg-primary-800"
           >
             {t('install')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

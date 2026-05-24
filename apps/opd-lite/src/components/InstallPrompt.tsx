@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -58,15 +59,18 @@ export function InstallPrompt() {
     >
       <p className="text-sm font-medium">Install OPD Lite for offline access</p>
       <div className="flex items-center gap-2">
-        <button
+        <Button
+          variant="outline"
+          className="bg-white text-primary-700 hover:bg-primary-50"
           onClick={handleInstall}
-          className="rounded bg-white text-primary-700 px-3 py-1.5 text-sm font-semibold hover:bg-primary-50"
         >
           Install
-        </button>
-        <button
-          onClick={handleDismiss}
+        </Button>
+        <Button
+          variant="icon"
+          type="button"
           className="text-white/80 hover:text-white p-1"
+          onClick={handleDismiss}
           aria-label="Dismiss install banner"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -76,7 +80,7 @@ export function InstallPrompt() {
               clipRule="evenodd"
             />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   )

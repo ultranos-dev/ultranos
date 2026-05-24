@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import {
   getQueueItems,
   removeQueueItem,
@@ -137,45 +138,46 @@ export function UploadQueue() {
               </div>
               <div className="flex shrink-0 gap-1">
                 {item.status === 'expired' && (
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
                     onClick={() => handleReupload(item.id!)}
                     aria-label={t('reuploadAriaLabel')}
-                    className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                   >
                     {t('reupload')}
-                  </button>
+                  </Button>
                 )}
                 {(item.status === 'expired' || item.status === 'failed') && (
                   <>
                     {confirmingId === item.id ? (
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-neutral-600">{t('confirmPrompt')}</span>
-                        <button
+                        <Button
+                          variant="danger"
                           type="button"
                           onClick={() => handleDiscard(item.id!)}
                           aria-label={t('confirmDiscardAriaLabel')}
-                          className="min-h-[44px] rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                         >
                           {t('confirm')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
                           type="button"
                           onClick={() => setConfirmingId(null)}
-                          className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-100 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                         >
                           {t('cancel')}
-                        </button>
+                        </Button>
                       </div>
                     ) : (
-                      <button
+                      <Button
+                        variant="ghost"
+                        className="!text-red-600"
                         type="button"
                         onClick={() => setConfirmingId(item.id!)}
                         aria-label={t('discardAriaLabel')}
-                        className="min-h-[44px] rounded-md px-3 py-2 text-xs font-medium text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
                       >
                         {t('discard')}
-                      </button>
+                      </Button>
                     )}
                   </>
                 )}

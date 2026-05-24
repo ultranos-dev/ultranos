@@ -112,6 +112,10 @@ async function fetchTrpcCount(path: string): Promise<number> {
     throw new Error(`Hub API error: ${res.status}`)
   }
 
-  const body = (await res.json()) as { result: { data: { json: number } } }
-  return body.result.data.json ?? 0
+  const body = (await res.json()) as { result: { data: { json: number | { count: number } } } }
+  const json = body.result.data.json
+  if (typeof json === 'object' && json !== null && 'count' in json) {
+    return json.count
+  }
+  return (json as number) ?? 0
 }

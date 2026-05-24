@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -123,7 +124,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
   )
 
   const inputClasses =
-    'w-full rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-2.5 ' +
+    'w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-4 py-2.5 ' +
     'text-base text-neutral-900 placeholder:text-neutral-400 ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
     'focus:border-primary-400 focus:ring-primary-200 ' +
@@ -143,7 +144,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
             return (
               <li
                 key={a.id}
-                className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-3"
+                className="flex items-center justify-between rounded-xl ring-[0.65px] ring-gray-400/40 bg-white ps-4 pe-4 py-3"
               >
                 <div>
                   <span className="font-semibold text-neutral-900">
@@ -170,7 +171,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
       )}
 
       {/* Add allergy form */}
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
         <div>
           <label htmlFor="allergy-substance" className="mb-1 block text-sm font-semibold text-neutral-700">
             Substance
@@ -253,16 +254,13 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
           <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>
         )}
 
-        <button
+        <Button
+          variant="danger"
           type="submit"
           disabled={disabled || !substance.trim() || isSubmitting}
-          className={
-            'rounded-lg bg-red-600 ps-6 pe-6 py-2.5 text-sm font-bold text-white ' +
-            'transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
-          }
         >
           {isSubmitting ? 'Adding...' : 'Add Allergy'}
-        </button>
+        </Button>
       </form>
     </div>
   )

@@ -9,6 +9,7 @@ import {
   type NotificationItem,
 } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { Button } from '@/components/ui/Button'
 import { NotificationItemRow } from '@/components/notifications/NotificationItem'
 
 export default function NotificationsPage() {
@@ -80,13 +81,13 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
         {unreadCount > 0 && (
-          <button
+          <Button
+            variant="ghost"
             type="button"
             onClick={handleMarkAllRead}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-primary-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-50 active:brightness-[0.88] motion-safe:transition-all motion-safe:duration-150"
           >
             {t('markAllRead')}
-          </button>
+          </Button>
         )}
       </div>
 

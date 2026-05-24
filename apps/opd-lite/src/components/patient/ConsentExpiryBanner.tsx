@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ConsentRenewalModal } from './ConsentRenewalModal'
+import { Button } from '@/components/ui/Button'
 
 interface ConsentExpiryBannerProps {
   patientId: string
@@ -35,14 +36,15 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
             {/* TODO: t('consent.expiryWarning', { date: formattedDate }) */}
             Consent expires on {formattedDate}
           </p>
-          <button
+          <Button
+            variant="warning"
+            className="shrink-0"
             type="button"
             onClick={() => setShowModal(true)}
-            className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
           >
             {/* TODO: t('consent.renewConsent') */}
             Renew Consent
-          </button>
+          </Button>
         </div>
       </div>
 

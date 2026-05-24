@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   searchMedications,
   type MedicationSearchResult,
@@ -199,7 +200,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
   }, [activeIndex])
 
   const inputClasses =
-    'w-full rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-2.5 ' +
+    'w-full rounded-xl border border-neutral-300 bg-white ps-4 pe-4 py-2.5 ' +
     'text-base text-neutral-900 placeholder:text-neutral-400 ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
     'focus:border-primary-400 focus:ring-primary-200 ' +
@@ -243,14 +244,13 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             className={inputClasses}
           />
           {hasMedication && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={handleClearMedication}
-              className="shrink-0 rounded-lg border border-neutral-200 ps-3 pe-3 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors"
               aria-label="Clear selected medication"
             >
               Clear
-            </button>
+            </Button>
           )}
         </div>
 
@@ -261,8 +261,8 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             role="listbox"
             aria-label="Medication search results"
             className={
-              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg ' +
-              'border border-neutral-200 bg-white shadow-lg'
+              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
+              'ring-[0.65px] ring-gray-400/40 bg-white shadow-lg'
             }
           >
             {results.map((result, idx) => (
@@ -298,7 +298,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
       {/* Dosage sub-form — visible when medication is selected */}
       {hasMedication && (
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
           <div className="grid grid-cols-3 gap-4">
             {/* Dosage quantity */}
             <div>
@@ -387,16 +387,13 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             <p className="text-sm font-semibold text-red-600" role="alert">{validationError}</p>
           )}
 
-          <button
+          <Button
+            variant="primary"
             type="submit"
             disabled={disabled || !hasMedication || isSubmitting}
-            className={
-              'rounded-lg bg-primary-600 ps-6 pe-6 py-2.5 text-sm font-bold text-white ' +
-              'transition-colors hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
-            }
           >
             {isSubmitting ? 'Saving...' : 'Add Prescription'}
-          </button>
+          </Button>
         </form>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -207,13 +208,14 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              fullWidth
             >
               {loading ? 'Signing in\u2026' : 'Sign In'}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -241,20 +243,22 @@ export default function LoginPage() {
                 autoFocus
               />
             </div>
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading || totpCode.length !== 6}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              fullWidth
             >
               {loading ? 'Verifying\u2026' : 'Verify'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              fullWidth
               type="button"
               onClick={handleBackToSignIn}
-              className="w-full text-sm text-neutral-500 hover:text-neutral-700"
             >
               Back to sign in
-            </button>
+            </Button>
           </form>
         )}
       </div>

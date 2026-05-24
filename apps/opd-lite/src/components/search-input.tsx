@@ -40,9 +40,10 @@ export function SearchInput({ value, onChange, placeholder = 'Search by name or 
         onChange={handleChange}
         placeholder={placeholder}
         aria-label="Patient search"
-        className="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-base font-semibold
+        className="w-full rounded-xl border-none bg-white/70 backdrop-blur-md px-4 py-3 text-base font-semibold
           text-neutral-900 placeholder:text-neutral-400 placeholder:font-normal
-          focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
+          ring-[0.65px] ring-gray-400/40
+          focus:ring-2 focus:ring-primary-200 focus:outline-none
           transition-colors"
       />
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import { db, type SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { SyncQueueEntry } from './SyncQueueEntry'
 import { syncDispenseToHub, retrySyncPayload } from '@/lib/dispense-sync'
@@ -194,15 +195,15 @@ export function SyncQueueDashboard() {
               Failed ({entries.failed.length})
             </h2>
             {entries.failed.length > 1 && (
-              <button
+              <Button
+                variant="danger"
                 type="button"
                 aria-label="Retry All Failed"
                 disabled={isRetrying}
                 onClick={handleRetryAllFailed}
-                className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {retryProgress ?? 'Retry All Failed'}
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex flex-col gap-2">

@@ -12,7 +12,7 @@ export default function SettingsPage() {
       <div className="mb-6 flex items-center gap-3">
         <Link
           href="/"
-          className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
           aria-label="Back to dashboard"
         >
           <svg

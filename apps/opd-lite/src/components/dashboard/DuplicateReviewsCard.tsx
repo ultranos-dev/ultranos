@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { Card } from '@/components/Card'
 
 /**
  * Dashboard card showing the number of pending MPI duplicate reviews.
@@ -45,7 +46,7 @@ export function DuplicateReviewsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card>
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
         {t('pendingReviews')}
       </h3>
@@ -76,6 +77,6 @@ export function DuplicateReviewsCard() {
           {t('unavailableOffline')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

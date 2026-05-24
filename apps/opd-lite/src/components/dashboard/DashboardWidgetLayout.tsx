@@ -2,6 +2,7 @@
 
 import { useState, type ReactElement } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { useDashboardPrefsStore, type WidgetId } from '@/stores/dashboard-prefs-store'
 import { DashboardCustomizePanel } from './DashboardCustomizePanel'
 
@@ -37,14 +38,14 @@ export function DashboardWidgetLayout({ children, roleWidgetIds }: DashboardWidg
       <div className="mb-3 flex items-center justify-between">
         <h2 className="sr-only">{t('summaryCardsAria')}</h2>
         <div />
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => setIsCustomizing(!isCustomizing)}
-          className="text-xs font-semibold text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
+          className="text-xs px-2 py-1"
           aria-label={t('customizeWidgets')}
         >
           {t('customizeWidgets')}
-        </button>
+        </Button>
       </div>
 
       {isCustomizing && (

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocale } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { AFGHAN_PROVINCES } from '@ultranos/shared-types'
 import type { AfghanProvince } from '@ultranos/shared-types'
 
@@ -167,20 +168,21 @@ export function ProvinceAutocomplete({
             <span className="flex-1 text-sm text-neutral-900">
               {getDisplayName(value)}
             </span>
-            <button
+            <Button
+              variant="icon"
               type="button"
+              className="ms-2 p-1"
               onClick={() => {
                 onChange('')
                 setQuery('')
                 inputRef.current?.focus()
               }}
-              className="ms-2 rounded p-1 text-neutral-400 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-600"
-              aria-label={`Clear ${label}`}
+              aria-label="Clear province"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </Button>
           </div>
         ) : (
           <input
@@ -218,7 +220,7 @@ export function ProvinceAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-white shadow-lg"
         >
           {filtered.map((province, index) => (
             <li
@@ -252,7 +254,7 @@ export function ProvinceAutocomplete({
       )}
 
       {isOpen && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
           No matching province
         </div>
       )}

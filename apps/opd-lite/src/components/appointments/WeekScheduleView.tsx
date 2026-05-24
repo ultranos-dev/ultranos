@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { db } from '@/lib/db'
 import { BookingModal } from './BookingModal'
+import { Button } from '@/components/ui/Button'
 import type { FhirAppointmentZod } from '@ultranos/shared-types'
 
 /** Configurable week start day. Saturday (6) is default for MENA. */
@@ -219,10 +220,9 @@ export function WeekScheduleView() {
       <div className="space-y-4">
         {/* Week range header */}
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={prevWeek}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
             aria-label={t('previousWeek')}
           >
             <svg
@@ -238,14 +238,13 @@ export function WeekScheduleView() {
                 d="M15.75 19.5L8.25 12l7.5-7.5"
               />
             </svg>
-          </button>
+          </Button>
           <h2 className="text-base font-bold text-neutral-900">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={nextWeek}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
             aria-label={t('nextWeek')}
           >
             <svg
@@ -261,18 +260,17 @@ export function WeekScheduleView() {
                 d="M8.25 4.5l7.5 7.5-7.5 7.5"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Day selector with prev/next */}
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={() =>
               setMobileDayOffset(Math.max(0, mobileDayOffset - 1))
             }
             disabled={mobileDayOffset === 0}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
             aria-label={t('previousDay')}
           >
             <svg
@@ -288,31 +286,27 @@ export function WeekScheduleView() {
                 d="M15.75 19.5L8.25 12l7.5-7.5"
               />
             </svg>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant={isSameDay(currentDay, today) ? 'primary' : 'secondary'}
             type="button"
             onClick={() => handleDayClick(currentDay)}
-            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-              isSameDay(currentDay, today)
-                ? 'bg-primary-100 text-primary-800'
-                : 'text-neutral-900'
-            }`}
+            className="px-4 py-2 text-sm"
           >
             {currentDay.toLocaleDateString(undefined, {
               weekday: 'long',
               month: 'short',
               day: 'numeric',
             })}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={() =>
               setMobileDayOffset(Math.min(6, mobileDayOffset + 1))
             }
             disabled={mobileDayOffset === 6}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
             aria-label={t('nextDay')}
           >
             <svg
@@ -328,7 +322,7 @@ export function WeekScheduleView() {
                 d="M8.25 4.5l7.5 7.5-7.5 7.5"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Time slots for selected day */}
@@ -337,11 +331,12 @@ export function WeekScheduleView() {
             const cellKey = `${mobileDayOffset}-${time}`
             const data = cellDataMap.get(cellKey)
             return (
-              <button
+              <Button
                 key={time}
+                variant="ghost"
                 type="button"
                 onClick={() => handleCellClick(currentDay, time)}
-                className={`w-full rounded-lg border p-2.5 text-start transition-colors ${
+                className={`w-full rounded-lg border p-2.5 text-start ${
                   data
                     ? 'border-blue-200 bg-blue-50 hover:bg-blue-100'
                     : 'border-neutral-200 bg-white hover:bg-neutral-50'
@@ -369,7 +364,7 @@ export function WeekScheduleView() {
                     </div>
                   )}
                 </div>
-              </button>
+              </Button>
             )
           })}
         </div>
@@ -393,10 +388,9 @@ export function WeekScheduleView() {
     <div className="space-y-4">
       {/* Week navigation */}
       <div className="flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="icon"
           onClick={prevWeek}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('previousWeek')}
         >
           <svg
@@ -412,16 +406,15 @@ export function WeekScheduleView() {
               d="M15.75 19.5L8.25 12l7.5-7.5"
             />
           </svg>
-        </button>
+        </Button>
 
         <h2 className="text-lg font-bold text-neutral-900">
           {formatWeekRange(weekStart, weekEnd)}
         </h2>
 
-        <button
-          type="button"
+        <Button
+          variant="icon"
           onClick={nextWeek}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('nextWeek')}
         >
           <svg
@@ -437,7 +430,7 @@ export function WeekScheduleView() {
               d="M8.25 4.5l7.5 7.5-7.5 7.5"
             />
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Legend */}
@@ -458,7 +451,7 @@ export function WeekScheduleView() {
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
         <table className="w-full border-collapse">
           <thead>
             <tr>
@@ -478,13 +471,14 @@ export function WeekScheduleView() {
                         : 'bg-neutral-50 text-neutral-700'
                     }`}
                   >
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
                       onClick={() => handleDayClick(day)}
                       className="hover:underline"
                     >
                       {formatShortDate(day)}
-                    </button>
+                    </Button>
                   </th>
                 )
               })}
@@ -510,10 +504,11 @@ export function WeekScheduleView() {
                         isToday ? 'bg-primary-50/30' : ''
                       }`}
                     >
-                      <button
+                      <Button
+                        variant="ghost"
                         type="button"
                         onClick={() => handleCellClick(day, time)}
-                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded transition-colors ${
+                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded ${
                           data
                             ? 'hover:bg-blue-100'
                             : 'hover:bg-neutral-100'
@@ -533,7 +528,7 @@ export function WeekScheduleView() {
                               </span>
                             ),
                           )}
-                      </button>
+                      </Button>
                     </td>
                   )
                 })}

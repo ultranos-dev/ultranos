@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { generateSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
 
 type AuthStep = 'credentials' | 'mfa'
 
@@ -114,6 +118,13 @@ export default function LoginPage() {
       email: userEmail,
     })
 
+    // Generate AES-256-GCM session key for IndexedDB encryption.
+    // Key lives in memory only — cleared on tab close and logout.
+    if (!encryptionKeyStore.isReady()) {
+      const encKey = await generateSessionKey()
+      encryptionKeyStore.setKey(encKey)
+    }
+
     const params = new URLSearchParams(window.location.search)
     const returnUrl = params.get('returnUrl') ?? '/'
     const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
@@ -161,7 +172,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+      <Card className="w-full max-w-sm">
         <h2 className="mb-6 text-center text-xl font-bold text-neutral-900">
           OPD Lite Sign In
         </h2>
@@ -169,7 +180,7 @@ export default function LoginPage() {
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
           >
             {error}
           </div>
@@ -187,7 +198,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 placeholder="clinician@hospital.example"
                 autoComplete="email"
               />
@@ -202,17 +213,13 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 autoComplete="current-password"
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-            >
+            <Button variant="primary" type="submit" disabled={loading} fullWidth>
               {loading ? 'Signing in\u2026' : 'Sign In'}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -234,29 +241,21 @@ export default function LoginPage() {
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading || totpCode.length !== 6}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-            >
+            <Button variant="primary" type="submit" disabled={loading || totpCode.length !== 6} fullWidth>
               {loading ? 'Verifying\u2026' : 'Verify'}
-            </button>
-            <button
-              type="button"
-              onClick={handleBackToSignIn}
-              className="w-full text-sm text-neutral-500 hover:text-neutral-700"
-            >
+            </Button>
+            <Button variant="ghost" onClick={handleBackToSignIn} fullWidth>
               Back to sign in
-            </button>
+            </Button>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

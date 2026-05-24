@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { getHistoryPage, type HistoryFilters, type HistoryPage } from '@/lib/history-data'
 import { HistoryFilterBar } from './HistoryFilterBar'
 import { HistoryItemRow } from './HistoryItemRow'
@@ -41,13 +42,13 @@ export function DispensingHistoryView() {
     <div data-testid="dispensing-history-view" className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <HistoryFilterBar filters={filters} onFiltersChange={handleFiltersChange} />
-        <button
+        <Button
+          variant="secondary"
           data-testid="shift-summary-button"
           onClick={() => setShowShiftSummary(true)}
-          className="px-4 py-2 rounded-md bg-neutral-100 text-neutral-700 hover:bg-neutral-200 text-sm font-medium"
         >
           Shift Summary
-        </button>
+        </Button>
       </div>
 
       {loading ? (

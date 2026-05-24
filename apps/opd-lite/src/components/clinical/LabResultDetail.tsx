@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import {
   acknowledgeNotification,
@@ -79,7 +80,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
         <img
           src={dataUri}
           alt={attachment.title ?? `Attachment ${index + 1}`}
-          className="max-w-full rounded-lg border border-neutral-200"
+          className="max-w-full rounded-xl ring-[0.65px] ring-gray-400/40"
         />
       </div>
     )
@@ -94,7 +95,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
         <embed
           src={dataUri}
           type="application/pdf"
-          className="h-96 w-full rounded-lg border border-neutral-200"
+          className="h-96 w-full rounded-xl ring-[0.65px] ring-gray-400/40"
           title={attachment.title ?? `PDF ${index + 1}`}
         />
       </div>
@@ -185,14 +186,15 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
   return (
     <div data-testid="lab-result-detail">
       {/* Back button */}
-      <button
+      <Button
+        variant="ghost"
         type="button"
         onClick={onBack}
-        className="mb-4 text-sm font-semibold text-primary-500 hover:underline"
+        className="mb-4"
         aria-label="Back to lab results"
       >
         &larr; Back to Results
-      </button>
+      </Button>
 
       <h3 className="text-xl font-bold text-neutral-900">{loincDisplay}</h3>
       {loincCode && (
@@ -237,7 +239,7 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
 
       {/* Conclusion */}
       {report.conclusion && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
           <h4 className="text-sm font-bold text-neutral-700">Conclusion</h4>
           <p className="mt-1 text-sm text-neutral-900 whitespace-pre-wrap">
             {report.conclusion}
@@ -255,22 +257,23 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
 
       {/* No file, no conclusion — show text-based summary hint */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4 text-sm text-neutral-500">
           No report content or attachments available. Result data may be pending.
         </div>
       )}
 
       {/* Acknowledge button — AC #3 */}
       {notification && !acknowledged && (
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={handleAcknowledge}
           disabled={acknowledging}
-          className="mt-6 rounded-md bg-blue-600 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="mt-6"
           data-testid="acknowledge-button"
         >
           {acknowledging ? 'Acknowledging...' : 'Acknowledge Result'}
-        </button>
+        </Button>
       )}
 
       {acknowledged && (

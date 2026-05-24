@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { useAppointments } from '@/hooks/useAppointments'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { PatientSummaryPopup } from './PatientSummaryPopup'
@@ -68,29 +69,29 @@ export function WalkInQueue() {
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4">
+    <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-white p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-base font-bold text-neutral-900">
           {t('walkInQueue')}
         </h3>
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
         >
           {t('addWalkIn')}
-        </button>
+        </Button>
       </div>
 
       {/* Inline add form */}
       {showAddForm && (
-        <div className="mb-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 space-y-3">
+        <div className="mb-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-3 space-y-3">
           <input
             type="text"
             value={patientSearch}
             onChange={(e) => setPatientSearch(e.target.value)}
             placeholder={t('selectPatient')}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
 
           <div className="flex gap-3">
@@ -118,14 +119,14 @@ export function WalkInQueue() {
             </label>
           </div>
 
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={handleAddWalkIn}
             disabled={!patientSearch.trim() || submitting}
-            className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('addWalkIn')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -143,11 +144,12 @@ export function WalkInQueue() {
             const status = walkIn.status
 
             return (
-              <button
+              <Button
                 key={walkIn.id}
+                variant="ghost"
                 type="button"
                 onClick={() => setSelectedAppointment(walkIn)}
-                className="w-full rounded-lg border border-purple-200 bg-purple-50 p-3 text-start hover:bg-purple-100 transition-colors"
+                className="w-full rounded-xl border border-purple-200 bg-purple-50 p-3 text-start hover:bg-purple-100"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -187,7 +189,7 @@ export function WalkInQueue() {
                 <p className="mt-1 text-xs text-neutral-500">
                   {t('waitTime', { minutes: waitMinutes })}
                 </p>
-              </button>
+              </Button>
             )
           })}
         </div>

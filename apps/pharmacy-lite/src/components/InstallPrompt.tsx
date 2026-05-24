@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -59,18 +60,18 @@ export function InstallPrompt() {
         Install Pharmacy Lite for quick access
       </p>
       <div className="mt-2 flex gap-2">
-        <button
+        <Button
+          variant="primary"
           onClick={handleInstall}
-          className="rounded-md bg-primary-600 px-3 py-1 text-sm text-white hover:bg-primary-700"
         >
           Install
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           onClick={handleDismiss}
-          className="rounded-md border border-neutral-300 px-3 py-1 text-sm text-neutral-600 hover:bg-neutral-50"
         >
           Not now
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import type { FhirAppointmentZod, AppointmentStatus } from '@ultranos/shared-types'
 
 interface PatientSummaryPopupProps {
@@ -59,10 +60,10 @@ export function PatientSummaryPopup({
           <h3 className="text-lg font-bold text-neutral-900">
             {patientName}
           </h3>
-          <button
+          <Button
+            variant="icon"
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
             aria-label="Close"
           >
             <svg
@@ -78,7 +79,7 @@ export function PatientSummaryPopup({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Patient info */}
@@ -120,28 +121,30 @@ export function PatientSummaryPopup({
 
         {/* Actions */}
         <div className="mt-6 flex gap-3">
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={handleStartEncounter}
-            className="flex-1 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+            className="flex-1"
           >
             {t('startEncounter')}
-          </button>
+          </Button>
 
           <div className="relative">
-            <button
+            <Button
+              variant="outline"
               type="button"
               onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               {t('changeStatus')}
-            </button>
+            </Button>
 
             {showStatusDropdown && (
-              <div className="absolute end-0 top-full z-10 mt-1 w-40 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+              <div className="absolute end-0 top-full z-10 mt-1 w-40 rounded-xl ring-[0.65px] ring-gray-400/40 bg-white py-1 shadow-lg">
                 {STATUS_OPTIONS.map((status) => (
-                  <button
+                  <Button
                     key={status}
+                    variant="ghost"
                     type="button"
                     onClick={() => handleStatusSelect(status)}
                     className="block w-full px-4 py-2 text-start text-sm text-neutral-700 hover:bg-neutral-100"
@@ -150,7 +153,7 @@ export function PatientSummaryPopup({
                     {status === 'fulfilled' && t('completed')}
                     {status === 'cancelled' && t('cancelled')}
                     {status === 'noshow' && t('noShow')}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

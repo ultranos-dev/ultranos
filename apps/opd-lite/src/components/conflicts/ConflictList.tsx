@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { Button } from '@/components/ui/Button'
 import { ConflictDiffView } from './ConflictDiffView'
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -90,7 +91,7 @@ export function ConflictList() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
+      <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center">
         <p className="text-sm text-neutral-500">Loading conflicts...</p>
       </div>
     )
@@ -107,7 +108,7 @@ export function ConflictList() {
 
   if (conflicts.length === 0) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center" data-testid="no-conflicts">
+      <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center" data-testid="no-conflicts">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mx-auto h-12 w-12 text-green-400">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -144,7 +145,8 @@ export function ConflictList() {
             data-testid="conflict-item"
           >
             {/* Conflict summary row */}
-            <button
+            <Button
+              variant="ghost"
               type="button"
               onClick={() => handleExpand(entry.id)}
               className="flex w-full items-center gap-3 ps-5 pe-5 py-4 text-start"
@@ -185,7 +187,7 @@ export function ConflictList() {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
-            </button>
+            </Button>
 
             {/* Expanded diff view */}
             {isExpanded && (

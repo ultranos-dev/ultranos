@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 import {
@@ -328,19 +329,21 @@ export default function PaperRxPage() {
                 className="w-full rounded-lg border border-neutral-200"
               />
               <canvas ref={canvasRef} className="hidden" />
-              <button
-                onClick={captureFromWebcam}
+              <Button
+                variant="primary"
+                fullWidth
                 disabled={!videoReady}
-                className="w-full rounded-lg bg-primary-600 px-4 py-3 font-medium text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={captureFromWebcam}
               >
                 {videoReady ? 'Take Photo' : 'Camera loading...'}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
-              <button
+              <Button
+                variant="outline"
+                fullWidth
                 onClick={startWebcam}
-                className="w-full rounded-lg border-2 border-dashed border-neutral-300 px-4 py-8 text-center hover:border-primary-400 hover:bg-primary-50"
               >
                 <span className="block text-lg font-medium text-neutral-700">
                   Open Camera
@@ -348,7 +351,7 @@ export default function PaperRxPage() {
                 <span className="text-sm text-neutral-500">
                   Use webcam to capture prescription
                 </span>
-              </button>
+              </Button>
 
               <div className="relative flex items-center gap-3">
                 <div className="flex-1 border-t border-neutral-200" />
@@ -356,9 +359,10 @@ export default function PaperRxPage() {
                 <div className="flex-1 border-t border-neutral-200" />
               </div>
 
-              <button
+              <Button
+                variant="outline"
+                fullWidth
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-lg border-2 border-dashed border-neutral-300 px-4 py-8 text-center hover:border-primary-400 hover:bg-primary-50"
               >
                 <span className="block text-lg font-medium text-neutral-700">
                   Upload File
@@ -366,7 +370,7 @@ export default function PaperRxPage() {
                 <span className="text-sm text-neutral-500">
                   Select an image file (JPEG, PNG)
                 </span>
-              </button>
+              </Button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -453,12 +457,13 @@ export default function PaperRxPage() {
               <p className="text-sm text-red-600">{errorMessage}</p>
             )}
 
-            <button
+            <Button
+              variant="primary"
+              fullWidth
               type="submit"
-              className="w-full rounded-lg bg-primary-600 px-4 py-3 font-medium text-white hover:bg-primary-700"
             >
               Confirm & Submit
-            </button>
+            </Button>
           </form>
         </div>
       )}
@@ -498,12 +503,12 @@ export default function PaperRxPage() {
             Manual verification flag applied. This prescription cannot be
             digitally invalidated.
           </p>
-          <button
+          <Button
+            variant="outline"
             onClick={resetForm}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
             Scan Another
-          </button>
+          </Button>
         </div>
       )}
 
@@ -527,12 +532,12 @@ export default function PaperRxPage() {
           </div>
           <p className="text-lg font-medium text-red-900">Submission Failed</p>
           <p className="text-sm text-red-600">{errorMessage}</p>
-          <button
+          <Button
+            variant="outline"
             onClick={() => setPhase('review')}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import type { CapacityWarningInfo } from '@ultranos/sync-engine'
 
 export function SyncCapacityBanner() {
@@ -45,13 +46,13 @@ export function SyncCapacityBanner() {
         className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
       >
         Sync queue nearly full ({warning.count} entries). Connect to sync.
-        <button
+        <Button
+          variant="ghost"
           type="button"
-          className="ms-2 font-medium underline"
           onClick={() => setWarning(null)}
         >
           Dismiss
-        </button>
+        </Button>
       </div>
     )
   }

@@ -3,6 +3,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { generateSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
 
@@ -56,6 +58,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             window.location.href = `/login?returnUrl=${returnUrl}`
             return
           }
+        }
+
+        // Ensure encryption key exists (lost on page refresh since it's memory-only)
+        if (!encryptionKeyStore.isReady()) {
+          const encKey = await generateSessionKey()
+          encryptionKeyStore.setKey(encKey)
         }
 
         // Story 22.5 AC #8: Redirect PENDING_VERIFICATION/REJECTED/REQUEST_MORE_INFO to KYC page

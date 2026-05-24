@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import { MedicationLabel } from './MedicationLabel'
 
@@ -55,15 +56,15 @@ export function LabelPreviewPanel({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {onClose && (
-            <button
+            <Button
+              variant="outline"
               data-testid="close-label-preview-btn"
               type="button"
               onClick={onClose}
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
               aria-label="Close label preview"
             >
               &larr; Back
-            </button>
+            </Button>
           )}
           <h3 className="text-lg font-semibold text-neutral-800">Label Preview</h3>
         </div>
@@ -81,14 +82,14 @@ export function LabelPreviewPanel({
             ))}
           </select>
 
-          <button
+          <Button
+            variant="primary"
             data-testid="print-all-labels-btn"
             type="button"
             onClick={() => window.print()}
-            className="rounded-md bg-neutral-800 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-700"
           >
             Print All Labels
-          </button>
+          </Button>
         </div>
       </div>
 

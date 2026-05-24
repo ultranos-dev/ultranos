@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
 import type { NotificationItem } from '@/lib/notification-api'
 import { db } from '@/lib/db'
@@ -173,39 +174,35 @@ export function NotificationCenter() {
             {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
           </span>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="primary"
           disabled={unreadCount === 0}
           onClick={acknowledgeAll}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Mark All Read"
         >
           Mark All Read
-        </button>
+        </Button>
       </div>
 
       {/* Tab bar */}
-      <div role="tablist" className="flex gap-1 rounded-lg bg-neutral-100 p-1">
+      <div role="tablist" className="flex gap-1 rounded-xl bg-neutral-100 p-1">
         {TABS.map(tab => (
-          <button
+          <Button
             key={tab.key}
+            variant={activeTab === tab.key ? 'primary' : 'ghost'}
             role="tab"
             aria-selected={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-600 hover:text-neutral-900'
-            }`}
+            className="flex-1"
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Error state */}
       {error && (
-        <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Notifications unavailable offline. Please check your connection.
         </div>
       )}
@@ -226,7 +223,7 @@ export function NotificationCenter() {
 
       {/* Notification list */}
       {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40">
           {filtered.map(n => (
             <NotificationRow
               key={n.id}

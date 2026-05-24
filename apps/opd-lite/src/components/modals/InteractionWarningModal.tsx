@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import type { InteractionResult } from '@/services/interactionService'
+import { Button } from '@/components/ui/Button'
 
 interface InteractionWarningModalProps {
   open: boolean
@@ -188,23 +189,23 @@ export function InteractionWarningModal({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
-          <button
+          <Button
+            variant="secondary"
             type="button"
             onClick={onCancel}
-            className="rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-300 active:scale-[0.97]"
             aria-label="Cancel prescription"
           >
             Cancel Prescription
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             type="button"
             onClick={handleOverride}
             disabled={justification.trim().length === 0}
-            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Proceed anyway"
           >
             Proceed Anyway
-          </button>
+          </Button>
         </div>
       </div>
     </div>

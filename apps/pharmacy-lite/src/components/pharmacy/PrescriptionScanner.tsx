@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   checkPrescriptionStatus,
   completePrescription,
@@ -257,7 +258,10 @@ export function PrescriptionScanner({
             className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-neutral-300"
             data-testid="scanner-viewport"
           />
-          <button
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-3"
             type="button"
             onClick={() => {
               if (html5QrRef.current) {
@@ -266,24 +270,23 @@ export function PrescriptionScanner({
               }
               setScanState({ phase: 'idle' })
             }}
-            className="mt-3 w-full rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Stop Scanner
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Idle: show scan + manual entry options */}
       {scanState.phase === 'idle' && (
         <>
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={startCameraScanner}
-            className="rounded-md bg-primary-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-700"
             data-testid="start-scanner-btn"
           >
             Scan Prescription QR
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
             <span className="h-px flex-1 bg-neutral-200" />
@@ -303,15 +306,15 @@ export function PrescriptionScanner({
                 if (e.key === 'Enter') handleManualCheck()
               }}
             />
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={handleManualCheck}
               disabled={!manualInput.trim()}
-              className="rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               data-testid="manual-check-btn"
             >
               Check
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -367,13 +370,14 @@ export function PrescriptionScanner({
             cannot be verified globally. Proceed with caution — this prescription
             may have already been fulfilled elsewhere.
           </p>
-          <button
+          <Button
+            variant="warning"
+            className="mt-4"
             type="button"
             onClick={handleReset}
-            className="mt-4 rounded-md bg-amber-200 px-4 py-2 text-sm font-semibold text-amber-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 
@@ -385,13 +389,14 @@ export function PrescriptionScanner({
           data-testid="scan-error"
         >
           <p className="text-sm font-bold text-red-800">{scanState.message}</p>
-          <button
+          <Button
+            variant="warning"
+            className="mt-4"
             type="button"
             onClick={handleReset}
-            className="mt-3 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 
@@ -421,13 +426,13 @@ export function PrescriptionScanner({
           <p className="mt-2 text-sm text-green-700">
             This prescription has been marked as fulfilled on the global system.
           </p>
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={handleReset}
-            className="mt-4 rounded-md bg-green-200 px-4 py-2 text-sm font-semibold text-green-800"
           >
             Scan Next
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -465,22 +470,22 @@ function StatusBanner({
           Prescribed: {new Date(result.authoredOn).toLocaleDateString()}
         </p>
         <div className="mt-4 flex gap-3">
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={() => onDispense(result.prescriptionId)}
             disabled={!isAuthenticated}
-            className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
             data-testid="dispense-btn"
           >
             Dispense
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             type="button"
             onClick={onReset}
-            className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -508,22 +513,24 @@ function StatusBanner({
       <p className="mt-3 text-sm font-semibold text-red-800">
         This prescription cannot be dispensed.
       </p>
-      <button
+      <Button
+        variant="secondary"
+        disabled
+        className="mt-4 cursor-not-allowed"
         type="button"
         onClick={onReset}
-        disabled
-        className="mt-4 cursor-not-allowed rounded-md bg-neutral-300 px-6 py-3 text-sm font-bold text-neutral-500"
         data-testid="dispense-btn-blocked"
       >
         Dispense Blocked
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        className="ms-3 mt-4"
         type="button"
         onClick={onReset}
-        className="ms-3 mt-4 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
       >
         Scan Another
-      </button>
+      </Button>
     </div>
   )
 }

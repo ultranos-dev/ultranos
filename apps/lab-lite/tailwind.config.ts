@@ -32,7 +32,12 @@ const config: Config = {
           800: 'var(--color-neutral-800)',
           900: 'var(--color-neutral-900)',
         },
+        'pill-green': '#9fe870',
+        'pill-text': '#163300',
         danger: 'var(--color-danger)',
+      },
+      borderRadius: {
+        pill: '9999px',
       },
     },
   },

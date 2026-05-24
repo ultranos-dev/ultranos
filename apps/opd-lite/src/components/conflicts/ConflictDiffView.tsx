@@ -8,6 +8,7 @@ import {
   type ResolutionType,
 } from '@/lib/conflict-resolution'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Button } from '@/components/ui/Button'
 
 /** Fields to display for each resource type — never show raw IDs or internal fields. */
 const DISPLAY_FIELDS: Record<string, string[]> = {
@@ -201,7 +202,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Side-by-side diff grid — uses logical properties for RTL */}
       <div
-        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-200"
         data-testid="diff-grid"
       >
         {/* Column headers */}
@@ -237,7 +238,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Resolution actions */}
       {!canResolve ? (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-3">
           <p className="text-xs font-semibold text-neutral-600">
             Only physicians can resolve conflicts. Please contact a physician to review.
           </p>
@@ -245,44 +246,43 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
       ) : (
         <div className="mt-4 flex flex-wrap gap-2">
           {/* Keep Both — default, emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="primary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('keep-both')}
             disabled={resolving}
-            className={`inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 ${
-              isTier1
-                ? 'border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
             data-testid="resolve-keep-both"
           >
             {isTier1 && (
               <span className="text-xs font-bold text-green-600">Recommended</span>
             )}
             Keep Both
-          </button>
+          </Button>
 
           {/* Prefer Local — de-emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="secondary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('prefer-local')}
             disabled={resolving}
-            className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
             data-testid="resolve-prefer-local"
           >
             Prefer Local
-          </button>
+          </Button>
 
           {/* Prefer Remote — de-emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="secondary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('prefer-remote')}
             disabled={resolving}
-            className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
             data-testid="resolve-prefer-remote"
           >
             Prefer Remote
-          </button>
+          </Button>
         </div>
       )}
 
@@ -302,23 +302,23 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             This action cannot be undone. CLAUDE.md recommends &quot;Keep Both&quot; for Tier 1 resources.
           </p>
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
+              variant="danger"
               type="button"
               onClick={() => executeResolve(confirmAction)}
               disabled={resolving}
-              className="rounded-md bg-red-600 ps-3 pe-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
               data-testid="confirm-destructive-yes"
             >
               Yes, discard
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={() => setConfirmAction(null)}
-              className="rounded-md bg-neutral-200 ps-3 pe-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-300"
               data-testid="confirm-destructive-cancel"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

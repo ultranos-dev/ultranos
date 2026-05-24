@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Card } from '@/components/Card'
 
 function getInitials(name: string): string {
   return name
@@ -25,7 +26,7 @@ export function ProfileCard() {
   const initials = getInitials(displayName)
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <Card>
       <h2 className="mb-4 text-sm font-semibold text-neutral-900">Profile</h2>
 
       <div className="flex items-start gap-4">
@@ -53,6 +54,6 @@ export function ProfileCard() {
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

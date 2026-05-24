@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { TIER_1_RESOURCE_TYPES } from '@/lib/conflict-resolution'
+import { Card } from '@/components/Card'
 
 export function UnresolvedConflictsCard() {
   const t = useTranslations('dashboard')
@@ -33,7 +34,7 @@ export function UnresolvedConflictsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card>
       <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
         {t('unresolvedConflicts')}
       </h3>
@@ -58,6 +59,6 @@ export function UnresolvedConflictsCard() {
           {t('conflictCheckUnavailable')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

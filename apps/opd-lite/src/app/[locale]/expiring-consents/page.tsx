@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface ExpiringConsent {
   id: string
@@ -80,7 +81,7 @@ export default function ExpiringConsentsPage() {
 
       {!loading && consents.length > 0 && (
         <>
-          <div className="overflow-x-auto rounded-xl border border-neutral-200">
+          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
             <table className="w-full text-sm">
               <thead className="bg-neutral-50 text-neutral-600">
                 <tr>
@@ -125,22 +126,12 @@ export default function ExpiringConsentsPage() {
           </div>
 
           <div className="mt-4 flex items-center gap-4">
-            <button
-              type="button"
-              disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - limit))}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
               Previous
-            </button>
-            <button
-              type="button"
-              disabled={consents.length < limit}
-              onClick={() => setOffset(offset + limit)}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            </Button>
+            <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
               Next
-            </button>
+            </Button>
           </div>
         </>
       )}

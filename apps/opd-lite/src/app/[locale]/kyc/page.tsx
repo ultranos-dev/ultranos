@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
+import { Button } from '@/components/ui/Button'
 import {
   getKycUploadUrl,
   uploadToSignedUrl,
@@ -325,14 +326,9 @@ export default function KycPage() {
             onFileSelect={(e) => handleFileSelect('NATIONAL_ID', e)}
           />
 
-          <button
-            type="button"
-            onClick={handleProceedToReview}
-            disabled={!licenseDoc.uploaded || !nationalIdDoc.uploaded}
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
-          >
+          <Button variant="primary" fullWidth disabled={!licenseDoc.uploaded || !nationalIdDoc.uploaded} onClick={handleProceedToReview}>
             Continue to Review
-          </button>
+          </Button>
         </div>
       )}
 
@@ -396,21 +392,12 @@ export default function KycPage() {
           </div>
 
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep('upload')}
-              className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
+            <Button variant="outline" className="flex-1" onClick={() => setStep('upload')}>
               Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep('confirm')}
-              disabled={!registryNumber.trim()}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            >
+            </Button>
+            <Button variant="primary" className="flex-1" disabled={!registryNumber.trim()} onClick={() => setStep('confirm')}>
               Continue to Confirm
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -422,7 +409,7 @@ export default function KycPage() {
             Confirm Submission
           </h2>
 
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+          <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
             <h3 className="mb-3 text-sm font-medium text-neutral-600">Summary</h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(reviewFields).map(([key, value]) => (
@@ -446,7 +433,7 @@ export default function KycPage() {
             </dl>
           </div>
 
-          <label className="flex items-start gap-3 rounded-lg border border-neutral-200 p-4">
+          <label className="flex items-start gap-3 rounded-xl ring-[0.65px] ring-gray-400/40 p-4">
             <input
               type="checkbox"
               checked={confirmed}
@@ -465,21 +452,12 @@ export default function KycPage() {
           )}
 
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep('review')}
-              className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
-            >
+            <Button variant="outline" className="flex-1" onClick={() => setStep('review')}>
               Back
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!confirmed || submitting}
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            >
+            </Button>
+            <Button variant="primary" className="flex-1" disabled={!confirmed || submitting} onClick={handleSubmit}>
               {submitting ? 'Submitting...' : 'Submit for Verification'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -545,7 +523,7 @@ function DocumentUploadZone({
           <p className="mb-3 text-xs text-neutral-500">
             JPEG, PNG, or PDF — max 10MB
           </p>
-          <label className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+          <label className="cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
             Select File
             <input
               type="file"

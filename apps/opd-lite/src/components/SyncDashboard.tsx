@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
@@ -326,7 +327,7 @@ export function SyncDashboard() {
 
       {/* Panel */}
       <div
-        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
+        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-white ring-[0.65px] ring-gray-400/40 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
         role="dialog"
         aria-label="Sync Dashboard"
       >
@@ -334,16 +335,16 @@ export function SyncDashboard() {
         <div className="border-b border-neutral-200 px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-neutral-900">Sync Status</h2>
-            <button
+            <Button
+              variant="icon"
               type="button"
               onClick={() => setDashboardOpen(false)}
-              className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-transform duration-100 active:scale-90"
               aria-label="Close sync dashboard"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
-            </button>
+            </Button>
           </div>
 
           {/* Summary (AC: 6) */}
@@ -382,11 +383,12 @@ export function SyncDashboard() {
           {/* Actions row */}
           <div className="mt-3 flex gap-2">
             {/* Sync Now (AC: 7) */}
-            <button
+            <Button
+              variant="primary"
+              className="gap-1.5"
               type="button"
               onClick={handleSyncNow}
               disabled={!isOnline || isDraining}
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-150 active:scale-[0.97]"
               title={!isOnline ? 'No network connection' : undefined}
               data-testid="sync-now-btn"
             >
@@ -401,18 +403,19 @@ export function SyncDashboard() {
                 </svg>
               )}
               {isDraining ? 'Syncing...' : 'Sync Now'}
-            </button>
+            </Button>
 
             {/* Retry All Failed */}
             {hasFailedItems && (
-              <button
+              <Button
+                variant="secondary"
+                className="gap-1.5"
                 type="button"
                 onClick={handleRetryAllFailed}
-                className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200 transition-all duration-150 active:scale-[0.97]"
                 data-testid="retry-all-btn"
               >
                 Retry All Failed
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -460,14 +463,15 @@ export function SyncDashboard() {
                     <div className="flex shrink-0 gap-1">
                       {/* Retry (AC: 4) */}
                       {item.status === 'failed' && (
-                        <button
+                        <Button
+                          variant="outline"
+                          className="bg-blue-50 text-blue-700 hover:bg-blue-100"
                           type="button"
                           onClick={() => handleRetry(item.id)}
-                          className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-all duration-100 active:scale-[0.97]"
                           data-testid="retry-btn"
                         >
                           Retry
-                        </button>
+                        </Button>
                       )}
 
                       {/* Conflict link (AC: 5) */}
@@ -496,31 +500,31 @@ export function SyncDashboard() {
                         <>
                           {discardingId === item.id ? (
                             <div className="flex gap-1">
-                              <button
+                              <Button
+                                variant="danger"
                                 type="button"
                                 onClick={() => handleDiscard(item.id)}
-                                className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700 transition-all duration-100 active:scale-[0.97]"
                                 data-testid="confirm-discard-btn"
                               >
                                 Confirm
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="secondary"
                                 type="button"
                                 onClick={() => setDiscardingId(null)}
-                                className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-all duration-100 active:scale-[0.97]"
                               >
                                 Cancel
-                              </button>
+                              </Button>
                             </div>
                           ) : (
-                            <button
+                            <Button
+                              variant="secondary"
                               type="button"
                               onClick={() => setDiscardingId(item.id)}
-                              className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-medium text-neutral-500 hover:bg-neutral-200 transition-all duration-100 active:scale-[0.97]"
                               data-testid="discard-btn"
                             >
                               Discard
-                            </button>
+                            </Button>
                           )}
                         </>
                       )}

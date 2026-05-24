@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { useDashboardPrefsStore, type WidgetId } from '@/stores/dashboard-prefs-store'
 
@@ -68,7 +69,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
 
   return (
     <div
-      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-lg"
+      className="rounded-xl bg-white/70 backdrop-blur-md p-5 ring-[0.65px] ring-gray-400/40 shadow-lg"
       role="dialog"
       aria-label={t('customizeWidgets')}
     >
@@ -76,16 +77,16 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
         <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
           {t('customizeWidgets')}
         </h3>
-        <button
+        <Button
+          variant="icon"
           type="button"
           onClick={onClose}
-          className="text-neutral-400 hover:text-neutral-600"
           aria-label={t('closeCustomize')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       <ul className="space-y-2">
@@ -106,24 +107,26 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
               </span>
               {isVisible && (
                 <div className="flex gap-1">
-                  <button
+                  <Button
+                    variant="icon"
                     type="button"
+                    className="p-1"
                     onClick={() => moveUp(id)}
                     disabled={idx === 0}
-                    className="rounded p-1 text-neutral-400 hover:text-neutral-600 disabled:opacity-30"
                     aria-label={`Move ${widgetLabels[id]} up`}
                   >
                     ↑
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="icon"
                     type="button"
+                    className="p-1"
                     onClick={() => moveDown(id)}
                     disabled={idx === localOrder.length - 1}
-                    className="rounded p-1 text-neutral-400 hover:text-neutral-600 disabled:opacity-30"
                     aria-label={`Move ${widgetLabels[id]} down`}
                   >
                     ↓
-                  </button>
+                  </Button>
                 </div>
               )}
             </li>
@@ -132,20 +135,20 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
       </ul>
 
       <div className="mt-4 flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={handleReset}
-          className="text-sm font-semibold text-neutral-500 hover:text-neutral-700"
+          className="text-sm text-neutral-500"
         >
           {t('resetDefaults')}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
           type="button"
           onClick={handleSave}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-bold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {t('saveLayout')}
-        </button>
+        </Button>
       </div>
     </div>
   )

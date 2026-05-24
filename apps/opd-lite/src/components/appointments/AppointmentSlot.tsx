@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import type { FhirAppointmentZod, AppointmentStatus } from '@ultranos/shared-types'
 
 interface AppointmentSlotProps {
@@ -79,7 +80,8 @@ export function AppointmentSlot({
     appointment?.serviceType?.[0]?.code ?? null
 
   return (
-    <button
+    <Button
+      variant="ghost"
       type="button"
       onClick={onClick}
       className={`w-full rounded-lg border p-3 text-start transition-colors ${colorClasses}`}
@@ -117,6 +119,6 @@ export function AppointmentSlot({
       <p className="mt-1 text-sm text-neutral-900">
         {patientName ?? t('available')}
       </p>
-    </button>
+    </Button>
   )
 }

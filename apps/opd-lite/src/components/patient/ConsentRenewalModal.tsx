@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface ConsentRenewalModalProps {
   patientId: string
@@ -154,22 +155,22 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
           )}
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button
+            <Button
+              variant="outline"
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40"
             >
               {/* TODO: t('consent.cancel') */}
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="warning"
               type="submit"
               disabled={submitting || !version.trim()}
-              className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:opacity-40"
             >
               {submitting ? 'Renewing...' : 'Renew Consent'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import { QRCodeSVG } from 'qrcode.react'
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 import { signPrescriptionBundle, type SignedPrescriptionBundle } from '@/lib/prescription-signing'
@@ -73,13 +74,13 @@ export function PrescriptionQR({
         <p className="text-xs text-neutral-400">
           Cryptographically signed — tamper-proof
         </p>
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={() => window.print()}
-          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
         >
           Print
-        </button>
+        </Button>
       </div>
     )
   }
@@ -94,14 +95,14 @@ export function PrescriptionQR({
           <p className="text-sm font-semibold text-red-800">{error}</p>
         </div>
       )}
-      <button
+      <Button
+        variant="primary"
         type="button"
         onClick={handleFinalize}
         disabled={prescriptions.length === 0 || signing}
-        className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
       >
         {signing ? 'Signing...' : 'Finalize & Generate QR'}
-      </button>
+      </Button>
     </div>
   )
 }

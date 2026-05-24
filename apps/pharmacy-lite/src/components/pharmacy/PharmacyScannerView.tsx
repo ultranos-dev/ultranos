@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   verifyPrescriptionQr,
   fetchAndCachePractitionerKey,
@@ -146,7 +147,9 @@ export function PharmacyScannerView({
             className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-neutral-300"
             data-testid="scanner-viewport"
           />
-          <button
+          <Button
+            variant="secondary"
+            fullWidth
             type="button"
             onClick={() => {
               if (html5QrRef.current) {
@@ -155,24 +158,23 @@ export function PharmacyScannerView({
               }
               setPhase({ step: 'idle' })
             }}
-            className="mt-3 w-full rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Stop Scanner
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Idle: show scan + manual entry options */}
       {phase.step === 'idle' && (
         <>
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={startCameraScanner}
-            className="rounded-md bg-primary-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-700"
             data-testid="start-scanner-btn"
           >
             Scan Prescription QR
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
             <span className="h-px flex-1 bg-neutral-200" />
@@ -192,15 +194,15 @@ export function PharmacyScannerView({
                 if (e.key === 'Enter') handlePasteVerify()
               }}
             />
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={handlePasteVerify}
               disabled={!pasteInput.trim()}
-              className="rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               data-testid="verify-btn"
             >
               Verify
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -238,13 +240,14 @@ export function PharmacyScannerView({
           data-testid="scan-error"
         >
           <p className="text-sm font-bold text-red-800">{phase.message}</p>
-          <button
+          <Button
+            variant="danger"
+            className="mt-3"
             type="button"
             onClick={handleReset}
-            className="mt-3 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -301,21 +304,21 @@ function ResultDisplay({
             ))}
           </div>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="primary"
               type="button"
               onClick={() => onProceedToReview(result.prescriptions, result.practitionerName)}
-              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
               data-testid="proceed-to-review-btn"
             >
               Proceed to Fulfillment
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={onReset}
-              className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
             >
               Scan Another
-            </button>
+            </Button>
           </div>
         </div>
       )
@@ -338,13 +341,14 @@ function ResultDisplay({
             DO NOT dispense medication based on this prescription.
             Report this incident to your supervisor immediately.
           </p>
-          <button
+          <Button
+            variant="danger"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-300 px-4 py-2 text-sm font-semibold text-red-900"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
@@ -363,13 +367,14 @@ function ResultDisplay({
             {new Date(result.expiry).toLocaleDateString()}.
             It cannot be fulfilled.
           </p>
-          <button
+          <Button
+            variant="warning"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-amber-200 px-4 py-2 text-sm font-semibold text-amber-800"
           >
             Scan Another
-          </button>
+          </Button>
         </div>
       )
 
@@ -388,22 +393,24 @@ function ResultDisplay({
             in the local trusted registry.
           </p>
           {result.fallbackAvailable && isAuthenticated && (
-            <button
+            <Button
+              variant="warning"
+              className="mt-3"
               type="button"
               onClick={() => onFetchKey(rawQr)}
-              className="mt-3 rounded-md bg-amber-300 px-4 py-2 text-sm font-semibold text-amber-800"
               data-testid="fetch-key-btn"
             >
               Look Up on Hub
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="secondary"
+            className="ms-3 mt-3"
             type="button"
             onClick={onReset}
-            className="ms-3 mt-3 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       )
 
@@ -424,13 +431,14 @@ function ResultDisplay({
           <p className="mt-2 text-sm text-red-700">
             Contact the prescribing clinician or your supervisor for a new prescription.
           </p>
-          <button
+          <Button
+            variant="danger"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-300 px-4 py-2 text-sm font-semibold text-red-900"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
@@ -452,22 +460,22 @@ function ResultDisplay({
             Dispensing is blocked until the prescriber key can be re-verified.
           </p>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="warning"
               type="button"
               onClick={() => onRetryVerify(rawQr)}
-              className="rounded-md bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-500"
               data-testid="retry-revalidation-btn"
             >
               Wait and Retry
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={onReset}
-              className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
               data-testid="cancel-offline-btn"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )
@@ -483,13 +491,14 @@ function ResultDisplay({
             Verification Blocked
           </p>
           <p className="mt-2 text-sm text-red-800">{result.reason}</p>
-          <button
+          <Button
+            variant="danger"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
@@ -501,13 +510,14 @@ function ResultDisplay({
           data-testid="scan-error"
         >
           <p className="text-sm font-bold text-red-800">{result.message}</p>
-          <button
+          <Button
+            variant="danger"
+            className="mt-3"
             type="button"
             onClick={onReset}
-            className="mt-3 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )
   }

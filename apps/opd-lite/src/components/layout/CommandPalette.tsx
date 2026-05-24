@@ -106,7 +106,7 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
 
       {/* Palette container */}
       <Command
-        className="relative w-full max-w-lg overflow-hidden rounded-xl border border-neutral-200 bg-white/95 shadow-lg backdrop-blur-md"
+        className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white/95 ring-[0.65px] ring-gray-400/40 shadow-lg backdrop-blur-md"
         label="Clinical Command Palette"
       >
         <Command.Input

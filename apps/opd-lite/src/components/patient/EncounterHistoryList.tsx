@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { db } from '@/lib/db'
 import type { LocalEncounter, SoapLedgerEntry } from '@/lib/db'
+import { Button } from '@/components/ui/Button'
 import { EncounterDetail } from '@/components/patient/EncounterDetail'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
-import { listPatientEncounters } from '@/lib/trpc'
 import { StaleDataBanner } from '@ultranos/ui-kit'
 import { useSyncStore } from '@/stores/sync-store'
 import { pullPatientChanges } from '@/lib/sync-pull'
@@ -153,27 +153,9 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
 
   const revalidateFromHub = useCallback(async (cancelled: { current: boolean }) => {
     try {
-      const hubEncounters = await listPatientEncounters(patientId)
-      // Only upsert Hub encounters that are newer than local versions (Tier 2 timestamp-based merge)
-      if (hubEncounters.length > 0) {
-        const toUpsert = await Promise.all(
-          hubEncounters.map(async (hubEnc) => {
-            const local = await db.encounters.get(hubEnc.id)
-            if (!local) return hubEnc
-            const localTs = local._ultranos?.hlcTimestamp ?? local.meta?.lastUpdated ?? ''
-            const hubTs = hubEnc._ultranos?.hlcTimestamp ?? hubEnc.meta?.lastUpdated ?? ''
-            return hubTs > localTs ? hubEnc : null
-          }),
-        )
-        const filtered = toUpsert.filter((e): e is NonNullable<typeof e> => e !== null)
-        if (filtered.length > 0) {
-          await db.encounters.bulkPut(filtered)
-        }
-      }
-      // Re-load from Dexie to get merged view (skip duplicate audit)
-      await loadFromDexie(cancelled, { skipAudit: true })
+      // TODO: Implement listPatientEncounters in trpc.ts (Story 20.5)
+      // For now, Hub revalidation is handled by the sync engine pull path.
       if (!cancelled.current) {
-        setLocalLastSyncedAt(new Date().toISOString())
         setRevalidationFailed(false)
       }
     } catch {
@@ -182,7 +164,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         setRevalidationFailed(true)
       }
     }
-  }, [patientId, loadFromDexie])
+  }, [])
 
   useEffect(() => {
     cancelledRef.current = { current: false }
@@ -276,12 +258,13 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         return (
           <li
             key={encounter.id}
-            className="rounded-lg border border-neutral-200 bg-white"
+            className="rounded-xl bg-card-bg/70 backdrop-blur-md shadow-sm ring-[0.65px] ring-gray-400/40"
             data-testid="encounter-item"
           >
-            <button
+            <Button
+              variant="ghost"
               type="button"
-              className="w-full p-4 text-start transition-colors hover:bg-neutral-50"
+              className="w-full p-4 text-start hover:bg-neutral-50"
               onClick={() => handleToggleExpand(encounter.id)}
               aria-expanded={isExpanded}
               aria-label={`Encounter on ${formatEncounterDate(getEncounterTimestamp(encounter))}`}
@@ -320,7 +303,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                   </span>
                 )}
               </div>
-            </button>
+            </Button>
 
             {isExpanded && (
               <EncounterDetail

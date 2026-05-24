@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations, useLocale } from 'next-intl'
+import { Card } from '@/components/Card'
 
 interface NameInputSectionProps {
   nameGiven: string
@@ -34,7 +35,7 @@ export function NameInputSection({
   const nameLocalPreview = nameParts.length > 0 ? nameParts.join(' ') : ''
 
   return (
-    <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
+    <Card as="fieldset">
       <legend className="text-base font-bold text-neutral-900 mb-4">
         {t('nameSection')}
       </legend>
@@ -136,7 +137,7 @@ export function NameInputSection({
         {/* Composed nameLocal preview */}
         {nameLocalPreview && (
           <div
-            className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3"
+            className="mt-3 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 px-4 py-3"
             aria-live="polite"
           >
             <p className="text-xs font-semibold text-neutral-500 mb-1">
@@ -151,6 +152,6 @@ export function NameInputSection({
           </div>
         )}
       </div>
-    </fieldset>
+    </Card>
   )
 }

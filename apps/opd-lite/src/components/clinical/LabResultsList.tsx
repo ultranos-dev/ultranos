@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { Button } from '@/components/ui/Button'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
 
@@ -176,10 +177,11 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
           return (
             <li key={report.id}>
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => onSelectReport(report)}
-                className={`w-full rounded-lg border px-4 py-3 text-start transition-colors hover:bg-neutral-50 ${
+                className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-neutral-50 ${
                   urgent
                     ? 'border-red-300 bg-red-50'
                     : 'border-neutral-200 bg-white'
@@ -223,7 +225,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                     />
                   </svg>
                 </div>
-              </button>
+              </Button>
             </li>
           )
         })}

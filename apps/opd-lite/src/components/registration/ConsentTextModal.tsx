@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 
 interface ConsentTextModalProps {
   open: boolean
@@ -82,7 +83,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         onClick={onClose}
       />
 
-      <div className="relative mx-4 w-full max-w-2xl rounded-xl border border-neutral-200 bg-white shadow-2xl">
+      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-white ring-[0.65px] ring-gray-400/40 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between rounded-t-xl border-b border-neutral-200 bg-neutral-50 px-6 py-4">
           <h2
@@ -91,34 +92,32 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
           >
             {t('consentDocumentTitle')}
           </h2>
-          <button
+          <Button
+            variant="icon"
             type="button"
+            className="min-h-[44px] min-w-[44px]"
             onClick={onClose}
-            className="min-h-[44px] min-w-[44px] rounded-lg text-neutral-500 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700"
             aria-label={t('cancel')}
           >
             <svg className="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         {/* Language tabs */}
         <div className="flex border-b border-neutral-200" role="tablist" aria-label={t('consentLanguage')}>
           {TABS.map((tab) => (
-            <button
+            <Button
               key={tab.locale}
+              variant={activeTab === tab.locale ? 'primary' : 'ghost'}
               role="tab"
               aria-selected={activeTab === tab.locale}
               onClick={() => setActiveTab(tab.locale as 'en' | 'ar' | 'prs')}
-              className={`flex-1 min-h-[44px] px-4 py-3 text-sm font-bold transition-colors ${
-                activeTab === tab.locale
-                  ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50/50'
-                  : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50'
-              }`}
+              className="flex-1 min-h-[44px]"
             >
               {t(tab.labelKey)}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -145,13 +144,13 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
 
         {/* Footer */}
         <div className="flex justify-end rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={onClose}
-            className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.97]"
           >
             {t('consentDocumentClose')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

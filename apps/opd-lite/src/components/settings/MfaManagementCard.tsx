@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
 
 export function MfaManagementCard() {
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null)
@@ -176,7 +178,7 @@ export function MfaManagementCard() {
   }, [factorId])
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <Card>
       <h2 className="mb-4 text-sm font-semibold text-neutral-900">MFA Management</h2>
 
       {!isOnline && (
@@ -203,14 +205,13 @@ export function MfaManagementCard() {
           </div>
 
           {!confirming && !enrolling && isOnline && (
-            <button
-              type="button"
+            <Button
+              variant="primary"
               onClick={isEnrolled ? handleStartReconfigure : startEnrollment}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
               aria-label={isEnrolled ? 'Reconfigure TOTP' : 'Enroll TOTP'}
             >
               {isEnrolled ? 'Reconfigure TOTP' : 'Enroll TOTP'}
-            </button>
+            </Button>
           )}
 
           {confirming && (
@@ -224,25 +225,16 @@ export function MfaManagementCard() {
                   value={confirmingCode}
                   onChange={(e) => setConfirmingCode(e.target.value)}
                   placeholder="Current 6-digit code"
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+                  className="rounded-xl border border-neutral-300 px-3 py-1.5 text-sm"
                   maxLength={6}
                   aria-label="Current TOTP code"
                 />
-                <button
-                  type="button"
-                  onClick={handleConfirmCurrentTotp}
-                  disabled={confirmingCode.length < 6}
-                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-                >
+                <Button variant="primary" disabled={confirmingCode.length < 6} onClick={handleConfirmCurrentTotp}>
                   Confirm
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-200"
-                >
+                </Button>
+                <Button variant="secondary" onClick={handleCancel}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -259,25 +251,16 @@ export function MfaManagementCard() {
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value)}
                   placeholder="Enter 6-digit code"
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+                  className="rounded-xl border border-neutral-300 px-3 py-1.5 text-sm"
                   maxLength={6}
                   aria-label="TOTP verification code"
                 />
-                <button
-                  type="button"
-                  onClick={handleVerify}
-                  disabled={verifyCode.length < 6}
-                  className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                >
+                <Button variant="primary" disabled={verifyCode.length < 6} onClick={handleVerify}>
                   Verify
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-200"
-                >
+                </Button>
+                <Button variant="secondary" onClick={handleCancel}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -287,6 +270,6 @@ export function MfaManagementCard() {
           )}
         </div>
       )}
-    </div>
+    </Card>
   )
 }

@@ -4,6 +4,7 @@
 
 @import '@ultranos/ui-kit/tokens.css';
 
+
 @media print {
   body * {
     visibility: hidden;

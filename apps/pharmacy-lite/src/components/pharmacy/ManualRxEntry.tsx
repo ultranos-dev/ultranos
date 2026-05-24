@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { OfflineGraceForm } from './OfflineGraceForm'
 
 interface ManualRxEntryProps {
@@ -134,24 +135,26 @@ export function ManualRxEntry({
       {/* Action buttons */}
       <div className="flex gap-3">
         {isOnline ? (
-          <button
+          <Button
+            variant="primary"
+            className="flex-1"
             type="button"
             onClick={handleLookup}
             disabled={!rxId.trim() || isLoading}
             data-testid="rx-lookup-button"
-            className="flex-1 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Looking up...' : 'Look Up'}
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="warning"
+            className="flex-1"
             type="button"
             onClick={() => setShowGraceForm(true)}
             data-testid="grace-dispense-button"
-            className="flex-1 rounded-lg border border-amber-400 bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
           >
             Proceed with Grace Dispensing
-          </button>
+          </Button>
         )}
       </div>
     </div>
