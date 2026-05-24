@@ -6,6 +6,8 @@ import { QueueStatusCard } from '@/components/dashboard/QueueStatusCard'
 import { ActivitySummaryCard } from '@/components/dashboard/ActivitySummaryCard'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import { RecentUploadsList } from '@/components/dashboard/RecentUploadsList'
+import { UploadSuccessBanner } from '@/components/dashboard/UploadSuccessBanner'
+import { Button } from '@/components/ui/Button'
 import { useDashboardData } from '@/hooks/useDashboardData'
 
 function RecentUploadsSkeleton() {
@@ -34,15 +36,16 @@ export default function LabHomePage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <UploadSuccessBanner />
       {error && (
         <div className="flex items-center justify-between rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert" aria-live="assertive">
           <span>{error}</span>
-          <button
+          <Button
+            variant="warning"
             onClick={retry}
-            className="ms-3 shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             {t('common.retry')}
-          </button>
+          </Button>
         </div>
       )}
       <LabIdentityCard />
