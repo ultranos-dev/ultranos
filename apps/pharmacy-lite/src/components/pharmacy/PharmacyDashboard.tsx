@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import Link from 'next/link'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import { DispensingSummaryCard } from './DispensingSummaryCard'
@@ -10,6 +9,7 @@ import {
   RecentDispensingList,
   type RecentDispenseItem,
 } from './RecentDispensingList'
+import { DashboardActionHub } from './DashboardActionHub'
 
 const AUTO_REFRESH_INTERVAL_MS = 30_000
 
@@ -180,25 +180,8 @@ export function PharmacyDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Scan Prescription CTA — UX-DR2 primary action */}
-        <Link
-          href="/scan"
-          className="inline-flex items-center justify-center gap-2 rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 bg-pill-green text-pill-text"
-        >
-          Scan QR Prescription
-        </Link>
-
-        {/* Story 24.3: Paper Prescription OCR quick action */}
-        <Link
-          href="/paper-rx"
-          data-testid="paper-rx-action-card"
-          className="inline-flex items-center justify-center gap-2 rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 border-2 border-orange-200 bg-orange-50 text-orange-800"
-        >
-          Scan Paper Prescription
-        </Link>
-      </div>
+      {/* Multi-entry action hub */}
+      <DashboardActionHub />
 
       {/* Today's dispensing summary */}
       <DispensingSummaryCard
