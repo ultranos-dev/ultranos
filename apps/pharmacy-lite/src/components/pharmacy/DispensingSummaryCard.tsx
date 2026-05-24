@@ -14,40 +14,42 @@ export const DispensingSummaryCard = memo(function DispensingSummaryCard({
   failedSync,
 }: DispensingSummaryCardProps) {
   return (
-    <div
-      data-testid="dispensing-summary-card"
-      className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
-    >
-      <h3 className="text-sm font-semibold text-neutral-600 mb-3">
-        Today&apos;s Dispensing
-      </h3>
-      <div className="grid grid-cols-3 gap-4 text-center">
+    <div data-testid="dispensing-summary-card" className="space-y-3">
+      {/* Primary metric — dispensed today (largest, most prominent) */}
+      <div className="rounded-xl border border-primary-200 bg-primary-50/40 p-4 flex items-center justify-between">
         <div>
-          <div
-            data-testid="dispensed-today-count"
-            className="text-2xl font-bold text-neutral-900"
-          >
-            {dispensedToday}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Dispensed</div>
+          <p className="text-xs font-medium text-primary-700 uppercase tracking-wide">Dispensed Today</p>
+          <p className="text-sm text-neutral-600 mt-0.5">Prescriptions fulfilled this shift</p>
         </div>
-        <div>
-          <div
+        <div data-testid="dispensed-today-count" className="text-3xl font-bold text-primary-800 tabular-nums">
+          {dispensedToday}
+        </div>
+      </div>
+
+      {/* Secondary metrics row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className={`rounded-lg border p-3 flex items-center justify-between ${
+          pendingSync > 0 ? 'border-amber-200 bg-amber-50/40' : 'border-neutral-200 bg-white'
+        }`}>
+          <p className="text-xs font-medium text-neutral-600">Pending Sync</p>
+          <span
             data-testid="pending-sync-count"
-            className={`text-2xl font-bold ${pendingSync > 0 ? 'text-amber-600' : 'text-neutral-900'}`}
+            className={`text-lg font-bold tabular-nums ${pendingSync > 0 ? 'text-amber-700' : 'text-neutral-400'}`}
           >
             {pendingSync}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Pending Sync</div>
+          </span>
         </div>
-        <div>
-          <div
+
+        <div className={`rounded-lg border p-3 flex items-center justify-between ${
+          failedSync > 0 ? 'border-red-300 bg-red-50' : 'border-neutral-200 bg-white'
+        }`}>
+          <p className="text-xs font-medium text-neutral-600">Failed</p>
+          <span
             data-testid="failed-sync-count"
-            className={`text-2xl font-bold ${failedSync > 0 ? 'text-red-600' : 'text-neutral-900'}`}
+            className={`text-lg font-bold tabular-nums ${failedSync > 0 ? 'text-red-700' : 'text-neutral-400'}`}
           >
             {failedSync}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Failed Sync</div>
+          </span>
         </div>
       </div>
     </div>

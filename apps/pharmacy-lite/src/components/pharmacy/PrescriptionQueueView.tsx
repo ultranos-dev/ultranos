@@ -7,6 +7,7 @@ import { syncDispenseToHub } from '@/lib/dispense-sync'
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
 import { QueueItemCard } from './QueueItemCard'
+import { EmptyState } from './EmptyState'
 
 type TabId = 'active' | 'completed' | 'failed'
 
@@ -172,9 +173,13 @@ export function PrescriptionQueueView() {
         aria-labelledby={`tab-${activeTab}`}
       >
         {currentItems.length === 0 ? (
-          <p className="text-sm text-neutral-400 py-8 text-center">
-            {emptyMessages[activeTab]}
-          </p>
+          <EmptyState
+            icon="queue"
+            title={emptyMessages[activeTab]}
+            description={activeTab === 'active' ? 'Scan a prescription QR code to start filling orders.' : 'Completed and failed items will appear here.'}
+            actionLabel={activeTab === 'active' ? 'Scan Prescription' : undefined}
+            actionHref={activeTab === 'active' ? '/scan' : undefined}
+          />
         ) : (
           <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden">
             {currentItems.map((item) => (

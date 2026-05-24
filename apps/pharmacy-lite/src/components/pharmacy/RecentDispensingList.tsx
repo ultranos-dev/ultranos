@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from './EmptyState'
+
 export interface RecentDispenseItem {
   id: string
   patientRef: string
@@ -42,9 +44,13 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
         Recent Dispensing
       </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-neutral-400 py-4 text-center">
-          No dispensing activity today
-        </p>
+        <EmptyState
+          icon="dispensing"
+          title="No dispensing activity today"
+          description="Dispensed medications will appear here as you fill prescriptions throughout your shift."
+          actionLabel="Start Scanning"
+          actionHref="/scan"
+        />
       ) : (
         <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden">
           {items.map((item) => (
