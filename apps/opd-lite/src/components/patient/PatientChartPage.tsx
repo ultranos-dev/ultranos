@@ -1,34 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { db } from '@/lib/db'
 import type { FhirPatient } from '@ultranos/shared-types'
-import type { LocalDiagnosticReport } from '@/lib/db'
-import { AllergyBanner } from '@/components/clinical/AllergyBanner'
+import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
+import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { usePatientSync } from '@/hooks/usePatientSync'
+import { Button } from '@/components/ui/Button'
+
+// Composed sections
+import { PatientBannerStack } from '@/components/patient/PatientBannerStack'
+import { PatientHeaderCard } from '@/components/patient/PatientHeaderCard'
+import { PatientEditModal } from '@/components/patient/PatientEditModal'
+import { PatientDetailsAccordion } from '@/components/patient/PatientDetailsAccordion'
+import { ActiveMedicationsList } from '@/components/patient/ActiveMedicationsList'
 import { EncounterHistoryList } from '@/components/patient/EncounterHistoryList'
 import { LabResultsList } from '@/components/clinical/LabResultsList'
 import { LabResultDetail } from '@/components/clinical/LabResultDetail'
-import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
-import { fetchDiagnosticReportsForPatient } from '@/lib/trpc'
-import { ConflictBanner } from '@/components/sync/ConflictBanner'
-import { usePatientSync } from '@/hooks/usePatientSync'
+import type { LocalDiagnosticReport } from '@/lib/db'
 
 interface PatientChartPageProps {
   patientId: string
-}
-
-function formatAge(birthDate?: string): string {
-  if (!birthDate) return 'Unknown age'
-  const birth = new Date(birthDate)
-  const now = new Date()
-  let age = now.getFullYear() - birth.getFullYear()
-  const monthDiff = now.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
-    age--
-  }
-  return `${age}y`
 }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -37,9 +30,11 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   const router = useRouter()
   const [patient, setPatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(true)
+  const [needsReauth, setNeedsReauth] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedLabReport, setSelectedLabReport] = useState<LocalDiagnosticReport | null>(null)
 
-  const { isSyncing } = usePatientSync(patientId)
+  usePatientSync(patientId)
 
   useEffect(() => {
     if (!UUID_REGEX.test(patientId)) {
@@ -60,12 +55,15 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
               patientId,
               { phiAccess: 'patient_chart_view' },
             )
-            // Story 20.5: Background fetch of lab results from Hub
-            fetchDiagnosticReportsForPatient(patientId)
           }
         }
-      } catch {
-        if (!cancelled) setPatient(null)
+      } catch (err) {
+        if (!cancelled) {
+          if (err instanceof EncryptionKeyNotAvailableError) {
+            setNeedsReauth(true)
+          }
+          setPatient(null)
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -74,6 +72,11 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
     return () => { cancelled = true }
   }, [patientId])
 
+  const handlePatientUpdated = useCallback((updated: FhirPatient) => {
+    setPatient(updated)
+  }, [])
+
+  // Loading state
   if (loading) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
@@ -82,78 +85,71 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
     )
   }
 
+  // Error states
   if (!patient) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
-        <button
-          onClick={() => router.push('/')}
-          className="mt-4 font-semibold text-primary-500 underline"
-        >
-          Return to Patient Search
-        </button>
+        {needsReauth ? (
+          <>
+            <p className="font-semibold text-neutral-500">
+              Session encryption key unavailable — please sign in again to access patient data.
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => {
+                const returnUrl = encodeURIComponent(window.location.pathname)
+                window.location.href = `/login?returnUrl=${returnUrl}`
+              }}
+              className="mt-4"
+            >
+              Sign In
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
+            <Button variant="ghost" onClick={() => router.push('/')} className="mt-4">
+              Return to Patient Search
+            </Button>
+          </>
+        )}
       </main>
     )
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
-      <AllergyBanner patientId={patientId} />
+    <main className="mx-auto max-w-2xl px-4 py-8 space-y-4">
+      {/* Back navigation */}
+      <Button variant="ghost" onClick={() => router.push('/')} aria-label="Back to search">
+        &larr; Back to Search
+      </Button>
 
-      {/* Sync conflict banner — renders after allergies, before header */}
-      <ConflictBanner patientId={patientId} />
+      {/* Safety banners — CLAUDE.md Rule #4: allergies first, never collapsed */}
+      <PatientBannerStack patient={patient} patientId={patientId} />
 
-      <header className="mb-8">
-        <button
-          onClick={() => router.push('/')}
-          className="mb-4 text-sm font-semibold text-primary-500 hover:underline"
-          aria-label="Back to search"
-        >
-          &larr; Back to Search
-        </button>
-        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
-          Patient Chart
-        </h1>
-      </header>
+      {/* Patient identity header with avatar, vitals, actions */}
+      <PatientHeaderCard
+        patient={patient}
+        patientId={patientId}
+        onEditClick={() => setEditModalOpen(true)}
+        onPatientUpdated={handlePatientUpdated}
+      />
 
-      <section
-        className="rounded-lg border border-neutral-200 bg-white p-6"
-        aria-label="Patient information"
-      >
-        <h2 className="text-xl font-bold text-neutral-900">
-          {patient._ultranos?.nameLocal}
-        </h2>
-        {patient._ultranos?.nameLatin && (
-          <p className="text-sm font-semibold text-neutral-500">
-            {patient._ultranos.nameLatin}
-          </p>
-        )}
-        <div className="mt-3 flex gap-4 text-sm font-semibold text-neutral-600">
-          <span>ID: {patient.id.slice(0, 8)}...</span>
-          <span>{patient.gender ?? 'Unknown'}</span>
-          <span>{formatAge(patient.birthDate)}</span>
-        </div>
-      </section>
+      {/* Collapsible demographics and identity details */}
+      <PatientDetailsAccordion patient={patient} />
 
-      <div className="mt-6 flex justify-end">
-        <Link
-          href={`/encounter/${patientId}`}
-          className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
-          aria-label="Start New Encounter"
-        >
-          Start New Encounter
-        </Link>
-      </div>
+      {/* Cross-encounter active medications */}
+      <ActiveMedicationsList patientId={patientId} />
 
-      <section className="mt-6" aria-label="Encounter history">
-        <h2 className="mb-4 text-xl font-bold text-neutral-900">Encounter History</h2>
+      {/* Encounter history with expandable detail */}
+      <section aria-label="Encounter history">
+        <h2 className="mb-3 text-lg font-bold text-neutral-900">Encounter History</h2>
         <EncounterHistoryList patientId={patientId} />
       </section>
 
-      {/* Lab Results — Story 20.5 */}
+      {/* Lab results */}
       <section
-        className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
         aria-label="Lab results"
       >
         {selectedLabReport ? (
@@ -168,6 +164,15 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
           />
         )}
       </section>
+
+      {/* Edit profile modal */}
+      <PatientEditModal
+        open={editModalOpen}
+        patient={patient}
+        patientId={patientId}
+        onClose={() => setEditModalOpen(false)}
+        onSaved={handlePatientUpdated}
+      />
     </main>
   )
 }
