@@ -899,13 +899,29 @@ export const patientRouter = createTRPCRouter({
         nationalId: z.string().min(1).max(200).optional(),
         guardianId: z.string().uuid().nullable().optional(),
         consentVersion: z.string().optional(),
+        // MPI Phase 1 fields
+        nameGiven: z.string().max(200).optional(),
+        nameFather: z.string().max(200).optional(),
+        nameGrandfather: z.string().max(200).optional(),
+        birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
+        addressProvinceOrigin: z.string().optional(),
+        addressDistrictOrigin: z.string().optional(),
+        addressVillageOrigin: z.string().max(200).optional(),
+        addressProvinceCurrent: z.string().optional(),
+        addressDistrictCurrent: z.string().optional(),
+        addressVillageCurrent: z.string().max(200).optional(),
+        isNomadic: z.boolean().optional(),
+        preferredLanguage: z.enum(['en', 'ar', 'prs']).optional(),
+        // Profile page additions
+        photoUrl: z.string().max(500).optional(),
+        bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       // Fetch current patient for HLC conflict detection
       const { data: current, error: fetchError } = await ctx.supabase
         .from('patients')
-        .select('id, updated_at, national_id_hash')
+        .select('id, updated_at, national_id_hash, blood_group')
         .eq('id', input.patientId)
         .eq('is_active', true)
         .single()
@@ -968,6 +984,74 @@ export const patientRouter = createTRPCRouter({
       if (input.consentVersion !== undefined) {
         updates.consentVersion = input.consentVersion
         fieldsUpdated.push('consentVersion')
+      }
+
+      // MPI Phase 1 fields
+      if (input.nameGiven !== undefined) {
+        updates.nameGiven = input.nameGiven
+        updates.nameGivenEnc = input.nameGiven
+        fieldsUpdated.push('nameGiven')
+      }
+      if (input.nameFather !== undefined) {
+        updates.nameFather = input.nameFather
+        updates.nameFatherEnc = input.nameFather
+        fieldsUpdated.push('nameFather')
+      }
+      if (input.nameGrandfather !== undefined) {
+        updates.nameGrandfather = input.nameGrandfather
+        updates.nameGrandfatherEnc = input.nameGrandfather
+        fieldsUpdated.push('nameGrandfather')
+      }
+      if (input.birthYear !== undefined) {
+        updates.birthYear = input.birthYear
+        fieldsUpdated.push('birthYear')
+      }
+      if (input.addressProvinceOrigin !== undefined) {
+        updates.addressProvinceOrigin = input.addressProvinceOrigin
+        fieldsUpdated.push('addressProvinceOrigin')
+      }
+      if (input.addressDistrictOrigin !== undefined) {
+        updates.addressDistrictOrigin = input.addressDistrictOrigin
+        fieldsUpdated.push('addressDistrictOrigin')
+      }
+      if (input.addressVillageOrigin !== undefined) {
+        updates.addressVillageOrigin = input.addressVillageOrigin
+        fieldsUpdated.push('addressVillageOrigin')
+      }
+      if (input.addressProvinceCurrent !== undefined) {
+        updates.addressProvinceCurrent = input.addressProvinceCurrent
+        fieldsUpdated.push('addressProvinceCurrent')
+      }
+      if (input.addressDistrictCurrent !== undefined) {
+        updates.addressDistrictCurrent = input.addressDistrictCurrent
+        fieldsUpdated.push('addressDistrictCurrent')
+      }
+      if (input.addressVillageCurrent !== undefined) {
+        updates.addressVillageCurrent = input.addressVillageCurrent
+        fieldsUpdated.push('addressVillageCurrent')
+      }
+      if (input.isNomadic !== undefined) {
+        updates.isNomadic = input.isNomadic
+        fieldsUpdated.push('isNomadic')
+      }
+      if (input.preferredLanguage !== undefined) {
+        updates.preferredLanguage = input.preferredLanguage
+        fieldsUpdated.push('preferredLanguage')
+      }
+      if (input.photoUrl !== undefined) {
+        updates.photoUrl = input.photoUrl
+        fieldsUpdated.push('photoUrl')
+      }
+      if (input.bloodGroup !== undefined) {
+        // Write-once enforcement: blood group cannot be changed once set to a real value
+        if (current.blood_group && current.blood_group !== 'Unknown') {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Blood group cannot be changed once set',
+          })
+        }
+        updates.bloodGroup = input.bloodGroup
+        fieldsUpdated.push('bloodGroup')
       }
 
       // National ID change — re-hash and check duplicates (excluding current patient)
