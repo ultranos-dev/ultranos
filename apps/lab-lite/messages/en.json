@@ -117,6 +117,7 @@
     "confirmCheckbox": "I have reviewed and confirm the metadata above is correct.",
     "errorCategory": "Please select a test category.",
     "errorDate": "Please enter the sample collection date.",
+    "errorFutureDate": "Collection date cannot be in the future.",
     "errorConfirm": "Please review and confirm the metadata before submitting.",
     "submitResults": "Submit Results"
   },

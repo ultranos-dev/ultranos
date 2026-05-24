@@ -102,9 +102,14 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
+    const today = new Date().toISOString().split('T')[0]
     const newErrors: { category?: string; date?: string; confirm?: string } = {}
     if (!loincCode) newErrors.category = t('errorCategory')
-    if (!collectionDate) newErrors.date = t('errorDate')
+    if (!collectionDate) {
+      newErrors.date = t('errorDate')
+    } else if (collectionDate > today) {
+      newErrors.date = t('errorFutureDate')
+    }
     if (hasOcr && !confirmed) {
       newErrors.confirm = t('errorConfirm')
     }
@@ -218,6 +223,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
           id="collection-date"
           type="date"
           value={collectionDate}
+          max={new Date().toISOString().split('T')[0]}
           onChange={(e) => {
             setCollectionDate(e.target.value)
             if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }))
