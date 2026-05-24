@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { LabIdentityCard } from '@/components/dashboard/LabIdentityCard'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { QueueStatusCard } from '@/components/dashboard/QueueStatusCard'
 import { ActivitySummaryCard } from '@/components/dashboard/ActivitySummaryCard'
 import { QuickActions } from '@/components/dashboard/QuickActions'
@@ -31,11 +31,11 @@ function RecentUploadsSkeleton() {
 
 export default function LabHomePage() {
   const t = useTranslations()
-  const { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry } =
+  const { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry, lastRefreshedAt } =
     useDashboardData()
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <UploadSuccessBanner />
       {error && (
         <div className="flex items-center justify-between rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert" aria-live="assertive">
@@ -48,13 +48,14 @@ export default function LabHomePage() {
           </Button>
         </div>
       )}
-      <LabIdentityCard />
+      <DashboardHeader />
+      <QuickActions />
       <QueueStatusCard counts={queueCounts} />
       <ActivitySummaryCard
         uploadsCompleted={todayUploadsCompleted}
         resultsPending={todayResultsPending}
+        lastRefreshedAt={lastRefreshedAt ?? undefined}
       />
-      <QuickActions />
       {loading ? <RecentUploadsSkeleton /> : <RecentUploadsList items={recentUploads} onItemCancelled={retry} />}
     </div>
   )
