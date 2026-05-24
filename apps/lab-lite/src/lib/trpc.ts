@@ -311,4 +311,117 @@ export async function searchPatients(
   return body.result.data.json.patients ?? []
 }
 
+// ── MPI Duplicate Detection & Patient Registration (Task 10) ──
+
+export interface CheckDuplicatesResult {
+  decision: 'ALLOW' | 'WARN' | 'BLOCK'
+  candidates: Array<{
+    id: string
+    nameGiven?: string
+    nameFather?: string
+    birthYear?: number
+    gender?: string
+    districtOrigin?: string
+    mpiScore: number
+  }>
+  proceedToken?: string
+}
+
+export interface CreatePatientInput {
+  nameLocal: string
+  nameGiven?: string
+  nameFather?: string
+  nameGrandfather?: string
+  gender: string
+  birthDate?: string
+  birthYearOnly?: boolean
+  birthYear?: number
+  phone?: string
+  consent: {
+    method: 'WRITTEN' | 'VERBAL_WITNESSED'
+    witnessedBy?: string
+    language: string
+    version: string
+  }
+  mpiProceedToken?: string
+}
+
+export interface CreatePatientResult {
+  id: string
+}
+
+/**
+ * Check MPI for duplicate patients before registration.
+ * Returns decision (ALLOW/WARN/BLOCK) with candidate matches.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function checkDuplicates(
+  input: Record<string, unknown>,
+  token: string,
+): Promise<CheckDuplicatesResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+
+  try {
+    const url = `${getHubApiUrl()}/lab.checkDuplicates?input=${encodeURIComponent(JSON.stringify({ json: input }))}`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const message =
+        (body as Record<string, any>)?.error?.json?.message ?? 'Duplicate check failed'
+      throw new Error(message)
+    }
+
+    const body = (await res.json()) as {
+      result: { data: { json: CheckDuplicatesResult } }
+    }
+    return body.result.data.json
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+/**
+ * Create a new patient via Hub API after MPI check.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function createPatient(
+  input: CreatePatientInput,
+  token: string,
+): Promise<CreatePatientResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+
+  try {
+    const res = await fetch(`${getHubApiUrl()}/lab.createPatient`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ json: input }),
+      signal: controller.signal,
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const message =
+        (body as Record<string, any>)?.error?.json?.message ?? 'Patient creation failed'
+      throw new Error(message)
+    }
+
+    const body = (await res.json()) as {
+      result: { data: { json: CreatePatientResult } }
+    }
+    return body.result.data.json
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export { getHubApiUrl }
