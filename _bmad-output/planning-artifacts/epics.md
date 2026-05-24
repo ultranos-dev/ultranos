@@ -4140,6 +4140,13 @@ So that I can find patients without needing to remember their exact name for the
 - **And** all text uses i18n keys in a new `patients` namespace (en/ar/prs)
 - **And** the table layout is RTL-safe with logical CSS properties
 
+**Enhancement (2026-05-23): Hub API Bulk Sync**
+The original implementation only read from local IndexedDB, leaving the directory empty on fresh installs or when patients were registered on other devices. Fixed by:
+- Adding `patient.list` cursor-based paginated endpoint to Hub API (50/page, `created_at` cursor)
+- Raising `patient.search` limit from 20 to 50
+- Background sync on every `/patients` mount — local data renders instantly, Hub data merges in via `usePatientListSync` hook
+- "Syncing..." indicator with pulsing blue dot during background fetch
+
 ---
 
 ### Story 37.4: Pharmacy-Lite — Upgrade to Sidebar Navigation
@@ -4500,7 +4507,7 @@ So that I can see at a glance how many patients are on my schedule for today.
 |-------|--------|-------|
 | 37.1: AppShell Sidebar Upgrade | ✅ Done | Sidebar.test.tsx (20) |
 | 37.2: OPD-Lite Sidebar Adoption | ✅ Done | (UI changes) |
-| 37.3: OPD-Lite Patient Directory | ✅ Done | patient-directory.test.tsx (7) |
+| 37.3: OPD-Lite Patient Directory | ✅ Done (+ Hub sync 2026-05-23) | patient-directory.test.tsx (7) |
 | 37.4: Pharmacy-Lite Sidebar Upgrade | ✅ Done | (UI changes) |
 | 37.5: Pharmacy Controlled Substances Page | ✅ Done | (UI + data wiring) |
 | 37.6: Pharmacy Unverified Dispenses Page | ✅ Done | (UI + data wiring) |

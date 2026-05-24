@@ -726,7 +726,8 @@
     "previous": "مخکینی",
     "next": "راتلونکی",
     "pageOf": "مخ {current} له {total}",
-    "allergyFlag": "حساسیت لري"
+    "allergyFlag": "حساسیت لري",
+    "syncing": "همگام‌سازی..."
   },
   "duplicateReview": {
     "title": "بررسی تکراری‌ها",

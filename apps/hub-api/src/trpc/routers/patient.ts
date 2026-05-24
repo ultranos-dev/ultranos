@@ -31,6 +31,100 @@ function hashNationalId(rawId: string): string {
  * Provides patient search for spoke apps (OPD Lite PWA, etc.).
  */
 export const patientRouter = createTRPCRouter({
+  // ── patient.list ───────────────────────────────────────────
+  // Cursor-based paginated listing of all active patients.
+  // Used by PatientDirectory for bulk sync into local IndexedDB.
+  list: protectedProcedure
+    .use(rateLimitMiddleware(RATE_LIMIT_TIERS.default, 'patientList'))
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('patients')
+        .select(
+          'id, gender, birth_date, birth_year_only, birth_year, ' +
+          'name_local, name_latin, national_id_hash, is_active, created_at, ' +
+          'name_given, name_father, name_grandfather, ' +
+          'address_district_origin, address_province_origin, ' +
+          'mpi_score, mpi_warn'
+        )
+        .eq('is_active', true)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .limit(input.limit)
+
+      if (input.cursor) {
+        query = query.gt('created_at', input.cursor)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Patient list error:', { code: error.code, hint: error.hint })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Patient list failed',
+        })
+      }
+
+      const rows = data ?? []
+      const nextCursor = rows.length === input.limit
+        ? (rows[rows.length - 1] as Record<string, unknown>).created_at as string
+        : null
+
+      // Audit PHI access (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: 'patient-list',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { resultCount: rows.length, hasCursor: !!input.cursor },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceType: 'PATIENT', resourceId: 'patient-list' })
+      }
+
+      return {
+        patients: rows.map((row: Record<string, unknown>) => ({
+          id: row.id,
+          resourceType: 'Patient' as const,
+          name: [{ text: row.name_local as string }],
+          gender: row.gender,
+          birthDate: row.birth_date,
+          birthYearOnly: row.birth_year_only,
+          _ultranos: {
+            nameLocal:    row.name_local,
+            nameLatin:    row.name_latin,
+            nationalIdHash: row.national_id_hash,
+            isActive:     row.is_active,
+            createdAt:    row.created_at,
+            nameGiven:           row.name_given,
+            nameFather:          row.name_father,
+            nameGrandfather:     row.name_grandfather,
+            birthYear:           row.birth_year,
+            addressDistrictOrigin: row.address_district_origin,
+            addressProvinceOrigin: row.address_province_origin,
+            mpiScore:    row.mpi_score,
+            mpiWarn:     (row.mpi_warn as boolean) ?? false,
+          },
+          meta: {
+            lastUpdated: row.created_at,
+          },
+        })),
+        nextCursor,
+      }
+    }),
+
   search: protectedProcedure
     .use(rateLimitMiddleware(RATE_LIMIT_TIERS.patientSearch, 'patientSearch'))
     .use(enforceResourceAccess('Patient'))
@@ -76,7 +170,7 @@ export const patientRouter = createTRPCRouter({
         )
         .or(orFilter)
         .eq('is_active', true)
-        .limit(20)
+        .limit(50)
 
       if (error) {
         // Log error shape only — never log PHI

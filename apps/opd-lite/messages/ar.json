@@ -726,7 +726,8 @@
     "previous": "السابق",
     "next": "التالي",
     "pageOf": "صفحة {current} من {total}",
-    "allergyFlag": "لديه حساسية"
+    "allergyFlag": "لديه حساسية",
+    "syncing": "جارٍ المزامنة..."
   },
   "duplicateReview": {
     "title": "مراجعة التكرارات",

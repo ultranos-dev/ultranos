@@ -687,6 +687,58 @@ Branch: `internationalization-01`
 
 ---
 
+## 2026-05-23 — Patient Directory Hub Sync & Search Limit Fix — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+
+**Root cause analysis:** The `/patients` page in OPD Lite was not fetching all patients due to 4 compounding issues:
+1. No bulk patient fetch on page load — PatientDirectory only read from local IndexedDB
+2. Hub API `patient.search` hard-coded `.limit(20)`, capping results
+3. Hub API had no endpoint for listing all patients (only search-by-query)
+4. Sync only triggered during active search, never on directory mount
+
+**Fix — Option C (new list endpoint + search limit raise + frontend sync):**
+
+1. **Hub API `patient.list` endpoint** — new cursor-based paginated listing of all active patients. Uses `created_at` cursor for stable ordering, default page size 50 (max 100), returns identity columns only (no sensitive PHI), audit logged per CLAUDE.md Rule #6, protected by `enforceResourceAccess('Patient')` and rate limiting
+2. **Hub API `patient.search` limit raised** from 20 to 50
+3. **`listPatientsFromHub()` client function** in `trpc.ts` — fetch wrapper with auth header injection and cursor/limit support
+4. **`usePatientListSync` hook** — pages through all Hub patients via `patient.list`, bulk-inserts into IndexedDB via `bulkPut`, offline-safe (catches failures silently), cancellable via AbortController
+5. **PatientDirectory background sync** — on mount, local IndexedDB data renders immediately, then background sync fires automatically, pages through all patients, refreshes table on completion. Subtle pulsing blue dot + "Syncing..." indicator during sync
+6. **i18n** — added "syncing" translation key to all 3 locales (en/ar/prs)
+
+### New Files
+- `apps/opd-lite/src/lib/use-patient-list-sync.ts`
+
+### Files Modified
+- `apps/hub-api/src/trpc/routers/patient.ts` — `patient.list` endpoint added, `patient.search` limit raised to 50
+- `apps/opd-lite/src/lib/trpc.ts` — `listPatientsFromHub()` + `PatientListResult` type
+- `apps/opd-lite/src/components/patients/PatientDirectory.tsx` — background Hub sync on mount, syncing indicator
+- `apps/opd-lite/messages/en.json` — "syncing" key
+- `apps/opd-lite/messages/ar.json` — "syncing" key (Arabic)
+- `apps/opd-lite/messages/prs.json` — "syncing" key (Dari)
+
+### Errors & Resolutions
+- No new TypeScript errors introduced. All pre-existing TS errors are in unrelated test files.
+
+### Tests Run
+- TypeScript compilation check (`tsc --noEmit`) for both `hub-api` and `opd-lite` — no new errors
+
+### Architecture Decisions
+- **Eager sync on every mount** — chosen over first-load-only because clinics with intermittent connectivity benefit from always trying to sync when online. Can optimize to watermark-based delta later.
+- **Cursor-based pagination** on `created_at` — stable ordering, no row skipping, efficient for sequential bulk fetch.
+- **`bulkPut` per page** — patients appear incrementally as pages arrive rather than waiting for full sync completion.
+- **Local-first rendering** — IndexedDB data shows instantly, Hub data merges in background. No loading gate on network.
+
+### PRD Trace
+- **FR36 / Epic 37 / Story 37.3:** Patient Directory & Browsing — was missing Hub API data population, now complete
+- **FR22 / Epic 16:** Hub API Patient CRUD — `patient.list` fills the bulk-listing gap
+- **NFR2:** Offline-first — local data renders immediately, Hub sync is background-only
+- **CLAUDE.md Rule #1:** No PHI in logs — `patient.list` only logs error code and result count
+- **CLAUDE.md Rule #6:** Audit every PHI access — `patient.list` emits `PHI_READ` audit event
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._

@@ -726,7 +726,8 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {current} of {total}",
-    "allergyFlag": "Has allergies"
+    "allergyFlag": "Has allergies",
+    "syncing": "Syncing..."
   },
   "duplicateReview": {
     "title": "Duplicate Reviews",

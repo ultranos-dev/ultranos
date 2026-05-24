@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
+import { usePatientListSync } from '@/lib/use-patient-list-sync'
 
 type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status'
 type SortDir = 'asc' | 'desc'
@@ -63,6 +65,8 @@ export function PatientDirectory() {
   const [allergyPatientIds, setAllergyPatientIds] = useState<Set<string>>(new Set())
   const [lastVisitMap, setLastVisitMap] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const { syncAll, cancel: cancelSync } = usePatientListSync()
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -137,6 +141,28 @@ export function PatientDirectory() {
     loadData()
     return () => { cancelled = true }
   }, [])
+
+  // Background Hub sync — fetch all patients and refresh local list
+  useEffect(() => {
+    let cancelled = false
+    setSyncing(true)
+
+    syncAll()
+      .then(async (hubPatients) => {
+        if (cancelled || hubPatients.length === 0) return
+        // Re-read from IndexedDB to pick up merged Hub data
+        const refreshed = await db.patients.toArray()
+        if (!cancelled) setPatients(refreshed)
+      })
+      .finally(() => {
+        if (!cancelled) setSyncing(false)
+      })
+
+    return () => {
+      cancelled = true
+      cancelSync()
+    }
+  }, [syncAll, cancelSync])
 
   // Build rows
   const rows: PatientRow[] = useMemo(() => {
@@ -253,13 +279,21 @@ export function PatientDirectory() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {t('title')}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('title')}
+          </h1>
+          {syncing && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+              {t('syncing')}
+            </span>
+          )}
+        </div>
         {showRegisterButton && (
           <Link
             href={`/${locale}/register-patient`}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="inline-flex items-center justify-center rounded-pill font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 bg-pill-green text-pill-text px-5 py-2 text-sm"
           >
             {t('registerNew')}
           </Link>
@@ -273,14 +307,14 @@ export function PatientDirectory() {
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="min-w-[200px] flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           aria-label={t('searchPlaceholder')}
         />
 
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1) }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           aria-label={t('status')}
         >
           <option value="all">{t('all')}</option>
@@ -291,7 +325,7 @@ export function PatientDirectory() {
         <select
           value={allergyFilter}
           onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           aria-label={t('hasAllergies')}
         >
           <option value="all">{t('hasAllergies')}: {t('all')}</option>
@@ -302,7 +336,7 @@ export function PatientDirectory() {
         <select
           value={visitFilter}
           onChange={(e) => { setVisitFilter(e.target.value as VisitFilter); setPage(1) }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           aria-label={t('lastVisitFilter')}
         >
           <option value="all">{t('lastVisitFilter')}: {t('all')}</option>
@@ -323,7 +357,7 @@ export function PatientDirectory() {
           </p>
           <Link
             href={`/${locale}/register-patient`}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center justify-center rounded-pill font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 bg-pill-green text-pill-text px-5 py-2 text-sm"
           >
             {t('registerNew')}
           </Link>
@@ -423,23 +457,15 @@ export function PatientDirectory() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600 dark:text-white"
-              >
+              <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                 {t('previous')}
-              </button>
+              </Button>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 {t('pageOf', { current: page, total: totalPages })}
               </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded-md border border-gray-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-gray-600 dark:text-white"
-              >
+              <Button variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                 {t('next')}
-              </button>
+              </Button>
             </div>
           )}
         </>

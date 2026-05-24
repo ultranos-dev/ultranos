@@ -1,0 +1,59 @@
+'use client'
+
+import { useCallback, useRef } from 'react'
+import { listPatientsFromHub } from '@/lib/trpc'
+import { db } from '@/lib/db'
+import type { FhirPatient } from '@ultranos/shared-types'
+
+/**
+ * Hook that pages through the Hub API patient.list endpoint
+ * and bulk-inserts all patients into local IndexedDB.
+ * Designed for the PatientDirectory background sync on mount.
+ * Offline-safe: failures are caught silently.
+ */
+export function usePatientListSync() {
+  const abortRef = useRef<AbortController | null>(null)
+
+  const syncAll = useCallback(async (): Promise<FhirPatient[]> => {
+    if (abortRef.current) {
+      abortRef.current.abort()
+    }
+    abortRef.current = new AbortController()
+    const signal = abortRef.current.signal
+
+    const allPatients: FhirPatient[] = []
+    let cursor: string | undefined
+
+    try {
+      // Page through all patients from the Hub
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        if (signal.aborted) break
+
+        const result = await listPatientsFromHub(cursor, 50, signal)
+        const page = result.patients
+
+        if (page.length > 0) {
+          allPatients.push(...page)
+          await db.patients.bulkPut(page)
+        }
+
+        if (!result.nextCursor) break
+        cursor = result.nextCursor
+      }
+    } catch {
+      // Offline or Hub unavailable — return whatever we fetched so far
+    }
+
+    return allPatients
+  }, [])
+
+  const cancel = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
+  }, [])
+
+  return { syncAll, cancel }
+}
