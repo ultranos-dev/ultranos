@@ -135,7 +135,7 @@ export function ControlledSubstancesView() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+      <h1 className="text-xl font-semibold text-neutral-900">
         {t('title')}
       </h1>
 
@@ -144,7 +144,7 @@ export function ControlledSubstancesView() {
         <div>
           <label
             htmlFor="cs-date-from"
-            className="block text-xs font-medium text-neutral-500 dark:text-neutral-400"
+            className="block text-xs font-medium text-neutral-500"
           >
             {t('dateFrom')}
           </label>
@@ -153,13 +153,13 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateFrom}
             onChange={handleDateFromChange}
-            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
         </div>
         <div>
           <label
             htmlFor="cs-date-to"
-            className="block text-xs font-medium text-neutral-500 dark:text-neutral-400"
+            className="block text-xs font-medium text-neutral-500"
           >
             {t('dateTo')}
           </label>
@@ -168,28 +168,28 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateTo}
             onChange={handleDateToChange}
-            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
         </div>
       </div>
 
       {/* Loading */}
       {loading && (
-        <div className="mt-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="mt-6 py-12 text-center text-sm text-neutral-500">
           {t('loading')}
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="mt-6 py-12 text-center text-sm text-red-600 dark:text-red-400">
+        <div className="mt-6 py-12 text-center text-sm text-red-600">
           {error}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !error && dispenses.length === 0 && (
-        <div className="mt-6 rounded-lg border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+        <div className="mt-6 rounded-lg border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500">
           {t('noRecords')}
         </div>
       )}
@@ -197,83 +197,83 @@ export function ControlledSubstancesView() {
       {/* Table */}
       {!loading && !error && dispenses.length > 0 && (
         <>
-          <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mt-2 text-xs text-neutral-500">
             {t('records', { count: totalCount })}
           </div>
 
-          <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-              <thead className="bg-neutral-50 dark:bg-neutral-800">
+          <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-200">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-50">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                   >
                     {t('date')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                   >
                     {t('patient')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                   >
                     {t('medication')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                     title={t('scheduleNote')}
                   >
                     {t('schedule')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                   >
                     {t('prescriber')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                   >
                     {t('status')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <tbody className="divide-y divide-neutral-100">
                 {dispenses.map((d) => (
                   <tr
                     key={d.id}
-                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                    className="hover:bg-neutral-50"
                   >
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                       {formatDateTime(d.meta?.lastUpdated)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                       {d.subject.reference}
                     </td>
-                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="px-4 py-3 text-sm text-neutral-700">
                       {extractMedicationDisplay(d)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-400 dark:text-neutral-500">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-400">
                       {/* controlledSubstanceSchedule not in schema yet */}
                       ---
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                       {extractPrescriberRef(d)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <span
                         className={
                           d.status === 'completed'
-                            ? 'text-green-700 dark:text-green-400'
+                            ? 'text-green-700'
                             : d.status === 'entered-in-error'
-                              ? 'text-red-700 dark:text-red-400'
-                              : 'text-amber-700 dark:text-amber-400'
+                              ? 'text-red-700'
+                              : 'text-amber-700'
                         }
                       >
                         {statusLabel(d.status, t)}
@@ -295,7 +295,7 @@ export function ControlledSubstancesView() {
               >
                 {t('previous')}
               </Button>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              <span className="text-sm text-neutral-600">
                 {t('page')} {page} {t('of')} {totalPages}
               </span>
               <Button

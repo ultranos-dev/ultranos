@@ -100,6 +100,8 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
+  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue']
+  const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
 
@@ -157,7 +159,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <main id="main-content" className="mx-auto max-w-2xl px-4 py-6">
+      <main id="main-content" className={`mx-auto px-4 py-6 ${isWideRoute ? 'max-w-5xl' : 'max-w-2xl'}`}>
         <SyncCapacityBanner />
         {children}
       </main>

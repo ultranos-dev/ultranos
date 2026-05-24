@@ -144,7 +144,7 @@ export function UnverifiedDispensesView() {
     try {
       const token = await useAuthSessionStore.getState().getAccessToken()
       if (!token) {
-        alert('Authentication required.')
+        setError('Authentication required.')
         return
       }
       setActionInFlight(reviewId)
@@ -153,7 +153,7 @@ export function UnverifiedDispensesView() {
       await fetchReviews()
     } catch {
       // TODO: The dispenseReview.updateStatus endpoint likely does not exist yet.
-      alert(t('reviewNotConnected'))
+      setError(t('reviewNotConnected'))
     } finally {
       setActionInFlight(null)
     }
@@ -161,13 +161,13 @@ export function UnverifiedDispensesView() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+      <h1 className="text-xl font-semibold text-neutral-900">
         {t('title')}
       </h1>
 
       {/* Tab switcher */}
       <div
-        className="mt-4 flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800"
+        className="mt-4 flex gap-1 rounded-lg bg-neutral-100 p-1"
         role="tablist"
       >
         <button
@@ -178,8 +178,8 @@ export function UnverifiedDispensesView() {
           }}
           className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'pending'
-              ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-neutral-100'
-              : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200'
+              ? 'bg-white text-neutral-900 shadow-sm'
+              : 'text-neutral-600 hover:text-neutral-900'
           }`}
         >
           {t('pending')}
@@ -192,8 +192,8 @@ export function UnverifiedDispensesView() {
           }}
           className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'resolved'
-              ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-neutral-100'
-              : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200'
+              ? 'bg-white text-neutral-900 shadow-sm'
+              : 'text-neutral-600 hover:text-neutral-900'
           }`}
         >
           {t('resolved')}
@@ -202,82 +202,82 @@ export function UnverifiedDispensesView() {
 
       {/* Loading */}
       {loading && (
-        <div className="mt-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="mt-6 py-12 text-center text-sm text-neutral-500">
           {t('loading')}
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="mt-6 py-12 text-center text-sm text-red-600 dark:text-red-400">
+        <div className="mt-6 py-12 text-center text-sm text-red-600">
           {error}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !error && reviews.length === 0 && (
-        <div className="mt-6 rounded-lg border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+        <div className="mt-6 rounded-lg border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500">
           {t('noRecords')}
         </div>
       )}
 
       {/* Pending reviews table */}
       {!loading && !error && reviews.length > 0 && activeTab === 'pending' && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
-          <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-            <thead className="bg-neutral-50 dark:bg-neutral-800">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="bg-neutral-50">
               <tr>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('date')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('dispenseId')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('reason')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('supervisor')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {/* Actions */}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+            <tbody className="divide-y divide-neutral-100">
               {reviews.map((r) => (
                 <tr
                   key={r.id}
-                  className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                  className="hover:bg-neutral-50"
                 >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                     {formatDateTime(r.created_at)}
                   </td>
                   <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600 dark:text-neutral-400"
+                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600"
                     title={r.dispense_id}
                   >
                     {truncateUuid(r.dispense_id)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="px-4 py-3 text-sm text-neutral-700">
                     {r.override_reason ?? '---'}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                     {r.override_supervisor
                       ? truncateUuid(r.override_supervisor)
                       : '---'}
@@ -309,73 +309,73 @@ export function UnverifiedDispensesView() {
 
       {/* Resolved reviews table */}
       {!loading && !error && reviews.length > 0 && activeTab === 'resolved' && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
-          <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-            <thead className="bg-neutral-50 dark:bg-neutral-800">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="bg-neutral-50">
               <tr>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('date')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('dispenseId')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('reason')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('supervisor')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('status')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('reviewedBy')}
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                  className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500"
                 >
                   {t('reviewedAt')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+            <tbody className="divide-y divide-neutral-100">
               {reviews.map((r) => (
                 <tr
                   key={r.id}
-                  className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                  className="hover:bg-neutral-50"
                 >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                     {formatDateTime(r.created_at)}
                   </td>
                   <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600 dark:text-neutral-400"
+                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600"
                     title={r.dispense_id}
                   >
                     {truncateUuid(r.dispense_id)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="px-4 py-3 text-sm text-neutral-700">
                     {r.override_reason ?? '---'}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                     {r.override_supervisor
                       ? truncateUuid(r.override_supervisor)
                       : '---'}
@@ -384,20 +384,20 @@ export function UnverifiedDispensesView() {
                     <span
                       className={
                         r.status === 'APPROVED'
-                          ? 'text-green-700 dark:text-green-400'
-                          : 'text-red-700 dark:text-red-400'
+                          ? 'text-green-700'
+                          : 'text-red-700'
                       }
                     >
                       {r.status === 'APPROVED' ? t('approved') : t('flagged')}
                     </span>
                   </td>
                   <td
-                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600 dark:text-neutral-400"
+                    className="whitespace-nowrap px-4 py-3 text-sm font-mono text-neutral-600"
                     title={r.reviewed_by ?? undefined}
                   >
                     {r.reviewed_by ? truncateUuid(r.reviewed_by) : '---'}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700">
                     {formatDateTime(r.reviewed_at)}
                   </td>
                 </tr>
