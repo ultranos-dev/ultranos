@@ -8,9 +8,11 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { SyncPulse } from './pharmacy/SyncPulse'
 import { SyncCapacityBanner } from './pharmacy/SyncCapacityBanner'
+import { SessionExpiryBanner } from './pharmacy/SessionExpiryBanner'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { stopAuditDrain } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 // Inline SVG icons — no icon library (matches codebase pattern)
 const icons = {
@@ -104,6 +106,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
+  useKeyboardShortcuts()
 
   const handleSignOut = useCallback(async () => {
     encryptionKeyStore.wipe()
@@ -161,6 +164,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
       </a>
       <main id="main-content" className={`mx-auto px-4 py-6 ${isWideRoute ? 'max-w-5xl' : 'max-w-2xl'}`}>
         <SyncCapacityBanner />
+        <SessionExpiryBanner />
         {children}
       </main>
     </Sidebar>

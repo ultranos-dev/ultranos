@@ -73,6 +73,17 @@ async function queryDashboardStats(): Promise<DashboardStats> {
         syncStatus,
       }
     })
+
+    // Enrich with patient names from local DB
+    const patientIds = recentDispenses.map((d) => d.patientRef).filter(Boolean)
+    if (patientIds.length > 0) {
+      const patients = await db.patients.where('id').anyOf(patientIds).toArray()
+      const nameMap = new Map(patients.map((p) => [p.id, p.nameGiven]))
+      recentDispenses = recentDispenses.map((d) => ({
+        ...d,
+        patientName: nameMap.get(d.patientRef),
+      }))
+    }
   } catch (err) {
     // Encryption key not yet available — show sync stats only.
     // Surface non-encryption errors so they aren't silently swallowed.

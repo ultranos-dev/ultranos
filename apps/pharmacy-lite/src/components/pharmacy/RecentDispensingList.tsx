@@ -5,6 +5,7 @@ import { EmptyState } from './EmptyState'
 export interface RecentDispenseItem {
   id: string
   patientRef: string
+  patientName?: string
   medicationName: string
   whenHandedOver: string
   syncStatus: 'synced' | 'pending' | 'failed'
@@ -64,7 +65,7 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
                   {item.medicationName}
                 </div>
                 <div className="text-xs text-neutral-500 truncate">
-                  {item.patientRef} &middot; {formatTime(item.whenHandedOver)}
+                  {item.patientName ?? item.patientRef} &middot; {formatTime(item.whenHandedOver)}
                 </div>
               </div>
               <span

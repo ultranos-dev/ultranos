@@ -162,10 +162,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
+    <div className="flex min-h-[80vh] flex-col items-center justify-center px-4">
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold text-neutral-900">Pharmacy Lite</h1>
+        <p className="text-sm text-neutral-500 mt-1">Powered by Ultranos</p>
+      </div>
       <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-center text-xl font-bold text-neutral-900">
-          Pharmacy Lite Sign In
+        <h2 className="mb-6 text-center text-lg font-semibold text-neutral-800">
+          Sign In
         </h2>
 
         {error && (
@@ -189,7 +193,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
                 placeholder="pharmacist@hospital.example"
                 autoComplete="email"
               />
@@ -204,7 +208,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
                 autoComplete="current-password"
               />
             </div>
@@ -237,7 +241,7 @@ export default function LoginPage() {
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
@@ -262,6 +266,7 @@ export default function LoginPage() {
           </form>
         )}
       </div>
+      <p className="mt-6 text-xs text-neutral-400">Secure healthcare platform</p>
     </div>
   )
 }
