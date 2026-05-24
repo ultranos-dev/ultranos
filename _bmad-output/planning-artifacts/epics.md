@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling', 'addendum-12-lab-lite-enterprise-ux']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -98,6 +98,12 @@ FR35: Collapsible Sidebar Navigation for All PWA Spoke Apps (OPD-Lite, Pharmacy-
 FR36: Patient Directory & Browsing (searchable, filterable, sortable patient list for OPD-Lite clinicians)
 FR37: Appointment Scheduling & Walk-In Queue Management (FHIR R4 Appointment/Slot, day/week views, walk-in queue, offline-first, Hub API sync)
 
+### New Functional Requirements (Lab Lite Enterprise UX Addendum — 2026-05-23)
+
+FR38: Lab Lite Enterprise Dashboard UX (Visual hierarchy, upload success confirmation, queue attention states, cancel/recall queued uploads, last-refreshed timestamps)
+FR39: Lab Lite Patient Infrastructure (Patient registration with MPI duplicate detection, two-phase patient search, recent patients cache, patient search autocomplete)
+FR40: Lab Lite Contextual Help & Efficiency (Tooltips on LOINC/OCR/dates, keyboard shortcuts, i18n completeness)
+
 ### New Non-Functional Requirements (Gap Analysis Addendum — 2026-05-02)
 
 NFR9: Session duration enforcement (8h GPs, 12h pharmacists, 4h admins, 90d patients)
@@ -153,6 +159,9 @@ NFR14: Epic 21 - Root/jailbreak detection
 FR35: Epic 37 - Collapsible Sidebar Navigation for All PWA Spoke Apps
 FR36: Epic 37 - Patient Directory & Browsing
 FR37: Epic 37 - Appointment Scheduling & Walk-In Queue Management
+FR38: Epic 38 - Lab Lite Enterprise Dashboard UX
+FR39: Epic 38 - Lab Lite Patient Infrastructure
+FR40: Epic 38 - Lab Lite Contextual Help & Efficiency
 
 ## Epic List
 
@@ -4544,3 +4553,242 @@ Daily view, walk-in queue, booking flow, weekly view, and badge. Sequential — 
 
 **Phase 6 — Sync Integration (Story 37.18)**
 Connects local scheduling to Hub API. Requires both 37.12 and 37.17 to be complete.
+
+---
+
+# Addendum 12 — Lab Lite Enterprise UX Overhaul
+
+> Addresses FR38–FR40. Transforms Lab Lite from functional prototype to enterprise-grade lab diagnostics app.
+> Branch: `ux-v1.0`
+> Date: 2026-05-23
+> Commits: `ab35ea0` through `e5b9709` (12 commits)
+> Plan: `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
+
+## Epic 38: Lab Lite Enterprise UX
+
+### Story 38.1: Upload Success Confirmation Banner (P0)
+As a lab technician, I want to see a clear confirmation when my upload is queued, so that I know the result was received and don't re-upload duplicates.
+
+**Acceptance Criteria:**
+- **Given** the technician completes the 4-step upload wizard and is redirected to `/?uploaded=true`
+- **When** the dashboard loads
+- **Then** a green success banner appears with a checkmark icon and message "Result queued successfully"
+- **And** the `?uploaded=true` query param is cleaned from the URL via `history.replaceState`
+- **And** the banner has `role="status"` and `aria-live="polite"` for screen reader announcement
+- **And** the banner can be dismissed via a "Dismiss" button
+- **And** all strings are i18n'd via `useTranslations('dashboard')`
+
+> **Status:** ✅ Done — Commit `ab35ea0`
+
+### Story 38.2: Cancel/Recall Queued Uploads from Dashboard
+As a lab technician, I want to cancel a queued upload from the dashboard before it syncs, so that I can correct mistakes (e.g., wrong patient).
+
+**Acceptance Criteria:**
+- **Given** a recent upload in "pending" or "failed" status from the local queue
+- **When** the technician clicks "Cancel" on the upload item
+- **Then** a two-step confirmation appears ("Yes, cancel" / "No, keep")
+- **And** confirming deletes the item from IndexedDB via `removeQueueItem`
+- **And** a `QUEUE_ITEM_DISCARDED` audit event is emitted
+- **And** the dashboard data refreshes immediately
+- **And** recent uploads now show patient first name prefix (e.g., "Ahmad — Blood Work CBC")
+- **And** `patientFirstName` and `localQueueId` are exposed on `RecentUploadItem`
+
+> **Status:** ✅ Done — Commit `a8b23d0`
+
+### Story 38.3: Complete i18n Coverage for Upload Workflow
+As a lab technician using a non-English locale, I want all upload workflow text to be translated, so that I can use the app in my language.
+
+**Acceptance Criteria:**
+- **Given** the StepIndicator, MetadataForm, ReviewStep, upload page, and offline page
+- **When** rendering in any supported locale
+- **Then** all user-facing text comes from `next-intl` translations, not hardcoded strings
+- **And** StepIndicator step labels use `useTranslations('steps')` with dynamic keys
+- **And** MetadataForm uses `useTranslations('metadata')` for all labels, errors, OCR status, confidence labels
+- **And** ReviewStep uses `useTranslations('results')` with interpolated values for patient/file display
+- **And** upload page uses `useTranslations()` for title, toggle labels, navigation buttons
+- **And** offline page uses `useTranslations('offline')` for message and button
+
+> **Status:** ✅ Done — Commit `ae03b12`
+
+### Story 38.4: Date Validation and Error Messaging
+As a lab technician, I want the collection date field to prevent future dates, so that I don't accidentally submit incorrect metadata.
+
+**Acceptance Criteria:**
+- **Given** the MetadataForm collection date input
+- **When** the technician selects a date
+- **Then** the browser's native date picker constrains to today or earlier via `max` attribute
+- **And** client-side validation rejects future dates with a clear error message
+- **And** the error message is i18n'd via `metadata.errorFutureDate`
+
+> **Status:** ✅ Done — Commit `5d782c4`
+
+### Story 38.5: Dashboard Visual Hierarchy Redesign
+As a lab technician, I want the dashboard to clearly show what needs my attention, so that I can quickly start uploads or address failures.
+
+**Acceptance Criteria:**
+- **Given** the lab-lite dashboard at `/`
+- **When** the page loads
+- **Then** the layout renders in this order: success banner, error banner, greeting header ("Welcome back, {name}"), Upload CTA (pill button with plus icon, no card wrapper), queue status card, activity summary card, recent uploads list
+- **And** the `LabIdentityCard` is replaced by a `DashboardHeader` component (non-card greeting)
+- **And** the `QuickActions` button has no card wrapper (standalone elevated CTA)
+- **And** the `QueueStatusCard` highlights with red border and background when `failed > 0`
+- **And** the `QueueStatusCard` shows "N failed — tap to review" link to `/queue` when failures/expired exist
+- **And** the `ActivitySummaryCard` shows "Updated HH:MM" timestamp from `lastRefreshedAt`
+- **And** `useDashboardData` exposes `lastRefreshedAt: string | null`
+- **And** the old `LabIdentityCard.tsx` file is deleted
+
+> **Status:** ✅ Done — Commit `457d6fc`
+
+### Story 38.6: Dexie Schema Extension for Patient Cache
+As a developer, I want the lab-lite Dexie schema to support full patient records, so that patient search and registration can work offline-first.
+
+**Acceptance Criteria:**
+- **Given** the lab-lite Dexie database at version 2
+- **When** the migration runs
+- **Then** version 3 adds `patients` table (indexed on `&id`, `_ultranos.nameLocal`, `_ultranos.nameLatin`, `meta.lastUpdated`)
+- **And** version 3 adds `syncQueue` table (indexed on `&id`, `resourceType`, `resourceId`, `status`, `createdAt`)
+- **And** helper functions `getPatients`, `putPatient`, `putPatients`, `getPatientById` are exported
+- **And** all existing v1/v2 tables and functions are unchanged
+
+> **Status:** ✅ Done — Commit `e68d3bc`
+
+### Story 38.7: Two-Phase Patient Search Hook
+As a lab technician, I want to search for patients by name, so that I can find patients without their national ID.
+
+**Acceptance Criteria:**
+- **Given** a search query of 2+ characters
+- **When** the search executes
+- **Then** Phase 1: immediate local Dexie search on `_ultranos.nameLocal`, `nameGiven`, `nameLatin` (case-insensitive includes)
+- **And** Phase 2: background Hub API revalidation via `lab.searchPatients` (non-blocking)
+- **And** results merge by ID with remote items taking precedence
+- **And** both phases are independently try/caught (offline-safe)
+- **And** `searchPatients` tRPC function is added with 10-second timeout
+
+> **Status:** ✅ Done — Commit `2ec3a3c`
+
+### Story 38.8: Recent Patients List in Upload Wizard
+As a lab technician, I want to see recently verified patients when starting an upload, so that I can quickly select without re-entering their ID.
+
+**Acceptance Criteria:**
+- **Given** the upload wizard Step 1 (Verify Patient)
+- **When** the step renders and the `verified_patients` cache has entries
+- **Then** a "Recent Patients" card appears above the verification tabs
+- **And** each patient shows first name and age with a clickable button
+- **And** clicking a patient sets the wizard patient state and advances to Step 2
+- **And** the list returns null when empty (no empty-state card)
+
+> **Status:** ✅ Done — Commit `43801c3`
+
+### Story 38.9: Patient Search Autocomplete in Upload Wizard
+As a lab technician, I want to search for patients by name during upload, so that I have an alternative to manual ID lookup or QR scan.
+
+**Acceptance Criteria:**
+- **Given** the upload wizard Step 1
+- **When** the page loads
+- **Then** the default verification mode is "Search" (new tab, before "Manual ID" and "QR Scan")
+- **And** the search input uses the `usePatientSearch` hook with 250ms debounce
+- **And** a dropdown shows results with first name and age
+- **And** shows "Searching..." during search, "No patients found" on empty results
+- **And** clicking a result sets patient and advances to Step 2
+- **And** the dropdown closes on outside click or result selection
+- **And** the pre-existing syntax error in upload/page.tsx (double `}}`) is fixed
+
+> **Status:** ✅ Done — Commit `43801c3`
+
+### Story 38.10: Patient Registration with MPI Duplicate Detection
+As a lab technician, I want to register a new patient when they don't exist in the system, so that I can upload results for first-time patients.
+
+**Acceptance Criteria:**
+- **Given** the `/patients/register` page
+- **When** the technician fills the registration form
+- **Then** the form collects: given name (required), father's name (optional), gender (required), birth info (year-only toggle or full date), phone (optional), consent (written or verbal with witness)
+- **And** client-side validation enforces required fields and year range (1900-current)
+- **And** submitting calls `patient.checkDuplicates` Hub API endpoint
+- **And** if ALLOW: calls `patient.create`, saves to local Dexie, redirects to `/upload`
+- **And** if WARN: shows MpiResultModal with candidates, score badges (red ≥80, amber ≥60, gray <60), "Add Anyway" with proceedToken, "Use This Patient"
+- **And** if BLOCK: shows MpiResultModal without "Add Anyway", only "Use This Patient" or "Cancel"
+- **And** a "Register Patient" nav item is added to the sidebar
+- **And** the FHIR Patient structure with `_ultranos` extensions is used for local persistence
+- **And** consent is mandatory (method + optional witness for verbal)
+
+> **Status:** ✅ Done — Commit `dd9f380`
+
+### Story 38.11: Contextual Tooltips for MetadataForm
+As a lab technician, I want help text on the LOINC category and collection date fields, so that I understand what to enter.
+
+**Acceptance Criteria:**
+- **Given** the MetadataForm
+- **When** hovering or focusing the "?" icon next to "Test Category" or "Sample Collection Date"
+- **Then** a tooltip appears with contextual help text
+- **And** the tooltip is keyboard-accessible (shows on focus, hides on blur)
+- **And** the tooltip has `role="tooltip"` and `aria-label` on the trigger button
+- **And** help text explains LOINC categories, collection date meaning
+
+> **Status:** ✅ Done — Commit `7df064e`
+
+### Story 38.12: Keyboard Shortcuts for Upload Wizard
+As a lab technician, I want keyboard shortcuts to navigate the upload wizard, so that I can work more efficiently.
+
+**Acceptance Criteria:**
+- **Given** the upload wizard on any step except Step 1
+- **When** the technician presses Escape (and focus is not on an input/textarea/select)
+- **Then** the wizard navigates back one step
+- **And** the shortcut does not fire when typing in form fields
+
+> **Status:** ✅ Done — Commit `c922ace`
+
+### Story 38.13: Input Styling Unification and Polish
+As a developer, I want consistent input styling and no duplicate utilities, so that the app feels cohesive.
+
+**Acceptance Criteria:**
+- **Given** the login page inputs use `rounded-md` and `focus:ring-1`
+- **When** the polish is applied
+- **Then** all inputs use `rounded-lg` and `focus:ring-2` consistently
+- **And** the duplicate `formatFileSize` functions in `ResultUpload.tsx` and `ReviewStep.tsx` are replaced with a single shared utility at `lib/format.ts`
+- **And** the Settings page removes the Session Info and MFA Status cards (which showed only `--` placeholders)
+
+> **Status:** ✅ Done — Commit `e5b9709`
+
+## Implementation Summary
+
+| Phase | Stories | What it delivers |
+|-------|---------|-----------------|
+| **1. Harden** | 38.1–38.4 | P0 success banner, cancel queued uploads, i18n completion, date validation |
+| **2. Dashboard** | 38.5 | Visual hierarchy, elevated CTA, attention states, last-refreshed timestamp |
+| **3. Patients** | 38.6–38.10 | Dexie schema, search hook, recent patients, search autocomplete, registration + MPI |
+| **4. Onboard** | 38.11 | Tooltip component, contextual help on LOINC/OCR/dates |
+| **5. Efficiency** | 38.12 | Escape key shortcut for wizard navigation |
+| **6. Polish** | 38.13 | Unified styling, shared utilities, settings cleanup |
+
+### New Files Created
+- `apps/lab-lite/src/components/dashboard/UploadSuccessBanner.tsx`
+- `apps/lab-lite/src/components/dashboard/DashboardHeader.tsx`
+- `apps/lab-lite/src/hooks/usePatientSearch.ts`
+- `apps/lab-lite/src/hooks/useRecentPatients.ts`
+- `apps/lab-lite/src/components/upload/RecentPatientsList.tsx`
+- `apps/lab-lite/src/components/upload/PatientSearchInput.tsx`
+- `apps/lab-lite/src/components/patients/PatientRegistrationForm.tsx`
+- `apps/lab-lite/src/components/patients/MpiResultModal.tsx`
+- `apps/lab-lite/src/app/[locale]/patients/register/page.tsx`
+- `apps/lab-lite/src/components/ui/Tooltip.tsx`
+- `apps/lab-lite/src/lib/format.ts`
+
+### Files Modified
+- `apps/lab-lite/src/app/[locale]/page.tsx` — dashboard redesign
+- `apps/lab-lite/src/app/[locale]/upload/page.tsx` — i18n, search/recent patients, keyboard shortcuts
+- `apps/lab-lite/src/app/[locale]/offline/page.tsx` — i18n
+- `apps/lab-lite/src/app/[locale]/login/page.tsx` — unified input styling
+- `apps/lab-lite/src/components/upload/StepIndicator.tsx` — i18n
+- `apps/lab-lite/src/components/MetadataForm.tsx` — i18n, tooltips, date validation
+- `apps/lab-lite/src/components/upload/ReviewStep.tsx` — i18n, shared formatFileSize
+- `apps/lab-lite/src/components/ResultUpload.tsx` — shared formatFileSize
+- `apps/lab-lite/src/components/dashboard/QueueStatusCard.tsx` — attention states
+- `apps/lab-lite/src/components/dashboard/ActivitySummaryCard.tsx` — lastRefreshedAt
+- `apps/lab-lite/src/components/dashboard/QuickActions.tsx` — card wrapper removed
+- `apps/lab-lite/src/components/dashboard/RecentUploadsList.tsx` — cancel action, patient names
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — removed placeholder cards
+- `apps/lab-lite/src/components/AppSidebar.tsx` — register patient nav item
+- `apps/lab-lite/src/hooks/useDashboardData.ts` — lastRefreshedAt, patientFirstName, localQueueId
+- `apps/lab-lite/src/lib/db.ts` — Dexie v3 (patients + syncQueue)
+- `apps/lab-lite/src/lib/trpc.ts` — searchPatients, checkDuplicates, createPatient
+- `apps/lab-lite/messages/en.json` — 40+ new translation keys

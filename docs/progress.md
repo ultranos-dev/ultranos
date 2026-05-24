@@ -739,6 +739,96 @@ Branch: `ux-v1.0`
 
 ---
 
+## 2026-05-23 — Lab Lite Enterprise UX Overhaul — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `ab35ea0` through `e5b9709` (12 commits)
+Plan: `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
+
+**Comprehensive UX critique** of Lab Lite dashboard and workflows using Nielsen's heuristics (scored 18/40 "Poor"), identifying 5 priority issues across patient safety, i18n, visual hierarchy, efficiency, and onboarding. All issues addressed across 6 phases.
+
+**Phase 1 — Harden Critical Flows (P0/P1 fixes):**
+1. **Upload success banner** — `UploadSuccessBanner` component reads `?uploaded=true`, shows green status banner with checkmark and dismiss, cleans URL via `history.replaceState`. Fixes P0 patient safety gap where technicians had no confirmation their result was queued.
+2. **Cancel/recall queued uploads** — RecentUploadsList now shows patient first name prefix, "Cancel" button on pending/failed local items with 2-step confirmation, `QUEUE_ITEM_DISCARDED` audit event on cancel.
+3. **Complete i18n coverage** — All hardcoded English strings in StepIndicator, MetadataForm, ReviewStep, upload page, and offline page now use `useTranslations()`. No remaining hardcoded user-facing strings.
+4. **Date validation** — MetadataForm collection date input has `max` attribute preventing future dates, plus client-side validation with translated error message.
+
+**Phase 2 — Dashboard Redesign:**
+5. **Visual hierarchy overhaul** — LabIdentityCard replaced by DashboardHeader (greeting, not a card). QuickActions CTA elevated to top without card wrapper. QueueStatusCard highlights red when failures exist, with "N failed — tap to review" link. ActivitySummaryCard shows "Updated HH:MM" timestamp. Layout order: success banner → error → greeting → CTA → queue → activity → recent uploads.
+
+**Phase 3 — Patient Infrastructure (following OPD-lite patterns):**
+6. **Dexie v3 schema** — Added `patients` table (indexed on nameLocal, nameLatin, lastUpdated) and `syncQueue` table with helper functions.
+7. **Two-phase patient search hook** — Phase 1: local Dexie filter (immediate). Phase 2: Hub API revalidation (background, non-blocking). Merge by ID with remote precedence. Both phases independently try/caught (offline-safe).
+8. **Recent patients list** — `useRecentPatients` hook reads `verified_patients` cache. RecentPatientsList component renders above verification tabs for one-tap patient selection.
+9. **Patient search autocomplete** — PatientSearchInput component with 250ms debounce, combobox ARIA pattern, outside-click close. Default "Search" tab added before "Manual ID" and "QR Scan".
+10. **Patient registration with MPI** — Full registration form (name, father's name, gender, birth info, phone, consent). Two-step flow: `checkDuplicates` → `createPatient`. MpiResultModal with color-coded score badges (red ≥80, amber ≥60, gray <60), WARN allows "Add Anyway" with proceedToken, BLOCK allows only "Use This Patient". Saves FHIR-structured patient to Dexie. Sidebar nav item added.
+
+**Phase 4 — Onboarding:**
+11. **Contextual tooltips** — Reusable Tooltip component (hover/focus, ARIA-labeled, RTL-safe). Added to MetadataForm for Test Category and Collection Date labels with explanatory help text.
+
+**Phase 5 — Efficiency:**
+12. **Keyboard shortcuts** — Escape key navigates back in upload wizard (unless focused on input/textarea/select).
+
+**Phase 6 — Polish:**
+13. **Unified styling** — Login page inputs changed from `rounded-md`/`ring-1` to `rounded-lg`/`ring-2`. Duplicate `formatFileSize` extracted to shared `lib/format.ts`. Settings page removed Session Info and MFA Status cards (placeholder-only).
+
+### New Files
+- `apps/lab-lite/src/components/dashboard/UploadSuccessBanner.tsx`
+- `apps/lab-lite/src/components/dashboard/DashboardHeader.tsx`
+- `apps/lab-lite/src/hooks/usePatientSearch.ts`
+- `apps/lab-lite/src/hooks/useRecentPatients.ts`
+- `apps/lab-lite/src/components/upload/RecentPatientsList.tsx`
+- `apps/lab-lite/src/components/upload/PatientSearchInput.tsx`
+- `apps/lab-lite/src/components/patients/PatientRegistrationForm.tsx`
+- `apps/lab-lite/src/components/patients/MpiResultModal.tsx`
+- `apps/lab-lite/src/app/[locale]/patients/register/page.tsx`
+- `apps/lab-lite/src/components/ui/Tooltip.tsx`
+- `apps/lab-lite/src/lib/format.ts`
+- `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
+
+### Files Modified
+- `apps/lab-lite/src/app/[locale]/page.tsx` — dashboard redesign (DashboardHeader, elevated CTA, success banner)
+- `apps/lab-lite/src/app/[locale]/upload/page.tsx` — i18n, search/recent patients, keyboard shortcuts, syntax fix
+- `apps/lab-lite/src/app/[locale]/offline/page.tsx` — i18n
+- `apps/lab-lite/src/app/[locale]/login/page.tsx` — unified input styling
+- `apps/lab-lite/src/components/upload/StepIndicator.tsx` — i18n with dynamic keys
+- `apps/lab-lite/src/components/MetadataForm.tsx` — i18n, tooltips, date validation
+- `apps/lab-lite/src/components/upload/ReviewStep.tsx` — i18n, shared formatFileSize
+- `apps/lab-lite/src/components/ResultUpload.tsx` — shared formatFileSize
+- `apps/lab-lite/src/components/dashboard/QueueStatusCard.tsx` — red attention states
+- `apps/lab-lite/src/components/dashboard/ActivitySummaryCard.tsx` — lastRefreshedAt prop
+- `apps/lab-lite/src/components/dashboard/QuickActions.tsx` — card wrapper removed
+- `apps/lab-lite/src/components/dashboard/RecentUploadsList.tsx` — cancel action, patient names
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — removed placeholder cards
+- `apps/lab-lite/src/components/AppSidebar.tsx` — register patient nav item
+- `apps/lab-lite/src/hooks/useDashboardData.ts` — lastRefreshedAt, patientFirstName, localQueueId
+- `apps/lab-lite/src/lib/db.ts` — Dexie v3 (patients + syncQueue tables)
+- `apps/lab-lite/src/lib/trpc.ts` — searchPatients, checkDuplicates, createPatient functions
+- `apps/lab-lite/messages/en.json` — 40+ new translation keys (dashboard, patients, verification, metadata)
+
+### Deleted Files
+- `apps/lab-lite/src/components/dashboard/LabIdentityCard.tsx` — replaced by DashboardHeader
+
+### Errors & Resolutions
+- Pre-existing syntax error in `upload/page.tsx` (double `}}` on line 370) — fixed during Task 8+9
+- Pre-existing TS errors in `audit-client.ts` and test files — unrelated, not introduced by this work
+
+### Tests Run
+- Manual verification of each phase via dev server
+- TypeScript compilation checks on modified files
+
+### PRD Trace
+- **FR38 / Epic 38:** Lab Lite Enterprise Dashboard UX — Stories 38.1–38.5
+- **FR39 / Epic 38:** Lab Lite Patient Infrastructure — Stories 38.6–38.10
+- **FR40 / Epic 38:** Lab Lite Contextual Help & Efficiency — Stories 38.11–38.13
+- **Epic 17:** Lab Lite Complete UI/UX — Story 17.1 implementation notes updated, Story 17.2 AC 10 (success toast) now fulfilled
+- **CLAUDE.md Rule #1:** No PHI in logs — cancel audit uses opaque IDs, no patient data in error messages
+- **CLAUDE.md Rule #6:** Audit every PHI access — cancel action emits QUEUE_ITEM_DISCARDED audit event
+- **CLAUDE.md Rule #7:** Lab Portal data minimization — patient search returns only firstName + age
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._
