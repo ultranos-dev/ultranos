@@ -1,7 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
 import { Button } from '@/components/ui/Button'
+import { DispensingConfirmationModal } from './DispensingConfirmationModal'
+import { AllergyBanner } from './AllergyBanner'
+import { usePatientStore } from '@/stores/patient-store'
 
 interface FulfillmentChecklistProps {
   onConfirm?: (selectedItems: FulfillmentItem[]) => void
@@ -16,6 +20,8 @@ function formatFrequency(freqN?: number, perU?: string): string {
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandName, setBatchLot } =
     useFulfillmentStore()
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const activePatient = usePatientStore((s) => s.activePatient)
 
   if (phase === 'empty' || items.length === 0) {
     return (
@@ -61,6 +67,11 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           </Button>
         </div>
       </div>
+
+      {/* Allergy banner — SAFETY-CRITICAL: highest display prominence */}
+      {activePatient?.allergies && activePatient.allergies.length > 0 && (
+        <AllergyBanner allergies={activePatient.allergies} patientName={activePatient.nameGiven} />
+      )}
 
       {/* Medication items */}
       <ul className="space-y-3" role="list">
@@ -145,13 +156,24 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
         data-testid="confirm-dispensing-btn"
         type="button"
         disabled={!hasSelection}
-        onClick={() => {
-          const selected = items.filter((i) => i.selected)
-          onConfirm?.(selected)
-        }}
+        onClick={() => setShowConfirmModal(true)}
       >
         Confirm Dispensing
       </Button>
+
+      {showConfirmModal && (
+        <DispensingConfirmationModal
+          items={items.filter((i) => i.selected)}
+          patientName={activePatient?.nameGiven ?? patientName}
+          patientAllergies={activePatient?.allergies}
+          onConfirm={() => {
+            setShowConfirmModal(false)
+            const selected = items.filter((i) => i.selected)
+            onConfirm?.(selected)
+          }}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
     </div>
   )
 }
