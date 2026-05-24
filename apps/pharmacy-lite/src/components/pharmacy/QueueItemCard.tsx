@@ -15,7 +15,7 @@ interface QueueItemCardProps {
 const phaseBadgeClasses: Record<FulfillmentPhaseBadge, string> = {
   loaded: 'bg-blue-100 text-blue-700',
   reviewing: 'bg-amber-100 text-amber-700',
-  dispensing: 'bg-amber-100 text-amber-700 animate-pulse',
+  dispensing: 'bg-amber-100 text-amber-700 animate-pulse motion-reduce:animate-none',
   completed: 'bg-green-100 text-green-700',
 }
 
@@ -134,7 +134,7 @@ export function QueueItemCard({
             disabled={retrying}
           >
             {retrying ? (
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-300 border-t-red-700 me-1" />
+              <span className="inline-block h-3 w-3 animate-spin motion-reduce:animate-none rounded-full border-2 border-red-300 border-t-red-700 me-1" />
             ) : null}
             Retry Sync
           </Button>

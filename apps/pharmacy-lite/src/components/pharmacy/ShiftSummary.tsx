@@ -35,7 +35,7 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
   return (
     <div
       data-testid="shift-summary-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}

@@ -32,7 +32,7 @@ const colorClasses: Record<PulseColor, string> = {
 
 const pulseClasses: Record<PulseColor, string> = {
   green: '',
-  amber: 'animate-pulse',
+  amber: 'animate-pulse motion-reduce:animate-none',
 }
 
 export function SyncPulse() {
