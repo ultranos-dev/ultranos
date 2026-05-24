@@ -36,12 +36,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const base =
       'inline-flex items-center justify-center rounded-pill ' +
       'px-5 py-2 text-sm font-semibold ' +
-      'transition-all duration-100 ease-out ' +
+      'transition-[transform,filter,background-color] duration-100 ease-[cubic-bezier(0.23,1,0.32,1)] ' +
       'hover:brightness-[1.04] active:brightness-[0.88] ' +
-      'focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 ' +
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 ' +
       'disabled:opacity-50 disabled:cursor-not-allowed ' +
       'disabled:hover:brightness-100 ' +
-      'motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100'
+      'motion-reduce:transition-none'
 
     const classes = [
       base,
