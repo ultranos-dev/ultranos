@@ -128,6 +128,23 @@ export interface AIModelMetadataEntry {
   isStale: boolean
 }
 
+// Diagnostic report type — used by LabResultsList/LabResultDetail components.
+// TODO: Add diagnosticReports table to Dexie schema when Story 20.5 is fully implemented.
+export interface LocalDiagnosticReport {
+  id: string
+  resourceType: 'DiagnosticReport'
+  status: string
+  code: { coding?: { code?: string; display?: string; system?: string }[]; text?: string }
+  subject: { reference?: string }
+  effectiveDateTime?: string
+  issued?: string
+  conclusion?: string
+  performer?: { display?: string; reference?: string }[]
+  presentedForm?: { contentType?: string; url?: string; title?: string; data?: string }[]
+  acknowledgedAt?: string
+  meta?: { lastUpdated?: string }
+}
+
 export interface ModelDownloadProgress {
   modelId: string         // primary key
   version: string

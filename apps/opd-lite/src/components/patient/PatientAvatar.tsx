@@ -153,7 +153,7 @@ export function PatientAvatar({
 
         // Audit the photo upload
         auditPhiAccess(
-          AuditAction.WRITE,
+          AuditAction.UPDATE,
           AuditResourceType.PATIENT,
           patientId,
           patientId,

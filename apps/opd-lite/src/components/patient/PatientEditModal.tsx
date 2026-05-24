@@ -314,7 +314,7 @@ export function PatientEditModal({
           await db.patients.put(updatedPatient)
 
           auditPhiAccess(
-            AuditAction.PHI_WRITE,
+            AuditAction.UPDATE,
             AuditResourceType.PATIENT,
             patientId,
             patientId,
@@ -339,7 +339,7 @@ export function PatientEditModal({
 
       // Emit audit event
       auditPhiAccess(
-        AuditAction.PHI_WRITE,
+        AuditAction.UPDATE,
         AuditResourceType.PATIENT,
         patientId,
         patientId,
@@ -357,7 +357,7 @@ export function PatientEditModal({
           await db.patients.put(updatedPatient)
 
           auditPhiAccess(
-            AuditAction.PHI_WRITE,
+            AuditAction.UPDATE,
             AuditResourceType.PATIENT,
             patientId,
             patientId,
