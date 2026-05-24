@@ -99,7 +99,14 @@
     "cameraError": "Camera access denied or unavailable",
     "qrExpired": "Health Passport QR code has expired",
     "qrVerificationFailed": "QR verification failed",
-    "verificationFailed": "Patient verification failed"
+    "verificationFailed": "Patient verification failed",
+    "recentPatients": "Recent Patients",
+    "noRecentPatients": "No recent patients",
+    "yearsOld": "{age} years",
+    "searchPatients": "Search Patients",
+    "searchPatientsPlaceholder": "Search by name...",
+    "searching": "Searching...",
+    "noSearchResults": "No patients found"
   },
   "metadata": {
     "testCategory": "Test Category",

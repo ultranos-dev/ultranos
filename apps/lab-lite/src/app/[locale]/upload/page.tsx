@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import { StepIndicator, type WizardStep } from '@/components/upload/StepIndicator'
 import { PatientVerifyForm } from '@/components/PatientVerifyForm'
 import { PatientVerifyScanner } from '@/components/PatientVerifyScanner'
+import { RecentPatientsList } from '@/components/upload/RecentPatientsList'
+import { PatientSearchInput } from '@/components/upload/PatientSearchInput'
 import { ResultUpload } from '@/components/ResultUpload'
 import { MetadataForm, type MetadataFormValues, type OcrStatus } from '@/components/MetadataForm'
 import { ReviewStep } from '@/components/upload/ReviewStep'
@@ -15,6 +17,8 @@ import { Button } from '@/components/ui/Button'
 import { reportQueueAuditEvent } from '@/lib/audit-client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useRecentPatients } from '@/hooks/useRecentPatients'
+import type { PatientSearchItem } from '@/hooks/usePatientSearch'
 
 // ── Wizard State ────────────────────────────────────────
 
@@ -84,7 +88,8 @@ export default function UploadPage() {
   const t = useTranslations()
   const session = useAuthSessionStore((s) => s.session)
   const [state, dispatch] = useReducer(wizardReducer, initialState)
-  const [verifyMode, setVerifyMode] = useState<'manual' | 'qr'>('manual')
+  const recentPatients = useRecentPatients(5)
+  const [verifyMode, setVerifyMode] = useState<'search' | 'manual' | 'qr'>('search')
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -136,6 +141,30 @@ export default function UploadPage() {
 
   const handleVerifyError = useCallback((message: string) => {
     setVerifyError(message)
+  }, [])
+
+  const handleRecentPatientSelect = useCallback((patient: { patientId: string; firstName: string; age: number }) => {
+    dispatch({
+      type: 'SET_PATIENT',
+      payload: {
+        patientRef: patient.patientId,
+        patientFirstName: patient.firstName,
+        patientAge: patient.age,
+      },
+    })
+    setVerifyError(null)
+  }, [])
+
+  const handleSearchPatientSelect = useCallback((patient: PatientSearchItem) => {
+    dispatch({
+      type: 'SET_PATIENT',
+      payload: {
+        patientRef: patient.id,
+        patientFirstName: patient.firstName,
+        patientAge: patient.age,
+      },
+    })
+    setVerifyError(null)
   }, [])
 
   const handleFileSelected = useCallback(
@@ -249,32 +278,6 @@ export default function UploadPage() {
       {/* Step 1: Verify Patient */}
       {state.step === 'VERIFY_PATIENT' && (
         <div className="flex flex-col gap-4">
-          {/* Manual / QR toggle */}
-          <div className="flex rounded-lg border border-neutral-200 bg-neutral-50 p-1">
-            <button
-              type="button"
-              onClick={() => setVerifyMode('manual')}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                verifyMode === 'manual'
-                  ? 'bg-white text-primary-700 shadow-sm'
-                  : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
-              }`}
-            >
-              {t('upload.manualId')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setVerifyMode('qr')}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                verifyMode === 'qr'
-                  ? 'bg-white text-primary-700 shadow-sm'
-                  : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
-              }`}
-            >
-              {t('upload.qrScan')}
-            </button>
-          </div>
-
           {verifyError && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
               {verifyError}
@@ -294,16 +297,59 @@ export default function UploadPage() {
             </div>
           )}
 
-          {/* Render verification form/scanner only if not yet verified */}
+          {/* Render verification options only if not yet verified */}
           {!state.patient && (
             <>
-              {verifyMode === 'manual' ? (
+              <RecentPatientsList patients={recentPatients} onSelect={handleRecentPatientSelect} />
+
+              {/* Search / Manual / QR toggle */}
+              <div className="flex rounded-lg border border-neutral-200 bg-neutral-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setVerifyMode('search')}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    verifyMode === 'search'
+                      ? 'bg-white text-primary-700 shadow-sm'
+                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                  }`}
+                >
+                  {t('verification.searchPatients')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVerifyMode('manual')}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    verifyMode === 'manual'
+                      ? 'bg-white text-primary-700 shadow-sm'
+                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                  }`}
+                >
+                  {t('upload.manualId')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVerifyMode('qr')}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    verifyMode === 'qr'
+                      ? 'bg-white text-primary-700 shadow-sm'
+                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                  }`}
+                >
+                  {t('upload.qrScan')}
+                </button>
+              </div>
+
+              {verifyMode === 'search' && (
+                <PatientSearchInput token={token} onSelect={handleSearchPatientSelect} />
+              )}
+              {verifyMode === 'manual' && (
                 <PatientVerifyForm
                   onVerified={handlePatientVerified}
                   onError={handleVerifyError}
                   token={token}
                 />
-              ) : (
+              )}
+              {verifyMode === 'qr' && (
                 <PatientVerifyScanner
                   onVerified={handlePatientVerified}
                   onError={handleVerifyError}
@@ -369,7 +415,7 @@ export default function UploadPage() {
             >
               {t('upload.next')}
             </Button>
-          )}}
+          )}
         </div>
       )}
 
