@@ -126,7 +126,10 @@
     "errorDate": "Please enter the sample collection date.",
     "errorFutureDate": "Collection date cannot be in the future.",
     "errorConfirm": "Please review and confirm the metadata before submitting.",
-    "submitResults": "Submit Results"
+    "submitResults": "Submit Results",
+    "testCategoryHelp": "LOINC is a standard system for identifying medical laboratory tests. Select the category that best matches your lab result.",
+    "confidenceHelp": "OCR confidence shows how certain the system is about the auto-detected value. High (85%+) means likely correct. Review all values before confirming.",
+    "collectionDateHelp": "The date the sample was collected from the patient, not the date of analysis."
   },
   "history": {
     "title": "Upload History",
