@@ -110,6 +110,22 @@ export default function UploadPage() {
     loadToken()
   }, [])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+      if (e.key === 'Escape' && state.step !== 'VERIFY_PATIENT') {
+        e.preventDefault()
+        dispatch({ type: 'PREV_STEP' })
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [state.step])
+
   // Browser back/navigation guard
   useEffect(() => {
     const hasData = state.patient !== null || state.file !== null || state.metadata !== null
