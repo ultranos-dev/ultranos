@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { formatFileSize } from '@/lib/format'
 
 interface ReviewStepProps {
   patientFirstName: string
@@ -13,12 +14,6 @@ interface ReviewStepProps {
   onSubmit: () => void
   submitting: boolean
   error: string | null
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function ReviewStep({

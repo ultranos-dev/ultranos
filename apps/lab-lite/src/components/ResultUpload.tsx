@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { formatFileSize } from '@/lib/format'
 
 const ACCEPTED_TYPES = new Set([
   'application/pdf',
@@ -16,12 +17,6 @@ interface ResultUploadProps {
   uploading?: boolean
   progress?: number
   disabled?: boolean
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 /**

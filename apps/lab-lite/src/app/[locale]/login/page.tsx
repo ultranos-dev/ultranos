@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
+import { Button } from '@/components/ui/Button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 type AuthStep = 'credentials' | 'mfa' | 'error'
@@ -176,7 +177,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="technician@lab.example"
                 autoComplete="email"
               />
@@ -191,17 +192,18 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 autoComplete="current-password"
               />
             </div>
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              fullWidth
             >
               {loading ? 'Signing in\u2026' : 'Sign In'}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -223,26 +225,28 @@ export default function LoginPage() {
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
               />
             </div>
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={loading || totpCode.length !== 6}
-              className="w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+              fullWidth
             >
               {loading ? 'Verifying\u2026' : 'Verify'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               type="button"
               onClick={handleBackToSignIn}
-              className="w-full text-sm text-neutral-500 hover:text-neutral-700"
+              fullWidth
             >
               Back to sign in
-            </button>
+            </Button>
           </form>
         )}
       </div>
