@@ -28,6 +28,8 @@ export interface RecentUploadItem {
   timestamp: string
   status: 'completed' | 'pending' | 'uploading' | 'failed' | 'expired'
   source: 'local' | 'remote'
+  patientFirstName?: string
+  localQueueId?: number
 }
 
 const REFRESH_INTERVAL_MS = 60_000
@@ -58,6 +60,8 @@ function mapQueueToRecent(items: UploadQueueEntry[]): RecentUploadItem[] {
     timestamp: item.queuedAt,
     status: item.status,
     source: 'local' as const,
+    patientFirstName: item.patientFirstName,
+    localQueueId: item.id,
   }))
 }
 

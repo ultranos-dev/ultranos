@@ -55,7 +55,7 @@ export default function LabHomePage() {
         resultsPending={todayResultsPending}
       />
       <QuickActions />
-      {loading ? <RecentUploadsSkeleton /> : <RecentUploadsList items={recentUploads} />}
+      {loading ? <RecentUploadsSkeleton /> : <RecentUploadsList items={recentUploads} onItemCancelled={retry} />}
     </div>
   )
 }

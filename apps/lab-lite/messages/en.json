@@ -152,7 +152,12 @@
     "noUploadsYet": "No uploads yet",
     "uploadNewResult": "Upload New Result",
     "uploadSuccess": "Result queued successfully — it will be uploaded when connectivity is available.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "cancelUpload": "Cancel",
+    "cancelConfirm": "Cancel this upload?",
+    "confirmCancel": "Yes, cancel",
+    "cancelDismiss": "No, keep",
+    "uploadCancelled": "Upload cancelled"
   },
   "notifications": {
     "title": "Notifications",
