@@ -367,7 +367,9 @@
     "syncQueue": "قائمة المزامنة",
     "settings": "الإعدادات",
     "suppliers": "الموردون",
-    "stockCount": "جرد المخزون"
+    "stockCount": "جرد المخزون",
+    "transfers": "التحويلات",
+    "reports": "التقارير"
   },
   "controlled": {
     "title": "سجل المواد الخاضعة للرقابة",

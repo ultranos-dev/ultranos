@@ -140,6 +140,21 @@ const icons = {
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   ),
+  transfers: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  ),
+  reports: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  ),
 } as const
 
 function getInitials(name: string): string {
@@ -156,7 +171,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/inventory/suppliers', '/inventory/count', '/pos', '/pos/accounts']
+  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/inventory/suppliers', '/inventory/count', '/inventory/transfers', '/pos', '/pos/accounts', '/reports']
   const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
@@ -193,6 +208,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
     { label: t('catalog'), href: '/inventory/catalog', icon: icons.catalog, active: pathname === '/inventory/catalog', group: 'inventory' },
     { label: t('suppliers'), href: '/inventory/suppliers', icon: icons.suppliers, active: pathname === '/inventory/suppliers', group: 'inventory' },
     { label: t('stockCount'), href: '/inventory/count', icon: icons.stockCount, active: pathname === '/inventory/count', group: 'inventory' },
+    { label: t('transfers'), href: '/inventory/transfers', icon: icons.transfers, active: pathname === '/inventory/transfers', group: 'inventory' },
     // Financial group
     { label: t('pos'), href: '/pos', icon: icons.pos, active: pathname === '/pos', group: 'financial' },
     { label: t('cashDrawer'), href: '/pos/cash-drawer', icon: icons.cashDrawer, active: pathname === '/pos/cash-drawer', group: 'financial' },
@@ -201,6 +217,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
     { label: t('controlled'), href: '/controlled', icon: icons.controlled, active: pathname === '/controlled', group: 'clinical' },
     { label: t('unverified'), href: '/unverified', icon: icons.unverified, active: pathname === '/unverified', group: 'clinical' },
     // System group
+    { label: t('reports'), href: '/reports', icon: icons.reports, active: pathname === '/reports', group: 'system' },
     { label: t('syncQueue'), href: '/sync', icon: icons.sync, active: pathname === '/sync', badge: failedCount || null, group: 'system' },
     { label: t('settings'), href: '/settings', icon: icons.settings, active: pathname === '/settings', group: 'system' },
   ]

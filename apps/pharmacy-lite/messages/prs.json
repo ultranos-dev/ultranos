@@ -367,7 +367,9 @@
     "syncQueue": "د همغږۍ لیست",
     "settings": "تنظیمات",
     "suppliers": "تأمین کنندگان",
-    "stockCount": "شمارش موجودی"
+    "stockCount": "شمارش موجودی",
+    "transfers": "انتقالات",
+    "reports": "گزارشات"
   },
   "controlled": {
     "title": "د کنترول شویو موادو ریکارد",

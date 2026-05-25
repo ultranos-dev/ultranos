@@ -367,7 +367,9 @@
     "syncQueue": "Sync Queue",
     "settings": "Settings",
     "suppliers": "Suppliers",
-    "stockCount": "Stock Count"
+    "stockCount": "Stock Count",
+    "transfers": "Transfers",
+    "reports": "Reports"
   },
   "controlled": {
     "title": "Controlled Substances Log",
