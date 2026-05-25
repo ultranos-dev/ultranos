@@ -48,9 +48,11 @@ export const patientRouter = createTRPCRouter({
         .from('patients')
         .select(
           'id, gender, birth_date, birth_year_only, birth_year, ' +
-          'name_local, name_latin, national_id_hash, is_active, created_at, ' +
+          'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
           'name_given, name_father, name_grandfather, ' +
-          'address_district_origin, address_province_origin, ' +
+          'address_province_origin, address_district_origin, address_village_origin, ' +
+          'address_province_current, address_district_current, address_village_current, ' +
+          'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
           'mpi_score, mpi_warn'
         )
         .eq('is_active', true)
@@ -102,6 +104,9 @@ export const patientRouter = createTRPCRouter({
           gender: row.gender,
           birthDate: row.birth_date,
           birthYearOnly: row.birth_year_only,
+          telecom: row.telecom_phone
+            ? [{ system: 'phone' as const, value: row.telecom_phone as string }]
+            : [],
           _ultranos: {
             nameLocal:    row.name_local,
             nameLatin:    row.name_latin,
@@ -112,13 +117,29 @@ export const patientRouter = createTRPCRouter({
             nameFather:          row.name_father,
             nameGrandfather:     row.name_grandfather,
             birthYear:           row.birth_year,
-            addressDistrictOrigin: row.address_district_origin,
-            addressProvinceOrigin: row.address_province_origin,
+            addressOrigin: row.address_province_origin
+              ? {
+                  province: row.address_province_origin as string,
+                  district: (row.address_district_origin as string) ?? '',
+                  village: (row.address_village_origin as string) || undefined,
+                }
+              : undefined,
+            addressCurrent: row.address_province_current
+              ? {
+                  province: row.address_province_current as string,
+                  district: (row.address_district_current as string) ?? '',
+                  village: (row.address_village_current as string) || undefined,
+                }
+              : undefined,
+            isNomadic:   (row.is_nomadic as boolean) ?? false,
+            bloodGroup:  (row.blood_group as string) ?? undefined,
+            photoUrl:    (row.photo_url as string) ?? undefined,
+            preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
           },
           meta: {
-            lastUpdated: row.created_at,
+            lastUpdated: (row.updated_at as string) ?? (row.created_at as string),
           },
         })),
         nextCursor,
@@ -163,9 +184,11 @@ export const patientRouter = createTRPCRouter({
         .from('patients')
         .select(
           'id, gender, birth_date, birth_year_only, birth_year, ' +
-          'name_local, name_latin, national_id_hash, is_active, created_at, ' +
+          'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
           'name_given, name_father, name_grandfather, ' +
-          'address_district_origin, address_province_origin, ' +
+          'address_province_origin, address_district_origin, address_village_origin, ' +
+          'address_province_current, address_district_current, address_village_current, ' +
+          'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
           'mpi_score, mpi_warn'
         )
         .or(orFilter)
@@ -209,6 +232,9 @@ export const patientRouter = createTRPCRouter({
           gender: row.gender,
           birthDate: row.birth_date,
           birthYearOnly: row.birth_year_only,
+          telecom: row.telecom_phone
+            ? [{ system: 'phone' as const, value: row.telecom_phone as string }]
+            : [],
           _ultranos: {
             nameLocal:    row.name_local,
             nameLatin:    row.name_latin,
@@ -219,13 +245,29 @@ export const patientRouter = createTRPCRouter({
             nameFather:          row.name_father,
             nameGrandfather:     row.name_grandfather,
             birthYear:           row.birth_year,
-            addressDistrictOrigin: row.address_district_origin,
-            addressProvinceOrigin: row.address_province_origin,
+            addressOrigin: row.address_province_origin
+              ? {
+                  province: row.address_province_origin as string,
+                  district: (row.address_district_origin as string) ?? '',
+                  village: (row.address_village_origin as string) || undefined,
+                }
+              : undefined,
+            addressCurrent: row.address_province_current
+              ? {
+                  province: row.address_province_current as string,
+                  district: (row.address_district_current as string) ?? '',
+                  village: (row.address_village_current as string) || undefined,
+                }
+              : undefined,
+            isNomadic:   (row.is_nomadic as boolean) ?? false,
+            bloodGroup:  (row.blood_group as string) ?? undefined,
+            photoUrl:    (row.photo_url as string) ?? undefined,
+            preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
           },
           meta: {
-            lastUpdated: row.created_at,
+            lastUpdated: (row.updated_at as string) ?? (row.created_at as string),
           },
         })),
       }
@@ -1122,6 +1164,7 @@ export const patientRouter = createTRPCRouter({
       }
 
       updates.updatedAt = new Date().toISOString()
+      updates.updatedBy = ctx.user.sub
       const row = db.toRow(updates)
 
       const { data: updated, error: updateError } = await ctx.supabase
