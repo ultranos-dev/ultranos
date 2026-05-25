@@ -53,7 +53,9 @@
     "loadingChart": "Loading patient chart...",
     "startNewEncounter": "Start New Encounter",
     "encounterHistory": "Encounter History",
-    "labResultsSection": "Lab results"
+    "labResultsSection": "Lab results",
+    "nidMissing": "National ID missing — update patient profile when available.",
+    "nidMissingBadge": "NID Missing"
   },
   "encounter": {
     "dashboard": "Encounter Dashboard",
@@ -642,6 +644,9 @@
     "bloodGroup": "Blood Group",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
+    "bloodGroupLocked": "Blood group cannot be changed once set",
+    "nationalIdLabel": "National ID#",
+    "nationalIdPlaceholder": "Enter national ID number",
     "viewFullConsent": "View Full Consent",
     "consentDocumentTitle": "Patient Consent Document",
     "consentDocumentVersion": "Version 1.0",
@@ -735,6 +740,7 @@
     "next": "Next",
     "pageOf": "Page {current} of {total}",
     "allergyFlag": "Has allergies",
+    "nidMissingBadge": "NID Missing",
     "syncing": "Syncing..."
   },
   "duplicateReview": {
