@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useLocale, useTranslations } from 'next-intl'
 import type { FhirPatient } from '@ultranos/shared-types'
+import { formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import { PatientAvatar } from '@/components/patient/PatientAvatar'
 import { Button } from '@/components/ui/Button'
@@ -60,6 +62,9 @@ export function PatientHeaderCard({
   onEditClick,
   onPatientUpdated,
 }: PatientHeaderCardProps) {
+  const locale = useLocale()
+  const t = useTranslations('patient')
+
   const [vitals, setVitals] = useState<BaselineVitals>({
     height: '--',
     weight: '--',
@@ -220,6 +225,23 @@ export function PatientHeaderCard({
             <span className="mx-1">&middot;</span>
             Blood: {bloodGroup}
           </p>
+
+          {/* Last updated by */}
+          {patient._ultranos.updatedByName ? (
+            <p className="mt-1 text-xs text-neutral-400">
+              {t('lastUpdatedBy', {
+                name: patient._ultranos.updatedByName,
+                role: patient._ultranos.updatedByRole ?? '',
+                time: formatRelativeTime(patient.meta.lastUpdated, locale as 'en' | 'ar' | 'prs'),
+              })}
+            </p>
+          ) : patient.meta.lastUpdated ? (
+            <p className="mt-1 text-xs text-neutral-400">
+              {t('lastUpdated', {
+                time: formatRelativeTime(patient.meta.lastUpdated, locale as 'en' | 'ar' | 'prs'),
+              })}
+            </p>
+          ) : null}
         </div>
       </div>
 
