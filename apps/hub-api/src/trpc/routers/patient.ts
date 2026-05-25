@@ -754,23 +754,61 @@ export const patientRouter = createTRPCRouter({
 
       // Return FHIR-aligned patient with _ultranos extensions.
       // Use decrypted _enc fields for PHI, fall back to plain columns if _enc is empty.
+      const nameLocal = (patient.nameLocalEnc as string) ?? (patient.nameLocal as string)
+      const nameGiven = (patient.nameGivenEnc as string) ?? (patient.nameGiven as string | null)
+      const nameFather = (patient.nameFatherEnc as string) ?? (patient.nameFather as string | null)
+      const nameGrandfather = (patient.nameGrandfatherEnc as string) ?? (patient.nameGrandfather as string | null)
+      const phone = patient.telecomPhone as string | null
+
       return {
         id: patient.id as string,
         resourceType: 'Patient' as const,
-        nameLocal: (patient.nameLocalEnc as string) ?? (patient.nameLocal as string),
-        nameLatin: (patient.nameLatinEnc as string) ?? (patient.nameLatin as string | null),
-        namePhonetic: (patient.namePhoneticEnc as string) ?? (patient.namePhonetic as string | null),
+        name: [
+          {
+            given: nameGiven ? [nameGiven] : [],
+            text: nameLocal,
+          },
+        ],
         gender: patient.gender as string | null,
         birthDate: (patient.birthDateEnc as string) ?? (patient.birthDate as string | null),
-        birthYearOnly: patient.birthYearOnly as boolean,
-        telecomPhone: patient.telecomPhone as string | null,
-        guardianId: patient.guardianId as string | null,
-        consentVersion: patient.consentVersion as string | null,
+        birthYearOnly: (patient.birthYearOnly as boolean) ?? true,
+        telecom: phone ? [{ system: 'phone' as const, value: phone }] : [],
         _ultranos: {
-          isActive: patient.isActive as boolean,
-          createdBy: patient.createdBy as string | null,
+          nameLocal,
+          nameLatin: (patient.nameLatinEnc as string) ?? (patient.nameLatin as string | null) ?? undefined,
+          namePhonetic: (patient.namePhoneticEnc as string) ?? (patient.namePhonetic as string | null) ?? undefined,
+          nationalIdHash: (patient.nationalIdHash as string) ?? undefined,
+          guardianId: (patient.guardianId as string) ?? undefined,
+          consentVersion: (patient.consentVersion as string) ?? undefined,
+          patient_tier: ((patient.patientTier as string) ?? 'FREE') as 'FREE' | 'PREMIUM',
+          preferredLanguage: (patient.preferredLanguage as string) ?? undefined,
+          isActive: (patient.isActive as boolean) ?? true,
+          createdBy: (patient.createdBy as string) ?? undefined,
           createdAt: patient.createdAt as string,
-          mpiWarn: patient.mpiWarn as boolean,
+          nameGiven: nameGiven ?? undefined,
+          nameFather: nameFather ?? undefined,
+          nameGrandfather: nameGrandfather ?? undefined,
+          birthYear: (patient.birthYear as number) ?? undefined,
+          addressOrigin: patient.addressProvinceOrigin
+            ? {
+                province: patient.addressProvinceOrigin as string,
+                district: (patient.addressDistrictOrigin as string) ?? '',
+                village: (patient.addressVillageOrigin as string) || undefined,
+              }
+            : undefined,
+          addressCurrent: patient.addressProvinceCurrent
+            ? {
+                province: patient.addressProvinceCurrent as string,
+                district: (patient.addressDistrictCurrent as string) ?? '',
+                village: (patient.addressVillageCurrent as string) || undefined,
+              }
+            : undefined,
+          isNomadic: (patient.isNomadic as boolean) ?? false,
+          biometricFingerprintHash: (patient.biometricFingerprintHash as string) ?? undefined,
+          biometricAlgorithmVersion: (patient.biometricAlgorithmVersion as string) ?? undefined,
+          mpiScore: (patient.mpiScore as number) ?? undefined,
+          photoUrl: (patient.photoUrl as string) ?? undefined,
+          bloodGroup: (patient.bloodGroup as string) ?? undefined,
         },
         meta: {
           lastUpdated: patient.updatedAt as string,

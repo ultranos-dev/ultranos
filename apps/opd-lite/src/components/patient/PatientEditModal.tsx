@@ -188,7 +188,7 @@ export function PatientEditModal({
       setAddressCurrent(EMPTY_ADDRESS)
     }
 
-    setIsNomadic(ext.isNomadic)
+    setIsNomadic(ext.isNomadic ?? false)
     setBloodGroup(ext.bloodGroup ?? 'Unknown')
 
     // Reset UI state

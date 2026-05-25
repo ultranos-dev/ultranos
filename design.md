@@ -12,13 +12,16 @@ Typography uses **Inter** as the sole typeface across all surfaces — display, 
 
 The interaction palette is driven by the **Wise Green** (`#9fe870`) with **Dark Green** (`#163300`) text — the same fresh, lime-bright pairing from the original Wise system. Primary buttons, active navigation tabs, icon badges on the anatomy viewer, and chart accent points all use this green system. Hover states shift to **Pastel Green** (`#cdffad`) with a subtle `scale(1.03)` expansion; pressed/`:active` states use `scale(0.97)` compression. Every transition specifies exact properties and uses custom easing curves — never `transition: all`, never default CSS easings. This level of craft is invisible to the user individually, but in aggregate it makes the interface feel alive and intentional.
 
-Cards have generous corner radii (16–20px) with subtle `1px` borders or light box shadows. The overall depth model is flat — elevation is communicated through layering and border contrast, not shadow stacking. The right-side detail panel enters as a slide-in sheet with `ease-out` easing, reinforcing a spatial model where deeper information emerges from the right edge.
+Cards use a **glassmorphic treatment**: 70% opacity background (`bg-card-bg/70`), `backdrop-blur-md` frosted blur, and a thin `0.65px` semi-transparent gray ring border (`ring-gray-400/40`). Corner radii are generous (`rounded-xl`, 16px). The overall depth model is flat — elevation is communicated through translucency, layering, and subtle ring borders, not shadow stacking or opaque borders. The right-side detail panel enters as a slide-in sheet with `ease-out` easing, reinforcing a spatial model where deeper information emerges from the right edge.
 
 **Key Characteristics:**
 - Inter as the sole typeface — weight 600 for values/headings, weight 400 for labels/body
 - Wise Green (`#9fe870`) as the primary interactive color with Dark Green (`#163300`) text
 - Warm off-white canvas with minimal shadows — flat, layered depth model
-- Generous card radii (16–20px) with thin borders
+- Glassmorphic cards: `bg-card-bg/70` + `backdrop-blur-md` + `ring-[0.65px] ring-gray-400/40` — via Card component
+- All buttons via Button component — no raw `<button>` elements
+- Icon buttons are circular (`rounded-full`) via `variant="icon"`
+- `rounded-xl` (16px) as the universal container/input radius
 - Custom easing curves on all transitions — never default CSS easings
 - `scale(1.03)` hover / `scale(0.97)` active on buttons — subtle, physical press feedback
 - Label-above-value typography pattern for all vitals and data points
@@ -375,45 +378,58 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 
 ### Buttons
 
-**Primary Green Pill (CTA)**
-- Background: `#9fe870` (Wise Green)
-- Text: `#163300` (Dark Green), 14–16px, weight 600
+> **Implementation rule:** No raw `<button>` elements anywhere in the app. Every button MUST use the `Button` component (`@/components/ui/Button`). This includes close buttons, nav arrows, toggles, expand/collapse triggers, dropdown items, and icon-only buttons. The only exceptions are `Button.tsx` itself and `pill-button.tsx` (which are button wrapper components).
+
+**Button Component** (`@/components/ui/Button`)
+- Supports variants: `primary`, `secondary`, `danger`, `warning`, `ghost`, `outline`, `icon`
+- Accepts `fullWidth` boolean prop
+- Accepts `as` polymorphic element type (default: `button`)
+- All shared states: focus ring (`ring-2 ring-primary-300 ring-offset-2`), disabled (`opacity-50 cursor-not-allowed`), reduced motion
+
+**Primary Green Pill (CTA)** — `variant="primary"`
+- Background: `#9fe870` (Wise Green) → Tailwind: `bg-pill-green`
+- Text: `#163300` (Dark Green) → Tailwind: `text-pill-text`
 - Icon: `#163300`, 16px, left of label (optional)
-- Padding: 10px 20px
+- Padding: 10px 20px → Tailwind: `px-5 py-2`
+- Border-radius: 9999px (pill) → Tailwind: `rounded-pill`
+- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
+- Hover: `brightness-[1.04]` — gated behind `@media (hover: hover) and (pointer: fine)`
+- Active: `brightness-[0.88]`
+- Focus: `ring-2 ring-primary-300 ring-offset-2`
+
+**Secondary Subtle Pill** — `variant="secondary"`
+- Background: `bg-neutral-200`
+- Text: `text-neutral-700`, 14px, weight 600
+- Padding: 8px 16px → Tailwind: `px-5 py-2`
 - Border-radius: 9999px (pill)
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `#cdffad`, `scale(1.03)` — gated behind `@media (hover: hover) and (pointer: fine)`
-- Active: `scale(0.97)`, transition-duration `100ms`
-- Focus: `0 0 0 2px #9fe870, 0 0 0 4px rgba(159, 232, 112, 0.3)`
+- Hover/Active: same brightness model as primary
 
-**Secondary Subtle Pill**
-- Background: `rgba(22, 51, 0, 0.08)` (dark green at 8% opacity)
-- Text: `#0e0f0c`, 14px, weight 600
+**Outlined Pill (Secondary Action)** — `variant="outline"`
+- Background: `bg-white`
+- Border: `border border-neutral-300`
+- Text: `text-neutral-700`, 14px, weight 600
 - Padding: 8px 16px
 - Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `rgba(22, 51, 0, 0.14)`, `scale(1.03)`
-- Active: `scale(0.97)`
 
-**Outlined Pill (Secondary Action)**
-- Background: `#ffffff`
-- Border: `1px solid #e8ebe6`
-- Text: `#0e0f0c`, 14px, weight 600
-- Padding: 8px 16px
-- Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle), border-color 160ms var(--ease-subtle)`
-- Hover: background `#f4f5f2`, border `#868685`, `scale(1.03)`
-- Active: `scale(0.97)`, background `#e8ebe6`
+**Danger** — `variant="danger"`
+- Background: `bg-red-600`, Text: `text-white`
 
-**Icon Button (Circle)**
-- Size: 36–40px diameter
-- Background: `#ffffff` or transparent
-- Border: `1px solid #e8ebe6` (when on white) or none (when on colored surface)
-- Icon: 18–20px, `#454745`
-- Border-radius: 50%
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `rgba(211, 242, 192, 0.4)`, `scale(1.03)`
-- Active: `scale(0.97)`
+**Warning** — `variant="warning"`
+- Background: `bg-amber-600`, Text: `text-white`
+
+**Ghost** — `variant="ghost"`
+- Background: `bg-transparent`, Text: `text-primary-500`
+- Use for: inline text-like buttons, menu items, expand/collapse toggles, template selectors
+- Override text color via `className` for contextual use (e.g., `className="text-red-600"` for logout)
+
+**Icon Button (Circle)** — `variant="icon"`
+- Background: transparent → `hover:bg-neutral-100`
+- Icon color: `text-neutral-500` → `hover:text-neutral-700`
+- Padding: `p-2` (default) — override with `className="p-1"` for compact or `className="min-h-[44px] min-w-[44px]"` for touch targets
+- **Border-radius: 50% (circular)** → Tailwind: `rounded-full`
+- Transition: same as other variants
+- Use for: close/dismiss X buttons, navigation arrows, clear buttons, notification bell, sync pulse, reorder arrows, user avatar trigger
+- Override colors via `className` for contextual use (e.g., `className="text-white/80 hover:text-white"` on dark surfaces)
 
 **Icon Button (Green Badge — Anatomy Hotspot)**
 - Size: 32–36px diameter
@@ -421,44 +437,49 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Icon: `#163300`, 16–18px
 - Border-radius: 50%
 - Box-shadow: `0 2px 8px rgba(159, 232, 112, 0.4)`
-- Transition: `transform 160ms var(--ease-out), box-shadow 200ms var(--ease-subtle)`
-- Hover: background `#cdffad`, shadow intensifies to `0 4px 12px rgba(159, 232, 112, 0.6)`, `scale(1.05)` — slightly more dramatic because these are discovery affordances, not repeated actions
+- Hover: background `#cdffad`, shadow intensifies, `scale(1.05)` — slightly more dramatic for discovery affordances
 - Active: `scale(0.95)`
 
-**Floating Action Button ("+ Add record")**
+**Floating Action Button ("+ Add record")** — `variant="primary"` with sizing overrides
 - Background: `#9fe870`
 - Text: `#163300`, 14px, weight 600
 - Icon: `#163300` "+" prefix, 16px
 - Padding: 12px 24px
 - Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: `scale(1.03)`, background `#cdffad`
-- Active: `scale(0.97)`
 - Position: Bottom of right panel, sticky
 
 ### Cards
 
-**Patient Identity Card**
-- Background: `#ffffff`
-- Border-radius: 16–20px
-- Border: `1px solid #e8ebe6`
-- Padding: 16–20px
-- Shadow: none or `0 1px 3px rgba(0,0,0,0.05)` (very subtle)
+> **Implementation rule:** All card-like containers MUST use the `Card` component (`@/components/Card`). No manual card styling with inline Tailwind classes. The Card component supports an `as` prop for polymorphic rendering (e.g., `<Card as="section">`, `<Card as="fieldset">`). Extra classes can be passed via `className` and are merged with the variant defaults.
+
+**Card Component** (`@/components/Card`)
+- Supports variants via `variant` prop (default: `"primary"`)
+- Supports `as` prop for polymorphic element type (default: `div`)
+- All HTML attributes pass through
+
+**Primary Card (Default)** — `variant="primary"`
+- Background: `bg-card-bg/70` (70% opacity for glassmorphic translucency)
+- Backdrop: `backdrop-blur-md` (frosted glass blur effect)
+- Border-radius: `rounded-xl` (16px)
+- Border: `ring-[0.65px] ring-gray-400/40` (thin semi-transparent gray ring — NOT `border border-neutral-200`)
+- Padding: `p-5` (20px)
+- Shadow: `shadow-sm`
+- Tailwind classes: `rounded-xl bg-card-bg/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40`
+
+**Why glassmorphic?** The frosted glass effect creates depth through translucency rather than shadow stacking, consistent with the flat depth model. The 0.65px ring is thinner than a standard 1px border, producing a refined edge that doesn't compete with content.
+
+**Patient Identity Card** — `<Card>`
+- Uses default primary variant
 - Photo: Circular crop, 72–88px, positioned top-right with slight overlap/bleed beyond the card edge
 
-**Vital Summary Card**
-- Background: `#ffffff`
-- Border-radius: 16px
-- Border: `1px solid #e8ebe6`
-- Padding: 16px
+**Vital Summary Card** — `<Card>`
+- Uses default primary variant
 - Layout: Label (top, gray) → Value (large, bold) → Sparkline/chart (below)
 - Icon: Green-outlined circle (24px) with organ/system icon in `#054d28`, top-left next to the label
 - Entry: Staggered fade + `translateY(8px)`, 300ms `--ease-out`, 50ms delay between siblings
 
-**Insurance/QR Sub-Card**
-- Background: `#ffffff`
-- Border-radius: 12px
-- Border: `1px solid #e8ebe6`
+**Insurance/QR Sub-Card** — `<Card>`
+- Uses default primary variant
 - Layout: QR code (left, ~100px) | Policy details (right, label-value stacked)
 
 **Right Panel Detail Sheet**
@@ -470,6 +491,47 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Close button: × icon, top-right, 32px hit target
 - Scrollable content area with bottom action bar pinned
 - Content items stagger in at 50ms intervals after panel lands
+
+### Allergy Banner
+
+Safety-critical banner that renders FIRST in the patient view, never collapsed, never behind a tab (CLAUDE.md Rule #4). Uses the same card styling as the default Card component — rounded corners, backdrop blur, subtle ring border — with semantic background colors per state. Single-line states use compact vertical padding; the active-allergies state uses full card padding to accommodate substance pills.
+
+**Shared Card Foundation**
+- Border-radius: `rounded-xl` (16px)
+- Backdrop: `backdrop-blur-md`
+- Shadow: `shadow-sm`
+- Ring: `ring-[0.65px]`
+- Margin-bottom: `mb-4` (16px spacing from next sibling)
+- Transition: `transition-colors duration-200`
+- Accessibility: `role="alert"`, `aria-live` (assertive for danger/warning, polite for neutral), `data-banner-state` attribute for testing
+
+**State: Active Allergies (Red)**
+- Background: `bg-red-50/70` (red-tinted, 70% opacity for glassmorphism)
+- Ring color: `ring-red-400/40`
+- Padding: `p-5` (20px all sides — more room for substance pill list)
+- Text: `text-sm font-bold text-red-800`, centered, uppercase substance list prefixed with "ALLERGIES:"
+- `aria-live="assertive"`, `data-banner-state="active"`
+
+**State: Warning — Data Unavailable (Yellow)**
+- Background: `bg-yellow-50/70`
+- Ring color: `ring-yellow-400/40`
+- Padding: `px-5 py-3` (20px horizontal, 12px vertical — compact single-line)
+- Text: `text-sm font-bold text-yellow-900`, centered
+- Content: "Allergy data unavailable — verify before prescribing"
+- `aria-live="assertive"`, `data-banner-state="warning"`
+
+**State: No Known Allergies / NKA (Neutral)**
+- Background: `bg-card-bg/70` (matches default Card component)
+- Ring color: `ring-gray-400/40` (matches default Card component)
+- Padding: `px-5 py-3` (compact single-line)
+- Text: `text-sm font-semibold text-neutral-600`, centered
+- Content: "No Known Allergies (NKA)"
+- `aria-live="polite"`, `data-banner-state="nka"`
+
+**State: Loading (Neutral)**
+- Identical styling to NKA state
+- Content: "Loading allergy data..."
+- `aria-live="polite"`, `data-banner-state="loading"`
 
 ### Navigation
 
@@ -552,26 +614,41 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 | Level | Treatment | Use |
 |-------|-----------|-----|
 | Flat (Level 0) | No shadow, no border | Default canvas, transparent elements |
-| Bordered (Level 1) | `1px solid #e8ebe6` | Cards, sub-cards, input fields |
-| Subtle lift (Level 2) | `0 1px 3px rgba(0,0,0,0.05)` | Patient ID card, hover-state cards |
-| Panel overlay (Level 3) | `-4px 0 16px rgba(0,0,0,0.08)` | Right detail panel when overlaying center |
+| Glassmorphic (Level 1) | `bg-card-bg/70` + `backdrop-blur-md` + `ring-[0.65px] ring-gray-400/40` + `shadow-sm` | All cards, panels, containers — via Card component |
+| Form field (Level 1) | `border border-neutral-300` | Input fields, selects, textareas (need visible editable border) |
+| Panel overlay (Level 2) | `ring-[0.65px] ring-gray-400/40` + `shadow-lg` | Dropdowns, popovers, notification panels |
+| Modal overlay (Level 3) | `ring-[0.65px] ring-gray-400/40` + `shadow-2xl` | Modals, full-screen overlays |
 | Badge glow (Level 4) | `0 2px 8px rgba(159, 232, 112, 0.4)` | Green hotspot badges on the anatomy viewer |
 
-**Shadow Philosophy**: Shadows are rare and subtle. The interface communicates depth through panel layering (left → center → right), border contrast, and background color shifts — not through stacked shadows. Green-glow shadows are reserved exclusively for interactive hotspot badges on the anatomy viewer.
+**Depth Philosophy**: Depth is communicated through glassmorphic translucency (`bg-*/70` + `backdrop-blur-md`), thin ring borders, and panel layering — not through shadow stacking or opaque borders. The old `border border-neutral-200` pattern is fully deprecated. Cards achieve depth by letting the background subtly show through their 70% opacity fill, reinforcing the layered spatial model.
 
 ---
 
 ## 8. Border Radius Scale
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `radius-xs` | 4px | Inline tags, tiny elements |
-| `radius-sm` | 8px | Image thumbnails, input fields, small badges |
-| `radius-md` | 12px | Sub-cards (QR section, insurance panel) |
-| `radius-lg` | 16px | Vital cards, standard cards |
-| `radius-xl` | 20px | Patient ID card, detail panel |
-| `radius-pill` | 9999px | All buttons, nav tabs, timestamp badges, avatar images |
-| `radius-circle` | 50% | Icon buttons, avatar photos, notification badges |
+| Token | Tailwind | Value | Usage |
+|-------|----------|-------|-------|
+| `radius-xs` | `rounded` | 4px | Inline tags, `<kbd>` keyboard badges |
+| `radius-sm` | `rounded-lg` | 8px | Small inline elements: close buttons, status badges, tab buttons inside tab bars |
+| `radius-md` | `rounded-xl` | 12–16px | **Default for all cards, containers, inputs, modals, dropdowns, panels, form fields.** This is the standard radius across the app. |
+| `radius-pill` | `rounded-pill` | 9999px | All text buttons (Button component), nav tabs, timestamp badges |
+| `radius-circle` | `rounded-full` | 50% | Icon buttons (Button `variant="icon"`), avatar photos, notification badges |
+
+> **Implementation rule:** Use `rounded-xl` as the default radius for all containers, inputs, and panels. Never use `rounded-md` on cards or form inputs. `rounded-lg` is reserved for small inline elements only (tab buttons within a tab bar, close button hit areas). `rounded-pill` (9999px) is for all text-bearing buttons via the Button component.
+
+## 8a. Border & Ring System
+
+> **Implementation rule:** Cards and containers use `ring-[0.65px] ring-gray-400/40` — NOT `border border-neutral-200`. The old `border border-neutral-200` pattern is deprecated across the app.
+
+| Context | Border Treatment | Notes |
+|---------|-----------------|-------|
+| Cards (Card component) | `ring-[0.65px] ring-gray-400/40` | Default via Card primary variant |
+| Form inputs (text, select, textarea) | `border border-neutral-300` | Inputs keep visible CSS borders for usability — they need to look editable |
+| Modals & overlays | `ring-[0.65px] ring-gray-400/40` | Consistent with cards |
+| Dropdowns & popovers | `ring-[0.65px] ring-gray-400/40` | Consistent with cards |
+| Tables & data grids | `ring-[0.65px] ring-gray-400/40` | On the wrapper element |
+| Semantic states (error, warning) | `border border-red-300`, `border border-amber-300` | Colored borders are kept for semantic meaning — never replace with gray ring |
+| `<kbd>` keyboard badges | `border border-neutral-200` | Exception: tiny inline elements keep traditional borders |
 
 ---
 
@@ -676,6 +753,10 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - Don't animate `padding`, `margin`, `height`, or `width` — layout properties trigger expensive reflows
 - Don't use Framer Motion shorthand props (`x`, `y`, `scale`) under load — use full `transform` strings for GPU acceleration
 - Don't mix icon styles — stick to outlined/stroke icons with consistent stroke weight
+- Don't use raw `<button>` elements — always use the `Button` component with the appropriate variant
+- Don't use `border border-neutral-200` on cards or containers — use `ring-[0.65px] ring-gray-400/40` via the Card component
+- Don't use `rounded-md` or `rounded-lg` on cards, containers, or form inputs — use `rounded-xl`
+- Don't manually style card containers with inline Tailwind — use the `Card` component
 
 ---
 
@@ -768,3 +849,9 @@ When reviewing Ultranos UI code, check for these issues:
 | `:focus` instead of `:focus-visible` | Switch to `:focus-visible` | Mouse users shouldn't see focus rings |
 | Missing `tabular-nums` on vitals | Add `font-variant-numeric: tabular-nums` | Prevents layout shift when numbers change |
 | Animating `height` or `margin` | Switch to `transform: translateY()` | Layout animations trigger expensive reflows |
+| Raw `<button>` element | Use `Button` component with correct variant | Every button must go through the unified Button system |
+| `border border-neutral-200` on card/container | Use Card component or `ring-[0.65px] ring-gray-400/40` | Old border pattern is deprecated — cards use glassmorphic ring |
+| `rounded-md` on card, container, or input | Use `rounded-xl` | `rounded-md` is not part of the radius scale for containers |
+| `rounded-lg` on card or container | Use `rounded-xl` | `rounded-lg` is reserved for small inline elements only |
+| Manual card styling (`bg-white p-6 shadow-sm`) | Use `<Card>` component | Cards must use the Card component for consistency |
+| `bg-card-bg` without `/70` opacity | Use `bg-card-bg/70` via Card component | Cards use 70% opacity for glassmorphic translucency |

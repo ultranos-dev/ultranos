@@ -3,11 +3,15 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { db } from '@/lib/db'
-import type { FhirPatient } from '@ultranos/shared-types'
+import type { FhirPatient, PatientAddress } from '@ultranos/shared-types'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { usePatientSync } from '@/hooks/usePatientSync'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
+
+const HUB_API_URL =
+  process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000'
 
 // Composed sections
 import { PatientBannerStack } from '@/components/patient/PatientBannerStack'
@@ -26,6 +30,137 @@ interface PatientChartPageProps {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/**
+ * Normalize a Dexie patient record into a proper FhirPatient shape.
+ *
+ * The sync pull may have stored the patient as a flat camelCase object
+ * (matching the Postgres row layout) rather than the nested FhirPatient
+ * structure that UI components expect. This function reconstructs the
+ * nested `_ultranos` block from flat fields when needed.
+ */
+function normalizeFhirPatient(raw: Record<string, unknown>): FhirPatient {
+  // Check if already in the correct nested shape WITH complete data.
+  // The patient.getById endpoint may return a partial _ultranos (only isActive,
+  // createdAt, etc.) while key fields like addressOrigin, nameGiven are at the
+  // top level. We detect this by checking for a key field that should be in _ultranos.
+  const ext = raw._ultranos as Record<string, unknown> | undefined
+  if (ext && typeof ext === 'object' && 'nameLocal' in ext && 'isNomadic' in ext) {
+    return raw as unknown as FhirPatient
+  }
+
+  // Reconstruct from flat Hub row (or hybrid format with partial _ultranos)
+  // Merge: prefer values from existing _ultranos, then fall back to top-level fields
+  const existingExt = (ext ?? {}) as Record<string, unknown>
+  const phone = (raw.telecomPhone as string) || (existingExt.telecomPhone as string) || undefined
+  return {
+    id: raw.id as string,
+    resourceType: 'Patient',
+    name: (raw.name as FhirPatient['name']) ?? [
+      {
+        given: (raw.nameGiven as string) ? [raw.nameGiven as string] : [],
+        text: (raw.nameLocal as string) ?? (existingExt.nameLocal as string) ?? '',
+      },
+    ],
+    gender: (raw.gender as FhirPatient['gender']),
+    birthDate: (raw.birthDate as string) || undefined,
+    birthYearOnly: (raw.birthYearOnly as boolean) ?? true,
+    telecom: phone
+      ? [{ system: 'phone' as const, value: phone }]
+      : (raw.telecom as FhirPatient['telecom']) ?? [],
+    _ultranos: {
+      nameLocal: (existingExt.nameLocal as string) ?? (raw.nameLocalEnc as string) ?? (raw.nameLocal as string) ?? '',
+      nameLatin: (existingExt.nameLatin as string) ?? (raw.nameLatinEnc as string) ?? (raw.nameLatin as string) ?? undefined,
+      namePhonetic: (existingExt.namePhonetic as string) ?? (raw.namePhoneticEnc as string) ?? (raw.namePhonetic as string) ?? undefined,
+      nationalIdHash: (existingExt.nationalIdHash as string) ?? (raw.nationalIdHash as string) ?? undefined,
+      guardianId: (existingExt.guardianId as string) ?? (raw.guardianId as string) ?? undefined,
+      consentVersion: (existingExt.consentVersion as string) ?? (raw.consentVersion as string) ?? undefined,
+      patient_tier: ((existingExt.patient_tier as string) ?? (raw.patientTier as string) ?? 'FREE') as 'FREE' | 'PREMIUM',
+      preferredLanguage: (existingExt.preferredLanguage as string) ?? (raw.preferredLanguage as string) ?? undefined,
+      isActive: (existingExt.isActive as boolean) ?? (raw.isActive as boolean) ?? true,
+      createdBy: (existingExt.createdBy as string) ?? (raw.createdBy as string) ?? undefined,
+      createdAt: (existingExt.createdAt as string) ?? (raw.createdAt as string) ?? new Date().toISOString(),
+      nameGiven: (existingExt.nameGiven as string) ?? (raw.nameGivenEnc as string) ?? (raw.nameGiven as string) ?? undefined,
+      nameFather: (existingExt.nameFather as string) ?? (raw.nameFatherEnc as string) ?? (raw.nameFather as string) ?? undefined,
+      nameGrandfather: (existingExt.nameGrandfather as string) ?? (raw.nameGrandfatherEnc as string) ?? (raw.nameGrandfather as string) ?? undefined,
+      birthYear: (existingExt.birthYear as number) ?? (raw.birthYear as number) ?? undefined,
+      addressOrigin: (existingExt.addressOrigin as PatientAddress | undefined) ?? (raw.addressProvinceOrigin
+        ? {
+            province: raw.addressProvinceOrigin as PatientAddress['province'],
+            district: (raw.addressDistrictOrigin as string) ?? '',
+            village: (raw.addressVillageOrigin as string) || undefined,
+          }
+        : undefined),
+      addressCurrent: (existingExt.addressCurrent as PatientAddress | undefined) ?? (raw.addressProvinceCurrent
+        ? {
+            province: raw.addressProvinceCurrent as PatientAddress['province'],
+            district: (raw.addressDistrictCurrent as string) ?? '',
+            village: (raw.addressVillageCurrent as string) || undefined,
+          }
+        : undefined),
+      isNomadic: (existingExt.isNomadic as boolean) ?? (raw.isNomadic as boolean) ?? false,
+      biometricFingerprintHash: (existingExt.biometricFingerprintHash as string) ?? (raw.biometricFingerprintHash as string) ?? undefined,
+      biometricAlgorithmVersion: (existingExt.biometricAlgorithmVersion as string) ?? (raw.biometricAlgorithmVersion as string) ?? undefined,
+      mpiScore: (existingExt.mpiScore as number) ?? (raw.mpiScore as number) ?? undefined,
+      identifiers: (existingExt.identifiers as FhirPatient['_ultranos']['identifiers']) ?? (raw.identifiers as FhirPatient['_ultranos']['identifiers']) ?? undefined,
+      photoUrl: (existingExt.photoUrl as string) ?? (raw.photoUrl as string) ?? undefined,
+      bloodGroup: (existingExt.bloodGroup as string) ?? (raw.bloodGroup as string) ?? undefined,
+    },
+    meta: raw.meta as FhirPatient['meta'] ?? {
+      lastUpdated: (raw.updatedAt as string) ?? new Date().toISOString(),
+      versionId: (raw.metaVersionId as string) ?? undefined,
+    },
+  }
+}
+
+/**
+ * Fetch a patient from the Hub API (patient.getById) and cache in Dexie.
+ * Used as a fallback when the patient isn't available in local IndexedDB
+ * (e.g. after sign-out/sign-in, since the sync pull for Patient resources
+ * is broken — the patients table is missing an hlc_timestamp column).
+ */
+async function fetchPatientFromHub(
+  patientId: string,
+): Promise<FhirPatient | null> {
+  try {
+    const supabase = getSupabaseBrowserClient()
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (!token) return null
+
+    const params = encodeURIComponent(
+      JSON.stringify({ json: { patientId } }),
+    )
+    const res = await fetch(
+      `${HUB_API_URL}/api/trpc/patient.getById?input=${params}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+
+    if (!res.ok) return null
+
+    const data = await res.json() as {
+      result: { data: { json: Record<string, unknown> } }
+    }
+    const raw = data.result?.data?.json
+    if (!raw) return null
+
+    const patient = normalizeFhirPatient(raw)
+
+    // Cache in Dexie so subsequent reads don't hit the Hub
+    try {
+      await db.patients.put(patient)
+    } catch {
+      // Non-critical — patient loaded in memory even if cache fails
+    }
+
+    return patient
+  } catch {
+    return null
+  }
+}
+
 export function PatientChartPage({ patientId }: PatientChartPageProps) {
   const router = useRouter()
   const [patient, setPatient] = useState<FhirPatient | null>(null)
@@ -42,32 +177,56 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
       return
     }
     let cancelled = false
+
     async function loadPatient() {
+      // Step 1: Try local Dexie first
       try {
-        const p = await db.patients.get(patientId)
+        const raw = await db.patients.get(patientId)
+        if (!cancelled && raw) {
+          const p = normalizeFhirPatient(raw as unknown as Record<string, unknown>)
+          setPatient(p)
+          setLoading(false)
+          auditPhiAccess(
+            AuditAction.READ,
+            AuditResourceType.PATIENT,
+            patientId,
+            patientId,
+            { phiAccess: 'patient_chart_view' },
+          )
+          return
+        }
+      } catch (err) {
+        if (!cancelled && err instanceof EncryptionKeyNotAvailableError) {
+          setNeedsReauth(true)
+          setLoading(false)
+          return
+        }
+        // Other Dexie errors (e.g. decryption failure with wrong key) —
+        // fall through to Hub fetch
+      }
+
+      // Step 2: Not in Dexie — fetch from Hub API directly
+      // (The sync pull for Patient resources is broken because the patients
+      // table lacks an hlc_timestamp column, so we fetch via patient.getById)
+      if (!cancelled) {
+        const hubPatient = await fetchPatientFromHub(patientId)
         if (!cancelled) {
-          setPatient(p ?? null)
-          if (p) {
+          setPatient(hubPatient)
+          if (hubPatient) {
             auditPhiAccess(
               AuditAction.READ,
               AuditResourceType.PATIENT,
               patientId,
               patientId,
-              { phiAccess: 'patient_chart_view' },
+              { phiAccess: 'patient_chart_view_hub_fallback' },
             )
           }
         }
-      } catch (err) {
-        if (!cancelled) {
-          if (err instanceof EncryptionKeyNotAvailableError) {
-            setNeedsReauth(true)
-          }
-          setPatient(null)
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
       }
+
+      if (!cancelled) setLoading(false)
     }
+
     loadPatient()
     return () => { cancelled = true }
   }, [patientId])
