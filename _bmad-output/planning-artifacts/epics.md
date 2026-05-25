@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling', 'addendum-12-lab-lite-enterprise-ux']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling', 'addendum-12-lab-lite-enterprise-ux', 'addendum-14-patient-profile-ux', 'addendum-15-audit-trail']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -103,6 +103,13 @@ FR37: Appointment Scheduling & Walk-In Queue Management (FHIR R4 Appointment/Slo
 FR38: Lab Lite Enterprise Dashboard UX (Visual hierarchy, upload success confirmation, queue attention states, cancel/recall queued uploads, last-refreshed timestamps)
 FR39: Lab Lite Patient Infrastructure (Patient registration with MPI duplicate detection, two-phase patient search, recent patients cache, patient search autocomplete)
 FR40: Lab Lite Contextual Help & Efficiency (Tooltips on LOINC/OCR/dates, keyboard shortcuts, i18n completeness)
+
+### New Functional Requirements (Patient Profile UX & Audit Trail Addendum — 2026-05-25)
+
+FR41: Patient Profile Data Fetch Fixes (Hub API fallback using patient.read, Dexie partial data refresh, address field normalization, edit modal payload alignment)
+FR42: National ID Field & NID Missing Badge (National ID# in registration + edit, MPI integration, amber "NID Missing" badge on profile and directory, form flow consistency)
+FR43: Patient Audit Trail & Last Updated Display (Role-tiered audit trail collapsible, "Last updated by" on header card, "Last Updated" directory column, updated_by tracking)
+FR44: Shared Patient Workflows Package (packages/patient-workflows with adapter pattern for cross-app patient registration, editing, and banner consistency — design spec only)
 
 ### New Non-Functional Requirements (Gap Analysis Addendum — 2026-05-02)
 
@@ -5030,6 +5037,189 @@ As a pharmacist reviewing recent activity, I want to see patient names instead o
 - `apps/lab-lite/src/components/dashboard/QuickActions.tsx` — card wrapper removed
 - `apps/lab-lite/src/components/dashboard/RecentUploadsList.tsx` — cancel action, patient names
 - `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — removed placeholder cards
+
+# Addendum 14: Patient Profile UX — Data Fetch Fixes, National ID & Form Consistency (Epic 40)
+
+**Date:** 2026-05-25
+**Branch:** `ux-v1.0`
+**Specs:** `docs/superpowers/specs/2026-05-25-national-id-field-nid-badge-design.md`, `docs/superpowers/specs/2026-05-25-patient-workflows-shared-package-design.md`
+**Plans:** `docs/superpowers/plans/2026-05-25-national-id-field-nid-badge.md`
+
+**Trigger:** Patient demographics (especially address data) were being saved to the database but not fetched by the patient profile page or Edit Profile modal. Root cause investigation revealed 6 compounding bugs, plus a need for National ID capture and form consistency across registration and edit flows.
+
+## Epic 40: Patient Profile UX Hardening
+
+Fix patient data fetch pipeline, add National ID# field with "NID Missing" badges, and align registration and edit forms to a consistent field order.
+
+### Story 40.1: Fix Patient Data Fetch Pipeline
+As a clinician viewing a patient profile, I want to see complete patient data (including address, phone, blood group) so that I have the full picture.
+
+**Acceptance Criteria:**
+- `fetchPatientFromHub` calls `patient.read` (not the non-existent `patient.getById`)
+- Profile page always fetches full record from Hub even if Dexie has partial data
+- `normalizeFhirPatient` handles flat address keys from `_ultranos` (from list/search responses)
+- `patient.list` and `patient.search` SELECT all address, phone, blood group, nomadic, preferred language columns
+- Response mapping builds nested `addressOrigin`/`addressCurrent` objects in FHIR shape
+
+> **Status:** Done
+
+### Story 40.2: Fix PatientEditModal Payload Alignment
+As a clinician editing a patient profile, I want address and phone updates to actually persist so that my edits are not silently lost.
+
+**Acceptance Criteria:**
+- Edit modal sends flat field names (`addressProvinceOrigin`, `telecomPhone`) matching `patient.update` Zod schema
+- After successful save, modal uses optimistic `buildUpdatedPatient()` with server timestamp instead of minimal server response
+- Dexie cache updated with full patient object after save
+
+> **Status:** Done
+
+### Story 40.3: National ID# Field in Registration
+As a clinician registering a patient, I want to capture their National ID number so that the system can use it for MPI deduplication and identity verification.
+
+**Acceptance Criteria:**
+- National ID# text input added as first field in Demographics section (before Gender)
+- Optional, max 200 chars, wired into `patient.checkDuplicates` for MPI dedup
+- Passed to `patient.create` — backend hashes via HMAC blind index
+- Saved to local Dexie cache on creation
+
+> **Status:** Done
+
+### Story 40.4: National ID# Field in Edit Modal
+As a clinician editing a patient profile, I want to add a National ID when the patient obtains one.
+
+**Acceptance Criteria:**
+- National ID# field appears first in Demographics section
+- When NID already exists: shows masked read-only display ("National ID ••••••")
+- When NID is empty: editable text input
+- On save, passed to `patient.update` which re-hashes and checks for duplicates
+
+> **Status:** Done
+
+### Story 40.5: "NID Missing" Badge
+As a clinician, I want to see at a glance which patients are missing a National ID so I can prompt them to bring it on their next visit.
+
+**Acceptance Criteria:**
+- Amber `NidMissingBanner` on patient profile page (in `PatientBannerStack`, priority #4 after MPI warn)
+- Amber pill badge ("NID Missing") in patient directory name column
+- Both render when `nationalIdHash` is falsy
+- i18n keys for en, ar, prs
+
+> **Status:** Done
+
+### Story 40.6: Registration Form Consistency
+As a clinician, I want the same fields available in both registration and edit forms so I don't have to immediately edit a profile I just created.
+
+**Acceptance Criteria:**
+- Registration form gains: Preferred Language, Blood Group, Nomadic toggle
+- Nomadic toggle relocated into `GeographySection` (shared between both forms)
+- Field order consistent: Name > Demographics (NID, Gender, Birth, Phone, Language) > Geography (Origin, Current, Nomadic) > Clinical (Blood Group) > Consent
+- `GeographySection` accepts optional `isNomadic`/`onIsNomadicChange` props
+
+> **Status:** Done
+
+### Story 40.7: Shared Patient Workflows Package Design
+As a platform architect, I want a design for sharing patient workflows across all spoke apps so that changes propagate automatically.
+
+**Acceptance Criteria:**
+- Design spec written for `packages/patient-workflows/` with adapter pattern
+- Adapter interface defined (checkDuplicates, createPatient, updatePatient, saveLocally, getAuthHeaders)
+- React context provider pattern documented
+- i18n export strategy documented
+- OPD-Lite migration plan documented
+- Design spec committed
+
+> **Status:** Done (design spec only — implementation is Sub-project A)
+
+# Addendum 15: Audit Trail & Last Updated Display (Epic 41)
+
+**Date:** 2026-05-25
+**Branch:** `ux-v1.0`
+**Spec:** `docs/superpowers/specs/2026-05-25-audit-trail-last-updated-design.md`
+**Plan:** `docs/superpowers/plans/2026-05-25-audit-trail-last-updated.md`
+
+**Trigger:** With multiple organizations/individuals registering and editing patient details, clinicians need visibility into who changed what and when. Audit data already existed in `audit_log` table — this feature surfaces it in the UI.
+
+## Epic 41: Audit Trail & Last Updated Display
+
+Surface audit trail data on the patient profile (role-tiered collapsible) and add "Last updated by" display to the patient header card and directory.
+
+### Story 41.1: Database — updated_by Column
+As a system, I need to track which practitioner last modified each patient record.
+
+**Acceptance Criteria:**
+- `updated_by UUID` column added to `patients` table (nullable for existing rows)
+- `patient.update` mutation writes `ctx.user.sub` to `updated_by`
+
+> **Status:** Done
+
+### Story 41.2: Resolve Updater Identity in patient.read
+As a clinician viewing a patient profile, I want to see who last updated the record.
+
+**Acceptance Criteria:**
+- `patient.read` joins `practitioners` table to resolve `updated_by` UUID to display name + role
+- Returns `_ultranos.updatedByName` ("Dr. Fatima") and `_ultranos.updatedByRole` ("DOCTOR")
+- Falls back gracefully when `updated_by` is null (legacy records)
+- `FhirPatient._ultranos` type extended with `updatedByName` and `updatedByRole`
+- `normalizeFhirPatient` handles the new fields
+
+> **Status:** Done
+
+### Story 41.3: patient.auditTrail Endpoint
+As a clinician or admin, I want to fetch audit entries for a specific patient.
+
+**Acceptance Criteria:**
+- New `patient.auditTrail` tRPC query with `patientId`, `limit`, `cursor` inputs
+- Role-based limit: clinical staff capped at 10 entries, admins get full pagination (up to 50)
+- Batch-resolves actor UUIDs to practitioner display names
+- Returns `entries[]` with action, actorName, actorRole, fieldsUpdated (names only, never values), operation, timestamp
+- Cursor-based pagination with `nextCursor` and `hasMore`
+- Self-audits the read (CLAUDE.md Rule #6)
+
+> **Status:** Done
+
+### Story 41.4: "Last Updated By" on PatientHeaderCard
+As a clinician, I want to see who last modified this patient record directly on the profile header.
+
+**Acceptance Criteria:**
+- "Last updated by Dr. Fatima (DOCTOR), 2h ago" line below vitals in PatientHeaderCard
+- Falls back to "Last updated 2h ago" when updater name unavailable
+- Uses `formatRelativeTime` from `@ultranos/ui-kit` for locale-aware timestamps
+
+> **Status:** Done
+
+### Story 41.5: "Last Updated" Column in PatientDirectory
+As a clinician browsing the patient directory, I want to see when each patient was last modified.
+
+**Acceptance Criteria:**
+- New sortable "Last Updated" column after Status in patient directory table
+- Shows relative time ("2h ago", "3 days ago") using locale-aware formatting
+- `SortField` type extended with `'lastUpdated'`
+
+> **Status:** Done
+
+### Story 41.6: PatientAuditTrail Collapsible Component
+As a clinician, I want to review recent changes to a patient record in a collapsible audit trail section.
+
+**Acceptance Criteria:**
+- Collapsible component matching `PatientDetailsAccordion` visual pattern
+- Lazy-loads audit entries on expand (not on page load)
+- Clinical staff: up to 10 entries, no "Load more"
+- Admin: 10 initial entries, "Load more" button loads next 50 via cursor pagination
+- Each entry shows: actor name (role), action description, humanized field names, relative timestamp
+- Field names mapped to human-readable labels (e.g. `nameGiven` -> "given name")
+- Never shows field values (CLAUDE.md Rule #1 — PHI safety)
+- Timeline-style layout with left border
+- Placed after PatientDetailsAccordion, before ActiveMedicationsList on profile page
+
+> **Status:** Done
+
+### Story 41.7: i18n for Audit Trail
+As a user in any supported locale, I want audit trail UI text in my language.
+
+**Acceptance Criteria:**
+- 11 new keys added to en.json, ar.json, prs.json (lastUpdatedBy, lastUpdated, auditTrail, auditTrailCount, auditCreated, auditUpdated, auditViewed, auditLoadMore, auditLoading, auditEmpty, lastUpdatedCol)
+
+> **Status:** Done
 - `apps/lab-lite/src/components/AppSidebar.tsx` — register patient nav item
 - `apps/lab-lite/src/hooks/useDashboardData.ts` — lastRefreshedAt, patientFirstName, localQueueId
 - `apps/lab-lite/src/lib/db.ts` — Dexie v3 (patients + syncQueue)

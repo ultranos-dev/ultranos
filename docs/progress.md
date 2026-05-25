@@ -919,6 +919,97 @@ Plan: `docs/superpowers/plans/2026-05-24-pharmacy-lite-enterprise-ux.md`
 
 ---
 
+## 2026-05-25 — Patient Profile UX Fixes, National ID, Audit Trail & Shared Package Design — COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `d06bb60` through `b3cde3c` (28 commits)
+
+**Phase 1 — Patient Data Fetch Bug Fixes (6 root causes identified via systematic debugging):**
+1. `fetchPatientFromHub` called non-existent `patient.getById` — fixed to use `patient.read`
+2. Profile page returned immediately from partial Dexie data — now always fetches full record from Hub in background
+3. `normalizeFhirPatient` couldn't find address data from list/search-cached records (flat keys in `_ultranos` not checked) — added fallback chain
+4. `patient.list` and `patient.search` missing 10+ columns (village, current address, phone, blood group, nomadic, etc.) — added to SELECT and response mapping with proper nested address objects
+5. `PatientEditModal` sent nested `addressOrigin`/`addressCurrent` objects but API expected flat field names — fixed to `addressProvinceOrigin`, `telecomPhone`, etc.
+6. After save, modal replaced full patient state with minimal server response `{ id, resourceType, meta }` — fixed to use `buildUpdatedPatient()` with server timestamp
+
+**Phase 2 — National ID# Field & NID Missing Badge (Epic 40, Stories 40.3–40.6):**
+7. National ID# text input added as first field in Demographics section (both registration form and edit modal)
+8. Wired into MPI duplicate check (`patient.checkDuplicates`)
+9. Edit modal: read-only masked display when NID exists, editable when empty
+10. `NidMissingBanner` amber banner on patient profile (PatientBannerStack priority #4)
+11. Amber "NID Missing" pill badge in PatientDirectory name column
+12. Registration form consistency: added Preferred Language, Blood Group, Nomadic toggle
+13. Nomadic toggle relocated into `GeographySection` (shared between registration and edit)
+14. Full i18n (en, ar, prs) for all new fields and badges
+
+**Phase 3 — Audit Trail & Last Updated Display (Epic 41, Stories 41.1–41.7):**
+15. Database migration: `updated_by UUID` column on `patients` table
+16. `patient.update` now writes `updated_by = ctx.user.sub`
+17. `patient.read` resolves `updated_by` to practitioner display name + role via join
+18. New `patient.auditTrail` tRPC endpoint: role-based limits (clinical: 10, admin: paginated 50), batch actor name resolution, cursor pagination, self-auditing
+19. `FhirPatient._ultranos` type extended with `updatedByName` and `updatedByRole`
+20. PatientHeaderCard: "Last updated by Dr. Fatima (DOCTOR), 2h ago" display
+21. PatientDirectory: new sortable "Last Updated" column with relative timestamps
+22. `PatientAuditTrail` collapsible component: lazy-load on expand, timeline layout, humanized field names, "Load more" for admins
+23. `formatRelativeTime` exported from `@ultranos/ui-kit` (was internal, now public)
+24. Full i18n (en, ar, prs) for audit trail and last updated keys
+
+**Phase 4 — Shared Patient Workflows Package Design (Sub-project A):**
+25. Design spec for `packages/patient-workflows/` with adapter pattern
+26. Adapter interface: `checkDuplicates`, `createPatient`, `updatePatient`, `saveLocally`, `getAuthHeaders`
+27. React context provider pattern (`PatientWorkflowProvider`)
+28. i18n export strategy (mergeable message objects)
+29. OPD-Lite migration plan (12 files move, adapter implementation, provider wrapping)
+
+### New Files
+- `apps/opd-lite/src/components/patient/NidMissingBanner.tsx`
+- `apps/opd-lite/src/components/patient/PatientAuditTrail.tsx`
+- `docs/superpowers/specs/2026-05-25-national-id-field-nid-badge-design.md`
+- `docs/superpowers/specs/2026-05-25-audit-trail-last-updated-design.md`
+- `docs/superpowers/specs/2026-05-25-patient-workflows-shared-package-design.md`
+- `docs/superpowers/plans/2026-05-25-national-id-field-nid-badge.md`
+- `docs/superpowers/plans/2026-05-25-audit-trail-last-updated.md`
+
+### Files Modified
+- `packages/shared-types/src/fhir/patient.ts` — `updatedByName`, `updatedByRole` in `_ultranos`
+- `packages/ui-kit/src/index.ts` — export `formatRelativeTime` and format utilities
+- `apps/hub-api/src/trpc/routers/patient.ts` — `patient.list`/`search` expanded SELECT, `patient.update` writes `updated_by`, `patient.read` resolves updater name, new `patient.auditTrail` endpoint
+- `apps/opd-lite/src/components/patient/PatientChartPage.tsx` — Hub fetch fix, normalizeFhirPatient address handling, `updatedByName`/`updatedByRole` fields, PatientAuditTrail wiring
+- `apps/opd-lite/src/components/patient/PatientEditModal.tsx` — flat field names, optimistic save, National ID# field, nomadic relocation
+- `apps/opd-lite/src/components/patient/PatientHeaderCard.tsx` — "Last updated by" display
+- `apps/opd-lite/src/components/patient/PatientBannerStack.tsx` — NidMissingBanner integration
+- `apps/opd-lite/src/components/patient/PatientDetailsAccordion.tsx` — unchanged (audit trail placed after it)
+- `apps/opd-lite/src/components/patients/PatientDirectory.tsx` — NID Missing badge, Last Updated column
+- `apps/opd-lite/src/components/registration/PatientRegistrationForm.tsx` — National ID#, Preferred Language, Blood Group, Nomadic fields
+- `apps/opd-lite/src/components/registration/GeographySection.tsx` — optional `isNomadic`/`onIsNomadicChange` props
+- `apps/opd-lite/messages/en.json` — 25+ new keys (NID, audit trail, last updated)
+- `apps/opd-lite/messages/ar.json` — Arabic translations
+- `apps/opd-lite/messages/prs.json` — Dari translations
+
+### Errors & Resolutions
+- `patient.getById` endpoint didn't exist on `patient` router (was on `patientAdmin`) — root cause of Hub fetch failure
+- Dexie cached partial data from `patient.list`/`patient.search` (missing 10+ columns) — profile page showed blanks
+- `normalizeFhirPatient` only checked `_ultranos.addressOrigin` (nested) and `raw.addressProvinceOrigin` (top-level), missed `_ultranos.addressProvinceOrigin` (flat key from list/search)
+- `formatRelativeTime` was not exported from `@ultranos/ui-kit` main index — Task 9 agent discovered and fixed
+- `bloodGroupLocked` i18n key was missing from en.json (pre-existing) — fixed during NID key additions
+
+### Tests Run
+- TypeScript compilation checks on all modified files — zero errors in modified files
+- Pre-existing TS errors in test files unaffected
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity — National ID# capture + MPI integration
+- **FR17 / Epic 8:** Cryptographic Audit Logging — audit trail UI surfaces existing audit_log data
+- **FR22 / Epic 16:** Hub API Patient CRUD — patient.read fix, patient.list/search expanded, patient.auditTrail new
+- **FR36 / Epic 37:** Patient Directory — NID Missing badge, Last Updated column
+- **Epic 20 — OPD Lite:** Registration form consistency, edit modal fixes, audit trail component
+- **CLAUDE.md Rule #1:** PHI never in UI audit trail — field names only, never values
+- **CLAUDE.md Rule #6:** Audit every PHI access — audit trail read itself emits audit event
+- **CLAUDE.md Rule #4:** Allergy display prominence — NID Missing badge uses amber (not red, reserved for allergies)
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._
