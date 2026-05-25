@@ -115,6 +115,7 @@ export function PatientEditModal({
 
   // Clinical
   const [bloodGroup, setBloodGroup] = useState<string>('Unknown')
+  const [nationalId, setNationalId] = useState('')
 
   // UI state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -125,6 +126,8 @@ export function PatientEditModal({
   const bloodGroupLocked =
     !!patient._ultranos.bloodGroup &&
     patient._ultranos.bloodGroup !== 'Unknown'
+
+  const hasNationalId = !!patient._ultranos.nationalIdHash
 
   // ── Initialize form from patient when modal opens ──
   useEffect(() => {
@@ -190,6 +193,7 @@ export function PatientEditModal({
 
     setIsNomadic(ext.isNomadic ?? false)
     setBloodGroup(ext.bloodGroup ?? 'Unknown')
+    setNationalId('') // Raw national ID is never stored; field starts empty for entry
 
     // Reset UI state
     setFieldErrors({})
@@ -255,6 +259,11 @@ export function PatientEditModal({
         .join(' ')
 
       // Build payload with only the changed fields
+      // Resolve current address: same as origin, or separate entry
+      const resolvedCurrent = sameAsOrigin
+        ? { province: addressOrigin.province, district: addressOrigin.district, village: addressOrigin.village }
+        : addressCurrent
+
       const payload: Record<string, unknown> = {
         patientId,
         lastKnownUpdate: patient.meta.lastUpdated,
@@ -266,30 +275,16 @@ export function PatientEditModal({
         birthYearOnly,
         birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
         birthDate: birthDate || undefined,
-        phone: phone || undefined,
+        telecomPhone: phone || undefined,
+        nationalId: nationalId || undefined,
         preferredLanguage: preferredLanguage || undefined,
-        addressOrigin: addressOrigin.province
-          ? {
-              province: addressOrigin.province,
-              district: addressOrigin.district,
-              village: addressOrigin.village || undefined,
-            }
-          : undefined,
-        addressCurrent: sameAsOrigin
-          ? (addressOrigin.province
-              ? {
-                  province: addressOrigin.province,
-                  district: addressOrigin.district,
-                  village: addressOrigin.village || undefined,
-                }
-              : undefined)
-          : (addressCurrent.province
-              ? {
-                  province: addressCurrent.province,
-                  district: addressCurrent.district,
-                  village: addressCurrent.village || undefined,
-                }
-              : undefined),
+        // Address fields — API expects flat field names, not nested objects
+        addressProvinceOrigin: addressOrigin.province || undefined,
+        addressDistrictOrigin: addressOrigin.district || undefined,
+        addressVillageOrigin: addressOrigin.village || undefined,
+        addressProvinceCurrent: resolvedCurrent.province || undefined,
+        addressDistrictCurrent: resolvedCurrent.district || undefined,
+        addressVillageCurrent: resolvedCurrent.village || undefined,
         isNomadic,
         bloodGroup: bloodGroupLocked ? undefined : (bloodGroup || undefined),
       }
@@ -329,13 +324,21 @@ export function PatientEditModal({
         throw new Error(`Update failed: ${res.status}`)
       }
 
+      // The update endpoint returns only { id, resourceType, meta } —
+      // use the server's lastUpdated timestamp for the optimistic patient.
       const body = await res.json() as {
-        result: { data: { json: FhirPatient } }
+        result: { data: { json: { meta: { lastUpdated: string } } } }
       }
-      const serverPatient = body.result.data.json
+      const serverTimestamp = body.result?.data?.json?.meta?.lastUpdated ?? now
 
-      // Update local Dexie cache
-      await db.patients.put(serverPatient)
+      const updatedPatient = buildUpdatedPatient(serverTimestamp)
+
+      // Update local Dexie cache with the full patient object
+      try {
+        await db.patients.put(updatedPatient)
+      } catch {
+        // Non-critical — state is updated in memory regardless
+      }
 
       // Emit audit event
       auditPhiAccess(
@@ -346,7 +349,7 @@ export function PatientEditModal({
         { phiAccess: 'profile_edit' },
       )
 
-      onSaved(serverPatient)
+      onSaved(updatedPatient)
       onClose()
     } catch (err) {
       // Offline fallback on network error
@@ -380,7 +383,7 @@ export function PatientEditModal({
     }
   }, [
     validate, patientId, patient, nameGiven, nameFather, nameGrandfather,
-    gender, birthYearOnly, birthYear, birthDate, phone, preferredLanguage,
+    gender, birthYearOnly, birthYear, birthDate, phone, nationalId, preferredLanguage,
     addressOrigin, addressCurrent, sameAsOrigin, isNomadic, bloodGroup,
     bloodGroupLocked, onSaved, onClose, t,
   ])
@@ -664,6 +667,35 @@ export function PatientEditModal({
                   <option value="prs">{isRtl ? '\u062F\u0631\u06CC' : 'Dari'}</option>
                 </select>
               </div>
+
+              {/* National ID */}
+              <div>
+                <label
+                  htmlFor="edit-national-id"
+                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                >
+                  {t('nationalIdLabel')}
+                  <span className="ms-1 text-xs font-normal text-neutral-400">
+                    ({t('optional')})
+                  </span>
+                </label>
+                {hasNationalId ? (
+                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                    {t('nationalId')} ••••••
+                  </p>
+                ) : (
+                  <input
+                    id="edit-national-id"
+                    type="text"
+                    inputMode="text"
+                    maxLength={200}
+                    className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    placeholder={t('nationalIdPlaceholder')}
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value)}
+                  />
+                )}
+              </div>
             </div>
           </Card>
 
@@ -675,6 +707,8 @@ export function PatientEditModal({
             onOriginChange={setAddressOrigin}
             onCurrentChange={setAddressCurrent}
             onSameAsOriginChange={setSameAsOrigin}
+            isNomadic={isNomadic}
+            onIsNomadicChange={setIsNomadic}
             errors={{
               originProvince: fieldErrors.addressOriginProvince,
               originDistrict: fieldErrors.addressOriginDistrict,
@@ -682,21 +716,6 @@ export function PatientEditModal({
               currentDistrict: fieldErrors.addressCurrentDistrict,
             }}
           />
-
-          {/* Nomadic toggle */}
-          <Card>
-            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-              <input
-                type="checkbox"
-                checked={isNomadic}
-                onChange={(e) => setIsNomadic(e.target.checked)}
-                className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
-              />
-              <span className="text-sm font-medium text-neutral-700">
-                {t('isNomadic')}
-              </span>
-            </label>
-          </Card>
 
           {/* Blood group */}
           <Card as="fieldset">
