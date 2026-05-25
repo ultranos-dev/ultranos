@@ -5,6 +5,8 @@ import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
 } from './dexie-encryption-middleware'
+import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInventorySettings } from './inventory/types'
+import { INVENTORY_STORES } from './inventory-db'
 
 export interface DispenseAuditEntry {
   id: string
@@ -94,6 +96,11 @@ class PharmacyLiteDatabase extends Dexie {
   pendingAuditEvents!: EntityTable<PendingAuditEvent, 'id'>
   clientAuditLog!: EntityTable<ClientAuditEvent, 'id'>
   patients!: EntityTable<LocalPatient, 'id'>
+  catalogItems!: EntityTable<CatalogItem, 'id'>
+  stockBatches!: EntityTable<StockBatch, 'id'>
+  stockMovements!: EntityTable<StockMovement, 'id'>
+  goodsReceipts!: EntityTable<GoodsReceipt, 'id'>
+  pharmacySettings!: EntityTable<PharmacyInventorySettings, 'locationId'>
 
   constructor() {
     super('pharmacy-lite')
@@ -129,6 +136,9 @@ class PharmacyLiteDatabase extends Dexie {
     this.version(5).stores({
       patients: 'id, nameGiven, phone, createdAt',
     })
+
+    // v6: Inventory management — catalog, stock batches, movements, goods receipts, settings
+    this.version(6).stores(INVENTORY_STORES)
   }
 }
 
