@@ -9,6 +9,9 @@ import { db } from '@/lib/db'
 import { selectFefoBatch } from '@/lib/inventory/fefo'
 import { deductStock } from '@/lib/inventory/stock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { createInvoiceFromDispense } from '@/lib/pos/invoice-service'
+import { usePosStore } from '@/stores/pos-store'
+import type { InvoiceLineItem } from '@/lib/pos/types'
 
 export type FulfillmentPhase =
   | 'empty'
@@ -56,6 +59,7 @@ interface FulfillmentState {
   assignFefoBatches: () => Promise<void>
   deductStockOnDispense: (practitionerId: string) => Promise<void>
   confirmDispense: () => Promise<void>
+  createInvoiceAfterDispense: (practitionerId: string) => Promise<void>
   reset: () => void
 }
 
@@ -250,6 +254,35 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         set((state) => {
           state.syncStatus.isPending = false
         })
+      }
+    },
+
+    createInvoiceAfterDispense: async (practitionerId: string) => {
+      const state = get()
+      const selectedItems = state.items.filter((i) => i.selected)
+      if (selectedItems.length === 0) return
+
+      const lineItems: InvoiceLineItem[] = selectedItems.map((item) => ({
+        catalogItemId: item.prescription.med,
+        stockBatchId: item.fefoBatchId ?? '',
+        description: item.prescription.medT || item.prescription.medN,
+        quantity: item.prescription.dos.qty,
+        unitPrice: 0,
+        lineTotal: 0,
+      }))
+
+      try {
+        const invoice = await createInvoiceFromDispense({
+          dispenseIds: selectedItems.map((i) => i.prescription.id),
+          patientId: undefined,
+          items: lineItems,
+          taxRate: 0,
+          createdBy: practitionerId,
+          invoicePrefix: 'INV-',
+        })
+        usePosStore.getState().setActiveInvoice(invoice)
+      } catch {
+        // Invoice creation failure should not block dispensing
       }
     },
 

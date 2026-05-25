@@ -11,6 +11,7 @@ import {
 } from './RecentDispensingList'
 import { DashboardActionHub } from './DashboardActionHub'
 import { InventoryAlertCard } from './inventory/InventoryAlertCard'
+import { DrawerStatusCard } from './pos/DrawerStatusCard'
 
 const AUTO_REFRESH_INTERVAL_MS = 30_000
 
@@ -210,6 +211,9 @@ export function PharmacyDashboard() {
 
       {/* Inventory alerts */}
       <InventoryAlertCard />
+
+      {/* Cash drawer status */}
+      <DrawerStatusCard />
     </div>
   )
 }

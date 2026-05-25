@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
 import { Button } from '@/components/ui/Button'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { AllergyBanner } from './AllergyBanner'
 import { usePatientStore } from '@/stores/patient-store'
+import { usePosStore } from '@/stores/pos-store'
 
 interface FulfillmentChecklistProps {
   onConfirm?: (selectedItems: FulfillmentItem[]) => void
@@ -21,7 +23,9 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandName, setBatchLot } =
     useFulfillmentStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [dispensingComplete, setDispensingComplete] = useState(false)
   const activePatient = usePatientStore((s) => s.activePatient)
+  const activeInvoice = usePosStore((s) => s.activeInvoice)
 
   if (phase === 'empty' || items.length === 0) {
     return (
@@ -159,6 +163,19 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
         Confirm Dispensing
       </Button>
 
+      {dispensingComplete && (
+        <div className="rounded-lg border-2 border-green-400 bg-green-50 p-4 space-y-3" data-testid="dispensing-complete-card">
+          <p className="text-sm font-bold text-green-800">Dispensing Complete</p>
+          {activeInvoice && (
+            <Link href="/pos">
+              <Button variant="primary" fullWidth type="button" data-testid="collect-payment-cta">
+                Collect Payment — {activeInvoice.invoiceNumber}
+              </Button>
+            </Link>
+          )}
+        </div>
+      )}
+
       {showConfirmModal && (
         <DispensingConfirmationModal
           items={items.filter((i) => i.selected)}
@@ -168,6 +185,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
             setShowConfirmModal(false)
             const selected = items.filter((i) => i.selected)
             onConfirm?.(selected)
+            setDispensingComplete(true)
           }}
           onCancel={() => setShowConfirmModal(false)}
         />

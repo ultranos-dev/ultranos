@@ -107,6 +107,27 @@ const icons = {
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </svg>
   ),
+  pos: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </svg>
+  ),
+  cashDrawer: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+      <line x1="12" y1="14" x2="12" y2="14.01" />
+    </svg>
+  ),
+  accounts: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <line x1="18" y1="8" x2="23" y2="13" />
+      <line x1="23" y1="8" x2="18" y2="13" />
+    </svg>
+  ),
 } as const
 
 function getInitials(name: string): string {
@@ -123,7 +144,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog']
+  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/pos', '/pos/accounts']
   const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
@@ -158,6 +179,10 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
     { label: t('stockOverview'), href: '/inventory', icon: icons.inventory, active: pathname === '/inventory', group: 'inventory' },
     { label: t('receiveStock'), href: '/inventory/receive', icon: icons.receive, active: pathname === '/inventory/receive', group: 'inventory' },
     { label: t('catalog'), href: '/inventory/catalog', icon: icons.catalog, active: pathname === '/inventory/catalog', group: 'inventory' },
+    // Financial group
+    { label: t('pos'), href: '/pos', icon: icons.pos, active: pathname === '/pos', group: 'financial' },
+    { label: t('cashDrawer'), href: '/pos/cash-drawer', icon: icons.cashDrawer, active: pathname === '/pos/cash-drawer', group: 'financial' },
+    { label: t('patientAccounts'), href: '/pos/accounts', icon: icons.accounts, active: pathname === '/pos/accounts', group: 'financial' },
     // Clinical group
     { label: t('controlled'), href: '/controlled', icon: icons.controlled, active: pathname === '/controlled', group: 'clinical' },
     { label: t('unverified'), href: '/unverified', icon: icons.unverified, active: pathname === '/unverified', group: 'clinical' },
