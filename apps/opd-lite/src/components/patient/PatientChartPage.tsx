@@ -18,6 +18,7 @@ import { PatientBannerStack } from '@/components/patient/PatientBannerStack'
 import { PatientHeaderCard } from '@/components/patient/PatientHeaderCard'
 import { PatientEditModal } from '@/components/patient/PatientEditModal'
 import { PatientDetailsAccordion } from '@/components/patient/PatientDetailsAccordion'
+import { PatientAuditTrail } from '@/components/patient/PatientAuditTrail'
 import { ActiveMedicationsList } from '@/components/patient/ActiveMedicationsList'
 import { EncounterHistoryList } from '@/components/patient/EncounterHistoryList'
 import { LabResultsList } from '@/components/clinical/LabResultsList'
@@ -191,6 +192,21 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   const [needsReauth, setNeedsReauth] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedLabReport, setSelectedLabReport] = useState<LocalDiagnosticReport | null>(null)
+  const [userRole, setUserRole] = useState<string>('DOCTOR')
+
+  useEffect(() => {
+    async function loadRole() {
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const { data } = await supabase.auth.getSession()
+        const role = (data.session?.user?.app_metadata?.role as string) ?? 'DOCTOR'
+        setUserRole(role)
+      } catch {
+        // Default role is fine
+      }
+    }
+    loadRole()
+  }, [])
 
   usePatientSync(patientId)
 
@@ -320,6 +336,9 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
 
       {/* Collapsible demographics and identity details */}
       <PatientDetailsAccordion patient={patient} />
+
+      {/* Audit trail — who modified this record */}
+      <PatientAuditTrail patientId={patientId} userRole={userRole} />
 
       {/* Cross-encounter active medications */}
       <ActiveMedicationsList patientId={patientId} />
