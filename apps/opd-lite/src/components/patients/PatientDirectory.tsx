@@ -5,11 +5,12 @@ import { useTranslations, useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { formatRelativeTime } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
 import { usePatientListSync } from '@/lib/use-patient-list-sync'
 
-type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status'
+type SortField = 'name' | 'age' | 'gender' | 'phone' | 'lastVisit' | 'status' | 'lastUpdated'
 type SortDir = 'asc' | 'desc'
 type StatusFilter = 'all' | 'active' | 'inactive'
 type AllergyFilter = 'all' | 'yes' | 'no'
@@ -25,6 +26,7 @@ interface PatientRow {
   status: string
   hasAllergies: boolean
   hasNationalId: boolean
+  lastUpdated: string | null
 }
 
 const PAGE_SIZE = 25
@@ -177,6 +179,7 @@ export function PatientDirectory() {
       status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
       hasAllergies: allergyPatientIds.has(p.id),
       hasNationalId: !!p._ultranos?.nationalIdHash,
+      lastUpdated: (p.meta?.lastUpdated as string) ?? null,
     }))
   }, [patients, allergyPatientIds, lastVisitMap])
 
@@ -385,6 +388,7 @@ export function PatientDirectory() {
                       ['phone', t('phone')],
                       ['lastVisit', t('lastVisit')],
                       ['status', t('status')],
+                      ['lastUpdated', t('lastUpdatedCol')],
                     ] as [SortField, string][]
                   ).map(([field, label]) => (
                     <th
@@ -447,6 +451,11 @@ export function PatientDirectory() {
                       >
                         {row.status === 'active' ? t('active') : t('inactive')}
                       </span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                      {row.lastUpdated
+                        ? formatRelativeTime(row.lastUpdated, locale as 'en' | 'ar' | 'prs')
+                        : '—'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       {row.hasAllergies && (
