@@ -13,6 +13,8 @@ import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { stopAuditDrain } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useCatalogSync } from '@/hooks/useCatalogSync'
+import { useExpiryWatchdog } from '@/hooks/useExpiryWatchdog'
 
 // Inline SVG icons — no icon library (matches codebase pattern)
 const icons = {
@@ -86,6 +88,25 @@ const icons = {
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
+  inventory: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  ),
+  receive: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  catalog: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  ),
 } as const
 
 function getInitials(name: string): string {
@@ -102,11 +123,13 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue']
+  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog']
   const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
   useKeyboardShortcuts()
+  useCatalogSync()
+  useExpiryWatchdog()
 
   const handleSignOut = useCallback(async () => {
     encryptionKeyStore.wipe()
@@ -131,6 +154,10 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
     { label: t('paperRx'), href: '/paper-rx', icon: icons.paperRx, active: pathname === '/paper-rx', group: 'primary' },
     { label: t('queue'), href: '/queue', icon: icons.queue, active: pathname === '/queue', badge: pendingCount || null, group: 'primary' },
     { label: t('history'), href: '/history', icon: icons.history, active: pathname === '/history', group: 'primary' },
+    // Inventory group
+    { label: t('stockOverview'), href: '/inventory', icon: icons.inventory, active: pathname === '/inventory', group: 'inventory' },
+    { label: t('receiveStock'), href: '/inventory/receive', icon: icons.receive, active: pathname === '/inventory/receive', group: 'inventory' },
+    { label: t('catalog'), href: '/inventory/catalog', icon: icons.catalog, active: pathname === '/inventory/catalog', group: 'inventory' },
     // Clinical group
     { label: t('controlled'), href: '/controlled', icon: icons.controlled, active: pathname === '/controlled', group: 'clinical' },
     { label: t('unverified'), href: '/unverified', icon: icons.unverified, active: pathname === '/unverified', group: 'clinical' },

@@ -10,6 +10,7 @@ import {
   type RecentDispenseItem,
 } from './RecentDispensingList'
 import { DashboardActionHub } from './DashboardActionHub'
+import { InventoryAlertCard } from './inventory/InventoryAlertCard'
 
 const AUTO_REFRESH_INTERVAL_MS = 30_000
 
@@ -206,6 +207,9 @@ export function PharmacyDashboard() {
 
       {/* Recent dispensing list */}
       <RecentDispensingList items={stats.recentDispenses} />
+
+      {/* Inventory alerts */}
+      <InventoryAlertCard />
     </div>
   )
 }

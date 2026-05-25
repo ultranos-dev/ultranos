@@ -6,6 +6,8 @@ import { syncDispenseToHub, type DispenseSyncResult } from '@/lib/dispense-sync'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { db } from '@/lib/db'
+import { selectFefoBatch } from '@/lib/inventory/fefo'
+import { deductStock } from '@/lib/inventory/stock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export type FulfillmentPhase =
@@ -20,6 +22,9 @@ export interface FulfillmentItem {
   selected: boolean
   brandName: string
   batchLot: string
+  fefoBatchId?: string
+  fefoBatchNumber?: string
+  fefoBatchExpiry?: string
 }
 
 export interface DispenseSyncStatus {
@@ -48,6 +53,8 @@ interface FulfillmentState {
   setBrandName: (prescriptionId: string, brandName: string) => void
   setBatchLot: (prescriptionId: string, batchLot: string) => void
   startReview: () => void
+  assignFefoBatches: () => Promise<void>
+  deductStockOnDispense: (practitionerId: string) => Promise<void>
   confirmDispense: () => Promise<void>
   reset: () => void
 }
@@ -132,6 +139,52 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         set((state) => {
           state.phase = 'reviewing'
         })
+      }
+    },
+
+    assignFefoBatches: async () => {
+      const items = get().items
+      const updatedItems = await Promise.all(
+        items.map(async (item) => {
+          if (!item.selected || item.fefoBatchId) return item
+          const catalogItem = await db.catalogItems
+            .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+            .first()
+          if (!catalogItem) return item
+          const batch = await selectFefoBatch(catalogItem.id, item.prescription.dos.qty)
+          if (!batch) return item
+          return {
+            ...item,
+            fefoBatchId: batch.id,
+            fefoBatchNumber: batch.batchNumber,
+            fefoBatchExpiry: batch.expiryDate,
+          }
+        })
+      )
+      set({ items: updatedItems })
+    },
+
+    deductStockOnDispense: async (practitionerId: string) => {
+      const items = get().items
+      for (const item of items) {
+        if (!item.selected || !item.fefoBatchId) continue
+        try {
+          const catalogItem = await db.catalogItems
+            .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+            .first()
+          if (!catalogItem) continue
+          await deductStock({
+            stockBatchId: item.fefoBatchId,
+            catalogItemId: catalogItem.id,
+            quantity: item.prescription.dos.qty,
+            type: 'dispensed',
+            referenceId: item.prescription.id,
+            referenceType: 'dispense',
+            performedBy: practitionerId,
+          })
+        } catch {
+          // Stock deduction failure should not block dispensing
+        }
       }
     },
 
