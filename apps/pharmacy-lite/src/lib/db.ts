@@ -7,6 +7,8 @@ import {
 } from './dexie-encryption-middleware'
 import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInventorySettings } from './inventory/types'
 import { INVENTORY_STORES } from './inventory-db'
+import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
+import { POS_STORES } from './pos-db'
 
 export interface DispenseAuditEntry {
   id: string
@@ -101,6 +103,11 @@ class PharmacyLiteDatabase extends Dexie {
   stockMovements!: EntityTable<StockMovement, 'id'>
   goodsReceipts!: EntityTable<GoodsReceipt, 'id'>
   pharmacySettings!: EntityTable<PharmacyInventorySettings, 'locationId'>
+  invoices!: EntityTable<Invoice, 'id'>
+  payments!: EntityTable<Payment, 'id'>
+  ledgerEntries!: EntityTable<LedgerEntry, 'id'>
+  patientAccounts!: EntityTable<PatientAccount, 'id'>
+  cashDrawers!: EntityTable<CashDrawer, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -139,6 +146,9 @@ class PharmacyLiteDatabase extends Dexie {
 
     // v6: Inventory management — catalog, stock batches, movements, goods receipts, settings
     this.version(6).stores(INVENTORY_STORES)
+
+    // v7: Point of Sale — invoices, payments, ledger entries, patient accounts, cash drawers
+    this.version(7).stores(POS_STORES)
   }
 }
 
