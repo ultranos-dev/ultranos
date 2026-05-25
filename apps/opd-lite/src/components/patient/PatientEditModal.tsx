@@ -518,6 +518,35 @@ export function PatientEditModal({
             </legend>
 
             <div className="space-y-4">
+              {/* National ID */}
+              <div>
+                <label
+                  htmlFor="edit-national-id"
+                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                >
+                  {t('nationalIdLabel')}
+                  <span className="ms-1 text-xs font-normal text-neutral-400">
+                    ({t('optional')})
+                  </span>
+                </label>
+                {hasNationalId ? (
+                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                    {t('nationalId')} ••••••
+                  </p>
+                ) : (
+                  <input
+                    id="edit-national-id"
+                    type="text"
+                    inputMode="text"
+                    maxLength={200}
+                    className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    placeholder={t('nationalIdPlaceholder')}
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value)}
+                  />
+                )}
+              </div>
+
               {/* Gender */}
               <div>
                 <label
@@ -666,35 +695,6 @@ export function PatientEditModal({
                   <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
                   <option value="prs">{isRtl ? '\u062F\u0631\u06CC' : 'Dari'}</option>
                 </select>
-              </div>
-
-              {/* National ID */}
-              <div>
-                <label
-                  htmlFor="edit-national-id"
-                  className="mb-1 block text-sm font-semibold text-neutral-700"
-                >
-                  {t('nationalIdLabel')}
-                  <span className="ms-1 text-xs font-normal text-neutral-400">
-                    ({t('optional')})
-                  </span>
-                </label>
-                {hasNationalId ? (
-                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-                    {t('nationalId')} ••••••
-                  </p>
-                ) : (
-                  <input
-                    id="edit-national-id"
-                    type="text"
-                    inputMode="text"
-                    maxLength={200}
-                    className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    placeholder={t('nationalIdPlaceholder')}
-                    value={nationalId}
-                    onChange={(e) => setNationalId(e.target.value)}
-                  />
-                )}
               </div>
             </div>
           </Card>

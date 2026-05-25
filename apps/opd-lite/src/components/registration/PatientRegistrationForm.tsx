@@ -489,6 +489,29 @@ export function PatientRegistrationForm({
           </legend>
 
           <div className="space-y-4">
+            {/* National ID */}
+            <div>
+              <label
+                htmlFor="national-id"
+                className="mb-1 block text-sm font-semibold text-neutral-700"
+              >
+                {t('nationalIdLabel')}
+                <span className="ms-1 text-xs font-normal text-neutral-400">
+                  ({t('optional')})
+                </span>
+              </label>
+              <input
+                id="national-id"
+                type="text"
+                inputMode="text"
+                maxLength={200}
+                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                placeholder={t('nationalIdPlaceholder')}
+                value={nationalId}
+                onChange={(e) => setNationalId(e.target.value)}
+              />
+            </div>
+
             {/* Gender */}
             <div>
               <label
@@ -623,29 +646,6 @@ export function PatientRegistrationForm({
                 placeholder={t('phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-
-            {/* National ID */}
-            <div>
-              <label
-                htmlFor="national-id"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
-              >
-                {t('nationalIdLabel')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
-                  ({t('optional')})
-                </span>
-              </label>
-              <input
-                id="national-id"
-                type="text"
-                inputMode="text"
-                maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                placeholder={t('nationalIdPlaceholder')}
-                value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
               />
             </div>
 
