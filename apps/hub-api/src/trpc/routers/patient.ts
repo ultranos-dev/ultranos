@@ -1297,6 +1297,100 @@ export const patientRouter = createTRPCRouter({
 
       return { success: true }
     }),
+
+  // ── patient.auditTrail ──────────────────────────────────────
+  auditTrail: protectedProcedure
+    .use(enforceResourceAccess('Patient'))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        limit: z.number().int().min(1).max(50).default(10),
+        cursor: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // Role-based limit: clinical staff see max 10, admins get full pagination
+      const maxLimit = ctx.user.role === 'ADMIN' ? input.limit : Math.min(input.limit, 10)
+
+      let query = ctx.supabase
+        .from('audit_log')
+        .select('id, action, actor_id, actor_role, metadata, timestamp')
+        .eq('resource_id', input.patientId)
+        .eq('resource_type', 'PATIENT')
+        .order('timestamp', { ascending: false })
+        .limit(maxLimit)
+
+      if (input.cursor) {
+        query = query.lt('timestamp', input.cursor)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Audit trail query error:', { code: error.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch audit trail',
+        })
+      }
+
+      const rows = data ?? []
+
+      // Batch-resolve actor names from practitioners table
+      const actorIds = [...new Set(rows.map((r: Record<string, unknown>) => r.actor_id as string).filter(Boolean))]
+      const actorMap = new Map<string, { name: string; role: string }>()
+
+      if (actorIds.length > 0) {
+        const { data: practitioners } = await ctx.supabase
+          .from('practitioners')
+          .select('id, given_name, family_name, role')
+          .in('id', actorIds)
+
+        for (const p of (practitioners ?? []) as Array<{ id: string; given_name: string; family_name: string; role: string }>) {
+          actorMap.set(p.id, {
+            name: `${p.given_name} ${p.family_name}`,
+            role: p.role,
+          })
+        }
+      }
+
+      // Audit the audit trail read itself (CLAUDE.md Rule #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'PHI_READ',
+          resourceType: 'PATIENT',
+          resourceId: input.patientId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { operation: 'audit_trail_read', entryCount: rows.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'PHI_READ', resourceId: input.patientId })
+      }
+
+      return {
+        entries: rows.map((r: Record<string, unknown>) => {
+          const actor = actorMap.get(r.actor_id as string)
+          const meta = (r.metadata ?? {}) as Record<string, unknown>
+          return {
+            id: r.id as string,
+            action: r.action as string,
+            actorName: actor?.name,
+            actorRole: (actor?.role ?? r.actor_role) as string,
+            fieldsUpdated: (meta.fieldsUpdated as string[]) ?? [],
+            operation: (meta.operation as string) ?? r.action,
+            timestamp: r.timestamp as string,
+          }
+        }),
+        nextCursor: rows.length === maxLimit
+          ? (rows[rows.length - 1] as Record<string, unknown>).timestamp as string
+          : null,
+        hasMore: rows.length === maxLimit,
+      }
+    }),
 })
 
 /**
