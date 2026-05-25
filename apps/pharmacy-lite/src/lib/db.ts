@@ -9,6 +9,7 @@ import type { CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacyInve
 import { INVENTORY_STORES } from './inventory-db'
 import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
 import { POS_STORES } from './pos-db'
+import type { Supplier, PurchaseOrder, StockCount } from './procurement/types'
 
 export interface DispenseAuditEntry {
   id: string
@@ -108,6 +109,9 @@ class PharmacyLiteDatabase extends Dexie {
   ledgerEntries!: EntityTable<LedgerEntry, 'id'>
   patientAccounts!: EntityTable<PatientAccount, 'id'>
   cashDrawers!: EntityTable<CashDrawer, 'id'>
+  suppliers!: EntityTable<Supplier, 'id'>
+  purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
+  stockCounts!: EntityTable<StockCount, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -153,6 +157,13 @@ class PharmacyLiteDatabase extends Dexie {
     // v8: Add lastSyncedAt index to catalogItems (fixes orderBy query in catalog-sync)
     this.version(8).stores({
       catalogItems: 'id, barcode, name, category, controlledSchedule, isActive, lastSyncedAt',
+    })
+
+    // v9: Procurement — suppliers, purchase orders, stock counts
+    this.version(9).stores({
+      suppliers: 'id, name, isActive',
+      purchaseOrders: 'id, supplierId, status, createdAt',
+      stockCounts: 'id, type, status, startedAt',
     })
   }
 }
