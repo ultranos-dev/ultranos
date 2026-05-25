@@ -149,6 +149,11 @@ class PharmacyLiteDatabase extends Dexie {
 
     // v7: Point of Sale — invoices, payments, ledger entries, patient accounts, cash drawers
     this.version(7).stores(POS_STORES)
+
+    // v8: Add lastSyncedAt index to catalogItems (fixes orderBy query in catalog-sync)
+    this.version(8).stores({
+      catalogItems: 'id, barcode, name, category, controlledSchedule, isActive, lastSyncedAt',
+    })
   }
 }
 

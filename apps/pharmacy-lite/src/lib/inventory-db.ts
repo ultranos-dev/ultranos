@@ -16,7 +16,7 @@ export type InventoryTables = {
 }
 
 export const INVENTORY_STORES = {
-  catalogItems: 'id, barcode, name, category, controlledSchedule, isActive',
+  catalogItems: 'id, barcode, name, category, controlledSchedule, isActive, lastSyncedAt',
   stockBatches: 'id, catalogItemId, expiryDate, status, locationId, [catalogItemId+status]',
   stockMovements: 'id, stockBatchId, catalogItemId, type, timestamp, hlcTimestamp',
   goodsReceipts: 'id, receivedAt, supplierId',
