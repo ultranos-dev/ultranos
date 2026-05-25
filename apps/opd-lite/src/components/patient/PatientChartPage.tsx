@@ -83,20 +83,38 @@ function normalizeFhirPatient(raw: Record<string, unknown>): FhirPatient {
       nameFather: (existingExt.nameFather as string) ?? (raw.nameFatherEnc as string) ?? (raw.nameFather as string) ?? undefined,
       nameGrandfather: (existingExt.nameGrandfather as string) ?? (raw.nameGrandfatherEnc as string) ?? (raw.nameGrandfather as string) ?? undefined,
       birthYear: (existingExt.birthYear as number) ?? (raw.birthYear as number) ?? undefined,
-      addressOrigin: (existingExt.addressOrigin as PatientAddress | undefined) ?? (raw.addressProvinceOrigin
-        ? {
-            province: raw.addressProvinceOrigin as PatientAddress['province'],
-            district: (raw.addressDistrictOrigin as string) ?? '',
-            village: (raw.addressVillageOrigin as string) || undefined,
-          }
-        : undefined),
-      addressCurrent: (existingExt.addressCurrent as PatientAddress | undefined) ?? (raw.addressProvinceCurrent
-        ? {
-            province: raw.addressProvinceCurrent as PatientAddress['province'],
-            district: (raw.addressDistrictCurrent as string) ?? '',
-            village: (raw.addressVillageCurrent as string) || undefined,
-          }
-        : undefined),
+      addressOrigin: (existingExt.addressOrigin as PatientAddress | undefined)
+        // Flat keys from patient.list/search responses cached in _ultranos
+        ?? ((existingExt.addressProvinceOrigin as string)
+          ? {
+              province: existingExt.addressProvinceOrigin as PatientAddress['province'],
+              district: (existingExt.addressDistrictOrigin as string) ?? '',
+              village: (existingExt.addressVillageOrigin as string) || undefined,
+            }
+          : undefined)
+        // Flat keys at top level from raw Hub row
+        ?? (raw.addressProvinceOrigin
+          ? {
+              province: raw.addressProvinceOrigin as PatientAddress['province'],
+              district: (raw.addressDistrictOrigin as string) ?? '',
+              village: (raw.addressVillageOrigin as string) || undefined,
+            }
+          : undefined),
+      addressCurrent: (existingExt.addressCurrent as PatientAddress | undefined)
+        ?? ((existingExt.addressProvinceCurrent as string)
+          ? {
+              province: existingExt.addressProvinceCurrent as PatientAddress['province'],
+              district: (existingExt.addressDistrictCurrent as string) ?? '',
+              village: (existingExt.addressVillageCurrent as string) || undefined,
+            }
+          : undefined)
+        ?? (raw.addressProvinceCurrent
+          ? {
+              province: raw.addressProvinceCurrent as PatientAddress['province'],
+              district: (raw.addressDistrictCurrent as string) ?? '',
+              village: (raw.addressVillageCurrent as string) || undefined,
+            }
+          : undefined),
       isNomadic: (existingExt.isNomadic as boolean) ?? (raw.isNomadic as boolean) ?? false,
       biometricFingerprintHash: (existingExt.biometricFingerprintHash as string) ?? (raw.biometricFingerprintHash as string) ?? undefined,
       biometricAlgorithmVersion: (existingExt.biometricAlgorithmVersion as string) ?? (raw.biometricAlgorithmVersion as string) ?? undefined,
@@ -104,6 +122,8 @@ function normalizeFhirPatient(raw: Record<string, unknown>): FhirPatient {
       identifiers: (existingExt.identifiers as FhirPatient['_ultranos']['identifiers']) ?? (raw.identifiers as FhirPatient['_ultranos']['identifiers']) ?? undefined,
       photoUrl: (existingExt.photoUrl as string) ?? (raw.photoUrl as string) ?? undefined,
       bloodGroup: (existingExt.bloodGroup as string) ?? (raw.bloodGroup as string) ?? undefined,
+      updatedByName: (existingExt.updatedByName as string) ?? undefined,
+      updatedByRole: (existingExt.updatedByRole as string) ?? undefined,
     },
     meta: raw.meta as FhirPatient['meta'] ?? {
       lastUpdated: (raw.updatedAt as string) ?? new Date().toISOString(),
@@ -131,14 +151,17 @@ async function fetchPatientFromHub(
       JSON.stringify({ json: { patientId } }),
     )
     const res = await fetch(
-      `${HUB_API_URL}/api/trpc/patient.getById?input=${params}`,
+      `${HUB_API_URL}/api/trpc/patient.read?input=${params}`,
       {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       },
     )
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.warn('[fetchPatientFromHub] patient.read failed:', { status: res.status })
+      return null
+    }
 
     const data = await res.json() as {
       result: { data: { json: Record<string, unknown> } }
@@ -179,13 +202,15 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
     let cancelled = false
 
     async function loadPatient() {
-      // Step 1: Try local Dexie first
+      // Step 1: Try local Dexie for instant display
+      let hasLocalData = false
       try {
         const raw = await db.patients.get(patientId)
         if (!cancelled && raw) {
           const p = normalizeFhirPatient(raw as unknown as Record<string, unknown>)
           setPatient(p)
           setLoading(false)
+          hasLocalData = true
           auditPhiAccess(
             AuditAction.READ,
             AuditResourceType.PATIENT,
@@ -193,7 +218,6 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
             patientId,
             { phiAccess: 'patient_chart_view' },
           )
-          return
         }
       } catch (err) {
         if (!cancelled && err instanceof EncryptionKeyNotAvailableError) {
@@ -201,18 +225,18 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
           setLoading(false)
           return
         }
-        // Other Dexie errors (e.g. decryption failure with wrong key) —
-        // fall through to Hub fetch
+        // Other Dexie errors — fall through to Hub fetch
       }
 
-      // Step 2: Not in Dexie — fetch from Hub API directly
-      // (The sync pull for Patient resources is broken because the patients
-      // table lacks an hlc_timestamp column, so we fetch via patient.getById)
+      // Step 2: Always fetch the full record from Hub API.
+      // Dexie may only have partial data from patient.list/search (missing
+      // address_current, village, phone, blood_group, etc.). The Hub
+      // patient.read endpoint returns the complete FHIR-aligned patient.
       if (!cancelled) {
         const hubPatient = await fetchPatientFromHub(patientId)
-        if (!cancelled) {
+        if (!cancelled && hubPatient) {
           setPatient(hubPatient)
-          if (hubPatient) {
+          if (!hasLocalData) {
             auditPhiAccess(
               AuditAction.READ,
               AuditResourceType.PATIENT,
