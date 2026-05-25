@@ -98,6 +98,10 @@ const ClientRegistrationSchema = z.object({
   birthYear: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
   birthDate: z.string().optional(),
   phone: z.string().max(50).optional(),
+  nationalId: z.string().max(200).optional(),
+  preferredLanguage: z.enum(['en', 'ar', 'prs']).optional(),
+  isNomadic: z.boolean().optional(),
+  bloodGroup: z.string().optional(),
   addressOriginProvince: z.string().min(1, 'required'),
   addressOriginDistrict: z.string().min(1, 'required'),
   addressOriginVillage: z.string().max(200).optional(),
@@ -129,6 +133,10 @@ interface AddressFields {
 
 const EMPTY_ADDRESS: AddressFields = { province: '', district: '', village: '' }
 
+const BLOOD_GROUPS = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown',
+] as const
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface PatientRegistrationFormProps {
@@ -152,6 +160,12 @@ export function PatientRegistrationForm({
   const [birthYear, setBirthYear] = useState<string>('')
   const [birthDate, setBirthDate] = useState('')
   const [phone, setPhone] = useState('')
+  const [nationalId, setNationalId] = useState('')
+  const [preferredLanguage, setPreferredLanguage] = useState<'en' | 'ar' | 'prs'>(
+    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : 'en',
+  )
+  const [isNomadic, setIsNomadic] = useState(false)
+  const [bloodGroup, setBloodGroup] = useState<string>('Unknown')
 
   // Address
   const [addressOrigin, setAddressOrigin] = useState<AddressFields>(EMPTY_ADDRESS)
@@ -194,6 +208,10 @@ export function PatientRegistrationForm({
         birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
         birthDate: birthDate || undefined,
         phone: phone || undefined,
+        nationalId: nationalId || undefined,
+        isNomadic,
+        preferredLanguage: preferredLanguage || undefined,
+        bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
         addressOrigin: addressOrigin.province
           ? {
               province: addressOrigin.province,
@@ -232,8 +250,8 @@ export function PatientRegistrationForm({
     },
     [
       nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
-      birthYear, birthDate, phone, addressOrigin, addressCurrent,
-      sameAsOrigin, consentMethod, consentWitnessedBy, consentLanguage,
+      birthYear, birthDate, phone, nationalId, preferredLanguage, isNomadic, bloodGroup,
+      addressOrigin, addressCurrent, sameAsOrigin, consentMethod, consentWitnessedBy, consentLanguage,
     ],
   )
 
@@ -249,6 +267,10 @@ export function PatientRegistrationForm({
       birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
       birthDate: birthDate || undefined,
       phone: phone || undefined,
+      nationalId: nationalId || undefined,
+      preferredLanguage: preferredLanguage || undefined,
+      isNomadic,
+      bloodGroup: bloodGroup || undefined,
       addressOriginProvince: addressOrigin.province,
       addressOriginDistrict: addressOrigin.district,
       addressOriginVillage: addressOrigin.village || undefined,
@@ -276,8 +298,8 @@ export function PatientRegistrationForm({
     return true
   }, [
     nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
-    birthYear, birthDate, phone, addressOrigin, addressCurrent,
-    consentMethod, consentWitnessedBy, consentLanguage, t,
+    birthYear, birthDate, phone, nationalId, preferredLanguage, isNomadic, bloodGroup,
+    addressOrigin, addressCurrent, consentMethod, consentWitnessedBy, consentLanguage, t,
   ])
 
   // ── Persist to local IndexedDB so PatientChartPage can load immediately ──
@@ -312,7 +334,10 @@ export function PatientRegistrationForm({
             : (addressCurrent.province
                 ? { province: addressCurrent.province, district: addressCurrent.district, village: addressCurrent.village || undefined }
                 : undefined),
-          isNomadic: false,
+          isNomadic,
+          bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
+          preferredLanguage: preferredLanguage || undefined,
+          nationalIdHash: undefined, // Hash computed server-side; not available locally
           isActive: true,
           patient_tier: 'FREE',
           createdAt: now,
@@ -331,7 +356,7 @@ export function PatientRegistrationForm({
         // Other IndexedDB errors — patient exists on Hub, will sync later.
       }
     },
-    [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, addressOrigin, addressCurrent, sameAsOrigin],
+    [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, nationalId, preferredLanguage, isNomadic, bloodGroup, addressOrigin, addressCurrent, sameAsOrigin],
   )
 
   // ── Submit handler ──
@@ -355,6 +380,7 @@ export function PatientRegistrationForm({
           birthYear: payload.birthYear,
           gender: payload.gender,
           phone: payload.phone,
+          nationalId: payload.nationalId as string | undefined,
           addressDistrictOrigin: (payload.addressOrigin as { district?: string } | undefined)?.district,
           addressProvinceOrigin: (payload.addressOrigin as { province?: string } | undefined)?.province,
         }
@@ -599,6 +625,54 @@ export function PatientRegistrationForm({
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
+
+            {/* National ID */}
+            <div>
+              <label
+                htmlFor="national-id"
+                className="mb-1 block text-sm font-semibold text-neutral-700"
+              >
+                {t('nationalIdLabel')}
+                <span className="ms-1 text-xs font-normal text-neutral-400">
+                  ({t('optional')})
+                </span>
+              </label>
+              <input
+                id="national-id"
+                type="text"
+                inputMode="text"
+                maxLength={200}
+                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                placeholder={t('nationalIdPlaceholder')}
+                value={nationalId}
+                onChange={(e) => setNationalId(e.target.value)}
+              />
+            </div>
+
+            {/* Preferred Language */}
+            <div>
+              <label
+                htmlFor="preferred-language"
+                className="mb-1 block text-sm font-semibold text-neutral-700"
+              >
+                {t('preferredLanguage')}
+                <span className="ms-1 text-xs font-normal text-neutral-400">
+                  ({t('optional')})
+                </span>
+              </label>
+              <select
+                id="preferred-language"
+                value={preferredLanguage}
+                onChange={(e) =>
+                  setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
+                }
+                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              >
+                <option value="en">English</option>
+                <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
+                <option value="prs">{isRtl ? '\u062F\u0631\u06CC' : 'Dari'}</option>
+              </select>
+            </div>
           </div>
         </Card>
 
@@ -610,6 +684,8 @@ export function PatientRegistrationForm({
           onOriginChange={setAddressOrigin}
           onCurrentChange={setAddressCurrent}
           onSameAsOriginChange={setSameAsOrigin}
+          isNomadic={isNomadic}
+          onIsNomadicChange={setIsNomadic}
           errors={{
             originProvince: fieldErrors.addressOriginProvince,
             originDistrict: fieldErrors.addressOriginDistrict,
@@ -617,6 +693,37 @@ export function PatientRegistrationForm({
             currentDistrict: fieldErrors.addressCurrentDistrict,
           }}
         />
+
+        {/* Clinical section */}
+        <Card as="fieldset">
+          <legend className="text-base font-bold text-neutral-900 mb-4">
+            {t('clinicalSection')}
+          </legend>
+
+          <div>
+            <label
+              htmlFor="blood-group"
+              className="mb-1 block text-sm font-semibold text-neutral-700"
+            >
+              {t('bloodGroup')}
+              <span className="ms-1 text-xs font-normal text-neutral-400">
+                ({t('optional')})
+              </span>
+            </label>
+            <select
+              id="blood-group"
+              value={bloodGroup}
+              onChange={(e) => setBloodGroup(e.target.value)}
+              className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            >
+              {BLOOD_GROUPS.map((bg) => (
+                <option key={bg} value={bg}>
+                  {bg}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Card>
 
         {/* Consent section */}
         <ConsentSection
