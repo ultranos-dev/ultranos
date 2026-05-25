@@ -365,7 +365,9 @@
     "controlled": "المواد الخاضعة للرقابة",
     "unverified": "صرف غير موثق",
     "syncQueue": "قائمة المزامنة",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "suppliers": "الموردون",
+    "stockCount": "جرد المخزون"
   },
   "controlled": {
     "title": "سجل المواد الخاضعة للرقابة",

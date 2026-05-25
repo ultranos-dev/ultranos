@@ -365,7 +365,9 @@
     "controlled": "Controlled Substances",
     "unverified": "Unverified Dispenses",
     "syncQueue": "Sync Queue",
-    "settings": "Settings"
+    "settings": "Settings",
+    "suppliers": "Suppliers",
+    "stockCount": "Stock Count"
   },
   "controlled": {
     "title": "Controlled Substances Log",

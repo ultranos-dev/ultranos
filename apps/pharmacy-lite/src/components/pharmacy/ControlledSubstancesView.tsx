@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
+import { getControlledSubstanceBalances } from '@/lib/procurement/stock-count-service'
 
 /**
  * TODO: Controlled substance filtering requires a `controlledSubstanceSchedule`
@@ -75,6 +76,7 @@ export function ControlledSubstancesView() {
     dateFrom: '',
     dateTo: '',
   })
+  const [balances, setBalances] = useState<{ catalogItemId: string; catalogItemName: string; schedule: string; totalOnHand: number; batchCount: number }[]>([])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
@@ -82,6 +84,9 @@ export function ControlledSubstancesView() {
     setLoading(true)
     setError(null)
     try {
+      const balanceData = await getControlledSubstanceBalances()
+      setBalances(balanceData)
+
       let query = db.dispenses.orderBy('meta.lastUpdated')
 
       // Apply date range filter using indexed meta.lastUpdated
@@ -172,6 +177,23 @@ export function ControlledSubstancesView() {
           />
         </div>
       </div>
+
+      {/* Running Balances */}
+      {balances.length > 0 && (
+        <div className="mt-4 mb-6">
+          <h2 className="text-sm font-semibold text-neutral-700 mb-2">Controlled Substance Balances</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {balances.map((item) => (
+              <div key={item.catalogItemId} className="rounded-lg border border-red-200 bg-red-50/30 p-3">
+                <p className="text-xs font-bold text-red-800">C{item.schedule}</p>
+                <p className="text-sm font-medium text-neutral-900">{item.catalogItemName}</p>
+                <p className="text-lg font-bold tabular-nums text-neutral-900">{item.totalOnHand}</p>
+                <p className="text-[10px] text-neutral-500">{item.batchCount} batch{item.batchCount !== 1 ? 'es' : ''}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (

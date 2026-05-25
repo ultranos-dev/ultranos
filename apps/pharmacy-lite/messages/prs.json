@@ -365,7 +365,9 @@
     "controlled": "کنترول شوي مواد",
     "unverified": "نه تایید شوي ورکول",
     "syncQueue": "د همغږۍ لیست",
-    "settings": "تنظیمات"
+    "settings": "تنظیمات",
+    "suppliers": "تأمین کنندگان",
+    "stockCount": "شمارش موجودی"
   },
   "controlled": {
     "title": "د کنترول شویو موادو ریکارد",

@@ -128,6 +128,18 @@ const icons = {
       <line x1="23" y1="8" x2="18" y2="13" />
     </svg>
   ),
+  suppliers: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  stockCount: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </svg>
+  ),
 } as const
 
 function getInitials(name: string): string {
@@ -144,7 +156,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/pos', '/pos/accounts']
+  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/inventory/suppliers', '/inventory/count', '/pos', '/pos/accounts']
   const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
@@ -179,6 +191,8 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
     { label: t('stockOverview'), href: '/inventory', icon: icons.inventory, active: pathname === '/inventory', group: 'inventory' },
     { label: t('receiveStock'), href: '/inventory/receive', icon: icons.receive, active: pathname === '/inventory/receive', group: 'inventory' },
     { label: t('catalog'), href: '/inventory/catalog', icon: icons.catalog, active: pathname === '/inventory/catalog', group: 'inventory' },
+    { label: t('suppliers'), href: '/inventory/suppliers', icon: icons.suppliers, active: pathname === '/inventory/suppliers', group: 'inventory' },
+    { label: t('stockCount'), href: '/inventory/count', icon: icons.stockCount, active: pathname === '/inventory/count', group: 'inventory' },
     // Financial group
     { label: t('pos'), href: '/pos', icon: icons.pos, active: pathname === '/pos', group: 'financial' },
     { label: t('cashDrawer'), href: '/pos/cash-drawer', icon: icons.cashDrawer, active: pathname === '/pos/cash-drawer', group: 'financial' },
