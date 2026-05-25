@@ -24,6 +24,7 @@ interface PatientRow {
   lastVisit: string | null
   status: string
   hasAllergies: boolean
+  hasNationalId: boolean
 }
 
 const PAGE_SIZE = 25
@@ -175,6 +176,7 @@ export function PatientDirectory() {
       lastVisit: lastVisitMap.get(p.id) ?? null,
       status: p._ultranos?.isActive !== false ? 'active' : 'inactive',
       hasAllergies: allergyPatientIds.has(p.id),
+      hasNationalId: !!p._ultranos?.nationalIdHash,
     }))
   }, [patients, allergyPatientIds, lastVisitMap])
 
@@ -412,7 +414,14 @@ export function PatientDirectory() {
                     data-testid={`patient-row-${row.id}`}
                   >
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                      {row.name}
+                      <span className="flex items-center gap-2">
+                        {row.name}
+                        {!row.hasNationalId && (
+                          <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                            {t('nidMissingBadge')}
+                          </span>
+                        )}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {row.age ?? '—'}
