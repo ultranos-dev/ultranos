@@ -19,6 +19,8 @@ interface GeographySectionProps {
   onOriginChange: (address: AddressFields) => void
   onCurrentChange: (address: AddressFields) => void
   onSameAsOriginChange: (checked: boolean) => void
+  isNomadic?: boolean
+  onIsNomadicChange?: (checked: boolean) => void
   errors?: {
     originProvince?: string
     originDistrict?: string
@@ -34,6 +36,8 @@ export function GeographySection({
   onOriginChange,
   onCurrentChange,
   onSameAsOriginChange,
+  isNomadic,
+  onIsNomadicChange,
   errors,
 }: GeographySectionProps) {
   const t = useTranslations('registration')
@@ -175,6 +179,24 @@ export function GeographySection({
           </>
         )}
       </div>
+
+      {/* Nomadic toggle — only rendered when parent provides the callback */}
+      {onIsNomadicChange && (
+        <>
+          <hr className="border-neutral-200 my-4" />
+          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+            <input
+              type="checkbox"
+              checked={isNomadic ?? false}
+              onChange={(e) => onIsNomadicChange(e.target.checked)}
+              className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+            />
+            <span className="text-sm font-medium text-neutral-700">
+              {t('isNomadic')}
+            </span>
+          </label>
+        </>
+      )}
     </Card>
   )
 }
