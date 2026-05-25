@@ -10,6 +10,7 @@ import { INVENTORY_STORES } from './inventory-db'
 import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from './pos/types'
 import { POS_STORES } from './pos-db'
 import type { Supplier, PurchaseOrder, StockCount } from './procurement/types'
+import type { StockTransfer } from './transfers/types'
 
 export interface DispenseAuditEntry {
   id: string
@@ -112,6 +113,7 @@ class PharmacyLiteDatabase extends Dexie {
   suppliers!: EntityTable<Supplier, 'id'>
   purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
   stockCounts!: EntityTable<StockCount, 'id'>
+  stockTransfers!: EntityTable<StockTransfer, 'id'>
 
   constructor() {
     super('pharmacy-lite')
@@ -164,6 +166,11 @@ class PharmacyLiteDatabase extends Dexie {
       suppliers: 'id, name, isActive',
       purchaseOrders: 'id, supplierId, status, createdAt',
       stockCounts: 'id, type, status, startedAt',
+    })
+
+    // v10: Stock transfers — cross-location inventory movements
+    this.version(10).stores({
+      stockTransfers: 'id, fromLocationId, toLocationId, status, requestedAt',
     })
   }
 }
