@@ -99,6 +99,10 @@ export interface FhirPatient {
     photoUrl?: string
     /** Blood group — write-once after first save */
     bloodGroup?: string
+    /** Display name of practitioner who last updated this record (resolved at read time) */
+    updatedByName?: string
+    /** Role of practitioner who last updated (DOCTOR, NURSE, etc.) */
+    updatedByRole?: string
   }
 
   // FHIR R4 Meta — canonical field names
