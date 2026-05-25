@@ -777,6 +777,21 @@ export const patientRouter = createTRPCRouter({
       // Decrypt PHI fields via db.fromRow()
       const patient = db.fromRow(data) as Record<string, unknown>
 
+      // Resolve updated_by to practitioner display name
+      let updatedByName: string | undefined
+      let updatedByRole: string | undefined
+      if (patient.updatedBy) {
+        const { data: practitioner } = await ctx.supabase
+          .from('practitioners')
+          .select('given_name, family_name, role')
+          .eq('id', patient.updatedBy)
+          .single()
+        if (practitioner) {
+          updatedByName = `${practitioner.given_name} ${practitioner.family_name}`
+          updatedByRole = practitioner.role
+        }
+      }
+
       // Audit PHI read (CLAUDE.md Rule #6)
       const audit = new AuditLogger(ctx.supabase)
       try {
@@ -851,6 +866,8 @@ export const patientRouter = createTRPCRouter({
           mpiScore: (patient.mpiScore as number) ?? undefined,
           photoUrl: (patient.photoUrl as string) ?? undefined,
           bloodGroup: (patient.bloodGroup as string) ?? undefined,
+          updatedByName,
+          updatedByRole,
         },
         meta: {
           lastUpdated: patient.updatedAt as string,
