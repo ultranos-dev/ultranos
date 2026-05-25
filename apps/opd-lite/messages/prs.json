@@ -55,7 +55,17 @@
     "encounterHistory": "تاریخچه ویزیت‌ها",
     "labResultsSection": "نتایج لابراتوار",
     "nidMissing": "تذکره موجود نیست — هنگام دسترسی مشخصات بیمار را بروز کنید.",
-    "nidMissingBadge": "بدون تذکره"
+    "nidMissingBadge": "بدون تذکره",
+    "lastUpdatedBy": "آخرین بروزرسانی توسط {name} ({role})، {time}",
+    "lastUpdated": "آخرین بروزرسانی {time}",
+    "auditTrail": "گزارش تغییرات",
+    "auditTrailCount": "{count, plural, one {۱ مورد} other {{count} مورد}}",
+    "auditCreated": "ثبت بیمار",
+    "auditUpdated": "بروزرسانی {fields}",
+    "auditViewed": "مشاهده سوابق بیمار",
+    "auditLoadMore": "بارگذاری بیشتر",
+    "auditLoading": "در حال بارگذاری گزارش تغییرات...",
+    "auditEmpty": "هیچ موردی یافت نشد"
   },
   "encounter": {
     "dashboard": "داشبورد ویزیت",
@@ -719,6 +729,7 @@
     "gender": "جنسیت",
     "phone": "تلیفون",
     "lastVisit": "وروستۍ لیدنه",
+    "lastUpdatedCol": "آخرین بروزرسانی",
     "status": "حالت",
     "allergies": "حساسیت",
     "active": "فعال",

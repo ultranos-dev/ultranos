@@ -55,7 +55,17 @@
     "encounterHistory": "Encounter History",
     "labResultsSection": "Lab results",
     "nidMissing": "National ID missing — update patient profile when available.",
-    "nidMissingBadge": "NID Missing"
+    "nidMissingBadge": "NID Missing",
+    "lastUpdatedBy": "Last updated by {name} ({role}), {time}",
+    "lastUpdated": "Last updated {time}",
+    "auditTrail": "Audit Trail",
+    "auditTrailCount": "{count, plural, one {1 entry} other {{count} entries}}",
+    "auditCreated": "created patient",
+    "auditUpdated": "updated {fields}",
+    "auditViewed": "viewed patient record",
+    "auditLoadMore": "Load more",
+    "auditLoading": "Loading audit trail...",
+    "auditEmpty": "No audit entries found"
   },
   "encounter": {
     "dashboard": "Encounter Dashboard",
@@ -719,6 +729,7 @@
     "gender": "Gender",
     "phone": "Phone",
     "lastVisit": "Last Visit",
+    "lastUpdatedCol": "Last Updated",
     "status": "Status",
     "allergies": "Allergies",
     "active": "Active",

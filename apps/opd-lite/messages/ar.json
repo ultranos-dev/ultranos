@@ -55,7 +55,17 @@
     "encounterHistory": "سجل الزيارات",
     "labResultsSection": "نتائج المختبر",
     "nidMissing": "الهوية الوطنية مفقودة — قم بتحديث ملف المريض عند التوفر.",
-    "nidMissingBadge": "بدون هوية"
+    "nidMissingBadge": "بدون هوية",
+    "lastUpdatedBy": "آخر تحديث بواسطة {name} ({role})، {time}",
+    "lastUpdated": "آخر تحديث {time}",
+    "auditTrail": "سجل المراجعة",
+    "auditTrailCount": "{count, plural, one {سجل واحد} other {{count} سجلات}}",
+    "auditCreated": "تسجيل مريض",
+    "auditUpdated": "تحديث {fields}",
+    "auditViewed": "عرض سجل المريض",
+    "auditLoadMore": "تحميل المزيد",
+    "auditLoading": "جارٍ تحميل سجل المراجعة...",
+    "auditEmpty": "لم يتم العثور على سجلات"
   },
   "encounter": {
     "dashboard": "لوحة الزيارات",
@@ -719,6 +729,7 @@
     "gender": "الجنس",
     "phone": "الهاتف",
     "lastVisit": "آخر زيارة",
+    "lastUpdatedCol": "آخر تحديث",
     "status": "الحالة",
     "allergies": "الحساسية",
     "active": "نشط",
