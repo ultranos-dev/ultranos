@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-24T12:00:00.000000'
+last_updated: '2026-05-25T18:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -491,3 +491,69 @@ development_status:
   39-16-login-page-branding: done
   39-17-patient-name-display-recent-dispensing: done
   epic-39-retrospective: optional
+
+  # ============================================================
+  # EPIC 40: Pharmacy Inventory & POS (2026-05-25)
+  # Addendum 14 in epics.md. Full enterprise inventory + POS system.
+  # 4 sub-projects (A-D), 49 tasks total.
+  # ============================================================
+  epic-40: done
+
+  # Sub-project A: Catalog + Stock Core (15 tasks)
+  40-a1-inventory-types: done
+  40-a2-dexie-v6-inventory-tables: done
+  40-a3-inventory-zustand-store: done
+  40-a4-catalog-sync-from-hub: done
+  40-a5-stock-service-fefo-deduct-add: done
+  40-a6-expiry-watchdog-stock-alerts: done
+  40-a7-goods-receipt-service: done
+  40-a8-receive-stock-page: done
+  40-a9-stock-table-component: done
+  40-a10-stock-overview-page-alert-panel: done
+  40-a11-catalog-browse-page: done
+  40-a12-dispensing-fefo-stock-deduction: done
+  40-a13-dashboard-inventory-alert-widget: done
+  40-a14-inventory-sidebar-nav: done
+  40-a15-hook-wiring-catalog-expiry: done
+
+  # Sub-project B: POS + Financial (13 tasks)
+  40-b1-pos-types: done
+  40-b2-dexie-v7-pos-tables: done
+  40-b3-pos-zustand-store: done
+  40-b4-invoice-service: done
+  40-b5-payment-service: done
+  40-b6-cash-drawer-service: done
+  40-b7-patient-account-service: done
+  40-b8-pos-page-payment-form: done
+  40-b9-cash-drawer-page: done
+  40-b10-patient-accounts-page: done
+  40-b11-dispensing-invoice-auto-creation: done
+  40-b12-dashboard-drawer-widget-pos-nav: done
+  40-b13-collect-payment-cta: done
+
+  # Sub-project C: Procurement + Counts (11 tasks)
+  40-c1-procurement-types: done
+  40-c2-dexie-v9-procurement-tables: done
+  40-c3-supplier-service: done
+  40-c4-purchase-order-service: done
+  40-c5-stock-count-service: done
+  40-c6-supplier-form: done
+  40-c7-suppliers-page: done
+  40-c8-stock-count-form: done
+  40-c9-stock-count-page: done
+  40-c10-controlled-substances-upgrade: done
+  40-c11-procurement-nav-items: done
+
+  # Sub-project D: Network + Reports (10 tasks)
+  40-d1-transfer-types: done
+  40-d2-dexie-v10-transfers-table: done
+  40-d3-transfer-service: done
+  40-d4-network-stock-query: done
+  40-d5-consumption-wastage-reports: done
+  40-d6-financial-controlled-reports: done
+  40-d7-transfers-page: done
+  40-d8-report-cards: done
+  40-d9-reports-page: done
+  40-d10-transfers-reports-nav: done
+
+  epic-40-retrospective: optional

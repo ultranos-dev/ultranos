@@ -1010,6 +1010,156 @@ Commits: `d06bb60` through `b3cde3c` (28 commits)
 
 ---
 
+## 2026-05-25 — Pharmacy Inventory & POS System (Epic 40) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: 29 commits across 4 sub-projects
+Design Spec: `docs/superpowers/specs/2026-05-25-pharmacy-inventory-pos-design.md`
+Plans: `docs/superpowers/plans/2026-05-25-pharmacy-inventory-subproject-{a,b,c,d}.md`
+
+**Full enterprise pharmacy operations system** — inventory management, procurement, inter-pharmacy transfers, point-of-sale (cash/card/credit), and operational reporting. Progressive complexity via settings toggles ensures corner pharmacies stay simple while hospital pharmacies get full capability.
+
+**Sub-project A — Catalog + Stock Core (15 tasks):**
+1. Inventory types (CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacySettings)
+2. Dexie v6 schema (catalogItems, stockBatches, stockMovements, goodsReceipts, pharmacySettings)
+3. Inventory Zustand store (alerts, catalog sync state)
+4. Catalog sync from Hub API (paginated, incremental, offline-safe)
+5. Stock service — FEFO batch selection, deduct/add stock, alerts query
+6. Expiry watchdog (hourly auto-quarantine of expired batches)
+7. Goods receipt service (creates batches + movements in single transaction)
+8. Receive Stock page (catalog search, barcode, line items, confirm)
+9. Stock table component (searchable, filterable, expiry highlighting)
+10. Stock Overview page with alert panel (low stock, near-expiry, quarantined)
+11. Catalog Browse page (Hub formulary with stock levels)
+12. Dispensing FEFO integration (batch auto-selection + stock deduction on confirm)
+13. Dashboard inventory alert widget
+14. Inventory sidebar navigation (3 items) + i18n
+15. Catalog sync + expiry watchdog hooks wired into AppShellWrapper
+
+**Sub-project B — POS + Financial (13 tasks):**
+1. POS types (Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer)
+2. Dexie v7 schema (invoices, payments, ledgerEntries, patientAccounts, cashDrawers)
+3. POS Zustand store
+4. Invoice service (create from dispense, payment status, void, today's revenue)
+5. Payment service (split-pay: cash/card/credit, drawer integration, ledger)
+6. Cash drawer service (open/close, reconciliation, discrepancy tracking)
+7. Patient account service (credit ledger, aging buckets, balance queries)
+8. POS page (invoice summary + split-pay form)
+9. Cash Drawer page (open/close sessions, history)
+10. Patient Accounts page (credit ledgers, aging report, payment recording)
+11. Dispensing → invoice auto-creation integration
+12. Dashboard drawer status widget + POS sidebar nav + i18n
+13. "Collect Payment" CTA shown after dispensing confirmation
+
+**Sub-project C — Procurement + Counts (11 tasks):**
+1. Procurement types (Supplier, PurchaseOrder, StockCount)
+2. Dexie v9 schema (suppliers, purchaseOrders, stockCounts)
+3. Supplier service (CRUD with sync queue)
+4. Purchase order service (full lifecycle: create, send, receive, close, cancel)
+5. Stock count service (start, add items, complete with adjustment generation)
+6. Supplier form component
+7. Suppliers page (list, create, edit, deactivate)
+8. Stock count form (scan/search, enter actuals, variance display)
+9. Stock Count page (full/spot/controlled options + history)
+10. Controlled Substances view upgrade (running balance cards)
+11. Procurement sidebar nav items + i18n
+
+**Sub-project D — Network + Reports (10 tasks):**
+1. Transfer types (StockTransfer, TransferItem, NetworkStockItem)
+2. Dexie v10 schema (stockTransfers)
+3. Transfer service (request, approve, ship/deduct, receive/add, cancel)
+4. Network stock query (Hub API for cross-pharmacy visibility)
+5. Consumption + wastage report services
+6. Financial + controlled discrepancy report services
+7. Transfers page (TransferCard with lifecycle actions)
+8. Report cards (consumption chart, financial summary, wastage, controlled discrepancy)
+9. Reports page (composes all report cards)
+10. Transfers + Reports sidebar nav + i18n
+
+**Bug fix during implementation:**
+- Dexie v8: Added `lastSyncedAt` index to `catalogItems` (was missing, caused SchemaError on catalog sync)
+- AppShellWrapper wired into locale layout (sidebar was built but never rendered — missing layout composition)
+
+### New Files (50+)
+```
+apps/pharmacy-lite/src/lib/inventory/types.ts
+apps/pharmacy-lite/src/lib/inventory/catalog-sync.ts
+apps/pharmacy-lite/src/lib/inventory/stock-service.ts
+apps/pharmacy-lite/src/lib/inventory/fefo.ts
+apps/pharmacy-lite/src/lib/inventory/expiry-watchdog.ts
+apps/pharmacy-lite/src/lib/inventory/goods-receipt-service.ts
+apps/pharmacy-lite/src/lib/inventory-db.ts
+apps/pharmacy-lite/src/lib/pos/types.ts
+apps/pharmacy-lite/src/lib/pos/invoice-service.ts
+apps/pharmacy-lite/src/lib/pos/payment-service.ts
+apps/pharmacy-lite/src/lib/pos/cash-drawer-service.ts
+apps/pharmacy-lite/src/lib/pos/patient-account-service.ts
+apps/pharmacy-lite/src/lib/pos-db.ts
+apps/pharmacy-lite/src/lib/procurement/types.ts
+apps/pharmacy-lite/src/lib/procurement/supplier-service.ts
+apps/pharmacy-lite/src/lib/procurement/purchase-order-service.ts
+apps/pharmacy-lite/src/lib/procurement/stock-count-service.ts
+apps/pharmacy-lite/src/lib/transfers/types.ts
+apps/pharmacy-lite/src/lib/transfers/transfer-service.ts
+apps/pharmacy-lite/src/lib/transfers/network-stock-query.ts
+apps/pharmacy-lite/src/lib/reports/consumption-report.ts
+apps/pharmacy-lite/src/lib/reports/wastage-report.ts
+apps/pharmacy-lite/src/lib/reports/financial-report.ts
+apps/pharmacy-lite/src/lib/reports/controlled-discrepancy.ts
+apps/pharmacy-lite/src/stores/inventory-store.ts
+apps/pharmacy-lite/src/stores/pos-store.ts
+apps/pharmacy-lite/src/hooks/useCatalogSync.ts
+apps/pharmacy-lite/src/hooks/useStockAlerts.ts
+apps/pharmacy-lite/src/hooks/useExpiryWatchdog.ts
+apps/pharmacy-lite/src/components/pharmacy/inventory/ (10 components)
+apps/pharmacy-lite/src/components/pharmacy/pos/ (7 components)
+apps/pharmacy-lite/src/components/pharmacy/procurement/ (5 components)
+apps/pharmacy-lite/src/components/pharmacy/transfers/ (2 components)
+apps/pharmacy-lite/src/components/pharmacy/reports/ (5 components)
+apps/pharmacy-lite/src/app/[locale]/inventory/{page,receive/page,catalog/page,suppliers/page,transfers/page,count/page}.tsx
+apps/pharmacy-lite/src/app/[locale]/pos/{page,cash-drawer/page,accounts/page}.tsx
+apps/pharmacy-lite/src/app/[locale]/reports/page.tsx
+```
+
+### Files Modified
+- `apps/pharmacy-lite/src/lib/db.ts` — Dexie v6→v10 (5 version bumps, 10 new tables)
+- `apps/pharmacy-lite/src/stores/fulfillment-store.ts` — FEFO assignment, stock deduction, invoice creation
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` — InventoryAlertCard + DrawerStatusCard widgets
+- `apps/pharmacy-lite/src/components/pharmacy/FulfillmentChecklist.tsx` — "Collect Payment" CTA
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx` — Running balance cards
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx` — 8 new nav items (inventory, POS, procurement, reports)
+- `apps/pharmacy-lite/src/app/[locale]/layout.tsx` — AppShellWrapper composition fix
+- `apps/pharmacy-lite/messages/{en,ar,prs}.json` — sidebar keys for all new pages
+
+### Architecture Decisions
+- **Immediate local stock deduction** — offline-first, conflicts resolved on Hub sync
+- **FEFO enforcement** — nearest-expiry batch always selected (patient safety)
+- **Auto-quarantine** — expired stock can never be dispensed
+- **Append-only StockMovement ledger** — Tier 1 sync, tamper-evident audit trail
+- **Integer minor units** — all money stored as integers (no floating point)
+- **Configurable POS flow** — `requirePaymentOnDispense` setting
+- **Patient credit/tab** — append-only LedgerEntry, cached balance on PatientAccount
+- **Inter-pharmacy transfers** — full lifecycle via Hub, both sides create StockMovements
+- **Settings toggles** — PO mode, zones, credit, transfers all opt-in
+
+### Errors & Resolutions
+- `lastSyncedAt` not indexed on `catalogItems` — caused Dexie SchemaError on catalog sync. Fixed with v8 migration adding the index.
+- `AppShellWrapper` not in layout tree — sidebar existed but was never rendered. Fixed by composing into locale layout.
+
+### Tests Run
+- `button-accessibility.test.tsx` — 4/4 passed
+- TypeScript compilation checks on all new files
+
+### PRD Trace
+- **FR9 / Epic 4 & 26:** Pharmacy Fulfillment — now includes stock tracking, POS, and reporting
+- **CLAUDE.md Rule #3:** Drug interaction check — InteractionCheckBanner "unavailable" state prevents silent skip
+- **CLAUDE.md Rule #4:** Allergy prominence — AllergyBanner + FulfillmentChecklist integration
+- **NFR2:** Offline-first — all inventory operations work without network, sync on reconnect
+- **Epic 26 extension:** Epic 40 transforms pharmacy-lite into a complete enterprise system
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._

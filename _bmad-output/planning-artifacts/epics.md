@@ -5225,3 +5225,125 @@ As a user in any supported locale, I want audit trail UI text in my language.
 - `apps/lab-lite/src/lib/db.ts` — Dexie v3 (patients + syncQueue)
 - `apps/lab-lite/src/lib/trpc.ts` — searchPatients, checkDuplicates, createPatient
 - `apps/lab-lite/messages/en.json` — 40+ new translation keys
+
+---
+
+# Addendum 14: Pharmacy Inventory & POS System (Epic 40)
+
+**Date:** 2026-05-25
+**Branch:** `ux-v1.0`
+**Commits:** 29 commits across 4 sub-projects
+**Design Spec:** `docs/superpowers/specs/2026-05-25-pharmacy-inventory-pos-design.md`
+**Plans:** `docs/superpowers/plans/2026-05-25-pharmacy-inventory-subproject-{a,b,c,d}.md`
+
+**Trigger:** Audit identified that pharmacy-lite had zero inventory management — no stock tracking, no product catalog, no POS, no supplier management. Independent pharmacies cannot operate without these capabilities.
+
+## Epic 40: Pharmacy Inventory & Point of Sale
+
+Enterprise-grade pharmacy operations platform with inventory management, procurement, inter-pharmacy transfers, point-of-sale (cash/card/credit), and operational reporting. Progressive complexity via settings toggles.
+
+### Sub-project A: Catalog + Stock Core (15 stories, all Done)
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 40-A1 | Inventory type definitions | Done |
+| 40-A2 | Dexie v6 — inventory tables | Done |
+| 40-A3 | Inventory Zustand store | Done |
+| 40-A4 | Catalog sync from Hub API | Done |
+| 40-A5 | Stock service — FEFO, deduct, add, alerts | Done |
+| 40-A6 | Expiry watchdog + stock alerts hook | Done |
+| 40-A7 | Goods receipt service | Done |
+| 40-A8 | Receive Stock page (catalog search + form) | Done |
+| 40-A9 | Stock table component | Done |
+| 40-A10 | Stock Overview page + alert panel | Done |
+| 40-A11 | Catalog Browse page | Done |
+| 40-A12 | Dispensing FEFO integration + stock deduction | Done |
+| 40-A13 | Dashboard inventory alert widget | Done |
+| 40-A14 | Inventory sidebar nav items + i18n | Done |
+| 40-A15 | Catalog sync + expiry watchdog hook wiring | Done |
+
+### Sub-project B: POS + Financial (13 stories, all Done)
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 40-B1 | POS type definitions | Done |
+| 40-B2 | Dexie v7 — POS tables | Done |
+| 40-B3 | POS Zustand store | Done |
+| 40-B4 | Invoice service (create, status, void, revenue) | Done |
+| 40-B5 | Payment service (cash/card/credit, ledger) | Done |
+| 40-B6 | Cash drawer service (open/close/reconcile) | Done |
+| 40-B7 | Patient account service (ledger, aging) | Done |
+| 40-B8 | POS page — invoice summary + payment form | Done |
+| 40-B9 | Cash Drawer page | Done |
+| 40-B10 | Patient Accounts page (credit ledgers) | Done |
+| 40-B11 | Dispensing → invoice auto-creation | Done |
+| 40-B12 | Dashboard drawer widget + POS sidebar nav | Done |
+| 40-B13 | "Collect Payment" CTA after dispensing | Done |
+
+### Sub-project C: Procurement + Counts (11 stories, all Done)
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 40-C1 | Procurement type definitions | Done |
+| 40-C2 | Dexie v9 — procurement tables | Done |
+| 40-C3 | Supplier service (CRUD + sync) | Done |
+| 40-C4 | Purchase order service (lifecycle) | Done |
+| 40-C5 | Stock count service (adjust + controlled flag) | Done |
+| 40-C6 | Supplier form component | Done |
+| 40-C7 | Suppliers page | Done |
+| 40-C8 | Stock count form (scan, enter actuals, variances) | Done |
+| 40-C9 | Stock Count page | Done |
+| 40-C10 | Controlled substances running balance upgrade | Done |
+| 40-C11 | Procurement sidebar nav + i18n | Done |
+
+### Sub-project D: Network + Reports (10 stories, all Done)
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 40-D1 | Transfer type definitions | Done |
+| 40-D2 | Dexie v10 — stockTransfers table | Done |
+| 40-D3 | Transfer service (request/approve/ship/receive) | Done |
+| 40-D4 | Network stock query (Hub API) | Done |
+| 40-D5 | Consumption + wastage report services | Done |
+| 40-D6 | Financial + controlled discrepancy reports | Done |
+| 40-D7 | Transfers page (card + lifecycle actions) | Done |
+| 40-D8 | Report cards (4 components) | Done |
+| 40-D9 | Reports page | Done |
+| 40-D10 | Transfers + Reports sidebar nav + i18n | Done |
+
+### Architecture Decisions
+
+- **Stock deduction:** Immediate local on dispense (offline-first)
+- **Conflict resolution:** StockMovements = Tier 1 (append-only), quantities = Tier 2 (timestamp merge)
+- **Catalog:** Hub-managed, locally cached
+- **FEFO:** Enforced (nearest-expiry batch selected first)
+- **Expiry:** Auto-quarantine (expired stock cannot be dispensed)
+- **Payments:** Cash + card + patient credit/tab
+- **Money:** Integer minor units (no floating point)
+- **Transfers:** Full lifecycle via Hub (both pharmacies create StockMovements)
+- **Progressive complexity:** Settings toggles for PO mode, zones, credit, transfers
+
+### Dexie Schema Evolution
+
+| Version | Tables Added |
+|---------|-------------|
+| v6 | catalogItems, stockBatches, stockMovements, goodsReceipts, pharmacySettings |
+| v7 | invoices, payments, ledgerEntries, patientAccounts, cashDrawers |
+| v8 | catalogItems index fix (lastSyncedAt) |
+| v9 | suppliers, purchaseOrders, stockCounts |
+| v10 | stockTransfers |
+
+### New Pages (10)
+
+| Route | Purpose |
+|-------|---------|
+| /inventory | Stock Overview (table + filters + alerts) |
+| /inventory/receive | Receive Stock (barcode scan + form) |
+| /inventory/catalog | Catalog Browse (Hub formulary) |
+| /inventory/suppliers | Supplier Management (CRUD) |
+| /inventory/transfers | Inter-Pharmacy Transfers |
+| /inventory/count | Stock Count (full/spot/controlled) |
+| /pos | Payment Collection |
+| /pos/cash-drawer | Cash Drawer Sessions |
+| /pos/accounts | Patient Credit Ledgers |
+| /reports | Reports Dashboard |
