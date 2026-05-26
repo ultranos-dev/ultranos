@@ -12,29 +12,19 @@ export const SyncQueueCard = memo(function SyncQueueCard({ pendingCount }: SyncQ
   return (
     <div
       data-testid="sync-queue-card"
-      className={`rounded-lg border p-4 shadow-sm ${
-        isAmber
-          ? 'border-amber-300 bg-amber-50'
-          : 'border-neutral-200 bg-white'
-      }`}
+      className="rounded-xl bg-white/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-neutral-600">
-            Sync Queue
-          </h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            {isAmber
-              ? `${pendingCount} item${pendingCount !== 1 ? 's' : ''} awaiting Hub sync`
-              : 'All synced'}
-          </p>
-        </div>
-        <div
-          className={`text-2xl font-bold ${isAmber ? 'text-amber-600' : 'text-green-600'}`}
-        >
-          {pendingCount}
-        </div>
-      </div>
+      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+        Sync Queue
+      </h3>
+      <p className={`mt-2 text-3xl font-black tabular-nums ${isAmber ? 'text-amber-600' : 'text-green-600'}`}>
+        {pendingCount}
+      </p>
+      <p className="mt-1 text-xs text-neutral-500">
+        {isAmber
+          ? `${pendingCount} item${pendingCount !== 1 ? 's' : ''} awaiting sync`
+          : 'All synced'}
+      </p>
     </div>
   )
 })

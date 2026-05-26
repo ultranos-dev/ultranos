@@ -169,14 +169,14 @@ export function PharmacyDashboard() {
   const pharmacistName = session?.email?.split('@')[0] ?? 'Pharmacist'
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Welcome header */}
-      <div className="flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-neutral-900">
+          <h1 className="text-3xl font-black tracking-tight text-neutral-900">
             Welcome, {pharmacistName}
-          </h2>
-          <p className="text-sm text-neutral-500">Pharmacy Dashboard</p>
+          </h1>
+          <p className="mt-1 text-sm font-semibold text-neutral-500">Pharmacist</p>
         </div>
         <div
           data-testid="connectivity-indicator"
@@ -194,26 +194,30 @@ export function PharmacyDashboard() {
       </div>
 
       {/* Multi-entry action hub */}
-      <DashboardActionHub />
+      <section className="mb-8">
+        <DashboardActionHub />
+      </section>
 
-      {/* Today's dispensing summary */}
-      <DispensingSummaryCard
-        dispensedToday={stats.dispensedToday}
-        pendingSync={stats.pendingSync}
-        failedSync={stats.failedSync}
-      />
+      {/* Summary cards grid */}
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DispensingSummaryCard
+          dispensedToday={stats.dispensedToday}
+          pendingSync={stats.pendingSync}
+          failedSync={stats.failedSync}
+        />
+        <SyncQueueCard pendingCount={stats.pendingSync} />
+        <InventoryAlertCard />
+      </section>
 
-      {/* Pending sync queue */}
-      <SyncQueueCard pendingCount={stats.pendingSync} />
+      {/* Operational cards */}
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <DrawerStatusCard />
+      </section>
 
       {/* Recent dispensing list */}
-      <RecentDispensingList items={stats.recentDispenses} />
-
-      {/* Inventory alerts */}
-      <InventoryAlertCard />
-
-      {/* Cash drawer status */}
-      <DrawerStatusCard />
+      <section>
+        <RecentDispensingList items={stats.recentDispenses} />
+      </section>
     </div>
   )
 }
