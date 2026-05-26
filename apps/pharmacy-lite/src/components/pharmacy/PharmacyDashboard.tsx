@@ -173,10 +173,10 @@ export function PharmacyDashboard() {
       {/* Welcome header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-neutral-900">
+          <h2 className="text-xl font-bold text-neutral-900">
             Welcome, {pharmacistName}
-          </h1>
-          <p className="mt-1 text-sm font-semibold text-neutral-500">Pharmacist</p>
+          </h2>
+          <p className="text-sm text-neutral-500">Pharmacy Dashboard</p>
         </div>
         <div
           data-testid="connectivity-indicator"
@@ -209,8 +209,8 @@ export function PharmacyDashboard() {
         <InventoryAlertCard />
       </section>
 
-      {/* Operational cards */}
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Operational row */}
+      <section className="mb-8">
         <DrawerStatusCard />
       </section>
 
