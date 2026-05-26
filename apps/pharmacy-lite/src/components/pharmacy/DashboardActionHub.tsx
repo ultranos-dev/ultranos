@@ -1,17 +1,14 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 import { PatientSearchBar } from './PatientSearchBar'
-import { PatientRegistrationForm } from './PatientRegistrationForm'
 import { usePatientStore } from '@/stores/patient-store'
 import type { LocalPatient } from '@/lib/db'
 
-type HubView = 'actions' | 'register'
-
 export function DashboardActionHub() {
-  const [view, setView] = useState<HubView>('actions')
-  const [prefillName, setPrefillName] = useState<string>()
+  const locale = useLocale()
   const setActivePatient = usePatientStore((s) => s.setActivePatient)
 
   const handleSelectPatient = useCallback((patient: LocalPatient) => {
@@ -20,27 +17,9 @@ export function DashboardActionHub() {
   }, [setActivePatient])
 
   const handleRegisterNew = useCallback((name?: string) => {
-    setPrefillName(name)
-    setView('register')
-  }, [])
-
-  const handleRegistered = useCallback((patient: LocalPatient) => {
-    setActivePatient(patient)
-    setView('actions')
-    window.location.href = '/scan'
-  }, [setActivePatient])
-
-  if (view === 'register') {
-    return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-5">
-        <PatientRegistrationForm
-          prefillName={prefillName}
-          onRegistered={handleRegistered}
-          onCancel={() => setView('actions')}
-        />
-      </div>
-    )
-  }
+    const params = name ? `?nameGiven=${encodeURIComponent(name)}` : ''
+    window.location.href = `/${locale}/register-patient${params}`
+  }, [locale])
 
   return (
     <div className="space-y-4" data-testid="dashboard-action-hub">
@@ -86,9 +65,8 @@ export function DashboardActionHub() {
           <span className="text-[10px] text-neutral-500">OCR Scan</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => handleRegisterNew()}
+        <Link
+          href="/register-patient"
           className="flex flex-col items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 text-center transition-colors hover:bg-neutral-50"
           data-testid="action-walk-in"
         >
@@ -100,7 +78,7 @@ export function DashboardActionHub() {
           </svg>
           <span className="text-xs font-semibold text-neutral-800">Walk-in</span>
           <span className="text-[10px] text-neutral-500">New Patient</span>
-        </button>
+        </Link>
       </div>
     </div>
   )
