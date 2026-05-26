@@ -171,8 +171,6 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const wideRoutes = ['/controlled', '/unverified', '/history', '/sync', '/queue', '/inventory', '/inventory/receive', '/inventory/catalog', '/inventory/suppliers', '/inventory/count', '/inventory/transfers', '/pos', '/pos/accounts', '/reports']
-  const isWideRoute = wideRoutes.some((r) => pathname.endsWith(r))
   const pendingCount = useSyncStore((s) => s.pendingCount)
   const failedCount = useSyncStore((s) => s.failedCount)
   useKeyboardShortcuts()
@@ -245,7 +243,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <main id="main-content" className={`mx-auto px-4 py-6 ${isWideRoute ? 'max-w-5xl' : 'max-w-2xl'}`}>
+      <main id="main-content" className="px-4 py-6 sm:px-6 lg:px-8">
         <SyncCapacityBanner />
         <SessionExpiryBanner />
         {children}
