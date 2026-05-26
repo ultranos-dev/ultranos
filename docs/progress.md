@@ -1160,6 +1160,56 @@ apps/pharmacy-lite/src/app/[locale]/reports/page.tsx
 
 ---
 
+## 2026-05-26 — Pharmacy-Lite UX Consistency (Sidebar, Cards, Shared Patient Forms) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `1c84553` through `5481241` (6 commits)
+
+**Layout fixes to match OPD-Lite patterns:**
+1. **Root layout cleanup** — removed legacy `<header>` bar and `<main className="mx-auto max-w-2xl">` from root `layout.tsx`. The old pre-sidebar layout was wrapping the entire app (including the sidebar) in a 672px centered column. Now matches OPD-Lite: `<body> → <ClientErrorBoundary> → {children}`.
+2. **Sidebar content area** — `AppShellWrapper` content wrapper changed from `mx-auto max-w-2xl/5xl` to `px-4 py-6 sm:px-6 lg:px-8`. Full-width content, responsive padding.
+3. **Dashboard card placement** — container updated to `mx-auto max-w-3xl px-4 py-8` with `mb-8` section spacing. Summary cards in `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`. Card styling (borders, padding, fonts, colors) preserved unchanged.
+
+**Shared patient registration forms (replacing simplified pharmacy-specific form):**
+4. **Copied 10 OPD-Lite components** — Card.tsx, registration/ (PatientRegistrationForm, NameInputSection, GeographySection, ConsentSection, ConsentTextModal, MpiResultModal), shared/ (ProvinceAutocomplete, DistrictAutocomplete), patient/PatientEditModal.tsx. All `@/` imports resolve correctly.
+5. **Created `/register-patient` route** — same as OPD-Lite. DashboardActionHub Walk-in button now links here instead of rendering inline form. Search "Register new" prefills `?nameGiven=`.
+6. **Registration i18n** — copied full `registration` namespace (116 keys + nested `consentDocument` with consent text in 3 languages) from OPD-Lite to pharmacy-lite's en.json, ar.json, prs.json.
+
+### New Files (11)
+- `apps/pharmacy-lite/src/components/Card.tsx`
+- `apps/pharmacy-lite/src/components/registration/PatientRegistrationForm.tsx`
+- `apps/pharmacy-lite/src/components/registration/NameInputSection.tsx`
+- `apps/pharmacy-lite/src/components/registration/GeographySection.tsx`
+- `apps/pharmacy-lite/src/components/registration/ConsentSection.tsx`
+- `apps/pharmacy-lite/src/components/registration/ConsentTextModal.tsx`
+- `apps/pharmacy-lite/src/components/registration/MpiResultModal.tsx`
+- `apps/pharmacy-lite/src/components/shared/ProvinceAutocomplete.tsx`
+- `apps/pharmacy-lite/src/components/shared/DistrictAutocomplete.tsx`
+- `apps/pharmacy-lite/src/components/patient/PatientEditModal.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/register-patient/page.tsx`
+
+### Files Modified
+- `apps/pharmacy-lite/src/app/layout.tsx` — removed legacy header + max-w-2xl
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx` — full-width content, removed wideRoutes
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` — grid card placement
+- `apps/pharmacy-lite/src/components/pharmacy/DashboardActionHub.tsx` — route-based registration
+- `apps/pharmacy-lite/messages/en.json` — registration namespace (116 keys)
+- `apps/pharmacy-lite/messages/ar.json` — registration namespace (Arabic)
+- `apps/pharmacy-lite/messages/prs.json` — registration namespace (Dari)
+
+### Errors & Resolutions
+- `MISSING_MESSAGE: Could not resolve 'registration'` — entire registration i18n namespace was missing after copying components. Fixed by copying 116 keys from OPD-Lite.
+- Sidebar not visible after login — `AppShellWrapper` was built but never composed into locale layout (fixed in prior session). Root layout's legacy `<header>` + `<main max-w-2xl>` then constrained everything to 672px (fixed this session).
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity — pharmacy now uses same MPI-enabled registration as OPD
+- **Epic 26 / 40:** Pharmacy UI — layout consistency with OPD-Lite sidebar and card patterns
+- **NFR7:** WCAG AA — shared components include ProvinceAutocomplete/DistrictAutocomplete with ARIA combobox, keyboard navigation
+- **Epic 11:** i18n — registration namespace with 116 keys in all 3 locales
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._

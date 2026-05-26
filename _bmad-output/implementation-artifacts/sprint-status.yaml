@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-25T18:00:00.000000'
+last_updated: '2026-05-26T12:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -557,3 +557,14 @@ development_status:
   40-d10-transfers-reports-nav: done
 
   epic-40-retrospective: optional
+
+  # ============================================================
+  # Pharmacy-Lite UX Consistency Fixes (2026-05-26)
+  # Sidebar layout, dashboard card placement, shared patient forms
+  # ============================================================
+  pharm-ux-1-root-layout-legacy-header-removal: done      # Remove old <header> + max-w-2xl from root layout
+  pharm-ux-2-sidebar-layout-match-opd: done               # AppShellWrapper content area matches OPD-Lite
+  pharm-ux-3-dashboard-card-grid-placement: done           # grid-cols-3 placement + mx-auto max-w-3xl container
+  pharm-ux-4-shared-patient-registration-form: done        # Copy OPD-Lite registration components (10 files)
+  pharm-ux-5-register-patient-route: done                  # /register-patient route, DashboardActionHub wiring
+  pharm-ux-6-registration-i18n-namespace: done             # 116 registration keys copied to en/ar/prs

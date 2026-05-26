@@ -5347,3 +5347,52 @@ Enterprise-grade pharmacy operations platform with inventory management, procure
 | /pos/cash-drawer | Cash Drawer Sessions |
 | /pos/accounts | Patient Credit Ledgers |
 | /reports | Reports Dashboard |
+| /register-patient | Patient Registration (shared OPD-Lite form) |
+
+---
+
+# Addendum 15: Pharmacy-Lite UX Consistency (2026-05-26)
+
+**Date:** 2026-05-26
+**Branch:** `ux-v1.0`
+**Commits:** `1c84553` through `5481241`
+
+**Trigger:** Sidebar wasn't visible (missing layout composition), dashboard cards weren't aligned with OPD-Lite patterns, and pharmacy-lite used a simplified patient registration form instead of the full OPD-Lite form with MPI, geography, and consent.
+
+## Fixes Applied
+
+### Fix 1: Root Layout — Remove Legacy Header + max-w-2xl
+The pre-sidebar root layout (`app/layout.tsx`) had a `<header>` bar and `<main className="mx-auto max-w-2xl">` wrapping the entire app — including the sidebar. Everything was squeezed into 672px. Removed to match OPD-Lite pattern: `<body> → <ClientErrorBoundary> → {children}`.
+
+> **Status:** Done — Commit `1c84553`
+
+### Fix 2: Sidebar Layout — Match OPD-Lite
+`AppShellWrapper` content area changed from `mx-auto max-w-2xl/5xl` to `px-4 py-6 sm:px-6 lg:px-8`. Sidebar sticks left, content fills remaining space. Removed `wideRoutes` logic.
+
+> **Status:** Done — Commit `bdbbe55`
+
+### Fix 3: Dashboard Card Grid Placement
+Dashboard container updated to `mx-auto max-w-3xl px-4 py-8` with `mb-8` section spacing. Summary cards placed in `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`. Card component styling preserved (no text/font changes).
+
+> **Status:** Done — Commit `2f7db16`
+
+### Fix 4: Shared Patient Registration Form
+Copied 10 OPD-Lite components into pharmacy-lite to replace the simplified 5-field registration form:
+- `Card.tsx` — shared card wrapper
+- `registration/` — PatientRegistrationForm, NameInputSection, GeographySection, ConsentSection, ConsentTextModal, MpiResultModal
+- `shared/` — ProvinceAutocomplete, DistrictAutocomplete
+- `patient/PatientEditModal.tsx`
+
+All `@/` imports resolve correctly (both apps use same alias convention). Dependencies (`auditPhiAccess`, `EncryptionKeyNotAvailableError`, Supabase client, Dexie db) all exist in pharmacy-lite.
+
+> **Status:** Done — Commit `720a09d`
+
+### Fix 5: Register Patient Route + DashboardActionHub Wiring
+Created `/register-patient` route (same as OPD-Lite). DashboardActionHub updated: Walk-in button now links to `/register-patient` instead of rendering the old inline form. Search "Register new" also navigates to the route with `?nameGiven=` prefill.
+
+> **Status:** Done — Commit `f781d78`
+
+### Fix 6: Registration i18n Namespace
+Copied the full `registration` namespace (116 keys including nested `consentDocument` with consent text in en/ar/prs) from OPD-Lite's message files into all 3 pharmacy-lite locale files.
+
+> **Status:** Done — Commit `5481241`
