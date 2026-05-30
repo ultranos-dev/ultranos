@@ -6,7 +6,8 @@ import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
 import { pullPatientChanges } from '@/lib/sync-pull'
-import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { auditPhiAccess, AuditAction } from '@/lib/audit'
+import type { AuditResourceType } from '@/lib/audit'
 
 // --- PHI-safe resource labels (AC: 9) ---
 
@@ -58,7 +59,7 @@ function safeFailureReason(entry: SyncQueueEntry): string {
   const raw = entry.failureReason ?? ''
   if (raw.includes('HTTP 4')) return 'Server rejected'
   if (raw.includes('HTTP 5')) return 'Server error'
-  if (raw.includes('conflict') || entry.conflictFlag) return 'Conflict detected'
+  if (raw.toLowerCase().includes('conflict') || entry.conflictFlag) return 'Conflict detected'
   if (raw.includes('network') || raw.includes('fetch')) return 'Network error'
   if (raw) return 'Sync failed'
   return 'Unknown error'
@@ -98,7 +99,6 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
           Pending
         </span>
       )
-    case 'in-flight':
     case 'syncing':
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800" data-testid="badge-syncing">
@@ -194,7 +194,7 @@ export function SyncDashboard() {
 
   // Derived counts
   const summary = useMemo(() => {
-    const totalPending = queueItems.filter(e => e.status === 'pending' || e.status === 'in-flight').length
+    const totalPending = queueItems.filter(e => e.status === 'pending' || e.status === 'syncing').length
     const totalFailed = queueItems.filter(e => e.status === 'failed' && !e.conflictFlag).length
     const totalConflicts = queueItems.filter(e => e.conflictFlag).length
     return { totalPending, totalFailed, totalConflicts, lastSyncedAt }
@@ -243,34 +243,27 @@ export function SyncDashboard() {
   const activePatientId = useSyncStore((s) => s.activePatientId)
 
   const handleSyncNow = useCallback(async () => {
-    console.log('[SyncDashboard] handleSyncNow called', { online: navigator.onLine, isDraining })
     if (!navigator.onLine) {
-      console.log('[SyncDashboard] ABORT: offline')
       return
     }
     setIsDraining(true)
     try {
       // Phase 1: Push pending local changes to Hub
-      const pendingCount = queueItems.filter(e => e.status === 'pending' || e.status === 'in-flight').length
-      console.log('[SyncDashboard] Phase 1: push drain, pendingCount=', pendingCount)
+      const pendingCount = queueItems.filter(e => e.status === 'pending' || e.status === 'syncing').length
       setSyncPhase(pendingCount > 0 ? `Pushing ${pendingCount} pending change${pendingCount !== 1 ? 's' : ''} to Hub...` : 'Checking for pending changes...')
       await triggerDrain()
-      console.log('[SyncDashboard] Phase 1 complete')
 
       // Phase 2: Pull remote changes for the active patient (if a chart is open)
-      console.log('[SyncDashboard] Phase 2: pull, activePatientId=', activePatientId)
       if (activePatientId) {
         setSyncPhase('Pulling latest patient data from Hub...')
         const { getSupabaseBrowserClient } = await import('@/lib/supabase')
         const { data } = await getSupabaseBrowserClient().auth.getSession()
         const token = data.session?.access_token ?? ''
-        console.log('[SyncDashboard] Phase 2: token present=', !!token)
         if (token) {
           await pullPatientChanges(activePatientId, () => token)
         }
       }
 
-      console.log('[SyncDashboard] Sync complete, updating lastSyncedAt')
       setSyncPhase('Sync complete')
 
       // Always update lastSyncedAt — even if nothing was pushed/pulled,
@@ -283,9 +276,8 @@ export function SyncDashboard() {
         pendingCount: state.pendingCount,
         failedCount: state.failedCount,
       })
-      console.log('[SyncDashboard] lastSyncedAt updated to', useSyncStore.getState().lastSyncedAt)
     } catch (err) {
-      console.error('[SyncDashboard] Sync failed:', err)
+      console.error('[SyncDashboard] Sync failed — see audit log for details')
       setSyncPhase('Sync failed — will retry')
     } finally {
       // Brief delay so final phase is visible
