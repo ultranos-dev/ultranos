@@ -117,7 +117,7 @@ export class DrainWorker {
                 await this.config.queue.markSynced(entry.id)
               } catch {
                 // onConflict handler failed — mark as failed so it retries
-                await this.config.queue.markFailed(entry.id)
+                await this.config.queue.markFailed(entry.id, 'Conflict handler failed')
                 this.config.onAudit?.(entry, 'failure')
               }
             } else {
@@ -125,11 +125,12 @@ export class DrainWorker {
               await this.config.queue.markSynced(entry.id)
             }
           } else {
-            await this.config.queue.markFailed(entry.id)
+            await this.config.queue.markFailed(entry.id, result.error ?? 'Sync failed')
             this.config.onAudit?.(entry, 'failure')
           }
-        } catch {
-          await this.config.queue.markFailed(entry.id)
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : 'Sync error'
+          await this.config.queue.markFailed(entry.id, reason)
           this.config.onAudit?.(entry, 'failure')
         }
       }
