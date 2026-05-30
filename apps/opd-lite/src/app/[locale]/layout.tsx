@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server'
 import { AppSidebar } from '@/components/AppSidebar'
 import { AppHeader } from '@/components/AppHeader'
 import { SyncProvider } from '@/components/providers/SyncProvider'
+import { SyncDashboard } from '@/components/SyncDashboard'
 
 export default async function LocaleLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages()
@@ -14,6 +15,7 @@ export default async function LocaleLayout({ children }: { children: React.React
           <AppHeader />
           {children}
         </AppSidebar>
+        <SyncDashboard />
       </SyncProvider>
     </NextIntlClientProvider>
   )
