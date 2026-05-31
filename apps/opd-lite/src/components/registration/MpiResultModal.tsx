@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 
 interface MpiCandidate {
@@ -166,21 +167,12 @@ export function MpiResultModal({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Chevron */}
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <ChevronRight
+                        size={16}
                         className={`shrink-0 text-neutral-400 transition-transform duration-200 ${
                           isExpanded ? 'rotate-90' : ''
                         }`}
-                      >
-                        <path d="M9 18l6-6-6-6" />
-                      </svg>
+                      />
 
                       <span className="text-sm font-bold text-neutral-900 truncate">
                         {name}

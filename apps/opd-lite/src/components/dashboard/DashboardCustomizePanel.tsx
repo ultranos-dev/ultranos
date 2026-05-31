@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useTranslations } from 'next-intl'
 import { useDashboardPrefsStore, type WidgetId } from '@/stores/dashboard-prefs-store'
@@ -83,9 +84,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
           onClick={onClose}
           aria-label={t('closeCustomize')}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
+          <X className="h-5 w-5" />
         </Button>
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { formatRelativeTime } from '@ultranos/ui-kit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -164,23 +165,12 @@ export function PatientAuditTrail({
             </span>
           )}
         </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
+        <ChevronDown
           className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-          />
-        </svg>
+        />
       </button>
 
       {/* Content */}

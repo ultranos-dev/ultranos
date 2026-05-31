@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { FhirPatient, PatientAddress } from '@ultranos/shared-types'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
 
 interface PatientDetailsAccordionProps {
   patient: FhirPatient
@@ -76,23 +77,12 @@ export function PatientDetailsAccordion({
         <span className="text-sm font-semibold text-neutral-700">
           Patient Details
         </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
+        <ChevronDown
           className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-          />
-        </svg>
+        />
       </button>
 
       {/* Collapsible content */}

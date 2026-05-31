@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { AlertTriangle, ArrowRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { db } from '@/lib/db'
 import { TIER_1_RESOURCE_TYPES } from '@/lib/conflict-resolution'
 
@@ -59,21 +61,7 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
       data-testid="conflict-banner"
     >
       <div className="flex items-start gap-3">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="mt-0.5 h-5 w-5 shrink-0 text-red-600"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-          />
-        </svg>
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden="true" />
         <div className="flex-1">
           <p className="text-sm font-bold text-red-800">
             {tier1Count} unresolved safety-critical conflict{tier1Count !== 1 ? 's' : ''} — prescription generation blocked
@@ -87,17 +75,9 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
             className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-red-700 underline hover:text-red-900"
           >
             Review Conflicts
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-4 w-4 rtl:rotate-180"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>
+            <DirectionalIcon category="navigation" aria-hidden={true}>
+              <ArrowRight className="h-4 w-4" />
+            </DirectionalIcon>
           </Link>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { CircleCheck, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
@@ -110,9 +111,7 @@ export function ConflictList() {
   if (conflicts.length === 0) {
     return (
       <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center" data-testid="no-conflicts">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mx-auto h-12 w-12 text-green-400">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
+        <CircleCheck className="mx-auto h-12 w-12 text-green-400" />
         <p className="mt-3 text-sm font-semibold text-neutral-700">No unresolved conflicts</p>
         <p className="mt-1 text-xs text-neutral-500">All Tier 1 safety-critical data is in sync.</p>
       </div>
@@ -176,18 +175,11 @@ export function ConflictList() {
               </div>
 
               {/* Chevron */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
+              <ChevronDown
                 className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform ${
                   isExpanded ? 'rotate-180' : ''
                 }`}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-              </svg>
+              />
             </Button>
 
             {/* Expanded diff view */}

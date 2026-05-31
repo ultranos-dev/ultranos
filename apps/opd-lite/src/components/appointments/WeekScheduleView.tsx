@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { db } from '@/lib/db'
 import { BookingModal } from './BookingModal'
@@ -225,19 +227,9 @@ export function WeekScheduleView() {
             onClick={prevWeek}
             aria-label={t('previousWeek')}
           >
-            <svg
-              className="h-5 w-5 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
+            <DirectionalIcon category="navigation">
+              <ChevronLeft className="h-5 w-5" />
+            </DirectionalIcon>
           </Button>
           <h2 className="text-base font-bold text-neutral-900">
             {formatWeekRange(weekStart, weekEnd)}
@@ -247,19 +239,9 @@ export function WeekScheduleView() {
             onClick={nextWeek}
             aria-label={t('nextWeek')}
           >
-            <svg
-              className="h-5 w-5 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
+            <DirectionalIcon category="navigation">
+              <ChevronRight className="h-5 w-5" />
+            </DirectionalIcon>
           </Button>
         </div>
 
@@ -273,19 +255,9 @@ export function WeekScheduleView() {
             disabled={mobileDayOffset === 0}
             aria-label={t('previousDay')}
           >
-            <svg
-              className="h-4 w-4 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
+            <DirectionalIcon category="navigation">
+              <ChevronLeft className="h-4 w-4" />
+            </DirectionalIcon>
           </Button>
 
           <Button
@@ -309,19 +281,9 @@ export function WeekScheduleView() {
             disabled={mobileDayOffset === 6}
             aria-label={t('nextDay')}
           >
-            <svg
-              className="h-4 w-4 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
+            <DirectionalIcon category="navigation">
+              <ChevronRight className="h-4 w-4" />
+            </DirectionalIcon>
           </Button>
         </div>
 
@@ -393,19 +355,9 @@ export function WeekScheduleView() {
           onClick={prevWeek}
           aria-label={t('previousWeek')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <DirectionalIcon category="navigation">
+            <ChevronLeft className="h-5 w-5" />
+          </DirectionalIcon>
         </Button>
 
         <h2 className="text-lg font-bold text-neutral-900">
@@ -417,19 +369,9 @@ export function WeekScheduleView() {
           onClick={nextWeek}
           aria-label={t('nextWeek')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-            />
-          </svg>
+          <DirectionalIcon category="navigation">
+            <ChevronRight className="h-5 w-5" />
+          </DirectionalIcon>
         </Button>
       </div>
 

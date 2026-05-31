@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
@@ -209,21 +211,9 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                       <span>{labName}</span>
                     </div>
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="h-5 w-5 shrink-0 text-neutral-400 rtl:scale-x-[-1]"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
+                  <DirectionalIcon category="navigation" aria-hidden={true}>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-neutral-400" />
+                  </DirectionalIcon>
                 </div>
               </Button>
             </li>

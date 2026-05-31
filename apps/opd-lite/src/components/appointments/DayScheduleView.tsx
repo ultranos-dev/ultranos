@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
@@ -106,19 +108,9 @@ export function DayScheduleView() {
           onClick={prevDay}
           aria-label={t('previousDay')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <DirectionalIcon category="navigation">
+            <ChevronLeft className="h-5 w-5" />
+          </DirectionalIcon>
         </Button>
 
         <div className="flex items-center gap-3">
@@ -140,19 +132,9 @@ export function DayScheduleView() {
           onClick={nextDay}
           aria-label={t('nextDay')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-            />
-          </svg>
+          <DirectionalIcon category="navigation">
+            <ChevronRight className="h-5 w-5" />
+          </DirectionalIcon>
         </Button>
       </div>
 

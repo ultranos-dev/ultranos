@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { AlertTriangle, CircleX, RefreshCw, X, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
@@ -83,9 +84,7 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
   if (conflictFlag) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800" data-testid="badge-conflict">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-          <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
-        </svg>
+        <AlertTriangle className="h-3.5 w-3.5" />
         Conflict
       </span>
     )
@@ -112,9 +111,7 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
     case 'failed':
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800" data-testid="badge-failed">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-            <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clipRule="evenodd" />
-          </svg>
+          <CircleX className="h-3.5 w-3.5" />
           Failed
         </span>
       )
@@ -125,21 +122,22 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
 
 // --- Resource type icon ---
 
+const RESOURCE_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Encounter: Stethoscope,
+  'SOAP Note': ClipboardList,
+  Vitals: HeartPulse,
+  Prescription: Pill,
+  Allergy: ShieldAlert,
+  Diagnosis: FileText,
+  Consent: FileText,
+  'Lab Result': FlaskConical,
+  Demographics: User,
+}
+
 function ResourceIcon({ resourceType }: { resourceType: string }) {
   const label = safeResourceLabel(resourceType)
-  // Simple emoji-free icons by resource type
-  const iconPaths: Record<string, string> = {
-    Encounter: 'M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
-    Vitals: 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z',
-    Prescription: 'M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5',
-  }
-  const d = iconPaths[label] ?? 'M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z'
-
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 shrink-0 text-neutral-400">
-      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
-    </svg>
-  )
+  const Icon = RESOURCE_ICON_MAP[label] ?? FileText
+  return <Icon className="h-5 w-5 shrink-0 text-neutral-400" />
 }
 
 // --- Grouped items ---
@@ -333,9 +331,7 @@ export function SyncDashboard() {
               onClick={() => setDashboardOpen(false)}
               aria-label="Close sync dashboard"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
@@ -390,9 +386,7 @@ export function SyncDashboard() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
-                </svg>
+                <RefreshCw className="h-3.5 w-3.5" />
               )}
               {isDraining ? 'Syncing...' : 'Sync Now'}
             </Button>

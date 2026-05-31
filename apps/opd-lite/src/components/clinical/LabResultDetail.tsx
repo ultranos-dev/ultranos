@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Check } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import {
@@ -278,9 +279,7 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
 
       {acknowledged && (
         <div className="mt-6 flex items-center gap-2 text-sm font-medium text-green-700">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-          </svg>
+          <Check className="h-5 w-5" />
           Result Acknowledged
         </div>
       )}
