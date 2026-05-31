@@ -555,6 +555,64 @@ export function reportNetworkAuditEvent(payload: {
 export { AuditAction, AuditResourceType }
 
 // ---------------------------------------------------------------------------
+// Story 50.1 — HMIS Report Audit Events
+// Tracks HMIS report lifecycle: generation, corrections, finalization, export.
+// PHI rule: no PHI in any HMIS audit event. All fields are opaque IDs, counts,
+// or report metadata. NEVER include aggregated values or patient references.
+// ---------------------------------------------------------------------------
+
+type HmisAuditAction =
+  | 'HMIS_REPORT_GENERATED'
+  | 'HMIS_REPORT_CORRECTED'
+  | 'HMIS_REPORT_FINALIZED'
+  | 'HMIS_REPORT_EXPORTED'
+
+/**
+ * Emit an HMIS report lifecycle audit event.
+ * Never throws — report workflow must not be blocked by audit failures.
+ * Metadata: reportId (opaque UUID), month, year — no aggregate values, no PHI.
+ */
+export function reportHmisAuditEvent(payload: {
+  action: HmisAuditAction
+  reportId: string
+  reportMonth: number
+  reportYear: number
+  fieldPath?: string           // HMIS_REPORT_CORRECTED only — field path, never value
+  format?: string              // HMIS_REPORT_EXPORTED only — 'pdf' | 'dhis2-json' | 'dhis2-csv'
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<HmisAuditAction, AuditAction> = {
+    HMIS_REPORT_GENERATED: AuditAction.CREATE,
+    HMIS_REPORT_CORRECTED: AuditAction.UPDATE,
+    HMIS_REPORT_FINALIZED: AuditAction.UPDATE,
+    HMIS_REPORT_EXPORTED: AuditAction.READ,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: 'HMIS_REPORT' as AuditResourceType,
+    resourceId: payload.reportId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      hmisEvent: payload.action,
+      outcome: 'SUCCESS',
+      reportId: payload.reportId,             // opaque UUID — never aggregate values
+      reportMonth: payload.reportMonth,
+      reportYear: payload.reportYear,
+      // Field path only for corrections — NEVER the value (could be PHI-adjacent)
+      ...(payload.fieldPath ? { fieldPath: payload.fieldPath } : {}),
+      ...(payload.format ? { format: payload.format } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
 // Story 47.7 — Infection Control Audit Events
 // Tracks audit lifecycle: creation, item recording, completion, and inspection pack generation.
 // No PHI involved — conductedBy is an opaque practitioner ID.
@@ -1144,11 +1202,105 @@ export function reportAtlasView(payload: { entryId: string; categoryId: string }
   void emitClientAudit(input)
 }
 
+// ---------------------------------------------------------------------------
+// Story 43.6 — QC Drift Detection Audit Events
+// Tracks drift detection lifecycle: alert creation and acknowledgment.
+// No PHI: analyte names and instrument IDs are operational data, not patient data.
+// ---------------------------------------------------------------------------
+
+/**
+ * Emit a QC drift detection or acknowledgment audit event.
+ * Called when a drift alert is created (QC_DRIFT_DETECTED) or when a supervisor
+ * acknowledges the alert (QC_DRIFT_ACKNOWLEDGED).
+ *
+ * Never throws — QC workflow must not be blocked by audit failures.
+ * No PHI: analyte, instrumentId, and ruleViolated are operational metadata only.
+ */
+export function reportQcDriftEvent(payload: {
+  action: 'QC_DRIFT_DETECTED' | 'QC_DRIFT_ACKNOWLEDGED'
+  alertId: string
+  analyte: string
+  instrumentId: string
+  ruleViolated?: string
+  severity?: string
+  resolution?: string
+  acknowledgedBy?: string
+  resultId?: string   // when flagging a patient result with advisory (no result values)
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.acknowledgedBy ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: payload.action === 'QC_DRIFT_DETECTED'
+      ? AuditAction.QC_DRIFT_DETECTED
+      : AuditAction.QC_DRIFT_ACKNOWLEDGED,
+    resourceType: 'QC_DRIFT_ALERT' as AuditResourceType,
+    resourceId: payload.alertId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      qcDriftEvent: payload.action,
+      outcome: 'SUCCESS',
+      alertId: payload.alertId,
+      analyte: payload.analyte,
+      instrumentId: payload.instrumentId,
+      ...(payload.ruleViolated ? { ruleViolated: payload.ruleViolated } : {}),
+      ...(payload.severity ? { severity: payload.severity } : {}),
+      ...(payload.resolution ? { resolution: payload.resolution } : {}),
+      ...(payload.acknowledgedBy ? { acknowledgedBy: payload.acknowledgedBy } : {}),
+      ...(payload.resultId ? { resultId: payload.resultId } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
 /**
  * Emit an audit event for the amendment workflow.
  * Story 43.3 AC #8: Every amendment action is audited.
  * CLAUDE.md Rule #1: No PHI in audit metadata — opaque IDs only.
  */
+/**
+ * Emit an audit event when the pre-release critical value checklist is completed.
+ * Story 43.7 AC #3: Completed checklist is stored as part of the result's audit trail.
+ *
+ * CLAUDE.md Rule #1: No PHI in audit metadata.
+ *   - resultId is opaque (UUID)
+ *   - criticalAnalytes lists analyte NAMES only — no numeric values
+ *   - No patient names, IDs, or demographic data
+ */
+export function reportChecklistEvent(payload: {
+  checklistId: string
+  resultId: string
+  /** Analyte names only — NO numeric values (CLAUDE.md Rule #1) */
+  criticalAnalytes: string[]
+  allItemsChecked: boolean
+  checkedBy: string
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.checkedBy,
+    actorRole: UserRole.LAB_TECH,
+    action: AuditAction.CRITICAL_VALUE_CHECKLIST_COMPLETED,
+    resourceType: AuditResourceType.LAB_RESULT,
+    resourceId: payload.resultId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      checklistEvent: 'CRITICAL_VALUE_CHECKLIST_COMPLETED',
+      checklistId: payload.checklistId,
+      // INTENTIONALLY OMIT actual critical values/numbers — CLAUDE.md Rule #1
+      criticalAnalytes: payload.criticalAnalytes,
+      allItemsChecked: payload.allItemsChecked,
+      outcome: 'SUCCESS',
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
 export function reportAmendmentEvent(payload: {
   action: 'AMENDMENT_INITIATED' | 'AMENDMENT_AUTHORIZED' | 'AMENDMENT_AUTH_DENIED' | 'AMENDMENT_COMMITTED'
   amendmentId: string

@@ -234,6 +234,15 @@ export {
   Columns3,
 } from 'lucide-react'
 
+// ─── Gamification & Achievements ────────────────────────────────────
+export {
+  Flame,
+  Trophy,
+  Medal,
+  Gem,
+  Zap,
+} from 'lucide-react'
+
 // ─── Geometric Shapes (Queue Tokens) ────────────────────────────────
 export {
   Star,

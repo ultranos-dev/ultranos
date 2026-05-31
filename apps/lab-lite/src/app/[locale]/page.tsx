@@ -10,6 +10,8 @@ import { UploadSuccessBanner } from '@/components/dashboard/UploadSuccessBanner'
 import { WorkloadScheduleCard } from '@/components/scheduler/WorkloadScheduleCard'
 import { Button } from '@/components/ui/Button'
 import { useDashboardData } from '@/hooks/useDashboardData'
+import { useDriftAlerts } from '@/hooks/useDriftAlerts'
+import { DriftAlertBanner } from '@/components/qc/DriftAlertBanner'
 
 function RecentUploadsSkeleton() {
   return (
@@ -34,10 +36,13 @@ export default function LabHomePage() {
   const t = useTranslations()
   const { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry, lastRefreshedAt } =
     useDashboardData()
+  const { alerts, refresh: refreshAlerts } = useDriftAlerts()
 
   return (
     <div className="flex flex-col gap-5">
       <UploadSuccessBanner />
+      {/* Story 43.6: Show drift alert banner when active QC alerts exist */}
+      <DriftAlertBanner alerts={alerts} onAcknowledged={refreshAlerts} />
       {error && (
         <div className="flex items-center justify-between rounded-md bg-amber-50 p-3 text-sm text-amber-700" role="alert" aria-live="assertive">
           <span>{error}</span>

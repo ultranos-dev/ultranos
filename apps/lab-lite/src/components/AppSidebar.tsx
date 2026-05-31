@@ -24,9 +24,11 @@ import {
   BarChart3,
   Calculator,
   Globe,
+  FileText,
   FlaskConical,
   Microscope,
   RefreshCw,
+  TrendingUp,
 } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -38,6 +40,9 @@ import { DataBudgetIndicator } from '@/components/DataBudgetIndicator'
 import { canAccessAuthorizationQueue } from '@/lib/permissions'
 import { getPendingAuthorizationCount } from '@/lib/db'
 import { usePendingHandovers } from '@/hooks/usePendingHandovers'
+import { useAchievementScheduler } from '@/hooks/useAchievementScheduler'
+import { AchievementNotification } from '@/components/achievements/AchievementNotification'
+import type { SchedulerRunResult } from '@/lib/achievement-scheduler'
 
 /** Hook to count pending + failed items in the Dexie upload queue. */
 function useQueueBadge(): number | null {
@@ -175,6 +180,10 @@ export function AppSidebar({ children }: { children: ReactNode }) {
   const { pendingHandovers } = usePendingHandovers()
   const handoverBadge = pendingHandovers.length > 0 ? pendingHandovers.length : null
 
+  // Achievement scheduler — runs on mount, triggers notifications when new awards are granted
+  const [pendingAchievements, setPendingAchievements] = useState<SchedulerRunResult | null>(null)
+  useAchievementScheduler((result) => setPendingAchievements(result))
+
   const handleSignOut = useCallback(async () => {
     useAuthSessionStore.getState().clearSession()
     await getSupabaseBrowserClient().auth.signOut()
@@ -195,6 +204,10 @@ export function AppSidebar({ children }: { children: ReactNode }) {
   const canAccessNetwork =
     session.labRole === LabRole.LAB_MANAGER || session.labRole === LabRole.SUPERVISOR
 
+  // Team Achievements nav is conditionally shown (gamification feature toggle checked at runtime)
+  // We use a simple client-side check via the scheduler hook; the nav item is always rendered
+  // but the page itself handles the enabled/disabled state.
+
   // Cost analysis is only visible to lab managers (sensitive business info)
   const canAccessCostAnalysis = session.labRole === LabRole.LAB_MANAGER
 
@@ -209,6 +222,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     { label: t('orders'), href: '/orders', icon: <ClipboardList size={20} />, active: pathname === '/orders', badge: ordersBadge, group: 'primary' },
     { label: t('worklist'), href: '/worklist', icon: <ClipboardList size={20} />, active: pathname === '/worklist', group: 'primary' },
     { label: t('upload'), href: '/upload', icon: <Upload size={20} />, active: pathname === '/upload', badge: uploadQueueBadge, group: 'primary' },
+    { label: t('reports'), href: '/reports', icon: <FileText size={20} />, active: pathname.startsWith('/reports'), group: 'primary' },
     { label: t('registerPatient'), href: '/patients/register', icon: <UserPlus size={20} />, active: pathname === '/patients/register', group: 'primary' },
     // Clinical
     { label: t('history'), href: '/history', icon: <History size={20} />, active: pathname === '/history', group: 'clinical' },
@@ -219,6 +233,8 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     { label: t('peerNetwork'), href: '/peer-network', icon: <MessageCircle size={20} />, active: pathname === '/peer-network', group: 'clinical' },
     { label: t('safetyReporting'), href: '/safety-reporting', icon: <AlertTriangle size={20} />, active: pathname === '/safety-reporting', group: 'clinical' },
     { label: t('shiftHandover'), href: '/shift-handover', icon: <RefreshCw size={20} />, active: pathname.startsWith('/shift-handover'), badge: handoverBadge, group: 'clinical' },
+    { label: t('qualityDashboard'), href: '/quality', icon: <TrendingUp size={20} />, active: pathname.startsWith('/quality'), group: 'clinical' },
+    { label: t('teamAchievements'), href: '/achievements', icon: <span aria-hidden="true" className="text-base leading-none">🏆</span>, active: pathname.startsWith('/achievements'), group: 'clinical' },
     // Finance
     { label: t('newPayment'), href: '/finance/payment', icon: <Banknote size={20} />, active: pathname === '/finance/payment', group: 'finance' },
     { label: t('receipts'), href: '/finance/receipts', icon: <Receipt size={20} />, active: pathname === '/finance/receipts', group: 'finance' },
@@ -271,6 +287,11 @@ export function AppSidebar({ children }: { children: ReactNode }) {
       persistKey="lab-lite-sidebar-collapsed"
     >
       {children}
+      {/* Achievement notification toast — shown when new achievements are awarded */}
+      <AchievementNotification
+        result={pendingAchievements}
+        onDismiss={() => setPendingAchievements(null)}
+      />
     </Sidebar>
   )
 }

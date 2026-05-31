@@ -11,6 +11,7 @@ import type { ChecklistItemTemplate, InfectionControlAudit } from '@/types/infec
 import { DEFAULT_CHECKLIST_ITEMS } from '@/lib/safety/default-checklist'
 
 import type { DailyActivityLog, DailyLogSettings } from '@/lib/daily-log-types'
+import type { HmisMonthlyReport } from '@/lib/hmis-types'
 import type { TokenColor, TokenSymbol } from '@/lib/token-generator'
 import type { TestTatProfile } from '@/lib/test-tat-database'
 import type { ReferenceRange, RangeVersion } from '@/lib/reference-ranges/types'
@@ -22,6 +23,58 @@ import type { LabLocation } from '@/types/lab-network'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
 import type { AtlasEntry, AtlasCategory } from '@/lib/visual-atlas'
+import type { QcRun, DriftAlert } from '@/lib/qc/types'
+import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
+import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
+import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
+
+// ---------------------------------------------------------------------------
+// Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
+// No PHI — achievements reference tech IDs and operational metrics only.
+// ---------------------------------------------------------------------------
+
+export enum AchievementType {
+  QC_CHAMPION = 'QC_CHAMPION',
+  ZERO_REJECTION_WEEK = 'ZERO_REJECTION_WEEK',
+  SPEED_STAR = 'SPEED_STAR',
+  CONSISTENCY_AWARD = 'CONSISTENCY_AWARD',
+  MENTORSHIP_BADGE = 'MENTORSHIP_BADGE',
+  TEAM_MILESTONE_1K = 'TEAM_MILESTONE_1K',
+  TEAM_MILESTONE_5K = 'TEAM_MILESTONE_5K',
+  TEAM_MILESTONE_10K = 'TEAM_MILESTONE_10K',
+}
+
+export interface Achievement {
+  id: string                        // UUID
+  techId: string                    // opaque practitioner ID
+  type: AchievementType
+  earnedAt: string                  // ISO 8601
+  evaluationPeriod: string          // e.g. "2026-05" monthly, "2026-W22" weekly
+  metadata: Record<string, unknown> // type-specific: score, count, etc.
+  description: string
+}
+
+export interface TeamAchievement {
+  id: string
+  type: AchievementType
+  earnedAt: string
+  evaluationPeriod: string
+  description: string
+  participatingTechIds: string[]
+}
+
+export interface AchievementPreferences {
+  techId: string
+  showOnTeamDashboard: boolean      // default true
+}
+
+export interface AchievementSchedulerConfig {
+  id: 'achievement-scheduler'       // singleton
+  lastMonthlyEvaluation: string | null   // YYYY-MM
+  lastWeeklyEvaluation: string | null    // YYYY-WNN
+  lastMilestoneCheck: string | null      // YYYY-MM-DD
+  gamificationEnabled: boolean           // lab-level toggle
+}
 
 // Re-export with Dexie-friendly names to avoid collision with result-templates.ts ReferenceRange
 export type ReferenceRangeEntry = ReferenceRange
@@ -343,6 +396,25 @@ class LabLiteDatabase extends Dexie {
   // v15 — Visual Atlas for Microscopy (Story 53.2)
   atlas_entries!: Dexie.Table<AtlasEntry, string>
   atlas_categories!: Dexie.Table<AtlasCategory, string>
+  // v16 — Analyzer Drift Detection (Story 43.6)
+  qcRuns!: Dexie.Table<QcRun, string>
+  driftAlerts!: Dexie.Table<DriftAlert, string>
+  // v17 — Gamified Team Quality Engagement (Story 51.7)
+  achievements!: Dexie.Table<Achievement, string>
+  team_achievements!: Dexie.Table<TeamAchievement, string>
+  achievement_preferences!: Dexie.Table<AchievementPreferences, string>
+  achievement_scheduler_config!: Dexie.Table<AchievementSchedulerConfig, string>
+  // v18 — Pre-Release Critical Value Checklist (Story 43.7)
+  criticalValueThresholds!: Dexie.Table<CriticalValueThreshold, number>
+  completedChecklists!: Dexie.Table<CompletedChecklist, string>
+  checklistConfig!: Dexie.Table<ChecklistConfig, string>
+  // v19 — Personal Quality Streak & Achievement System (Story 46.7)
+  quality_streaks!: Dexie.Table<QualityStreak, string>
+  quality_metrics!: Dexie.Table<QualityMetric, string>
+  badges!: Dexie.Table<Badge, string>
+  earned_badges!: Dexie.Table<EarnedBadge, string>
+  // v20 — Auto-Compiled HMIS Monthly Report (Story 50.1)
+  hmisReports!: Dexie.Table<HmisMonthlyReport, string>
 
   constructor() {
     super('lab-lite-db')
@@ -712,6 +784,350 @@ class LabLiteDatabase extends Dexie {
       // New in v15 — Visual Atlas (Story 53.2):
       atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
       atlas_categories: '&id',
+    })
+    // v16 — Analyzer Drift Detection (Story 43.6)
+    // QC data is local-first: stored in Dexie, synced to Hub for backup.
+    // No PHI — QC runs are instrument control data, not patient data.
+    this.version(16).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
+      // New in v16 — Analyzer Drift Detection (Story 43.6):
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel]',
+      driftAlerts: '&id, analyte, loincCode, instrumentId, detectedAt, acknowledgedAt, [analyte+instrumentId+controlLevel]',
+    })
+    // v17 — Gamified Team Quality Engagement (Story 51.7)
+    // No PHI: achievement records reference tech IDs and operational metrics only.
+    // Tier 3 (Operational) sync — see CLAUDE.md sync tier table.
+    this.version(17).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel]',
+      driftAlerts: '&id, analyte, loincCode, instrumentId, detectedAt, acknowledgedAt, [analyte+instrumentId+controlLevel]',
+      // New in v17 — Gamified Team Quality Engagement (Story 51.7):
+      achievements: '&id, techId, type, [techId+type], [type+evaluationPeriod]',
+      team_achievements: '&id, type, earnedAt, evaluationPeriod',
+      achievement_preferences: '&techId',
+      achievement_scheduler_config: '&id',
+    })
+    // v18 — Pre-Release Critical Value Checklist (Story 43.7)
+    // criticalValueThresholds: lab-specific overrides; defaults seeded on first install.
+    // completedChecklists: append-only audit record per result release with critical values.
+    // checklistConfig: per-lab customization of checklist items.
+    // No PHI — analyte names are clinical config, resultId is opaque, patientRef never stored.
+    this.version(18).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel]',
+      driftAlerts: '&id, analyte, loincCode, instrumentId, detectedAt, acknowledgedAt, [analyte+instrumentId+controlLevel]',
+      achievements: '&id, techId, type, [techId+type], [type+evaluationPeriod]',
+      team_achievements: '&id, type, earnedAt, evaluationPeriod',
+      achievement_preferences: '&techId',
+      achievement_scheduler_config: '&id',
+      // New in v18 — Pre-Release Critical Value Checklist (Story 43.7):
+      criticalValueThresholds: '++id, &loincCode, analyte, isActive',
+      completedChecklists: '&id, resultId, completedAt',
+      checklistConfig: '&id, labId',
+    }).upgrade(async (tx) => {
+      // Seed default thresholds only if table is empty (preserves lab overrides on re-upgrade)
+      const existing = await tx.table('criticalValueThresholds').count()
+      if (existing === 0) {
+        await tx.table('criticalValueThresholds').bulkAdd(
+          DEFAULT_CRITICAL_THRESHOLDS.map((t) => ({ ...t, id: undefined })),
+        )
+      }
+    })
+    // v19 — Personal Quality Streak & Achievement System (Story 46.7)
+    // Self-reinforcement: no PHI, no comparative data, no leaderboards.
+    this.version(19).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel]',
+      driftAlerts: '&id, analyte, loincCode, instrumentId, detectedAt, acknowledgedAt, [analyte+instrumentId+controlLevel]',
+      achievements: '&id, techId, type, [techId+type], [type+evaluationPeriod]',
+      team_achievements: '&id, type, earnedAt, evaluationPeriod',
+      achievement_preferences: '&techId',
+      achievement_scheduler_config: '&id',
+      criticalValueThresholds: '++id, &loincCode, analyte, isActive',
+      completedChecklists: '&id, resultId, completedAt',
+      checklistConfig: '&id, labId',
+      // New in v19 — Personal Quality Streak & Achievement System (Story 46.7):
+      quality_streaks: '&id, technicianId, streakType, [technicianId+streakType]',
+      quality_metrics: '&id, technicianId, metricType, period, [technicianId+period]',
+      badges: '&id, category',
+      earned_badges: '&id, technicianId, badgeId, earnedAt, syncStatus',
+    })
+
+    // v20 — Auto-Compiled HMIS Monthly Report (Story 50.1)
+    // Aggregate-only statistics — no PHI stored.
+    // Indexed for month/year lookup, status filtering, and sync queue queries.
+    this.version(20).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
+      qcRuns: '&id, analyte, loincCode, instrumentId, runDate, [analyte+instrumentId+controlLevel]',
+      driftAlerts: '&id, analyte, loincCode, instrumentId, detectedAt, acknowledgedAt, [analyte+instrumentId+controlLevel]',
+      achievements: '&id, techId, type, [techId+type], [type+evaluationPeriod]',
+      team_achievements: '&id, type, earnedAt, evaluationPeriod',
+      achievement_preferences: '&techId',
+      achievement_scheduler_config: '&id',
+      criticalValueThresholds: '++id, &loincCode, analyte, isActive',
+      completedChecklists: '&id, resultId, completedAt',
+      checklistConfig: '&id, labId',
+      quality_streaks: '&id, technicianId, streakType, [technicianId+streakType]',
+      quality_metrics: '&id, technicianId, metricType, period, [technicianId+period]',
+      badges: '&id, category',
+      earned_badges: '&id, technicianId, badgeId, earnedAt, syncStatus',
+      // New in v20 — HMIS Monthly Report (Story 50.1)
+      hmisReports: '&id, [reportYear+reportMonth], status, finalizedAt, syncStatus',
     })
   }
 }
@@ -1934,5 +2350,262 @@ export async function seedAtlas(): Promise<void> {
     }
   } catch {
     // Never throw — atlas seeding failures must not break the app
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Achievement helpers (v17) — Story 51.7: Gamified Team Quality Engagement
+// ---------------------------------------------------------------------------
+
+/** Put (upsert) an individual achievement. */
+export async function putAchievement(achievement: Achievement): Promise<void> {
+  const db = getDb()
+  await db.achievements.put(achievement)
+}
+
+/** Bulk-put achievement records (used by evaluation engine). */
+export async function putAchievements(records: Achievement[]): Promise<void> {
+  const db = getDb()
+  await db.achievements.bulkPut(records)
+}
+
+/** Get all achievements for a specific tech (for portfolio). */
+export async function getAchievementsForTech(techId: string): Promise<Achievement[]> {
+  const db = getDb()
+  return db.achievements.where('techId').equals(techId).toArray()
+}
+
+/** Check if an achievement of a given type already exists for a period (dedup guard). */
+export async function getAchievementByPeriod(
+  type: AchievementType,
+  evaluationPeriod: string,
+  techId?: string,
+): Promise<Achievement | undefined> {
+  const db = getDb()
+  if (techId) {
+    const results = await db.achievements
+      .where('[type+evaluationPeriod]')
+      .equals([type, evaluationPeriod])
+      .filter((a) => a.techId === techId)
+      .toArray()
+    return results[0]
+  }
+  return db.achievements
+    .where('[type+evaluationPeriod]')
+    .equals([type, evaluationPeriod])
+    .first()
+}
+
+/** Put (upsert) a team achievement. */
+export async function putTeamAchievement(achievement: TeamAchievement): Promise<void> {
+  const db = getDb()
+  await db.team_achievements.put(achievement)
+}
+
+/** Get team achievements ordered by earnedAt descending. */
+export async function getTeamAchievements(months: number): Promise<TeamAchievement[]> {
+  const db = getDb()
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - months)
+  const cutoffIso = cutoff.toISOString()
+  const all = await db.team_achievements.orderBy('earnedAt').reverse().toArray()
+  return all.filter((a) => a.earnedAt >= cutoffIso)
+}
+
+/** Check if a team achievement already exists for a given type+period (dedup guard). */
+export async function getTeamAchievementByPeriod(
+  type: AchievementType,
+  evaluationPeriod: string,
+): Promise<TeamAchievement | undefined> {
+  const db = getDb()
+  return db.team_achievements
+    .where('[type+evaluationPeriod]')
+    .equals([type, evaluationPeriod])
+    .first()
+}
+
+/** Get all team achievements of a specific type (for milestone dedup). */
+export async function getTeamAchievementsByType(type: AchievementType): Promise<TeamAchievement[]> {
+  const db = getDb()
+  return db.team_achievements.where('type').equals(type).toArray()
+}
+
+/** Get achievement preferences for a tech (returns default if not set). */
+export async function getAchievementPreferences(techId: string): Promise<AchievementPreferences> {
+  const db = getDb()
+  const prefs = await db.achievement_preferences.get(techId)
+  return prefs ?? { techId, showOnTeamDashboard: true }
+}
+
+/** Save achievement preferences for a tech. */
+export async function putAchievementPreferences(prefs: AchievementPreferences): Promise<void> {
+  const db = getDb()
+  await db.achievement_preferences.put(prefs)
+}
+
+/** Get the achievement scheduler config singleton. */
+export async function getAchievementSchedulerConfig(): Promise<AchievementSchedulerConfig> {
+  const db = getDb()
+  const config = await db.achievement_scheduler_config.get('achievement-scheduler')
+  return config ?? {
+    id: 'achievement-scheduler',
+    lastMonthlyEvaluation: null,
+    lastWeeklyEvaluation: null,
+    lastMilestoneCheck: null,
+    gamificationEnabled: false,
+  }
+}
+
+/** Save the achievement scheduler config singleton. */
+export async function putAchievementSchedulerConfig(
+  config: AchievementSchedulerConfig,
+): Promise<void> {
+  const db = getDb()
+  await db.achievement_scheduler_config.put(config)
+}
+
+// ---------------------------------------------------------------------------
+// Critical Value Threshold helpers (v18) — Story 43.7
+// No PHI — analyte names and LOINC codes are clinical configuration, not patient data.
+// ---------------------------------------------------------------------------
+
+/**
+ * Retrieve a critical value threshold for a given (loincCode, analyte) pair.
+ * Used by the critical value engine (Story 48.4) and the pre-release checklist (Story 43.7).
+ *
+ * Returns undefined when no matching active threshold exists.
+ * Never throws — callers must handle undefined and treat as "not configured".
+ */
+export async function getCriticalThresholdByAnalyte(
+  loincCode: string,
+  analyte: string,
+): Promise<CriticalValueThreshold | undefined> {
+  const db = getDb()
+  // Try LOINC-primary lookup first (most precise)
+  const byLoinc = await db.criticalValueThresholds.where('loincCode').equals(loincCode).first()
+  if (byLoinc) return byLoinc
+  // Fallback: match by analyte name (covers cases where LOINC codes differ across instruments)
+  const byAnalyte = await db.criticalValueThresholds.where('analyte').equals(analyte).first()
+  return byAnalyte
+}
+
+/** Upsert a critical value threshold (lab override). */
+export async function putCriticalValueThreshold(
+  threshold: Omit<CriticalValueThreshold, 'id'>,
+): Promise<void> {
+  const db = getDb()
+  const existing = await db.criticalValueThresholds.where('loincCode').equals(threshold.loincCode).first()
+  if (existing?.id != null) {
+    await db.criticalValueThresholds.update(existing.id, threshold)
+  } else {
+    await db.criticalValueThresholds.add(threshold as CriticalValueThreshold)
+  }
+}
+
+/** Return all active critical value thresholds. */
+export async function getAllCriticalValueThresholds(): Promise<CriticalValueThreshold[]> {
+  const db = getDb()
+  return db.criticalValueThresholds.where('isActive').equals(1).toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Completed Checklist helpers (v18) — Story 43.7
+// completedChecklists is append-only per CLAUDE.md audit rules.
+// resultId is opaque — no PHI stored directly.
+// ---------------------------------------------------------------------------
+
+/** Store a completed checklist. Append-only — never updated. */
+export async function addCompletedChecklist(checklist: CompletedChecklist): Promise<void> {
+  const db = getDb()
+  await db.completedChecklists.add(checklist)
+}
+
+/** Retrieve the completed checklist for a given result. */
+export async function getCompletedChecklistForResult(
+  resultId: string,
+): Promise<CompletedChecklist | undefined> {
+  const db = getDb()
+  return db.completedChecklists.where('resultId').equals(resultId).first()
+}
+
+// ---------------------------------------------------------------------------
+// Checklist Config helpers (v18) — Story 43.7 (AC #4 — configurable per lab)
+// ---------------------------------------------------------------------------
+
+/** Load the lab's checklist configuration, or undefined if not yet configured. */
+export async function getChecklistConfig(): Promise<ChecklistConfig | undefined> {
+  const db = getDb()
+  return db.checklistConfig.get('config')
+}
+
+/** Save (insert or replace) the lab's checklist configuration. */
+export async function putChecklistConfig(config: ChecklistConfig): Promise<void> {
+  const db = getDb()
+  await db.checklistConfig.put(config)
+}
+
+// ---------------------------------------------------------------------------
+// HMIS Monthly Report helpers (v20) — Story 50.1
+// Aggregate-only statistics — no PHI stored in any of these helpers.
+// ---------------------------------------------------------------------------
+
+/** Save (insert or replace) an HMIS monthly report. */
+export async function saveHmisReport(report: HmisMonthlyReport): Promise<void> {
+  const db = getDb()
+  await db.hmisReports.put(report)
+}
+
+/** Get a single HMIS report by id. Returns undefined if not found. */
+export async function getHmisReport(id: string): Promise<HmisMonthlyReport | undefined> {
+  const db = getDb()
+  return db.hmisReports.get(id)
+}
+
+/** Get all HMIS reports for a given year, ordered by month ascending. */
+export async function getHmisReportsByYear(year: number): Promise<HmisMonthlyReport[]> {
+  const db = getDb()
+  return db.hmisReports.where('reportYear').equals(year).sortBy('reportMonth')
+}
+
+/**
+ * Finalize an HMIS report.
+ * - Transitions status from 'draft' → 'finalized'
+ * - Records finalizedBy and finalizedAt
+ * - Enqueues the report for Hub sync (Tier 3 — operational data, LWW)
+ * - Throws if report not found or already finalized
+ */
+export async function finalizeHmisReport(id: string, finalizedBy: string): Promise<void> {
+  const db = getDb()
+  const now = new Date().toISOString()
+  await db.transaction('rw', db.hmisReports, async () => {
+    const report = await db.hmisReports.get(id)
+    if (!report) throw new Error(`HMIS report not found: ${id}`)
+    if (report.status === 'finalized') {
+      throw new Error(`HMIS report ${id} is already finalized`)
+    }
+    await db.hmisReports.update(id, {
+      status: 'finalized',
+      finalizedBy,
+      finalizedAt: now,
+    })
+  })
+
+  // Enqueue for Hub sync — Tier 3 (operational data, Last-Write-Wins)
+  // A newer finalizedAt wins if the same month/year exists on the Hub.
+  try {
+    const finalized = await db.hmisReports.get(id)
+    if (finalized) {
+      await enqueueSyncEvent({
+        resourceType: 'HmisReport',
+        resourceId: id,
+        status: 'pending',
+        payload: finalized,
+        createdAt: now,
+        lastAttemptAt: null,
+        retryCount: 0,
+      })
+    }
+  } catch {
+    // Sync enqueue failure must not block finalization
   }
 }

@@ -19,6 +19,8 @@ export default defineConfig({
       '@ultranos/audit-logger/adapters/dexie': path.resolve(__dirname, '../../packages/audit-logger/dist/adapters/dexie-adapter.js'),
       '@ultranos/audit-logger/drain': path.resolve(__dirname, '../../packages/audit-logger/dist/drain.js'),
       '@ultranos/audit-logger': path.resolve(__dirname, '../../packages/audit-logger/dist/index.js'),
+      '@ultranos/ui-kit/icons': path.resolve(__dirname, '../../packages/ui-kit/src/icons.ts'),
+      '@ultranos/ui-kit': path.resolve(__dirname, '../../packages/ui-kit/src/index.ts'),
     },
   },
 })

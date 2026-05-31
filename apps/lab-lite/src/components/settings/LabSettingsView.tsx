@@ -13,8 +13,11 @@ import { Button } from '@/components/ui/Button'
 import { SecurityAlertFlow } from '@/components/security/SecurityAlertFlow'
 import { ConfidencePrincipleInfo } from '@/components/ai/ConfidencePrincipleInfo'
 import { DEFAULT_TAT_PROFILES, type TestTatProfile } from '@/lib/test-tat-database'
-import { getTatOverrides, putTatOverride, removeTatOverride, type TatOverrideEntry, getDailyLogSettings, saveDailyLogSettings } from '@/lib/db'
+import { getTatOverrides, putTatOverride, removeTatOverride, type TatOverrideEntry, getDailyLogSettings, saveDailyLogSettings, getAchievementSchedulerConfig, putAchievementSchedulerConfig, getAchievementPreferences, putAchievementPreferences, getChecklistConfig, putChecklistConfig, getAllCriticalValueThresholds, putCriticalValueThreshold } from '@/lib/db'
 import type { DailyLogSettings } from '@/lib/daily-log-types'
+import type { ChecklistConfigItem, CriticalValueThreshold } from '@/lib/critical-values/types'
+import { DEFAULT_CHECKLIST_CONFIG_ITEMS, DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
+import { BadgeShowcase } from '@/components/quality/BadgeShowcase'
 
 /** Map LabRole enum to i18n key under settings namespace */
 const ROLE_I18N_KEY: Record<LabRole, string> = {
@@ -29,6 +32,7 @@ export function LabSettingsView() {
   const tScheduler = useTranslations('scheduler.nav')
   const tData = useTranslations('dataBudget')
   const tSecurity = useTranslations('security')
+  const tChecklist = useTranslations('criticalValueChecklist')
   const session = useAuthSessionStore((s) => s.session)
   const [showSecurityAlert, setShowSecurityAlert] = useState(false)
   const isManager = session?.labRole === LabRole.LAB_MANAGER
@@ -44,6 +48,131 @@ export function LabSettingsView() {
   // TAT override state (Task 6 — Story 45.5)
   const [tatOverrides, setTatOverrides] = useState<Partial<Record<string, TatOverrideEntry>>>({})
   const [tatEdits, setTatEdits] = useState<Record<string, number>>({})
+
+  // Critical Value Checklist + Threshold config state (Story 43.7)
+  const [checklistItems, setChecklistItems] = useState<ChecklistConfigItem[]>(DEFAULT_CHECKLIST_CONFIG_ITEMS)
+  const [thresholds, setThresholds] = useState<CriticalValueThreshold[]>([])
+  const [newChecklistLabel, setNewChecklistLabel] = useState('')
+
+  useEffect(() => {
+    async function loadCriticalValueConfig() {
+      try {
+        const config = await getChecklistConfig()
+        if (config?.items?.length) setChecklistItems(config.items)
+        const savedThresholds = await getAllCriticalValueThresholds()
+        if (savedThresholds.length > 0) setThresholds(savedThresholds)
+        else {
+          // First load — show defaults
+          setThresholds(DEFAULT_CRITICAL_THRESHOLDS as CriticalValueThreshold[])
+        }
+      } catch {
+        // non-fatal — fall back to defaults
+      }
+    }
+    void loadCriticalValueConfig()
+  }, [])
+
+  async function handleToggleChecklistItemRequired(id: string) {
+    const updated = checklistItems.map((item) =>
+      item.id === id ? { ...item, isRequired: !item.isRequired } : item,
+    )
+    setChecklistItems(updated)
+    await putChecklistConfig({
+      id: 'config',
+      labId: session?.labId ?? 'default',
+      items: updated,
+      updatedAt: new Date().toISOString(),
+      updatedBy: session?.userId ?? 'unknown',
+    })
+  }
+
+  async function handleAddChecklistItem() {
+    const label = newChecklistLabel.trim()
+    if (!label) return
+    const newItem: ChecklistConfigItem = {
+      id: crypto.randomUUID(),
+      label,
+      isRequired: false,
+      isDefault: false,
+      order: checklistItems.length + 1,
+    }
+    const updated = [...checklistItems, newItem]
+    setChecklistItems(updated)
+    setNewChecklistLabel('')
+    await putChecklistConfig({
+      id: 'config',
+      labId: session?.labId ?? 'default',
+      items: updated,
+      updatedAt: new Date().toISOString(),
+      updatedBy: session?.userId ?? 'unknown',
+    })
+  }
+
+  async function handleRemoveChecklistItem(id: string) {
+    const updated = checklistItems.filter((item) => item.id !== id)
+    setChecklistItems(updated)
+    await putChecklistConfig({
+      id: 'config',
+      labId: session?.labId ?? 'default',
+      items: updated,
+      updatedAt: new Date().toISOString(),
+      updatedBy: session?.userId ?? 'unknown',
+    })
+  }
+
+  async function handleSaveThreshold(threshold: CriticalValueThreshold) {
+    await putCriticalValueThreshold({
+      ...threshold,
+      configuredBy: session?.userId ?? 'lab',
+      updatedAt: new Date().toISOString(),
+    })
+    // Reload
+    const saved = await getAllCriticalValueThresholds()
+    setThresholds(saved.length > 0 ? saved : (DEFAULT_CRITICAL_THRESHOLDS as CriticalValueThreshold[]))
+  }
+
+  // Gamification state (Story 51.7)
+  const [gamificationEnabled, setGamificationEnabled] = useState(false)
+  const [showOnTeamDashboard, setShowOnTeamDashboard] = useState(true)
+
+  useEffect(() => {
+    async function loadGamification() {
+      try {
+        const config = await getAchievementSchedulerConfig()
+        setGamificationEnabled(config.gamificationEnabled)
+        if (session?.practitionerId) {
+          const prefs = await getAchievementPreferences(session.practitionerId)
+          setShowOnTeamDashboard(prefs.showOnTeamDashboard)
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+    void loadGamification()
+  }, [session?.practitionerId])
+
+  async function handleGamificationToggle(enabled: boolean) {
+    setGamificationEnabled(enabled)
+    try {
+      const config = await getAchievementSchedulerConfig()
+      await putAchievementSchedulerConfig({ ...config, gamificationEnabled: enabled })
+    } catch {
+      // non-fatal — toggle is best-effort
+    }
+  }
+
+  async function handleShowOnDashboardToggle(show: boolean) {
+    if (!session?.practitionerId) return
+    setShowOnTeamDashboard(show)
+    try {
+      await putAchievementPreferences({
+        techId: session.practitionerId,
+        showOnTeamDashboard: show,
+      })
+    } catch {
+      // non-fatal
+    }
+  }
 
   useEffect(() => {
     if (!isLoaded) void loadFromDexie()
@@ -121,6 +250,11 @@ export function LabSettingsView() {
               </dd>
             </div>
           </dl>
+        </div>
+
+        {/* Quality Badges — Story 46.7 */}
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <BadgeShowcase />
         </div>
 
         {/* Lab Info Card */}
@@ -335,6 +469,99 @@ export function LabSettingsView() {
           <ChevronRight size={20} className="text-neutral-400 rtl:-scale-x-100" aria-hidden="true" />
         </Link>
 
+        {/* Critical Value Checklist Config — Story 43.7 (AC #4) — lab_manager only */}
+        {isManager && (
+          <div
+            className="rounded-lg border border-neutral-200 bg-white p-4"
+            data-testid="critical-value-checklist-settings"
+          >
+            <h2 className="text-sm font-semibold text-neutral-500 mb-1">
+              {tChecklist('settingsTitle')}
+            </h2>
+            <p className="text-xs text-neutral-400 mb-3">{tChecklist('settingsDescription')}</p>
+            <div className="space-y-2">
+              {checklistItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-neutral-700 flex-1">{item.label}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleChecklistItemRequired(item.id)}
+                      className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
+                        item.isRequired
+                          ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      }`}
+                      data-testid={`checklist-required-toggle-${item.id}`}
+                    >
+                      {item.isRequired ? tChecklist('itemRequired') : tChecklist('itemOptional')}
+                    </button>
+                    {!item.isDefault && (
+                      <button
+                        type="button"
+                        onClick={() => void handleRemoveChecklistItem(item.id)}
+                        className="text-xs text-red-500 hover:text-red-700"
+                        data-testid={`checklist-remove-${item.id}`}
+                        aria-label={`Remove ${item.label}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Add custom item */}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newChecklistLabel}
+                onChange={(e) => setNewChecklistLabel(e.target.value)}
+                placeholder={tChecklist('addItemLabel')}
+                className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                data-testid="new-checklist-item-input"
+              />
+              <button
+                type="button"
+                onClick={() => void handleAddChecklistItem()}
+                disabled={!newChecklistLabel.trim()}
+                className="rounded bg-blue-600 px-3 py-1 text-sm text-white disabled:opacity-40 hover:bg-blue-700 transition-colors"
+                data-testid="add-checklist-item-button"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Critical Value Thresholds Config — Story 43.7 (AC #4) — lab_manager only */}
+        {isManager && (
+          <div
+            className="rounded-lg border border-neutral-200 bg-white p-4"
+            data-testid="critical-value-thresholds-settings"
+          >
+            <h2 className="text-sm font-semibold text-neutral-500 mb-1">
+              {tChecklist('thresholdsTitle')}
+            </h2>
+            <p className="text-xs text-neutral-400 mb-3">{tChecklist('thresholdsDescription')}</p>
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-5 gap-2 text-xs font-medium text-neutral-500">
+                <span className="col-span-2">{tChecklist('analyteName')}</span>
+                <span>{tChecklist('criticalLow')}</span>
+                <span>{tChecklist('criticalHigh')}</span>
+                <span>{tChecklist('unit')}</span>
+              </div>
+              {thresholds.map((threshold) => (
+                <ThresholdRow
+                  key={threshold.loincCode}
+                  threshold={threshold}
+                  onSave={(t) => void handleSaveThreshold(t)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Security Alert — lab_manager only (Story 49.4) */}
         {isManager && (
           <button
@@ -363,6 +590,76 @@ export function LabSettingsView() {
           <ConfidencePrincipleInfo variant="panel" />
         </div>
 
+        {/* Team Quality Achievements — Story 51.7 */}
+        <div className="rounded-lg border border-neutral-200 bg-white p-4" data-testid="gamification-settings">
+          <h2 className="text-sm font-semibold text-neutral-500 mb-3">Team Quality Achievements</h2>
+          <div className="space-y-3">
+            {/* Lab-manager toggle: enable/disable for the whole lab */}
+            {isManager && (
+              <div className="flex items-center justify-between gap-4">
+                <label
+                  htmlFor="gamification-enabled"
+                  className="text-sm text-neutral-700"
+                >
+                  Enable Team Quality Achievements
+                </label>
+                <button
+                  id="gamification-enabled"
+                  type="button"
+                  role="switch"
+                  aria-checked={gamificationEnabled}
+                  data-testid="gamification-toggle"
+                  onClick={() => void handleGamificationToggle(!gamificationEnabled)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+                    gamificationEnabled ? 'bg-blue-600' : 'bg-neutral-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
+                      gamificationEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+
+            {/* Per-tech toggle: show my achievements on team dashboard */}
+            {gamificationEnabled && (
+              <div className="flex items-center justify-between gap-4">
+                <label
+                  htmlFor="show-on-dashboard"
+                  className="text-sm text-neutral-700"
+                >
+                  Show my achievements on team dashboard
+                </label>
+                <button
+                  id="show-on-dashboard"
+                  type="button"
+                  role="switch"
+                  aria-checked={showOnTeamDashboard}
+                  data-testid="show-on-dashboard-toggle"
+                  onClick={() => void handleShowOnDashboardToggle(!showOnTeamDashboard)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+                    showOnTeamDashboard ? 'bg-blue-600' : 'bg-neutral-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform ${
+                      showOnTeamDashboard ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+
+            {!gamificationEnabled && !isManager && (
+              <p className="text-xs text-neutral-400">
+                Team achievements are not currently enabled for this lab.
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Sign Out */}
         <Button
           variant="danger"
@@ -378,6 +675,76 @@ export function LabSettingsView() {
       {showSecurityAlert && (
         <SecurityAlertFlow onClose={() => setShowSecurityAlert(false)} />
       )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ThresholdRow — inline editable row for a single critical value threshold
+// Story 43.7 AC #4 (configurable thresholds per lab)
+// ---------------------------------------------------------------------------
+
+interface ThresholdRowProps {
+  threshold: CriticalValueThreshold
+  onSave: (threshold: CriticalValueThreshold) => void
+}
+
+function ThresholdRow({ threshold, onSave }: ThresholdRowProps) {
+  const [low, setLow] = useState<string>(
+    threshold.criticalLow != null ? String(threshold.criticalLow) : '',
+  )
+  const [high, setHigh] = useState<string>(
+    threshold.criticalHigh != null ? String(threshold.criticalHigh) : '',
+  )
+  const [dirty, setDirty] = useState(false)
+
+  function handleChange(field: 'low' | 'high', value: string) {
+    if (field === 'low') setLow(value)
+    else setHigh(value)
+    setDirty(true)
+  }
+
+  function handleSave() {
+    onSave({
+      ...threshold,
+      criticalLow: low !== '' ? parseFloat(low) : null,
+      criticalHigh: high !== '' ? parseFloat(high) : null,
+    })
+    setDirty(false)
+  }
+
+  return (
+    <div className="grid grid-cols-5 gap-2 items-center text-sm">
+      <span className="col-span-2 text-neutral-700">{threshold.analyte}</span>
+      <input
+        type="number"
+        value={low}
+        onChange={(e) => handleChange('low', e.target.value)}
+        className="rounded border border-neutral-300 px-1 py-0.5 text-sm text-end w-full"
+        data-testid={`threshold-low-${threshold.loincCode}`}
+        placeholder="—"
+      />
+      <input
+        type="number"
+        value={high}
+        onChange={(e) => handleChange('high', e.target.value)}
+        className="rounded border border-neutral-300 px-1 py-0.5 text-sm text-end w-full"
+        data-testid={`threshold-high-${threshold.loincCode}`}
+        placeholder="—"
+      />
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-neutral-500 truncate">{threshold.unit}</span>
+        {dirty && (
+          <button
+            type="button"
+            onClick={handleSave}
+            className="ms-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white hover:bg-blue-700"
+            data-testid={`threshold-save-${threshold.loincCode}`}
+          >
+            ✓
+          </button>
+        )}
+      </div>
     </div>
   )
 }
