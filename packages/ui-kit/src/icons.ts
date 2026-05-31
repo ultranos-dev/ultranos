@@ -165,6 +165,8 @@ export {
   Save,
   Calculator,
   ListOrdered,
+  List,
+  Bookmark,
 } from 'lucide-react'
 
 // ─── Calendar & Scheduling ──────────────────────────────────────────
@@ -186,11 +188,25 @@ export {
   CloudOff,
   CloudUpload,
   CloudDownload,
+  CloudCheck,
   Globe,
   MessageSquare,
   MessageCircle,
   Languages,
   QrCode,
+} from 'lucide-react'
+
+// ─── Media & Audio ──────────────────────────────────────────────────
+export {
+  Play,
+  Pause,
+  StopCircle,
+  Volume2,
+  VolumeX,
+  Mic,
+  MicOff,
+  Camera,
+  Video,
 } from 'lucide-react'
 
 // ─── Data & Charts ──────────────────────────────────────────────────
