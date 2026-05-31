@@ -50,34 +50,38 @@ export interface MentorshipSyncSummary {
 export async function getMentorshipSyncSummary(
   technicianId: string,
 ): Promise<MentorshipSyncSummary> {
-  const db = getDb()
+  try {
+    const db = getDb()
 
-  const [activePairings, pendingJournal, pendingCheckIns] = await Promise.all([
-    // Count pairings where this technician is mentor or mentee
-    db.mentorship_pairings
-      .where('mentorId')
-      .equals(technicianId)
-      .or('menteeId')
-      .equals(technicianId)
-      .count(),
-    // Count journal entries authored by this technician that haven't been synced
-    db.learning_journal
-      .where('syncStatus')
-      .equals('pending')
-      .filter((entry) => entry.authorId === technicianId)
-      .count(),
-    // Count check-in records completed by this technician that haven't been synced
-    db.check_in_records
-      .where('syncStatus')
-      .equals('pending')
-      .filter((record) => record.completedBy === technicianId)
-      .count(),
-  ])
+    const [activePairings, pendingJournal, pendingCheckIns] = await Promise.all([
+      // Count pairings where this technician is mentor or mentee
+      db.mentorship_pairings
+        .where('mentorId')
+        .equals(technicianId)
+        .or('menteeId')
+        .equals(technicianId)
+        .count(),
+      // Count journal entries authored by this technician that haven't been synced
+      db.learning_journal
+        .where('syncStatus')
+        .equals('pending')
+        .filter((entry) => entry.authorId === technicianId)
+        .count(),
+      // Count check-in records completed by this technician that haven't been synced
+      db.check_in_records
+        .where('syncStatus')
+        .equals('pending')
+        .filter((record) => record.completedBy === technicianId)
+        .count(),
+    ])
 
-  return {
-    pairingCount: activePairings,
-    pendingJournalEntries: pendingJournal,
-    pendingCheckIns: pendingCheckIns,
+    return {
+      pairingCount: activePairings,
+      pendingJournalEntries: pendingJournal,
+      pendingCheckIns: pendingCheckIns,
+    }
+  } catch {
+    return { pairingCount: 0, pendingJournalEntries: 0, pendingCheckIns: 0 }
   }
 }
 
@@ -94,11 +98,15 @@ export async function getMentorshipSyncSummary(
  * without PHI. Callers receive a resolved Promise regardless of network state.
  */
 export async function syncMentorshipPairings(technicianId: string): Promise<void> {
-  // Each phase is isolated: one phase failing does not prevent subsequent phases.
-  await _pullPairings(technicianId)
-  await _pushPendingJournalEntries(technicianId)
-  await _pushPendingCheckIns(technicianId)
-  await _pullPartnerContent(technicianId)
+  try {
+    // Each phase is isolated: one phase failing does not prevent subsequent phases.
+    await _pullPairings(technicianId)
+    await _pushPendingJournalEntries(technicianId)
+    await _pushPendingCheckIns(technicianId)
+    await _pullPartnerContent(technicianId)
+  } catch (err) {
+    console.warn('[mentorship-sync] Unexpected error:', err instanceof Error ? err.message : 'unknown')
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -271,16 +279,12 @@ async function _pullPartnerContent(technicianId: string): Promise<void> {
 
     const pairingIds = pairings.map((p) => p.id)
 
-    const input = encodeURIComponent(
-      JSON.stringify({ json: { technicianId, pairingIds } }),
-    )
-    const res = await fetch(
-      `${HUB_API_URL}/mentorship.pullPartnerContent?input=${input}`,
-      {
-        method: 'GET',
-        signal: AbortSignal.timeout(30_000),
-      },
-    )
+    const res = await fetch(`${HUB_API_URL}/mentorship.pullPartnerContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ json: { technicianId, pairingIds } }),
+      signal: AbortSignal.timeout(30_000),
+    })
 
     if (!res.ok) {
       console.warn(
