@@ -2,11 +2,13 @@
  * Story 42.5 — Authorization Action Handler Tests
  * Task 11.2: approve/reject/hold actions; Task 11.4: critical value flows;
  * Task 11.6: offline persistence
+ * Story 43.7 — Checklist gate integration tests (8.10, 8.11)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { approveResult, rejectResult, holdResult } from '../lib/authorization-actions'
 import type { LabResultForAuthorization } from '../types/authorization'
 import { AuthorizationStatus } from '../types/authorization'
+import type { CompletedChecklist } from '../lib/critical-values/types'
 
 // Shared mock DB singleton — same reference for both test assertions and implementation calls
 const mockDbInstance = {
@@ -22,13 +24,24 @@ const mockDbInstance = {
   },
 }
 
+const mockAddCompletedChecklist = vi.fn().mockResolvedValue(undefined)
+const mockGetCompletedChecklistForResult = vi.fn().mockResolvedValue(null)
+
 vi.mock('../lib/db', () => ({
   getDb: () => mockDbInstance,
+  addCompletedChecklist: (...args: unknown[]) => mockAddCompletedChecklist(...args),
+  getCompletedChecklistForResult: (...args: unknown[]) => mockGetCompletedChecklistForResult(...args),
 }))
 
 // Mock audit client
 vi.mock('../lib/audit-client', () => ({
   reportAuthorizationAuditEvent: vi.fn(),
+  reportChecklistEvent: vi.fn(),
+}))
+
+// Mock escalation integration (fire-and-forget)
+vi.mock('../lib/escalation-integration', () => ({
+  checkAndInitiateEscalation: vi.fn().mockResolvedValue(undefined),
 }))
 
 // Mock result-release (fire-and-forget in approveResult)
@@ -78,9 +91,28 @@ const criticalResult: LabResultForAuthorization = {
   abnormalityFlags: ['LL'],
 }
 
+// A minimal valid CompletedChecklist for use in critical result tests
+const mockCompletedChecklist: CompletedChecklist = {
+  id: 'checklist-uuid-001',
+  resultId: 'result-uuid-critical',
+  items: [
+    { id: 'qc-passed-today', label: 'QC passed today', isRequired: true, isChecked: true },
+    { id: 'patient-id-verified', label: 'Patient ID verified', isRequired: true, isChecked: true },
+    { id: 'result-plausibility', label: 'Result plausibility', isRequired: true, isChecked: true },
+    { id: 'delta-check-reviewed', label: 'Delta check reviewed', isRequired: true, isChecked: true },
+    { id: 'repeat-testing', label: 'Repeat testing', isRequired: false, isChecked: false },
+  ],
+  completedBy: 'prac-supervisor-003',
+  completedAt: '2026-05-31T10:00:00.000Z',
+  hlcTimestamp: '2026-05-31T10:00:00.000Z-0-test',
+  syncStatus: 'local',
+}
+
 describe('approveResult', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAddCompletedChecklist.mockResolvedValue(undefined)
+    mockGetCompletedChecklistForResult.mockResolvedValue(null)
   })
 
   it('updates result status to APPROVED', async () => {
@@ -163,7 +195,47 @@ describe('approveResult', () => {
     ).rejects.toThrow(/critical/i)
   })
 
-  it('critical result: succeeds when criticalValueAcknowledged=true', async () => {
+  it('critical result: succeeds when criticalValueAcknowledged=true and completedChecklist provided', async () => {
+    const { getDb } = await import('../lib/db')
+    const db = getDb()
+
+    await approveResult({
+      result: criticalResult,
+      actorId: 'prac-supervisor-003',
+      actorRole: 'SUPERVISOR',
+      criticalValueAcknowledged: true,
+      completedChecklist: { ...mockCompletedChecklist, resultId: criticalResult.id },
+    })
+
+    expect(db.lab_results.update).toHaveBeenCalledWith(
+      criticalResult.id,
+      expect.objectContaining({
+        authorizationStatus: AuthorizationStatus.APPROVED,
+      }),
+    )
+  })
+
+  it('Story 43.7 — critical result: throws when no completedChecklist and none stored', async () => {
+    mockGetCompletedChecklistForResult.mockResolvedValue(null)
+
+    await expect(
+      approveResult({
+        result: criticalResult,
+        actorId: 'prac-supervisor-003',
+        actorRole: 'SUPERVISOR',
+        criticalValueAcknowledged: true,
+        // No completedChecklist provided
+      }),
+    ).rejects.toThrow(/completed critical value checklist/i)
+  })
+
+  it('Story 43.7 — critical result: succeeds on idempotent retry when checklist already stored', async () => {
+    // Simulate retry: no completedChecklist passed but one already exists in Dexie
+    mockGetCompletedChecklistForResult.mockResolvedValue({
+      ...mockCompletedChecklist,
+      resultId: criticalResult.id,
+    })
+
     const { getDb } = await import('../lib/db')
     const db = getDb()
 
@@ -176,8 +248,73 @@ describe('approveResult', () => {
 
     expect(db.lab_results.update).toHaveBeenCalledWith(
       criticalResult.id,
+      expect.objectContaining({ authorizationStatus: AuthorizationStatus.APPROVED }),
+    )
+  })
+
+  it('8.10 Story 43.7 — emits CRITICAL_VALUE_CHECKLIST_COMPLETED audit event on approval with checklist', async () => {
+    const { reportChecklistEvent } = await import('../lib/audit-client')
+
+    await approveResult({
+      result: criticalResult,
+      actorId: 'prac-supervisor-003',
+      actorRole: 'SUPERVISOR',
+      criticalValueAcknowledged: true,
+      completedChecklist: { ...mockCompletedChecklist, resultId: criticalResult.id },
+      criticalValueMatches: [
+        { loincCode: '2823-3', analyte: 'Potassium', direction: 'LOW', threshold: 2.5, unit: 'mEq/L' },
+      ],
+    })
+
+    expect(reportChecklistEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        authorizationStatus: AuthorizationStatus.APPROVED,
+        checklistId: mockCompletedChecklist.id,
+        resultId: criticalResult.id,
+        allItemsChecked: expect.any(Boolean),
+        checkedBy: 'prac-supervisor-003',
+      }),
+    )
+  })
+
+  it('8.11 Story 43.7 — audit event criticalAnalytes contains analyte names only, no numeric values', async () => {
+    const { reportChecklistEvent } = await import('../lib/audit-client')
+
+    await approveResult({
+      result: criticalResult,
+      actorId: 'prac-supervisor-003',
+      actorRole: 'SUPERVISOR',
+      criticalValueAcknowledged: true,
+      completedChecklist: { ...mockCompletedChecklist, resultId: criticalResult.id },
+      criticalValueMatches: [
+        { loincCode: '2823-3', analyte: 'Potassium', direction: 'LOW', threshold: 2.5, unit: 'mEq/L' },
+        { loincCode: '718-7', analyte: 'Hemoglobin', direction: 'LOW', threshold: 5.0, unit: 'g/dL' },
+      ],
+    })
+
+    const call = vi.mocked(reportChecklistEvent).mock.calls[0][0]
+    // criticalAnalytes should be strings like "Potassium - LOW", NOT "2.5" or numeric values
+    for (const entry of call.criticalAnalytes) {
+      expect(typeof entry).toBe('string')
+      // No bare numbers in the analyte label
+      expect(entry).toMatch(/^[A-Za-z]/)
+    }
+    expect(call.criticalAnalytes).toContain('Potassium - LOW')
+    expect(call.criticalAnalytes).toContain('Hemoglobin - LOW')
+  })
+
+  it('Story 43.7 — stores completedChecklist in Dexie before releasing', async () => {
+    await approveResult({
+      result: criticalResult,
+      actorId: 'prac-supervisor-003',
+      actorRole: 'SUPERVISOR',
+      criticalValueAcknowledged: true,
+      completedChecklist: { ...mockCompletedChecklist, resultId: criticalResult.id },
+    })
+
+    expect(mockAddCompletedChecklist).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: mockCompletedChecklist.id,
+        resultId: criticalResult.id,
       }),
     )
   })

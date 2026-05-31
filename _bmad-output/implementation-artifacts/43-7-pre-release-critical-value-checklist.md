@@ -1,6 +1,6 @@
 # Story 43.7: Pre-Release Critical Value Checklist
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -17,13 +17,13 @@ So that critical results are verified through a structured process before reachi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Critical value thresholds configuration (AC: #1, #4)
-  - [ ] 1.1 Create `apps/lab-lite/src/lib/critical-values/types.ts` with core types:
+- [x] Task 1: Critical value thresholds configuration (AC: #1, #4)
+  - [x] 1.1 Create `apps/lab-lite/src/lib/critical-values/types.ts` with core types:
     - `CriticalValueThreshold`: `{ loincCode, analyteName, criticalLow, criticalHigh, unit }`
     - `CriticalValueMatch`: `{ loincCode, analyteName, value, direction: 'LOW' | 'HIGH', threshold }`
     - `ChecklistItem`: `{ id, label, isRequired, isChecked, checkedBy?, checkedAt? }`
     - `CompletedChecklist`: `{ id, resultId, items: ChecklistItem[], completedBy, completedAt, hlcTimestamp }`
-  - [ ] 1.2 Create `apps/lab-lite/src/lib/critical-values/default-thresholds.ts` — default critical value thresholds:
+  - [x] 1.2 Create `apps/lab-lite/src/lib/critical-values/default-thresholds.ts` — default critical value thresholds:
     - Potassium: < 2.5 or > 6.5 mEq/L
     - Glucose: < 40 or > 500 mg/dL
     - Hemoglobin: < 5.0 or > 20.0 g/dL
@@ -34,82 +34,82 @@ So that critical results are verified through a structured process before reachi
     - INR: > 5.0
     - Troponin: > threshold (lab-specific)
     - Additional analytes per lab configuration
-  - [ ] 1.3 Add `criticalValueThresholds` Dexie table for lab-specific threshold overrides: `&loincCode, analyteName`
-  - [ ] 1.4 Default thresholds used when no lab-specific override exists
+  - [x] 1.3 Add `criticalValueThresholds` Dexie table for lab-specific threshold overrides: `&loincCode, analyteName`
+  - [x] 1.4 Default thresholds used when no lab-specific override exists
 
-- [ ] Task 2: Critical value detection engine (AC: #1)
-  - [ ] 2.1 Create `apps/lab-lite/src/lib/critical-values/critical-value-detector.ts`
-  - [ ] 2.2 `detectCriticalValues(results: ResultEntry[]): CriticalValueMatch[]`
-  - [ ] 2.3 Checks each result value against thresholds (lab-specific overrides first, then defaults)
-  - [ ] 2.4 Returns array of matches with analyte name, actual value, direction (LOW/HIGH), and threshold value
-  - [ ] 2.5 All computation is offline — reads thresholds from Dexie and in-memory defaults
+- [x] Task 2: Critical value detection engine (AC: #1)
+  - [x] 2.1 Create `apps/lab-lite/src/lib/critical-values/critical-value-detector.ts`
+  - [x] 2.2 `detectCriticalValues(results: ResultEntry[]): CriticalValueMatch[]`
+  - [x] 2.3 Checks each result value against thresholds (lab-specific overrides first, then defaults)
+  - [x] 2.4 Returns array of matches with analyte name, actual value, direction (LOW/HIGH), and threshold value
+  - [x] 2.5 All computation is offline — reads thresholds from Dexie and in-memory defaults
 
-- [ ] Task 3: Mandatory checklist UI component (AC: #1, #2)
-  - [ ] 3.1 Create `apps/lab-lite/src/components/critical-values/CriticalValueChecklist.tsx`
-  - [ ] 3.2 Modal dialog that appears when supervisor clicks "Release" and critical values are detected
-  - [ ] 3.3 Header: "Critical Value Checklist" with red alert styling and the detected critical values listed
-  - [ ] 3.4 Default checklist items (each with a checkbox):
+- [x] Task 3: Mandatory checklist UI component (AC: #1, #2)
+  - [x] 3.1 Create `apps/lab-lite/src/components/critical-values/CriticalValueChecklist.tsx`
+  - [x] 3.2 Modal dialog that appears when supervisor clicks "Release" and critical values are detected
+  - [x] 3.3 Header: "Critical Value Checklist" with red alert styling and the detected critical values listed
+  - [x] 3.4 Default checklist items (each with a checkbox):
     - "QC passed today for [analyte]" — auto-checked if QC data from 43.2 confirms passing QC
     - "Patient ID verified (two-identifier)" — auto-checked if verification record from 43.4 exists and isComplete
     - "Result reviewed for plausibility" — auto-checked if plausibility check from 43.5 ran with no unacknowledged CRITICAL flags
     - "Delta check reviewed (if prior result exists)" — auto-checked if delta check from 43.5 ran; shows "N/A" if no prior result
     - "Repeat testing performed (if required by lab policy)" — manual check only, never auto-checked
-  - [ ] 3.5 Auto-checked items display a green checkmark with "Auto-verified" label; supervisor can uncheck if they disagree
-  - [ ] 3.6 Manual items require explicit supervisor click
-  - [ ] 3.7 "Release" button at bottom — disabled until ALL required items are checked
-  - [ ] 3.8 "Cancel" button returns to result view without releasing
-  - [ ] 3.9 RTL support: logical CSS properties, checkbox labels align correctly in Arabic/Dari/Pashto
+  - [x] 3.5 Auto-checked items display a green checkmark with "Auto-verified" label; supervisor can uncheck if they disagree
+  - [x] 3.6 Manual items require explicit supervisor click
+  - [x] 3.7 "Release" button at bottom — disabled until ALL required items are checked
+  - [x] 3.8 "Cancel" button returns to result view without releasing
+  - [x] 3.9 RTL support: logical CSS properties, checkbox labels align correctly in Arabic/Dari/Pashto
 
-- [ ] Task 4: Checklist storage in audit trail (AC: #3)
-  - [ ] 4.1 Add `completedChecklists` Dexie table: `&id, resultId, completedAt`
-  - [ ] 4.2 On release, store `CompletedChecklist` with all items, their checked status, who checked them, and timestamps
-  - [ ] 4.3 Add `CRITICAL_VALUE_CHECKLIST_COMPLETED` to `AuditAction` enum
-  - [ ] 4.4 Emit `CRITICAL_VALUE_CHECKLIST_COMPLETED` audit event with metadata: `{ resultId, criticalValuesDetected: [...analytes], allItemsChecked: true, checkedBy }`
-  - [ ] 4.5 Audit metadata must NOT include actual result values — only analyte names and whether thresholds were exceeded
-  - [ ] 4.6 The completed checklist is viewable in the result detail's audit trail section
+- [x] Task 4: Checklist storage in audit trail (AC: #3)
+  - [x] 4.1 Add `completedChecklists` Dexie table: `&id, resultId, completedAt`
+  - [x] 4.2 On release, store `CompletedChecklist` with all items, their checked status, who checked them, and timestamps
+  - [x] 4.3 Add `CRITICAL_VALUE_CHECKLIST_COMPLETED` to `AuditAction` enum
+  - [x] 4.4 Emit `CRITICAL_VALUE_CHECKLIST_COMPLETED` audit event with metadata: `{ resultId, criticalValuesDetected: [...analytes], allItemsChecked: true, checkedBy }`
+  - [x] 4.5 Audit metadata must NOT include actual result values — only analyte names and whether thresholds were exceeded
+  - [x] 4.6 The completed checklist is viewable in the result detail's audit trail section
 
-- [ ] Task 5: Configurable checklist items (AC: #4)
-  - [ ] 5.1 Add "Critical Value Checklist" section to `apps/lab-lite/src/components/settings/LabSettingsView.tsx`
-  - [ ] 5.2 Lab manager can:
+- [x] Task 5: Configurable checklist items (AC: #4)
+  - [x] 5.1 Add "Critical Value Checklist" section to `apps/lab-lite/src/components/settings/LabSettingsView.tsx`
+  - [x] 5.2 Lab manager can:
     - Add custom checklist items (text label + required flag)
     - Remove non-default items (default items cannot be removed, only set to optional)
     - Reorder items
     - Toggle items between required and optional
-  - [ ] 5.3 Add `checklistConfig` Dexie table: `&id, labId` — stores custom checklist items per lab
-  - [ ] 5.4 Configuration changes are audit-logged
-  - [ ] 5.5 Configuration synced to Hub for backup and cross-device consistency
+  - [x] 5.3 Add `checklistConfig` Dexie table: `&id, labId` — stores custom checklist items per lab
+  - [x] 5.4 Configuration changes are audit-logged
+  - [x] 5.5 Configuration synced to Hub for backup and cross-device consistency
 
-- [ ] Task 6: Configurable critical value thresholds (AC: #4)
-  - [ ] 6.1 Add "Critical Value Thresholds" section to settings (alongside or within the checklist config section)
-  - [ ] 6.2 Lab manager can override default thresholds per analyte
-  - [ ] 6.3 Can add new analytes not in the default list
-  - [ ] 6.4 Threshold changes are versioned and audit-logged
-  - [ ] 6.5 Share UI pattern with Story 43.8 (Localized Reference Ranges) settings
+- [x] Task 6: Configurable critical value thresholds (AC: #4)
+  - [x] 6.1 Add "Critical Value Thresholds" section to settings (alongside or within the checklist config section)
+  - [x] 6.2 Lab manager can override default thresholds per analyte
+  - [x] 6.3 Can add new analytes not in the default list
+  - [x] 6.4 Threshold changes are versioned and audit-logged
+  - [x] 6.5 Share UI pattern with Story 43.8 (Localized Reference Ranges) settings
 
-- [ ] Task 7: Integration with result authorization workflow (AC: #1, #2)
-  - [ ] 7.1 Hook into the authorization workflow from Story 42.5
-  - [ ] 7.2 When supervisor clicks "Release" (approve), run critical value detection first
-  - [ ] 7.3 If critical values detected: show checklist modal (Task 3) — release blocked until checklist complete
-  - [ ] 7.4 If no critical values: proceed with normal release flow (no checklist)
-  - [ ] 7.5 Critical values ALWAYS require supervisor authorization regardless of auto-verify rules (reinforcing 42.5 AC)
+- [x] Task 7: Integration with result authorization workflow (AC: #1, #2)
+  - [x] 7.1 Hook into the authorization workflow from Story 42.5
+  - [x] 7.2 When supervisor clicks "Release" (approve), run critical value detection first
+  - [x] 7.3 If critical values detected: show checklist modal (Task 3) — release blocked until checklist complete
+  - [x] 7.4 If no critical values: proceed with normal release flow (no checklist)
+  - [x] 7.5 Critical values ALWAYS require supervisor authorization regardless of auto-verify rules (reinforcing 42.5 AC)
 
-- [ ] Task 8: Tests (AC: all)
-  - [ ] 8.1 Unit test: critical value detector identifies Potassium > 6.5 as critical high
-  - [ ] 8.2 Unit test: critical value detector identifies Glucose < 40 as critical low
-  - [ ] 8.3 Unit test: critical value detector returns empty array for normal values
-  - [ ] 8.4 Unit test: lab-specific threshold overrides take precedence over defaults
-  - [ ] 8.5 Unit test: checklist auto-checks QC item when QC passed today
-  - [ ] 8.6 Unit test: checklist auto-checks patient ID item when two-identifier verification exists
-  - [ ] 8.7 Unit test: checklist auto-checks plausibility item when no unacknowledged CRITICAL flags
-  - [ ] 8.8 Unit test: "Release" button disabled until all required items checked
-  - [ ] 8.9 Unit test: completed checklist stored in Dexie with correct structure
-  - [ ] 8.10 Unit test: `CRITICAL_VALUE_CHECKLIST_COMPLETED` audit event emitted
-  - [ ] 8.11 Unit test: audit metadata does NOT contain actual result values
-  - [ ] 8.12 Unit test: custom checklist items from lab config appear in checklist
-  - [ ] 8.13 Component test: checklist modal renders all items with correct auto-check states
-  - [ ] 8.14 Component test: cancel button closes modal without releasing
-  - [ ] 8.15 RTL snapshot test: CriticalValueChecklist in both LTR and RTL
-  - [ ] 8.16 Offline test: checklist works entirely offline (Dexie data only)
+- [x] Task 8: Tests (AC: all)
+  - [x] 8.1 Unit test: critical value detector identifies Potassium > 6.5 as critical high
+  - [x] 8.2 Unit test: critical value detector identifies Glucose < 40 as critical low
+  - [x] 8.3 Unit test: critical value detector returns empty array for normal values
+  - [x] 8.4 Unit test: lab-specific threshold overrides take precedence over defaults
+  - [x] 8.5 Unit test: checklist auto-checks QC item when QC passed today
+  - [x] 8.6 Unit test: checklist auto-checks patient ID item when two-identifier verification exists
+  - [x] 8.7 Unit test: checklist auto-checks plausibility item when no unacknowledged CRITICAL flags
+  - [x] 8.8 Unit test: "Release" button disabled until all required items checked
+  - [x] 8.9 Unit test: completed checklist stored in Dexie with correct structure
+  - [x] 8.10 Unit test: `CRITICAL_VALUE_CHECKLIST_COMPLETED` audit event emitted
+  - [x] 8.11 Unit test: audit metadata does NOT contain actual result values
+  - [x] 8.12 Unit test: custom checklist items from lab config appear in checklist
+  - [x] 8.13 Component test: checklist modal renders all items with correct auto-check states
+  - [x] 8.14 Component test: cancel button closes modal without releasing
+  - [x] 8.15 RTL snapshot test: CriticalValueChecklist in both LTR and RTL
+  - [x] 8.16 Offline test: checklist works entirely offline (Dexie data only)
 
 ## Dev Notes
 
@@ -215,3 +215,46 @@ Supervisor clicks "Release"
 - Story 43.5 (Result Plausibility Checker) — plausibility auto-verification source
 - LOINC categories: `apps/lab-lite/src/lib/loinc-categories.ts`
 - CLAUDE.md Rule #6: Every PHI access must emit audit event
+
+## Dev Agent Record
+
+### Completion Notes
+
+- **DB version 18** — story adds `criticalValueThresholds`, `completedChecklists`, and `checklistConfig` Dexie tables. Version 17 was already taken by gamification achievements.
+- **`analyte` field** — spec said `analyteName` but the existing engine/tests use `analyte`. Implemented with `analyte` throughout to match existing interface.
+- **`CriticalValueMatch.direction`** — used uppercase `'HIGH'|'LOW'` (matching story spec) in the detector and types; the engine (Story 48.4) uses lowercase `'high'|'low'` in a separate module — no conflict.
+- **Icons** — initial import used `CheckCircle` and `XCircle` from `@ultranos/ui-kit/icons` which don't exist; corrected to `CircleCheck` and `CircleX` per the ui-kit exports catalog.
+- **Custom item labels** — `getItemLabel` initially fell back to `itemId` for non-default items; fixed to fall back to `item.label` so lab-configured labels display correctly.
+- **Import path** — `authorization-actions.ts` initially had `'../lib/critical-values/types'`; corrected to `'./critical-values/types'`.
+- **Authorization-actions test** — the existing "critical result: succeeds" test was broken because it didn't provide `completedChecklist`. Updated to provide one and added 5 new Story 43.7 checklist gate tests.
+- **Idempotent retry guard** — `approveResult` checks for an existing stored checklist via `getCompletedChecklistForResult` before throwing, allowing retries without double-storing.
+- **Pitfall #2 (checklist bypass)** — implemented: `approveResult` independently verifies checklist existence; there is no code path that bypasses the checklist gate for critical results.
+- **vitest.config.ts** — added `@ultranos/ui-kit/icons` and `@ultranos/ui-kit` aliases pointing to source `.ts` files to ensure test resolution uses the same source as the build.
+
+## File List
+
+### Created
+- `apps/lab-lite/src/lib/critical-values/types.ts`
+- `apps/lab-lite/src/lib/critical-values/default-thresholds.ts`
+- `apps/lab-lite/src/lib/critical-values/critical-value-detector.ts`
+- `apps/lab-lite/src/components/critical-values/CriticalValueChecklist.tsx`
+- `apps/lab-lite/src/__tests__/critical-value-detector.test.ts`
+- `apps/lab-lite/src/__tests__/critical-value-checklist.test.tsx`
+- `apps/lab-lite/src/__tests__/__snapshots__/critical-value-checklist.test.tsx.snap`
+
+### Modified
+- `packages/shared-types/src/enums.ts` — added `CRITICAL_VALUE_CHECKLIST_COMPLETED` to `AuditAction` enum
+- `apps/lab-lite/src/lib/db.ts` — added v18 schema (`criticalValueThresholds`, `completedChecklists`, `checklistConfig`), 7 helper functions, and default threshold seeding
+- `apps/lab-lite/src/lib/audit-client.ts` — added `reportChecklistEvent()`
+- `apps/lab-lite/src/lib/authorization-actions.ts` — extended `ApproveOptions` with checklist gate; extended imports
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — added Critical Value Checklist and Thresholds configuration sections
+- `apps/lab-lite/src/__tests__/authorization-actions.test.ts` — added checklist gate mocks + 5 new tests; fixed broken critical result test
+- `apps/lab-lite/messages/en.json` — added `criticalValueChecklist` i18n namespace
+- `apps/lab-lite/messages/ar.json` — Arabic translations for `criticalValueChecklist`
+- `apps/lab-lite/messages/prs.json` — Dari translations for `criticalValueChecklist`
+- `apps/lab-lite/messages/ps.json` — Pashto translations for `criticalValueChecklist`
+- `apps/lab-lite/vitest.config.ts` — added `@ultranos/ui-kit/icons` and `@ultranos/ui-kit` source aliases
+
+## Change Log
+
+- Story 43.7 implementation complete (Date: 2026-05-31)

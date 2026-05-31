@@ -11,9 +11,9 @@
  * Critical value approval requires criticalValueAcknowledged=true.
  * Rejection requires non-empty rejectionComments.
  */
-import { getDb } from './db'
+import { getDb, addCompletedChecklist, getCompletedChecklistForResult } from './db'
 import { hlc, serializeHlc } from './hlc'
-import { reportAuthorizationAuditEvent } from './audit-client'
+import { reportAuthorizationAuditEvent, reportChecklistEvent } from './audit-client'
 import { dispatchResultRelease } from './result-release'
 import { checkAndInitiateEscalation } from './escalation-integration'
 import {
@@ -22,6 +22,7 @@ import {
 } from '../types/authorization'
 import type { LabResultForAuthorization } from '../types/authorization'
 import { isCriticalResult } from './permissions'
+import type { CompletedChecklist, CriticalValueMatch } from './critical-values/types'
 
 interface ApproveOptions {
   result: LabResultForAuthorization
@@ -29,6 +30,14 @@ interface ApproveOptions {
   actorRole: string
   /** Required if result has LL or HH flags. Must be true to proceed. */
   criticalValueAcknowledged?: boolean
+  /**
+   * Story 43.7 — Required when critical values are detected.
+   * The completed checklist must be provided and stored before release proceeds.
+   * Its presence also serves as the server-side bypass guard (AC: pitfall #2).
+   */
+  completedChecklist?: CompletedChecklist
+  /** The critical value matches that triggered the checklist, for audit metadata. */
+  criticalValueMatches?: CriticalValueMatch[]
 }
 
 interface RejectOptions {
@@ -48,10 +57,24 @@ interface HoldOptions {
 
 /**
  * Approve (release) a lab result.
- * Critical results require criticalValueAcknowledged=true.
+ *
+ * Critical results require:
+ *   1. criticalValueAcknowledged=true (legacy gate from Story 42.5)
+ *   2. completedChecklist provided (Story 43.7 gate — cannot be bypassed)
+ *
+ * The checklist is stored as part of the audit trail before release proceeds.
+ * Pitfall #2 (Story 43.7): This function independently verifies checklist
+ * existence, so there is no code path that bypasses it for critical results.
  */
 export async function approveResult(options: ApproveOptions): Promise<void> {
-  const { result, actorId, actorRole, criticalValueAcknowledged = false } = options
+  const {
+    result,
+    actorId,
+    actorRole,
+    criticalValueAcknowledged = false,
+    completedChecklist,
+    criticalValueMatches = [],
+  } = options
   const db = getDb()
   const nowHlc = serializeHlc(hlc.now())
   const nowIso = new Date().toISOString()
@@ -61,6 +84,31 @@ export async function approveResult(options: ApproveOptions): Promise<void> {
     throw new Error(
       'Critical value acknowledgment is required before approving this result.',
     )
+  }
+
+  // Story 43.7 checklist gate: critical results ALWAYS require a completed checklist.
+  // This cannot be bypassed — the release mutation checks independently of the UI.
+  if (isCriticalResult(result.abnormalityFlags)) {
+    if (!completedChecklist) {
+      // Check if checklist already stored (e.g. idempotent retry)
+      const existing = await getCompletedChecklistForResult(result.id)
+      if (!existing) {
+        throw new Error(
+          'A completed critical value checklist is required before releasing this result.',
+        )
+      }
+    } else {
+      // Store the checklist as part of the audit trail (AC: #3)
+      await addCompletedChecklist(completedChecklist)
+      // Emit audit event — analyte names only, no numeric values (CLAUDE.md Rule #1)
+      reportChecklistEvent({
+        checklistId: completedChecklist.id,
+        resultId: result.id,
+        criticalAnalytes: criticalValueMatches.map((m) => `${m.analyte} - ${m.direction}`),
+        allItemsChecked: completedChecklist.items.every((i) => !i.isRequired || i.isChecked),
+        checkedBy: actorId,
+      })
+    }
   }
 
   // 1. Update Dexie result record
