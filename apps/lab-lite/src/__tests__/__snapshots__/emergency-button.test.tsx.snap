@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`EmergencyButton > LTR snapshot 1`] = `
+<div>
+  <button
+    aria-label="Emergency Protocol"
+    class="hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+    style="position: fixed; inset-inline-end: 1rem; bottom: 1rem; z-index: 9999; width: 56px; height: 56px; border-radius: 50%; background-color: rgb(220, 38, 38); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="28"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      viewBox="0 0 24 24"
+      width="28"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Emergency
+    </span>
+  </button>
+</div>
+`;
+
+exports[`EmergencyButton > RTL snapshot — button stays in inline-end position 1`] = `
+<div>
+  <button
+    aria-label="Emergency Protocol"
+    class="hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+    style="position: fixed; inset-inline-end: 1rem; bottom: 1rem; z-index: 9999; width: 56px; height: 56px; border-radius: 50%; background-color: rgb(220, 38, 38); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="28"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      viewBox="0 0 24 24"
+      width="28"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span
+      class="sr-only"
+    >
+      Emergency
+    </span>
+  </button>
+</div>
+`;
