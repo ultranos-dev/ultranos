@@ -16,6 +16,26 @@ const mockSupabaseClient = {
   from: vi.fn(),
 }
 
+/**
+ * Create a Supabase-style chainable query mock.
+ * Every method returns the same builder, and the builder is thenable.
+ */
+function chainableQuery(data: unknown) {
+  const result = { data, error: null }
+  const builder: Record<string, unknown> = {}
+  for (const method of ['select', 'gt', 'order', 'eq', 'in', 'limit', 'single', 'maybeSingle', 'insert']) {
+    builder[method] = vi.fn().mockReturnValue(builder)
+  }
+  builder.then = (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve)
+  builder.catch = (reject: (v: unknown) => unknown) => Promise.resolve(result).catch(reject)
+  return builder
+}
+
+/** Mock for the organizations table used by enforceEntitlement middleware. */
+function orgMock() {
+  return chainableQuery({ id: 'org-test-001', status: 'ACTIVE', cancelled_at: null })
+}
+
 const { appRouter } = await import('../trpc/routers/_app')
 const { createCallerFactory } = await import('../trpc/init')
 
@@ -43,11 +63,12 @@ describe('vocabulary.sync', () => {
       { code: 'RX101', display: 'NewDrug', form: 'Tablet', strength: '10 mg', atc_code: null, version: 2 },
     ]
 
-    let callCount = 0
+    let vocabCallCount = 0
     mockSupabaseClient.from.mockImplementation((table: string) => {
-      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
-      callCount++
-      if (callCount === 1) {
+      if (table === 'organizations') return orgMock()
+      if (table === 'org_subscriptions') return chainableQuery([{ id: 'sub-1', status: 'ACTIVE' }])
+      vocabCallCount++
+      if (vocabCallCount === 1) {
         // First call: entries query (select * → gt → order)
         return {
           select: vi.fn().mockReturnValue({
@@ -79,7 +100,8 @@ describe('vocabulary.sync', () => {
 
   it('returns empty entries when vocabulary is up-to-date', async () => {
     mockSupabaseClient.from.mockImplementation((table: string) => {
-      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      if (table === 'organizations') return orgMock()
+      if (table === 'org_subscriptions') return chainableQuery([{ id: 'sub-1', status: 'ACTIVE' }])
       return {
         select: vi.fn().mockReturnValue({
           gt: vi.fn().mockReturnValue({
@@ -111,7 +133,8 @@ describe('vocabulary.sync', () => {
 
   it('supports all vocabulary types', async () => {
     mockSupabaseClient.from.mockImplementation((table: string) => {
-      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      if (table === 'organizations') return orgMock()
+      if (table === 'org_subscriptions') return chainableQuery([{ id: 'sub-1', status: 'ACTIVE' }])
       return {
         select: vi.fn().mockReturnValue({
           gt: vi.fn().mockReturnValue({
@@ -145,7 +168,8 @@ describe('vocabulary.sync', () => {
   it('excludes entries at or below sinceVersion', async () => {
     // Mock returns empty (simulating server filtered correctly)
     mockSupabaseClient.from.mockImplementation((table: string) => {
-      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'sub-1', status: 'ACTIVE' }, error: null }), limit: vi.fn().mockResolvedValue({ data: [{ id: 'sub-1', status: 'ACTIVE' }], error: null }) }) }) }) }) }
+      if (table === 'organizations') return orgMock()
+      if (table === 'org_subscriptions') return chainableQuery([{ id: 'sub-1', status: 'ACTIVE' }])
       return {
         select: vi.fn().mockReturnValue({
           gt: vi.fn().mockReturnValue({
@@ -165,8 +189,13 @@ describe('vocabulary.sync', () => {
     const result = await caller.vocabulary.sync({ type: 'medications', sinceVersion: 1 })
 
     expect(result.entries).toHaveLength(0)
-    // Verify the gt filter was called with the correct sinceVersion
-    const fromMock = mockSupabaseClient.from.mock.results[0]?.value
+    // Verify the gt filter was called with the correct sinceVersion.
+    // Skip middleware calls (organizations, org_subscriptions) — find the vocabulary table call.
+    const vocabCall = mockSupabaseClient.from.mock.calls.findIndex(
+      (args: string[]) => args[0] === 'vocabulary_medications',
+    )
+    expect(vocabCall).toBeGreaterThanOrEqual(0)
+    const fromMock = mockSupabaseClient.from.mock.results[vocabCall]?.value
     const gtSpy = fromMock?.select?.mock.results[0]?.value?.gt
     expect(gtSpy).toHaveBeenCalledWith('version', 1)
   })
