@@ -1,0 +1,205 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ModuleViewer — RTL Snapshot (Task 8) > renders correctly in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+      data-testid="module-viewer"
+    >
+      <div
+        class="flex items-start justify-between gap-2"
+      >
+        <div>
+          <h2
+            class="text-base font-semibold text-gray-900 dark:text-gray-100"
+          >
+            CBC Refresher
+          </h2>
+          <p
+            class="text-xs text-gray-500 dark:text-gray-400"
+          >
+            Complete Blood Count
+             · 
+            3
+             
+            min
+          </p>
+        </div>
+        <button
+          aria-label="Close"
+          class="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          data-testid="module-viewer-close"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="18"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="18"
+          >
+            <line
+              x1="18"
+              x2="6"
+              y1="6"
+              y2="18"
+            />
+            <line
+              x1="6"
+              x2="18"
+              y1="6"
+              y2="18"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="flex flex-col gap-3"
+        data-testid="module-step"
+      >
+        <p
+          class="text-xs font-medium text-gray-500 dark:text-gray-400"
+        >
+          Step 1 of 3
+        </p>
+        <div
+          class="prose prose-sm max-w-none dark:prose-invert"
+          data-testid="step-content"
+        >
+          <pre
+            class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+          >
+            ## Step 1: Collect sample
+          </pre>
+        </div>
+        <div
+          class="flex justify-between gap-2 pt-1"
+        >
+          <button
+            class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            data-testid="step-back"
+            disabled=""
+            type="button"
+          >
+            Back
+          </button>
+          <button
+            class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            data-testid="step-next"
+            type="button"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ModuleViewer — RTL Snapshot (Task 8) > renders correctly in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+      data-testid="module-viewer"
+    >
+      <div
+        class="flex items-start justify-between gap-2"
+      >
+        <div>
+          <h2
+            class="text-base font-semibold text-gray-900 dark:text-gray-100"
+          >
+            CBC Refresher
+          </h2>
+          <p
+            class="text-xs text-gray-500 dark:text-gray-400"
+          >
+            Complete Blood Count
+             · 
+            3
+             
+            min
+          </p>
+        </div>
+        <button
+          aria-label="Close"
+          class="rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          data-testid="module-viewer-close"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="18"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="18"
+          >
+            <line
+              x1="18"
+              x2="6"
+              y1="6"
+              y2="18"
+            />
+            <line
+              x1="6"
+              x2="18"
+              y1="6"
+              y2="18"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="flex flex-col gap-3"
+        data-testid="module-step"
+      >
+        <p
+          class="text-xs font-medium text-gray-500 dark:text-gray-400"
+        >
+          Step 1 of 3
+        </p>
+        <div
+          class="prose prose-sm max-w-none dark:prose-invert"
+          data-testid="step-content"
+        >
+          <pre
+            class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+          >
+            ## Step 1: Collect sample
+          </pre>
+        </div>
+        <div
+          class="flex justify-between gap-2 pt-1"
+        >
+          <button
+            class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            data-testid="step-back"
+            disabled=""
+            type="button"
+          >
+            Back
+          </button>
+          <button
+            class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            data-testid="step-next"
+            type="button"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
