@@ -26,7 +26,7 @@ export interface LearningJournalProps {
 
 export function LearningJournal({
   pairing,
-  currentUserId: _currentUserId,
+  currentUserId,
   onAddEntry,
 }: LearningJournalProps) {
   const t = useTranslations('mentorship')
@@ -107,7 +107,12 @@ export function LearningJournal({
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+              className={
+                'rounded-xl border p-4 shadow-sm ' +
+                (entry.authorId === currentUserId
+                  ? 'border-primary-200 bg-primary-50'
+                  : 'border-neutral-200 bg-white')
+              }
             >
               {/* Entry header */}
               <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -124,6 +129,13 @@ export function LearningJournal({
                     ? t('journalRoleMentor')
                     : t('journalRoleMentee')}
                 </span>
+
+                {/* "You" badge — shown only for current user's own entries */}
+                {entry.authorId === currentUserId && (
+                  <span className="inline-flex items-center rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
+                    {t('journalYou')}
+                  </span>
+                )}
 
                 {/* Date */}
                 <span className="text-xs text-neutral-400">

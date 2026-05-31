@@ -14,6 +14,7 @@
 import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { getDb } from '@/lib/db'
+import { hlc, serializeHlc } from '@/lib/hlc'
 import type { MentorshipPairing, LearningJournalEntry } from '@/lib/mentorship-types'
 import { Button } from '@/components/ui/Button'
 
@@ -29,7 +30,7 @@ async function compressPhoto(file: File): Promise<string> {
     const url = URL.createObjectURL(file)
     img.onload = () => {
       const canvas = document.createElement('canvas')
-      const scale = Math.min(1, 800 / img.width)
+      const scale = Math.min(1, 800 / Math.max(img.width, img.height))
       canvas.width = Math.round(img.width * scale)
       canvas.height = Math.round(img.height * scale)
       const ctx = canvas.getContext('2d')!
@@ -170,7 +171,7 @@ export function JournalEntryForm({
               learningOutcome: learningOutcome.trim() || undefined,
             }
           : undefined,
-        createdAt: new Date().toISOString(),
+        createdAt: serializeHlc(hlc.now()),
         syncStatus: 'pending',
       }
 
