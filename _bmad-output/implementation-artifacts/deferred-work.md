@@ -800,3 +800,32 @@
 - **D-RTL2: `Noto Naskh Arabic` (clinical serif font) declared but never applied.** `--font-family-serif-ar` is defined in `tokens.css` but no component references it. AC#5 (clinical font switching) is partially unmet. Blocked until clinical document views are implemented. → **Epic 35, Story 35.2**
 - **D-RTL3: `patient-lite-mobile` never calls `initI18n()`.** The i18n module exists at `src/i18n/index.ts` but `App.tsx` never invokes it. Pre-existing issue not introduced by Story 1-5. → **Epic 35, Story 35.3**
 - **D-RTL4: RTL snapshot test gaps.** EncounterDashboard (pre-existing render issue), PatientSearchScreen, PatientResultList (OPD-Lite), and LabelPreviewPanel (Pharmacy-Lite, missing `dir="rtl"` container wrapper) lack proper RTL direction snapshot tests. AC#8 partially unmet. → **Epic 35, Story 35.4**
+
+## Deferred from: code review of 42-1-role-based-access-control (2026-05-30)
+
+- **D-42.1-R1: Role change not propagated to target user's active session.** `updateStaffRole` writes the new role to the DB but the target user's Zustand session store retains the stale role until page reload. Server-side `enforceLabRole` middleware re-reads from DB on every request, so mutations are blocked correctly — but client-side UI shows elevated affordances for a demoted user until session refresh. Spec explicitly defers this to v1. Future: poll `getMyRole` on visibility change or add Redis-backed role invalidation.
+- **D-42.1-R2: `.single()` on `lab_technicians` locks out multi-row practitioners.** `labRestrictedProcedure` uses `.single()` which throws if a practitioner has rows in multiple labs. Pre-existing from Story 12.1. If multi-lab membership becomes a use case, API needs an explicit lab selector parameter.
+- **D-42.1-R3: `ar.json` missing verification sub-keys.** Arabic locale file is missing `recentPatients`, `noRecentPatients`, `yearsOld`, `searchPatients` etc. present in `en.json`. Pre-existing locale parity gap, not caused by Story 42.1.
+
+## Deferred from: code review of 55-1-lab-staff-role-management (2026-05-30)
+
+- **D-55.1-R1: `pullOrders` returns `orderingPhysicianName`.** Physician full name returned to lab clients violates CLAUDE.md Rule #7 (lab portal sees only patient first name + age). Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R2: `pullOrders` returns `specialInstructions`.** Free-text clinical field exposed to lab endpoint violates Rule #7 data minimization. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R3: Unbounded N+1 `getUserById` fan-out in `listLabStaff`/`listStaff`.** One Auth Admin API call per staff member via `Promise.all` with no concurrency limit. Risk of Auth API quota exhaustion for large labs (50+ staff). Add `p-limit` or batch to ≤10 concurrent. → Epic 34 (operational)
+- **D-55.1-R4: `pullOrders`/`acknowledgeOrder` missing `enforceLabRole` permission gate.** Any LAB_TECH can pull all active orders — no VIEW_ORDERS permission check. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R5: `acknowledgeOrder` count check broken.** Supabase `.update()` doesn't return `count` without `.select('id', { count: 'exact' })`. The "already claimed" guard never triggers. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R6: `pullOrders` audit emits SUCCESS before `getFieldEncryptionKeys()`.** If key retrieval fails after audit, trail shows false success. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+
+## Deferred from: code review round 2 of 42-1-role-based-access-control (2026-05-30)
+
+- **D-42.1-R2-1: `acknowledgeOrder` ADMIN sets `received_by_lab_id=null` → phantom unclaimed state.** ADMIN ack writes null lab ID, making the order appear unassigned to all labs in subsequent pullOrders queries. Story 42.2 code; design decision needed when Admin order management is scoped. → Epic 42/Story 42.2
+- **D-42.1-R2-2: `pullOrders` audit `actorId` uses `lab_technicians` row ID, not practitioner UUID.** Uses `ctx.lab?.technicianId` (row ID from lab_technicians table) instead of `ctx.user.sub` (practitioner UUID). Inconsistent with updateStaffRole which correctly uses `ctx.user.sub`. Story 42.2 code. → Epic 42/Story 42.2
+- **D-42.1-R2-3: `pullOrders` returns `specialInstructions` (free-text, possible Rule #7 concern).** Operational test-handling data the lab needs, but free-text could embed PHI. Evaluate Rule #7 scope during Story 42.2 review. → Epic 42/Story 42.2
+- **D-42.1-R2-4: `patientRef` blind-indexed but still returned in `pullOrders`.** Prior fix claimed removal but code uses blind index (HMAC, non-reversible). Architecturally sound; confirm intent during 42.2 review. → Epic 42/Story 42.2
+
+## Deferred from: code review of 47-2-sharps-waste-tracking (2026-05-30)
+
+- **D-47.2-R1: `getContainerHistory` loads all disposed containers into memory with JS filter.** Dexie query uses indexed `location` but JS-filters `type` + `status`. O(disposed) per call, O(active) in `getContainersNearingFull`. Optimize with compound index when data volume warrants.
+- **D-47.2-R2: `WasteContainerList` loads once and never refreshes (stale multi-tab data).** `useEffect` with `[]` deps. Cross-cutting pattern across lab-lite. Address with Dexie liveQuery or event-based refresh.
+- **D-47.2-R3: `ActivateContainerModal` missing focus trap and Escape key handling.** Pre-existing across lab-lite modals. → Epic 35 accessibility sweep.
+- **D-47.2-R4: `activateContainer` does not record who activated.** No `activatedBy` field on `WasteContainer`. Add when role-gated waste operations are scoped.

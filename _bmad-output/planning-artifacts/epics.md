@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling', 'addendum-12-lab-lite-enterprise-ux', 'addendum-14-patient-profile-ux', 'addendum-15-audit-trail']
+stepsCompleted: [1, 2, 3, 4, 'addendum-1', 'addendum-2', 'addendum-3', 'addendum-4', 'addendum-5-deferred-work', 'addendum-6', 'addendum-7', 'addendum-8-mpi-phase1', 'addendum-9-mpi-phase2', 'addendum-10-mpi-phase3', 'addendum-11-navigation-scheduling', 'addendum-12-lab-lite-enterprise-ux', 'addendum-14-patient-profile-ux', 'addendum-15-audit-trail', 'addendum-16-lab-lite-enterprise-transformation']
 workflowType: 'epics-and-stories'
 status: 'complete'
 completedAt: '2026-04-28'
@@ -5396,3 +5396,1454 @@ Created `/register-patient` route (same as OPD-Lite). DashboardActionHub updated
 Copied the full `registration` namespace (116 keys including nested `consentDocument` with consent text in en/ar/prs) from OPD-Lite's message files into all 3 pharmacy-lite locale files.
 
 > **Status:** Done — Commit `5481241`
+
+---
+
+# Addendum 16: Lab-Lite Enterprise Transformation (2026-05-30)
+
+**Source:** Brainstorming session — 108 features across 11 domains, scored and prioritized into 4 tiers.
+**Input documents:** `_bmad-output/brainstorming/brainstorming-session-2026-05-30-001.md`, `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md` (for deduplication)
+
+### New Functional Requirements (Lab-Lite Enterprise Transformation)
+
+FR42: Lab Operations Core — Electronic test order reception (FHIR ServiceRequest), sample accessioning, chain of custody, structured result templates, result authorization workflow, write-once distribute-many, smart sample prioritization, digital lab logbook
+FR43: Quality Assurance & Legal Shield — Immutable result audit chain, QC-result temporal binding, amendment & correction protocol, patient ID verification log, plausibility checker, drift detection, aviation-style checklists, localized reference ranges
+FR44: Lab Financial Operations — Payment collection & receipt system, cost-per-test calculator, reagent waste & expiry tracking
+FR45: Patient Safety & Inclusive Access — Audio + thumbprint consent, patient queue token system, family delegate result access, plain-language audio results, one-trip optimization, cultural sensitivity flags, family account & payment delegation
+FR46: SOPs Training & Professional Development — SOP library with acknowledgment, micro-learning modules, competency self-assessment, peer network "Ask a Tech", mentorship pairing, certification pathway tracker, personal quality streaks
+FR47: Bio-Safety & Occupational Health — Post-exposure emergency protocol, sharps & waste tracking, employee health & vaccination registry, temperature monitoring, spill protocol, anonymous safety reporting, infection control audit
+FR48: Intelligent Decision Support — Power-aware workload scheduler, predictive reagent burndown, pre-shift readiness forecast, critical value escalation chain
+FR49: Offline Resilience & Communication — Data budget mode, SMS critical result fallback, Bluetooth P2P sync, conflict zone security protocols, offline AI audit cache
+FR50: Reporting & Surveillance Automation — Auto-compiled HMIS monthly report, multi-donor report templates, disease surveillance alerts, daily activity log (WhatsApp-shareable)
+FR51: Multi-Tech Lab Management — Shift handover protocol, workload balancing dashboard, technician performance metrics, sample collision prevention, equipment booking, RAG readiness board, dynamic sample dispatch, gamified team engagement
+FR52: Cross-App Integration & Pharmacy Awareness — Pharmacy-Lite prescription awareness, shared inventory visibility, Hub-managed reagent ordering, cross-app patient timeline, distributed inventory hub
+FR53: AI-Assisted Clinical Support — Contextual knowledge cards, visual atlas for microscopy, anomaly flagging, tele-consultation request builder, AI microscopy assist, confidence inversion principle, AI provenance trail, patient-facing public health guidance
+FR54: Lab Network & Outbreak Response — WhatsApp integration layer, multi-branch lab network management, courier & sample transport tracking, external reference lab integration, solar power integration, outbreak response mode, mass casualty triage protocol, CHW collection module, seasonal operations planner
+
+### FR Coverage Map (Addendum 16)
+
+FR42: Epic 42 — Lab Operations Core
+FR43: Epic 43 — Quality Assurance & Legal Shield
+FR44: Epic 44 — Lab Financial Operations
+FR45: Epic 45 — Patient Safety & Inclusive Access
+FR46: Epic 46 — SOPs, Training & Professional Development
+FR47: Epic 47 — Bio-Safety & Occupational Health
+FR48: Epic 48 — Intelligent Decision Support
+FR49: Epic 49 — Offline Resilience & Communication
+FR50: Epic 50 — Reporting & Surveillance Automation
+FR51: Epic 51 — Multi-Tech Lab Management
+FR52: Epic 52 — Cross-App Integration & Pharmacy Awareness
+FR53: Epic 53 — AI-Assisted Clinical Support
+FR54: Epic 54 — Lab Network & Outbreak Response
+
+## Epic 42: Lab Operations Core — Orders, Samples & Results
+
+Lab techs receive electronic test orders from OPD-Lite, track samples through their lifecycle, enter structured results via templates, authorize results through a multi-tier workflow, and deliver them back to ordering physicians — replacing paper requisitions, manual logbooks, and verbal handoffs.
+**FRs covered:** FR42 (brainstorm #2, #7, #21, #22, #23, #41, #42, #65, #100)
+**Tier:** 1 (Foundation)
+
+### Story 42.1: Role-Based Access Control for Lab Staff
+
+As a lab manager,
+I want to assign role-based permissions (Tech, Senior Tech, Supervisor, Lab Manager) to lab staff,
+So that junior techs cannot release results without authorization and sensitive operations are restricted to qualified personnel.
+
+**Acceptance Criteria:**
+
+**Given** the Lab-Lite auth system with a single LAB_TECH role
+**When** a lab manager accesses user management in settings
+**Then** they can assign one of four roles: LAB_TECH, SENIOR_TECH, SUPERVISOR, LAB_MANAGER
+**And** each role has a defined permission set (LAB_TECH: enter results; SENIOR_TECH: enter + release routine results; SUPERVISOR: enter + release all + override QC lockout; LAB_MANAGER: all permissions + user management)
+**And** the role is stored in the auth session and enforced on every protected action
+**And** role changes are audit-logged with the modifier's identity and timestamp
+
+**Admin Portal Surface:** Role assignment and user management (creating lab staff accounts, assigning LAB_TECH/SENIOR_TECH/SUPERVISOR/LAB_MANAGER roles) is performed in the Admin Portal. Lab-Lite displays the authenticated user's role, enforces the permission set locally, and shows a read-only role indicator in settings -- but does not provide UI for assigning or changing roles.
+
+### Story 42.2: Electronic Test Order Reception from OPD-Lite
+
+As a lab technician,
+I want to receive electronic test orders from OPD-Lite as structured FHIR ServiceRequests,
+So that I no longer rely on paper requisitions with illegible handwriting.
+
+**Acceptance Criteria:**
+
+**Given** a physician in OPD-Lite creates a test order for a patient
+**When** the order syncs to the Hub and Lab-Lite pulls pending orders
+**Then** a new order appears in the lab worklist with: patient reference (first name + age only), tests requested (LOINC codes), clinical urgency flag, ordering physician, and special instructions
+**And** the order status is set to RECEIVED and a timestamp is recorded
+**And** the ordering physician sees the status change in OPD-Lite
+**And** orders are persisted in Dexie for offline access
+**And** data minimization is enforced — no diagnosis, medication, or clinical history is transmitted to Lab-Lite
+
+### Story 42.3: Sample Accessioning & Chain of Custody
+
+As a lab technician,
+I want to accession incoming samples with a unique ID and log every handoff,
+So that every sample has a documented chain of custody from collection to result.
+
+**Acceptance Criteria:**
+
+**Given** an electronic order has been received
+**When** the tech taps "Receive Sample" on the order
+**Then** a unique sample ID is generated (format: LAB-YYYYMMDD-NNNN, configurable per lab)
+**And** the system logs: who received the sample, from whom, timestamp, sample type (blood/urine/swab/other), and condition at receipt (acceptable/hemolyzed/clotted/insufficient/mislabeled)
+**And** if condition is not acceptable, the tech selects a rejection reason and the ordering physician is notified with a re-collection request
+**And** the sample status pipeline begins: Received → In Processing → Completed → Reported
+**And** every subsequent handoff is logged with identity and timestamp
+**And** the chain of custody is viewable as a timeline on the sample detail screen
+
+### Story 42.4: Lab Result Templates & Structured Data Entry
+
+As a lab technician,
+I want to enter results into structured templates specific to each test type,
+So that results are standardized, auto-calculated fields reduce errors, and abnormal values are automatically flagged.
+
+**Acceptance Criteria:**
+
+**Given** a sample is in In Processing status
+**When** the tech opens the result entry form
+**Then** a template matching the test type is loaded with: field names, data types (numeric/text/select), units of measure, decimal precision, and reference ranges (age/gender-specific)
+**And** results outside reference ranges are auto-flagged: Low (L), High (H), Critical Low (LL), Critical High (HH)
+**And** auto-calculated fields compute in real-time as values are entered
+**And** templates are bundled offline and versioned — old results reference the template version they were entered against
+**And** the system ships with templates for the 8 existing LOINC categories plus a generic template for unlisted tests
+**And** a comment field is available for per-field and per-report annotations
+
+### Story 42.5: Result Authorization Workflow
+
+As a lab supervisor,
+I want to review and authorize results before they are released to the ordering physician,
+So that no result reaches a clinician without appropriate quality verification.
+
+**Acceptance Criteria:**
+
+**Given** a tech has entered and saved a result
+**When** the result requires authorization (based on role permissions from Story 42.1)
+**Then** the result appears in the supervisor's Pending Authorization queue
+**And** the supervisor can approve (release), reject (return to tech with comments), or hold (flag for discussion)
+**And** auto-verification rules allow automatic release for results that are: within normal reference ranges AND QC was passing AND the entering tech has SENIOR_TECH or higher role
+**And** critical values ALWAYS require supervisor authorization regardless of auto-verify rules
+**And** released results flow to the ordering physician via the existing notification system
+**And** the authorization action is audit-logged
+
+### Story 42.6: Write-Once, Distribute-Many Result Delivery
+
+As a lab technician,
+I want to enter a result once and have it automatically distributed to all relevant systems,
+So that I eliminate triple-copy transcription to doctor, patient record, logbook, and monthly statistics.
+
+**Acceptance Criteria:**
+
+**Given** a result has been authorized and released
+**When** the system processes the release
+**Then** the result is simultaneously: (a) delivered as a FHIR DiagnosticReport to OPD-Lite embedded in the patient encounter timeline, (b) made available in Patient-Lite for the patient health passport view, (c) appended to the digital lab logbook, (d) counted in monthly statistics aggregation
+**And** each destination receives only the data its minimization rules allow
+**And** the distribution is queued for offline delivery if any destination is unreachable
+
+### Story 42.7: Smart Sample Prioritization Queue
+
+As a lab technician,
+I want the worklist to automatically prioritize samples by urgency, stability, and efficiency,
+So that I process the most critical samples first and batch similar tests for instrument efficiency.
+
+**Acceptance Criteria:**
+
+**Given** multiple orders exist in the worklist
+**When** the tech views the worklist
+**Then** samples are auto-sorted by: (1) clinical urgency flag (STAT > Urgent > Routine), (2) sample stability window, (3) test type batching to minimize reagent swaps, (4) time in queue
+**And** the tech can manually override the suggested order by drag-reordering
+**And** samples approaching their stability window show a warning badge with countdown
+**And** the prioritization algorithm runs locally (Dexie) and works fully offline
+
+### Story 42.8: Digital Lab Logbook
+
+As a lab manager,
+I want an auto-populated digital logbook that replaces the legally required paper register,
+So that the logbook is always current, searchable, backed up, and ready for inspection.
+
+**Acceptance Criteria:**
+
+**Given** a result has been authorized and released
+**When** the system appends it to the digital logbook
+**Then** the logbook entry contains the same columns the Afghan MoPH paper register requires: sequential number, date, patient reference, test type, result summary, technician ID, authorization status
+**And** the logbook is searchable by date range, test type, patient reference, and technician
+**And** it can be exported as a printable PDF matching the MoPH register format
+**And** the logbook is stored in Dexie (offline-first) with sync to Hub
+**And** logbook entries are append-only and cannot be edited or deleted
+
+## Epic 43: Quality Assurance & Legal Shield
+
+Lab results are protected by an immutable audit chain with QC records temporally bound to results, amendments preserve full history with mandatory reason codes, and every result can be defended with cryptographic evidence — transforming Lab-Lite into Khalid's legal defense system.
+**FRs covered:** FR43 (brainstorm #61, #62, #63, #67, #9, #10, #48, #99)
+**Tier:** 1-2 (Foundation + Operational)
+
+### Story 43.1: Immutable Result Audit Chain
+
+As a lab manager,
+I want every result to have a complete, tamper-proof audit chain from sample receipt to report delivery,
+So that I can defend any result with cryptographic evidence when questioned.
+
+**Acceptance Criteria:**
+
+**Given** a sample enters the lab workflow
+**When** any action occurs (receive, process, enter result, authorize, release, amend)
+**Then** a structured audit event is emitted with: action type, actor identity, timestamp (HLC), resource references, and a SHA-256 hash linking to the previous event in the chain
+**And** the audit chain covers the full lifecycle: collection → accessioning → processing → result entry → authorization → release → delivery → amendment (if any)
+**And** audit events are append-only and cannot be modified or deleted
+**And** the audit chain is stored locally in Dexie and synced to Hub
+**And** a chain verification function can detect any tampering by re-computing hashes
+
+### Story 43.2: QC-Result Temporal Binding
+
+As a lab supervisor,
+I want every patient result to be stamped with the QC status that was active at the time of processing,
+So that I can prove QC was passing when any specific result was produced.
+
+**Acceptance Criteria:**
+
+**Given** a tech enters a patient result
+**When** the result is saved
+**Then** the system records the most recent QC run for the relevant analyte/instrument: QC run ID, timestamp, result (pass/fail), control values, and whether it was within acceptable range
+**And** this QC snapshot is immutably linked to the patient result
+**And** if no QC has been run today for that analyte, the system shows a warning: "No QC recorded for [analyte] today — run QC before releasing patient results"
+**And** if QC was failing, the result is flagged: "QC advisory — verify result"
+**And** the temporal QC linkage is visible in the result detail view and audit trail
+
+### Story 43.3: Amendment & Correction Protocol
+
+As a lab technician,
+I want to correct a released result with full traceability and mandatory notification,
+So that errors are fixed transparently while preserving the complete history for legal and clinical purposes.
+
+**Acceptance Criteria:**
+
+**Given** a released result needs correction
+**When** a tech initiates an amendment
+**Then** the original result is preserved and marked as superseded (never deleted or overwritten)
+**And** the amendment requires: mandatory reason code (clerical error, instrument malfunction, wrong patient, QC failure discovered post-release), free-text explanation, and supervisor authorization
+**And** the ordering physician is automatically notified of the correction with both original and amended values
+**And** if the patient has already viewed the result in Patient-Lite, a patient notification is also generated
+**And** the digital logbook receives a new entry referencing the original with amendment details
+**And** the full amendment chain is visible in the audit trail
+
+### Story 43.4: Patient ID Verification Logging
+
+As a lab technician,
+I want the system to log HOW patient identity was verified at sample collection,
+So that there is a documented, auditable answer to "Did you verify this was the right patient?"
+
+**Acceptance Criteria:**
+
+**Given** a tech is about to collect a sample
+**When** the tech verifies the patient's identity
+**Then** the system logs the verification method(s) used: National ID card (scanned), verbal confirmation of name + father's name, QR code from Health Passport, or other
+**And** a minimum of two identifiers is required before sample collection can proceed
+**And** if only one identifier is used, the system logs "Verification: INCOMPLETE — single identifier only" as a visible deviation record
+**And** the verification log is part of the sample's chain of custody and audit trail
+
+### Story 43.5: Result Plausibility Checker
+
+As a lab technician working alone,
+I want the system to automatically check results for plausibility,
+So that I have a "second opinion" that catches data entry errors and implausible analyzer outputs.
+
+**Acceptance Criteria:**
+
+**Given** a result has been entered
+**When** the tech saves the result
+**Then** the system runs automatic checks: (a) absolute range check — flags physiologically impossible values (e.g., WBC > 500,000), (b) delta check — compares to patient's last result for the same test if available and flags significant changes (configurable per analyte), (c) internal consistency — flags combinations that are clinically inconsistent (e.g., very low RBC with normal hemoglobin)
+**And** flagged results show a warning with the reason: "Result flagged: [reason]. Please verify before releasing."
+**And** the tech can acknowledge the flag with an explanation (e.g., "confirmed — patient has known CML") or re-enter the result
+**And** flag acknowledgments are logged in the audit trail
+
+### Story 43.6: Analyzer Drift Detection & Recalibration Alerts
+
+As a lab supervisor,
+I want the system to detect when analyzer QC values are trending outside acceptable limits,
+So that we catch calibration drift before it affects patient results.
+
+**Acceptance Criteria:**
+
+**Given** QC results are being entered over multiple days
+**When** the system detects a trend: (a) 5+ consecutive QC values trending in the same direction, (b) 2 consecutive values exceeding 2 standard deviations from the mean, (c) any single value exceeding 3 standard deviations
+**Then** an alert is displayed: "[Analyte] QC trending [high/low] for [N] consecutive runs. Recommend recalibration before processing patient samples."
+**And** if the alert is ignored, all subsequent patient results for that analyte are flagged: "QC advisory — produced during drift warning"
+**And** drift alerts are logged and visible in the QC history view
+
+### Story 43.7: Pre-Release Critical Value Checklist
+
+As a lab supervisor,
+I want a mandatory checklist before releasing critical values,
+So that critical results are verified through a structured process before reaching the clinician.
+
+**Acceptance Criteria:**
+
+**Given** a result contains one or more critical values (e.g., Potassium > 6.5, Glucose < 40, Hgb < 5)
+**When** the supervisor attempts to release the result
+**Then** a mandatory checklist is displayed: "☐ QC passed today for this analyte ☐ Patient ID verified ☐ Result reviewed for plausibility ☐ Delta check reviewed (if prior result exists) ☐ Repeat testing performed (if required by lab policy)"
+**And** the supervisor must check each item before the Release button is enabled
+**And** the completed checklist is stored as part of the result's audit trail
+**And** the checklist items are configurable per lab
+
+### Story 43.8: Localized Reference Ranges
+
+As a lab manager,
+I want to configure reference ranges specific to our patient population,
+So that results are not inappropriately flagged based on Western reference values.
+
+**Acceptance Criteria:**
+
+**Given** the lab is at altitude >2000m or serves a population with known physiological differences
+**When** the lab manager accesses reference range settings
+**Then** they can override default reference ranges per analyte with: age-specific ranges, gender-specific ranges, altitude-adjusted ranges, and population-specific ranges
+**And** overridden ranges are used for all auto-flagging (normal/abnormal/critical)
+**And** the reference range source (default vs. custom) is visible on result reports
+**And** range changes are versioned and audit-logged
+**And** historical results retain the reference ranges that were active when they were produced
+
+**Admin Portal Surface:** Reference range configuration is an operational lab function that stays in Lab-Lite. The Admin Portal provides a default reference range template library (e.g., altitude-adjusted, population-specific baselines) that labs can pull from and customize locally. Lab managers override ranges within Lab-Lite for their facility.
+
+## Epic 44: Lab Financial Operations
+
+Labs can collect payments, generate receipts, calculate true cost-per-test, and track reagent waste — transforming the lab from a cost center with no visibility into a managed business unit that can prove its financial viability.
+**FRs covered:** FR44 (brainstorm #79, #82, #84)
+**Tier:** 1 (Foundation)
+
+### Story 44.1: Payment Collection & Receipt System
+
+As a lab cashier or technician,
+I want to record patient payments, generate receipts, and reconcile daily cash,
+So that lab revenue is tracked, patients have payment proof, and cash handling is transparent.
+
+**Acceptance Criteria:**
+
+**Given** a patient has tests to pay for
+**When** the tech records a payment
+**Then** the system captures: patient reference, tests paid for, amount, payment method (cash/card/insurance/waiver), and timestamp
+**And** a receipt is generated that can be printed (thermal printer compatible) or sent via SMS to the patient or delegate
+**And** partial payments are supported with outstanding balance tracking
+**And** end-of-day cash reconciliation shows: expected total, collected total, outstanding, variance
+**And** payment records are stored in Dexie (offline-first) with sync to Hub
+**And** all payment transactions are audit-logged
+
+### Story 44.2: Cost-Per-Test Calculator
+
+As a lab manager,
+I want to know the true cost of each test type,
+So that I can identify which tests are profitable, which are subsidized, and make informed pricing decisions.
+
+**Acceptance Criteria:**
+
+**Given** the lab has inventory data (reagent costs, consumable costs) and operational data (tests performed, staff costs)
+**When** the lab manager opens the cost analysis view
+**Then** the system calculates per test type: reagent cost per test (from auto-deduction data if available, or manual entry), consumable cost (tubes, slides, tips), labor cost allocation (staff salary / tests per shift), and overhead allocation
+**And** compares cost-per-test to the current price charged
+**And** displays margin per test: positive (profitable) or negative (subsidized)
+**And** highlights tests with negative margins with recommendations
+**And** data can be exported for reporting to hospital administration
+
+### Story 44.3: Reagent Waste & Expiry Loss Tracking
+
+As a lab manager,
+I want to track how much reagent is consumed versus how much expires unused,
+So that I can identify and reduce waste — the silent budget killer.
+
+**Acceptance Criteria:**
+
+**Given** reagent inventory is being tracked (manual entry initially, auto-deduction in future epic)
+**When** a reagent is opened, the system records: open date, lot number, expiry date, and expected tests per unit
+**And** when a reagent is used up or expires, the system records: actual tests performed, remaining quantity at disposal, and waste reason (expired/contaminated/depleted)
+**Then** the waste dashboard shows: consumption efficiency per reagent (tests performed / tests expected), waste rate (% of reagent expired before depletion), financial loss from waste per period
+**And** the system alerts when a reagent is projected to expire before depletion: "Chemistry strips opened [date] — at current usage rate, [X] tests will remain at expiry. Consider batching chemistry tests on fewer days."
+
+## Epic 45: Patient Safety & Inclusive Access
+
+Patients — including illiterate, elderly, and culturally conservative patients — can give legally valid consent via audio and thumbprint, navigate the lab via visual symbol-based queuing, receive results in plain-language audio, and delegate access to family members.
+**FRs covered:** FR45 (brainstorm #57, #58, #53, #54, #55, #60, #104)
+**Tier:** 1-2 (Foundation + Operational)
+
+### Story 45.1: Audio & Thumbprint Consent Capture
+
+As a lab technician,
+I want to capture legally valid patient consent from illiterate patients via audio recording and thumbprint,
+So that consent is obtained without requiring reading or writing ability.
+
+**Acceptance Criteria:**
+
+**Given** a patient cannot read or sign their name
+**When** the tech initiates consent capture
+**Then** the system plays a pre-recorded consent explanation in the patient's language (Dari, Pashto, Arabic, or English) describing: what samples will be collected, what tests will be performed, and their right to refuse
+**And** the patient's verbal consent is captured via audio recording (stored encrypted, linked to the encounter)
+**And** alternatively or additionally, a thumbprint can be captured via the device touchscreen
+**And** the consent record includes: method (audio/thumbprint/both), language, timestamp, witnessing tech ID, and the consent text version
+**And** consent is revocable — a "withdraw consent" action is available that halts processing and notifies the ordering physician
+**And** consent records are part of the audit trail and cannot be deleted
+
+### Story 45.2: Patient Queue Token System
+
+As a lab receptionist or technician,
+I want to assign patients visual tokens (color + symbol) instead of calling names aloud,
+So that patient privacy is protected and illiterate patients can navigate the queue.
+
+**Acceptance Criteria:**
+
+**Given** a patient arrives at the lab
+**When** they are registered in the queue
+**Then** the system assigns a unique token: a color + symbol combination (e.g., "Blue Star", "Red Circle", "Green Triangle")
+**And** the token is displayed on screen or printed on a small card for the patient
+**And** the lab display shows which token is currently being called: "Now serving: Blue Star"
+**And** patient names are never announced aloud (PHI protection)
+**And** tokens are recycled after the patient's visit is complete
+**And** the queue display is visible on a wall-mounted tablet or monitor
+
+### Story 45.3: Family Delegate Result Access
+
+As a patient's family member,
+I want to be designated as a result delegate so I can receive and view lab results on behalf of my illiterate parent,
+So that results reach someone who can understand and act on them.
+
+**Acceptance Criteria:**
+
+**Given** a patient designates a family delegate at registration
+**When** results are ready
+**Then** the delegate receives the SMS receipt code and can view results in Patient-Lite on the patient's behalf
+**And** delegation requires one-time consent from the patient (audio + thumbprint from Story 45.1 or verbal witnessed)
+**And** the delegate's phone number and relationship are recorded
+**And** delegation is revocable by the patient at any time
+**And** the delegation relationship and all access events are audit-logged
+**And** the delegate sees the same data minimization as the patient — no internal lab notes or raw values beyond what the patient view shows
+
+### Story 45.4: Plain-Language Audio Result Summaries
+
+As a patient who cannot read,
+I want to hear my lab results explained in simple language in my own language,
+So that I understand what my results mean without needing someone to read to me.
+
+**Acceptance Criteria:**
+
+**Given** a result has been released and the patient or delegate accesses it
+**When** they tap the audio button on the result view
+**Then** a pre-recorded, physician-approved audio explanation plays in the patient's language (Dari, Pashto, Arabic, or English)
+**And** the explanation uses plain language: not "Hemoglobin: 9.2 g/dL [L]" but "Your blood strength is a little low. This is not dangerous but your doctor will discuss it with you."
+**And** a visual color indicator (green/yellow/red) accompanies each result field for at-a-glance understanding
+**And** the audio scripts are physician-authored, versioned, and bundled offline
+**And** the audio is never AI-generated — only curated, reviewed scripts are used
+
+### Story 45.5: One-Trip Optimization
+
+As a patient who traveled far to reach the lab,
+I want the lab to minimize the number of return trips I need to make,
+So that I don't lose additional days of work and travel for follow-up visits.
+
+**Acceptance Criteria:**
+
+**Given** a patient has multiple tests ordered
+**When** the tech reviews the orders at sample collection
+**Then** the system identifies: which tests can produce results today (rapid tests, CBC, chemistry), which require extended processing (cultures, specialized panels), and the optimal return date if any test requires a return visit
+**And** for rapid tests, the patient is advised to wait (with estimated turnaround time displayed)
+**And** for extended tests, the result is delivered remotely to the doctor and the patient is told "You do not need to return — your doctor will contact you"
+**And** if a return IS needed, the system calculates the single optimal date that covers all pending results
+
+### Story 45.6: Cultural Sensitivity Flags
+
+As a lab technician,
+I want to see cultural care preferences for each patient,
+So that I can provide culturally respectful care that doesn't drive patients away.
+
+**Acceptance Criteria:**
+
+**Given** a patient has cultural preferences recorded
+**When** the tech views the patient's lab order
+**Then** relevant flags are displayed prominently: "Female phlebotomist preferred", "Privacy screen required", "Fasting patient — offer water and date after collection", "Male family members should not be present during female sample collection"
+**And** flags are recordable at registration and editable by the tech
+**And** flags persist across visits in the patient's local profile
+**And** flag adherence is not tracked punitively — these are care guidance, not mandates
+
+## Epic 46: SOPs, Training & Professional Development
+
+Lab techs access an offline SOP library, receive contextual micro-learning at point-of-need, track competency decay, and connect with peer networks — breaking professional isolation and building a career ladder where none exists.
+**FRs covered:** FR46 (brainstorm #36, #33, #34, #35, #37, #38, #107)
+**Tier:** 1-2 (Foundation + Operational)
+
+### Story 46.1: SOP Library with Offline Access & Acknowledgment
+
+As a lab technician,
+I want to access Standard Operating Procedures for every test and procedure offline,
+So that I always have the correct protocol available even when connectivity is gone.
+
+**Acceptance Criteria:**
+
+**Given** the lab has SOPs for its test menu
+**When** a tech opens the SOP library
+**Then** SOPs are organized by category (hematology, chemistry, microbiology, general lab safety) and searchable by keyword
+**And** each SOP includes: title, version, effective date, author, step-by-step procedure with images where applicable
+**And** SOPs are bundled offline in the PWA and sync updates when connectivity is available
+**And** when an SOP is new or updated, the system requires acknowledgment: "New SOP: [title]. Please review and confirm."
+**And** acknowledgment tracking shows: who read it, when, and who hasn't yet
+**And** SOP acknowledgment records are part of the inspection readiness documentation
+
+### Story 46.2: Contextual Micro-Learning Modules
+
+As a lab technician working alone,
+I want to receive short training refreshers triggered by my current context,
+So that I can learn at point-of-need without leaving the lab.
+
+**Acceptance Criteria:**
+
+**Given** a tech is performing a procedure
+**When** context triggers apply (first time performing a test type, hasn't performed a procedure in >30 days, new SOP for this procedure)
+**Then** a non-intrusive notification appears: "Quick refresher available: [Procedure Name] (3 min)"
+**And** the module includes: step-by-step with images/video, key tips, and a 2-3 question self-assessment
+**And** modules are bundled offline (no streaming dependency)
+**And** completed modules are tracked in the tech's professional development record
+**And** the tech can dismiss the notification — learning is encouraged, not forced
+
+### Story 46.3: Competency Self-Assessment & Skill Decay Detection
+
+As a lab technician,
+I want the system to track which procedures I perform regularly and alert me when skills may be decaying,
+So that I can proactively refresh techniques I haven't practiced recently.
+
+**Acceptance Criteria:**
+
+**Given** a tech has a history of test procedures performed
+**When** a procedure hasn't been performed in >45 days (configurable)
+**Then** the system surfaces a gentle notification: "You haven't performed [procedure] in [N] days. Would you like to review the technique?"
+**And** the tech's competency dashboard shows: procedures performed regularly (green), procedures with decay risk (yellow), procedures not performed in >90 days (red)
+**And** the dashboard is visible to the tech themselves (for professional pride) and optionally to their supervisor (for support planning)
+**And** competency records feed into the certification pathway (Story 46.6)
+
+### Story 46.4: Peer Network — "Ask a Tech"
+
+As a lab technician working in an isolated facility,
+I want to post questions with photos to a moderated peer network,
+So that I can get help from experienced techs without needing real-time connectivity.
+
+**Acceptance Criteria:**
+
+**Given** a tech encounters something they can't identify or interpret
+**When** they post to the peer network
+**Then** they can include: a text question, photos (blood smear, analyzer error, precipitate in reagent), and their lab context (test type, instrument)
+**And** posts are anonymized by default (no patient identifiers, no lab name unless opted in)
+**And** the network uses store-and-forward messaging — works over intermittent connectivity
+**And** designated mentors or senior techs can respond with guidance
+**And** posts and responses are searchable (knowledge base effect)
+**And** moderation flags inappropriate content
+
+### Story 46.5: Mentorship Pairing System
+
+As a district health officer,
+I want to pair experienced techs with isolated or junior techs for structured mentorship,
+So that professional isolation is addressed and knowledge transfer happens even without travel.
+
+**Acceptance Criteria:**
+
+**Given** the Hub has a registry of lab technicians across the network
+**When** a mentorship pairing is created
+**Then** the mentor and mentee are linked in Lab-Lite with: monthly check-in prompts, a shared learning journal for case discussions, and progress tracking
+**And** all interactions are asynchronous (no real-time requirement)
+**And** the district health officer can see which techs are mentored and which are unmatched
+**And** mentorship activity is tracked in the tech's professional development record
+
+**Admin Portal Surface:** Mentorship pairing management (creating, editing, and dissolving mentor-mentee pairs) is performed by district health officers in the Admin Portal, which has cross-lab visibility of all technicians. Lab-Lite shows the mentorship relationship to the paired techs, enables async communication (shared learning journal, check-in prompts), and tracks participation -- but does not provide the pairing management UI.
+
+### Story 46.6: Certification Pathway Tracker
+
+As a lab technician,
+I want to track my progress toward professional certification milestones,
+So that I have a visible career ladder and evidence of my professional growth.
+
+**Acceptance Criteria:**
+
+**Given** certification levels are defined (if applicable in the jurisdiction)
+**When** the tech views their certification pathway
+**Then** they see: modules completed, competency assessments passed, supervised procedures logged, continuing education hours accumulated, and progress toward the next milestone
+**And** when a milestone is met, a verifiable digital certificate is generated
+**And** the pathway is visible in the tech's profile and exportable for external verification
+
+**Admin Portal Surface:** Certification milestone definitions (module requirements, competency criteria, CE hour thresholds) and credential management (issuing, revoking, verifying credentials) are managed in the Admin Portal. Lab-Lite shows the tech their own progress dashboard, logs supervised procedures, and generates printable/verifiable certificates upon milestone completion.
+
+### Story 46.7: Personal Quality Streak & Achievement System
+
+As a solo lab technician,
+I want to see my quality streaks and achievements,
+So that I have evidence I'm doing good work even when nobody else sees it.
+
+**Acceptance Criteria:**
+
+**Given** a tech is working alone
+**When** they view their quality dashboard
+**Then** they see: current QC streak (consecutive passing days), zero rejection streak (days without a rejected sample), training modules completed this quarter, and monthly quality metrics (e.g., hemoglobin CV%)
+**And** milestone achievements award digital badges visible in their professional profile
+**And** the system is self-reinforcement, not competitive — no leaderboard for solo techs
+**And** streaks reset with explanation, not punishment
+
+## Epic 47: Bio-Safety & Occupational Health
+
+When a needle-stick happens, the app walks the tech through the emergency protocol, auto-identifies the source patient, tracks sharps and waste, maintains vaccination records, and provides spill response guidance — because the tech's own health matters as much as the patient's.
+**FRs covered:** FR47 (brainstorm #71, #72, #73, #74, #75, #77, #78)
+**Tier:** 1-2 (Foundation + Operational)
+
+### Story 47.1: Post-Exposure Emergency Protocol
+
+As a lab technician who just had a needle-stick,
+I want the app to guide me through the post-exposure protocol step-by-step,
+So that I take the right actions immediately when I'm panicking and can't think clearly.
+
+**Acceptance Criteria:**
+
+**Given** a tech activates the emergency button (persistent, always accessible)
+**When** they select "Needle-stick / Sharp Injury"
+**Then** the system launches a guided workflow: (1) Immediate first aid instructions, (2) Auto-identification of the source patient from the last processed sample, (3) Display of source patient's relevant status (e.g., "Hep B: POSITIVE"), (4) PEP protocol based on exposure type and source status, (5) Nearest PEP provider contact info
+**And** an incident report is auto-generated with: time, location, mechanism, source patient status, tech's vaccination status (from Story 47.3), and first aid actions taken
+**And** the lab manager and infection control officer are notified immediately
+**And** the workflow works fully offline
+**And** all data is audit-logged
+
+### Story 47.2: Sharps & Waste Tracking
+
+As a lab manager,
+I want to track biohazard waste generation and sharps container status,
+So that full containers are replaced proactively and waste disposal is documented for compliance.
+
+**Acceptance Criteria:**
+
+**Given** sharps containers and waste bins are in use
+**When** a tech logs a container replacement (date started, date full, disposed by whom)
+**Then** the system tracks: fill rate per container location, average days to full, and alerts when approaching full ("Sharps container in Station 2 started 14 days ago — average fill time is 12 days. Replace today.")
+**And** waste disposal is logged: type (sharps/infectious/chemical), quantity, disposal method, handler ID, and date
+**And** waste tracking feeds into the inspection readiness documentation
+**And** the system generates monthly waste summaries
+
+### Story 47.3: Employee Health & Vaccination Registry
+
+As a lab manager,
+I want to maintain each tech's occupational health record,
+So that vaccination status is instantly available during exposure incidents and screening reminders are automated.
+
+**Acceptance Criteria:**
+
+**Given** a tech is employed at the lab
+**When** their health record is maintained
+**Then** it tracks: Hepatitis B vaccination status and titer date, tetanus, COVID, TB screening dates and results, and any occupational exposure history with outcomes
+**And** when an exposure occurs (Story 47.1), the system instantly retrieves the tech's relevant vaccination status to guide PEP decisions
+**And** screening reminders are generated: "Your TB screening is due in 30 days"
+**And** health records are encrypted and access-restricted to the tech themselves and the lab manager
+
+**Admin Portal Surface:** Employee health record management (creating records, editing vaccination status, logging screening results, managing exposure history) is performed by lab managers in the Admin Portal. Lab-Lite provides read-only emergency access to a tech's vaccination status during exposure incidents (Story 47.1 dependency) and displays screening reminders -- but does not allow editing health records.
+
+### Story 47.4: Temperature & Environment Monitoring
+
+As a lab technician,
+I want to monitor reagent fridge temperatures and receive alerts on excursions,
+So that temperature-sensitive reagents are not used after storage failures.
+
+**Acceptance Criteria:**
+
+**Given** reagent storage requires temperature monitoring
+**When** using BLE temperature sensors ($15 IoT loggers) or manual twice-daily readings
+**Then** temperatures are logged with timestamp and location (fridge 1, fridge 2, ambient)
+**And** excursion alerts fire when temperature exceeds acceptable range: "Reagent fridge exceeded 8°C at [time] — duration [X] hours. Affected reagents may be compromised."
+**And** the manual fallback prompts twice-daily readings with a color-coded trend display
+**And** temperature logs feed into the inspection readiness documentation
+**And** affected reagents are flagged for review before use
+
+### Story 47.5: Spill & Decontamination Protocol
+
+As a lab technician alone during a spill,
+I want a risk-tiered guided response,
+So that I decontaminate correctly without needing to call someone for instructions.
+
+**Acceptance Criteria:**
+
+**Given** a spill occurs
+**When** the tech taps the "Spill" emergency button
+**Then** the system asks: "What spilled?" with options: Blood/Serum, Urine, Chemical/Reagent, Culture/Microbiology
+**And** each selection triggers the appropriate protocol: PPE requirements, decontamination agent, contact time, area clearance time, and disposal method
+**And** a microbiology culture spill triggers a more aggressive protocol than a urine spill
+**And** the event is logged as an incident with decontamination actions taken
+
+### Story 47.6: Anonymous Safety Reporting
+
+As a lab technician,
+I want to report safety concerns anonymously,
+So that issues like hand hygiene non-compliance are reported without creating interpersonal conflict.
+
+**Acceptance Criteria:**
+
+**Given** a tech observes a safety concern
+**When** they submit an anonymous report
+**Then** the report describes the concern category (hand hygiene, PPE non-use, improper waste disposal, equipment misuse, other) and free-text details
+**And** the report is flagged to the lab manager with NO identifying information about the reporter
+**And** the lab manager can acknowledge, investigate, and close the concern
+**And** a trend dashboard shows: concern categories over time, resolution rate, and recurring issues
+
+### Story 47.7: Infection Control Self-Audit Checklist
+
+As a lab manager,
+I want a monthly self-audit checklist for infection control,
+So that compliance is continuously monitored and inspection-ready at all times.
+
+**Acceptance Criteria:**
+
+**Given** a month has passed since the last audit
+**When** the lab manager opens the infection control audit
+**Then** a checklist is presented: hand hygiene stations stocked, PPE inventory adequate, sharps containers not overfilled, work surfaces decontaminated on schedule, autoclave validation current, waste disposal compliant
+**And** each item is marked pass/fail with optional photo evidence
+**And** a compliance score is generated and tracked over time
+**And** the completed audit is stored in the inspection readiness pack
+
+## Epic 48: Intelligent Decision Support
+
+Solo techs get a "co-pilot" — power-aware workload scheduling, predictive reagent burndown, pre-shift readiness forecasts, and a critical value escalation chain. The app thinks alongside Fatima so she can focus on the science, not the logistics.
+**FRs covered:** FR48 (brainstorm #8, #11, #12, #16)
+**Tier:** 2 (Operational Power)
+
+### Story 48.1: Power-Aware Workload Scheduler
+
+As a lab technician with limited generator fuel,
+I want the system to schedule my work around available power hours,
+So that I prioritize analyzer-dependent tests during power availability and defer manual tests to non-power hours.
+
+**Acceptance Criteria:**
+
+**Given** the tech has entered generator schedule (start time, duration in hours)
+**When** viewing the worklist
+**Then** the system calculates estimated analyzer time needed for pending tests and warns if it exceeds available power: "You have 4 hours of power. Your pending queue needs ~5.5 hours of analyzer time. Here's what to prioritize."
+**And** tests are tagged: requires-power (analyzer) vs. manual (microscopy, urinalysis)
+**And** a recommended schedule is generated: "Run chemistry batch NOW — if you wait 30 min, you won't finish before shutdown"
+**And** the scheduler works fully offline from local data
+
+### Story 48.2: Predictive Reagent Burndown
+
+As a lab technician who is also the procurement department,
+I want the system to predict when reagents will run out,
+So that I can order resupply before a stockout leaves patients unserved.
+
+**Acceptance Criteria:**
+
+**Given** reagent inventory data is entered (quantity, expiry date)
+**When** the system has consumption history
+**Then** it calculates projected depletion date based on average daily consumption AND chemical expiry date — whichever comes first
+**And** it factors in supplier lead time (configurable per supplier): "Order by [date] to avoid stockout given [N]-day delivery time"
+**And** the dashboard shows each reagent with: current stock, projected depletion date, expiry date, and recommended reorder date
+**And** alerts fire at configurable thresholds (30 days, 14 days, 7 days before projected stockout)
+
+### Story 48.3: Pre-Shift Readiness Forecast
+
+As a lab technician starting my day,
+I want a morning readiness briefing,
+So that I know what I can and can't do today before patients arrive.
+
+**Acceptance Criteria:**
+
+**Given** it is the start of a shift
+**When** the tech opens the dashboard
+**Then** a readiness briefing is displayed: personnel status (who's working today), reagent stock status per test type (sufficient / low / stockout), equipment status (operational / maintenance due / down), pending orders from overnight, and power/generator forecast
+**And** each area is color-coded: green (good), amber (caution), red (action needed)
+**And** actionable recommendations are included: "Chemistry strips low — defer non-urgent panels", "Maintenance due on hematology analyzer — schedule for today"
+**And** the briefing generates entirely from local Dexie data (works offline)
+
+### Story 48.4: Critical Value Escalation Chain
+
+As a lab supervisor,
+I want critical results to trigger an unstoppable notification chain until a physician acknowledges receipt,
+So that life-threatening results never sit unread in a notification queue.
+
+**Acceptance Criteria:**
+
+**Given** a result contains a critical value (configurable thresholds per test — e.g., Potassium > 6.5, Glucose < 40, Hemoglobin < 5)
+**When** the result is released
+**Then** the system triggers a multi-step escalation: (1) Full-screen alert to the releasing tech requiring acknowledgment, (2) Urgent in-app notification to the ordering physician in OPD-Lite, (3) If no physician acknowledgment within 15 minutes → SMS to physician, (4) If no acknowledgment within 30 minutes → SMS to facility medical director, (5) If no acknowledgment within 60 minutes → flag to district health officer
+**And** every step is audit-logged: notification sent, received, acknowledged (or escalated)
+**And** the critical thresholds are physician-configured and modifiable by lab managers
+**And** the escalation chain is deterministic — no AI judgment, just rules
+
+## Epic 49: Offline Resilience & Communication
+
+Labs operate through complete connectivity blackouts — Bluetooth P2P sync with OPD-Lite in the same building, SMS fallback for critical results, data budget tracking for prepaid SIMs, and conflict zone security protocols for data protection under threat.
+**FRs covered:** FR49 (brainstorm #4, #5, #6, #76, #106)
+**Tier:** 2 (Operational Power)
+
+### Story 49.1: Data Budget Mode
+
+As a lab technician on a prepaid SIM,
+I want to track how much data each sync costs and forecast when my data will run out,
+So that I can manage connectivity as a finite resource.
+
+**Acceptance Criteria:**
+
+**Given** the tech's device uses prepaid mobile data
+**When** they enable Data Budget Mode in settings
+**Then** the system tracks estimated data consumption per sync operation (KB per result upload, per notification pull, per audit drain)
+**And** a dashboard shows: "You've used ~45MB of ~500MB this month. At current rate, you'll run out on the 18th."
+**And** a "Low Data Mode" toggle batches syncs, compresses payloads, and skips non-essential pulls (e.g., notification polling frequency reduced)
+**And** the tech can set their data plan size and billing cycle date
+
+### Story 49.2: SMS Fallback for Critical Results
+
+As a lab technician with no internet connectivity,
+I want critical results to be sent to the ordering physician via SMS,
+So that life-threatening findings reach the doctor even during a complete internet blackout.
+
+**Acceptance Criteria:**
+
+**Given** internet connectivity is unavailable AND a critical result has been released
+**When** the escalation chain (Story 48.4) cannot deliver via in-app notification
+**Then** the system sends a compressed, coded SMS to the ordering physician's registered phone number: "Patient [ID-code] — [Test] — CRITICAL — [Key value] — Confirm receipt"
+**And** the SMS contains NO PHI beyond what is clinically necessary for the critical value alert
+**And** the system tracks SMS delivery status if available
+**And** SMS fallback is only used for critical values, not routine results
+**And** the physician can confirm receipt by replying to the SMS
+
+### Story 49.3: Bluetooth Peer-to-Peer Sync with OPD-Lite
+
+As a lab technician in a facility with no internet,
+I want to sync results directly to the doctor's OPD-Lite device over Bluetooth or local WiFi,
+So that results reach the physician across the hallway without needing cloud connectivity.
+
+**Acceptance Criteria:**
+
+**Given** both Lab-Lite and OPD-Lite are running on devices in the same building
+**When** the tech taps "Send to [Doctor Name]" on a released result
+**Then** the system discovers nearby OPD-Lite devices via Bluetooth Low Energy or local WiFi Direct
+**And** the result is transmitted as a signed FHIR DiagnosticReport bundle
+**And** the receiving OPD-Lite device verifies the signature and imports the result into the patient's encounter
+**And** the transfer is logged in both apps' audit trails
+**And** no internet or Hub connectivity is required at any point in this flow
+**And** the transfer is encrypted in transit
+
+### Story 49.4: Conflict Zone Security Protocols
+
+As a lab manager in an area with deteriorating security,
+I want to protect patient data when the facility is at risk of being compromised,
+So that sensitive health information cannot be exploited if devices are seized.
+
+**Acceptance Criteria:**
+
+**Given** security conditions deteriorate
+**When** the lab manager activates "Security Alert" mode
+**Then** the system: (a) encrypts all patient data with emergency encryption (device becomes read-only without re-authentication), (b) generates a minimal-data backup to encrypted USB or cloud (enough to restore operations, no exploitable PHI), (c) displays a rapid shutdown checklist: secure biohazards, lock sample storage, power down instruments, (d) optionally: device wipe of all PHI with confirmation ("This will erase all patient data. Hub backup is available. Proceed?")
+**And** the security event is logged for institutional records
+**And** the system can be restored from Hub backup when conditions improve
+
+## Epic 50: Reporting & Surveillance Automation
+
+Monthly HMIS reports, donor-specific reports, daily activity logs, and disease surveillance alerts all generate automatically — killing Fatima's 2-day end-of-month reporting burden and turning every lab into a sentinel surveillance node.
+**FRs covered:** FR50 (brainstorm #3, #28, #29, #30, #31)
+**Tier:** 2-3 (Operational + Enterprise)
+
+### Story 50.1: Auto-Compiled HMIS Monthly Report
+
+As a lab technician,
+I want the monthly health directorate report to generate automatically from my operational data,
+So that my 2-day end-of-month reporting chore becomes a button press.
+
+**Acceptance Criteria:**
+
+**Given** a month of lab data exists
+**When** the tech or manager taps "Generate Monthly Report"
+**Then** the system compiles: total tests by category, positivity rates (malaria, TB, hepatitis), demographic breakdowns (age/gender), and reagent consumption summary
+**And** the report is formatted in the exact Afghan MoPH HMIS template
+**And** the tech reviews, can make minor corrections, and taps "Finalize"
+**And** the report exports as PDF for printing or as structured data for DHIS2 upload
+**And** report generation works from local Dexie data (offline capable)
+
+### Story 50.2: Multi-Donor Report Templates
+
+As a lab manager with multiple funding sources,
+I want donor-specific reports to generate automatically in each donor's required format,
+So that I never manually compile a donor report again.
+
+**Acceptance Criteria:**
+
+**Given** the lab is registered with multiple programs (e.g., WHO TB, MSF malaria, USAID hepatitis)
+**When** the manager selects a program and reporting period
+**Then** the system generates a report in that donor's specific format with the data fields they require
+**And** program-specific test tracking is automatic (tests tagged by program at order time)
+**And** the report includes reimbursement calculations where applicable
+**And** reports are exportable as PDF and shareable via email or WhatsApp
+
+### Story 50.3: Automated Disease Surveillance Alerts
+
+As a district health officer,
+I want labs to automatically alert me when positivity rates spike,
+So that outbreaks are detected early from lab data — the earliest epidemiological signal.
+
+**Acceptance Criteria:**
+
+**Given** the lab has historical positivity rate data
+**When** the system detects a significant deviation: (a) positivity rate for any test category exceeds 2x the 4-week rolling average, or (b) 3+ confirmed cases of a reportable disease within 48 hours
+**Then** an automated surveillance alert is generated and transmitted to the district health officer and national surveillance system
+**And** the alert includes: lab location, test category, current positivity rate vs. baseline, number of cases, and time period
+**And** the tech is notified that a surveillance alert was generated
+**And** alerts are logged and auditable
+
+**Admin Portal Surface:** Alert recipient configuration (which district health officers and surveillance contacts receive alerts, per geographic area and disease category) is managed in the Admin Portal. Lab-Lite generates surveillance alerts per the configured rules and transmits them to the Hub for routing -- but does not manage the recipient list.
+
+### Story 50.4: Daily Activity Log (WhatsApp-Shareable)
+
+As a lab technician,
+I want a daily summary auto-generated as a shareable image,
+So that hospital administration gets their daily report via WhatsApp without me writing anything.
+
+**Acceptance Criteria:**
+
+**Given** a day of lab operations has occurred
+**When** end-of-day arrives (or the tech manually triggers)
+**Then** the system generates a formatted daily summary: tests run by type, samples received vs. completed, turnaround times, rejected samples, stockout alerts, equipment status
+**And** the summary renders as a clean image (PNG) optimized for WhatsApp sharing
+**And** the image includes the lab name, date, and a verification watermark
+**And** the tech can share it directly via the device's share sheet (WhatsApp, email, etc.)
+
+## Epic 51: Multi-Tech Lab Management
+
+Khalid's 6-tech lab runs smoothly with automated shift handover protocols, real-time workload balancing, sample collision prevention, equipment scheduling, and a RAG readiness board — bringing military-grade operational awareness to clinical labs.
+**FRs covered:** FR51 (brainstorm #39, #40, #43, #44, #45, #46, #47, #98)
+**Tier:** 2-3 (Operational + Enterprise)
+
+### Story 51.1: Shift Handover Protocol
+
+As an incoming shift technician,
+I want an auto-generated handover report from the outgoing shift,
+So that I know exactly what's pending, what's broken, and what needs attention without relying on verbal handoff.
+
+**Acceptance Criteria:**
+
+**Given** a shift change is occurring
+**When** the outgoing tech triggers "End Shift" or the incoming tech starts their shift
+**Then** the system generates a structured handover: pending samples (count, urgency), equipment alerts (malfunctions, QC failures), incomplete orders, QC status for each analyte, and free-text notes from the outgoing tech
+**And** the incoming tech acknowledges the handover with their identity
+**And** unacknowledged handovers are flagged to the lab manager
+**And** the handover record is stored for accountability
+
+### Story 51.2: Workload Balancing Dashboard
+
+As a lab manager,
+I want to see real-time workload distribution across all techs,
+So that I can rebalance work and identify when someone is consistently overloaded.
+
+**Acceptance Criteria:**
+
+**Given** multiple techs are processing samples
+**When** the manager opens the workload dashboard
+**Then** each tech's current load is displayed: pending samples, in-progress samples, completed today, and estimated completion time
+**And** the manager can drag-reassign samples between techs
+**And** when a tech marks themselves unavailable (break, absent), their queue is flagged for redistribution
+**And** historical data shows patterns: who's consistently overloaded, who's underutilized
+
+**Admin Portal Surface:** This dashboard is operational and stays in Lab-Lite. However, the staff roster and shift assignments (who works which shift, absences, leave) are managed in the Admin Portal. Lab-Lite consumes the roster data for workload distribution, availability display, and redistribution logic.
+
+### Story 51.3: Sample Collision Prevention
+
+As a lab technician,
+I want the system to prevent two techs from accidentally processing the same sample,
+So that duplicate runs are eliminated and reagent is not wasted.
+
+**Acceptance Criteria:**
+
+**Given** a tech accepts a sample for processing
+**When** they scan or tap "Start Processing"
+**Then** the sample is locked to that tech with a timestamp
+**And** if another tech tries to process the same sample, they see: "This sample is currently being processed by [Name] (started [time]). Duplicate run prevented."
+**And** the lock releases when the result is entered or the tech explicitly releases it
+**And** locks older than a configurable timeout (default 4 hours) auto-release with a notification to the lab manager
+
+### Story 51.4: Equipment Booking & Scheduling
+
+As a lab technician in a resource-constrained lab,
+I want to queue my sample batches for shared instruments,
+So that I know when it's my turn and can prepare accordingly.
+
+**Acceptance Criteria:**
+
+**Given** an instrument is shared by multiple techs
+**When** a tech queues a batch for an instrument
+**Then** the system shows: current batch (owner, estimated completion time), queued batches (order, estimated start times), and availability windows
+**And** techs receive a notification when their batch is next
+**And** the manager can prioritize or reorder the queue
+
+### Story 51.5: RAG Readiness Board
+
+As a lab manager,
+I want a single dashboard showing Red/Amber/Green status across all operational dimensions,
+So that I can assess lab readiness at a glance.
+
+**Acceptance Criteria:**
+
+**Given** operational data exists across multiple domains
+**When** the manager opens the readiness board
+**Then** the following dimensions are displayed with RAG status: Personnel (Green: all present / Amber: 1 absent / Red: <minimum staffing), Equipment (Green: all operational / Amber: maintenance due / Red: critical instrument down), Supplies (Green: >2 weeks stock / Amber: <1 week / Red: stockout), QC (Green: all passing / Amber: drift warning / Red: failed — results blocked)
+**And** clicking any dimension drills down to details
+**And** the board auto-refreshes from local data
+
+### Story 51.6: Technician Performance Portfolio
+
+As a lab technician,
+I want a professional development portfolio based on my work data,
+So that I have objective evidence for annual evaluations and career growth.
+
+**Acceptance Criteria:**
+
+**Given** a tech has work history
+**When** they view their portfolio
+**Then** they see: tests processed per shift (avg and trend), average turnaround time, QC pass rate, sample rejection rate, training modules completed, mentorship participation
+**And** the portfolio is framed as professional development, not surveillance — the tech sees their own data
+**And** the supervisor can view it with the tech's knowledge for evaluation conversations
+**And** data is exportable for annual review documentation
+
+**Admin Portal Surface:** The supervisor/manager review dashboard (viewing portfolios across all techs, comparative analytics, and formal evaluation workflows) is in the Admin Portal. Lab-Lite provides the self-service portfolio view for the tech themselves, showing their own performance data and development trajectory.
+
+### Story 51.7: Gamified Team Quality Engagement
+
+As a lab team,
+I want team quality achievements recognized and celebrated,
+So that quality metrics feel like accomplishments rather than surveillance.
+
+**Acceptance Criteria:**
+
+**Given** a multi-tech lab team
+**When** quality milestones are achieved
+**Then** the system recognizes: "QC Champion of the Month" (best QC compliance), "Zero Rejection Week" (no rejected samples for 7 days), "Speed Star" (fastest TAT while maintaining quality)
+**And** achievements are displayed on the team dashboard (opt-in)
+**And** the framing is collaborative, not competitive: "The whole team achieved Zero Rejection Week — celebrate!"
+**And** individual achievements are visible in the tech's portfolio (Story 51.6)
+
+## Epic 52: Cross-App Integration & Pharmacy Awareness
+
+Lab-Lite becomes a fully connected node in the Ultranos ecosystem — Pharmacy-Lite pushes medication monitoring flags, inventory is visible network-wide, Hub coordinates procurement, and patient timelines show results across all apps.
+**FRs covered:** FR52 (brainstorm #24, #25, #26, #27, #105)
+**Tier:** 3 (Enterprise)
+
+### Story 52.1: Pharmacy-Lite Medication Monitoring Flags
+
+As a lab technician,
+I want to see which patients need follow-up labs based on their medications,
+So that I can proactively schedule monitoring tests for patients who might forget to return.
+
+**Acceptance Criteria:**
+
+**Given** Pharmacy-Lite dispenses a medication requiring lab monitoring (e.g., Warfarin → INR, Metformin → renal function, Lithium → serum levels)
+**When** the dispensing event syncs to Hub
+**Then** Lab-Lite receives a monitoring flag: "Patient [ID] started [Medication] on [date]. [Test] monitoring due [frequency]."
+**And** a "Monitoring Due" section appears on the Lab-Lite dashboard with upcoming monitoring tests
+**And** the system can generate reminders to the patient or ordering physician when monitoring is overdue
+
+### Story 52.2: Shared Inventory Visibility Across Network
+
+As a district health officer,
+I want to see reagent stock levels across all labs in my network,
+So that I can redistribute supplies before any lab hits a stockout.
+
+**Acceptance Criteria:**
+
+**Given** multiple labs report inventory data to the Hub
+**When** the district health officer views the inventory dashboard
+**Then** they see a heat map: which labs are stocked, low, or stocked out per reagent category
+**And** recommendations surface: "Lab A has 0 malaria RDTs. Lab B (30km away) has 50 — recommend transfer."
+**And** individual lab managers can see their own stock relative to network peers
+
+**Admin Portal Surface:** The district health officer inventory dashboard (cross-network heat map, redistribution recommendations, transfer coordination) is in the Admin Portal. Individual lab managers see their own stock levels and network-relative position in Lab-Lite.
+
+### Story 52.3: Hub-Managed Coordinated Procurement
+
+As a lab technician requesting resupply,
+I want my reagent request to flow to a central coordinator who can batch orders across labs,
+So that procurement is efficient and cost-effective at the network level.
+
+**Acceptance Criteria:**
+
+**Given** predictive burndown (Story 48.2) flags an upcoming stockout
+**When** the tech taps "Request Resupply"
+**Then** the request flows to Hub where a procurement coordinator sees all pending requests across the network
+**And** the coordinator can batch orders to suppliers, negotiate volume pricing, and route deliveries efficiently
+**And** the tech sees status updates: "Request received → Approved → Ordered → Shipped → ETA: [date]"
+**And** order history tracks past deliveries, costs, and lead times
+
+**Admin Portal Surface:** The procurement coordinator dashboard (viewing all pending requests across the network, batching orders, negotiating volume pricing, routing deliveries) is in the Admin Portal. Lab-Lite provides the resupply request flow for individual techs and shows status updates on their requests.
+
+### Story 52.4: Cross-App Patient Result Timeline
+
+As a physician in OPD-Lite,
+I want to see all lab results for a patient in a longitudinal timeline,
+So that I can track trends and see the full diagnostic picture across visits.
+
+**Acceptance Criteria:**
+
+**Given** a patient has lab results from multiple visits
+**When** the physician views the patient's clinical timeline in OPD-Lite
+**Then** lab results appear inline with encounters, prescriptions, and notes
+**And** results are grouped by test type with trend visualization (e.g., glucose values over 6 months)
+**And** abnormal values are highlighted in the timeline
+**And** each result links to its full DiagnosticReport detail
+**And** data minimization is enforced — the patient's view in Patient-Lite shows simplified, plain-language results only
+
+## Epic 53: AI-Assisted Clinical Support
+
+AI serves as librarian (knowledge cards), pattern flagger (anomaly detection), and communication bridge (tele-consultation builder) — with the confidence inversion principle ensuring AI is loudest when least certain. Never a diagnostician.
+**FRs covered:** FR53 (brainstorm #13, #14, #15, #17, #18, #19, #20, #108)
+**Tier:** 3-4 (Enterprise + Innovation)
+
+### Story 53.1: Contextual Knowledge Cards
+
+As a lab technician encountering an unfamiliar result pattern,
+I want physician-curated reference cards to appear automatically based on my current result,
+So that I have a textbook that opens to the right page without searching.
+
+**Acceptance Criteria:**
+
+**Given** a tech enters or reviews a result
+**When** the result matches a trigger pattern (e.g., WBC > 50,000 with blasts, severely low hemoglobin, critical electrolyte values)
+**Then** a reference card appears with: condition description, recommended actions (e.g., "IMMEDIATE referral required"), and clinical context
+**And** all cards are physician-authored, named, and versioned — NOT AI-generated content
+**And** cards are bundled offline in the PWA
+**And** the card display is non-intrusive — appears as a side panel, not a blocker
+
+### Story 53.2: Visual Atlas for Microscopy
+
+As a lab technician looking at a blood smear,
+I want to search an offline visual atlas by what I'm seeing under the microscope,
+So that I can identify cells and parasites even without a colleague to ask.
+
+**Acceptance Criteria:**
+
+**Given** the tech is performing microscopy
+**When** they open the visual atlas
+**Then** they can browse by category: blood cells (normal and abnormal), parasites (malaria species, filaria), bacteria (Gram stain morphologies), urine sediment, and body fluid cells
+**And** each reference image includes: photomicrograph, description, clinical significance, and recommended next steps
+**And** the atlas is curated by hematopathologists and bundled offline
+**And** search is available by keyword or visual browsing
+
+### Story 53.3: AI Anomaly Flagging for Physician Review
+
+As a lab system,
+I want to detect statistical anomalies in result data and flag them for physician review,
+So that potentially dangerous patterns are caught even when the tech is tired or overloaded.
+
+**Acceptance Criteria:**
+
+**Given** a result has been entered
+**When** the AI reviews the structured result data (numbers only, no PHI context)
+**Then** it identifies statistical anomalies: unusual combinations of values, patterns consistent with urgent conditions, significant changes from prior results
+**And** the AI NEVER names a diagnosis — it says "This pattern warrants urgent physician review" not "This is TTP"
+**And** the flag is sent as a priority notification to the ordering physician
+**And** the flag includes a confidence level and the explicit statement: "Statistical pattern flag — not a diagnosis. Clinical correlation required."
+**And** the Confidence Inversion Principle applies: lower confidence = LOUDER alert (Story 53.5)
+
+### Story 53.4: Tele-Consultation Request Builder
+
+As a lab technician who can't interpret a result,
+I want AI to help me package a clear consultation request for a remote expert,
+So that the expert gets all the information they need to help me without a back-and-forth exchange.
+
+**Acceptance Criteria:**
+
+**Given** the tech encounters something they can't interpret
+**When** they tap "Request Consultation"
+**Then** the system helps them build a structured request: result data, their observations (free text), microscopy photos (phone camera), and the relevant knowledge card for context
+**And** the package is sent to a remote pathologist or reference lab — a HUMAN expert, not an AI
+**And** the AI's role is limited to helping the tech communicate clearly — formatting the question, suggesting relevant observations to include
+**And** the consultation operates store-and-forward (no real-time requirement)
+**And** responses from the expert attach to the patient's result record as consultation notes
+
+### Story 53.5: Confidence Inversion Principle
+
+As a lab system designer,
+I want AI to be loudest when it's least certain,
+So that false confidence is structurally impossible and uncertainty always triggers human review.
+
+**Acceptance Criteria:**
+
+**Given** any AI-assisted action in Lab-Lite
+**When** the AI generates an output with a confidence level
+**Then** the UI reflects: High confidence → subtle green indicator, Medium confidence → yellow with explanation text, Low confidence → red full-screen alert: "I cannot reliably assess this. Request human consultation."
+**And** the AI is never allowed to suppress its uncertainty — every output includes a visible confidence indicator
+**And** below a configurable confidence threshold, the system auto-escalates to the ordering physician regardless of other rules
+**And** the principle is documented in the UI: "This system is designed to alert more aggressively when less certain."
+
+### Story 53.6: AI Provenance Trail
+
+As a lab manager or regulator,
+I want every AI-assisted action to be logged with full provenance,
+So that I can always answer "Did AI make this decision?" with verifiable evidence.
+
+**Acceptance Criteria:**
+
+**Given** any AI-assisted interaction occurs
+**When** the interaction is logged
+**Then** the provenance record includes: model version (or ONNX model hash for offline), input description (no PHI — e.g., "CBC result set, 5 numeric values"), AI output (what it suggested or flagged), confidence score, what the tech decided, and what the physician confirmed
+**And** the provenance trail is immutable (append-only, hash-chained)
+**And** provenance records are queryable: "Show all AI-assisted decisions for [date range]"
+**And** offline AI decisions are cached locally and synced to Hub (Story 49 architecture)
+
+### Story 53.7: Patient-Facing Public Health Guidance
+
+As a patient receiving a positive test result,
+I want to receive simple, actionable health guidance along with my result,
+So that I know what to do next to protect myself and my family.
+
+**Acceptance Criteria:**
+
+**Given** a result triggers a public health guidance condition (malaria positive, TB positive, hepatitis positive)
+**When** the result is delivered to Patient-Lite or the family delegate
+**Then** a physician-approved guidance message accompanies the result in the patient's language (audio + text): "Your malaria test is positive. Your doctor will give you medicine. Important: (1) Sleep under a bed net tonight, (2) Bring your children for testing within 2 days, (3) Drink clean water and rest."
+**And** guidance messages are condition-specific and versioned
+**And** guidance messages are NEVER AI-generated — only physician-authored scripts
+
+## Epic 54: Lab Network & Outbreak Response
+
+Multi-branch labs manage satellite collection points, courier logistics, reference lab send-outs, and outbreak response mode — scaling Lab-Lite from a single-facility tool to a network platform.
+**FRs covered:** FR54 (brainstorm #89, #90, #91, #92, #93, #94, #101, #102, #103)
+**Tier:** 3-4 (Enterprise + Innovation)
+
+### Story 54.1: Multi-Branch Lab Network Management
+
+As a lab manager running a main lab with satellite collection points,
+I want to manage the entire network from one dashboard,
+So that I have visibility across all locations without traveling between them.
+
+**Acceptance Criteria:**
+
+**Given** a lab network with a main lab and satellite collection points
+**When** the manager views the network dashboard
+**Then** they see: all locations with their operational status (active/inactive), pending samples per location, stock levels per location, and staffing status
+**And** satellite collection points run a simplified "Collection Only" mode of Lab-Lite (register patient, collect sample, print label)
+**And** the main lab receives all samples for processing and routes results back to satellites for patient pickup
+
+**Admin Portal Surface:** The network management dashboard (all locations, operational status, staffing overview, adding/removing satellite sites) is in the Admin Portal. Lab-Lite handles individual site operations: the main lab processes samples and manages its local workflow; satellite sites run in "Collection Only" mode.
+
+### Story 54.2: Community Health Worker Collection Module
+
+As a village health worker at a remote health post,
+I want an ultra-simplified sample collection interface,
+So that I can register patients and collect samples without lab training.
+
+**Acceptance Criteria:**
+
+**Given** a non-tech health worker with a basic smartphone
+**When** they open Lab-Lite in CHW mode
+**Then** they see: (1) patient identification (QR scan or name + father's name), (2) sample type selection via pictographic menu (blood tube, urine cup, swab icons), (3) label generation (handwritten barcode number or printed if available), (4) "Samples Collected" log with timestamps
+**And** when the courier arrives, each sample barcode is scanned to create a handoff record
+**And** the module syncs store-and-forward when connectivity appears
+**And** NO result entry, QC, or inventory functions are available in CHW mode
+
+**Admin Portal Surface:** CHW user enrollment (creating accounts, assigning CHW role, provisioning credentials, linking to collection sites) is done via the Admin Portal. Lab-Lite provides the simplified CHW mode interface for sample collection and handoff -- the CHW never interacts with Admin Portal directly.
+
+### Story 54.3: Courier & Sample Transport Tracking
+
+As a lab manager,
+I want to track samples during transport from collection points to the main lab,
+So that transit conditions are documented and stability windows are monitored.
+
+**Acceptance Criteria:**
+
+**Given** samples are being transported by motorcycle courier
+**When** the courier picks up samples
+**Then** the system records: pickup location, timestamp, courier ID, sample count, and temperature at pickup (if sensor available)
+**And** at delivery, the system records: arrival timestamp, temperature at arrival, sample condition assessment
+**And** if transit time exceeds the stability window for any sample type, the system flags: "Sample [ID] exceeded [N]-hour stability window. Flag for pre-analytical error."
+**And** transport records become part of the chain of custody
+
+### Story 54.4: External Reference Lab Integration
+
+As a lab technician sending samples to a reference lab,
+I want to manage send-outs with tracking and result import,
+So that reference lab results are incorporated into the patient's record seamlessly.
+
+**Acceptance Criteria:**
+
+**Given** a test cannot be performed locally
+**When** the tech initiates a "Send to Reference Lab"
+**Then** the system generates: a referral form (patient ID, test requested, clinical context), a shipping manifest, and a tracking record
+**And** the tech tracks status: "Sent → Received by Reference Lab → Processing → Results Available"
+**And** results from the reference lab can be entered manually or imported via structured data
+**And** the result report notes: "Performed at: [Reference Lab Name], Accreditation #[X]"
+**And** TAT tracking shows: average reference lab TAT and alerts when overdue
+
+### Story 54.5: Outbreak Response Mode
+
+As a provincial health officer,
+I want to activate "Outbreak Mode" for all labs in an affected area,
+So that lab operations shift to support the outbreak response with maximum throughput and real-time surveillance.
+
+**Acceptance Criteria:**
+
+**Given** an outbreak is declared
+**When** the health officer activates Outbreak Mode for the affected area
+**Then** participating labs switch to: (a) prioritized testing queue for the target pathogen, (b) real-time result reporting to the surveillance system (instead of monthly), (c) simplified data entry for the target test (reduced fields, faster throughput), (d) inventory alerts recalibrated for surge demand, (e) auto-generated daily situation reports
+**And** normal operations resume when Outbreak Mode is deactivated
+**And** all outbreak mode actions are audit-logged with the activation authority
+
+**Admin Portal Surface:** Outbreak Mode activation and deactivation (selecting affected area, target pathogen, participating labs) is performed by provincial health officers in the Admin Portal. Lab-Lite receives the mode switch via Hub sync and adjusts operations accordingly (prioritized queue, real-time reporting, simplified entry, surge alerts). Labs cannot self-activate Outbreak Mode.
+
+### Story 54.6: Seasonal Operations Planner
+
+As a lab manager preparing for malaria season,
+I want a unified seasonal operations plan 30 days ahead of projected demand surges,
+So that I can pre-position reagents, adjust staffing, and prepare protocols proactively.
+
+**Acceptance Criteria:**
+
+**Given** historical data shows seasonal demand patterns
+**When** a demand surge is projected
+**Then** the system generates a seasonal plan covering: power forecast (solar availability, generator needs), reagent forecast (projected consumption vs. current stock), staffing forecast (shift adjustments needed), and clinical protocol recommendations (priority worklist templates, QC schedule adjustments)
+**And** the plan includes actionable deadlines: "Order RDTs by [date] for bulk pricing, pre-position backup stock from [partner lab]"
+**And** the plan is exportable and shareable with hospital administration
+
+### Addendum 17: Admin Portal Centralization (2026-05-30)
+
+**Decision:** All user creation, role assignment, staff management, and cross-facility oversight functions are centralized in the Admin Portal (`apps/admin-portal/`). Spoke apps (Lab-Lite, OPD-Lite, Pharmacy-Lite, Patient-Lite) consume roles and permissions for operational gating but do NOT provide management UIs for user lifecycle.
+
+**Rationale:** All spoke apps require Admin Portal for organizational sign-ups. Centralizing people management eliminates N duplicate staff UIs, ensures consistent role assignment workflows, and maintains a single source of truth for user lifecycle across the platform.
+
+**Affected stories:** 42.1, 46.5, 46.6, 47.3, 50.3, 51.2, 51.6, 52.2, 52.3, 54.1, 54.2, 54.5
+
+**Pattern:** Stories that involve cross-facility dashboards (district health officer views, network management, coordinated procurement) render in Admin Portal. Stories that involve facility-level operations (sample processing, result entry, QC) remain in the spoke app.
+
+### FR Coverage Map (Addendum 17)
+
+FR55: Epic 55 — Admin Portal People & Facility Management
+
+## Epic 55: Admin Portal People & Facility Management
+
+The Admin Portal becomes the single management surface for user lifecycle, role assignment, staff oversight, cross-facility dashboards, and operational configuration — centralizing functions that were previously scattered across spoke apps or deferred entirely. Spoke apps consume roles and permissions but never assign them.
+**FRs covered:** FR55 (Addendum 17 centralization mandate + deferred items from Stories 42.1, 46.5, 46.6, 47.3, 50.3, 51.6, 52.2, 52.3, 54.1, 54.2, 54.5)
+**Tier:** 1 (Foundation — unblocks role management across all spoke apps)
+
+### Story 55.1: Lab Staff Role Management
+
+As an organization administrator,
+I want to assign lab-specific roles (LAB_TECH, SENIOR_TECH, SUPERVISOR, LAB_MANAGER) to lab staff from the Admin Portal,
+So that role assignment is centralized, auditable, and consistent across all labs in my organization.
+
+**Acceptance Criteria:**
+
+**Given** the Admin Portal with an authenticated org administrator
+**When** they navigate to a lab's staff management page
+**Then** they see all staff members in that lab with their current roles, email (truncated for display), and assignment date
+**And** they can assign one of four roles: LAB_TECH, SENIOR_TECH, SUPERVISOR, LAB_MANAGER
+**And** role changes require confirmation ("Change [name] from [old] to [new]?")
+**And** last-manager protection prevents demoting the only LAB_MANAGER in a lab (enforced atomically via Supabase RPC with SELECT...FOR UPDATE)
+**And** role changes emit an audit event with: action UPDATE, resourceType PRACTITIONER, previousRole, newRole, modifiedBy (practitioner UUID)
+**And** the `listStaff` Hub API endpoint uses targeted user lookups instead of `listUsers()` to avoid pagination issues
+**And** role labels are localized in all Admin Portal locale files
+
+**Dev Notes:**
+- Hub API endpoints `lab.listStaff` and `lab.updateStaffRole` already exist — this story builds the Admin Portal UI that calls them
+- Fix the `listUsers()` pagination issue: replace with `supabase.auth.admin.getUserById()` per practitioner, or batch with `in()` filter
+- Fix the TOCTOU race: wrap last-manager check in a Supabase RPC function with `SELECT...FOR UPDATE` inside a transaction
+- Reuse the `StaffManagementPanel` design pattern (confirmation dialog, role dropdown, truncated email) from the removed Lab-Lite component
+
+### Story 55.2: Cross-Lab Staff Overview Dashboard
+
+As an organization administrator,
+I want a single dashboard showing all staff across all my labs with their roles and activity status,
+So that I can manage staffing, identify gaps, and ensure every lab has adequate coverage.
+
+**Acceptance Criteria:**
+
+**Given** an org with multiple labs
+**When** the admin views the staff overview
+**Then** they see a table of all staff grouped by lab: name/email, role, last active date, lab assignment
+**And** they can filter by role, lab, and activity status
+**And** they can reassign a staff member to a different lab (with audit logging)
+**And** labs with no LAB_MANAGER are flagged with a warning
+**And** the dashboard is paginated and searchable
+
+### Story 55.3: Employee Health & Vaccination Registry (Admin Surface)
+
+As an organization administrator or lab manager (via Admin Portal),
+I want to maintain each tech's occupational health record centrally,
+So that vaccination status is instantly available during exposure incidents and screening reminders are automated.
+
+**Acceptance Criteria:**
+
+**Given** the Admin Portal employee management section
+**When** managing a tech's health record
+**Then** the admin can record: Hepatitis B vaccination status and titer date, tetanus, COVID, TB screening dates and results, and occupational exposure history
+**And** screening reminders are generated and visible in the Admin Portal dashboard
+**And** health records are encrypted and access-restricted
+**And** Lab-Lite retains read-only emergency access to vaccination status during exposure incidents (Story 47.1 dependency)
+
+**Admin Portal Surface:** Full CRUD for employee health records. Lab-Lite gets read-only API access for emergency protocol (Story 47.1).
+
+### Story 55.4: Mentorship Pairing Management
+
+As a district health officer (via Admin Portal),
+I want to pair experienced techs with isolated or junior techs for structured mentorship,
+So that professional isolation is addressed and knowledge transfer happens across the network.
+
+**Acceptance Criteria:**
+
+**Given** the Admin Portal mentorship section
+**When** a district health officer creates a mentorship pairing
+**Then** the mentor and mentee are linked with: monthly check-in prompts, progress tracking, and pairing metadata (start date, goals)
+**And** the officer can see which techs are mentored and which are unmatched
+**And** pairings can be dissolved with a reason code
+**And** Lab-Lite displays the mentorship relationship and enables async communication (Story 46.5)
+
+**Admin Portal Surface:** Pairing creation, dissolution, and oversight dashboard. Lab-Lite shows the relationship and enables communication.
+
+### Story 55.5: Certification & Credential Management
+
+As an organization administrator,
+I want to define certification milestones and manage credential records for lab staff,
+So that professional development is tracked centrally and credentials are verifiable.
+
+**Acceptance Criteria:**
+
+**Given** the Admin Portal certification section
+**When** managing certification pathways
+**Then** the admin can: define milestone requirements per certification level, review and approve completed milestones, issue verifiable digital certificates, and track expiry dates for credentials
+**And** Lab-Lite shows the tech their own progress and generates certificates (Story 46.6)
+
+**Admin Portal Surface:** Milestone definitions, credential issuance, and expiry monitoring. Lab-Lite provides self-service progress view.
+
+### Story 55.6: Cross-Facility Inventory & Procurement Dashboard
+
+As a district health officer or procurement coordinator,
+I want to see reagent stock levels across all labs and coordinate procurement centrally,
+So that supplies are redistributed before stockouts and procurement is batched for efficiency.
+
+**Acceptance Criteria:**
+
+**Given** multiple labs report inventory data to the Hub
+**When** the coordinator views the inventory dashboard
+**Then** they see a heat map of stock levels per lab per reagent category
+**And** redistribution recommendations surface when one lab is stocked out while another has surplus
+**And** the coordinator can batch orders to suppliers across labs
+**And** individual lab managers see their own stock in Lab-Lite (Stories 52.2, 52.3)
+
+**Admin Portal Surface:** Network-wide inventory visibility and coordinated procurement. Lab-Lite provides single-lab stock view and resupply request flow.
+
+### Story 55.7: Lab Network & Outbreak Management
+
+As a provincial health officer,
+I want to manage multi-branch lab networks and activate outbreak response mode from the Admin Portal,
+So that network operations and emergency responses are coordinated from a single command surface.
+
+**Acceptance Criteria:**
+
+**Given** a lab network with a main lab and satellite collection points
+**When** the officer views the network dashboard
+**Then** they see all locations with operational status, pending samples, stock levels, and staffing
+**And** they can activate/deactivate Outbreak Mode for affected areas (Story 54.5)
+**And** they can enroll Community Health Workers with simplified credentials (Story 54.2)
+**And** Lab-Lite receives mode switches and adjusts operations accordingly
+
+**Admin Portal Surface:** Network management, outbreak activation, CHW enrollment. Lab-Lite handles individual site operations and CHW collection mode.
+
+### Story 55.8: Surveillance Alert Configuration
+
+As a district health officer,
+I want to configure which surveillance alerts I receive and set thresholds,
+So that I get the right alerts for my jurisdiction without noise from irrelevant facilities.
+
+**Acceptance Criteria:**
+
+**Given** the Admin Portal alert configuration section
+**When** the officer configures their alert preferences
+**Then** they can: select which labs they monitor, set positivity rate thresholds per test category, configure notification channels (in-app, SMS, email), and review alert history
+**And** Lab-Lite generates and transmits alerts per the configured rules (Story 50.3)
+
+**Admin Portal Surface:** Alert recipient and threshold configuration. Lab-Lite generates alerts per rules.
