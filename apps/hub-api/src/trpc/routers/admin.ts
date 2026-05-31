@@ -4,8 +4,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
-import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES } from '@ultranos/shared-types'
+import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole } from '@ultranos/shared-types'
 import crypto from 'crypto'
+import { encryptField, decryptField } from '@ultranos/crypto/server'
+import { getCachedEncryptionKey } from '@/lib/field-encryption'
+import { computeScreeningReminders } from '@/lib/screening-reminders'
 
 /**
  * ADMIN-role-only middleware guard.
@@ -3980,6 +3983,2918 @@ export const adminRouter = createTRPCRouter({
         settings: { ...defaults, ...merged },
       }
     }),
+
+  // ================================================================
+  // Story 55.1: Lab Staff Role Management (AC #1, #2, #4, #5)
+  // ================================================================
+
+  /**
+   * Story 55.1 AC #1: List staff members for a given lab.
+   * Uses targeted getUserById instead of listUsers() to fix pagination bug.
+   */
+  listLabStaff: adminProcedure
+    .input(z.object({ labId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: staff, error } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_role, created_at')
+        .eq('lab_id', input.labId)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch lab staff',
+        })
+      }
+
+      const practitionerIds = (staff ?? []).map((s: any) => s.practitioner_id)
+      let emailMap: Record<string, string> = {}
+
+      if (practitionerIds.length > 0) {
+        const { data: practitioners } = await ctx.supabase
+          .from('practitioners')
+          .select('id, auth_user_id')
+          .in('id', practitionerIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const lookups = practitioners
+            .filter((p: any) => p.auth_user_id)
+            .map(async (p: any) => {
+              const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
+              if (data?.user?.email) {
+                emailMap[p.id] = data.user.email
+              }
+            })
+          await Promise.all(lookups)
+        }
+      }
+
+      return (staff ?? []).map((s: any) => ({
+        practitionerId: s.practitioner_id as string,
+        email: emailMap[s.practitioner_id] ?? '',
+        labRole: s.lab_role as LabRole,
+        createdAt: s.created_at as string,
+      }))
+    }),
+
+  /**
+   * Story 55.1 AC #2, #3, #5: Update a staff member's lab role.
+   * Uses atomic RPC function for last-manager protection.
+   * Emits audit event on success.
+   */
+  updateLabStaffRole: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        targetPractitionerId: z.string().uuid(),
+        newRole: z.nativeEnum(LabRole),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase.rpc('update_lab_role_atomic', {
+        p_target_id: input.targetPractitionerId,
+        p_lab_id: input.labId,
+        p_new_role: input.newRole,
+      })
+
+      if (error) {
+        // Last-manager violation from the RPC function
+        if (error.message?.includes('Cannot demote the last Lab Manager')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Cannot demote the last Lab Manager in this lab',
+          })
+        }
+        if (error.message?.includes('Staff member not found')) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Staff member not found in this lab',
+          })
+        }
+        if (error.message?.includes('Invalid lab role')) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message,
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update staff role',
+        })
+      }
+
+      const result = data as { success: boolean; previousRole: string; newRole: string; changed: boolean }
+
+      // Emit audit event (AC #5)
+      if (result.changed) {
+        const audit = new AuditLogger(ctx.supabase)
+        try {
+          await audit.emit({
+            action: 'UPDATE',
+            resourceType: 'PRACTITIONER',
+            resourceId: input.targetPractitionerId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: {
+              previousRole: result.previousRole,
+              newRole: input.newRole,
+              labId: input.labId,
+              endpoint: 'admin.updateLabStaffRole',
+            },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'PRACTITIONER', resourceId: input.targetPractitionerId })
+        }
+      }
+
+      return { success: true, previousRole: result.previousRole, newRole: result.newRole }
+    }),
+
+  // ================================================================
+  // Story 55.2: Cross-Lab Staff Overview Dashboard
+  // ================================================================
+
+  /**
+   * Story 55.2 AC #1-5: List all lab staff across the organization
+   * with filtering by role, lab, and activity status. Cursor-based pagination.
+   * Includes labHasManager flag per row (AC #4).
+   */
+  listAllLabStaff: adminProcedure
+    .input(
+      z.object({
+        roleFilter: z.nativeEnum(LabRole).optional(),
+        labFilter: z.string().uuid().optional(),
+        activityFilter: z.enum(['ACTIVE_7D', 'INACTIVE', 'ALL']).default('ALL'),
+        cursor: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Step 1: Build query for lab_technicians joined with labs
+      let query = ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_id, lab_role, created_at, labs!inner(id, lab_name)')
+        .order('practitioner_id', { ascending: true })
+        .limit(input.limit + 1) // fetch one extra to detect next page
+
+      if (input.roleFilter) {
+        query = query.eq('lab_role', input.roleFilter)
+      }
+      if (input.labFilter) {
+        query = query.eq('lab_id', input.labFilter)
+      }
+      if (input.cursor) {
+        query = query.gt('practitioner_id', input.cursor)
+      }
+
+      const { data: staff, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch lab staff',
+        })
+      }
+
+      const rows = staff ?? []
+      const hasMore = rows.length > input.limit
+      const pageRows = hasMore ? rows.slice(0, input.limit) : rows
+
+      // Step 2: Look up emails via practitioners + getUserById
+      const practitionerIds = [...new Set(pageRows.map((s: any) => s.practitioner_id as string))]
+      const emailMap: Record<string, string> = {}
+      const lastLoginMap: Record<string, string | null> = {}
+
+      if (practitionerIds.length > 0) {
+        const { data: practitioners } = await ctx.supabase
+          .from('practitioners')
+          .select('id, auth_user_id')
+          .in('id', practitionerIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const lookups = practitioners
+            .filter((p: any) => p.auth_user_id)
+            .map(async (p: any) => {
+              const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
+              if (data?.user) {
+                if (data.user.email) emailMap[p.id] = data.user.email
+                lastLoginMap[p.id] = data.user.last_sign_in_at ?? null
+              }
+            })
+          await Promise.all(lookups)
+        }
+      }
+
+      // Step 3: Determine which labs have a manager (AC #4)
+      const labIds = [...new Set(pageRows.map((s: any) => s.lab_id as string))]
+      const managerLabIds = new Set<string>()
+
+      if (labIds.length > 0) {
+        const { data: managers } = await ctx.supabase
+          .from('lab_technicians')
+          .select('lab_id')
+          .eq('lab_role', 'LAB_MANAGER')
+          .in('lab_id', labIds)
+
+        if (managers) {
+          for (const m of managers) {
+            managerLabIds.add(m.lab_id as string)
+          }
+        }
+      }
+
+      // Step 4: Apply activity filter client-side
+      let filteredRows = pageRows
+      if (input.activityFilter === 'ACTIVE_7D') {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        filteredRows = pageRows.filter((s: any) => {
+          const lastLogin = lastLoginMap[s.practitioner_id]
+          return lastLogin && lastLogin >= sevenDaysAgo
+        })
+      } else if (input.activityFilter === 'INACTIVE') {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        filteredRows = pageRows.filter((s: any) => {
+          const lastLogin = lastLoginMap[s.practitioner_id]
+          return !lastLogin || lastLogin < sevenDaysAgo
+        })
+      }
+
+      const items = filteredRows.map((s: any) => {
+        const lab = s.labs as { id: string; lab_name: string }
+        return {
+          practitionerId: s.practitioner_id as string,
+          email: emailMap[s.practitioner_id] ?? '',
+          labId: s.lab_id as string,
+          labName: lab.lab_name,
+          labRole: s.lab_role as LabRole,
+          lastActiveAt: lastLoginMap[s.practitioner_id] ?? null,
+          createdAt: s.created_at as string,
+          labHasManager: managerLabIds.has(s.lab_id as string),
+        }
+      })
+
+      const lastRow = pageRows[pageRows.length - 1]
+      return {
+        items,
+        nextCursor: hasMore && lastRow ? (lastRow as any).practitioner_id as string : null,
+      }
+    }),
+
+  /**
+   * Story 55.2 AC #3: List all labs for the filter dropdown.
+   */
+  listLabsForFilter: adminProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name')
+        .order('lab_name', { ascending: true })
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch labs',
+        })
+      }
+
+      return (data ?? []).map((l: any) => ({
+        id: l.id as string,
+        labName: l.lab_name as string,
+      }))
+    }),
+
+  /**
+   * Story 55.2 AC #6: Export lab staff as CSV.
+   * Accepts same filters as listAllLabStaff but no pagination.
+   * Returns base64-encoded CSV. Emits audit event for data export.
+   */
+  exportLabStaffCsv: adminProcedure
+    .input(
+      z.object({
+        roleFilter: z.nativeEnum(LabRole).optional(),
+        labFilter: z.string().uuid().optional(),
+        activityFilter: z.enum(['ACTIVE_7D', 'INACTIVE', 'ALL']).default('ALL'),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // Fetch all staff (no pagination)
+      let query = ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_id, lab_role, created_at, labs!inner(id, lab_name)')
+        .order('practitioner_id', { ascending: true })
+
+      if (input.roleFilter) {
+        query = query.eq('lab_role', input.roleFilter)
+      }
+      if (input.labFilter) {
+        query = query.eq('lab_id', input.labFilter)
+      }
+
+      const { data: staff, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch lab staff for export',
+        })
+      }
+
+      const rows = staff ?? []
+
+      // Look up emails and last login
+      const practitionerIds = [...new Set(rows.map((s: any) => s.practitioner_id as string))]
+      const emailMap: Record<string, string> = {}
+      const lastLoginMap: Record<string, string | null> = {}
+
+      if (practitionerIds.length > 0) {
+        const { data: practitioners } = await ctx.supabase
+          .from('practitioners')
+          .select('id, auth_user_id')
+          .in('id', practitionerIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const lookups = practitioners
+            .filter((p: any) => p.auth_user_id)
+            .map(async (p: any) => {
+              const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
+              if (data?.user) {
+                if (data.user.email) emailMap[p.id] = data.user.email
+                lastLoginMap[p.id] = data.user.last_sign_in_at ?? null
+              }
+            })
+          await Promise.all(lookups)
+        }
+      }
+
+      // Apply activity filter
+      let filteredRows = rows
+      if (input.activityFilter === 'ACTIVE_7D') {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        filteredRows = rows.filter((s: any) => {
+          const lastLogin = lastLoginMap[s.practitioner_id]
+          return lastLogin && lastLogin >= sevenDaysAgo
+        })
+      } else if (input.activityFilter === 'INACTIVE') {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        filteredRows = rows.filter((s: any) => {
+          const lastLogin = lastLoginMap[s.practitioner_id]
+          return !lastLogin || lastLogin < sevenDaysAgo
+        })
+      }
+
+      // Build CSV
+      const csvHeader = 'Email,Lab Name,Role,Last Active,Assigned Date'
+      const csvRows = filteredRows.map((s: any) => {
+        const lab = s.labs as { id: string; lab_name: string }
+        const email = emailMap[s.practitioner_id] ?? ''
+        const lastActive = lastLoginMap[s.practitioner_id] ?? 'Never'
+        const assignedDate = s.created_at ? new Date(s.created_at as string).toISOString().split('T')[0] : ''
+        // Escape CSV fields that may contain commas
+        const escapeCsv = (val: string) => val.includes(',') ? `"${val}"` : val
+        return [escapeCsv(email), escapeCsv(lab.lab_name), s.lab_role, lastActive, assignedDate].join(',')
+      })
+
+      const csvContent = [csvHeader, ...csvRows].join('\n')
+      const base64 = Buffer.from(csvContent, 'utf-8').toString('base64')
+
+      // Emit audit event for data export (AC #6)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'EXPORT' as any,
+          resourceType: 'PRACTITIONER',
+          resourceId: 'cross-lab-staff-export',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            exportType: 'CSV',
+            rowCount: filteredRows.length,
+            filters: {
+              roleFilter: input.roleFilter ?? 'ALL',
+              labFilter: input.labFilter ?? 'ALL',
+              activityFilter: input.activityFilter,
+            },
+            endpoint: 'admin.exportLabStaffCsv',
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'EXPORT', resourceType: 'PRACTITIONER' })
+      }
+
+      const dateStr = new Date().toISOString().split('T')[0]
+      return {
+        data: base64,
+        filename: `lab-staff-export-${dateStr}.csv`,
+        mimeType: 'text/csv',
+      }
+    }),
+
+  // ================================================================
+  // Story 55.4: Mentorship Pairing Management
+  // ================================================================
+
+  /**
+   * AC #1: List all mentorship pairings with mentor/mentee names, emails, lab name.
+   * Cursor-based pagination, filterable by status.
+   */
+  listMentorshipPairings: adminProcedure
+    .input(
+      z.object({
+        statusFilter: z.enum(['ACTIVE', 'DISSOLVED', 'ALL']).default('ALL'),
+        cursor: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('mentorship_pairings')
+        .select(`
+          id, mentor_practitioner_id, mentee_practitioner_id, lab_id, goals,
+          status, start_date, dissolved_at, dissolved_reason, dissolved_notes,
+          created_at,
+          mentor:practitioners!mentorship_pairings_mentor_practitioner_id_fkey(id, given_name, family_name, auth_user_id),
+          mentee:practitioners!mentorship_pairings_mentee_practitioner_id_fkey(id, given_name, family_name, auth_user_id),
+          labs!mentorship_pairings_lab_id_fkey(id, lab_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(input.limit + 1)
+
+      if (input.statusFilter !== 'ALL') {
+        query = query.eq('status', input.statusFilter)
+      }
+      if (input.cursor) {
+        query = query.lt('id', input.cursor)
+      }
+
+      const { data: rows, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch mentorship pairings',
+        })
+      }
+
+      const allRows = rows ?? []
+      const hasMore = allRows.length > input.limit
+      const pageRows = hasMore ? allRows.slice(0, input.limit) : allRows
+
+      // Look up emails for mentors and mentees
+      const authUserIds: string[] = []
+      const practitionerAuthMap: Record<string, string> = {}
+
+      for (const row of pageRows) {
+        const mentor = row.mentor as any
+        const mentee = row.mentee as any
+        if (mentor?.auth_user_id) {
+          practitionerAuthMap[mentor.id] = mentor.auth_user_id
+          authUserIds.push(mentor.auth_user_id)
+        }
+        if (mentee?.auth_user_id) {
+          practitionerAuthMap[mentee.id] = mentee.auth_user_id
+          authUserIds.push(mentee.auth_user_id)
+        }
+      }
+
+      const emailMap: Record<string, string> = {}
+      if (authUserIds.length > 0) {
+        const lookups = Object.entries(practitionerAuthMap).map(async ([practId, authId]) => {
+          const { data } = await ctx.supabase.auth.admin.getUserById(authId)
+          if (data?.user?.email) {
+            emailMap[practId] = data.user.email
+          }
+        })
+        await Promise.all(lookups)
+      }
+
+      const items = pageRows.map((row: any) => {
+        const mentor = row.mentor as { id: string; given_name: string; family_name: string } | null
+        const mentee = row.mentee as { id: string; given_name: string; family_name: string } | null
+        const lab = row.labs as { id: string; lab_name: string } | null
+
+        return {
+          id: row.id as string,
+          mentorName: mentor ? `${mentor.given_name ?? ''} ${mentor.family_name ?? ''}`.trim() : 'Unknown',
+          mentorEmail: mentor ? (emailMap[mentor.id] ?? '') : '',
+          menteeName: mentee ? `${mentee.given_name ?? ''} ${mentee.family_name ?? ''}`.trim() : 'Unknown',
+          menteeEmail: mentee ? (emailMap[mentee.id] ?? '') : '',
+          labName: lab?.lab_name ?? 'Unknown',
+          startDate: row.start_date as string,
+          status: row.status as string,
+          dissolvedAt: row.dissolved_at as string | null,
+          dissolvedReason: row.dissolved_reason as string | null,
+        }
+      })
+
+      const lastRow = pageRows[pageRows.length - 1]
+      return {
+        items,
+        nextCursor: hasMore && lastRow ? (lastRow as any).id as string : null,
+      }
+    }),
+
+  /**
+   * AC #5: Get full pairing detail with check-in history.
+   */
+  getMentorshipPairingDetail: adminProcedure
+    .input(z.object({ pairingId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data: pairing, error } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select(`
+          id, mentor_practitioner_id, mentee_practitioner_id, lab_id, goals,
+          status, start_date, dissolved_at, dissolved_reason, dissolved_notes,
+          created_at, created_by,
+          mentor:practitioners!mentorship_pairings_mentor_practitioner_id_fkey(id, given_name, family_name),
+          mentee:practitioners!mentorship_pairings_mentee_practitioner_id_fkey(id, given_name, family_name),
+          labs!mentorship_pairings_lab_id_fkey(id, lab_name)
+        `)
+        .eq('id', input.pairingId)
+        .single()
+
+      if (error || !pairing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Pairing not found' })
+      }
+
+      const { data: checkins } = await ctx.supabase
+        .from('mentorship_checkins')
+        .select('id, month, status, notes, completed_at')
+        .eq('pairing_id', input.pairingId)
+        .order('month', { ascending: false })
+
+      const mentor = pairing.mentor as any
+      const mentee = pairing.mentee as any
+      const lab = pairing.labs as any
+
+      return {
+        id: pairing.id,
+        mentorName: mentor ? `${mentor.given_name ?? ''} ${mentor.family_name ?? ''}`.trim() : 'Unknown',
+        mentorPractitionerId: pairing.mentor_practitioner_id,
+        menteeName: mentee ? `${mentee.given_name ?? ''} ${mentee.family_name ?? ''}`.trim() : 'Unknown',
+        menteePractitionerId: pairing.mentee_practitioner_id,
+        labName: lab?.lab_name ?? 'Unknown',
+        goals: pairing.goals,
+        status: pairing.status,
+        startDate: pairing.start_date,
+        dissolvedAt: pairing.dissolved_at,
+        dissolvedReason: pairing.dissolved_reason,
+        dissolvedNotes: pairing.dissolved_notes,
+        createdAt: pairing.created_at,
+        checkins: (checkins ?? []).map((c: any) => ({
+          id: c.id as string,
+          month: c.month as string,
+          status: c.status as string,
+          notes: c.notes as string | null,
+          completedAt: c.completed_at as string | null,
+        })),
+      }
+    }),
+
+  /**
+   * AC #2, #7: Create a new mentorship pairing.
+   * Validates mentor role and mentee active-pairing uniqueness.
+   */
+  createMentorshipPairing: adminProcedure
+    .input(
+      z.object({
+        mentorPractitionerId: z.string().uuid(),
+        menteePractitionerId: z.string().uuid(),
+        goals: z.string().max(2000).optional(),
+        startDate: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.mentorPractitionerId === input.menteePractitionerId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Mentor and mentee cannot be the same person',
+        })
+      }
+
+      // Validate mentor is SUPERVISOR or LAB_MANAGER
+      const { data: mentorTech, error: mentorErr } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_id, lab_role')
+        .eq('practitioner_id', input.mentorPractitionerId)
+        .in('lab_role', ['SUPERVISOR', 'LAB_MANAGER'])
+        .limit(1)
+        .maybeSingle()
+
+      if (mentorErr || !mentorTech) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Mentor must have SUPERVISOR or LAB_MANAGER role',
+        })
+      }
+
+      // Check mentee doesn't already have an active pairing
+      const { data: existingPairing } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select('id')
+        .eq('mentee_practitioner_id', input.menteePractitionerId)
+        .eq('status', 'ACTIVE')
+        .maybeSingle()
+
+      if (existingPairing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Mentee already has an active mentorship pairing',
+        })
+      }
+
+      const { data: created, error: insertErr } = await ctx.supabase
+        .from('mentorship_pairings')
+        .insert({
+          mentor_practitioner_id: input.mentorPractitionerId,
+          mentee_practitioner_id: input.menteePractitionerId,
+          lab_id: mentorTech.lab_id,
+          goals: input.goals ?? null,
+          start_date: input.startDate,
+          created_by: ctx.user.sub,
+        })
+        .select('id, status, start_date, created_at')
+        .single()
+
+      if (insertErr || !created) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create mentorship pairing',
+        })
+      }
+
+      // Emit audit event
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'MENTORSHIP',
+          resourceId: created.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            mentorId: input.mentorPractitionerId,
+            menteeId: input.menteePractitionerId,
+            labId: mentorTech.lab_id,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'MENTORSHIP', resourceId: created.id })
+      }
+
+      return {
+        id: created.id,
+        status: created.status,
+        startDate: created.start_date,
+        createdAt: created.created_at,
+      }
+    }),
+
+  /**
+   * AC #3, #7: Dissolve a mentorship pairing with reason code.
+   */
+  dissolveMentorshipPairing: adminProcedure
+    .input(
+      z.object({
+        pairingId: z.string().uuid(),
+        reason: z.enum(['COMPLETED', 'REASSIGNED', 'INACTIVE', 'OTHER']),
+        notes: z.string().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date().toISOString()
+
+      const { data: updated, error } = await ctx.supabase
+        .from('mentorship_pairings')
+        .update({
+          status: 'DISSOLVED',
+          dissolved_at: now,
+          dissolved_reason: input.reason,
+          dissolved_notes: input.notes ?? null,
+          updated_at: now,
+        })
+        .eq('id', input.pairingId)
+        .eq('status', 'ACTIVE')
+        .select('id, status')
+        .single()
+
+      if (error || !updated) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Active pairing not found',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'MENTORSHIP',
+          resourceId: input.pairingId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { action: 'DISSOLVE', reason: input.reason },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'MENTORSHIP', resourceId: input.pairingId })
+      }
+
+      return { id: updated.id, status: updated.status }
+    }),
+
+  /**
+   * AC #5, #7: Upsert a monthly check-in for a pairing.
+   */
+  updateMentorshipCheckin: adminProcedure
+    .input(
+      z.object({
+        pairingId: z.string().uuid(),
+        month: z.string().regex(/^\d{4}-\d{2}$/),
+        status: z.enum(['COMPLETED', 'SKIPPED']),
+        notes: z.string().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify pairing exists
+      const { data: pairing } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select('id')
+        .eq('id', input.pairingId)
+        .single()
+
+      if (!pairing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Pairing not found' })
+      }
+
+      const { error } = await ctx.supabase
+        .from('mentorship_checkins')
+        .upsert(
+          {
+            pairing_id: input.pairingId,
+            month: input.month,
+            status: input.status,
+            notes: input.notes ?? null,
+            completed_at: input.status === 'COMPLETED' ? new Date().toISOString() : null,
+          },
+          { onConflict: 'pairing_id,month' },
+        )
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update check-in',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'MENTORSHIP',
+          resourceId: input.pairingId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { action: 'CHECKIN', month: input.month, status: input.status },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'MENTORSHIP', resourceId: input.pairingId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * AC #4: Dashboard summary stats for mentorship.
+   */
+  getMentorshipStats: adminProcedure
+    .query(async ({ ctx }) => {
+      // totalPaired: distinct practitioners in ACTIVE pairings
+      const { data: activePairings } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select('mentor_practitioner_id, mentee_practitioner_id, start_date')
+        .eq('status', 'ACTIVE')
+
+      const pairedIds = new Set<string>()
+      let totalStartDays = 0
+      for (const p of (activePairings ?? [])) {
+        pairedIds.add(p.mentor_practitioner_id as string)
+        pairedIds.add(p.mentee_practitioner_id as string)
+        const startMs = new Date(p.start_date as string).getTime()
+        totalStartDays += (Date.now() - startMs) / 86_400_000
+      }
+
+      // Also include dissolved pairings for average duration
+      const { data: dissolvedPairings } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select('start_date, dissolved_at')
+        .eq('status', 'DISSOLVED')
+
+      let totalDissolvedDays = 0
+      for (const p of (dissolvedPairings ?? [])) {
+        if (p.dissolved_at) {
+          const startMs = new Date(p.start_date as string).getTime()
+          const endMs = new Date(p.dissolved_at as string).getTime()
+          totalDissolvedDays += (endMs - startMs) / 86_400_000
+        }
+      }
+
+      const totalPairings = (activePairings?.length ?? 0) + (dissolvedPairings?.length ?? 0)
+      const avgPairingDurationDays = totalPairings > 0
+        ? Math.round((totalStartDays + totalDissolvedDays) / totalPairings)
+        : 0
+
+      // unmatchedTechs: technicians not in any active pairing
+      const { count: totalTechs } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id', { count: 'exact', head: true })
+
+      const unmatchedTechs = (totalTechs ?? 0) - pairedIds.size
+
+      // checkinCompletionRate
+      const { count: completedCheckins } = await ctx.supabase
+        .from('mentorship_checkins')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'COMPLETED')
+
+      const { count: skippedCheckins } = await ctx.supabase
+        .from('mentorship_checkins')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'SKIPPED')
+
+      const totalCheckins = (completedCheckins ?? 0) + (skippedCheckins ?? 0)
+      const checkinCompletionRate = totalCheckins > 0
+        ? Math.round(((completedCheckins ?? 0) / totalCheckins) * 100)
+        : 0
+
+      return {
+        totalPaired: pairedIds.size,
+        unmatchedTechs: Math.max(0, unmatchedTechs),
+        avgPairingDurationDays,
+        checkinCompletionRate,
+      }
+    }),
+
+  /**
+   * AC #2: List practitioners eligible to be mentors (SUPERVISOR or LAB_MANAGER).
+   */
+  listEligibleMentors: adminProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_role, labs!inner(id, lab_name), practitioners!inner(id, given_name, family_name)')
+        .in('lab_role', ['SUPERVISOR', 'LAB_MANAGER'])
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch eligible mentors',
+        })
+      }
+
+      return (data ?? []).map((row: any) => {
+        const p = row.practitioners as { id: string; given_name: string; family_name: string }
+        const lab = row.labs as { id: string; lab_name: string }
+        return {
+          practitionerId: p.id,
+          name: `${p.given_name ?? ''} ${p.family_name ?? ''}`.trim(),
+          labName: lab.lab_name,
+          labRole: row.lab_role as string,
+        }
+      })
+    }),
+
+  // ================================================================
+  // Employee Health & Vaccination Registry (Story 55.3)
+  // ================================================================
+
+  /**
+   * Get employee health record for a practitioner.
+   * Decrypts exposure history and computes screening reminders.
+   */
+  getEmployeeHealth: adminProcedure
+    .input(z.object({ practitionerId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('employee_health_records')
+        .select('*')
+        .eq('practitioner_id', input.practitionerId)
+        .single()
+
+      const audit = new AuditLogger(ctx.supabase)
+      await audit.emit({
+        action: 'READ',
+        resourceType: 'EMPLOYEE_HEALTH',
+        resourceId: input.practitionerId,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role,
+        outcome: 'SUCCESS',
+        sessionId: ctx.user.sessionId,
+        metadata: {},
+      })
+
+      if (error || !data) {
+        return null
+      }
+
+      // Decrypt exposure history
+      let exposureHistory: Array<{ date: string; type: string; outcome: string }> = []
+      if (data.exposure_history_encrypted) {
+        try {
+          const key = getCachedEncryptionKey()
+          const decrypted = decryptField(data.exposure_history_encrypted, key)
+          if (decrypted !== '[Encrypted Content]') {
+            exposureHistory = JSON.parse(decrypted)
+          }
+        } catch {
+          // Decryption failed — return empty array rather than crash
+        }
+      }
+
+      const reminders = computeScreeningReminders({
+        tb_screening_date: data.tb_screening_date,
+      })
+
+      return {
+        id: data.id,
+        practitionerId: data.practitioner_id,
+        hepBStatus: data.hep_b_status,
+        hepBTiterDate: data.hep_b_titer_date,
+        tetanusStatus: data.tetanus_status,
+        tetanusDate: data.tetanus_date,
+        covidStatus: data.covid_status,
+        covidDoses: data.covid_doses,
+        covidLastDoseDate: data.covid_last_dose_date,
+        tbScreeningDate: data.tb_screening_date,
+        tbScreeningResult: data.tb_screening_result,
+        exposureHistory,
+        reminders,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      }
+    }),
+
+  /**
+   * Create or update employee health record.
+   * Encrypts exposure history before storing.
+   */
+  updateEmployeeHealth: adminProcedure
+    .input(
+      z.object({
+        practitionerId: z.string().uuid(),
+        hepBStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
+        hepBTiterDate: z.string().nullable().optional(),
+        tetanusStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
+        tetanusDate: z.string().nullable().optional(),
+        covidStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
+        covidDoses: z.number().int().min(0).default(0),
+        covidLastDoseDate: z.string().nullable().optional(),
+        tbScreeningDate: z.string().nullable().optional(),
+        tbScreeningResult: z
+          .enum(['NEGATIVE', 'POSITIVE', 'INDETERMINATE'])
+          .nullable()
+          .optional(),
+        exposureHistory: z
+          .array(
+            z.object({
+              date: z.string(),
+              type: z.string(),
+              outcome: z.string(),
+            }),
+          )
+          .default([]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Encrypt exposure history
+      let exposureHistoryEncrypted: string | null = null
+      if (input.exposureHistory.length > 0) {
+        const key = getCachedEncryptionKey()
+        exposureHistoryEncrypted = encryptField(
+          JSON.stringify(input.exposureHistory),
+          key,
+        )
+      }
+
+      const row = {
+        practitioner_id: input.practitionerId,
+        hep_b_status: input.hepBStatus,
+        hep_b_titer_date: input.hepBTiterDate ?? null,
+        tetanus_status: input.tetanusStatus,
+        tetanus_date: input.tetanusDate ?? null,
+        covid_status: input.covidStatus,
+        covid_doses: input.covidDoses,
+        covid_last_dose_date: input.covidLastDoseDate ?? null,
+        tb_screening_date: input.tbScreeningDate ?? null,
+        tb_screening_result: input.tbScreeningResult ?? null,
+        exposure_history_encrypted: exposureHistoryEncrypted,
+      }
+
+      const { data, error } = await ctx.supabase
+        .from('employee_health_records')
+        .upsert(row, { onConflict: 'practitioner_id' })
+        .select('*')
+        .single()
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save employee health record',
+        })
+      }
+
+      // Build changed fields list for audit metadata
+      const changedFields = [
+        'hepBStatus',
+        'tetanusStatus',
+        'covidStatus',
+        'covidDoses',
+        'tbScreeningDate',
+        'tbScreeningResult',
+        'exposureHistory',
+      ].filter((f) => input[f as keyof typeof input] !== undefined)
+
+      const audit = new AuditLogger(ctx.supabase)
+      await audit.emit({
+        action: 'UPDATE',
+        resourceType: 'EMPLOYEE_HEALTH',
+        resourceId: input.practitionerId,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role,
+        outcome: 'SUCCESS',
+        sessionId: ctx.user.sessionId,
+        metadata: { changedFields },
+      })
+
+      return { success: true, id: data.id }
+    }),
+
+  // ================================================================
+  // Story 55.5: Certification & Credential Management
+  // ================================================================
+
+  /**
+   * Task 2.1 / AC #1: List certification pathways for the org.
+   * Cursor-based pagination, filterable by status.
+   */
+  listCertificationPathways: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(['ACTIVE', 'ARCHIVED', 'ALL']).default('ALL'),
+        cursor: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('certification_pathways')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(input.cursor, input.cursor + input.limit - 1)
+
+      if (input.status !== 'ALL') {
+        query = query.eq('status', input.status)
+      }
+
+      const { data: rows, error, count } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch certification pathways',
+        })
+      }
+
+      const pathways = (rows ?? []).map((row: any) => ({
+        id: row.id as string,
+        name: row.name as string,
+        description: row.description as string | null,
+        milestones: row.milestones as Array<{ title: string; type: string; required_count: number }>,
+        milestoneCount: Array.isArray(row.milestones) ? row.milestones.length : 0,
+        status: row.status as string,
+        createdAt: row.created_at as string,
+        updatedAt: row.updated_at as string,
+      }))
+
+      return { pathways, total: count ?? 0 }
+    }),
+
+  /**
+   * Task 2.2 / AC #2: Create a certification pathway.
+   * Validates milestone schema. Emits audit event.
+   */
+  createCertificationPathway: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(255),
+        description: z.string().max(2000).optional(),
+        milestones: z.array(
+          z.object({
+            title: z.string().min(1).max(255),
+            type: z.enum(['MODULE_COMPLETION', 'SUPERVISED_PROCEDURE', 'ASSESSMENT_PASS', 'CONTINUING_ED_HOURS']),
+            required_count: z.number().int().min(1),
+          }),
+        ).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Resolve org_id from the admin's organization
+      const { data: practitioner } = await ctx.supabase
+        .from('practitioners')
+        .select('org_id')
+        .eq('id', ctx.user.sub)
+        .single()
+
+      const orgId = practitioner?.org_id ?? ctx.user.orgId
+      if (!orgId) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Organization context required',
+        })
+      }
+
+      const { data: pathway, error } = await ctx.supabase
+        .from('certification_pathways')
+        .insert({
+          org_id: orgId,
+          name: input.name,
+          description: input.description ?? null,
+          milestones: input.milestones,
+          status: 'ACTIVE',
+        })
+        .select('id')
+        .single()
+
+      if (error || !pathway) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create certification pathway',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_PATHWAY_CREATED',
+          resourceType: 'CERTIFICATION_PATHWAY',
+          resourceId: pathway.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { milestoneCount: input.milestones.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_PATHWAY_CREATED', resourceId: pathway.id })
+      }
+
+      return { success: true, id: pathway.id }
+    }),
+
+  /**
+   * Task 2.3 / AC #2: Update a certification pathway.
+   * Emits audit event.
+   */
+  updateCertificationPathway: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        name: z.string().min(1).max(255).optional(),
+        description: z.string().max(2000).optional(),
+        milestones: z.array(
+          z.object({
+            title: z.string().min(1).max(255),
+            type: z.enum(['MODULE_COMPLETION', 'SUPERVISED_PROCEDURE', 'ASSESSMENT_PASS', 'CONTINUING_ED_HOURS']),
+            required_count: z.number().int().min(1),
+          }),
+        ).min(1).optional(),
+        status: z.enum(['ACTIVE', 'ARCHIVED']).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...updates } = input
+      const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (updates.name !== undefined) updatePayload.name = updates.name
+      if (updates.description !== undefined) updatePayload.description = updates.description
+      if (updates.milestones !== undefined) updatePayload.milestones = updates.milestones
+      if (updates.status !== undefined) updatePayload.status = updates.status
+
+      const { error } = await ctx.supabase
+        .from('certification_pathways')
+        .update(updatePayload)
+        .eq('id', id)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update certification pathway',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_PATHWAY_UPDATED',
+          resourceType: 'CERTIFICATION_PATHWAY',
+          resourceId: id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { updatedFields: Object.keys(updates) },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_PATHWAY_UPDATED', resourceId: id })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Task 2.4: Archive a certification pathway.
+   * Emits audit event.
+   */
+  archiveCertificationPathway: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase
+        .from('certification_pathways')
+        .update({ status: 'ARCHIVED', updated_at: new Date().toISOString() })
+        .eq('id', input.id)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to archive certification pathway',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_PATHWAY_ARCHIVED',
+          resourceType: 'CERTIFICATION_PATHWAY',
+          resourceId: input.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_PATHWAY_ARCHIVED', resourceId: input.id })
+      }
+
+      return { success: true }
+    }),
+
+  // ================================================================
+  // Task 3: Progress Tracking & Milestone Review
+  // ================================================================
+
+  /**
+   * Task 3.1 / AC #3: List certification progress for a practitioner.
+   * Joins milestone details from the pathway.
+   */
+  listCertificationProgress: adminProcedure
+    .input(
+      z.object({
+        practitionerId: z.string().uuid(),
+        pathwayId: z.string().uuid().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('certification_progress')
+        .select(`
+          id, pathway_id, practitioner_id, milestone_index, status,
+          evidence_ref, reviewer_note, approved_by, approved_at, submitted_at, created_at,
+          certification_pathways!inner(id, name, milestones, status)
+        `)
+        .eq('practitioner_id', input.practitionerId)
+        .order('pathway_id')
+        .order('milestone_index', { ascending: true })
+
+      if (input.pathwayId) {
+        query = query.eq('pathway_id', input.pathwayId)
+      }
+
+      const { data: rows, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch certification progress',
+        })
+      }
+
+      // Group by pathway for easier UI consumption
+      const pathwayMap = new Map<string, {
+        pathwayId: string
+        pathwayName: string
+        pathwayStatus: string
+        milestones: Array<{
+          progressId: string
+          milestoneIndex: number
+          title: string
+          type: string
+          requiredCount: number
+          status: string
+          evidenceRef: string | null
+          reviewerNote: string | null
+          approvedAt: string | null
+          submittedAt: string | null
+        }>
+      }>()
+
+      for (const row of (rows ?? []) as any[]) {
+        const pathway = row.certification_pathways
+        const pathwayMilestones = Array.isArray(pathway?.milestones) ? pathway.milestones : []
+        const milestoneDetail = pathwayMilestones[row.milestone_index] ?? { title: 'Unknown', type: 'UNKNOWN', required_count: 1 }
+
+        if (!pathwayMap.has(row.pathway_id)) {
+          pathwayMap.set(row.pathway_id, {
+            pathwayId: row.pathway_id,
+            pathwayName: pathway?.name ?? 'Unknown',
+            pathwayStatus: pathway?.status ?? 'UNKNOWN',
+            milestones: [],
+          })
+        }
+
+        pathwayMap.get(row.pathway_id)!.milestones.push({
+          progressId: row.id,
+          milestoneIndex: row.milestone_index,
+          title: milestoneDetail.title,
+          type: milestoneDetail.type,
+          requiredCount: milestoneDetail.required_count,
+          status: row.status,
+          evidenceRef: row.evidence_ref,
+          reviewerNote: row.reviewer_note,
+          approvedAt: row.approved_at,
+          submittedAt: row.submitted_at,
+        })
+      }
+
+      // Calculate completion percentage per pathway
+      const pathways = Array.from(pathwayMap.values()).map((p) => ({
+        ...p,
+        completionPct: p.milestones.length > 0
+          ? Math.round((p.milestones.filter((m) => m.status === 'APPROVED').length / p.milestones.length) * 100)
+          : 0,
+      }))
+
+      return { pathways }
+    }),
+
+  /**
+   * Task 3.2 / AC #4: Approve or reject a submitted milestone.
+   * Validates status is SUBMITTED. Emits audit event.
+   */
+  reviewMilestone: adminProcedure
+    .input(
+      z.object({
+        progressId: z.string().uuid(),
+        action: z.enum(['APPROVE', 'REJECT']),
+        note: z.string().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch current progress record
+      const { data: progress, error: fetchError } = await ctx.supabase
+        .from('certification_progress')
+        .select('id, status, pathway_id, practitioner_id, milestone_index')
+        .eq('id', input.progressId)
+        .single()
+
+      if (fetchError || !progress) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Progress record not found',
+        })
+      }
+
+      if (progress.status !== 'SUBMITTED') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Cannot review milestone — current status is ${progress.status}, expected SUBMITTED`,
+        })
+      }
+
+      const newStatus = input.action === 'APPROVE' ? 'APPROVED' : 'REJECTED'
+      const updatePayload: Record<string, unknown> = {
+        status: newStatus,
+        reviewer_note: input.note ?? null,
+      }
+
+      if (input.action === 'APPROVE') {
+        updatePayload.approved_by = ctx.user.sub
+        updatePayload.approved_at = new Date().toISOString()
+      }
+
+      const { error: updateError } = await ctx.supabase
+        .from('certification_progress')
+        .update(updatePayload)
+        .eq('id', input.progressId)
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update milestone status',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_MILESTONE_REVIEWED',
+          resourceType: 'CERTIFICATION_PROGRESS',
+          resourceId: input.progressId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            reviewAction: input.action,
+            pathwayId: progress.pathway_id,
+            practitionerId: progress.practitioner_id,
+            milestoneIndex: progress.milestone_index,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_MILESTONE_REVIEWED', resourceId: input.progressId })
+      }
+
+      return { success: true, newStatus }
+    }),
+
+  /**
+   * Task 3.3: Assign a pathway to a practitioner.
+   * Creates PENDING progress records for each milestone.
+   */
+  assignPathway: adminProcedure
+    .input(
+      z.object({
+        practitionerId: z.string().uuid(),
+        pathwayId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch pathway to get milestones
+      const { data: pathway, error: pathwayError } = await ctx.supabase
+        .from('certification_pathways')
+        .select('id, milestones, status')
+        .eq('id', input.pathwayId)
+        .single()
+
+      if (pathwayError || !pathway) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Certification pathway not found',
+        })
+      }
+
+      if (pathway.status !== 'ACTIVE') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Cannot assign an archived pathway',
+        })
+      }
+
+      const milestones = Array.isArray(pathway.milestones) ? pathway.milestones : []
+      if (milestones.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Pathway has no milestones',
+        })
+      }
+
+      // Check for existing assignment
+      const { data: existing } = await ctx.supabase
+        .from('certification_progress')
+        .select('id')
+        .eq('pathway_id', input.pathwayId)
+        .eq('practitioner_id', input.practitionerId)
+        .limit(1)
+
+      if (existing && existing.length > 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Practitioner is already assigned to this pathway',
+        })
+      }
+
+      // Create PENDING progress records for each milestone
+      const progressRecords = milestones.map((_: any, index: number) => ({
+        pathway_id: input.pathwayId,
+        practitioner_id: input.practitionerId,
+        milestone_index: index,
+        status: 'PENDING',
+      }))
+
+      const { error: insertError } = await ctx.supabase
+        .from('certification_progress')
+        .insert(progressRecords)
+
+      if (insertError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to assign pathway',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_PATHWAY_ASSIGNED',
+          resourceType: 'CERTIFICATION_PROGRESS',
+          resourceId: input.pathwayId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            practitionerId: input.practitionerId,
+            milestoneCount: milestones.length,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_PATHWAY_ASSIGNED', resourceId: input.pathwayId })
+      }
+
+      return { success: true, milestonesCreated: milestones.length }
+    }),
+
+  // ================================================================
+  // Task 4: Credential Issuance
+  // ================================================================
+
+  /**
+   * Task 4.1 / AC #5: Issue a credential after all milestones are approved.
+   * Generates SHA-256 hash. Emits audit event.
+   */
+  issueCredential: adminProcedure
+    .input(
+      z.object({
+        practitionerId: z.string().uuid(),
+        pathwayId: z.string().uuid(),
+        expiresAt: z.string().datetime().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify all milestones are APPROVED
+      const { data: progressRows, error: progressError } = await ctx.supabase
+        .from('certification_progress')
+        .select('id, status')
+        .eq('pathway_id', input.pathwayId)
+        .eq('practitioner_id', input.practitionerId)
+
+      if (progressError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to verify milestone completion',
+        })
+      }
+
+      if (!progressRows || progressRows.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No progress records found for this pathway assignment',
+        })
+      }
+
+      const unapproved = progressRows.filter((r: any) => r.status !== 'APPROVED')
+      if (unapproved.length > 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Cannot issue credential — ${unapproved.length} milestone(s) not yet approved`,
+        })
+      }
+
+      // Generate certificate hash (Task 4.2)
+      const issuedAt = new Date().toISOString()
+      const milestoneDetails = progressRows.map((r: any) => r.id).sort().join('|')
+      const certificateContent = `${input.practitionerId}|${input.pathwayId}|${issuedAt}|${milestoneDetails}`
+      const certificateHash = crypto.createHash('sha256').update(certificateContent).digest('hex')
+
+      const { data: credential, error: credError } = await ctx.supabase
+        .from('certification_credentials')
+        .insert({
+          pathway_id: input.pathwayId,
+          practitioner_id: input.practitionerId,
+          issued_at: issuedAt,
+          expires_at: input.expiresAt ?? null,
+          certificate_hash: certificateHash,
+          issued_by: ctx.user.sub,
+        })
+        .select('id')
+        .single()
+
+      if (credError || !credential) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to issue credential',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_CREDENTIAL_ISSUED',
+          resourceType: 'CERTIFICATION_CREDENTIAL',
+          resourceId: credential.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            practitionerId: input.practitionerId,
+            pathwayId: input.pathwayId,
+            certificateHash,
+            expiresAt: input.expiresAt ?? null,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_CREDENTIAL_ISSUED', resourceId: credential.id })
+      }
+
+      return { success: true, credentialId: credential.id, certificateHash }
+    }),
+
+  // ================================================================
+  // Task 9: Expiry Monitoring
+  // ================================================================
+
+  /**
+   * Task 9.1 / AC #6: Get credentials expiring within a given window.
+   * Returns credentials with practitioner name, pathway name, days remaining.
+   */
+  getExpiringCredentials: adminProcedure
+    .input(
+      z.object({
+        daysAhead: z.number().int().min(1).max(365).default(90),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const now = new Date()
+      const cutoff = new Date(now.getTime() + input.daysAhead * 24 * 60 * 60 * 1000).toISOString()
+
+      const { data: rows, error } = await ctx.supabase
+        .from('certification_credentials')
+        .select(`
+          id, practitioner_id, pathway_id, issued_at, expires_at, certificate_hash,
+          certification_pathways!inner(name),
+          practitioners!certification_credentials_practitioner_id_fkey(given_name, family_name)
+        `)
+        .not('expires_at', 'is', null)
+        .lte('expires_at', cutoff)
+        .gte('expires_at', now.toISOString())
+        .order('expires_at', { ascending: true })
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch expiring credentials',
+        })
+      }
+
+      const credentials = (rows ?? []).map((row: any) => {
+        const expiresAt = new Date(row.expires_at)
+        const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+        const practitioner = row.practitioners
+        const pathway = row.certification_pathways
+
+        return {
+          id: row.id as string,
+          practitionerId: row.practitioner_id as string,
+          practitionerName: practitioner
+            ? `${practitioner.given_name ?? ''} ${practitioner.family_name ?? ''}`.trim()
+            : 'Unknown',
+          pathwayName: pathway?.name ?? 'Unknown',
+          expiresAt: row.expires_at as string,
+          daysRemaining,
+          urgency: daysRemaining <= 30 ? 'red' as const
+            : daysRemaining <= 60 ? 'orange' as const
+            : 'amber' as const,
+        }
+      })
+
+      // Compute bucket counts (Task 9.2)
+      const buckets = {
+        within90: credentials.length,
+        within60: credentials.filter((c) => c.daysRemaining <= 60).length,
+        within30: credentials.filter((c) => c.daysRemaining <= 30).length,
+      }
+
+      return { credentials, buckets }
+    }),
+
+  // ================================================================
+  // Story 55.6: Cross-Facility Inventory & Procurement
+  // ================================================================
+
+  // Task 2: Inventory overview endpoint (AC 1, 2)
+  getInventoryOverview: adminProcedure
+    .input(z.object({}))
+    .query(async ({ ctx }) => {
+      // Get all active labs for this org
+      const { data: labs, error: labsErr } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name')
+        .eq('org_id', ctx.user.orgId)
+        .eq('status', 'ACTIVE')
+
+      if (labsErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load labs' })
+      }
+
+      const labList = (labs ?? []) as { id: string; lab_name: string }[]
+      const labIds = labList.map((l) => l.id)
+
+      if (labIds.length === 0) {
+        const audit = new AuditLogger(ctx.supabase)
+        try {
+          await audit.emit({
+            action: 'READ',
+            resourceType: 'INVENTORY_OVERVIEW',
+            resourceId: 'batch',
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: { labCount: 0 },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'INVENTORY_OVERVIEW' })
+        }
+        return { labs: [], reagentCategories: [], cells: [] }
+      }
+
+      // Get snapshots ordered for dedup (latest first per lab+category)
+      const { data: snapshots, error: snapErr } = await ctx.supabase
+        .from('lab_inventory_snapshots')
+        .select('lab_id, reagent_category, quantity, unit, reported_at')
+        .eq('org_id', ctx.user.orgId)
+        .in('lab_id', labIds)
+        .order('lab_id', { ascending: true })
+        .order('reagent_category', { ascending: true })
+        .order('reported_at', { ascending: false })
+
+      if (snapErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load inventory snapshots' })
+      }
+
+      // Deduplicate: keep only latest per (lab_id, reagent_category)
+      const seen = new Set<string>()
+      const latestSnapshots: Array<{
+        lab_id: string; reagent_category: string; quantity: number; unit: string; reported_at: string
+      }> = []
+      for (const snap of (snapshots ?? []) as any[]) {
+        const key = `${snap.lab_id}::${snap.reagent_category}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          latestSnapshots.push(snap)
+        }
+      }
+
+      // Compute stock levels (v1 flat thresholds: GREEN >14, AMBER 1-7, RED 0)
+      const reagentCategorySet = new Set<string>()
+      const cells = latestSnapshots.map((snap) => {
+        reagentCategorySet.add(snap.reagent_category)
+        const lab = labList.find((l) => l.id === snap.lab_id)
+        let stockLevel: 'GREEN' | 'AMBER' | 'RED' = 'GREEN'
+        if (snap.quantity === 0) stockLevel = 'RED'
+        else if (snap.quantity <= 7) stockLevel = 'AMBER'
+
+        return {
+          labId: snap.lab_id,
+          labName: lab?.lab_name ?? 'Unknown',
+          reagentCategory: snap.reagent_category,
+          quantity: snap.quantity,
+          unit: snap.unit,
+          reportedAt: snap.reported_at,
+          stockLevel,
+        }
+      })
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'INVENTORY_OVERVIEW',
+          resourceId: 'batch',
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { labCount: labList.length, cellCount: cells.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'INVENTORY_OVERVIEW' })
+      }
+
+      return {
+        labs: labList.map((l) => ({ id: l.id, name: l.lab_name })),
+        reagentCategories: Array.from(reagentCategorySet).sort(),
+        cells,
+      }
+    }),
+
+  // Task 3: Redistribution recommendation logic (AC 3)
+  getRedistributionRecommendations: adminProcedure
+    .input(z.object({}))
+    .query(async ({ ctx }) => {
+      const { data: snapshots, error: snapErr } = await ctx.supabase
+        .from('lab_inventory_snapshots')
+        .select('lab_id, reagent_category, quantity, unit, reported_at')
+        .eq('org_id', ctx.user.orgId)
+        .order('lab_id', { ascending: true })
+        .order('reagent_category', { ascending: true })
+        .order('reported_at', { ascending: false })
+
+      if (snapErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load inventory snapshots' })
+      }
+
+      // Deduplicate: keep only latest per (lab_id, reagent_category)
+      const seen = new Set<string>()
+      const latest: Array<{ lab_id: string; reagent_category: string; quantity: number }> = []
+      for (const snap of (snapshots ?? []) as any[]) {
+        const key = `${snap.lab_id}::${snap.reagent_category}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          latest.push(snap)
+        }
+      }
+
+      // Get lab names
+      const labIds = [...new Set(latest.map((s) => s.lab_id))]
+      const { data: labs } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name')
+        .in('id', labIds.length > 0 ? labIds : ['__none__'])
+
+      const labMap = new Map<string, string>()
+      for (const lab of (labs ?? []) as { id: string; lab_name: string }[]) {
+        labMap.set(lab.id, lab.lab_name)
+      }
+
+      // Group by reagent_category
+      const byCategory = new Map<string, Array<{ lab_id: string; quantity: number }>>()
+      for (const snap of latest) {
+        if (!byCategory.has(snap.reagent_category)) byCategory.set(snap.reagent_category, [])
+        byCategory.get(snap.reagent_category)!.push({ lab_id: snap.lab_id, quantity: snap.quantity })
+      }
+
+      // RED labs get suggested transfers from GREEN labs
+      const recommendations: Array<{
+        targetLabId: string; targetLabName: string
+        sourceLabId: string; sourceLabName: string
+        reagentCategory: string; sourceQuantity: number
+      }> = []
+
+      for (const [category, entries] of byCategory) {
+        const redLabs = entries.filter((e) => e.quantity === 0)
+        const greenLabs = entries.filter((e) => e.quantity > 14).sort((a, b) => b.quantity - a.quantity)
+        for (const red of redLabs) {
+          for (const green of greenLabs) {
+            recommendations.push({
+              targetLabId: red.lab_id,
+              targetLabName: labMap.get(red.lab_id) ?? 'Unknown',
+              sourceLabId: green.lab_id,
+              sourceLabName: labMap.get(green.lab_id) ?? 'Unknown',
+              reagentCategory: category,
+              sourceQuantity: green.quantity,
+            })
+          }
+        }
+      }
+
+      recommendations.sort((a, b) => b.sourceQuantity - a.sourceQuantity)
+      return { recommendations }
+    }),
+
+  // Task 4: Purchase order CRUD and status pipeline (AC 4, 6)
+  listPurchaseOrders: adminProcedure
+    .input(z.object({
+      status: z.enum(['REQUESTED', 'APPROVED', 'ORDERED', 'SHIPPED', 'DELIVERED']).optional(),
+      cursor: z.number().int().min(0).default(0),
+      limit: z.number().int().min(1).max(100).default(25),
+    }))
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('purchase_orders')
+        .select('*, suppliers(name)', { count: 'exact' })
+        .eq('org_id', ctx.user.orgId)
+        .order('created_at', { ascending: false })
+        .range(input.cursor, input.cursor + input.limit - 1)
+
+      if (input.status) query = query.eq('status', input.status)
+
+      const { data, error, count } = await query
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load purchase orders' })
+      }
+
+      const orders = ((data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        supplierId: row.supplier_id,
+        supplierName: row.suppliers?.name ?? 'Unknown',
+        items: row.items,
+        status: row.status,
+        totalItems: row.total_items,
+        notes: row.notes,
+        createdBy: row.created_by,
+        approvedBy: row.approved_by,
+        approvedAt: row.approved_at,
+        orderedAt: row.ordered_at,
+        shippedAt: row.shipped_at,
+        deliveredAt: row.delivered_at,
+        createdAt: row.created_at,
+      }))
+
+      return { orders, total: count ?? 0 }
+    }),
+
+  createPurchaseOrder: adminProcedure
+    .input(z.object({
+      supplierId: z.string().uuid(),
+      items: z.array(z.object({
+        labId: z.string().uuid(),
+        reagentCategory: z.string().min(1),
+        quantity: z.number().int().positive(),
+        unit: z.string().min(1),
+      })).min(1),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Validate supplier exists and is ACTIVE
+      const { data: supplier, error: supErr } = await ctx.supabase
+        .from('suppliers')
+        .select('id, status')
+        .eq('id', input.supplierId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (supErr || !supplier) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Supplier not found' })
+      }
+      if ((supplier as any).status !== 'ACTIVE') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Supplier is not active' })
+      }
+
+      const itemsJson = input.items.map((i) => ({
+        lab_id: i.labId, reagent_category: i.reagentCategory,
+        quantity: i.quantity, unit: i.unit,
+      }))
+
+      const { data, error } = await ctx.supabase
+        .from('purchase_orders')
+        .insert({
+          org_id: ctx.user.orgId,
+          supplier_id: input.supplierId,
+          items: itemsJson,
+          status: 'REQUESTED',
+          total_items: input.items.length,
+          notes: input.notes ?? null,
+          created_by: ctx.user.sub,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create purchase order' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'PURCHASE_ORDER',
+          resourceId: data.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { supplierId: input.supplierId, itemCount: input.items.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'PURCHASE_ORDER' })
+      }
+
+      return { id: data.id }
+    }),
+
+  updateOrderStatus: adminProcedure
+    .input(z.object({
+      orderId: z.string().uuid(),
+      newStatus: z.enum(['APPROVED', 'ORDERED', 'SHIPPED', 'DELIVERED']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const STATUS_ORDER = ['REQUESTED', 'APPROVED', 'ORDERED', 'SHIPPED', 'DELIVERED'] as const
+      const TIMESTAMP_FIELDS: Record<string, string> = {
+        APPROVED: 'approved_at', ORDERED: 'ordered_at',
+        SHIPPED: 'shipped_at', DELIVERED: 'delivered_at',
+      }
+
+      const { data: order, error: fetchErr } = await ctx.supabase
+        .from('purchase_orders')
+        .select('id, status')
+        .eq('id', input.orderId)
+        .eq('org_id', ctx.user.orgId)
+        .single()
+
+      if (fetchErr || !order) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Purchase order not found' })
+      }
+
+      const currentIdx = STATUS_ORDER.indexOf((order as any).status)
+      const newIdx = STATUS_ORDER.indexOf(input.newStatus)
+
+      if (newIdx !== currentIdx + 1) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Invalid status transition: ${(order as any).status} → ${input.newStatus}. Must advance one step forward.`,
+        })
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        status: input.newStatus,
+        [TIMESTAMP_FIELDS[input.newStatus]]: new Date().toISOString(),
+      }
+      if (input.newStatus === 'APPROVED') updatePayload.approved_by = ctx.user.sub
+
+      const { error: updateErr } = await ctx.supabase
+        .from('purchase_orders')
+        .update(updatePayload)
+        .eq('id', input.orderId)
+
+      if (updateErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update order status' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'PURCHASE_ORDER',
+          resourceId: input.orderId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { previousStatus: (order as any).status, newStatus: input.newStatus },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'PURCHASE_ORDER' })
+      }
+
+      return { success: true }
+    }),
+
+  // Task 5: Supplier CRUD endpoints (AC 5)
+  listSuppliers: adminProcedure
+    .input(z.object({
+      status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      let query = ctx.supabase
+        .from('suppliers')
+        .select('*')
+        .eq('org_id', ctx.user.orgId)
+        .order('name', { ascending: true })
+
+      if (input.status) query = query.eq('status', input.status)
+
+      const { data, error } = await query
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load suppliers' })
+      }
+
+      const suppliers = ((data ?? []) as any[]).map((row) => ({
+        id: row.id,
+        name: row.name,
+        contactEmail: row.contact_email,
+        phone: row.phone,
+        leadTimeDays: row.lead_time_days,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }))
+
+      return { suppliers }
+    }),
+
+  createSupplier: adminProcedure
+    .input(z.object({
+      name: z.string().min(1).max(200),
+      contactEmail: z.string().email().optional(),
+      phone: z.string().optional(),
+      leadTimeDays: z.number().int().min(0).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.supabase
+        .from('suppliers')
+        .insert({
+          org_id: ctx.user.orgId,
+          name: input.name,
+          contact_email: input.contactEmail ?? null,
+          phone: input.phone ?? null,
+          lead_time_days: input.leadTimeDays ?? null,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create supplier' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'SUPPLIER',
+          resourceId: data.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { supplierName: input.name },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'SUPPLIER' })
+      }
+
+      return { id: data.id }
+    }),
+
+  updateSupplier: adminProcedure
+    .input(z.object({
+      id: z.string().uuid(),
+      name: z.string().min(1).max(200).optional(),
+      contactEmail: z.string().email().nullable().optional(),
+      phone: z.string().nullable().optional(),
+      leadTimeDays: z.number().int().min(0).nullable().optional(),
+      status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (input.name !== undefined) updatePayload.name = input.name
+      if (input.contactEmail !== undefined) updatePayload.contact_email = input.contactEmail
+      if (input.phone !== undefined) updatePayload.phone = input.phone
+      if (input.leadTimeDays !== undefined) updatePayload.lead_time_days = input.leadTimeDays
+      if (input.status !== undefined) updatePayload.status = input.status
+
+      const { error } = await ctx.supabase
+        .from('suppliers')
+        .update(updatePayload)
+        .eq('id', input.id)
+        .eq('org_id', ctx.user.orgId)
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update supplier' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'SUPPLIER',
+          resourceId: input.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { changedFields: Object.keys(updatePayload).filter((k) => k !== 'updated_at') },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'SUPPLIER' })
+      }
+
+      return { success: true }
+    }),
+
+  // ================================================================
+  // Story 55.7: Lab Network & Outbreak Management
+  // ================================================================
+
+  /**
+   * Task 2: Network overview — lab summaries with operational metrics.
+   * AC 1, 2: Aggregates pending samples, stock alerts, staff count per lab.
+   */
+  getNetworkOverview: adminProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.user.orgId
+
+    const { data: labs, error: labsError } = await ctx.supabase
+      .from('labs')
+      .select('id, lab_name, status, last_sync_at, created_at')
+      .eq('org_id', orgId)
+      .order('lab_name')
+
+    if (labsError) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load labs' })
+    }
+
+    const labSummaries = await Promise.all(
+      (labs ?? []).map(async (lab: Record<string, unknown>) => {
+        const labId = lab.id as string
+
+        const { count: staffCount } = await ctx.supabase
+          .from('lab_technicians')
+          .select('id', { count: 'exact', head: true })
+          .eq('lab_id', labId)
+
+        const { count: pendingSamples } = await ctx.supabase
+          .from('lab_orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('lab_id', labId)
+          .eq('status', 'PENDING')
+
+        let stockAlertCount = 0
+        let stockDataAvailable = false
+        try {
+          const { count } = await ctx.supabase
+            .from('lab_inventory_snapshots')
+            .select('id', { count: 'exact', head: true })
+            .eq('lab_id', labId)
+            .eq('level', 'RED')
+          stockAlertCount = count ?? 0
+          stockDataAvailable = true
+        } catch {
+          // Table may not exist yet (Story 55.6 dependency)
+        }
+
+        return {
+          labId,
+          labName: lab.lab_name as string,
+          status: lab.status as string,
+          pendingSamples: pendingSamples ?? 0,
+          stockAlertCount,
+          stockDataAvailable,
+          staffCount: staffCount ?? 0,
+          lastSyncAt: (lab.last_sync_at as string) ?? null,
+        }
+      }),
+    )
+
+    const audit = new AuditLogger(ctx.supabase)
+    try {
+      await audit.emit({
+        action: 'NETWORK_OVERVIEW_ACCESSED',
+        resourceType: 'NETWORK',
+        resourceId: orgId,
+        actorId: ctx.user.sub,
+        actorRole: ctx.user.role,
+        outcome: 'SUCCESS',
+        sessionId: ctx.user.sessionId,
+        metadata: { labCount: labSummaries.length },
+      })
+    } catch {
+      console.warn('[AUDIT_FAILURE]', { action: 'NETWORK_OVERVIEW_ACCESSED' })
+    }
+
+    return { labs: labSummaries }
+  }),
+
+  /**
+   * Task 3.1: Activate outbreak mode.
+   * AC 3, 4, 7: Create outbreak event + dispatch notifications.
+   */
+  activateOutbreakMode: adminProcedure
+    .input(
+      z.object({
+        pathogen: z.string().min(1).max(255),
+        affectedLabIds: z.array(z.string().uuid()).min(1),
+        notes: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+
+      const { data: validLabs, error: labError } = await ctx.supabase
+        .from('labs')
+        .select('id')
+        .eq('org_id', orgId)
+        .in('id', input.affectedLabIds)
+
+      if (labError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to validate labs' })
+      }
+
+      const validLabIds = new Set((validLabs ?? []).map((l: Record<string, unknown>) => l.id as string))
+      const invalidIds = input.affectedLabIds.filter((id) => !validLabIds.has(id))
+      if (invalidIds.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Labs not found in organization: ${invalidIds.length} invalid lab(s)`,
+        })
+      }
+
+      const { data: outbreak, error: insertError } = await ctx.supabase
+        .from('outbreak_events')
+        .insert({
+          org_id: orgId,
+          pathogen: input.pathogen,
+          affected_lab_ids: input.affectedLabIds,
+          status: 'ACTIVE',
+          activated_by: ctx.user.sub,
+          activated_at: new Date().toISOString(),
+          notes: input.notes ?? null,
+        })
+        .select('id')
+        .single()
+
+      if (insertError || !outbreak) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create outbreak event' })
+      }
+
+      const outbreakId = (outbreak as Record<string, unknown>).id as string
+
+      // Dispatch notifications to all practitioners at affected labs
+      try {
+        const { data: practitioners } = await ctx.supabase
+          .from('lab_technicians')
+          .select('practitioner_id')
+          .in('lab_id', input.affectedLabIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const notifications = (practitioners as Record<string, unknown>[]).map((p) => ({
+            recipient_ref: p.practitioner_id as string,
+            recipient_role: 'LAB_TECH',
+            type: 'OUTBREAK_MODE_ACTIVATED',
+            payload: JSON.stringify({ outbreak_id: outbreakId, pathogen: input.pathogen }),
+            status: 'QUEUED',
+            next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+          }))
+          await ctx.supabase.from('notifications').insert(notifications)
+        }
+      } catch {
+        console.warn('[NOTIFICATION_FAILURE]', { outbreakId })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'OUTBREAK_MODE_ACTIVATED',
+          resourceType: 'OUTBREAK_EVENT',
+          resourceId: outbreakId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { pathogen: input.pathogen, affectedLabCount: input.affectedLabIds.length },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'OUTBREAK_MODE_ACTIVATED', resourceId: outbreakId })
+      }
+
+      return { success: true, outbreakId }
+    }),
+
+  /**
+   * Task 3.3: Deactivate (resolve) outbreak mode.
+   * AC 7: Validates active status, updates to RESOLVED, dispatches notifications.
+   */
+  deactivateOutbreakMode: adminProcedure
+    .input(
+      z.object({
+        outbreakId: z.string().uuid(),
+        notes: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: outbreak, error: fetchError } = await ctx.supabase
+        .from('outbreak_events')
+        .select('id, status, pathogen, affected_lab_ids, org_id')
+        .eq('id', input.outbreakId)
+        .single()
+
+      if (fetchError || !outbreak) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Outbreak event not found' })
+      }
+
+      const ob = outbreak as Record<string, unknown>
+      if (ob.org_id !== ctx.user.orgId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Outbreak belongs to a different organization' })
+      }
+
+      if (ob.status !== 'ACTIVE') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Outbreak is already resolved' })
+      }
+
+      const { error: updateError } = await ctx.supabase
+        .from('outbreak_events')
+        .update({
+          status: 'RESOLVED',
+          resolved_at: new Date().toISOString(),
+          resolved_by: ctx.user.sub,
+          notes: input.notes ?? ob.notes,
+        })
+        .eq('id', input.outbreakId)
+
+      if (updateError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to resolve outbreak' })
+      }
+
+      const affectedLabIds = ob.affected_lab_ids as string[]
+      try {
+        const { data: practitioners } = await ctx.supabase
+          .from('lab_technicians')
+          .select('practitioner_id')
+          .in('lab_id', affectedLabIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const notifications = (practitioners as Record<string, unknown>[]).map((p) => ({
+            recipient_ref: p.practitioner_id as string,
+            recipient_role: 'LAB_TECH',
+            type: 'OUTBREAK_MODE_DEACTIVATED',
+            payload: JSON.stringify({ outbreak_id: input.outbreakId, pathogen: ob.pathogen }),
+            status: 'QUEUED',
+            next_retry_at: new Date(Date.now() + 60_000).toISOString(),
+          }))
+          await ctx.supabase.from('notifications').insert(notifications)
+        }
+      } catch {
+        console.warn('[NOTIFICATION_FAILURE]', { outbreakId: input.outbreakId })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'OUTBREAK_MODE_DEACTIVATED',
+          resourceType: 'OUTBREAK_EVENT',
+          resourceId: input.outbreakId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { pathogen: ob.pathogen as string },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'OUTBREAK_MODE_DEACTIVATED', resourceId: input.outbreakId })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Task 3.4: List outbreaks for the org.
+   * AC 6: Returns outbreaks with lab names joined.
+   */
+  listOutbreaks: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(['ACTIVE', 'RESOLVED']).optional(),
+      }).optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+
+      let query = ctx.supabase
+        .from('outbreak_events')
+        .select('id, pathogen, affected_lab_ids, status, activated_by, activated_at, resolved_at, resolved_by, notes')
+        .eq('org_id', orgId)
+        .order('activated_at', { ascending: false })
+
+      if (input?.status) {
+        query = query.eq('status', input.status)
+      }
+
+      const { data: outbreaks, error } = await query
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load outbreaks' })
+      }
+
+      const allLabIds = new Set<string>()
+      for (const ob of (outbreaks ?? []) as Record<string, unknown>[]) {
+        for (const labId of (ob.affected_lab_ids as string[])) {
+          allLabIds.add(labId)
+        }
+      }
+
+      let labNameMap: Record<string, string> = {}
+      if (allLabIds.size > 0) {
+        const { data: labs } = await ctx.supabase
+          .from('labs')
+          .select('id, lab_name')
+          .in('id', Array.from(allLabIds))
+        for (const lab of (labs ?? []) as Record<string, unknown>[]) {
+          labNameMap[lab.id as string] = lab.lab_name as string
+        }
+      }
+
+      return {
+        outbreaks: ((outbreaks ?? []) as Record<string, unknown>[]).map((ob) => ({
+          id: ob.id as string,
+          pathogen: ob.pathogen as string,
+          affectedLabIds: ob.affected_lab_ids as string[],
+          affectedLabNames: (ob.affected_lab_ids as string[]).map((id) => labNameMap[id] ?? id),
+          status: ob.status as string,
+          activatedBy: ob.activated_by as string,
+          activatedAt: ob.activated_at as string,
+          resolvedAt: (ob.resolved_at as string) ?? null,
+          resolvedBy: (ob.resolved_by as string) ?? null,
+          notes: (ob.notes as string) ?? null,
+        })),
+      }
+    }),
+
+  /**
+   * Task 4: CHW enrollment.
+   * AC 5: Create a simplified practitioner record with role CHW.
+   */
+  enrollChw: adminProcedure
+    .input(
+      z.object({
+        fullName: z.string().min(1).max(255),
+        phone: z.string().min(7).max(20).regex(/^\+?[0-9\s\-()]+$/, 'Invalid phone format'),
+        assignedLabId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.user.orgId
+
+      const { data: lab, error: labError } = await ctx.supabase
+        .from('labs')
+        .select('id')
+        .eq('id', input.assignedLabId)
+        .eq('org_id', orgId)
+        .single()
+
+      if (labError || !lab) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Lab not found in organization' })
+      }
+
+      // Encrypt full_name (PHI) before storage
+      let encryptedName: string
+      try {
+        const key = await getCachedEncryptionKey()
+        encryptedName = encryptField(input.fullName, key)
+      } catch {
+        encryptedName = input.fullName
+      }
+
+      const chwId = crypto.randomUUID()
+      const { error: insertError } = await ctx.supabase
+        .from('practitioners')
+        .insert({
+          id: chwId,
+          org_id: orgId,
+          given_name: encryptedName,
+          family_name: '',
+          role: 'CHW',
+          status: 'ACTIVE',
+          telecom_phone: input.phone,
+          created_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create CHW record' })
+      }
+
+      // Audit event — log only practitioner_id, never name or phone (CLAUDE.md PHI rule)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CHW_ENROLLED',
+          resourceType: 'PRACTITIONER',
+          resourceId: chwId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { assignedLabId: input.assignedLabId },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CHW_ENROLLED', resourceId: chwId })
+      }
+
+      return { success: true, chwId }
+    }),
+
+  // ================================================================
+  // Story 55.8: Surveillance Alert Configuration
+  // ================================================================
+
+  /**
+   * Task 2.1: Get surveillance config for the current user (or specified practitioner).
+   */
+  getSurveillanceConfig: adminProcedure
+    .input(
+      z.object({
+        practitionerId: z.string().uuid().optional(),
+      }).optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const practitionerId = input?.practitionerId ?? ctx.user.sub
+
+      const { data: config, error } = await ctx.supabase
+        .from('surveillance_alert_configs')
+        .select('*')
+        .eq('practitioner_id', practitionerId)
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch surveillance config' })
+      }
+
+      if (!config) return { config: null }
+
+      const labIds = (config as Record<string, unknown>).monitored_lab_ids as string[]
+      let labs: Array<{ id: string; name: string; status: string }> = []
+      if (labIds.length > 0) {
+        const { data: labRows } = await ctx.supabase
+          .from('labs')
+          .select('id, name, status')
+          .in('id', labIds)
+        labs = (labRows ?? []) as Array<{ id: string; name: string; status: string }>
+      }
+
+      return {
+        config: {
+          id: (config as any).id,
+          practitionerId: (config as any).practitioner_id,
+          orgId: (config as any).org_id,
+          monitoredLabIds: labIds,
+          monitoredLabs: labs,
+          thresholds: (config as any).thresholds as Array<{ test_category: string; threshold_pct: number }>,
+          channels: (config as any).channels as { in_app: boolean; sms_phone?: string; email?: string },
+          createdAt: (config as any).created_at,
+          updatedAt: (config as any).updated_at,
+        },
+      }
+    }),
+
+  /**
+   * Task 2.2: Upsert surveillance config.
+   */
+  updateSurveillanceConfig: adminProcedure
+    .input(
+      z.object({
+        monitoredLabIds: z.array(z.string().uuid()).min(1, 'At least one lab must be selected'),
+        thresholds: z
+          .array(
+            z.object({
+              test_category: z.string().min(1),
+              threshold_pct: z.number().min(0).max(100),
+            }),
+          )
+          .min(1, 'At least one threshold must be configured'),
+        channels: z.object({
+          in_app: z.literal(true),
+          sms_phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'SMS phone must be E.164 format').optional(),
+          email: z.string().email('Invalid email address').optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: orgLabs, error: labError } = await ctx.supabase
+        .from('labs')
+        .select('id')
+        .eq('org_id', ctx.user.orgId)
+
+      if (labError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to validate lab IDs' })
+      }
+
+      const orgLabIds = new Set((orgLabs ?? []).map((l: any) => l.id as string))
+      const invalidLabs = input.monitoredLabIds.filter((id) => !orgLabIds.has(id))
+      if (invalidLabs.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Lab IDs do not belong to your organization: ${invalidLabs.join(', ')}`,
+        })
+      }
+
+      const { data: upserted, error: upsertError } = await ctx.supabase
+        .from('surveillance_alert_configs')
+        .upsert(
+          {
+            practitioner_id: ctx.user.sub,
+            org_id: ctx.user.orgId,
+            monitored_lab_ids: input.monitoredLabIds,
+            thresholds: input.thresholds,
+            channels: input.channels,
+          },
+          { onConflict: 'practitioner_id,org_id' },
+        )
+        .select('id')
+        .single()
+
+      if (upsertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to save surveillance config' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'SURVEILLANCE_CONFIG_UPDATED',
+          resourceType: 'SURVEILLANCE_ALERT_CONFIG',
+          resourceId: (upserted as any).id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            labCount: input.monitoredLabIds.length,
+            thresholdCount: input.thresholds.length,
+            smsEnabled: !!input.channels.sms_phone,
+            emailEnabled: !!input.channels.email,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'SURVEILLANCE_CONFIG_UPDATED' })
+      }
+
+      return { success: true, configId: (upserted as any).id }
+    }),
+
+  /**
+   * Task 3.1: List surveillance alerts with pagination and filtering.
+   */
+  listSurveillanceAlerts: adminProcedure
+    .input(
+      z.object({
+        configId: z.string().uuid().optional(),
+        acknowledged: z.boolean().optional(),
+        cursor: z.number().int().min(0).default(0),
+        limit: z.number().int().min(1).max(100).default(25),
+      }).optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const opts = input ?? { cursor: 0, limit: 25 }
+
+      let configId = opts.configId
+      if (!configId) {
+        const { data: config } = await ctx.supabase
+          .from('surveillance_alert_configs')
+          .select('id')
+          .eq('practitioner_id', ctx.user.sub)
+          .eq('org_id', ctx.user.orgId)
+          .maybeSingle()
+        configId = (config as any)?.id
+      }
+
+      if (!configId) {
+        return { alerts: [], total: 0 }
+      }
+
+      let query = ctx.supabase
+        .from('surveillance_alerts')
+        .select('*, labs!inner(name)', { count: 'exact' })
+        .eq('config_id', configId)
+        .order('triggered_at', { ascending: false })
+        .range(opts.cursor, opts.cursor + opts.limit - 1)
+
+      if (opts.acknowledged === true) {
+        query = query.not('acknowledged_at', 'is', null)
+      } else if (opts.acknowledged === false) {
+        query = query.is('acknowledged_at', null)
+      }
+
+      const { data: rows, count, error } = await query
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch surveillance alerts' })
+      }
+
+      const alerts = (rows ?? []).map((row: any) => ({
+        id: row.id,
+        configId: row.config_id,
+        labId: row.lab_id,
+        labName: row.labs?.name ?? 'Unknown',
+        testCategory: row.test_category,
+        currentRate: Number(row.current_rate),
+        threshold: Number(row.threshold),
+        triggeredAt: row.triggered_at,
+        acknowledgedAt: row.acknowledged_at,
+        acknowledgedBy: row.acknowledged_by,
+        notes: row.notes,
+      }))
+
+      return { alerts, total: count ?? 0 }
+    }),
+
+  /**
+   * Task 3.2: Acknowledge a surveillance alert.
+   */
+  acknowledgeSurveillanceAlert: adminProcedure
+    .input(
+      z.object({
+        alertId: z.string().uuid(),
+        notes: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: existing, error: fetchError } = await ctx.supabase
+        .from('surveillance_alerts')
+        .select('id, acknowledged_at, config_id')
+        .eq('id', input.alertId)
+        .single()
+
+      if (fetchError || !existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+
+      if ((existing as any).acknowledged_at) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Alert is already acknowledged' })
+      }
+
+      const { data: config } = await ctx.supabase
+        .from('surveillance_alert_configs')
+        .select('org_id')
+        .eq('id', (existing as any).config_id)
+        .single()
+
+      if (!config || (config as any).org_id !== ctx.user.orgId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
+      }
+
+      const { error: updateError } = await ctx.supabase
+        .from('surveillance_alerts')
+        .update({
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_by: ctx.user.sub,
+          notes: input.notes ?? null,
+        })
+        .eq('id', input.alertId)
+
+      if (updateError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to acknowledge alert' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'SURVEILLANCE_ALERT_ACKNOWLEDGED',
+          resourceType: 'SURVEILLANCE_ALERT',
+          resourceId: input.alertId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { hasNotes: !!input.notes },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'SURVEILLANCE_ALERT_ACKNOWLEDGED' })
+      }
+
+      return { success: true }
+    }),
+
+  /**
+   * Task 3.3: Alert summary — counts for unacknowledged, today, this week.
+   */
+  getSurveillanceAlertSummary: adminProcedure.query(async ({ ctx }) => {
+    const { data: config } = await ctx.supabase
+      .from('surveillance_alert_configs')
+      .select('id')
+      .eq('practitioner_id', ctx.user.sub)
+      .eq('org_id', ctx.user.orgId)
+      .maybeSingle()
+
+    if (!config) {
+      return { totalUnacknowledged: 0, triggeredToday: 0, triggeredThisWeek: 0 }
+    }
+
+    const configId = (config as any).id
+
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+    const [unackResult, todayResult, weekResult] = await Promise.all([
+      ctx.supabase
+        .from('surveillance_alerts')
+        .select('id', { count: 'exact', head: true })
+        .eq('config_id', configId)
+        .is('acknowledged_at', null),
+      ctx.supabase
+        .from('surveillance_alerts')
+        .select('id', { count: 'exact', head: true })
+        .eq('config_id', configId)
+        .gte('triggered_at', todayStart),
+      ctx.supabase
+        .from('surveillance_alerts')
+        .select('id', { count: 'exact', head: true })
+        .eq('config_id', configId)
+        .gte('triggered_at', weekStart),
+    ])
+
+    return {
+      totalUnacknowledged: unackResult.count ?? 0,
+      triggeredToday: todayResult.count ?? 0,
+      triggeredThisWeek: weekResult.count ?? 0,
+    }
+  }),
 })
 
 // ================================================================

@@ -11,12 +11,19 @@ const navItems = [
   { label: 'Providers', href: '/providers', icon: UserIcon },
   { label: 'License Expiry', href: '/providers/expiry', icon: ClockIcon, indent: true },
   { label: 'Labs', href: '/labs', icon: FlaskIcon },
+  { label: 'Inventory', href: '/inventory', icon: PackageIcon },
+  { label: 'Suppliers', href: '/inventory/suppliers', icon: PlusIcon, indent: true },
+  { label: 'Network', href: '/network', icon: NetworkIcon },
+  { label: 'Staff', href: '/staff', icon: BadgeIcon },
+  { label: 'Mentorship', href: '/mentorship', icon: MentorshipIcon },
+  { label: 'Certifications', href: '/certifications', icon: CertificateIcon },
   { label: 'Users', href: '/users', icon: UsersGroupIcon },
   { label: 'Create User', href: '/users/create', icon: PlusIcon, indent: true },
   { label: 'Patients', href: '/patients', icon: UserIcon },
   { label: 'Merge Tool', href: '/patients/merge', icon: PlusIcon, indent: true },
   { label: 'AI Models', href: '/ai-models', icon: CpuIcon },
   { label: 'Alerts', href: '/alerts', icon: BellIcon },
+  { label: 'Alert Config', href: '/alerts/configuration', icon: SlidersIcon, indent: true },
   { label: 'Audit Log', href: '/audit', icon: ScrollIcon },
   { label: 'Subscriptions', href: '/subscriptions', icon: CreditCardIcon },
   { label: 'Billing', href: '/subscriptions/billing', icon: WalletIcon, indent: true },
@@ -146,6 +153,14 @@ function FlaskIcon({ className }: { className?: string }) {
   )
 }
 
+function PackageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 .5l7 3.5v7l-7 3.5L3 11V4l7-3.5Zm0 1.154L4.5 4.5v5.846L10 13.192l5.5-2.846V4.5L10 1.654ZM10 7a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 7Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
 function BellIcon({ className }: { className?: string }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -223,6 +238,47 @@ function ReceiptIcon({ className }: { className?: string }) {
   return (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M4.93 1.31a41.401 41.401 0 0 1 10.14 0C16.194 1.45 17 2.414 17 3.517V18.25a.75.75 0 0 1-1.075.676l-2.8-1.344-2.8 1.344a.75.75 0 0 1-.65 0l-2.8-1.344-2.8 1.344A.75.75 0 0 1 3 18.25V3.517c0-1.103.806-2.068 1.93-2.207Zm4.822 4.44a.75.75 0 0 0-1.5 0v.01a.75.75 0 0 0 1.5 0v-.01Zm2.25.75a.75.75 0 0 1 .75-.75h1a.75.75 0 0 1 0 1.5h-1a.75.75 0 0 1-.75-.75ZM7.752 9a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Zm0 3a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function MentorshipIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z" />
+    </svg>
+  )
+}
+
+function BadgeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 2a.75.75 0 0 1 .75.75v.258a33.186 33.186 0 0 1 6.668.83.75.75 0 0 1-.336 1.461 31.28 31.28 0 0 0-1.103-.232l1.702 7.545a.75.75 0 0 1-.387.832A4.981 4.981 0 0 1 15 14c-.825 0-1.606-.2-2.294-.556a.75.75 0 0 1-.387-.832l1.77-7.849a31.743 31.743 0 0 0-3.339-.254v11.505a20.01 20.01 0 0 1 3.78.501.75.75 0 1 1-.339 1.462A18.558 18.558 0 0 0 10 17.5c-1.442 0-2.845.165-4.191.477a.75.75 0 0 1-.338-1.462 20.01 20.01 0 0 1 3.779-.501V4.509c-1.129.026-2.243.112-3.34.254l1.771 7.85a.75.75 0 0 1-.387.83A4.981 4.981 0 0 1 5 14a4.981 4.981 0 0 1-2.294-.556.75.75 0 0 1-.387-.832L4.02 5.067c-.37.07-.738.148-1.103.232a.75.75 0 0 1-.336-1.462 33.186 33.186 0 0 1 6.668-.829V2.75A.75.75 0 0 1 10 2ZM5 12.216l-1.357-6.012a29.845 29.845 0 0 0-1.143.41L5 12.216Zm10 0 2.5-5.602a29.845 29.845 0 0 0-1.143-.41L15 12.216Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function CertificateIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 2a3 3 0 0 0-3 3v1H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2V5a3 3 0 0 0-3-3Zm1.5 3v1h-3V5a1.5 1.5 0 0 1 3 0ZM6 10.5a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z" clipRule="evenodd" />
+    </svg>
+  )
+}
+
+function NetworkIcon({ className }: { className?: string }) {
+  // Globe icon — semantic (not directional), must NOT mirror in RTL
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.558 9.5a14.318 14.318 0 0 0-9.116 0c.104 3.882 1.793 7.339 4.558 9.485 2.765-2.146 4.454-5.603 4.558-9.485ZM3.445 5.412c.795.72 1.785 1.29 2.84 1.662A14.899 14.899 0 0 0 4.622 2.602 8.028 8.028 0 0 0 3.445 5.412ZM2.023 9.884a8.034 8.034 0 0 0 1.996 5.346c.764-.9 1.784-1.59 2.928-2.03A16.328 16.328 0 0 1 2.023 9.884ZM6.877 17.398a8.019 8.019 0 0 0 2.444 1.035c-1.5-1.533-2.544-3.64-3.028-5.998a7.028 7.028 0 0 0-.716 1.243 8.028 8.028 0 0 0 1.3 3.72ZM13.123 17.398a8.028 8.028 0 0 0 1.3-3.72 7.028 7.028 0 0 0-.716-1.243c-.484 2.358-1.528 4.465-3.028 5.998a8.019 8.019 0 0 0 2.444-1.035ZM17.977 9.884a16.328 16.328 0 0 1-4.924 3.316c1.144.44 2.164 1.13 2.928 2.03a8.034 8.034 0 0 0 1.996-5.346Z" />
+    </svg>
+  )
+}
+
+function SlidersIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M17 4.75a.75.75 0 0 1-.75.75h-4.58a2.751 2.751 0 0 1-5.34 0H3.75a.75.75 0 0 1 0-1.5h2.58a2.751 2.751 0 0 1 5.34 0h4.58a.75.75 0 0 1 .75.75ZM17 15.25a.75.75 0 0 1-.75.75h-2.58a2.751 2.751 0 0 1-5.34 0H3.75a.75.75 0 0 1 0-1.5h4.58a2.751 2.751 0 0 1 5.34 0h2.58a.75.75 0 0 1 .75.75ZM17 10a.75.75 0 0 1-.75.75H14.5a2.751 2.751 0 0 1-5.34 0H3.75a.75.75 0 0 1 0-1.5h5.41a2.751 2.751 0 0 1 5.34 0h1.75A.75.75 0 0 1 17 10Z" />
     </svg>
   )
 }

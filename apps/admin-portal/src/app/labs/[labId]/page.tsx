@@ -224,8 +224,14 @@ export default function LabDetailPage() {
           <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
         )}
 
-        {/* Action buttons — AC #3, status-dependent */}
+        {/* Action buttons — AC #3, status-dependent + Story 55.1 AC #6: Staff link */}
         <div className="mt-6 flex gap-3">
+          <button
+            onClick={() => router.push(`/labs/${labId}/staff`)}
+            className="rounded-full px-6 py-2.5 text-sm font-semibold border border-border text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+          >
+            View Staff
+          </button>
           {lab.status === 'PENDING' && (
             <button
               onClick={() => setPendingAction('APPROVE')}
