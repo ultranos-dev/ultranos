@@ -17,6 +17,7 @@ export const ROLE_MODULE_MAP: Record<string, string | null> = {
   DOCTOR: 'OPD_LITE',
   PHARMACIST: 'PHARMACY_LITE',
   LAB_TECH: 'LAB_LITE',
+  CHW: null,
 }
 
 /** Human-readable display names for module codes. */

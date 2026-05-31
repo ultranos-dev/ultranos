@@ -5,7 +5,7 @@
 
 export const typography = {
   fontFamily: {
-    sans: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    sans: "'Urbanist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     mono: "'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace",
     'sans-ar': "'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif",
     'serif-ar': "'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif",

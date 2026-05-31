@@ -269,6 +269,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.45.0
         version: 2.104.1
+      '@ultranos/audit-logger':
+        specifier: workspace:*
+        version: link:../../packages/audit-logger
       '@ultranos/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto

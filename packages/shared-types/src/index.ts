@@ -8,6 +8,9 @@ export * from './fhir/audit-event.js'
 // Shared FHIR R4 building-block schemas
 export * from './fhir/common.schema.js'
 
+// Lab role permissions (Story 42.1)
+export * from './lab-permissions.js'
+
 // Prescription types
 export * from './prescription.js'
 
@@ -24,8 +27,12 @@ export * from './fhir/condition.schema.js'
 export * from './fhir/allergy-intolerance.schema.js'
 export * from './fhir/medication-statement.schema.js'
 export * from './fhir/diagnostic-report.schema.js'
+export * from './fhir/service-request.schema.js'
 export * from './fhir/medication-dispense.schema.js'
 export * from './fhir/appointment.schema.js'
+
+// FHIR Specimen (lab accessioning)
+export * from './fhir/specimen.schema.js'
 
 // SOAP ledger AI types
 export * from './fhir/soap-ledger.js'

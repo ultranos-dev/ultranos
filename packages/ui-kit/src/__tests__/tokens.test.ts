@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { typography, colors, spacing, letterSpacing, borderRadius, shadows, transitions } from '../tokens.js'
 
 describe('typography tokens', () => {
-  it('uses Inter as primary font family', () => {
-    expect(typography.fontFamily.sans).toContain('Inter')
+  it('uses Urbanist as primary font family', () => {
+    expect(typography.fontFamily.sans).toContain('Urbanist')
   })
 
   it('defines base font size as 1rem', () => {

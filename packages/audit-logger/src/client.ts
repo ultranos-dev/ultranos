@@ -121,9 +121,9 @@ export async function emitClientAudit(input: ClientAuditEventInput): Promise<voi
           const parts = path.split('.')
           let target: Record<string, unknown> = cleaned
           for (let i = 0; i < parts.length - 1; i++) {
-            target = target[parts[i]] as Record<string, unknown>
+            target = target[parts[i]!] as Record<string, unknown>
           }
-          delete target[parts[parts.length - 1]]
+          delete target[parts[parts.length - 1]!]
         }
         input = { ...input, metadata: cleaned }
       }

@@ -22,7 +22,7 @@ export class DexieAuditAdapter implements AuditStoreAdapter {
   async getPending(limit: number): Promise<ClientAuditEvent[]> {
     return this.table
       .where('[status+queuedAt]')
-      .between(['pending', Dexie.minKey], ['pending', Dexie.maxKey])
+      .between(['pending', ''], ['pending', '\uffff'])
       .limit(limit)
       .toArray()
   }

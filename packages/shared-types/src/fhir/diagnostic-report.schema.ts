@@ -4,6 +4,7 @@ import {
   ReferenceSchema,
   FhirMetaSchema,
 } from './common.schema.js'
+import type { PatientVerificationMethod } from '../enums.js'
 
 // FHIR R4 DiagnosticReport Zod Schema
 // Ref: https://hl7.org/fhir/R4/diagnosticreport.html
@@ -57,3 +58,38 @@ export const FhirDiagnosticReportSchema = z.object({
 })
 
 export type FhirDiagnosticReport = z.infer<typeof FhirDiagnosticReportSchema>
+
+/**
+ * Patient identity verification record — stored per sample collection.
+ * Story 43.4: Records HOW patient identity was verified, never the data itself.
+ * Data minimization: no patient name, no full ID number, no QR payload content.
+ * CLAUDE.md Rule #7: Lab Portal can only see patient name + age — verification
+ * records use opaque patientRef only.
+ */
+export interface PatientVerificationRecord {
+  /** UUID — primary key and sync key */
+  id: string
+  /** Reference to the FhirSpecimen from story 42.3 accessioning */
+  sampleId: string
+  /** Opaque Patient/<uuid> reference — never a name or demographic */
+  patientRef: string
+  /** Array of verification methods used — must have >=2 for isComplete=true */
+  methods: PatientVerificationMethod[]
+  /** Free-text description required when OTHER is in methods array */
+  otherDescription?: string
+  /** Practitioner ID of the verifying technician */
+  verifiedBy: string
+  /** ISO 8601 timestamp of verification */
+  verifiedAt: string
+  /** Hybrid Logical Clock timestamp for offline sync ordering */
+  hlcTimestamp: string
+  /** true if methods.length >= 2 (WHO two-identifier minimum) */
+  isComplete: boolean
+  /**
+   * Populated when isComplete=false (single-identifier override).
+   * Required for legal compliance — minimum 10 characters.
+   */
+  deviationReason?: string
+  /** Sync status for offline queue */
+  syncStatus: 'pending' | 'synced'
+}

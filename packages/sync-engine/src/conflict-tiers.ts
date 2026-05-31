@@ -25,6 +25,7 @@ const CONFLICT_TIER_MAP: Record<string, ConflictTier> = {
   Observation: 'TIER_2',
   MedicationDispense: 'TIER_2',
   Encounter: 'TIER_2',
+  ServiceRequest: 'TIER_2',
 
   // Tier 3 — Operational (LWW)
   Patient: 'TIER_3',

@@ -26,7 +26,7 @@ export interface SidebarProps {
   user?: SidebarUser | null
   onSignOut?: () => void
   syncIndicator?: ReactNode
-  languageSelector?: ReactNode
+  languageSelector?: ReactNode | ((collapsed: boolean) => ReactNode)
   children: ReactNode
   defaultCollapsed?: boolean
   persistKey?: string
@@ -98,7 +98,7 @@ export function Sidebar({
           color: colors.neutral[0],
           display: 'flex',
           flexDirection: 'column',
-          fontFamily: typography.fontFamily.sans,
+          fontFamily: 'var(--font-family-sans)',
           transition: `width ${transitions.normal}, min-width ${transitions.normal}`,
           overflow: 'hidden',
           position: 'sticky',
@@ -296,7 +296,7 @@ export function Sidebar({
           )}
           {languageSelector && (
             <div style={{ marginBlockStart: spacing[2], display: 'flex', justifyContent: collapsed ? 'center' : 'flex-start' }}>
-              {languageSelector}
+              {typeof languageSelector === 'function' ? languageSelector(collapsed) : languageSelector}
             </div>
           )}
         </div>

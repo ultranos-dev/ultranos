@@ -43,6 +43,9 @@ export enum AuditAction {
   KYC_APPROVED = 'KYC_APPROVED',
   KYC_REJECTED = 'KYC_REJECTED',
   KYC_MORE_INFO_REQUESTED = 'KYC_MORE_INFO_REQUESTED',
+  PHI_CLEANUP = 'PHI_CLEANUP',
+  PATIENT_IDENTITY_VERIFIED = 'PATIENT_IDENTITY_VERIFIED',
+  REFERENCE_RANGE_UPDATED = 'REFERENCE_RANGE_UPDATED',
 }
 
 export enum AuditResourceType {
@@ -62,6 +65,12 @@ export enum AuditResourceType {
   PRACTITIONER = 'PRACTITIONER',
   LAB_REGISTRATION = 'LAB_REGISTRATION',
   PRESCRIBING_ANOMALY = 'PRESCRIBING_ANOMALY',
+  SYSTEM = 'SYSTEM',
+  WASTE_CONTAINER = 'WASTE_CONTAINER',
+  MENTORSHIP = 'MENTORSHIP',
+  EMPLOYEE_HEALTH = 'EMPLOYEE_HEALTH',
+  TEMPERATURE_MONITORING = 'TEMPERATURE_MONITORING',
+  SPECIMEN = 'SPECIMEN',
 }
 
 export enum AuditOutcome {
@@ -180,4 +189,43 @@ export enum NotificationStatus {
 export enum RecipientRole {
   CLINICIAN = 'CLINICIAN',
   PATIENT = 'PATIENT',
+}
+
+/**
+ * Lab sub-roles within the LAB_TECH UserRole.
+ * Story 42.1: Four-tier lab role hierarchy.
+ * Ordered by privilege level (lowest → highest).
+ */
+export enum LabRole {
+  LAB_TECH = 'LAB_TECH',
+  SENIOR_TECH = 'SENIOR_TECH',
+  SUPERVISOR = 'SUPERVISOR',
+  LAB_MANAGER = 'LAB_MANAGER',
+}
+
+/**
+ * Lab-specific permissions gated by LabRole.
+ * Story 42.1 AC 2: Permission matrix.
+ */
+export enum LabPermission {
+  ENTER_RESULTS = 'ENTER_RESULTS',
+  RELEASE_ROUTINE_RESULTS = 'RELEASE_ROUTINE_RESULTS',
+  RELEASE_ALL_RESULTS = 'RELEASE_ALL_RESULTS',
+  OVERRIDE_QC_LOCKOUT = 'OVERRIDE_QC_LOCKOUT',
+  VIEW_STAFF = 'VIEW_STAFF',
+  MANAGE_STAFF_ROLES = 'MANAGE_STAFF_ROLES',
+  VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
+}
+
+/**
+ * Methods used to verify patient identity at sample collection.
+ * Story 43.4: Two-identifier minimum (WHO patient identification standard).
+ * IMPORTANT: The record stores the METHOD, never the data value itself (CLAUDE.md Rule #7).
+ */
+export enum PatientVerificationMethod {
+  NATIONAL_ID_SCANNED = 'NATIONAL_ID_SCANNED',     // Physical National ID card scanned or number entered
+  VERBAL_CONFIRMATION = 'VERBAL_CONFIRMATION',       // Verbal confirmation of patient name + father's name
+  QR_CODE = 'QR_CODE',                               // QR code scanned from Health Passport (Patient-Lite app)
+  WRISTBAND_SCANNED = 'WRISTBAND_SCANNED',           // Hospital wristband barcode (future use)
+  OTHER = 'OTHER',                                   // Requires free-text description
 }
