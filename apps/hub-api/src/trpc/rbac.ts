@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { protectedProcedure } from './init'
-import type { LabStatus } from '@ultranos/shared-types'
+import type { LabStatus, LabRole } from '@ultranos/shared-types'
 
 /**
  * RBAC role-to-FHIR-resource permission map.
@@ -99,6 +99,8 @@ export interface LabContext {
   technicianId: string
   labId: string
   labStatus: LabStatus
+  /** Lab sub-role within LAB_TECH umbrella. Story 42.1. */
+  labRole: LabRole
 }
 
 /**
@@ -127,7 +129,7 @@ export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
   // Resolve lab affiliation from the labs/lab_technicians tables
   const { data: technicianRecord, error } = await opts.ctx.supabase
     .from('lab_technicians')
-    .select('id, lab_id, labs!inner(id, status)')
+    .select('id, lab_id, lab_role, labs!inner(id, status)')
     .eq('practitioner_id', opts.ctx.user.sub)
     .single()
 
@@ -147,6 +149,7 @@ export const labRestrictedProcedure = protectedProcedure.use(async (opts) => {
         technicianId: technicianRecord.id,
         labId: technicianRecord.lab_id,
         labStatus: labRecord.status as LabStatus,
+        labRole: (technicianRecord.lab_role ?? 'LAB_TECH') as LabRole,
       } satisfies LabContext,
     },
   })

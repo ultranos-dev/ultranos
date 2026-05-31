@@ -424,4 +424,101 @@ export async function createPatient(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Order sync (Story 42.2)
+// ---------------------------------------------------------------------------
+
+export interface LabOrderResponse {
+  orderId: string
+  patientFirstName: string
+  patientAge: number | null
+  patientRef: string
+  testsRequested: Array<{ loincCode: string; loincDisplay: string }>
+  urgency: 'routine' | 'urgent' | 'asap' | 'stat'
+  orderingPhysicianName: string
+  specialInstructions: string | null
+  status: string
+  authoredOn: string
+}
+
+export interface PullOrdersResult {
+  orders: LabOrderResponse[]
+  syncTimestamp: string | null
+}
+
+/**
+ * Pull pending test orders from Hub API.
+ * Returns ONLY data-minimized order summaries (CLAUDE.md Rule #7).
+ * Supports incremental sync via `since` parameter.
+ */
+export async function pullOrders(
+  token: string,
+  since?: string,
+): Promise<PullOrdersResult> {
+  const input = encodeURIComponent(
+    JSON.stringify({ json: { ...(since ? { since } : {}) } }),
+  )
+  const res = await fetch(`${getHubApiUrl()}/lab.pullOrders?input=${input}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Pull orders failed: ${res.status}`)
+  const body = (await res.json()) as {
+    result: { data: { json: { orders: LabOrderResponse[]; syncTimestamp: string | null } } }
+  }
+  const json = body.result.data.json
+  return { orders: json.orders ?? [], syncTimestamp: json.syncTimestamp ?? null }
+}
+
+/**
+ * Acknowledge an order as RECEIVED by this lab.
+ * Triggers a notification to the ordering physician in OPD-Lite.
+ */
+export async function acknowledgeOrder(
+  orderId: string,
+  token: string,
+): Promise<void> {
+  const res = await fetch(`${getHubApiUrl()}/lab.acknowledgeOrder`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { orderId, status: 'RECEIVED' } }),
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const message =
+      (body as Record<string, any>)?.error?.json?.message ??
+      'Order acknowledgement failed'
+    throw new Error(message)
+  }
+}
+
+// ── Lab Role & Staff Management (Story 42.1) ──────────────────
+
+import type { LabRole } from '@ultranos/shared-types'
+
+export interface GetMyRoleResult {
+  labRole: LabRole | null
+}
+
+/**
+ * Fetch the caller's own lab role from Hub API.
+ * Used by AuthGuard to populate the session store.
+ * Falls back gracefully if offline.
+ */
+export async function getMyRole(token: string): Promise<GetMyRoleResult> {
+  const res = await fetch(`${getHubApiUrl()}/lab.getMyRole`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5_000),
+  })
+  if (!res.ok) throw new Error('Failed to fetch lab role')
+  const body = await res.json() as { result: { data: { json: GetMyRoleResult } } }
+  return body.result.data.json
+}
+
 export { getHubApiUrl }

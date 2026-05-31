@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { LabRole } from '@ultranos/shared-types'
 
 export interface AuthSession {
   userId: string
@@ -6,6 +7,8 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  /** Lab sub-role within LAB_TECH umbrella. Story 42.1. */
+  labRole: LabRole | null
 }
 
 export type EntitlementStatus = 'active' | 'trial' | 'inactive' | 'checking'
