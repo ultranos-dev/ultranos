@@ -151,7 +151,7 @@ describe('lab.getEmergencyVaccinationStatus', () => {
     expect(result).not.toHaveProperty('exposureHistory')
   })
 
-  it('emits READ audit event with EMERGENCY access type', async () => {
+  it('emits READ audit event with EMERGENCY access type and SUCCESS outcome', async () => {
     const fromImpl = buildFromMock({
       callerLabRole: 'SUPERVISOR',
       callerLabId: LAB_ID,
@@ -170,12 +170,53 @@ describe('lab.getEmergencyVaccinationStatus', () => {
       expect.objectContaining({
         action: 'READ',
         resourceType: 'EMPLOYEE_HEALTH',
+        outcome: 'SUCCESS',
         metadata: expect.objectContaining({
           accessType: 'EMERGENCY',
           scope: 'VACCINATION_STATUS_ONLY',
         }),
       }),
     )
+  })
+
+  it('emits NOT_FOUND audit outcome when record does not exist', async () => {
+    const fromImpl = buildFromMock({
+      callerLabRole: 'SUPERVISOR',
+      callerLabId: LAB_ID,
+      targetLabId: LAB_ID,
+      healthRecord: null,
+    })
+
+    const caller = createCallerFactory(labRouter)(makeLabTechCtx(fromImpl) as any)
+    await caller.getEmergencyVaccinationStatus({ practitionerId: PRACTITIONER_ID })
+
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: 'NOT_FOUND' }),
+    )
+  })
+
+  it('continues and returns data even if audit emit throws', async () => {
+    mockAuditEmit.mockRejectedValueOnce(new Error('audit DB down'))
+    const fromImpl = buildFromMock({
+      callerLabRole: 'SUPERVISOR',
+      callerLabId: LAB_ID,
+      targetLabId: LAB_ID,
+      healthRecord: {
+        hep_b_status: 'COMPLETE',
+        tetanus_status: 'IN_PROGRESS',
+        covid_status: 'NOT_STARTED',
+      },
+    })
+
+    const caller = createCallerFactory(labRouter)(makeLabTechCtx(fromImpl) as any)
+    const result = await caller.getEmergencyVaccinationStatus({ practitionerId: PRACTITIONER_ID })
+
+    // Emergency endpoint must not block on audit failure
+    expect(result).toEqual({
+      hepBStatus: 'COMPLETE',
+      tetanusStatus: 'IN_PROGRESS',
+      covidStatus: 'NOT_STARTED',
+    })
   })
 
   it('rejects callers from a different lab', async () => {

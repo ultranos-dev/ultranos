@@ -186,6 +186,72 @@ describe('Inventory — Stock Level Logic', () => {
     expect(result.cells[0].stockLevel).toBe('GREEN')
   })
 
+  it('classifies quantity 10 as YELLOW (8-14)', async () => {
+    const supabase = buildMockSupabase()
+    supabase.from('labs').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: [{ id: 'lab-1', lab_name: 'Lab A' }],
+          error: null,
+        }),
+      }),
+    })
+    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({
+                data: [
+                  { lab_id: 'lab-1', reagent_category: 'Malaria RDT', quantity: 10, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
+    const result = await caller.getInventoryOverview({})
+
+    expect(result.cells[0].stockLevel).toBe('YELLOW')
+  })
+
+  it('classifies quantity 14 as YELLOW (boundary)', async () => {
+    const supabase = buildMockSupabase()
+    supabase.from('labs').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: [{ id: 'lab-1', lab_name: 'Lab A' }],
+          error: null,
+        }),
+      }),
+    })
+    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({
+                data: [
+                  { lab_id: 'lab-1', reagent_category: 'Malaria RDT', quantity: 14, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCallerFactory(adminRouter)(makeCtx(supabase))
+    const result = await caller.getInventoryOverview({})
+
+    expect(result.cells[0].stockLevel).toBe('YELLOW')
+  })
+
   it('emits INVENTORY_OVERVIEW_ACCESSED audit event', async () => {
     const supabase = buildMockSupabase()
     supabase.from('labs').select = vi.fn().mockReturnValue({
@@ -213,28 +279,33 @@ describe('Redistribution Recommendations', () => {
 
   it('recommends transfer from GREEN lab to RED lab', async () => {
     const supabase = buildMockSupabase()
-    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+    // New query order: labs (ACTIVE) first, then snapshots filtered by active lab IDs
+    supabase.from('labs').select = vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [
-                { lab_id: 'lab-1', reagent_category: 'Malaria RDT', quantity: 0, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
-                { lab_id: 'lab-2', reagent_category: 'Malaria RDT', quantity: 50, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
-              ],
-              error: null,
-            }),
-          }),
+        eq: vi.fn().mockResolvedValue({
+          data: [
+            { id: 'lab-1', lab_name: 'Lab A', latitude: null, longitude: null },
+            { id: 'lab-2', lab_name: 'Lab B', latitude: null, longitude: null },
+          ],
+          error: null,
         }),
       }),
     })
-    supabase.from('labs').select = vi.fn().mockReturnValue({
-      in: vi.fn().mockResolvedValue({
-        data: [
-          { id: 'lab-1', lab_name: 'Lab A' },
-          { id: 'lab-2', lab_name: 'Lab B' },
-        ],
-        error: null,
+    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({
+                data: [
+                  { lab_id: 'lab-1', reagent_category: 'Malaria RDT', quantity: 0, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
+                  { lab_id: 'lab-2', reagent_category: 'Malaria RDT', quantity: 50, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
       }),
     })
 
@@ -247,29 +318,34 @@ describe('Redistribution Recommendations', () => {
       sourceLabName: 'Lab B',
       reagentCategory: 'Malaria RDT',
       sourceQuantity: 50,
+      distanceKm: null,
     })
   })
 
   it('returns empty recommendations when no RED labs exist', async () => {
     const supabase = buildMockSupabase()
-    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+    supabase.from('labs').select = vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [
-                { lab_id: 'lab-1', reagent_category: 'CBC', quantity: 20, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
-              ],
-              error: null,
-            }),
-          }),
+        eq: vi.fn().mockResolvedValue({
+          data: [{ id: 'lab-1', lab_name: 'Lab A', latitude: null, longitude: null }],
+          error: null,
         }),
       }),
     })
-    supabase.from('labs').select = vi.fn().mockReturnValue({
-      in: vi.fn().mockResolvedValue({
-        data: [{ id: 'lab-1', lab_name: 'Lab A' }],
-        error: null,
+    supabase.from('lab_inventory_snapshots').select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        in: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({
+                data: [
+                  { lab_id: 'lab-1', reagent_category: 'CBC', quantity: 20, unit: 'tests', reported_at: '2026-05-30T10:00:00Z' },
+                ],
+                error: null,
+              }),
+            }),
+          }),
+        }),
       }),
     })
 

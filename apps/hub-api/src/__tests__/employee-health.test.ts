@@ -117,7 +117,7 @@ describe('admin.getEmployeeHealth', () => {
     expect(mockDecryptField).toHaveBeenCalled()
   })
 
-  it('emits READ audit event', async () => {
+  it('emits READ audit event with SUCCESS outcome', async () => {
     const mock = createMockSupabase()
     mock.single.mockResolvedValue({ data: SAMPLE_RECORD, error: null })
 
@@ -130,6 +130,21 @@ describe('admin.getEmployeeHealth', () => {
         resourceType: 'EMPLOYEE_HEALTH',
         resourceId: PRACTITIONER_ID,
         actorId: 'admin-1',
+        outcome: 'SUCCESS',
+      }),
+    )
+  })
+
+  it('emits NOT_FOUND audit outcome when record does not exist', async () => {
+    const mock = createMockSupabase()
+    mock.single.mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
+
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(mock))
+    await caller.getEmployeeHealth({ practitionerId: PRACTITIONER_ID })
+
+    expect(mockAuditEmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: 'NOT_FOUND',
       }),
     )
   })
@@ -142,6 +157,19 @@ describe('admin.getEmployeeHealth', () => {
     const result = await caller.getEmployeeHealth({ practitionerId: PRACTITIONER_ID })
 
     expect(result).toBeNull()
+  })
+
+  it('returns decryptionFailed flag when decryption throws', async () => {
+    mockDecryptField.mockImplementationOnce(() => { throw new Error('bad key') })
+    const mock = createMockSupabase()
+    mock.single.mockResolvedValue({ data: SAMPLE_RECORD, error: null })
+
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(mock))
+    const result = await caller.getEmployeeHealth({ practitionerId: PRACTITIONER_ID })
+
+    expect(result).not.toBeNull()
+    expect(result!.decryptionFailed).toBe(true)
+    expect(result!.exposureHistory).toEqual([])
   })
 
   it('computes screening reminders', async () => {
@@ -189,7 +217,7 @@ describe('admin.updateEmployeeHealth', () => {
     )
   })
 
-  it('emits UPDATE audit event with changed fields', async () => {
+  it('emits UPDATE audit event with only submitted optional fields in changedFields', async () => {
     const mock = createMockSupabase()
     const caller = createCallerFactory(adminRouter)(makeAdminCtx(mock))
 
@@ -199,6 +227,7 @@ describe('admin.updateEmployeeHealth', () => {
       tetanusStatus: 'NOT_STARTED',
       covidStatus: 'NOT_STARTED',
       covidDoses: 0,
+      tbScreeningDate: '2026-01-15',
     })
 
     expect(mockAuditEmit).toHaveBeenCalledWith(
@@ -207,10 +236,46 @@ describe('admin.updateEmployeeHealth', () => {
         resourceType: 'EMPLOYEE_HEALTH',
         resourceId: PRACTITIONER_ID,
         metadata: expect.objectContaining({
-          changedFields: expect.any(Array),
+          changedFields: expect.arrayContaining(['hepBStatus', 'tbScreeningDate']),
         }),
       }),
     )
+    // Optional fields not supplied should not appear
+    const call = mockAuditEmit.mock.calls[0][0]
+    expect(call.metadata.changedFields).not.toContain('hepBTiterDate')
+    expect(call.metadata.changedFields).not.toContain('tetanusDate')
+  })
+
+  it('rejects invalid date string for tbScreeningDate', async () => {
+    const mock = createMockSupabase()
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(mock))
+
+    await expect(
+      caller.updateEmployeeHealth({
+        practitionerId: PRACTITIONER_ID,
+        hepBStatus: 'NOT_STARTED',
+        tetanusStatus: 'NOT_STARTED',
+        covidStatus: 'NOT_STARTED',
+        covidDoses: 0,
+        tbScreeningDate: 'not-a-date',
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('rejects exposure history entry with type exceeding 200 chars', async () => {
+    const mock = createMockSupabase()
+    const caller = createCallerFactory(adminRouter)(makeAdminCtx(mock))
+
+    await expect(
+      caller.updateEmployeeHealth({
+        practitionerId: PRACTITIONER_ID,
+        hepBStatus: 'NOT_STARTED',
+        tetanusStatus: 'NOT_STARTED',
+        covidStatus: 'NOT_STARTED',
+        covidDoses: 0,
+        exposureHistory: [{ date: '2026-01-01', type: 'x'.repeat(201), outcome: 'fine' }],
+      }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
   })
 
   it('rejects non-ADMIN callers with FORBIDDEN', async () => {

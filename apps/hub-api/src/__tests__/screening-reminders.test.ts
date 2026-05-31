@@ -51,4 +51,10 @@ describe('computeScreeningReminders', () => {
     const result = computeScreeningReminders({ tb_screening_date: new Date('2026-01-01') })
     expect(result.tbScreening.status).toBe('UP_TO_DATE')
   })
+
+  it('returns NOT_RECORDED for invalid/malformed date strings (NaN guard)', () => {
+    const result = computeScreeningReminders({ tb_screening_date: 'not-a-date' })
+    expect(result.tbScreening.status).toBe('NOT_RECORDED')
+    expect(result.tbScreening.message).toBe('No TB screening recorded')
+  })
 })

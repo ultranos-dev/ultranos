@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
-import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole } from '@ultranos/shared-types'
+import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction } from '@ultranos/shared-types'
 import crypto from 'crypto'
 import { encryptField, decryptField } from '@ultranos/crypto/server'
 import { getCachedEncryptionKey } from '@/lib/field-encryption'
@@ -104,7 +104,12 @@ function sanitizeMetadata(metadata: Record<string, unknown> | null): Record<stri
  * Shared by all export procedures.
  */
 function buildCsvExport(headers: string[], rows: string[][], prefix: string) {
-  const esc = (s: string) => `"${(s ?? '').replace(/"/g, '""')}"`
+  const esc = (s: string) => {
+    let val = (s ?? '').replace(/"/g, '""')
+    // Guard against formula injection in spreadsheet apps
+    if (/^[=+\-@\t\r]/.test(val)) val = `'${val}`
+    return `"${val}"`
+  }
   const csv = [headers.join(','), ...rows.map(r => r.map(esc).join(','))].join('\n')
   return {
     data: Buffer.from(csv).toString('base64'),
@@ -4083,6 +4088,13 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
+      if (!data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'RPC returned no data',
+        })
+      }
+
       const result = data as { success: boolean; previousRole: string; newRole: string; changed: boolean }
 
       // Emit audit event (AC #5)
@@ -4127,16 +4139,18 @@ export const adminRouter = createTRPCRouter({
         roleFilter: z.nativeEnum(LabRole).optional(),
         labFilter: z.string().uuid().optional(),
         activityFilter: z.enum(['ACTIVE_7D', 'INACTIVE', 'ALL']).default('ALL'),
-        cursor: z.string().uuid().optional(),
+        cursor: z.string().optional(), // composite cursor: "practitioner_id:lab_id"
         limit: z.number().int().min(1).max(50).default(20),
       }),
     )
     .query(async ({ ctx, input }) => {
       // Step 1: Build query for lab_technicians joined with labs
+      // Order by composite (practitioner_id, lab_id) to avoid skipping multi-lab records
       let query = ctx.supabase
         .from('lab_technicians')
         .select('practitioner_id, lab_id, lab_role, created_at, labs!inner(id, lab_name)')
         .order('practitioner_id', { ascending: true })
+        .order('lab_id', { ascending: true })
         .limit(input.limit + 1) // fetch one extra to detect next page
 
       if (input.roleFilter) {
@@ -4146,7 +4160,11 @@ export const adminRouter = createTRPCRouter({
         query = query.eq('lab_id', input.labFilter)
       }
       if (input.cursor) {
-        query = query.gt('practitioner_id', input.cursor)
+        const [cursorPracId, cursorLabId] = input.cursor.split(':')
+        if (cursorPracId && cursorLabId) {
+          // Rows after cursor position in composite order
+          query = query.or(`practitioner_id.gt.${cursorPracId},and(practitioner_id.eq.${cursorPracId},lab_id.gt.${cursorLabId})`)
+        }
       }
 
       const { data: staff, error } = await query
@@ -4238,8 +4256,43 @@ export const adminRouter = createTRPCRouter({
       const lastRow = pageRows[pageRows.length - 1]
       return {
         items,
-        nextCursor: hasMore && lastRow ? (lastRow as any).practitioner_id as string : null,
+        nextCursor: hasMore && lastRow ? `${(lastRow as any).practitioner_id}:${(lastRow as any).lab_id}` : null,
       }
+    }),
+
+  /**
+   * Story 55.2 AC #4: Return labs that have no LAB_MANAGER assigned (org-wide).
+   * Used by the warning banner on the cross-lab staff overview page.
+   */
+  getManagerlessLabs: adminProcedure
+    .query(async ({ ctx }) => {
+      const { data: allLabs, error: labsError } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name')
+
+      if (labsError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch labs',
+        })
+      }
+
+      const { data: managedLabIds, error: mgError } = await ctx.supabase
+        .from('lab_technicians')
+        .select('lab_id')
+        .eq('lab_role', 'LAB_MANAGER')
+
+      if (mgError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch lab managers',
+        })
+      }
+
+      const managedSet = new Set((managedLabIds ?? []).map((r: any) => r.lab_id as string))
+      return (allLabs ?? [])
+        .filter((l: any) => !managedSet.has(l.id as string))
+        .map((l: any) => ({ labId: l.id as string, labName: l.lab_name as string }))
     }),
 
   /**
@@ -4278,12 +4331,13 @@ export const adminRouter = createTRPCRouter({
         activityFilter: z.enum(['ACTIVE_7D', 'INACTIVE', 'ALL']).default('ALL'),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      // Fetch all staff (no pagination)
+    .mutation(async ({ ctx, input }) => {
+      // Fetch all staff (explicit high limit to override Supabase default of 1000)
       let query = ctx.supabase
         .from('lab_technicians')
         .select('practitioner_id, lab_id, lab_role, created_at, labs!inner(id, lab_name)')
         .order('practitioner_id', { ascending: true })
+        .limit(10000)
 
       if (input.roleFilter) {
         query = query.eq('lab_role', input.roleFilter)
@@ -4344,26 +4398,21 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      // Build CSV
-      const csvHeader = 'Email,Lab Name,Role,Last Active,Assigned Date'
+      // Build CSV using shared helper (proper RFC 4180 escaping)
+      const headers = ['Email', 'Lab Name', 'Role', 'Last Active', 'Assigned Date']
       const csvRows = filteredRows.map((s: any) => {
         const lab = s.labs as { id: string; lab_name: string }
         const email = emailMap[s.practitioner_id] ?? ''
         const lastActive = lastLoginMap[s.practitioner_id] ?? 'Never'
         const assignedDate = s.created_at ? new Date(s.created_at as string).toISOString().split('T')[0] : ''
-        // Escape CSV fields that may contain commas
-        const escapeCsv = (val: string) => val.includes(',') ? `"${val}"` : val
-        return [escapeCsv(email), escapeCsv(lab.lab_name), s.lab_role, lastActive, assignedDate].join(',')
+        return [email, lab.lab_name, s.lab_role as string, lastActive, assignedDate]
       })
-
-      const csvContent = [csvHeader, ...csvRows].join('\n')
-      const base64 = Buffer.from(csvContent, 'utf-8').toString('base64')
 
       // Emit audit event for data export (AC #6)
       const audit = new AuditLogger(ctx.supabase)
       try {
         await audit.emit({
-          action: 'EXPORT' as any,
+          action: AuditAction.EXPORT,
           resourceType: 'PRACTITIONER',
           resourceId: 'cross-lab-staff-export',
           actorId: ctx.user.sub,
@@ -4385,12 +4434,7 @@ export const adminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'EXPORT', resourceType: 'PRACTITIONER' })
       }
 
-      const dateStr = new Date().toISOString().split('T')[0]
-      return {
-        data: base64,
-        filename: `lab-staff-export-${dateStr}.csv`,
-        mimeType: 'text/csv',
-      }
+      return buildCsvExport(headers, csvRows, 'lab-staff-export')
     }),
 
   // ================================================================
@@ -4889,6 +4933,7 @@ export const adminRouter = createTRPCRouter({
         .eq('practitioner_id', input.practitionerId)
         .single()
 
+      // P1: audit after error check with accurate outcome
       const audit = new AuditLogger(ctx.supabase)
       await audit.emit({
         action: 'READ',
@@ -4896,7 +4941,7 @@ export const adminRouter = createTRPCRouter({
         resourceId: input.practitionerId,
         actorId: ctx.user.sub,
         actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
+        outcome: error || !data ? 'NOT_FOUND' : 'SUCCESS',
         sessionId: ctx.user.sessionId,
         metadata: {},
       })
@@ -4905,8 +4950,9 @@ export const adminRouter = createTRPCRouter({
         return null
       }
 
-      // Decrypt exposure history
+      // P2: track decryption failure so UI can surface a warning
       let exposureHistory: Array<{ date: string; type: string; outcome: string }> = []
+      let decryptionFailed = false
       if (data.exposure_history_encrypted) {
         try {
           const key = getCachedEncryptionKey()
@@ -4915,7 +4961,8 @@ export const adminRouter = createTRPCRouter({
             exposureHistory = JSON.parse(decrypted)
           }
         } catch {
-          // Decryption failed — return empty array rather than crash
+          decryptionFailed = true
+          console.error('[employee-health] exposure_history decryption failed for record', data.id)
         }
       }
 
@@ -4936,6 +4983,7 @@ export const adminRouter = createTRPCRouter({
         tbScreeningDate: data.tb_screening_date,
         tbScreeningResult: data.tb_screening_result,
         exposureHistory,
+        decryptionFailed,
         reminders,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -4951,37 +4999,58 @@ export const adminRouter = createTRPCRouter({
       z.object({
         practitionerId: z.string().uuid(),
         hepBStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
-        hepBTiterDate: z.string().nullable().optional(),
+        // P4: validate date format to prevent future-date suppression of reminders
+        hepBTiterDate: z.string().date().nullable().optional(),
         tetanusStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
-        tetanusDate: z.string().nullable().optional(),
+        tetanusDate: z.string().date().nullable().optional(),
         covidStatus: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETE']),
         covidDoses: z.number().int().min(0).default(0),
-        covidLastDoseDate: z.string().nullable().optional(),
-        tbScreeningDate: z.string().nullable().optional(),
+        covidLastDoseDate: z.string().date().nullable().optional(),
+        tbScreeningDate: z.string().date().nullable().optional(),
         tbScreeningResult: z
           .enum(['NEGATIVE', 'POSITIVE', 'INDETERMINATE'])
           .nullable()
           .optional(),
+        // P5: bound exposure history to prevent DoS via encrypted blob inflation
         exposureHistory: z
           .array(
             z.object({
-              date: z.string(),
-              type: z.string(),
-              outcome: z.string(),
+              date: z.string().date(),
+              type: z.string().max(200),
+              outcome: z.string().max(500),
             }),
           )
+          .max(100)
           .default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Encrypt exposure history
+      // P8: wrap encryption key retrieval — failure before upsert should still emit audit
       let exposureHistoryEncrypted: string | null = null
-      if (input.exposureHistory.length > 0) {
-        const key = getCachedEncryptionKey()
-        exposureHistoryEncrypted = encryptField(
-          JSON.stringify(input.exposureHistory),
-          key,
-        )
+      try {
+        if (input.exposureHistory.length > 0) {
+          const key = getCachedEncryptionKey()
+          exposureHistoryEncrypted = encryptField(
+            JSON.stringify(input.exposureHistory),
+            key,
+          )
+        }
+      } catch (encErr) {
+        const audit = new AuditLogger(ctx.supabase)
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'EMPLOYEE_HEALTH',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'FAILURE',
+          sessionId: ctx.user.sessionId,
+          metadata: { error: 'encryption_key_unavailable' },
+        })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to save employee health record',
+        })
       }
 
       const row = {
@@ -5011,16 +5080,19 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      // Build changed fields list for audit metadata
+      // P3: list all submitted fields (filter was always-true before; explicit list is honest)
       const changedFields = [
         'hepBStatus',
         'tetanusStatus',
         'covidStatus',
         'covidDoses',
-        'tbScreeningDate',
-        'tbScreeningResult',
-        'exposureHistory',
-      ].filter((f) => input[f as keyof typeof input] !== undefined)
+        ...(input.hepBTiterDate !== undefined ? ['hepBTiterDate'] : []),
+        ...(input.tetanusDate !== undefined ? ['tetanusDate'] : []),
+        ...(input.covidLastDoseDate !== undefined ? ['covidLastDoseDate'] : []),
+        ...(input.tbScreeningDate !== undefined ? ['tbScreeningDate'] : []),
+        ...(input.tbScreeningResult !== undefined ? ['tbScreeningResult'] : []),
+        ...(input.exposureHistory.length > 0 ? ['exposureHistory'] : []),
+      ]
 
       const audit = new AuditLogger(ctx.supabase)
       await audit.emit({
@@ -5058,11 +5130,12 @@ export const adminRouter = createTRPCRouter({
         .from('certification_pathways')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .range(input.cursor, input.cursor + input.limit - 1)
 
       if (input.status !== 'ALL') {
         query = query.eq('status', input.status)
       }
+
+      query = query.range(input.cursor, input.cursor + input.limit - 1)
 
       const { data: rows, error, count } = await query
 
@@ -5187,15 +5260,17 @@ export const adminRouter = createTRPCRouter({
       if (updates.milestones !== undefined) updatePayload.milestones = updates.milestones
       if (updates.status !== undefined) updatePayload.status = updates.status
 
-      const { error } = await ctx.supabase
+      const { data: updated, error } = await ctx.supabase
         .from('certification_pathways')
         .update(updatePayload)
         .eq('id', id)
+        .select('id')
+        .single()
 
-      if (error) {
+      if (error || !updated) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to update certification pathway',
+          code: error ? 'INTERNAL_SERVER_ERROR' : 'NOT_FOUND',
+          message: error ? 'Failed to update certification pathway' : 'Certification pathway not found',
         })
       }
 
@@ -5225,15 +5300,18 @@ export const adminRouter = createTRPCRouter({
   archiveCertificationPathway: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const { error } = await ctx.supabase
+      const { data: updated, error } = await ctx.supabase
         .from('certification_pathways')
         .update({ status: 'ARCHIVED', updated_at: new Date().toISOString() })
         .eq('id', input.id)
+        .eq('status', 'ACTIVE')
+        .select('id')
+        .single()
 
-      if (error) {
+      if (error || !updated) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to archive certification pathway',
+          code: error ? 'INTERNAL_SERVER_ERROR' : 'CONFLICT',
+          message: error ? 'Failed to archive certification pathway' : 'Pathway not found or already archived',
         })
       }
 
@@ -5503,6 +5581,13 @@ export const adminRouter = createTRPCRouter({
         .insert(progressRecords)
 
       if (insertError) {
+        // Unique constraint violation = concurrent duplicate assignment
+        if (insertError.code === '23505') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Practitioner is already assigned to this pathway',
+          })
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to assign pathway',
@@ -5548,10 +5633,46 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify pathway exists and is ACTIVE
+      const { data: pathway, error: pathwayError } = await ctx.supabase
+        .from('certification_pathways')
+        .select('id, milestones, status')
+        .eq('id', input.pathwayId)
+        .single()
+
+      if (pathwayError || !pathway) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Certification pathway not found',
+        })
+      }
+
+      if (pathway.status !== 'ACTIVE') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Cannot issue credential for an archived pathway',
+        })
+      }
+
+      // Check for existing credential (prevent duplicates)
+      const { data: existingCreds } = await ctx.supabase
+        .from('certification_credentials')
+        .select('id')
+        .eq('pathway_id', input.pathwayId)
+        .eq('practitioner_id', input.practitionerId)
+        .limit(1)
+
+      if (existingCreds && existingCreds.length > 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A credential has already been issued for this pathway assignment',
+        })
+      }
+
       // Verify all milestones are APPROVED
       const { data: progressRows, error: progressError } = await ctx.supabase
         .from('certification_progress')
-        .select('id, status')
+        .select('id, status, milestone_index')
         .eq('pathway_id', input.pathwayId)
         .eq('practitioner_id', input.practitionerId)
 
@@ -5577,9 +5698,12 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
-      // Generate certificate hash (Task 4.2)
+      // Generate certificate hash using milestone content (not progress IDs)
       const issuedAt = new Date().toISOString()
-      const milestoneDetails = progressRows.map((r: any) => r.id).sort().join('|')
+      const pathwayMilestones = Array.isArray(pathway.milestones) ? pathway.milestones : []
+      const milestoneDetails = pathwayMilestones
+        .map((m: any) => `${m.title}:${m.type}:${m.required_count}`)
+        .join('|')
       const certificateContent = `${input.practitionerId}|${input.pathwayId}|${issuedAt}|${milestoneDetails}`
       const certificateHash = crypto.createHash('sha256').update(certificateContent).digest('hex')
 
@@ -5597,6 +5721,12 @@ export const adminRouter = createTRPCRouter({
         .single()
 
       if (credError || !credential) {
+        if (credError?.code === '23505') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A credential has already been issued for this pathway assignment',
+          })
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to issue credential',
@@ -5763,14 +5893,15 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      // Compute stock levels (v1 flat thresholds: GREEN >14, AMBER 1-7, RED 0)
+      // Compute stock levels (v1 thresholds: GREEN >14, YELLOW 8-14, AMBER 1-7, RED 0)
       const reagentCategorySet = new Set<string>()
       const cells = latestSnapshots.map((snap) => {
         reagentCategorySet.add(snap.reagent_category)
         const lab = labList.find((l) => l.id === snap.lab_id)
-        let stockLevel: 'GREEN' | 'AMBER' | 'RED' = 'GREEN'
+        let stockLevel: 'GREEN' | 'YELLOW' | 'AMBER' | 'RED' = 'GREEN'
         if (snap.quantity === 0) stockLevel = 'RED'
         else if (snap.quantity <= 7) stockLevel = 'AMBER'
+        else if (snap.quantity <= 14) stockLevel = 'YELLOW'
 
         return {
           labId: snap.lab_id,
@@ -5810,10 +5941,30 @@ export const adminRouter = createTRPCRouter({
   getRedistributionRecommendations: adminProcedure
     .input(z.object({}))
     .query(async ({ ctx }) => {
+      // Only consider ACTIVE labs (consistent with getInventoryOverview)
+      const { data: activeLabs, error: labsErr } = await ctx.supabase
+        .from('labs')
+        .select('id, lab_name, latitude, longitude')
+        .eq('org_id', ctx.user.orgId)
+        .eq('status', 'ACTIVE')
+
+      if (labsErr) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load labs' })
+      }
+
+      const activeLabIds = ((activeLabs ?? []) as any[]).map((l) => l.id)
+      if (activeLabIds.length === 0) return { recommendations: [] }
+
+      const labMap = new Map<string, { name: string; lat: number | null; lng: number | null }>()
+      for (const lab of (activeLabs ?? []) as any[]) {
+        labMap.set(lab.id, { name: lab.lab_name, lat: lab.latitude ?? null, lng: lab.longitude ?? null })
+      }
+
       const { data: snapshots, error: snapErr } = await ctx.supabase
         .from('lab_inventory_snapshots')
         .select('lab_id, reagent_category, quantity, unit, reported_at')
         .eq('org_id', ctx.user.orgId)
+        .in('lab_id', activeLabIds)
         .order('lab_id', { ascending: true })
         .order('reagent_category', { ascending: true })
         .order('reported_at', { ascending: false })
@@ -5833,18 +5984,6 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      // Get lab names
-      const labIds = [...new Set(latest.map((s) => s.lab_id))]
-      const { data: labs } = await ctx.supabase
-        .from('labs')
-        .select('id, lab_name')
-        .in('id', labIds.length > 0 ? labIds : ['__none__'])
-
-      const labMap = new Map<string, string>()
-      for (const lab of (labs ?? []) as { id: string; lab_name: string }[]) {
-        labMap.set(lab.id, lab.lab_name)
-      }
-
       // Group by reagent_category
       const byCategory = new Map<string, Array<{ lab_id: string; quantity: number }>>()
       for (const snap of latest) {
@@ -5852,27 +5991,41 @@ export const adminRouter = createTRPCRouter({
         byCategory.get(snap.reagent_category)!.push({ lab_id: snap.lab_id, quantity: snap.quantity })
       }
 
-      // RED labs get suggested transfers from GREEN labs
+      // Haversine distance in km (returns null if either lab has no coordinates)
+      function haversineKm(lat1: number | null, lng1: number | null, lat2: number | null, lng2: number | null): number | null {
+        if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null
+        const R = 6371
+        const dLat = (lat2 - lat1) * Math.PI / 180
+        const dLng = (lng2 - lng1) * Math.PI / 180
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      }
+
+      // Each RED lab gets paired with the single best source (highest surplus GREEN lab)
       const recommendations: Array<{
         targetLabId: string; targetLabName: string
         sourceLabId: string; sourceLabName: string
         reagentCategory: string; sourceQuantity: number
+        distanceKm: number | null
       }> = []
 
       for (const [category, entries] of byCategory) {
         const redLabs = entries.filter((e) => e.quantity === 0)
         const greenLabs = entries.filter((e) => e.quantity > 14).sort((a, b) => b.quantity - a.quantity)
+        const bestSource = greenLabs[0]
+        if (!bestSource) continue
         for (const red of redLabs) {
-          for (const green of greenLabs) {
-            recommendations.push({
-              targetLabId: red.lab_id,
-              targetLabName: labMap.get(red.lab_id) ?? 'Unknown',
-              sourceLabId: green.lab_id,
-              sourceLabName: labMap.get(green.lab_id) ?? 'Unknown',
-              reagentCategory: category,
-              sourceQuantity: green.quantity,
-            })
-          }
+          const targetInfo = labMap.get(red.lab_id)
+          const sourceInfo = labMap.get(bestSource.lab_id)
+          recommendations.push({
+            targetLabId: red.lab_id,
+            targetLabName: targetInfo?.name ?? 'Unknown',
+            sourceLabId: bestSource.lab_id,
+            sourceLabName: sourceInfo?.name ?? 'Unknown',
+            reagentCategory: category,
+            sourceQuantity: bestSource.quantity,
+            distanceKm: haversineKm(targetInfo?.lat ?? null, targetInfo?.lng ?? null, sourceInfo?.lat ?? null, sourceInfo?.lng ?? null),
+          })
         }
       }
 
@@ -6030,13 +6183,20 @@ export const adminRouter = createTRPCRouter({
       }
       if (input.newStatus === 'APPROVED') updatePayload.approved_by = ctx.user.sub
 
-      const { error: updateErr } = await ctx.supabase
+      // Use optimistic locking: WHERE status = currentStatus prevents concurrent double-advance
+      const { error: updateErr, count: updatedCount } = await ctx.supabase
         .from('purchase_orders')
         .update(updatePayload)
         .eq('id', input.orderId)
+        .eq('org_id', ctx.user.orgId)
+        .eq('status', (order as any).status)
+        .select('id', { count: 'exact', head: true })
 
       if (updateErr) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update order status' })
+      }
+      if (!updatedCount || updatedCount === 0) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Order status was modified by another user. Please refresh and try again.' })
       }
 
       const audit = new AuditLogger(ctx.supabase)
@@ -6151,14 +6311,18 @@ export const adminRouter = createTRPCRouter({
       if (input.leadTimeDays !== undefined) updatePayload.lead_time_days = input.leadTimeDays
       if (input.status !== undefined) updatePayload.status = input.status
 
-      const { error } = await ctx.supabase
+      const { error, count: updatedCount } = await ctx.supabase
         .from('suppliers')
         .update(updatePayload)
         .eq('id', input.id)
         .eq('org_id', ctx.user.orgId)
+        .select('id', { count: 'exact', head: true })
 
       if (error) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to update supplier' })
+      }
+      if (!updatedCount || updatedCount === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Supplier not found' })
       }
 
       const audit = new AuditLogger(ctx.supabase)

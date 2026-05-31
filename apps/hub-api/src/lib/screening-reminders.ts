@@ -30,6 +30,17 @@ export function computeScreeningReminders(record: {
   }
 
   const lastScreening = new Date(record.tb_screening_date)
+
+  // P6: guard against invalid date strings producing NaN comparisons
+  if (isNaN(lastScreening.getTime())) {
+    return {
+      tbScreening: {
+        status: 'NOT_RECORDED',
+        message: 'No TB screening recorded',
+      },
+    }
+  }
+
   const dueDate = new Date(lastScreening)
   dueDate.setMonth(dueDate.getMonth() + TB_INTERVAL_MONTHS)
 

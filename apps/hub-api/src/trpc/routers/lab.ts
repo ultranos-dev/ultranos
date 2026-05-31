@@ -1440,17 +1440,23 @@ export const labRouter = createTRPCRouter({
         .eq('practitioner_id', input.practitionerId)
         .single()
 
-      const audit = new AuditLogger(ctx.supabase)
-      await audit.emit({
-        action: 'READ',
-        resourceType: 'EMPLOYEE_HEALTH',
-        resourceId: input.practitionerId,
-        actorId: ctx.user.sub,
-        actorRole: ctx.user.role,
-        outcome: 'SUCCESS',
-        sessionId: ctx.user.sessionId,
-        metadata: { accessType: 'EMERGENCY', scope: 'VACCINATION_STATUS_ONLY' },
-      })
+      // P1+D2: audit after error check with accurate outcome.
+      // Best-effort for emergency endpoint — audit failure must not block access during incidents.
+      try {
+        const audit = new AuditLogger(ctx.supabase)
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'EMPLOYEE_HEALTH',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: error || !data ? 'NOT_FOUND' : 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { accessType: 'EMERGENCY', scope: 'VACCINATION_STATUS_ONLY' },
+        })
+      } catch {
+        console.error('[emergency-vaccination] audit emit failed for practitioner', input.practitionerId)
+      }
 
       if (error || !data) {
         return null

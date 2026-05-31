@@ -63,6 +63,7 @@ BEGIN
 END;
 $$;
 
--- Grant execute to authenticated users (RLS + API-layer auth controls actual access)
-GRANT EXECUTE ON FUNCTION update_lab_role_atomic(UUID, UUID, TEXT) TO authenticated;
+-- Grant execute to service_role only — API-layer (adminProcedure / labRestrictedProcedure)
+-- enforces authorization. Authenticated users must NOT call this RPC directly because
+-- SECURITY DEFINER bypasses RLS.
 GRANT EXECUTE ON FUNCTION update_lab_role_atomic(UUID, UUID, TEXT) TO service_role;
