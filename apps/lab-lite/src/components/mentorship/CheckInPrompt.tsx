@@ -72,7 +72,7 @@ export function CheckInPrompt({ pairings, onCheckIn }: CheckInPromptProps) {
                 {/* Partner name — no PHI risk, mentorship partner names are staff, not patients */}
                 <span className="font-medium">
                   {t('checkInPartnerLabel', {
-                    name: `${pairing.mentorName} → ${pairing.menteeName}`,
+                    name: `${pairing.mentorName} — ${pairing.menteeName}`,
                   })}
                 </span>
                 <span className="text-xs text-amber-700">

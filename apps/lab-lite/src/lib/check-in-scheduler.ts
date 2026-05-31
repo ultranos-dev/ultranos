@@ -21,7 +21,7 @@ import type { MentorshipPairing } from '@/lib/mentorship-types'
  *     valid for ISO 8601 dates — lexicographic order matches chronological order)
  *
  * @param technicianId - Opaque practitioner ID (not PHI)
- * @returns Array of overdue MentorshipPairing records, newest deadline first
+ * @returns Array of overdue MentorshipPairing records, most overdue first (ascending by nextCheckInDue)
  */
 export async function getOverdueCheckIns(
   technicianId: string,

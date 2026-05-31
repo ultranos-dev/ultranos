@@ -43,7 +43,7 @@ export function CheckInForm({
   const t = useTranslations('mentorship')
 
   const [notes, setNotes] = useState('')
-  const [goals, setGoals] = useState<string[]>([''])
+  const [goals, setGoals] = useState<string[]>([])
   const [notesError, setNotesError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -183,7 +183,7 @@ export function CheckInForm({
                 disabled:opacity-50"
               aria-label={t('checkInGoalAriaLabel', { number: index + 1 })}
             />
-            {goals.length > 1 && (
+            {goals.length > 0 && (
               <button
                 type="button"
                 onClick={() => handleRemoveGoal(index)}
