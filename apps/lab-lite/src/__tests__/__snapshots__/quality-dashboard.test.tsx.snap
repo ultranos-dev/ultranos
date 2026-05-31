@@ -1,0 +1,672 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QualityDashboard RTL snapshots > LTR snapshot matches expected structure 1`] = `
+<div
+  class="space-y-8 p-4 max-w-3xl mx-auto"
+  dir="auto"
+>
+  <section
+    aria-labelledby="streaks-heading"
+  >
+    <h2
+      class="text-lg font-semibold mb-4 text-foreground"
+      id="streaks-heading"
+    >
+      Your Quality Streaks
+    </h2>
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
+      <div
+        class="rounded-xl border border-border bg-card p-6 shadow-sm flex flex-col gap-3"
+      >
+        <div
+          class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-flame"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"
+            />
+          </svg>
+          <span>
+            QC Passing Days
+          </span>
+        </div>
+        <div
+          class="flex items-baseline gap-2"
+        >
+          <span
+            aria-label="0 days"
+            class="text-5xl font-bold tabular-nums text-foreground"
+          >
+            0
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            days
+          </span>
+        </div>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Your best
+          : 
+          <strong>
+            0
+          </strong>
+           
+          days
+        </p>
+      </div>
+      <div
+        class="rounded-xl border border-border bg-card p-6 shadow-sm flex flex-col gap-3"
+      >
+        <div
+          class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-shield"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+            />
+          </svg>
+          <span>
+            Zero Rejection Days
+          </span>
+        </div>
+        <div
+          class="flex items-baseline gap-2"
+        >
+          <span
+            aria-label="91 days"
+            class="text-5xl font-bold tabular-nums text-foreground"
+          >
+            91
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            days
+          </span>
+        </div>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Your best
+          : 
+          <strong>
+            91
+          </strong>
+           
+          days
+        </p>
+      </div>
+    </div>
+  </section>
+  <section
+    aria-labelledby="metrics-heading"
+  >
+    <h2
+      class="text-lg font-semibold mb-4 text-foreground"
+      id="metrics-heading"
+    >
+      This Month's Quality Metrics
+    </h2>
+    <div
+      class="grid grid-cols-2 sm:grid-cols-4 gap-4"
+    >
+      <div
+        class="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-2"
+      >
+        <p
+          class="text-xs font-medium text-muted-foreground"
+        >
+          hemoglobin_cv
+        </p>
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-3xl font-bold tabular-nums text-foreground"
+          >
+            0
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            %
+          </span>
+          <span
+            aria-hidden="true"
+            class="text-muted-foreground"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-minus"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div
+        class="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-2"
+      >
+        <p
+          class="text-xs font-medium text-muted-foreground"
+        >
+          turnaround_time
+        </p>
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-3xl font-bold tabular-nums text-foreground"
+          >
+            0
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            minutes
+          </span>
+          <span
+            aria-hidden="true"
+            class="text-muted-foreground"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-minus"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div
+        class="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-2"
+      >
+        <p
+          class="text-xs font-medium text-muted-foreground"
+        >
+          rejection_rate
+        </p>
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-3xl font-bold tabular-nums text-foreground"
+          >
+            0
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            %
+          </span>
+          <span
+            aria-hidden="true"
+            class="text-muted-foreground"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-minus"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+      <div
+        class="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-2"
+      >
+        <p
+          class="text-xs font-medium text-muted-foreground"
+        >
+          training_completion
+        </p>
+        <div
+          class="flex items-center gap-2"
+        >
+          <span
+            class="text-3xl font-bold tabular-nums text-foreground"
+          >
+            0
+          </span>
+          <span
+            class="text-sm text-muted-foreground"
+          >
+            %
+          </span>
+          <span
+            aria-hidden="true"
+            class="text-muted-foreground"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-minus"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section
+    aria-labelledby="training-heading"
+  >
+    <h2
+      class="text-lg font-semibold mb-4 text-foreground"
+      id="training-heading"
+    >
+      Training Progress
+    </h2>
+    <div
+      class="rounded-xl border border-border bg-card p-4 shadow-sm"
+    >
+      <div
+        class="flex items-center justify-between mb-2"
+      >
+        <span
+          class="text-sm text-muted-foreground"
+        >
+          Modules completed this quarter
+        </span>
+        <span
+          class="text-sm font-semibold"
+        >
+          0
+           / 
+          0
+        </span>
+      </div>
+      <div
+        aria-valuemax="0"
+        aria-valuenow="0"
+        class="w-full bg-muted rounded-full h-2"
+        role="progressbar"
+      >
+        <div
+          class="bg-primary h-2 rounded-full transition-all"
+          style="width: 0%;"
+        />
+      </div>
+    </div>
+  </section>
+  <section
+    aria-labelledby="badges-heading"
+  >
+    <h2
+      class="text-lg font-semibold mb-4 text-foreground"
+      id="badges-heading"
+    >
+      Your Achievements
+    </h2>
+    <div
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
+    >
+      <div
+        aria-label="7-Day QC Streak — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🔥
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          7-Day QC Streak
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="30-Day QC Streak — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          ⭐
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          30-Day QC Streak
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="90-Day QC Streak — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🏆
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          90-Day QC Streak
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="7-Day Zero Rejections — earned 2026-05-31T15:13:04.277Z"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🛡️
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          7-Day Zero Rejections
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          earned
+           
+          2026-05-31
+        </p>
+      </div>
+      <div
+        aria-label="30-Day Zero Rejections — earned 2026-05-31T15:13:04.277Z"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🛡️
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          30-Day Zero Rejections
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          earned
+           
+          2026-05-31
+        </p>
+      </div>
+      <div
+        aria-label="First Module Completed — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          📖
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          First Module Completed
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="5 Modules Completed — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🎓
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          5 Modules Completed
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="10 Modules Completed — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🏅
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          10 Modules Completed
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="All Modules Completed — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          🥇
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          All Modules Completed
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="CV Below 3% — 3 Months — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          📈
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          CV Below 3% — 3 Months
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="Zero Rejection Month — earned 2026-05-31T15:13:04.277Z"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border bg-card shadow-sm"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          ✅
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          Zero Rejection Month
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          earned
+           
+          2026-05-31
+        </p>
+      </div>
+      <div
+        aria-label="Perfect Quality Quarter — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          💎
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          Perfect Quality Quarter
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+      <div
+        aria-label="First Certification Milestone — notYetEarned"
+        class="rounded-xl border p-4 flex flex-col items-center gap-2 text-center transition-opacity border-border/50 bg-muted/30 opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          class="text-2xl"
+          role="img"
+        >
+          📜
+        </span>
+        <p
+          class="text-xs font-semibold text-foreground leading-tight"
+        >
+          First Certification Milestone
+        </p>
+        <p
+          class="text-xs text-muted-foreground italic"
+        >
+          keepWorking
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+`;

@@ -1,6 +1,6 @@
 # Story 51.7: Gamified Team Quality Engagement
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -90,11 +90,11 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
 
 ### Task 1: Dexie Schema — Achievements (AC: 1, 4, 6)
 
-- [ ] Add version increment to `apps/lab-lite/src/lib/db.ts` with new tables:
+- [x] Add version increment to `apps/lab-lite/src/lib/db.ts` with new tables:
   - `achievements`: `&id, techId, type, earnedAt, [techId+type], [type+evaluationPeriod]`
   - `team_achievements`: `&id, type, earnedAt, evaluationPeriod`
   - `achievement_preferences`: `&techId`
-- [ ] Define `Achievement` interface:
+- [x] Define `Achievement` interface:
   - `id: string` (UUID)
   - `techId: string`
   - `type: AchievementType`
@@ -102,14 +102,14 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
   - `evaluationPeriod: string` (e.g., "2026-05" for monthly, "2026-W22" for weekly)
   - `metadata: Record<string, any>` (type-specific data: score, count, etc.)
   - `description: string`
-- [ ] Define `TeamAchievement` interface:
+- [x] Define `TeamAchievement` interface:
   - `id: string`
   - `type: AchievementType`
   - `earnedAt: string`
   - `evaluationPeriod: string`
   - `description: string`
   - `participatingTechIds: string[]`
-- [ ] Define `AchievementType` enum:
+- [x] Define `AchievementType` enum:
   - `QC_CHAMPION`
   - `ZERO_REJECTION_WEEK`
   - `SPEED_STAR`
@@ -118,13 +118,13 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
   - `TEAM_MILESTONE_1K`
   - `TEAM_MILESTONE_5K`
   - `TEAM_MILESTONE_10K`
-- [ ] Define `AchievementPreferences` interface:
+- [x] Define `AchievementPreferences` interface:
   - `techId: string`
   - `showOnTeamDashboard: boolean` (default true)
 
 ### Task 2: Achievement Evaluation Engine (AC: 1, 5)
 
-- [ ] Create `apps/lab-lite/src/lib/achievement-service.ts`:
+- [x] Create `apps/lab-lite/src/lib/achievement-service.ts`:
   - `evaluateMonthlyAchievements(yearMonth: string): Promise<Achievement[]>`:
     - QC Champion: query QC results per tech, compute first-attempt pass rate, award to tech(s) with highest rate (min 20 runs)
     - Speed Star: query TAT per tech, compute average, filter for >95% QC pass rate, award to fastest (min 50 tests)
@@ -147,20 +147,20 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
 
 ### Task 3: Achievement Scheduler (AC: 5)
 
-- [ ] Create `apps/lab-lite/src/lib/achievement-scheduler.ts`:
+- [x] Create `apps/lab-lite/src/lib/achievement-scheduler.ts`:
   - Runs achievement evaluation on schedule:
     - Monthly: on the 1st of each month (evaluates previous month)
     - Weekly: every Monday (evaluates previous week)
     - Milestones: checked daily
   - Uses a simple "last evaluated" timestamp in `lab_config` to prevent duplicate evaluations
   - Triggered from a layout effect or app startup hook
-- [ ] Create `apps/lab-lite/src/hooks/useAchievementScheduler.ts`:
+- [x] Create `apps/lab-lite/src/hooks/useAchievementScheduler.ts`:
   - Hook that checks if evaluation is due and triggers it
   - Runs on app mount and daily thereafter
 
 ### Task 4: Team Achievement Dashboard (AC: 2, 3)
 
-- [ ] Create `apps/lab-lite/src/components/achievements/TeamAchievementDashboard.tsx`:
+- [x] Create `apps/lab-lite/src/components/achievements/TeamAchievementDashboard.tsx`:
   - Section or page showing team achievements
   - Current month's achievements: earned badges with descriptions
   - Active streaks with progress indicators (e.g., "Day 4 of Zero Rejection streak!")
@@ -168,48 +168,48 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
   - Team milestones with progress bars (e.g., "4,200 / 5,000 tests — 84%!")
   - Collaborative language throughout (AC 3)
   - Opt-in: only visible when lab manager has enabled gamification
-- [ ] Create `apps/lab-lite/src/components/achievements/AchievementBadge.tsx`:
+- [x] Create `apps/lab-lite/src/components/achievements/AchievementBadge.tsx`:
   - Reusable badge component
   - Shows: icon (trophy, star, shield, etc. — CSS-based, no external images), achievement name, date earned
   - Respects tech's opt-out preference (hides name if opted out)
   - RTL-safe layout
-- [ ] Create `apps/lab-lite/src/components/achievements/StreakProgress.tsx`:
+- [x] Create `apps/lab-lite/src/components/achievements/StreakProgress.tsx`:
   - Shows current streak with day count and progress bar
   - Collaborative messaging: "The team is on a 4-day Zero Rejection streak!"
   - Visual indicator: growing flame or counter icon
 
 ### Task 5: Portfolio Integration (AC: 4)
 
-- [ ] Implement `apps/lab-lite/src/components/portfolio/AchievementBadges.tsx` (placeholder from Story 51.6):
+- [x] Implement `apps/lab-lite/src/components/portfolio/AchievementBadges.tsx` (placeholder from Story 51.6):
   - Queries `getAchievementsForTech(techId)` from achievement service
   - Renders earned badges in a grid
   - Each badge: icon, name, date, description
   - Included in portfolio export
-- [ ] Modify `apps/lab-lite/src/lib/portfolio-service.ts`:
+- [x] Modify `apps/lab-lite/src/lib/portfolio-service.ts`:
   - Add `achievements` to `PortfolioMetrics` by calling `getAchievementsForTech()`
-- [ ] Modify `apps/lab-lite/src/lib/portfolio-export.ts`:
+- [x] Modify `apps/lab-lite/src/lib/portfolio-export.ts`:
   - Include achievement badges in the export HTML
 
 ### Task 6: Opt-In / Opt-Out Management (AC: 6)
 
-- [ ] Add gamification settings to `apps/lab-lite/src/components/settings/LabSettingsView.tsx`:
+- [x] Add gamification settings to `apps/lab-lite/src/components/settings/LabSettingsView.tsx`:
   - LAB_MANAGER toggle: "Enable Team Quality Achievements" (stores in `lab_config`)
   - Per-tech toggle: "Show my achievements on team dashboard" (stores in `achievement_preferences`)
-- [ ] Implement preference checking in `TeamAchievementDashboard.tsx`:
+- [x] Implement preference checking in `TeamAchievementDashboard.tsx`:
   - If gamification is disabled for the lab, the dashboard section is hidden
   - If a tech opts out, their name is replaced with "A team member" on team dashboard badges
 
 ### Task 7: Notification Integration (AC: 5)
 
-- [ ] When achievements are awarded, create notifications:
+- [x] When achievements are awarded, create notifications:
   - Individual: "Congratulations! You earned QC Champion for May 2026."
   - Team: "The whole team achieved Zero Rejection Week! Celebrate!"
   - Milestone: "Your lab just processed its 5,000th test!"
-- [ ] Use existing notification infrastructure in `apps/lab-lite/src/components/notifications/`
+- [x] Use existing notification infrastructure in `apps/lab-lite/src/components/notifications/`
 
 ### Task 8: Internationalization
 
-- [ ] Add i18n keys to all 5 locale files (`apps/lab-lite/messages/{en,ar,prs,ps,fa}.json`):
+- [x] Add i18n keys to all 5 locale files (`apps/lab-lite/messages/{en,ar,prs,ps,fa}.json`):
   - `achievements.teamAchievements`: "Team Achievements"
   - `achievements.qcChampion`: "QC Champion"
   - `achievements.qcChampionDesc`: "Best QC compliance rate this month"
@@ -231,7 +231,7 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
 
 ### Task 9: Testing
 
-- [ ] Create `apps/lab-lite/src/__tests__/achievement-service.test.ts`:
+- [x] Create `apps/lab-lite/src/__tests__/achievement-service.test.ts`:
   - Test QC Champion selection with multiple techs
   - Test QC Champion minimum threshold (< 20 runs = no award)
   - Test tied QC Champion awards both techs
@@ -243,14 +243,14 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
   - Test team milestone at 1K/5K/10K thresholds
   - Test milestone awarded only once
   - Test achievement retrieval for portfolio
-- [ ] Create `apps/lab-lite/src/__tests__/team-achievement-dashboard.test.tsx`:
+- [x] Create `apps/lab-lite/src/__tests__/team-achievement-dashboard.test.tsx`:
   - Test dashboard renders when gamification is enabled
   - Test dashboard hidden when gamification is disabled
   - Test collaborative language (no competitive framing)
   - Test opt-out hides tech name
   - Test streak progress display
   - Test milestone progress bars
-- [ ] Create `apps/lab-lite/src/__tests__/achievement-scheduler.test.ts`:
+- [x] Create `apps/lab-lite/src/__tests__/achievement-scheduler.test.ts`:
   - Test monthly evaluation triggers on 1st of month
   - Test weekly evaluation triggers on Monday
   - Test duplicate evaluation prevention
@@ -334,3 +334,62 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
 - Dexie schema: `apps/lab-lite/src/lib/db.ts`
 - Notification components: `apps/lab-lite/src/components/notifications/`
 - Settings view: `apps/lab-lite/src/components/settings/LabSettingsView.tsx`
+
+## File List
+
+### Created
+- `apps/lab-lite/src/lib/achievement-service.ts`
+- `apps/lab-lite/src/lib/achievement-scheduler.ts`
+- `apps/lab-lite/src/hooks/useAchievementScheduler.ts`
+- `apps/lab-lite/src/components/achievements/TeamAchievementDashboard.tsx`
+- `apps/lab-lite/src/components/achievements/AchievementBadge.tsx`
+- `apps/lab-lite/src/components/achievements/StreakProgress.tsx`
+- `apps/lab-lite/src/components/achievements/AchievementNotification.tsx`
+- `apps/lab-lite/src/components/portfolio/AchievementBadges.tsx`
+- `apps/lab-lite/src/lib/portfolio-service.ts`
+- `apps/lab-lite/src/lib/portfolio-export.ts`
+- `apps/lab-lite/src/__tests__/achievement-service.test.ts`
+- `apps/lab-lite/src/__tests__/achievement-scheduler.test.ts`
+- `apps/lab-lite/src/__tests__/team-achievement-dashboard.test.tsx`
+
+### Modified
+- `apps/lab-lite/src/lib/db.ts` — added v17 schema (achievements, team_achievements, achievement_preferences, achievement_scheduler_config tables) + helper functions
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — added gamification enable/disable toggles
+- `apps/lab-lite/src/components/AppSidebar.tsx` — added Team Achievements nav item + AchievementNotification
+- `apps/lab-lite/messages/en.json` — added achievements i18n section + sidebar key
+- `apps/lab-lite/messages/ar.json` — added achievements i18n section + sidebar key
+- `apps/lab-lite/messages/prs.json` — added achievements i18n section + sidebar key
+- `apps/lab-lite/messages/ps.json` — added achievements i18n section + sidebar key
+
+## Change Log
+
+| Date | Change | Author |
+|---|---|---|
+| 2026-05-31 | Full implementation of Story 51.7 — gamified team quality engagement. All 9 tasks completed. 38 tests passing (20 service, 12 scheduler, 6 dashboard). | Dev Agent |
+
+## Dev Agent Record
+
+### Implementation Notes
+
+**Task 1 (Dexie Schema):** Added `AchievementType` enum, `Achievement`, `TeamAchievement`, `AchievementPreferences`, `AchievementSchedulerConfig` interfaces to `db.ts`. Incremented schema to v17 (db was at v16/Analyzer Drift). Used a dedicated `achievement_scheduler_config` singleton table (keyed `&id`) rather than `lab_config`, since that table didn't exist in the schema.
+
+**Task 2 (Evaluation Engine):** `achievement-service.ts` implements all six achievement types. Key decision: `isQcPass` uses ±2 SD rule. `getIsoWeekString` uses UTC methods (`getUTCFullYear/Month/Date`) to avoid timezone-day-boundary bugs. Zero Rejection Week requires minimum 10 samples to prevent false positives on lab closure days. Ties are resolved by awarding all qualifying techs.
+
+**Task 3 (Scheduler):** `achievement-scheduler.ts` tracks last evaluation timestamps in the `achievement_scheduler_config` singleton. Monthly evaluations check the previous month; weekly check the previous week using Monday as start. The `useAchievementScheduler` hook fires 2 seconds after mount, then hourly.
+
+**Task 4 (Dashboard):** `TeamAchievementDashboard.tsx` returns `null` when gamification is disabled. Uses collaborative language throughout — no rankings or comparisons. `StreakProgress` shows team streak with progress bar toward 7-day goal. `MilestoneProgressBar` shows ARIA `progressbar` role with 1K/5K/10K thresholds.
+
+**Task 5 (Portfolio):** `portfolio-service.ts` and `portfolio-export.ts` created fresh (Story 51.6 had not been implemented). `AchievementBadges.tsx` renders sorted badge grid with `data-testid="achievement-badges-list"`.
+
+**Task 6 (Opt-In):** Settings card added to `LabSettingsView.tsx` with two toggles: lab-manager enable/disable + per-tech show-on-dashboard. Dashboard respects both levels.
+
+**Task 7 (Notifications):** `AchievementNotification.tsx` implements a toast component (`role="status"`, `aria-live="polite"`) that auto-dismisses after 8s. Integrated into `AppSidebar.tsx` via `useAchievementScheduler` callback.
+
+**Task 8 (i18n):** Added 20 i18n keys to all 4 existing locale files (en/ar/prs/ps). `fa.json` does not exist in the repo; skipped.
+
+**Task 9 (Tests):** Fixed three bugs during test-driven development: (1) `AchievementType` enum not available in Vitest mock — fixed by explicit `AchievementType: AT` re-export; (2) invalid date strings `'2026-04-010'` in Zero Rejection Week test — fixed with uniform date format; (3) `getIsoWeekString` using local-time methods — fixed to UTC. Dashboard test required `vi.fn()` pattern for `getAchievementSchedulerConfig` due to Vitest hoisting behavior with closure-captured variables.
+
+### Debug Log
+
+- **Vitest hoisting / closure issue:** `vi.mock('../lib/db', async () => ({ getAchievementSchedulerConfig: async () => mockConfig, ... }))` did not reliably reflect mutations of `mockConfig.gamificationEnabled` per-test. Resolved by switching to `vi.fn()` (`mockGetSchedulerConfig`) with explicit `mockResolvedValue` in `beforeEach`, giving deterministic per-test control.
+- **UTC timezone bug in ISO week calculation:** `getIsoWeekString(new Date('2026-04-06'))` returned W14 instead of W15 on non-UTC systems. Fixed by using `date.getUTCFullYear()`, `date.getUTCMonth()`, `date.getUTCDate()` throughout the function.
