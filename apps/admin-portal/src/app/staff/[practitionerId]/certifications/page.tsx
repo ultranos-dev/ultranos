@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 
 interface MilestoneProgress {
   progressId: string
@@ -25,6 +27,11 @@ interface PathwayProgress {
   pathwayStatus: string
   completionPct: number
   milestones: MilestoneProgress[]
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -54,6 +61,22 @@ export default function PractitionerCertificationsPage() {
   const [availablePathways, setAvailablePathways] = useState<Array<{ id: string; name: string }>>([])
   const [assigningPathwayId, setAssigningPathwayId] = useState('')
   const [assigning, setAssigning] = useState(false)
+  const [issuingPathway, setIssuingPathway] = useState<string | null>(null)
+
+  async function handleIssueCredential(pathwayId: string) {
+    try {
+      setIssuingPathway(pathwayId)
+      await trpc.admin.issueCredential.mutate({
+        practitionerId,
+        pathwayId,
+      })
+      fetchProgress()
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to issue credential')
+    } finally {
+      setIssuingPathway(null)
+    }
+  }
 
   const fetchProgress = useCallback(async () => {
     try {
@@ -146,12 +169,11 @@ export default function PractitionerCertificationsPage() {
                   className="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-accent-subtle transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <svg
-                      className={`h-4 w-4 text-text-secondary transition-transform ${expandedPathways.has(pathway.pathwayId) ? 'rotate-90' : ''}`}
-                      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                    >
-                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clipRule="evenodd" />
-                    </svg>
+                    <DirectionalIcon category="navigation">
+                      <ChevronRight
+                        className={`h-4 w-4 text-text-secondary transition-transform ${expandedPathways.has(pathway.pathwayId) ? 'rotate-90' : ''}`}
+                      />
+                    </DirectionalIcon>
                     <span className="font-medium text-text-primary">{pathway.pathwayName}</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -165,6 +187,19 @@ export default function PractitionerCertificationsPage() {
                   </div>
                 </button>
 
+                {/* Issue Credential button — AC #5 */}
+                {pathway.completionPct === 100 && (
+                  <div className="px-4 py-2 bg-surface border-t border-border flex justify-end">
+                    <button
+                      onClick={() => handleIssueCredential(pathway.pathwayId)}
+                      disabled={issuingPathway === pathway.pathwayId}
+                      className="rounded-full bg-success px-5 py-1.5 text-sm font-medium text-white hover:bg-success/90 transition-colors disabled:opacity-50"
+                    >
+                      {issuingPathway === pathway.pathwayId ? 'Issuing...' : 'Issue Credential'}
+                    </button>
+                  </div>
+                )}
+
                 {/* Milestones */}
                 {expandedPathways.has(pathway.pathwayId) && (
                   <div className="divide-y divide-border bg-surface-raised">
@@ -172,7 +207,11 @@ export default function PractitionerCertificationsPage() {
                       <div key={milestone.progressId} className="flex items-center justify-between px-6 py-3">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-text-primary">{milestone.title}</p>
-                          <p className="text-xs text-text-secondary">{formatType(milestone.type)} &middot; Required: {milestone.requiredCount}</p>
+                          <p className="text-xs text-text-secondary">
+                            {formatType(milestone.type)} &middot; Required: {milestone.requiredCount}
+                            {milestone.submittedAt && <> &middot; Submitted: {formatDate(milestone.submittedAt)}</>}
+                            {milestone.approvedAt && <> &middot; Approved: {formatDate(milestone.approvedAt)}</>}
+                          </p>
                           {milestone.reviewerNote && (
                             <p className="text-xs text-text-secondary mt-1 italic">Note: {milestone.reviewerNote}</p>
                           )}

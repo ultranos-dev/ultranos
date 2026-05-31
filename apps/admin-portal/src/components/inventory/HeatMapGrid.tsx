@@ -7,7 +7,7 @@ interface HeatMapCell {
   quantity: number
   unit: string
   reportedAt: string
-  stockLevel: 'GREEN' | 'AMBER' | 'RED'
+  stockLevel: 'GREEN' | 'YELLOW' | 'AMBER' | 'RED'
 }
 
 interface HeatMapGridProps {
@@ -18,6 +18,7 @@ interface HeatMapGridProps {
 
 const STOCK_COLORS: Record<string, string> = {
   GREEN: 'bg-success-subtle text-success',
+  YELLOW: 'bg-caution-subtle text-caution',
   AMBER: 'bg-warning-subtle text-warning',
   RED: 'bg-danger-subtle text-danger',
 }

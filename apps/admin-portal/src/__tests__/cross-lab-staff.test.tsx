@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { within } from '@testing-library/react'
 
 // ── Mock supabase (required by TopHeader) ───────────────────
 vi.mock('@/lib/supabase', () => ({
@@ -33,6 +34,7 @@ vi.mock('next/navigation', () => ({
 // ── Mock trpc ───────────────────────────────────────────────
 const mockListAllLabStaff = vi.fn()
 const mockListLabsForFilter = vi.fn()
+const mockGetManagerlessLabs = vi.fn()
 const mockExportLabStaffCsv = vi.fn()
 
 vi.mock('@/lib/trpc', () => ({
@@ -40,7 +42,8 @@ vi.mock('@/lib/trpc', () => ({
     admin: {
       listAllLabStaff: { query: (...args: any[]) => mockListAllLabStaff(...args) },
       listLabsForFilter: { query: (...args: any[]) => mockListLabsForFilter(...args) },
-      exportLabStaffCsv: { query: (...args: any[]) => mockExportLabStaffCsv(...args) },
+      getManagerlessLabs: { query: (...args: any[]) => mockGetManagerlessLabs(...args) },
+      exportLabStaffCsv: { mutate: (...args: any[]) => mockExportLabStaffCsv(...args) },
     },
   },
 }))
@@ -93,6 +96,7 @@ describe('Cross-Lab Staff Overview Page', () => {
     vi.clearAllMocks()
     mockListLabsForFilter.mockResolvedValue(MOCK_LABS)
     mockListAllLabStaff.mockResolvedValue(MOCK_STAFF)
+    mockGetManagerlessLabs.mockResolvedValue([{ labId: 'lab-2', labName: 'West Lab' }])
   })
 
   it('renders staff table with correct columns', async () => {
@@ -248,7 +252,49 @@ describe('Cross-Lab Staff Overview Page', () => {
     render(<StaffPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Connection failed')).toBeInTheDocument()
+      expect(screen.getByText('Failed to load staff. Please try again.')).toBeInTheDocument()
     })
+  })
+
+  it('labs dropdown shows error option when listLabsForFilter fails', async () => {
+    mockListLabsForFilter.mockRejectedValue(new Error('Network error'))
+
+    render(<StaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('t***@lab.com')).toBeInTheDocument()
+    })
+
+    const labSelect = screen.getByLabelText('Filter by lab')
+    expect(labSelect.querySelector('option[disabled]')?.textContent).toBe('Failed to load labs')
+  })
+})
+
+describe('Cross-Lab Staff Overview Page — RTL snapshots', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockListLabsForFilter.mockResolvedValue(MOCK_LABS)
+    mockListAllLabStaff.mockResolvedValue(MOCK_STAFF)
+    mockGetManagerlessLabs.mockResolvedValue([{ labId: 'lab-2', labName: 'West Lab' }])
+  })
+
+  it('renders correctly in LTR', async () => {
+    const { container } = render(
+      <div dir="ltr">
+        <StaffPage />
+      </div>,
+    )
+    await waitFor(() => expect(screen.getByText('t***@lab.com')).toBeInTheDocument())
+    expect(container.firstChild).toMatchSnapshot()
+  })
+
+  it('renders correctly in RTL', async () => {
+    const { container } = render(
+      <div dir="rtl">
+        <StaffPage />
+      </div>,
+    )
+    await waitFor(() => expect(screen.getByText('t***@lab.com')).toBeInTheDocument())
+    expect(container.firstChild).toMatchSnapshot()
   })
 })

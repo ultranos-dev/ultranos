@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
 import { MergePreview } from '@/components/patients/MergePreview'
+import { Check } from '@ultranos/ui-kit/icons'
 
 interface Patient {
   id: string
@@ -173,9 +174,7 @@ export default function MergeWizardPage() {
         <div className="mx-auto max-w-7xl px-8 py-6">
           <div className="rounded-3xl bg-white p-8 border border-border text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-subtle">
-              <svg className="h-8 w-8 text-success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-              </svg>
+              <Check className="h-8 w-8 text-success" />
             </div>
             <p className="mt-4 text-lg font-semibold text-text-primary">Patients merged successfully</p>
             <p className="mt-1 text-sm text-text-muted">
@@ -228,9 +227,7 @@ export default function MergeWizardPage() {
                 }`}
               >
                 {s < step ? (
-                  <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                  </svg>
+                  <Check className="h-3.5 w-3.5" />
                 ) : (
                   s
                 )}

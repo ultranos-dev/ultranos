@@ -11,14 +11,23 @@ interface ExpiryBuckets {
 
 export function ExpiryWarningWidget() {
   const [buckets, setBuckets] = useState<ExpiryBuckets | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     trpc.admin.getExpiringCredentials.query({ daysAhead: 90 })
       .then((result) => setBuckets(result.buckets))
       .catch(() => {
-        // Widget is informational — swallow errors
+        setError(true)
       })
   }, [])
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-warning bg-warning-subtle p-3 text-sm text-warning">
+        Unable to load credential expiry data.
+      </div>
+    )
+  }
 
   if (!buckets || (buckets.within90 === 0)) return null
 

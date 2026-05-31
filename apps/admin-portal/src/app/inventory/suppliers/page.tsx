@@ -84,20 +84,23 @@ export default function SuppliersPage() {
       setSubmitting(true)
       setError(null)
 
+      const parsedLeadTime = formLeadTime ? parseInt(formLeadTime, 10) : NaN
+      const leadTimeDays = !isNaN(parsedLeadTime) && parsedLeadTime >= 0 ? parsedLeadTime : null
+
       if (editingSupplier) {
         await trpc.admin.updateSupplier.mutate({
           id: editingSupplier.id,
           name: formName.trim(),
           contactEmail: formEmail.trim() || null,
           phone: formPhone.trim() || null,
-          leadTimeDays: formLeadTime ? parseInt(formLeadTime) : null,
+          leadTimeDays,
         })
       } else {
         await trpc.admin.createSupplier.mutate({
           name: formName.trim(),
           contactEmail: formEmail.trim() || undefined,
           phone: formPhone.trim() || undefined,
-          leadTimeDays: formLeadTime ? parseInt(formLeadTime) : undefined,
+          leadTimeDays: leadTimeDays ?? undefined,
         })
       }
 

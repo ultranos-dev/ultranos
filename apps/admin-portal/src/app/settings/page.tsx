@@ -7,6 +7,7 @@ import { TopHeader } from '@/components/TopHeader'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
+import { KeyRound } from '@ultranos/ui-kit/icons'
 
 /* ─── Types ─── */
 
@@ -512,7 +513,7 @@ export default function SettingsPage() {
                           className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
                         >
                           <div className="flex items-center gap-3">
-                            <KeyIcon className="h-5 w-5 text-text-secondary" />
+                            <KeyRound className="h-5 w-5 text-text-secondary" />
                             <div>
                               <p className="text-sm font-medium text-text-primary">
                                 {factor.friendly_name || 'Security Key'}
@@ -696,10 +697,3 @@ export default function SettingsPage() {
   )
 }
 
-function KeyIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A.75.75 0 0 1 9.178 14H8v1.25a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75V14H3.75a.75.75 0 0 1-.75-.75v-1.428a.75.75 0 0 1 .22-.53l4.084-4.084A5.01 5.01 0 0 1 8 7Zm5-3a.75.75 0 0 0 0 1.5A1.5 1.5 0 0 1 14.5 7 .75.75 0 0 0 16 7a3 3 0 0 0-3-3Z" clipRule="evenodd" />
-    </svg>
-  )
-}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { TriangleAlert } from '@ultranos/ui-kit/icons'
 
 type LabRoleFilter = 'ALL' | 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 type ActivityFilter = 'ALL' | 'ACTIVE_7D' | 'INACTIVE'
@@ -53,6 +54,7 @@ function truncateEmail(email: string): string {
 function formatRelativeTime(iso: string | null): string {
   if (!iso) return 'Never'
   const diff = Date.now() - new Date(iso).getTime()
+  if (diff < 0) return 'Just now'
   const minutes = Math.floor(diff / 60_000)
   if (minutes < 1) return 'Just now'
   if (minutes < 60) return `${minutes}m ago`
@@ -62,8 +64,11 @@ function formatRelativeTime(iso: string | null): string {
   return `${days}d ago`
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 function RoleBadge({ role }: { role: string }) {
@@ -75,18 +80,13 @@ function RoleBadge({ role }: { role: string }) {
   )
 }
 
-function WarningIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
-    </svg>
-  )
-}
 
 export default function StaffPage() {
   const router = useRouter()
   const [staff, setStaff] = useState<StaffRow[]>([])
   const [labs, setLabs] = useState<LabOption[]>([])
+  const [labsError, setLabsError] = useState(false)
+  const [managerlessCount, setManagerlessCount] = useState(0)
   const [roleFilter, setRoleFilter] = useState<LabRoleFilter>('ALL')
   const [labFilter, setLabFilter] = useState('')
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('ALL')
@@ -96,15 +96,22 @@ export default function StaffPage() {
   const [pageIndex, setPageIndex] = useState(0)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
 
-  // Fetch labs for dropdown
+  // Fetch labs for dropdown and org-wide managerless count on mount
   useEffect(() => {
-    trpc.admin.listLabsForFilter.query().then(setLabs).catch(() => {})
+    trpc.admin.listLabsForFilter.query()
+      .then(setLabs)
+      .catch(() => setLabsError(true))
+
+    trpc.admin.getManagerlessLabs.query()
+      .then((labs) => setManagerlessCount(labs.length))
+      .catch(() => {})
   }, [])
 
   const fetchStaff = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
+      setNextCursor(null)
       const result = await trpc.admin.listAllLabStaff.query({
         ...(roleFilter !== 'ALL' && { roleFilter }),
         ...(labFilter && { labFilter }),
@@ -114,8 +121,8 @@ export default function StaffPage() {
       })
       setStaff(result.items)
       setNextCursor(result.nextCursor)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load staff')
+    } catch {
+      setError('Failed to load staff. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -126,28 +133,25 @@ export default function StaffPage() {
   }, [fetchStaff])
 
   function resetPagination() {
+    setNextCursor(null)
     setCursors([undefined])
     setPageIndex(0)
   }
 
   function handleNext() {
     if (!nextCursor) return
-    const newCursors = [...cursors]
-    if (pageIndex + 1 >= newCursors.length) {
-      newCursors.push(nextCursor)
-    }
-    setCursors(newCursors)
-    setPageIndex(pageIndex + 1)
+    setCursors((prev) => {
+      const updated = [...prev]
+      if (pageIndex + 1 >= updated.length) updated.push(nextCursor)
+      return updated
+    })
+    setPageIndex((prev) => prev + 1)
   }
 
   function handlePrevious() {
     if (pageIndex <= 0) return
-    setPageIndex(pageIndex - 1)
+    setPageIndex((prev) => prev - 1)
   }
-
-  const managerlessLabCount = new Set(
-    staff.filter((s) => !s.labHasManager).map((s) => s.labId)
-  ).size
 
   return (
     <>
@@ -181,6 +185,7 @@ export default function StaffPage() {
               aria-label="Filter by lab"
             >
               <option value="">All Labs</option>
+              {labsError && <option disabled>Failed to load labs</option>}
               {labs.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.labName}
@@ -204,7 +209,7 @@ export default function StaffPage() {
           {/* Export */}
           <ExportButton
             exportFn={() =>
-              trpc.admin.exportLabStaffCsv.query({
+              trpc.admin.exportLabStaffCsv.mutate({
                 ...(roleFilter !== 'ALL' && { roleFilter }),
                 ...(labFilter && { labFilter }),
                 activityFilter,
@@ -218,11 +223,11 @@ export default function StaffPage() {
           <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
         )}
 
-        {/* Managerless lab warning banner (AC #4) */}
-        {managerlessLabCount > 0 && (
+        {/* Org-wide managerless lab warning banner (AC #4) */}
+        {managerlessCount > 0 && (
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-warning-subtle p-3 text-sm text-warning">
-            <WarningIcon className="h-4 w-4 shrink-0" />
-            Warning: {managerlessLabCount} lab{managerlessLabCount > 1 ? 's' : ''} have no Lab Manager assigned
+            <TriangleAlert className="h-4 w-4 shrink-0" />
+            Warning: {managerlessCount} lab{managerlessCount > 1 ? 's' : ''} have no Lab Manager assigned
           </div>
         )}
 
@@ -242,11 +247,11 @@ export default function StaffPage() {
               <table className="w-full text-sm">
                 <thead className="bg-black">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Email</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Lab Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Role</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Last Active</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Assigned</th>
+                    <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Email</th>
+                    <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Lab Name</th>
+                    <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Role</th>
+                    <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Last Active</th>
+                    <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Assigned</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-surface-raised">
@@ -254,20 +259,23 @@ export default function StaffPage() {
                     <tr
                       key={`${row.practitionerId}-${row.labId}`}
                       onClick={() => router.push(`/labs/${row.labId}/staff`)}
-                      className="cursor-pointer transition-colors hover:bg-brand-lime/5"
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/labs/${row.labId}/staff`) }}
+                      tabIndex={0}
+                      role="button"
+                      className="cursor-pointer transition-colors hover:bg-brand-lime/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
                     >
-                      <td className="px-4 py-3 text-text-muted">{truncateEmail(row.email)}</td>
-                      <td className="px-4 py-3 font-medium text-text-primary">
+                      <td className="ps-4 pe-4 py-3 text-text-muted">{truncateEmail(row.email)}</td>
+                      <td className="ps-4 pe-4 py-3 font-medium text-text-primary">
                         <span className="flex items-center gap-1.5">
                           {row.labName}
                           {!row.labHasManager && (
-                            <WarningIcon className="h-4 w-4 text-warning shrink-0" />
+                            <TriangleAlert className="h-4 w-4 text-warning shrink-0" />
                           )}
                         </span>
                       </td>
-                      <td className="px-4 py-3"><RoleBadge role={row.labRole} /></td>
-                      <td className="px-4 py-3 text-text-muted">{formatRelativeTime(row.lastActiveAt)}</td>
-                      <td className="px-4 py-3 text-text-muted">{formatDate(row.createdAt)}</td>
+                      <td className="ps-4 pe-4 py-3"><RoleBadge role={row.labRole} /></td>
+                      <td className="ps-4 pe-4 py-3 text-text-muted">{formatRelativeTime(row.lastActiveAt)}</td>
+                      <td className="ps-4 pe-4 py-3 text-text-muted">{formatDate(row.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

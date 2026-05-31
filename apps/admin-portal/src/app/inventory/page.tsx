@@ -7,6 +7,7 @@ import { HeatMapGrid } from '@/components/inventory/HeatMapGrid'
 import { RedistributionCard } from '@/components/inventory/RedistributionCard'
 import { CreatePurchaseOrderModal } from '@/components/inventory/CreatePurchaseOrderModal'
 import { OrderStatusPipeline, getNextStatus } from '@/components/inventory/OrderStatusPipeline'
+import { PurchaseOrderDetailModal } from '@/components/inventory/PurchaseOrderDetailModal'
 
 type ActiveTab = 'heatmap' | 'orders'
 
@@ -17,7 +18,7 @@ interface InventoryCell {
   quantity: number
   unit: string
   reportedAt: string
-  stockLevel: 'GREEN' | 'AMBER' | 'RED'
+  stockLevel: 'GREEN' | 'YELLOW' | 'AMBER' | 'RED'
 }
 
 interface Recommendation {
@@ -27,6 +28,7 @@ interface Recommendation {
   sourceLabName: string
   reagentCategory: string
   sourceQuantity: number
+  distanceKm: number | null
 }
 
 interface PurchaseOrder {
@@ -73,6 +75,7 @@ export default function InventoryPage() {
   const [orderCursor, setOrderCursor] = useState(0)
   const [ordersLoading, setOrdersLoading] = useState(false)
   const [advancingId, setAdvancingId] = useState<string | null>(null)
+  const [viewingOrder, setViewingOrder] = useState<PurchaseOrder | null>(null)
 
   // Suppliers (for PO creation modal)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -237,6 +240,7 @@ export default function InventoryPage() {
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Items</th>
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
                         <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Created</th>
+                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Details</th>
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Actions</th>
                       </tr>
                     </thead>
@@ -252,6 +256,14 @@ export default function InventoryPage() {
                               <OrderStatusPipeline currentStatus={order.status} />
                             </td>
                             <td className="px-4 py-3 text-text-secondary">{formatDate(order.createdAt)}</td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => setViewingOrder(order)}
+                                className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-accent-subtle transition-colors"
+                              >
+                                View
+                              </button>
+                            </td>
                             <td className="px-4 py-3 text-center">
                               {next && (
                                 <button
@@ -313,6 +325,15 @@ export default function InventoryPage() {
               setShowCreateModal(false)
               if (tab === 'orders') fetchOrders()
             }}
+          />
+        )}
+
+        {/* PO Detail Modal */}
+        {viewingOrder && (
+          <PurchaseOrderDetailModal
+            order={viewingOrder}
+            labNames={Object.fromEntries(labs.map((l) => [l.id, l.name]))}
+            onClose={() => setViewingOrder(null)}
           />
         )}
       </div>
