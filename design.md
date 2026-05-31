@@ -660,6 +660,59 @@ Safety-critical banner that renders FIRST in the patient view, never collapsed, 
 - **Icon set direction**: Medical/clinical icons (stethoscope, clipboard, syringe, heart, lungs) alongside standard UI icons (search, filter, download, print, share, chevron, close)
 - **Green circle icon treatment**: For vital-card icons and anatomy hotspots, the icon sits inside a 24–36px green-outlined (`#9fe870` stroke or `#e2f6d5` fill) or green-filled (`#9fe870`) circle with `#163300` icon color
 
+### Icon Library & Implementation
+
+All icons across every app and the admin-portal are standardized on **lucide-react** via `@ultranos/ui-kit`. The catalog lives in `packages/ui-kit/src/icons.ts` and covers ~160 icons across 14 domain groups (Navigation, Users, Clinical, Lab, Pharmacy, Status, Documents, Actions, Calendar, Communication, Media, Charts, Shapes, Admin).
+
+**Tree-shaking — always use the subpath import:**
+```typescript
+// ✅ Correct — only the named icons are bundled by Next.js tree-shaking
+import { Bell, Microscope, ChevronRight } from '@ultranos/ui-kit/icons'
+
+// ❌ Never import lucide-react directly in app code
+import { Bell } from 'lucide-react'
+```
+
+The `@ultranos/ui-kit/icons` subpath maps to its own `dist/icons.js` chunk — separate from the rest of ui-kit — so unused icons are eliminated at build time. Each Lucide icon is a standalone ESM export (~200–500 bytes), compared to ~300KB for the full unshaken library.
+
+**RTL-aware rendering — use `DirectionalIcon`:**
+```typescript
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronRight, Pill } from '@ultranos/ui-kit/icons'
+
+// Navigation icons (arrows, chevrons, back buttons) → mirror in RTL
+<DirectionalIcon category="navigation">
+  <ChevronRight size={20} />
+</DirectionalIcon>
+
+// Medical icons (pill, stethoscope, flask, microscope) → never mirror
+<DirectionalIcon category="medical">
+  <Pill size={20} />
+</DirectionalIcon>
+```
+
+`DirectionalIcon` applies `transform: var(--directional-icon-transform, none)` via a CSS custom property set by `[dir="rtl"]` — zero JavaScript, zero layout recalculation.
+
+**Size conventions:**
+
+| Context | `size` prop | Tailwind equivalent |
+|---------|------------|-------------------|
+| Button / nav tab | `size={16}` | `h-4 w-4` |
+| Sidebar rail | `size={20}` | `h-5 w-5` |
+| Standalone action | `size={24}` | `h-6 w-6` |
+| Empty state / illustration | `size={28}`–`size={48}` | `h-7 w-7` – `h-12 w-12` |
+
+**Stroke weight:** Lucide default is `strokeWidth={2}`. Only override (e.g. `strokeWidth={1.5}`) when the design spec explicitly calls for lighter strokes on large decorative icons.
+
+**Adding new icons:** Add to `packages/ui-kit/src/icons.ts` in the appropriate domain group and rebuild ui-kit (`pnpm -F @ultranos/ui-kit build`). Never add lucide-react to an individual app's `package.json`.
+
+**Intentionally NOT migrated to Lucide (inline SVGs preserved):**
+- Loading spinners (`animate-spin`) — CSS animation pattern with no Lucide equivalent
+- `token-icons.tsx` — custom **filled** geometric shapes; Lucide versions are outlined
+- `ResultColorIndicator.tsx` — uses `strokeWidth="2.5"` deliberately for healthcare-grade legibility
+- `QcHistoryView.tsx` — Levey-Jennings chart with dynamic `viewBox` (data visualization)
+- Cultural flag path registries — data-driven SVG path lookup tables, not UI icons
+
 ---
 
 ## 10. Accessibility & Reduced Motion
