@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-interface SyncStatus {
+export interface SyncStatus {
   isPending: boolean
   isError: boolean
   lastSyncedAt: string | null
@@ -9,7 +9,8 @@ interface SyncStatus {
 }
 
 interface SyncState extends SyncStatus {
-  updateSyncStatus: (status: SyncStatus) => void
+  updateSyncStatus: (status: Partial<SyncStatus>) => void
+  markSynced: () => void
 }
 
 export const useSyncStore = create<SyncState>()((set) => ({
@@ -21,5 +22,9 @@ export const useSyncStore = create<SyncState>()((set) => ({
 
   updateSyncStatus: (status) => {
     set(status)
+  },
+
+  markSynced: () => {
+    set({ lastSyncedAt: new Date().toISOString() })
   },
 }))

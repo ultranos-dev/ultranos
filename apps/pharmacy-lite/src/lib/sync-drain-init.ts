@@ -51,7 +51,12 @@ export function startSyncDrain(): void {
       return result
     },
     onStatusUpdate: (status) => {
-      useSyncStore.getState().updateSyncStatus(status)
+      const store = useSyncStore.getState()
+      store.updateSyncStatus(status)
+      // Update lastSyncedAt when drain completes a cycle with no pending items
+      if (!status.isPending && status.pendingCount === 0) {
+        store.markSynced()
+      }
     },
     onAudit: (entry, outcome) => {
       const session = useAuthSessionStore.getState().session
@@ -69,6 +74,13 @@ export function startSyncDrain(): void {
   })
 
   drainWorker.start()
+}
+
+/**
+ * Trigger an immediate drain cycle. No-op if worker is not running.
+ */
+export function triggerDrain(): void {
+  drainWorker?.drain()
 }
 
 /**

@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
+import { SyncProvider } from '@/components/providers/SyncProvider'
 import { AppShellWrapper } from '@/components/AppShellWrapper'
 
 export default async function LocaleLayout({ children }: { children: React.ReactNode }) {
@@ -7,9 +8,11 @@ export default async function LocaleLayout({ children }: { children: React.React
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <AppShellWrapper>
-        {children}
-      </AppShellWrapper>
+      <SyncProvider>
+        <AppShellWrapper>
+          {children}
+        </AppShellWrapper>
+      </SyncProvider>
     </NextIntlClientProvider>
   )
 }

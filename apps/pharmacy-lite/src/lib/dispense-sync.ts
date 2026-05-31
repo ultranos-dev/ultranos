@@ -92,6 +92,42 @@ export async function syncDispenseToHub(
   }
 }
 
+/**
+ * Retry syncing a previously queued payload directly to the Hub.
+ * Used by SyncQueueDashboard when the original dispense record is no longer
+ * available in IndexedDB but the serialized payload is still in the sync queue.
+ */
+export async function retrySyncPayload(
+  payload: Record<string, unknown>,
+): Promise<DispenseSyncResult> {
+  try {
+    const url = new URL(getHubApiUrl())
+    url.pathname = url.pathname.replace(/\/$/, '') + '/medication.recordDispense'
+
+    const token = await useAuthSessionStore.getState().getAccessToken()
+    if (!token) {
+      return { synced: false, queued: false, error: 'Authentication required for Hub sync' }
+    }
+
+    const res = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ json: payload }),
+    })
+
+    if (!res.ok) {
+      return { synced: false, queued: false, error: `Hub returned ${res.status}` }
+    }
+
+    return { synced: true, queued: false }
+  } catch {
+    return { synced: false, queued: false, error: 'Network error during retry' }
+  }
+}
+
 async function enqueueForRetry(
   dispense: LocalMedicationDispense,
   payload: Record<string, unknown>,

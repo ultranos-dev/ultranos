@@ -10,11 +10,14 @@ import { SyncPulse } from './pharmacy/SyncPulse'
 import { SyncCapacityBanner } from './pharmacy/SyncCapacityBanner'
 import { SessionExpiryBanner } from './pharmacy/SessionExpiryBanner'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { stopSyncDrain } from '@/lib/sync-drain-init'
+import { stopKrlSync } from '@/lib/krl-sync-worker'
 import { stopAuditDrain } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useCatalogSync } from '@/hooks/useCatalogSync'
 import { useExpiryWatchdog } from '@/hooks/useExpiryWatchdog'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
 // Inline SVG icons — no icon library (matches codebase pattern)
 const icons = {
@@ -179,6 +182,8 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
 
   const handleSignOut = useCallback(async () => {
     encryptionKeyStore.wipe()
+    stopSyncDrain()
+    stopKrlSync()
     stopAuditDrain()
     useAuthSessionStore.getState().clearSession()
     try {
@@ -235,6 +240,7 @@ export function AppShellWrapper({ children }: { children: ReactNode }) {
       }}
       onSignOut={handleSignOut}
       syncIndicator={<SyncPulse />}
+      languageSelector={(collapsed: boolean) => <LanguageSelectorClient collapsed={collapsed} />}
       persistKey="pharmacy-lite-sidebar-collapsed"
     >
       <a
