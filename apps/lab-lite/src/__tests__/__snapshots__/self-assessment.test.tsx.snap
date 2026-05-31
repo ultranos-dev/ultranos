@@ -1,0 +1,425 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="flex flex-col gap-4"
+      data-testid="self-assessment"
+    >
+      <h3
+        class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+      >
+        Self-Check
+      </h3>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-0"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          1
+          . 
+          What is the first step?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-0"
+                name="q-0"
+                type="radio"
+                value="0"
+              />
+              Collect sample
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-1"
+                name="q-0"
+                type="radio"
+                value="1"
+              />
+              Run QC
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-2"
+                name="q-0"
+                type="radio"
+                value="2"
+              />
+              Label tube
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-1"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          2
+          . 
+          How are reagents stored?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-0"
+                name="q-1"
+                type="radio"
+                value="0"
+              />
+              Room temp
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-1"
+                name="q-1"
+                type="radio"
+                value="1"
+              />
+              Refrigerated
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-2"
+                name="q-1"
+                type="radio"
+                value="2"
+              />
+              Frozen
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-2"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          3
+          . 
+          What does CBC stand for?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-0"
+                name="q-2"
+                type="radio"
+                value="0"
+              />
+              Complete Blood Count
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-1"
+                name="q-2"
+                type="radio"
+                value="1"
+              />
+              Cell Blood Check
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-2"
+                name="q-2"
+                type="radio"
+                value="2"
+              />
+              Count Blood Cells
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex justify-between gap-2 pt-1"
+      >
+        <button
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          data-testid="quiz-back"
+          type="button"
+        >
+          Back
+        </button>
+        <button
+          class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+          data-testid="quiz-submit"
+          disabled=""
+          type="button"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SelfAssessment — RTL snapshot (Task 8) > renders correctly in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col gap-4"
+      data-testid="self-assessment"
+    >
+      <h3
+        class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+      >
+        Self-Check
+      </h3>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-0"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          1
+          . 
+          What is the first step?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-0"
+                name="q-0"
+                type="radio"
+                value="0"
+              />
+              Collect sample
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-1"
+                name="q-0"
+                type="radio"
+                value="1"
+              />
+              Run QC
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-0-2"
+                name="q-0"
+                type="radio"
+                value="2"
+              />
+              Label tube
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-1"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          2
+          . 
+          How are reagents stored?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-0"
+                name="q-1"
+                type="radio"
+                value="0"
+              />
+              Room temp
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-1"
+                name="q-1"
+                type="radio"
+                value="1"
+              />
+              Refrigerated
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-1-2"
+                name="q-1"
+                type="radio"
+                value="2"
+              />
+              Frozen
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex flex-col gap-2"
+        data-testid="question-2"
+      >
+        <p
+          class="text-sm font-medium text-gray-800 dark:text-gray-200"
+        >
+          3
+          . 
+          What does CBC stand for?
+        </p>
+        <ul
+          class="space-y-1.5"
+        >
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-0"
+                name="q-2"
+                type="radio"
+                value="0"
+              />
+              Complete Blood Count
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-1"
+                name="q-2"
+                type="radio"
+                value="1"
+              />
+              Cell Blood Check
+            </label>
+          </li>
+          <li>
+            <label
+              class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 p-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <input
+                class="accent-blue-600"
+                data-testid="option-2-2"
+                name="q-2"
+                type="radio"
+                value="2"
+              />
+              Count Blood Cells
+            </label>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="flex justify-between gap-2 pt-1"
+      >
+        <button
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          data-testid="quiz-back"
+          type="button"
+        >
+          Back
+        </button>
+        <button
+          class="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+          data-testid="quiz-submit"
+          disabled=""
+          type="button"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
