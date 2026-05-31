@@ -122,20 +122,44 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
 /**
  * Start listening for online events and drain the queue automatically.
  * Call once on app initialization. Returns a cleanup function.
+ *
+ * When Low Data Mode is active, drains on a 30-minute interval instead of
+ * on-online events to conserve data.
  */
-export function startQueueDrainListener(deps: DrainDependencies): () => void {
-  const handler = () => {
-    drainQueue(deps)
-  }
+export function startQueueDrainListener(
+  deps: DrainDependencies,
+  options?: { lowDataMode?: boolean },
+): () => void {
+  const lowData = options?.lowDataMode ?? false
+  let intervalId: ReturnType<typeof setInterval> | null = null
 
-  window.addEventListener('online', handler)
+  if (lowData) {
+    // Low Data Mode: batch drain every 30 minutes
+    const LOW_DATA_DRAIN_INTERVAL_MS = 30 * 60 * 1000
+    intervalId = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        drainQueue(deps)
+      }
+    }, LOW_DATA_DRAIN_INTERVAL_MS)
+  } else {
+    // Normal mode: drain on online event
+    const handler = () => {
+      drainQueue(deps)
+    }
 
-  // Also attempt drain on startup if already online
-  if (typeof navigator !== 'undefined' && navigator.onLine) {
-    drainQueue(deps)
+    window.addEventListener('online', handler)
+
+    // Also attempt drain on startup if already online
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      drainQueue(deps)
+    }
+
+    return () => {
+      window.removeEventListener('online', handler)
+    }
   }
 
   return () => {
-    window.removeEventListener('online', handler)
+    if (intervalId) clearInterval(intervalId)
   }
 }

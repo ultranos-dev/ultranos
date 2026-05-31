@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["'Inter'", 'system-ui', '-apple-system', "'Segoe UI'", 'Roboto', 'sans-serif'],
+        sans: ['var(--font-family-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
         primary: {

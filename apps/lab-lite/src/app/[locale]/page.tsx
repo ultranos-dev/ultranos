@@ -7,6 +7,7 @@ import { ActivitySummaryCard } from '@/components/dashboard/ActivitySummaryCard'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import { RecentUploadsList } from '@/components/dashboard/RecentUploadsList'
 import { UploadSuccessBanner } from '@/components/dashboard/UploadSuccessBanner'
+import { WorkloadScheduleCard } from '@/components/scheduler/WorkloadScheduleCard'
 import { Button } from '@/components/ui/Button'
 import { useDashboardData } from '@/hooks/useDashboardData'
 
@@ -56,6 +57,7 @@ export default function LabHomePage() {
         resultsPending={todayResultsPending}
         lastRefreshedAt={lastRefreshedAt ?? undefined}
       />
+      <WorkloadScheduleCard />
       {loading ? <RecentUploadsSkeleton /> : <RecentUploadsList items={recentUploads} onItemCancelled={retry} />}
     </div>
   )
