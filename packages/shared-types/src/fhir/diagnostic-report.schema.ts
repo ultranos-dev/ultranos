@@ -4,7 +4,7 @@ import {
   ReferenceSchema,
   FhirMetaSchema,
 } from './common.schema.js'
-import type { PatientVerificationMethod } from '../enums.js'
+import type { PatientVerificationMethod, AmendmentReasonCode } from '../enums.js'
 
 // FHIR R4 DiagnosticReport Zod Schema
 // Ref: https://hl7.org/fhir/R4/diagnosticreport.html
@@ -92,4 +92,41 @@ export interface PatientVerificationRecord {
   deviationReason?: string
   /** Sync status for offline queue */
   syncStatus: 'pending' | 'synced'
+}
+
+/**
+ * Amendment record — stored per amendment workflow.
+ * Story 43.3: Three-actor amendment protocol (tech → supervisor → system commit).
+ * Append-only: records are never deleted or modified after COMMITTED.
+ * PHI safety: authorizedBy and initiatedBy are opaque practitioner IDs only.
+ */
+export interface AmendmentRecord {
+  /** UUID — primary key */
+  id: string
+  /** Report ID that was amended (now has status 'amended' or 'entered-in-error') */
+  originalReportId: string
+  /** Report ID of the new corrected report */
+  amendedReportId: string
+  /** Reason classification for the amendment */
+  reasonCode: AmendmentReasonCode
+  /** Free-text explanation — minimum 10 characters */
+  reasonText: string
+  /** Opaque practitioner ID of the authorizing supervisor */
+  authorizedBy: string
+  /** ISO 8601 timestamp of supervisor authorization */
+  authorizedAt: string
+  /** Opaque practitioner ID of the initiating technician */
+  initiatedBy: string
+  /** ISO 8601 timestamp of initiation */
+  initiatedAt: string
+  /** Snapshot of the original result values before amendment */
+  originalValues: Record<string, unknown>
+  /** Snapshot of the corrected result values */
+  amendedValues: Record<string, unknown>
+  /** Hybrid Logical Clock timestamp for offline ordering */
+  hlcTimestamp: string
+  /** Workflow status */
+  status: 'PENDING_AUTHORIZATION' | 'COMMITTED'
+  /** Sync status for offline queue */
+  syncStatus: 'pending' | 'synced' | 'failed'
 }

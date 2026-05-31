@@ -46,6 +46,10 @@ export enum AuditAction {
   PHI_CLEANUP = 'PHI_CLEANUP',
   PATIENT_IDENTITY_VERIFIED = 'PATIENT_IDENTITY_VERIFIED',
   REFERENCE_RANGE_UPDATED = 'REFERENCE_RANGE_UPDATED',
+  RESULT_AMENDED = 'RESULT_AMENDED',
+  QC_DRIFT_DETECTED = 'QC_DRIFT_DETECTED',
+  QC_DRIFT_ACKNOWLEDGED = 'QC_DRIFT_ACKNOWLEDGED',
+  CRITICAL_VALUE_CHECKLIST_COMPLETED = 'CRITICAL_VALUE_CHECKLIST_COMPLETED',
 }
 
 export enum AuditResourceType {
@@ -228,4 +232,17 @@ export enum PatientVerificationMethod {
   QR_CODE = 'QR_CODE',                               // QR code scanned from Health Passport (Patient-Lite app)
   WRISTBAND_SCANNED = 'WRISTBAND_SCANNED',           // Hospital wristband barcode (future use)
   OTHER = 'OTHER',                                   // Requires free-text description
+}
+
+/**
+ * Reason codes for lab result amendments.
+ * Story 43.3 AC #3: Mandatory reason classification for amendment audit trail.
+ */
+export enum AmendmentReasonCode {
+  CLERICAL_ERROR = 'CLERICAL_ERROR',
+  INSTRUMENT_MALFUNCTION = 'INSTRUMENT_MALFUNCTION',
+  WRONG_PATIENT = 'WRONG_PATIENT',
+  QC_FAILURE_POST_RELEASE = 'QC_FAILURE_POST_RELEASE',
+  TRANSCRIPTION_ERROR = 'TRANSCRIPTION_ERROR',
+  OTHER = 'OTHER',
 }
