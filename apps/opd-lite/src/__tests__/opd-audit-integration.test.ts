@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { setAuditStoreAdapter, type AuditStoreAdapter, type ClientAuditEvent } from '@ultranos/audit-logger/client'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePatientStore } from '@/stores/patient-store'
@@ -245,7 +245,7 @@ describe('OPD-Lite Audit Integration', () => {
             frequencyCode: 'BID',
             durationDays: 5,
             route: 'oral',
-          } as any,
+          } as unknown,
           'enc-001',
           'patient-001',
           'Practitioner/doctor-001',

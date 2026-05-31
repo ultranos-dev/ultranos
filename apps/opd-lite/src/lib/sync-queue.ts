@@ -43,7 +43,7 @@ const dexieStorage: SyncQueueStorage = {
       .toArray()
     if (synced.length === 0) return null
     synced.sort((a, b) => (b.lastAttemptAt ?? b.createdAt).localeCompare(a.lastAttemptAt ?? a.createdAt))
-    return synced[0]
+    return synced[0] ?? null
   },
 }
 

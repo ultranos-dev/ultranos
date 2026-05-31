@@ -23,7 +23,7 @@ interface EncounterHistoryListProps {
 
 function formatEncounterDate(hlcTimestamp: string): string {
   try {
-    const iso = hlcTimestamp.split('_')[0]
+    const iso = hlcTimestamp.split('_')[0]!
     return new Date(iso).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -194,7 +194,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   }, [globalLastSyncedAt, loadFromDexie])
 
   const handleSyncNow = useCallback(async () => {
-    console.log('[EncounterHistoryList] handleSyncNow clicked, patientId=', patientId)
+    console.warn('[EncounterHistoryList] handleSyncNow clicked')
     // Use the sync engine pull path, then fall back to legacy revalidation
     try {
       const { getSupabaseBrowserClient } = await import('@/lib/supabase')

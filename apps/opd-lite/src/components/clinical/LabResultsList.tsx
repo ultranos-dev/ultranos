@@ -85,8 +85,8 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
       // Sort by effectiveDateTime descending, fallback to issued
       results.sort((a, b) => {
-        const dateA = new Date(a.effectiveDateTime ?? a.issued).getTime()
-        const dateB = new Date(b.effectiveDateTime ?? b.issued).getTime()
+        const dateA = new Date(a.effectiveDateTime ?? a.issued ?? 0).getTime()
+        const dateB = new Date(b.effectiveDateTime ?? b.issued ?? 0).getTime()
         return dateB - dateA
       })
 

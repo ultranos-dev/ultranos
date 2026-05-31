@@ -103,7 +103,7 @@ export default function LoginPage() {
       return
     }
 
-    const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const base64 = jwt.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
     const payload = JSON.parse(atob(base64))
     const userId = payload.sub
     const role = payload.role ?? ''

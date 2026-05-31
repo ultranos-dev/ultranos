@@ -64,7 +64,7 @@ describe('encryption performance', () => {
       const max = Math.max(...times)
       const p95 = times.sort((a, b) => a - b)[Math.floor(iterations * 0.95)]!
 
-      console.log(
+      console.warn(
         `Raw crypto - avg: ${avg.toFixed(2)}ms, p95: ${p95.toFixed(2)}ms, max: ${max.toFixed(2)}ms`,
       )
 
@@ -141,7 +141,7 @@ describe('encryption performance', () => {
         plainTimes.reduce((a, b) => a + b, 0) / plainTimes.length
       const overhead = encAvg - plainAvg
 
-      console.log(
+      console.warn(
         `Dexie encrypted avg: ${encAvg.toFixed(2)}ms, plain avg: ${plainAvg.toFixed(2)}ms, overhead: ${overhead.toFixed(2)}ms`,
       )
 

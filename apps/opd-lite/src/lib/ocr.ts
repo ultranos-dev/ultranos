@@ -21,20 +21,20 @@ export interface OcrResult {
 /** Known KYC field patterns for extraction from license/ID documents */
 const FIELD_PATTERNS: Record<string, RegExp[]> = {
   full_name: [
-    /(?:name|الاسم)\s*[:\-]?\s*(.+)/i,
+    /(?:name|الاسم)\s*[:-]?\s*(.+)/i,
     /(?:dr\.?\s+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/,
   ],
   license_number: [
-    /(?:license|lic|رخصة)\s*(?:no|number|#|رقم)?\s*[:\-]?\s*([A-Z0-9\-]+)/i,
-    /([A-Z]{2,6}[\-\/]?\d{3,10})/,
+    /(?:license|lic|رخصة)\s*(?:no|number|#|رقم)?\s*[:-]?\s*([A-Z0-9-]+)/i,
+    /([A-Z]{2,6}[-/]?\d{3,10})/,
   ],
   issuing_body: [
-    /(?:issued?\s*by|authority|الجهة)\s*[:\-]?\s*(.+)/i,
+    /(?:issued?\s*by|authority|الجهة)\s*[:-]?\s*(.+)/i,
     /(HAAD|DHA|MOH|JMC|SCFHS|NHRA)/i,
   ],
   expiry_date: [
-    /(?:expir|valid\s*until|تاريخ الانتهاء)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
-    /(\d{4}[\-\/]\d{2}[\-\/]\d{2})/,
+    /(?:expir|valid\s*until|تاريخ الانتهاء)\s*[:-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
+    /(\d{4}[-/]\d{2}[-/]\d{2})/,
   ],
 }
 
@@ -116,9 +116,9 @@ function extractFieldsFromText(text: string): OcrField[] {
 
     for (const line of lines) {
       for (let i = 0; i < patterns.length; i++) {
-        const match = line.match(patterns[i])
+        const match = line.match(patterns[i]!)
         if (match) {
-          const value = (match[1] ?? match[0]).trim()
+          const value = (match[1] ?? match[0]!).trim()
           // TODO: v1 limitation — confidence is synthetic (based on regex specificity).
           // Real fix: use DOCUMENT_TEXT_DETECTION and word-level confidence from Cloud Vision API.
           const confidence = i === 0 ? 0.92 : 0.78
@@ -150,7 +150,7 @@ export function fileToBase64(file: File): Promise<string> {
     reader.onload = () => {
       const result = reader.result as string
       // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
-      const base64 = result.split(',')[1]
+      const base64 = result.split(',')[1]!
       resolve(base64)
     }
     reader.onerror = reject

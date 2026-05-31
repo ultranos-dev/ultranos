@@ -34,7 +34,7 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 // Mock window.location
-const mockLocationHref = vi.fn()
+const _mockLocationHref = vi.fn()
 Object.defineProperty(window, 'location', {
   value: { href: '' },
   writable: true,

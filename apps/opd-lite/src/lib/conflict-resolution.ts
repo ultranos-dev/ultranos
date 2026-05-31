@@ -9,7 +9,8 @@
  */
 
 import { db, type SyncQueueEntry } from './db'
-import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
+import { auditPhiAccess, AuditAction } from './audit'
+import type { AuditResourceType } from './audit'
 
 /** Tier 1 resource types that require append-only merge by default. */
 export const TIER_1_RESOURCE_TYPES = [
@@ -55,7 +56,7 @@ export async function getTier1Conflicts(): Promise<SyncQueueEntry[]> {
   return all.filter(
     (entry) =>
       entry.conflictFlag === true &&
-      entry.status !== 'resolved' &&
+      entry.status !== 'synced' &&
       isTier1Resource(entry.resourceType),
   )
 }
@@ -115,7 +116,7 @@ export async function resolveConflict(
 
       // Update syncQueue entry to resolved
       await db.syncQueue.update(entryId, {
-        status: 'resolved' as const,
+        status: 'synced' as const,
         conflictFlag: false,
         resolvedAt: now,
         resolutionType,

@@ -42,7 +42,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         if (!useAuthSessionStore.getState().isAuthenticated) {
           try {
             const jwt = data.session.access_token
-            const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+            const base64 = jwt.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
             const payload = JSON.parse(atob(base64))
             useAuthSessionStore.getState().setSession({
               userId: payload.sub,

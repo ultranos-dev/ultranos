@@ -138,7 +138,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
         setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
       } else if (e.key === 'Enter' && activeIndex >= 0) {
         e.preventDefault()
-        handleSelectMedication(results[activeIndex].item)
+        handleSelectMedication(results[activeIndex]!.item)
       } else if (e.key === 'Escape') {
         setIsOpen(false)
         setActiveIndex(-1)

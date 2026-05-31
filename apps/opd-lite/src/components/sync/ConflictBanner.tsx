@@ -30,7 +30,7 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
         (entry) =>
           entry.patientRef === patientRef &&
           entry.conflictFlag === true &&
-          entry.status !== 'resolved' &&
+          entry.status !== 'synced' &&
           (TIER_1_RESOURCE_TYPES as readonly string[]).includes(entry.resourceType),
       )
 

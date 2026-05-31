@@ -41,7 +41,7 @@ export function MpiResultModal({
   // Auto-expand first candidate when modal opens
   useEffect(() => {
     if (open && candidates.length > 0) {
-      setExpandedId(candidates[0].id)
+      setExpandedId(candidates[0]!.id)
     } else {
       setExpandedId(null)
     }
@@ -64,8 +64,8 @@ export function MpiResultModal({
         'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
       )
       if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
+      const first = focusable[0]!
+      const last = focusable[focusable.length - 1]!
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault()
         last.focus()

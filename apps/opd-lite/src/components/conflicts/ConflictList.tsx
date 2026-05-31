@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
-import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { auditPhiAccess, AuditAction } from '@/lib/audit'
+import type { AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/Button'
 import { ConflictDiffView } from './ConflictDiffView'
 
@@ -39,7 +40,7 @@ export function ConflictList() {
       const tier1 = all.filter(
         (entry) =>
           entry.conflictFlag === true &&
-          entry.status !== 'resolved' &&
+          entry.status !== 'synced' &&
           isTier1Resource(entry.resourceType),
       )
 

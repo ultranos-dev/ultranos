@@ -38,7 +38,7 @@ export function SyncPulse() {
   useEffect(() => {
     const refresh = async () => {
       const store = useSyncStore.getState()
-      const pending = await db.syncQueue.where('status').anyOf(['pending', 'in-flight']).count()
+      const pending = await db.syncQueue.where('status').anyOf(['pending', 'syncing']).count()
       const failed = await db.syncQueue.where('status').equals('failed').count()
       const conflicts = await db.syncQueue.filter(e => e.conflictFlag === true).count()
       store.updateSyncStatus({

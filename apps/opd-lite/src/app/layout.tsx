@@ -5,12 +5,11 @@ import { getDirection } from '@ultranos/ui-kit'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import './globals.css'
 
-const inter = localFont({
-  src: [
-    { path: '../../public/fonts/inter-latin.woff2', weight: '400 900', style: 'normal' },
-    { path: '../../public/fonts/inter-latin-ext.woff2', weight: '400 900', style: 'normal' },
-  ],
-  variable: '--font-inter',
+const urbanist = localFont({
+  src: '../../public/fonts/Urbanist-Variable.woff2',
+  weight: '100 900',
+  style: 'normal',
+  variable: '--font-urbanist',
   display: 'swap',
 })
 
@@ -35,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isRtl = dir === 'rtl'
 
   return (
-    <html lang={locale} dir={dir} className={inter.variable}>
+    <html lang={locale} dir={dir} className={urbanist.variable}>
       <head>
         {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
       </head>

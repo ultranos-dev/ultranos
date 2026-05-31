@@ -54,7 +54,7 @@ function compactDosage(rx: FhirMedicationRequestZod): CompactDosage {
     if (freqCode) result.freq = freqCode
   }
 
-  if (d?.asNeededBoolean) result.prn = true
+  if ((d as typeof d & { asNeededBoolean?: boolean })?.asNeededBoolean) result.prn = true
 
   return result
 }

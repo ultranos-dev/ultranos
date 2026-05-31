@@ -19,7 +19,7 @@ interface RecentEncounter {
 function formatDate(timestamp: string): string {
   try {
     // HLC timestamps have format "ISO_counter_nodeId" — extract ISO portion
-    const iso = timestamp.includes('_') ? timestamp.split('_')[0] : timestamp
+    const iso = timestamp.includes('_') ? timestamp.split('_')[0]! : timestamp
     return new Date(iso).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',

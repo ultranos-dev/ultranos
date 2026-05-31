@@ -34,7 +34,7 @@ export function SOAPNoteEntry({
   onAssessmentChange,
   onPlanChange,
   encounterId,
-  patientId,
+  patientId: _patientId,
   aiConsentGranted,
   isOnline,
 }: SOAPNoteEntryProps) {
@@ -48,7 +48,7 @@ export function SOAPNoteEntry({
 
   // Offline macro state
   const [macroMatches, setMacroMatches] = useState<SOAPTemplate[]>([])
-  const [macroQuery, setMacroQuery] = useState('')
+  const [_macroQuery, setMacroQuery] = useState('')
   const macroTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track text changes for macro search when offline

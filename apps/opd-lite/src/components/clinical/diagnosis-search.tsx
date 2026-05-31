@@ -129,7 +129,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
         setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
       } else if (e.key === 'Enter' && activeIndex >= 0) {
         e.preventDefault()
-        handleSelect(results[activeIndex].item)
+        handleSelect(results[activeIndex]!.item)
       } else if (e.key === 'Escape') {
         setIsOpen(false)
         setActiveIndex(-1)

@@ -66,8 +66,8 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
       if (e.key === 'Tab') {
         const focusables = e.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
         if (focusables.length === 0) return
-        const first = focusables[0]
-        const last = focusables[focusables.length - 1]
+        const first = focusables[0]!
+        const last = focusables[focusables.length - 1]!
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault()
           last.focus()

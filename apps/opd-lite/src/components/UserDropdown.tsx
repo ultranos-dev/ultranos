@@ -19,7 +19,7 @@ function getInitials(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w[0].toUpperCase())
+    .map((w) => w[0]!.toUpperCase())
     .slice(0, 2)
     .join('')
 }
@@ -73,7 +73,7 @@ export function UserDropdown() {
 
   if (!session) return null
 
-  const displayName = session.name || session.email?.split('@')[0] || 'User'
+  const displayName = session.email?.split('@')[0] || 'User'
   const initials = getInitials(displayName)
 
   return (

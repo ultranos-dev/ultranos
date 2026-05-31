@@ -77,7 +77,7 @@ describe('compressPrescription', () => {
   it('preserves essential medication data', () => {
     const rx = makeMockRx()
     const compressed = compressPrescription([rx])
-    const parsed = JSON.parse(compressed)
+    const _parsed = JSON.parse(compressed)
 
     // Must contain medication code + display
     expect(compressed).toContain('AMX500')
@@ -87,7 +87,7 @@ describe('compressPrescription', () => {
   it('preserves encounter and requester references', () => {
     const rx = makeMockRx()
     const compressed = compressPrescription([rx])
-    const parsed = JSON.parse(compressed)
+    const _parsed = JSON.parse(compressed)
 
     expect(compressed).toContain('e-456')
     expect(compressed).toContain('dr-789')
@@ -133,7 +133,7 @@ describe('compressPrescription', () => {
       },
     })
     const compressed = compressPrescription([rx1, rx2])
-    const parsed = JSON.parse(compressed)
+    const _parsed = JSON.parse(compressed)
 
     expect(compressed).toContain('AMX500')
     expect(compressed).toContain('IBU400')

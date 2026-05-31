@@ -15,7 +15,7 @@ vi.mock('next/link', () => ({
 
 // Mock Dexie DB
 const mockEncountersOrderBy = vi.fn()
-const mockEncountersFilter = vi.fn()
+const _mockEncountersFilter = vi.fn()
 const mockSyncQueueFilter = vi.fn()
 const mockPatientsGet = vi.fn()
 

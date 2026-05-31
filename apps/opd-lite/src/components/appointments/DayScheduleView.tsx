@@ -83,7 +83,7 @@ export function DayScheduleView() {
     const val = e.target.value
     if (val) {
       // Parse as local date to avoid timezone shift
-      const [y, m, d] = val.split('-').map(Number)
+      const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
       setSelectedDate(new Date(y, m - 1, d))
     }
   }

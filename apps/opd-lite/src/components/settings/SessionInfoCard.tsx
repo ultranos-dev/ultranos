@@ -6,7 +6,7 @@ import { Card } from '@/components/Card'
 
 function parseJwtPayload(token: string): { exp?: number; iat?: number } | null {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const base64 = token.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
     return JSON.parse(atob(base64))
   } catch {
     return null
@@ -30,7 +30,8 @@ export function SessionInfoCard() {
   const session = useAuthSessionStore((s) => s.session)
   const [remainingMs, setRemainingMs] = useState<number | null>(null)
 
-  const payload = session?.token ? parseJwtPayload(session.token) : null
+  const token = (session as (typeof session) & { token?: string })?.token
+  const payload = token ? parseJwtPayload(token) : null
   const expiresAtMs = payload?.exp ? payload.exp * 1000 : null
   const loginAtMs = payload?.iat ? payload.iat * 1000 : null
 

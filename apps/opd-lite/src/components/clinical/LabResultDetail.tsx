@@ -21,7 +21,7 @@ interface LabResultDetailProps {
 const SAFE_IMAGE_PREFIXES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 const SAFE_CONTENT_TYPES = [...SAFE_IMAGE_PREFIXES, 'application/pdf']
 
-function isSafeContentType(ct: string): boolean {
+function _isSafeContentType(ct: string): boolean {
   return SAFE_CONTENT_TYPES.some(safe =>
     ct === safe || (safe.endsWith('+xml') ? false : ct.startsWith(safe.split('/')[0] + '/') && SAFE_IMAGE_PREFIXES.some(p => ct === p)),
   )

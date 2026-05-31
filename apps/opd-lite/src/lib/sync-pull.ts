@@ -13,7 +13,8 @@ import {
   compareHlc,
   type SyncRecord,
 } from '@ultranos/sync-engine'
-import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
+import { auditPhiAccess, AuditAction } from './audit'
+import type { AuditResourceType } from './audit'
 import type { FhirPatient, PatientAddress, PatientTier } from '@ultranos/shared-types'
 
 const HUB_BASE_URL = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
@@ -188,7 +189,7 @@ export async function pullPatientChanges(
     }
 
     try {
-      const table = (db as unknown as Record<string, import('dexie').Table>)[tableName]
+      const table = (db as unknown as Record<string, { get: (key: string) => Promise<unknown>; put: (item: unknown) => Promise<unknown> }>)[tableName]
       if (!table) {
         result.errors.push(`No local table for: ${tableName}`)
         continue

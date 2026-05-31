@@ -23,6 +23,7 @@ function getHubApiUrl(): string {
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- sync access to zustand store state
     const { useAuthSessionStore } = require('@/stores/auth-session-store')
     return useAuthSessionStore.getState().session?.token ?? null
   } catch {

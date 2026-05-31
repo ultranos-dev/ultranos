@@ -17,6 +17,7 @@ import { clearPhiTables } from '@/lib/phi-cleanup'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { SyncPulse } from '@/components/SyncPulse'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 import { useNavBadges } from '@/hooks/useNavBadges'
 
 // Inline SVG icons — no icon library (matches codebase pattern)
@@ -121,7 +122,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     usePrescriptionStore.getState().clearPhiState()
     useAllergyStore.getState().clearPhiState()
 
-    auditPhiAccess(AuditAction.PHI_CLEANUP, AuditResourceType.SYSTEM, 'user-logout')
+    auditPhiAccess(AuditAction.LOGOUT, AuditResourceType.USER_ACCOUNT, 'user-logout')
     await clearPhiTables()
 
     encryptionKeyStore.wipe()
@@ -171,6 +172,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
       }}
       onSignOut={handleSignOut}
       syncIndicator={<SyncPulse />}
+      languageSelector={(collapsed: boolean) => <LanguageSelectorClient collapsed={collapsed} />}
       persistKey="opd-lite-sidebar-collapsed"
     >
       {children}

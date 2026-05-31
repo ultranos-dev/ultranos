@@ -60,7 +60,7 @@ function makeObservation(
     subject: { reference: `Patient/${ctx.patientId}` },
     encounter: { reference: `Encounter/${ctx.encounterId}` },
     effectiveDateTime: ctx.nowIso,
-    performer: [{ reference: ctx.practitionerRef }],
+    performer: ctx.practitionerRef ? [{ reference: ctx.practitionerRef }] : undefined,
     _ultranos: {
       isOfflineCreated: true,
       hlcTimestamp: ctx.hlcTimestamp,

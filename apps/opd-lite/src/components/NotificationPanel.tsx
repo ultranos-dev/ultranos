@@ -138,7 +138,6 @@ function NotificationDropdown({
     }
     load()
     return () => { active = false }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- onCountChange is a stable setState reference
   }, [])
 
   const handleAcknowledge = useCallback(async (id: string) => {

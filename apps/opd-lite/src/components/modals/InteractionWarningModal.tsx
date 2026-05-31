@@ -36,7 +36,7 @@ const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string
 }
 
 function getSeverityStyle(severity: DrugInteractionSeverity) {
-  return SEVERITY_STYLES[severity] ?? SEVERITY_STYLES[DrugInteractionSeverity.MAJOR]
+  return (SEVERITY_STYLES[severity] ?? SEVERITY_STYLES[DrugInteractionSeverity.MAJOR])!
 }
 
 export function InteractionWarningModal({
@@ -64,8 +64,8 @@ export function InteractionWarningModal({
       'button:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])',
     )
     if (focusable.length === 0) return
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault()
       last.focus()

@@ -24,7 +24,7 @@ function formatVital(obs: LocalObservation): { label: string; value: string } {
   const code = obs.code?.coding?.[0]?.display || obs.code?.text || 'Unknown'
   const val = obs.valueQuantity
     ? `${obs.valueQuantity.value} ${obs.valueQuantity.unit ?? ''}`
-    : obs.valueString ?? '-'
+    : (obs as LocalObservation & { valueString?: string }).valueString ?? '-'
   return { label: code, value: val.trim() }
 }
 

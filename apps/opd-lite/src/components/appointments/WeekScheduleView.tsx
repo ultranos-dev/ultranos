@@ -115,7 +115,7 @@ export function WeekScheduleView() {
     [selectedDate],
   )
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart])
-  const weekEnd = weekDays[6]
+  const weekEnd = weekDays[6]!
 
   const today = useMemo(() => {
     const d = new Date()
@@ -215,7 +215,7 @@ export function WeekScheduleView() {
 
   // Mobile: single-day list view with prev/next
   if (isMobile) {
-    const currentDay = weekDays[mobileDayOffset] ?? weekDays[0]
+    const currentDay = weekDays[mobileDayOffset] ?? weekDays[0]!
     return (
       <div className="space-y-4">
         {/* Week range header */}

@@ -50,7 +50,7 @@ export function MfaManagementCard() {
         const supabase = getSupabaseBrowserClient()
         const { data } = await supabase.auth.mfa.listFactors()
         if (active) {
-          const verifiedFactors = data.totp.filter(
+          const verifiedFactors = (data?.totp ?? []).filter(
             (f: { status: string }) => f.status === 'verified'
           )
           setIsEnrolled(verifiedFactors.length > 0)

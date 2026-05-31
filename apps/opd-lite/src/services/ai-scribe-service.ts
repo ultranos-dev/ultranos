@@ -16,7 +16,8 @@ function getHubApiUrl(): string {
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
   try {
-    return useAuthSessionStore.getState().session?.token ?? null
+    const session = useAuthSessionStore.getState().session
+    return (session as typeof session & { token?: string })?.token ?? null
   } catch {
     return null
   }

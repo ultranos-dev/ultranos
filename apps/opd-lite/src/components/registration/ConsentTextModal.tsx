@@ -40,8 +40,8 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
       )
       if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
+      const first = focusable[0]!
+      const last = focusable[focusable.length - 1]!
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault()
         last.focus()

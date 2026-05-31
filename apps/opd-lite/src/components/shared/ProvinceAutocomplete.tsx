@@ -131,7 +131,7 @@ export function ProvinceAutocomplete({
       case 'Enter':
         e.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          handleSelect(filtered[highlightedIndex])
+          handleSelect(filtered[highlightedIndex]!)
         }
         break
       case 'Escape':

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
 import { Button } from '@/components/ui/Button'
 import {

@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { signPrescriptionBundle, type SignedPrescriptionBundle } from '@/lib/prescription-signing'
+import { describe, it, expect, vi } from 'vitest'
+import { signPrescriptionBundle } from '@/lib/prescription-signing'
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 
 // Mock the sync-engine crypto module
 vi.mock('@ultranos/sync-engine', () => ({
-  signPayload: vi.fn(async (payload: string, _key: Uint8Array) => {
+  signPayload: vi.fn(async (_payload: string, _key: Uint8Array) => {
     // Return a deterministic 64-byte signature for testing
     return new Uint8Array(64).fill(0xab)
   }),

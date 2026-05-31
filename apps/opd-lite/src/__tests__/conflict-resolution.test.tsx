@@ -139,7 +139,7 @@ describe('getTier1Conflicts', () => {
         id: 'c3',
         resourceType: 'MedicationRequest',
         conflictFlag: true,
-        status: 'resolved',
+        status: 'synced',
       }),
     ])
 
@@ -191,7 +191,7 @@ describe('resolveConflict', () => {
 
     // Verify syncQueue entry is now resolved
     const updated = await db.syncQueue.get('resolve-1')
-    expect(updated?.status).toBe('resolved')
+    expect(updated?.status).toBe('synced')
     expect(updated?.conflictFlag).toBe(false)
     expect(updated?.resolutionType).toBe('keep-both')
     expect(updated?.resolvedAt).toBeTruthy()
@@ -240,7 +240,7 @@ describe('resolveConflict', () => {
     expect(result.success).toBe(true)
 
     const updated = await db.syncQueue.get('resolve-local')
-    expect(updated?.status).toBe('resolved')
+    expect(updated?.status).toBe('synced')
     expect(updated?.resolutionType).toBe('prefer-local')
   })
 
@@ -288,7 +288,7 @@ describe('resolveConflict', () => {
   it('returns failure for already-resolved conflict', async () => {
     const entry = makeConflictEntry({
       id: 'already-resolved',
-      status: 'resolved',
+      status: 'synced',
       conflictFlag: false,
     })
     await db.syncQueue.put(entry)
@@ -342,7 +342,7 @@ describe('hasUnresolvedTier1Conflicts', () => {
         id: 'resolved-1',
         resourceType: 'AllergyIntolerance',
         conflictFlag: true,
-        status: 'resolved',
+        status: 'synced',
         patientRef: 'Patient/patient-resolved',
       }),
     ])

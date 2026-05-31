@@ -304,7 +304,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     }, 60_000)
 
     return () => clearInterval(interval)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- syncRef.current is stable
+  }, [])
 
   return {
     appointments,

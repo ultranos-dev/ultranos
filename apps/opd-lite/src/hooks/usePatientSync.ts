@@ -70,7 +70,7 @@ export function usePatientSync(patientId: string): PatientSyncState {
       // Update global conflict count
       if (result.conflictsDetected > 0) {
         const total = await db.syncQueue
-          .filter((e) => e.conflictFlag === true && e.status !== 'resolved')
+          .filter((e) => e.conflictFlag === true && e.status !== 'synced')
           .count()
         setConflictCount(total)
       }

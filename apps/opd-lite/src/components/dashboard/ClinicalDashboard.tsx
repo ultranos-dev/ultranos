@@ -49,7 +49,7 @@ export function ClinicalDashboard() {
     searchRef.current?.querySelector('input')?.focus()
   }, [])
 
-  const displayName = session?.name || session?.email?.split('@')[0] || 'Clinician'
+  const displayName = session?.email?.split('@')[0] || 'Clinician'
   const displayRole = formatRole(session?.role ?? '')
 
   return (

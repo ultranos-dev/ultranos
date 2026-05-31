@@ -26,7 +26,6 @@ export function usePatientListSync() {
 
     try {
       // Page through all patients from the Hub
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         if (signal.aborted) break
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { db } from '@/lib/db'
-import type { LocalMedicationStatement, InteractionAuditEntry } from '@/lib/db'
 
 interface ActiveMedicationsListProps {
   patientId: string

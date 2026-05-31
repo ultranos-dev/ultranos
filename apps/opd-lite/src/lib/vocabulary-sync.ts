@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { db } from './db'
-import type { VocabMedicationEntry, VocabIcd10Entry, VocabInteractionEntry } from './db'
+import type { VocabMedicationEntry, VocabIcd10Entry } from './db'
 import { invalidateInteractionCache } from '@/services/interactionService'
 
 type VocabType = 'medications' | 'icd10' | 'interactions'
@@ -244,10 +244,10 @@ export async function syncAllVocabulary(
   const failed: VocabType[] = []
 
   for (let i = 0; i < types.length; i++) {
-    if (results[i].status === 'fulfilled') {
-      succeeded.push(types[i])
+    if (results[i]!.status === 'fulfilled') {
+      succeeded.push(types[i]!)
     } else {
-      failed.push(types[i])
+      failed.push(types[i]!)
     }
   }
 

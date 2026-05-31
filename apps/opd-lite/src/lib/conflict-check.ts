@@ -15,7 +15,7 @@ import { TIER_1_RESOURCE_TYPES } from './conflict-resolution'
  *
  * Returns true if any syncQueue entry matches:
  * - conflictFlag === true
- * - status is not 'resolved'
+ * - status is not 'synced'
  * - resourceType is a Tier 1 type
  * - patientRef matches the given patient ID
  */
@@ -29,7 +29,7 @@ export async function hasUnresolvedTier1Conflicts(
     (entry) =>
       entry.patientRef === patientRef &&
       entry.conflictFlag === true &&
-      entry.status !== 'resolved' &&
+      entry.status !== 'synced' &&
       (TIER_1_RESOURCE_TYPES as readonly string[]).includes(entry.resourceType),
   )
 }
@@ -47,7 +47,7 @@ export async function getUnresolvedTier1ConflictCount(
     (entry) =>
       entry.patientRef === patientRef &&
       entry.conflictFlag === true &&
-      entry.status !== 'resolved' &&
+      entry.status !== 'synced' &&
       (TIER_1_RESOURCE_TYPES as readonly string[]).includes(entry.resourceType),
   ).length
 }

@@ -59,9 +59,9 @@ export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: string
+  action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
-  status: 'pending' | 'in-flight' | 'failed' | 'resolved'
+  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
@@ -129,7 +129,6 @@ export interface AIModelMetadataEntry {
 }
 
 // Diagnostic report type — used by LabResultsList/LabResultDetail components.
-// TODO: Add diagnosticReports table to Dexie schema when Story 20.5 is fully implemented.
 export interface LocalDiagnosticReport {
   id: string
   resourceType: 'DiagnosticReport'
@@ -172,8 +171,9 @@ class OpdLiteDatabase extends Dexie {
   vocabularyInteractions!: EntityTable<VocabInteractionEntry, 'id'>
   aiModels!: EntityTable<AIModelMetadataEntry, 'modelId'>
   modelDownloadProgress!: EntityTable<ModelDownloadProgress, 'modelId'>
-  appointments!: EntityTable<any, 'id'>
-  slots!: EntityTable<any, 'id'>
+  appointments!: EntityTable<Record<string, unknown>, 'id'>
+  slots!: EntityTable<Record<string, unknown>, 'id'>
+  diagnosticReports!: EntityTable<LocalDiagnosticReport, 'id'>
   syncMeta!: EntityTable<SyncMetaEntry, 'patientId'>
 
   constructor() {
@@ -543,6 +543,13 @@ class OpdLiteDatabase extends Dexie {
     // v19: Sync metadata table for pull watermarks (Sync Engine Activation)
     this.version(19).stores({
       syncMeta: '&patientId',
+    })
+
+    // v20: DiagnosticReport cache for lab results (Story 20.5)
+    // Encrypted — contains clinical content (lab conclusions, performer info).
+    this.version(20).stores({
+      diagnosticReports:
+        'id, status, subject.reference, meta.lastUpdated',
     })
   }
 }

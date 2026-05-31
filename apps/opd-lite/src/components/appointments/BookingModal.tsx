@@ -225,7 +225,7 @@ export function BookingModal({
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     if (val) {
-      const [y, m, d] = val.split('-').map(Number)
+      const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
       setBookingDate(new Date(y, m - 1, d))
       setSelectedTime('') // Reset time when date changes
     }
@@ -239,7 +239,7 @@ export function BookingModal({
 
     try {
       // Build start/end ISO strings for the selected date + time
-      const [hours, minutes] = selectedTime.split(':').map(Number)
+      const [hours = 0, minutes = 0] = selectedTime.split(':').map(Number)
       const start = new Date(bookingDate)
       start.setHours(hours, minutes, 0, 0)
       const end = new Date(

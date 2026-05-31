@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '../lib/db'
 
 // Minimal FHIR-shaped stubs for seeding PHI tables

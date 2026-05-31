@@ -62,7 +62,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const [dexiePatient, setDexiePatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const { isSyncing } = usePatientSync(patientId)
+  const { isSyncing: _isSyncing } = usePatientSync(patientId)
   const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
 
   // Shallow selectors to prevent unnecessary re-renders (perf guardrail)
@@ -292,7 +292,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     try {
       // Safety gate: check interactions against active meds
       const activeMedNames = pendingPrescriptions.map(
-        (rx) => rx.medicationCodeableConcept.coding[0]?.display ?? '',
+        (rx) => rx.medicationCodeableConcept.coding?.[0]?.display ?? '',
       ).filter(Boolean)
 
       let checkResult: InteractionCheckSummary
