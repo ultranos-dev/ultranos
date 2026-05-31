@@ -95,6 +95,44 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 - Types live in `packages/shared-types/src/fhir/`
 - **Meta fields:** Use FHIR R4 canonical `Meta` field names: `lastUpdated` (ISO 8601 instant), `versionId` (string). The `createdAt` field is an Ultranos extension and MUST live inside the `_ultranos` namespace, never in `meta`. Do NOT use `createdAt`/`updatedAt` in the `meta` object.
 
+### Icons
+
+All icons across every app and the admin-portal are standardized on **lucide-react** via the shared `@ultranos/ui-kit` package.
+
+**Import rule — always use the subpath for tree-shaking:**
+```typescript
+// ✅ Correct — tree-shakeable, only used icons bundled
+import { Bell, ChevronRight, Microscope } from '@ultranos/ui-kit/icons'
+
+// ❌ Wrong — pulls everything through the barrel export
+import { Bell } from '@ultranos/ui-kit'
+
+// ❌ Wrong — bypasses the shared catalog, causes version drift
+import { Bell } from 'lucide-react'
+```
+
+**RTL mirroring — use `DirectionalIcon` from `@ultranos/ui-kit`:**
+```typescript
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+
+// Navigation icons (arrows, chevrons, back buttons) → mirror in RTL
+<DirectionalIcon category="navigation"><ChevronRight size={20} /></DirectionalIcon>
+
+// Medical icons (pill, stethoscope, flask, microscope) → never mirror
+<DirectionalIcon category="medical"><Microscope size={20} /></DirectionalIcon>
+```
+
+**Adding new icons:** Add to `packages/ui-kit/src/icons.ts` in the appropriate domain group. Never add lucide-react directly to an app's `package.json`.
+
+**Intentionally kept as inline SVG** (do not migrate these):
+- `apps/lab-lite/src/components/queue/token-icons.tsx` — custom filled geometric shapes; Lucide versions are outlined
+- `apps/lab-lite/src/components/results/ResultColorIndicator.tsx` — `strokeWidth="2.5"` chosen deliberately for healthcare readability
+- `apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx` — custom hardcoded fill colors (#fee2e2, #dc2626 etc.)
+- `apps/lab-lite/src/components/qc/QcHistoryView.tsx` — Levey-Jennings chart (data visualization, dynamic viewBox)
+- `apps/lab-lite/src/components/patients/CulturalFlagsBanner.tsx` / `CulturalFlagsEditor.tsx` — data-driven flag path registry
+- All `animate-spin` loading spinners — CSS animation SVGs, no Lucide equivalent
+
 ### RTL Support
 Arabic and Dari are RTL languages. Every UI component must work in both LTR and RTL.
 - Use logical CSS properties: `margin-inline-start` not `margin-left`, `padding-inline-end` not `padding-right`
