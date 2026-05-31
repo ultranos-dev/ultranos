@@ -10,6 +10,10 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./icons": {
+      "import": "./dist/icons.js",
+      "types": "./dist/icons.d.ts"
+    },
     "./tokens.css": "./src/tokens.css",
     "./connected-language-selector": "./src/components/ConnectedLanguageSelector.tsx"
   },

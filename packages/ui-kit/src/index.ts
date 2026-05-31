@@ -83,3 +83,7 @@ export type {
   ArabicPluralCategory,
   DariPluralCategory,
 } from './utils/format.js'
+
+// ─── Icons (Lucide) ─────────────────────────────────────────────────
+// Consumers: prefer importing from '@ultranos/ui-kit/icons' for better tree-shaking.
+export * from './icons.js'
