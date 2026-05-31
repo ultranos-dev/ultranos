@@ -103,6 +103,8 @@ export {
   ShoppingCart,
   BadgePercent,
   Barcode,
+  Banknote,
+  Scale,
 } from 'lucide-react'
 
 // ─── Status & Alerts ────────────────────────────────────────────────
@@ -161,6 +163,8 @@ export {
   GripVertical,
   Settings,
   Save,
+  Calculator,
+  ListOrdered,
 } from 'lucide-react'
 
 // ─── Calendar & Scheduling ──────────────────────────────────────────
@@ -171,6 +175,7 @@ export {
   CalendarClock,
   CalendarPlus,
   CalendarX,
+  History,
 } from 'lucide-react'
 
 // ─── Communication & Sync ───────────────────────────────────────────
