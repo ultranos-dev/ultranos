@@ -1,6 +1,6 @@
 # Story 53.2: Visual Atlas for Microscopy
 
-Status: pending
+Status: complete
 
 ## Story
 
@@ -32,97 +32,48 @@ The atlas is a **static, physician-curated reference** — not AI-generated cont
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Atlas Data Model** (AC: 1, 2, 3, 4)
-  - [ ] Create `apps/lab-lite/src/lib/visual-atlas.ts` with type definitions:
-    ```typescript
-    interface AtlasCategory {
-      id: string                      // e.g., 'blood-cells'
-      name: string                    // i18n key
-      icon: string                    // icon identifier for sidebar
-      subcategories: AtlasSubcategory[]
-    }
+- [x] **Task 1: Atlas Data Model** (AC: 1, 2, 3, 4)
+  - [x] Create `apps/lab-lite/src/lib/visual-atlas.ts` with type definitions
+  - [x] Export `ATLAS_CATEGORY_TREE` array with the full category tree (5 categories, 9 subcategories)
 
-    interface AtlasSubcategory {
-      id: string                      // e.g., 'blood-cells-abnormal'
-      name: string                    // i18n key
-      categoryId: string              // parent category reference
-      entries: AtlasEntry[]
-    }
+- [x] **Task 2: Atlas Content — Initial Seed Data** (AC: 1, 2, 3, 4)
+  - [x] Create `apps/lab-lite/src/lib/atlas-seed-data.ts` with placeholder entries for each category
+  - [x] 37 entries spanning all 9 subcategories with full clinical descriptions and next steps
+  - [x] Placeholder images with `placeholder: true` flag
+  - [x] i18n keys added to `messages/en.json`, `messages/ar.json`, `messages/prs.json`, `messages/ps.json` under `visualAtlas` namespace
+  - [x] i18n key format: short keys (`entries.neutrophil.name`) not full namespace paths
 
-    interface AtlasEntry {
-      id: string                      // unique entry ID (e.g., 'ATLAS-BC-BLAST-001')
-      name: string                    // i18n key for entry name
-      image: string                   // base64-encoded optimized image (WebP/JPEG)
-      imageMimeType: 'image/webp' | 'image/jpeg'
-      thumbnailImage: string          // base64 thumbnail (max 20KB) for list view
-      description: string             // i18n key for detailed description
-      clinicalSignificance: string    // i18n key for clinical significance
-      nextSteps: string[]             // i18n keys for recommended next steps
-      tags: string[]                  // searchable tags (English, for keyword matching)
-      author: {
-        name: string
-        credentials: string
-        institution: string
-      }
-      version: string                 // semver
-      lastReviewedAt: string          // ISO 8601
-    }
-    ```
-  - [ ] Export `ATLAS_CATEGORIES` array with the full category tree.
+- [x] **Task 3: Dexie Schema Update for Atlas** (AC: 5, 7)
+  - [x] Added `atlas_entries` and `atlas_categories` class declarations to `LabLiteDatabase`
+  - [x] v15 migration block with `atlas_entries: '&id, categoryId, subcategoryId, *tags, version'` and `atlas_categories: '&id'`
+  - [x] `semverIsNewer()` helper for version comparison
+  - [x] `seedAtlas()` function with version-check upsert logic (never throws)
 
-- [ ] **Task 2: Atlas Content — Initial Seed Data** (AC: 1, 2, 3, 4)
-  - [ ] Create `apps/lab-lite/src/lib/atlas-seed-data.ts` with placeholder entries for each category:
-    - **Blood Cells — Normal:** Neutrophil, Lymphocyte, Monocyte, Eosinophil, Basophil, Reticulocyte, Platelet (normal morphology).
-    - **Blood Cells — Abnormal:** Blast cell, Schistocyte, Spherocyte, Target cell, Sickle cell, Auer rod, Hypersegmented neutrophil, Rouleaux formation.
-    - **Parasites:** P. falciparum (ring, trophozoite, gametocyte), P. vivax (ring, trophozoite, schizont), Microfilaria, Trypanosoma.
-    - **Bacteria (Gram Stain):** Gram-positive cocci in clusters, Gram-positive cocci in chains, Gram-negative rods, Gram-negative diplococci, Acid-fast bacilli.
-    - **Urine Sediment:** RBC cast, WBC cast, Granular cast, Calcium oxalate crystal, Uric acid crystal, Epithelial cells.
-    - **Body Fluid Cells:** Mesothelial cells, Malignant cells (generic), Reactive lymphocytes.
-  - [ ] Use placeholder images (solid color with text overlay) until real photomicrographs are provided. Mark entries with `placeholder: true`.
-  - [ ] Each entry fully populated with description, clinical significance, and next steps.
-  - [ ] Add i18n keys to `messages/en.json` under a `visualAtlas` namespace.
+- [x] **Task 4: Atlas Browse UI** (AC: 1, 2, 3, 8, 10)
+  - [x] `apps/lab-lite/src/components/atlas/AtlasBrowser.tsx` with category/subcategory nav, entry grid, detail view
+  - [x] RTL-compatible: logical CSS properties throughout (`ps-`, `pe-`, `ms-`, `me-`)
+  - [x] All text via `useTranslations('visualAtlas')`
+  - [x] Lazy image loading for thumbnails
 
-- [ ] **Task 3: Dexie Schema Update for Atlas** (AC: 5, 7)
-  - [ ] Add `atlas_entries` table to Dexie schema: `&id, categoryId, subcategoryId, *tags, version`.
-  - [ ] Add `atlas_categories` table: `&id`.
-  - [ ] Create migration to next Dexie version.
-  - [ ] Implement `seedAtlas()` function that populates categories and entries on first load.
-  - [ ] Version-check logic: if bundled entry version > stored version, update. Never delete entries (append-only content updates).
+- [x] **Task 5: Keyword Search** (AC: 6)
+  - [x] `apps/lab-lite/src/lib/atlas-search.ts` with `searchAtlas()` function
+  - [x] AND-logic multi-word search; case-insensitive; tags as primary search surface
+  - [x] Relevance scoring by tag match count
+  - [x] Debounced search input in `AtlasBrowser`
 
-- [ ] **Task 4: Atlas Browse UI** (AC: 1, 2, 3, 8, 10)
-  - [ ] Create `apps/lab-lite/src/components/atlas/AtlasBrowser.tsx` — main atlas page component.
-  - [ ] Left sidebar (or inline-start panel): category list with icons, expandable to show subcategories.
-  - [ ] Main content area: grid of entry cards (thumbnail + name) for the selected subcategory.
-  - [ ] Entry detail view: full image, description, clinical significance, next steps list, author attribution.
-  - [ ] Image rendered via `<img src="data:{mimeType};base64,{image}" />` with lazy loading for thumbnails.
-  - [ ] RTL-compatible: logical CSS properties, mirrored navigation layout.
-  - [ ] All text via `useTranslations('visualAtlas')`.
+- [x] **Task 6: Atlas Page Route** (AC: 10)
+  - [x] `apps/lab-lite/src/app/[locale]/atlas/page.tsx` with `AuthGuard`
+  - [x] Sidebar nav item: `<Microscope size={20} />` icon, `href="/atlas"`, in clinical group
+  - [x] "Open Atlas" contextual link added to `ResultEntryForm.tsx` (above template fields)
 
-- [ ] **Task 5: Keyword Search** (AC: 6)
-  - [ ] Create `apps/lab-lite/src/lib/atlas-search.ts`.
-  - [ ] Implement `searchAtlas(query: string): AtlasEntry[]` that searches across entry names, descriptions, and tags.
-  - [ ] Case-insensitive, partial match (substring search).
-  - [ ] Search operates on Dexie data (offline-capable).
-  - [ ] Search input at the top of the atlas browser with debounced filtering (300ms).
-  - [ ] Results displayed as a flat list across all categories, grouped by category.
+- [x] **Task 7: Audit Integration** (AC: 9)
+  - [x] `reportAtlasView()` added to `apps/lab-lite/src/lib/audit-client.ts`
+  - [x] Emits `ATLAS_ENTRY_VIEWED` with `entryId` and `categoryId` only — no PHI
+  - [x] Fire-and-forget, never throws
 
-- [ ] **Task 6: Atlas Page Route** (AC: 10)
-  - [ ] Create `apps/lab-lite/src/app/[locale]/atlas/page.tsx` — the atlas page.
-  - [ ] Add "Visual Atlas" entry to the sidebar navigation in `AppSidebar.tsx` with a microscope icon.
-  - [ ] Add contextual "Open Atlas" link in the result entry form (Story 42.4) that opens the atlas in a new panel or navigates to the atlas page.
-
-- [ ] **Task 7: Audit Integration** (AC: 9)
-  - [ ] Add `reportAtlasView()` to `apps/lab-lite/src/lib/audit-client.ts`.
-  - [ ] Emit audit event when an atlas entry is viewed: action `ATLAS_ENTRY_VIEWED`, metadata includes `entryId`, `categoryId` (no PHI).
-  - [ ] Follow existing pattern: never throw, fire-and-forget.
-
-- [ ] **Task 8: Image Optimization Pipeline** (AC: 7)
-  - [ ] Create `scripts/optimize-atlas-images.ts` — a build-time script that:
-    - Reads source images from `apps/lab-lite/src/assets/atlas/` (when real images are provided).
-    - Converts to WebP, resizes to max 800x600 for full view and 200x150 for thumbnails.
-    - Compresses to target max 200KB (full) and 20KB (thumbnail).
-    - Outputs base64-encoded strings into the seed data file.
-  - [ ] Document the pipeline in the script header for future contributors.
+- [x] **Task 8: Image Optimization Pipeline** (AC: 7)
+  - [x] `scripts/optimize-atlas-images.ts` created — build-time sharp pipeline for future real images
+  - [x] Documented for future clinical image contributors
 
 ## Dev Notes
 
@@ -142,3 +93,44 @@ The atlas is a **static, physician-curated reference** — not AI-generated cont
 - Sidebar navigation: `apps/lab-lite/src/components/AppSidebar.tsx`
 - i18n messages: `apps/lab-lite/messages/en.json`
 - Image optimization: WebP format for best compression-to-quality ratio in modern browsers
+
+## Dev Agent Record
+
+### Completion Notes
+
+All 8 tasks completed across two sessions (session 1 created the files; session 2 fixed i18n key paths, db.ts schema, audit integration, locale translations, Open Atlas link, and tests).
+
+Key implementation decisions:
+- **i18n key format**: Seed data stores SHORT keys (`entries.neutrophil.name`) not full namespace paths (`visualAtlas.entries.neutrophil.name`). `useTranslations('visualAtlas')` resolves short keys within its namespace.
+- **Dexie version**: Added as v15 (concurrent Story 51.1/43.3/42.8 work added v14 on top of original v13 atlas slot).
+- **`semverIsNewer()`**: Exported from `db.ts` for testability.
+- **reportAtlasView()**: Added at end of `audit-client.ts`. Uses `'VISUAL_ATLAS' as AuditResourceType` — atlas is not a standard FHIR resource type, cast is intentional.
+- **Open Atlas link**: Placed above template fields in `ResultEntryForm`, uses `next/link` directly (locale prefix is 'never' in routing config).
+- **Translations**: All 4 locales (en, ar, prs, ps) include the full `visualAtlas` namespace with 38 clinical translations.
+
+Tests: 35 unit tests in `src/__tests__/visual-atlas.test.ts` — all passing. Coverage: category tree structure, seed data integrity, i18n key format correctness, no-PHI validation, search AND logic, relevance scoring, semverIsNewer edge cases.
+
+## File List
+
+### New Files
+- `apps/lab-lite/src/lib/visual-atlas.ts`
+- `apps/lab-lite/src/lib/atlas-seed-data.ts`
+- `apps/lab-lite/src/lib/atlas-search.ts`
+- `apps/lab-lite/src/components/atlas/AtlasBrowser.tsx`
+- `apps/lab-lite/src/app/[locale]/atlas/page.tsx`
+- `apps/lab-lite/src/__tests__/visual-atlas.test.ts`
+- `scripts/optimize-atlas-images.ts`
+
+### Modified Files
+- `apps/lab-lite/src/lib/db.ts` — Added `AtlasEntry`/`AtlasCategory` import, class declarations, v15 schema, `semverIsNewer()`, `seedAtlas()`
+- `apps/lab-lite/src/lib/audit-client.ts` — Added `reportAtlasView()`
+- `apps/lab-lite/src/components/AppSidebar.tsx` — Added `visualAtlas` nav item with `<Microscope>` icon
+- `apps/lab-lite/src/components/ResultEntryForm.tsx` — Added `tAtlas`, "Open Atlas" contextual link
+- `apps/lab-lite/messages/en.json` — Added `visualAtlas` sidebar key and full namespace
+- `apps/lab-lite/messages/ar.json` — Added Arabic `visualAtlas` namespace
+- `apps/lab-lite/messages/prs.json` — Added Dari `visualAtlas` namespace
+- `apps/lab-lite/messages/ps.json` — Added Pashto `visualAtlas` namespace
+
+## Change Log
+
+- 2026-05-31: Story 53.2 complete. Visual Atlas for Microscopy implemented across two sessions. All 8 tasks done, 35 tests passing. (Dev Agent)
