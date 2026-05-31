@@ -1,0 +1,25 @@
+import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { DataBudgetDashboard } from '@/components/settings/DataBudgetDashboard'
+
+export default function DataBudgetPage() {
+  const t = useTranslations('dataBudget')
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Link
+          href="/settings"
+          className="text-neutral-400 hover:text-neutral-600 rtl:-scale-x-100"
+          aria-label="Back"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </Link>
+        <h1 className="text-2xl font-bold text-neutral-900">{t('usageTitle')}</h1>
+      </div>
+      <DataBudgetDashboard />
+    </div>
+  )
+}
