@@ -43,5 +43,8 @@
     "react-dom": "^19.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "lucide-react": "^1.17.0"
   }
 }
