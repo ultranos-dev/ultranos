@@ -241,6 +241,24 @@ describe('sync.pull', () => {
     vi.clearAllMocks()
   })
 
+  /**
+   * Create a Supabase-style chainable query mock.
+   * Every method returns the same builder (chainable), and the builder is
+   * thenable so `await query` resolves to `{ data, error }`.
+   * This mirrors the real Supabase PostgREST builder behavior where
+   * .select().gt().order().eq() all return the same builder instance.
+   */
+  function chainableQuery(data: unknown) {
+    const result = { data, error: null }
+    const builder: Record<string, unknown> = {}
+    for (const method of ['select', 'gt', 'order', 'eq', 'in', 'limit', 'single', 'maybeSingle', 'insert']) {
+      builder[method] = vi.fn().mockReturnValue(builder)
+    }
+    builder.then = (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve)
+    builder.catch = (reject: (v: unknown) => unknown) => Promise.resolve(result).catch(reject)
+    return builder
+  }
+
   it('rejects unauthenticated requests', async () => {
     const caller = createCaller(createUnauthContext())
 
@@ -253,22 +271,15 @@ describe('sync.pull', () => {
   })
 
   it('returns changes since a given HLC timestamp', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: [
-              {
-                id: 'enc-1',
-                status: 'in-progress',
-                hlcTimestamp: '000001700000001:00000:node-1',
-              },
-            ],
-            error: null,
-          }),
-        }),
-      }),
-    })
+    const mockFrom = vi.fn().mockReturnValue(
+      chainableQuery([
+        {
+          id: 'enc-1',
+          status: 'in-progress',
+          hlcTimestamp: '000001700000001:00000:node-1',
+        },
+      ]),
+    )
 
     mockSupabaseClient.from = mockFrom
 
@@ -283,16 +294,7 @@ describe('sync.pull', () => {
   })
 
   it('filters by resource types when specified', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: [],
-            error: null,
-          }),
-        }),
-      }),
-    })
+    const mockFrom = vi.fn().mockReturnValue(chainableQuery([]))
 
     mockSupabaseClient.from = mockFrom
 
@@ -310,16 +312,7 @@ describe('sync.pull', () => {
   })
 
   it('returns empty array when no changes exist', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gt: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: [],
-            error: null,
-          }),
-        }),
-      }),
-    })
+    const mockFrom = vi.fn().mockReturnValue(chainableQuery([]))
 
     mockSupabaseClient.from = mockFrom
 
