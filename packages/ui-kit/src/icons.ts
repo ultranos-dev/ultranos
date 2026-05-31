@@ -168,6 +168,18 @@ export {
   ListOrdered,
   List,
   Bookmark,
+  LogOut,
+} from 'lucide-react'
+
+// ─── Admin & Platform ────────────────────────────────────────────────
+export {
+  Cpu,
+  CreditCard,
+  Wallet,
+  Award,
+  Building2,
+  Building,
+  Landmark,
 } from 'lucide-react'
 
 // ─── Calendar & Scheduling ──────────────────────────────────────────
