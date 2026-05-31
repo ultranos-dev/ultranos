@@ -1,6 +1,6 @@
 # Story 55.2: Cross-Lab Staff Overview Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -159,6 +159,33 @@ All text is hardcoded English, matching the existing Admin Portal pattern.
 - [Source: apps/admin-portal/src/app/labs/[labId]/page.tsx:36-46] — StatusBadge component pattern
 - [Source: supabase/migrations/028_lab_technician_roles.sql] — lab_technicians table with lab_role column
 - [Source: packages/shared-types/src/enums.ts:192-210] — LabRole enum values
+
+### Review Findings (Group A — Backend)
+
+- [x] [Review][Defer] Activity filter applied after pagination — pages return 0–20 items unpredictably. Decision: denormalize `last_active_at` into DB (migration + login hook). Deferred — requires schema change beyond this story's scope.
+- [x] [Review][Dismiss] Audit failure swallowed silently — accepted: staff data is not PHI, try/catch pattern is consistent with admin router.
+- [x] [Review][Patch] CSV injection — added formula injection guard to buildCsvExport helper [admin.ts:107-114]
+- [x] [Review][Patch] Export unbounded query — added .limit(10000) to override Supabase default [admin.ts — exportLabStaffCsv]
+- [x] [Review][Patch] `'EXPORT' as any` → `AuditAction.EXPORT` with proper enum import [admin.ts:7, 4374]
+- [x] [Review][Patch] exportLabStaffCsv changed from .query to .mutation [admin.ts, page.tsx, test]
+- [x] [Review][Defer] N+1 getUserById calls — spec-mandated design, performance concern for large orgs — deferred, by-design
+- [x] [Review][Defer] `labs!inner` join silently excludes orphaned staff — deferred, pre-existing data model
+- [x] [Review][Defer] Practitioners with no matching auth record show empty email — deferred, pre-existing
+
+### Review Findings (Group B — Frontend)
+
+- [x] [Review][Decision→Patch] Managerless-lab warning count — added `admin.getManagerlessLabs` endpoint for org-wide count, wired to banner [admin.ts, staff/page.tsx]
+- [x] [Review][Patch] Raw API error message surfaced in UI — replaced with generic fallback message [staff/page.tsx]
+- [x] [Review][Patch] `handleNext` uses stale `pageIndex` — fixed with functional updater form [staff/page.tsx]
+- [x] [Review][Patch] `nextCursor` not cleared by `resetPagination` — now cleared on reset [staff/page.tsx]
+- [x] [Review][Patch] `formatDate` has no null guard — added null/invalid-date guard returns '—' [staff/page.tsx]
+- [x] [Review][Patch] `formatRelativeTime` shows negative values for future timestamps — added `diff < 0` guard [staff/page.tsx]
+- [x] [Review][Patch] `listLabsForFilter` failure silently swallowed — now sets `labsError` state, shows disabled option [staff/page.tsx, test]
+- [x] [Review][Patch] Physical CSS padding (`px-*`) → logical properties (`ps-*`/`pe-*`) — CLAUDE.md RTL fix [staff/page.tsx]
+- [x] [Review][Patch] No RTL snapshot tests for new component — added LTR + RTL snapshot describe block [cross-lab-staff.test.tsx]
+- [x] [Review][Patch] Row click not keyboard-accessible — added `tabIndex`, `onKeyDown`, `role="button"`, focus ring [staff/page.tsx]
+- [x] [Review][Defer] `formatDate` uses `undefined` locale — needs app locale context — deferred, pre-existing pattern
+- [x] [Review][Defer] No test for `listLabsForFilter` failure path — addressed above, partially resolved
 
 ## Dev Agent Record
 

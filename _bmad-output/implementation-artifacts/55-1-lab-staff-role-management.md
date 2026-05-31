@@ -183,7 +183,20 @@ Claude Opus 4.6 (1M context)
 - [x] [Review][Defer] `acknowledgeOrder` count check broken — Supabase `.update()` doesn't return `count` without `.select('id', { count: 'exact' })`. Guard at lab.ts:1172 never triggers. Pre-existing from Story 42.2. — deferred, pre-existing
 - [x] [Review][Defer] `pullOrders` audit emits SUCCESS before `getFieldEncryptionKeys()` — if key retrieval fails, audit trail shows false success. Pre-existing from Story 42.2. — deferred, pre-existing
 
+### Adversarial Code Review Findings (2026-05-31)
+
+- [x] [Review][Patch] **CRITICAL: `update_lab_role_atomic` RPC callable by any authenticated user** — Fixed: revoked `EXECUTE` from `authenticated`, kept only `service_role`. [030_atomic_last_manager_check.sql]
+- [x] [Review][Patch] **HIGH: RPC return value not null-checked before cast** — Fixed: added `if (!data) throw new TRPCError(...)` before the cast. [admin.ts]
+- [x] [Review][Patch] **HIGH: CSV `escapeCsv` doesn't escape double-quotes or newlines** — Fixed: replaced inline escaping with existing `buildCsvExport` helper (proper RFC 4180 escaping). [admin.ts]
+- [x] [Review][Patch] **HIGH: `listAllLabStaff` cursor uses `practitioner_id` but table has composite key `(practitioner_id, lab_id)`** — Fixed: composite cursor `practitioner_id:lab_id` with dual `.order()` and composite `.or()` filter. [admin.ts]
+- [x] [Review][Defer] **HIGH: Activity filter applied client-side after server-side pagination** — `ACTIVE_7D`/`INACTIVE` filter runs after `limit+1` fetch, producing inconsistent page sizes and potential infinite pagination loops. Affects `listAllLabStaff` and `exportLabStaffCsv`. [admin.ts:4208-4222] — deferred, Story 55.2 scope
+- [x] [Review][Defer] **MEDIUM: `exportLabStaffCsv` is `.query` not `.mutation`** — Exports with side effects (audit event) should be mutations. Also unbounded fetch with no limit risks memory exhaustion on large deployments. [admin.ts:4281] — deferred, Story 55.2 scope
+- [x] [Review][Defer] **MEDIUM: `EXPORT as any` bypasses audit action type system** — If `EXPORT` isn't a valid audit action, events may be silently dropped. [admin.ts:4363] — deferred, Story 55.2 scope
+- [x] [Review][Defer] **HIGH: Commit bundles Stories 55.2-55.8 in admin.ts (+2787 unrelated lines)** — Commit `2a89b81` claims "Story 55.1" but contains endpoints for 55.2 (cross-lab overview, CSV export), 55.3 (employee health), 55.4 (mentorship), 55.5 (certifications), 55.6 (inventory), 55.7 (network), 55.8 (alerts). Cannot revert 55.1 independently. — deferred, commit hygiene
+- [x] [Review][Defer] **MEDIUM: `lab.ts` changes attributed to wrong commit** — Spec lists `lab.ts` as modified (Task 2 listStaff fix, TOCTOU fix), but these changes are in commit `816c4ed` (Story 42.5), not in `2a89b81`. — deferred, commit attribution
+
 ### Change Log
+- 2026-05-31: Adversarial code review (3-layer: Blind Hunter + Edge Case Hunter + Acceptance Auditor)
 - 2026-05-30: Implemented all 7 tasks for Story 55.1 Lab Staff Role Management
 
 ### File List

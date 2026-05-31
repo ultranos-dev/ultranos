@@ -1,6 +1,6 @@
 # Story 55.5: Certification & Credential Management
 
-Status: review
+Status: done
 
 ## Story
 
@@ -181,3 +181,21 @@ Claude Opus 4.6 (1M context)
 - apps/admin-portal/src/components/certifications/ExpiryWarningWidget.tsx (new)
 - apps/hub-api/src/__tests__/certification.test.ts (new)
 - apps/admin-portal/src/__tests__/certifications.test.tsx (new)
+
+### Review Findings
+
+- [x] [Review][Decision] `getMyCertifications` uses `labRestrictedProcedure` — Decided: keep as-is (B). `labRestrictedProcedure` is correct since cert progress is only meaningful for active lab staff.
+- [x] [Review][Patch] Certificate hash formula uses progress record IDs instead of milestone content — FIXED: hash now uses milestone title:type:required_count from pathway definition. [admin.ts:5628-5631]
+- [x] [Review][Decision] ExpiryWarningWidget displays subtracted bucket counts — Decided: keep exclusive ranges (B). More informative than cumulative, avoids confusing double-counting.
+- [x] [Review][Patch] Broken pagination in `listCertificationPathways` — FIXED: moved `.range()` after status filter. [admin.ts:5057-5065]
+- [x] [Review][Patch] `updateCertificationPathway` silent no-op on missing ID — FIXED: added `.select('id').single()` with NOT_FOUND error. [admin.ts:5190-5200]
+- [x] [Review][Patch] `archiveCertificationPathway` allows double-archive — FIXED: added `.eq('status', 'ACTIVE')` guard with CONFLICT error. [admin.ts:5228-5240]
+- [x] [Review][Patch] Missing "Issue Credential" UI — FIXED: added "Issue Credential" button when completionPct === 100. [staff/[practitionerId]/certifications/page.tsx]
+- [x] [Review][Patch] Timestamps not rendered in practitioner certifications page — FIXED: added submittedAt/approvedAt display in milestone rows. [staff/[practitionerId]/certifications/page.tsx]
+- [x] [Review][Patch] `CertificateIcon` lacks RTL non-mirroring guard — FIXED: added `rtl:scale-x-100` class. [Sidebar.tsx:263]
+- [x] [Review][Patch] `assignPathway` race condition — FIXED: added DB unique constraint `uq_cert_progress_pathway_practitioner_milestone` + 23505 error handling. [admin.ts + migration]
+- [x] [Review][Patch] `issueCredential` TOCTOU — FIXED: added DB unique constraint `uq_cert_credentials_pathway_practitioner` + 23505 error handling for credential insert. [admin.ts + migration]
+- [x] [Review][Patch] Missing duplicate credential issuance check — FIXED: added pre-insert existence check + DB unique constraint as final guard. [admin.ts:5577-5588]
+- [x] [Review][Patch] `issueCredential` doesn't verify pathway is ACTIVE — FIXED: added pathway fetch + ACTIVE status check before issuance. [admin.ts:5557-5575]
+- [x] [Review][Patch] ExpiryWarningWidget silently swallows fetch errors — FIXED: added error state with visible warning banner. [ExpiryWarningWidget.tsx]
+- [x] [Review][Defer] Archive action uses browser `confirm()` instead of custom modal — deferred, cosmetic UX

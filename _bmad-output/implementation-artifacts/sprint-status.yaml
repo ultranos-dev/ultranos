@@ -1,5 +1,5 @@
 # generated: 2026-04-29T03:34:34.691026
-# last_updated: 2026-05-14T15:10:00.000000
+# last_updated: 2026-05-31T11:15:00.000000
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-30T17:30:00.000000'
+last_updated: '2026-05-31T23:59:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -585,7 +585,10 @@ development_status:
   # Patient identity verification logging, audit chain, PHI compliance
   # ============================================================
   epic-43: in-progress
+  43-3-amendment-correction-protocol: review
   43-4-patient-id-verification-logging: review
+  43-6-analyzer-drift-detection: review
+  43-7-pre-release-critical-value-checklist: review
   43-8-localized-reference-ranges: review
 
   # ============================================================
@@ -595,11 +598,11 @@ development_status:
   # ============================================================
   epic-55: in-progress
   55-1-lab-staff-role-management: done
-  55-2-cross-lab-staff-overview-dashboard: review
-  55-3-employee-health-vaccination-registry: review
+  55-2-cross-lab-staff-overview-dashboard: done
+  55-3-employee-health-vaccination-registry: done
   55-4-mentorship-pairing-management: review
-  55-5-certification-credential-management: review
-  55-6-cross-facility-inventory-procurement: review
+  55-5-certification-credential-management: done
+  55-6-cross-facility-inventory-procurement: done
   55-7-lab-network-outbreak-management: review
   55-8-surveillance-alert-configuration: review
   epic-55-retrospective: optional
@@ -610,6 +613,7 @@ development_status:
   # ============================================================
   epic-48: in-progress
   48-1-power-aware-workload-scheduler: review
+  48-4-critical-value-escalation-chain: review
   epic-48-retrospective: optional
 
   # ============================================================
@@ -655,10 +659,26 @@ development_status:
   # ============================================================
   epic-46: in-progress
   46-2-contextual-micro-learning: review
+  46-7-personal-quality-streak: review
 
   # ============================================================
   # EPIC 50: Lab Reporting & Analytics (2026-05-31)
   # Daily activity log auto-generation and WhatsApp sharing
   # ============================================================
   epic-50: in-progress
+  50-1-auto-compiled-hmis-report: review
   50-4-daily-activity-log-whatsapp: review
+  # ============================================================
+  # EPIC 51: Shift & Workload Management (2026-05-31)
+  # Shift handover protocol and workload tooling
+  # ============================================================
+  epic-51: in-progress
+  51-1-shift-handover-protocol: review
+  51-7-gamified-team-quality-engagement: review
+
+  # ============================================================
+  # EPIC 52: Cross-App Integration & Pharmacy Awareness (2026-05-31)
+  # Pharmacy-Lite dispensing events -> Lab-Lite monitoring flags
+  # ============================================================
+  epic-52: in-progress
+  52-1-pharmacy-medication-monitoring-flags: in-progress

@@ -829,3 +829,16 @@
 - **D-47.2-R2: `WasteContainerList` loads once and never refreshes (stale multi-tab data).** `useEffect` with `[]` deps. Cross-cutting pattern across lab-lite. Address with Dexie liveQuery or event-based refresh.
 - **D-47.2-R3: `ActivateContainerModal` missing focus trap and Escape key handling.** Pre-existing across lab-lite modals. → Epic 35 accessibility sweep.
 - **D-47.2-R4: `activateContainer` does not record who activated.** No `activatedBy` field on `WasteContainer`. Add when role-gated waste operations are scoped.
+- **D-55.2-W4: Activity filter + pagination interaction.** `listAllLabStaff` applies activity filter client-side after DB LIMIT, producing inconsistent page sizes (0–20 items) and making some matching records unreachable. Fix requires denormalizing `last_active_at` into `lab_technicians` table via migration + login hook. Decision: defer to a follow-up story.
+
+## Deferred from: code review of 55-3-employee-health-registry (2026-05-31)
+
+- **D-55.3-D1: Tech self-access and lab manager access to own health record.** AC #4 requires three access tiers (tech self, lab manager, org admin). Currently only org admins can access `getEmployeeHealth`/`updateEmployeeHealth`. Dev Notes explicitly deferred tech self-access to a future Lab-Lite story. Add Lab-Lite endpoint + UI page for self-service and manager access.
+- **D-55.3-D3: Upsert race condition on `updateEmployeeHealth` can silently overwrite exposure history.** Full-row upsert with `onConflict: 'practitioner_id'` has no optimistic locking. Two concurrent saves overwrite each other. Low concurrency expected in current admin-only use, but exposure history is safety-critical. Add `updated_at` optimistic lock or move to append-only exposure entries table when concurrency increases.
+- **D-55.3-W1: `setMonth` date arithmetic fragile for non-12-month intervals.** `screening-reminders.ts` uses `dueDate.setMonth(getMonth() + 12)` — safe for exactly 12 months but silently overflows for shorter intervals (e.g., Jan 31 + 6 months → Aug 1). Use date-fns or clamp the day when extending to other screening types.
+
+## Deferred from: code review of 55-6-cross-facility-inventory-procurement (2026-05-31)
+
+- **D-55.6-W1: No role differentiation for PO approval workflow.** Any admin can approve their own purchase order — no separation of duties between requester and approver. `approved_by` is recorded but not enforced to differ from `created_by`. V1 simplification; add role-gated approval when procurement roles are defined.
+- **D-55.2-W5: `formatDate` uses `undefined` locale.** `page.tsx` calls `toLocaleDateString(undefined, ...)` which renders dates in the browser's locale. For the MENA/Central Asia target, this produces inconsistent formats across devices. Defer until a locale context/i18n system is in place.
+- **D-55.2-W6: No test for `listLabsForFilter` failure path.** The `.catch(() => {})` in `StaffPage` silently hides labs-dropdown fetch failures. Should add a test that asserts the dropdown remains in a usable empty state on failure.

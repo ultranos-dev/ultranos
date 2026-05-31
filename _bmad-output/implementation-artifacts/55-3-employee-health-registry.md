@@ -1,6 +1,6 @@
 # Story 55.3: Employee Health & Vaccination Registry (Admin Surface)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -159,5 +159,21 @@ Claude Opus 4.6 (1M context)
 - `apps/hub-api/src/trpc/routers/lab.ts` — added `getEmergencyVaccinationStatus` endpoint
 - `packages/shared-types/src/enums.ts` — added `EMPLOYEE_HEALTH` to `AuditResourceType`
 
+### Review Findings
+
+- [x] [Review][Decision] **D1: Access control is ADMIN-only; spec AC #4 requires tech self-access and lab manager access** — DEFERRED. Dev Notes explicitly scope tech self-access to a future Lab-Lite story. Admin-only access accepted for this story. [admin.ts:4883, admin.ts:4949]
+- [x] [Review][Decision] **D3: Upsert race condition — concurrent updates silently lose exposure history entries** — DEFERRED. Low concurrency expected for admin-only portal. Optimistic locking deferred to future hardening. [admin.ts:5001-5005]
+- [x] [Review][Patch] **D2→P: Emergency endpoint should catch audit errors and continue (best-effort)** — FIXED. `getEmergencyVaccinationStatus` audit wrapped in try/catch with console.error fallback. Admin endpoints stay fail-closed. [lab.ts:1444]
+- [x] [Review][Patch] **P1: Audit emitted before error check — logs SUCCESS on failed/empty reads** — FIXED. Audit moved after error check; outcome set to `'NOT_FOUND'` when no record exists. [admin.ts:4892-4906, lab.ts:1443-1456]
+- [x] [Review][Patch] **P2: Silent decryption failure returns empty exposure history with no UI indicator** — FIXED. Added `decryptionFailed: true` flag to `getEmployeeHealth` response. [admin.ts:4911-4919]
+- [x] [Review][Patch] **P3: `changedFields` audit metadata always contains all 7 fields** — FIXED. Required fields always listed; optional fields only included when present in input. [admin.ts:5015-5023]
+- [x] [Review][Patch] **P4: No date format validation in Zod schema** — FIXED. All date fields use `z.string().date()`. [admin.ts:4954-4964]
+- [x] [Review][Patch] **P5: Exposure history entries have no length or content limits** — FIXED. `type` max 200, `outcome` max 500, array max 100, `date` uses `z.string().date()`. [admin.ts:4966-4973]
+- [x] [Review][Patch] **P6: Invalid `tb_screening_date` produces NaN — screening shows UP_TO_DATE** — FIXED. Added `isNaN` guard; returns `NOT_RECORDED` for invalid dates. [screening-reminders.ts:32-37]
+- [x] [Review][Patch] **P7: `border-l-4` is physical CSS — doesn't mirror in RTL** — FIXED. Changed to `border-s-4`. [page.tsx:67]
+- [x] [Review][Patch] **P8: Encryption key failure crashes `updateEmployeeHealth` without audit** — FIXED. Encryption wrapped in try/catch; emits `FAILURE` audit event before throwing. [admin.ts:4980]
+- [x] [Review][Defer] **W1: `setMonth` date arithmetic fragile for non-12-month intervals** — Safe with current `TB_INTERVAL_MONTHS = 12` but overflows for shorter intervals. [screening-reminders.ts:34] — deferred, pre-existing pattern
+
 ### Change Log
+- 2026-05-31: Code review — D1/D3 deferred, D2 promoted to patch, 8 patches, 1 defer, 9 dismissed
 - 2026-05-30: Story 55.3 implemented — employee health registry with encrypted exposure history, admin CRUD, lab emergency read-only endpoint, screening reminders, 26 tests

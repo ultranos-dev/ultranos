@@ -1,6 +1,6 @@
 # Story 55.6: Cross-Facility Inventory & Procurement Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -180,3 +180,18 @@ Claude Opus 4.6 (1M context)
 **Modified files:**
 - `apps/hub-api/src/trpc/routers/admin.ts` — added 8 inventory/supplier/PO endpoints
 - `apps/admin-portal/src/components/Sidebar.tsx` — added Inventory + Suppliers nav items + PackageIcon
+
+> **Note:** The admin.ts inventory endpoints and Sidebar nav changes were committed under commit `2a89b81` (Story 55.1) rather than `6e8266c` (Story 55.6). The code is correct; this is a commit attribution discrepancy only.
+
+### Review Findings
+
+- [x] [Review][Patch] **Stock threshold gap: add YELLOW tier for quantities 8-14** — Fixed. Added YELLOW level (8-14) to threshold logic, updated HeatMapGrid STOCK_COLORS, updated type union, added 2 boundary tests. [admin.ts:5896-5914, HeatMapGrid.tsx:19-24]
+- [x] [Review][Patch] **Add distance to redistribution recommendations** — Fixed. Applied Supabase migration `add_lat_lng_to_labs` (latitude/longitude double precision columns), added haversine calculation to `getRedistributionRecommendations`, `distanceKm` included in response and displayed in RedistributionCard when available. [admin.ts:5939-6048, RedistributionCard.tsx]
+- [x] [Review][Patch] **PO detail modal for line items** — Fixed. Created `PurchaseOrderDetailModal.tsx` with full line item table (lab, reagent, qty, unit). Wired via "View" button in PO table with `viewingOrder` state. [inventory/page.tsx, PurchaseOrderDetailModal.tsx]
+- [x] [Review][Patch] **Redistribution endpoint doesn't filter by ACTIVE labs** — Fixed. Endpoint now queries active labs first (with org_id + status=ACTIVE), builds labMap from that result, then filters snapshots by active lab IDs. [admin.ts:5940-5970]
+- [x] [Review][Patch] **Redistribution produces cartesian explosion** — Fixed. Each RED lab now paired with the single best source (highest surplus GREEN lab) instead of all GREEN labs. [admin.ts:6017-6036]
+- [x] [Review][Patch] **TOCTOU race in updateOrderStatus** — Fixed. UPDATE query now includes `.eq('status', currentStatus)` as optimistic lock; returns CONFLICT if 0 rows affected. [admin.ts:6163-6177]
+- [x] [Review][Patch] **updateSupplier returns success on 0 rows affected** — Fixed. Update query uses `select('id', { count: 'exact', head: true })`; throws NOT_FOUND if 0 rows affected. [admin.ts:6284-6296]
+- [x] [Review][Patch] **parseInt without NaN guard in supplier form** — Fixed. Uses `parseInt(formLeadTime, 10)` with explicit `isNaN` guard; falls back to `null` safely. [suppliers/page.tsx:83-85]
+- [x] [Review][Patch] **Commit attribution: backend + sidebar changes in wrong commit** — Noted in File List. Not a code issue.
+- [x] [Review][Defer] **No role differentiation for PO approval workflow** — Any admin can approve their own PO (no separation of duties). `approved_by` is recorded but not enforced to differ from `created_by`. Likely a v1 simplification. — deferred, business rule for future iteration
