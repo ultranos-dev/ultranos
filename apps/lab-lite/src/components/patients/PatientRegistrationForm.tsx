@@ -13,6 +13,8 @@ import {
   type CreatePatientInput,
 } from '@/lib/trpc'
 import { MpiResultModal } from './MpiResultModal'
+import { CulturalFlagsEditor } from './CulturalFlagsEditor'
+import type { PatientCulturalPreferences } from '@/lib/cultural-flags'
 
 const INPUT_CLASS =
   'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
@@ -47,6 +49,8 @@ export function PatientRegistrationForm() {
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [mpiResult, setMpiResult] = useState<CheckDuplicatesResult | null>(null)
+  const [showCulturalPrefs, setShowCulturalPrefs] = useState(false)
+  const [savedCulturalPrefs, setSavedCulturalPrefs] = useState<PatientCulturalPreferences | null>(null)
 
   const getToken = useCallback(async (): Promise<string> => {
     const supabase = getSupabaseBrowserClient()
@@ -325,6 +329,26 @@ export function PatientRegistrationForm() {
             </div>
           )}
         </fieldset>
+
+        {/* Cultural Preferences — collapsible, optional (Story 45.6 Task 6) */}
+        <details
+          open={showCulturalPrefs}
+          onToggle={(e) => setShowCulturalPrefs((e.target as HTMLDetailsElement).open)}
+          data-testid="cultural-prefs-section"
+        >
+          <summary className="cursor-pointer text-sm font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+            {t('culturalPreferences', { defaultMessage: 'Cultural Preferences (optional)' })}
+          </summary>
+          <div className="mt-3">
+            <CulturalFlagsEditor
+              patientRef=""
+              existingPrefs={savedCulturalPrefs}
+              techId=""
+              hlcTimestamp=""
+              onSave={(prefs) => setSavedCulturalPrefs(prefs)}
+            />
+          </div>
+        </details>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-2">
