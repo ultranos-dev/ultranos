@@ -1,6 +1,6 @@
 # Story 46.7: Personal Quality Streak & Achievement System
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,17 +19,17 @@ Quality data is derived from existing QC history (Epic 43), sample rejection dat
 
 ## Acceptance Criteria
 
-1. [ ] Given a tech is working alone, when they view their quality dashboard, then they see: current QC streak (consecutive passing days), zero rejection streak (days without a rejected sample), training modules completed this quarter, and monthly quality metrics (e.g., hemoglobin CV%).
-2. [ ] Milestone achievements award digital badges visible in their professional profile.
-3. [ ] The system is self-reinforcement, not competitive — no leaderboard for solo techs.
-4. [ ] Streaks reset with explanation, not punishment.
-5. [ ] All UI is RTL-compatible and i18n-ready.
-6. [ ] No patient data appears in quality metrics — only aggregate statistics.
+1. [x] Given a tech is working alone, when they view their quality dashboard, then they see: current QC streak (consecutive passing days), zero rejection streak (days without a rejected sample), training modules completed this quarter, and monthly quality metrics (e.g., hemoglobin CV%).
+2. [x] Milestone achievements award digital badges visible in their professional profile.
+3. [x] The system is self-reinforcement, not competitive — no leaderboard for solo techs.
+4. [x] Streaks reset with explanation, not punishment.
+5. [x] All UI is RTL-compatible and i18n-ready.
+6. [x] No patient data appears in quality metrics — only aggregate statistics.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Quality Streak Data Model & Dexie Schema** (AC: 1, 2)
-  - [ ] Create `apps/lab-lite/src/lib/quality-streak-types.ts` with:
+- [x] **Task 1: Quality Streak Data Model & Dexie Schema** (AC: 1, 2)
+  - [x] Create `apps/lab-lite/src/lib/quality-streak-types.ts` with:
     ```
     QualityStreak {
       id: string
@@ -42,7 +42,7 @@ Quality data is derived from existing QC history (Epic 43), sample rejection dat
       updatedAt: string
     }
     ```
-  - [ ] Define `QualityMetric` type:
+  - [x] Define `QualityMetric` type:
     ```
     {
       id: string
@@ -55,7 +55,7 @@ Quality data is derived from existing QC history (Epic 43), sample rejection dat
       updatedAt: string
     }
     ```
-  - [ ] Define `Badge` type:
+  - [x] Define `Badge` type:
     ```
     {
       id: string
@@ -70,7 +70,7 @@ Quality data is derived from existing QC history (Epic 43), sample rejection dat
       }
     }
     ```
-  - [ ] Define `EarnedBadge` type:
+  - [x] Define `EarnedBadge` type:
     ```
     {
       id: string
@@ -80,83 +80,83 @@ Quality data is derived from existing QC history (Epic 43), sample rejection dat
       syncStatus: 'pending' | 'synced'
     }
     ```
-  - [ ] Update `apps/lab-lite/src/lib/db.ts` — add Dexie tables:
+  - [x] Update `apps/lab-lite/src/lib/db.ts` — add Dexie tables:
     - `quality_streaks` table: `&id, technicianId, streakType, [technicianId+streakType]`
     - `quality_metrics` table: `&id, technicianId, metricType, period, [technicianId+period]`
     - `badges` table: `&id, category`
     - `earned_badges` table: `&id, technicianId, badgeId, earnedAt, syncStatus`
 
-- [ ] **Task 2: Streak Calculation Engine** (AC: 1, 4)
-  - [ ] Create `apps/lab-lite/src/lib/streak-calculator.ts`.
-  - [ ] Implement `calculateQCStreak(technicianId: string): Promise<QualityStreak>`:
+- [x] **Task 2: Streak Calculation Engine** (AC: 1, 4)
+  - [x] Create `apps/lab-lite/src/lib/streak-calculator.ts`.
+  - [x] Implement `calculateQCStreak(technicianId: string): Promise<QualityStreak>`:
     - Query QC result history (Epic 43 Dexie tables).
     - Count consecutive calendar days where all QC results were passing (within acceptable limits).
     - If a QC failure is found, reset streak to 0 and record `lastResetReason`: "QC result out of range on [date] for [test category]".
-  - [ ] Implement `calculateRejectionStreak(technicianId: string): Promise<QualityStreak>`:
+  - [x] Implement `calculateRejectionStreak(technicianId: string): Promise<QualityStreak>`:
     - Query sample rejection history (Story 42.3 Dexie tables).
     - Count consecutive calendar days with zero rejected samples.
     - On reset, record `lastResetReason`: "Sample rejected on [date]: [rejection reason]".
-  - [ ] Update `longestStreak` if `currentStreak` exceeds it.
-  - [ ] **Reset framing:** When a streak resets, the UI displays: "Your [streak type] streak was [N] days. Here's what happened: [reason]. You're starting fresh — let's build it back!"
+  - [x] Update `longestStreak` if `currentStreak` exceeds it.
+  - [x] **Reset framing:** When a streak resets, the UI displays: "Your [streak type] streak was [N] days. Here's what happened: [reason]. You're starting fresh — let's build it back!"
 
-- [ ] **Task 3: Monthly Quality Metrics Calculator** (AC: 1)
-  - [ ] Create `apps/lab-lite/src/lib/quality-metrics-calculator.ts`.
-  - [ ] Implement `calculateMonthlyMetrics(technicianId: string, period: string): Promise<QualityMetric[]>`:
+- [x] **Task 3: Monthly Quality Metrics Calculator** (AC: 1)
+  - [x] Create `apps/lab-lite/src/lib/quality-metrics-calculator.ts`.
+  - [x] Implement `calculateMonthlyMetrics(technicianId: string, period: string): Promise<QualityMetric[]>`:
     - **Hemoglobin CV%:** Calculate coefficient of variation from QC data for hemoglobin controls.
     - **Turnaround time:** Average time from sample receipt to result authorization.
     - **Rejection rate:** Rejected samples / total samples received as percentage.
     - **Training completion rate:** Modules completed / modules available this quarter.
-  - [ ] Calculate `trend` by comparing current period to previous period: improving (value better), stable (within 5% change), declining (value worse).
-  - [ ] Store metrics in Dexie.
+  - [x] Calculate `trend` by comparing current period to previous period: improving (value better), stable (within 5% change), declining (value worse).
+  - [x] Store metrics in Dexie.
 
-- [ ] **Task 4: Badge System** (AC: 2, 3)
-  - [ ] Create `apps/lab-lite/src/lib/badge-definitions.ts` — define the initial badge set:
+- [x] **Task 4: Badge System** (AC: 2, 3)
+  - [x] Create `apps/lab-lite/src/lib/badge-definitions.ts` — define the initial badge set:
     - **Streak badges:** 7-Day QC Streak, 30-Day QC Streak, 90-Day QC Streak, 7-Day Zero Rejections, 30-Day Zero Rejections.
     - **Training badges:** First Module Completed, 5 Modules Completed, 10 Modules Completed, All Modules Completed.
     - **Quality badges:** CV% Below 3% for 3 Months, Zero Rejection Month, Perfect Quality Quarter.
     - **Milestone badges:** First Certification Milestone (ties to Story 46.6).
-  - [ ] Create `apps/lab-lite/src/lib/badge-evaluator.ts`.
-  - [ ] Implement `evaluateBadges(technicianId: string): Promise<EarnedBadge[]>` — check all badge requirements against current data, return newly earned badges.
-  - [ ] Badge evaluation runs after each streak update and metric calculation.
-  - [ ] **Non-competitive framing:** All badge descriptions use personal achievement language ("You achieved...", "Your dedication..."), never comparative language.
+  - [x] Create `apps/lab-lite/src/lib/badge-evaluator.ts`.
+  - [x] Implement `evaluateBadges(technicianId: string): Promise<EarnedBadge[]>` — check all badge requirements against current data, return newly earned badges.
+  - [x] Badge evaluation runs after each streak update and metric calculation.
+  - [x] **Non-competitive framing:** All badge descriptions use personal achievement language ("You achieved...", "Your dedication..."), never comparative language.
 
-- [ ] **Task 5: Quality Dashboard** (AC: 1, 2, 3, 4, 5)
-  - [ ] Create `apps/lab-lite/src/components/quality/QualityDashboard.tsx`.
-  - [ ] **Streaks section:** Display current QC streak and zero rejection streak with:
+- [x] **Task 5: Quality Dashboard** (AC: 1, 2, 3, 4, 5)
+  - [x] Create `apps/lab-lite/src/components/quality/QualityDashboard.tsx`.
+  - [x] **Streaks section:** Display current QC streak and zero rejection streak with:
     - Large number display with flame/star icon.
     - Longest streak record below.
     - If streak recently reset: encouraging reset message with reason.
-  - [ ] **Monthly metrics section:** Display current month's metrics as cards:
+  - [x] **Monthly metrics section:** Display current month's metrics as cards:
     - Each metric shows value, unit, and trend arrow (up/down/dash).
     - Mini sparkline chart showing last 6 months trend (optional, use a lightweight chart library or SVG).
-  - [ ] **Training section:** Modules completed this quarter with progress toward quarterly goal.
-  - [ ] **Badges section:** Grid of earned badges with names and earned dates. Unearned badges shown as greyed-out silhouettes with progress hints.
-  - [ ] Ensure no leaderboard, no comparison to other techs, no ranking.
+  - [x] **Training section:** Modules completed this quarter with progress toward quarterly goal.
+  - [x] **Badges section:** Grid of earned badges with names and earned dates. Unearned badges shown as greyed-out silhouettes with progress hints.
+  - [x] Ensure no leaderboard, no comparison to other techs, no ranking.
 
-- [ ] **Task 6: Badge Display in Profile** (AC: 2)
-  - [ ] Create `apps/lab-lite/src/components/quality/BadgeShowcase.tsx` — compact badge display for embedding in the tech's profile/settings page.
-  - [ ] Show earned badges with icons and earned dates.
-  - [ ] Integrate into the existing settings/profile page.
+- [x] **Task 6: Badge Display in Profile** (AC: 2)
+  - [x] Create `apps/lab-lite/src/components/quality/BadgeShowcase.tsx` — compact badge display for embedding in the tech's profile/settings page.
+  - [x] Show earned badges with icons and earned dates.
+  - [x] Integrate into the existing settings/profile page.
 
-- [ ] **Task 7: Integration with Professional Portfolio** (AC: 2)
-  - [ ] Quality metrics and earned badges sync to Hub as part of the tech's professional development record.
-  - [ ] Create `apps/lab-lite/src/lib/quality-sync.ts` — sync streaks, metrics, and earned badges to Hub.
-  - [ ] Badges earned feed into certification pathway (Story 46.6) as evidence of professional growth.
+- [x] **Task 7: Integration with Professional Portfolio** (AC: 2)
+  - [x] Quality metrics and earned badges sync to Hub as part of the tech's professional development record.
+  - [x] Create `apps/lab-lite/src/lib/quality-sync.ts` — sync streaks, metrics, and earned badges to Hub.
+  - [x] Badges earned feed into certification pathway (Story 46.6) as evidence of professional growth.
 
-- [ ] **Task 8: Page Route & Navigation** (AC: 5)
-  - [ ] Create `apps/lab-lite/src/app/[locale]/quality/page.tsx`.
-  - [ ] Add quality dashboard link to `AppSidebar.tsx` navigation.
-  - [ ] Add all translation keys.
-  - [ ] Ensure RTL layout compatibility.
+- [x] **Task 8: Page Route & Navigation** (AC: 5)
+  - [x] Create `apps/lab-lite/src/app/[locale]/quality/page.tsx`.
+  - [x] Add quality dashboard link to `AppSidebar.tsx` navigation.
+  - [x] Add all translation keys.
+  - [x] Ensure RTL layout compatibility.
 
-- [ ] **Task 9: Tests** (AC: 1-4, 6)
-  - [ ] Unit tests for QC streak calculation: consecutive passing days, reset on failure, longest streak tracking.
-  - [ ] Unit tests for rejection streak calculation: zero rejection counting, reset with reason.
-  - [ ] Unit tests for monthly metrics: CV% calculation, trend determination, edge cases (no data).
-  - [ ] Unit tests for badge evaluation: requirement matching, newly earned detection, idempotency.
-  - [ ] Component tests for QualityDashboard: streak display, metric cards, badge grid, reset message.
-  - [ ] Verify no comparative/competitive language in any badge or UI text.
-  - [ ] RTL snapshot tests.
+- [x] **Task 9: Tests** (AC: 1-4, 6)
+  - [x] Unit tests for QC streak calculation: consecutive passing days, reset on failure, longest streak tracking.
+  - [x] Unit tests for rejection streak calculation: zero rejection counting, reset with reason.
+  - [x] Unit tests for monthly metrics: CV% calculation, trend determination, edge cases (no data).
+  - [x] Unit tests for badge evaluation: requirement matching, newly earned detection, idempotency.
+  - [x] Component tests for QualityDashboard: streak display, metric cards, badge grid, reset message.
+  - [x] Verify no comparative/competitive language in any badge or UI text.
+  - [x] RTL snapshot tests.
 
 ## Dev Notes
 
@@ -201,3 +201,63 @@ Modified files:
 - Training completions: Story 46.2 (micro-learning modules)
 - Certification pathway: Story 46.6 (badges as milestone evidence)
 - Existing Dexie schema: `apps/lab-lite/src/lib/db.ts`
+
+## File List
+
+### New Files
+- `apps/lab-lite/src/lib/quality-streak-types.ts`
+- `apps/lab-lite/src/lib/streak-calculator.ts`
+- `apps/lab-lite/src/lib/quality-metrics-calculator.ts`
+- `apps/lab-lite/src/lib/badge-definitions.ts`
+- `apps/lab-lite/src/lib/badge-evaluator.ts`
+- `apps/lab-lite/src/lib/quality-sync.ts`
+- `apps/lab-lite/src/components/quality/QualityDashboard.tsx`
+- `apps/lab-lite/src/components/quality/BadgeShowcase.tsx`
+- `apps/lab-lite/src/app/[locale]/quality/page.tsx`
+- `apps/lab-lite/src/__tests__/quality-streak-calculator.test.ts`
+- `apps/lab-lite/src/__tests__/quality-metrics-calculator.test.ts`
+- `apps/lab-lite/src/__tests__/badge-evaluator.test.ts`
+- `apps/lab-lite/src/__tests__/quality-dashboard.test.tsx`
+- `apps/lab-lite/src/__tests__/__snapshots__/quality-dashboard.test.tsx.snap`
+
+### Modified Files
+- `apps/lab-lite/src/lib/db.ts` (added v19 schema: quality_streaks, quality_metrics, badges, earned_badges)
+- `apps/lab-lite/src/components/AppSidebar.tsx` (added TrendingUp icon, qualityDashboard nav item)
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` (integrated BadgeShowcase)
+- `apps/lab-lite/messages/en.json` (quality namespace + sidebar.qualityDashboard)
+- `apps/lab-lite/messages/ar.json` (quality namespace + sidebar.qualityDashboard)
+- `apps/lab-lite/messages/prs.json` (quality namespace + sidebar.qualityDashboard)
+- `apps/lab-lite/messages/ps.json` (quality namespace + sidebar.qualityDashboard)
+- `packages/ui-kit/src/icons.ts` (added Flame, Trophy, Medal, Gem, Zap to gamification section)
+
+## Dev Agent Record
+
+### Implementation Plan
+Implemented following TDD red-green-refactor: wrote failing tests first for each module, then implemented minimal code to pass, then refactored for clarity.
+
+Architecture:
+- **Data layer:** Dexie v19 schema with 4 new tables. Pass/fail logic for QC derives from `observedValue` within `[targetMean ± 2*targetSd]` (no explicit status field on QcRun).
+- **Calculation layer:** `streak-calculator.ts` uses a 90-day look-back window, groups runs by calendar day, walks backwards to count consecutive passing days. Neutral days (no runs) skip without breaking streaks — correct for labs where instruments may not run daily.
+- **Metrics layer:** CV% = (stddev/mean)*100 per LOINC '718-7' hemoglobin runs. Trend uses 5% threshold comparing current vs previous period.
+- **Badge layer:** 13 badges across 4 categories. `evaluateBadges()` is idempotent — loads already-earned badge IDs into a Set before checking requirements. Badges qualify via `currentStreak` OR `longestStreak` so historic achievements are preserved after resets.
+- **UI layer:** `QualityDashboard.tsx` with `dir="auto"` for RTL, no PHI exposed, no comparative language. `BadgeShowcase.tsx` embedded in settings page.
+- **Sync layer:** `quality-sync.ts` non-blocking — network failures silently keep `syncStatus: 'pending'`.
+
+### Completion Notes
+- All 48 tests pass: 17 streak calculator + 9 metrics calculator + 12 badge evaluator + 10 dashboard component
+- Non-comparative language verified by dedicated test suite scanning all badge names and descriptions
+- RTL compatibility confirmed by snapshot test with `dir="auto"` assertion
+- Patient data isolation verified by test: patient IDs/references never appear in quality dashboard output
+- `Flame` icon added to `packages/ui-kit/src/icons.ts` gamification section (required by QualityDashboard)
+- Solo-tech rejection attribution counts all lab rejections globally (not filtered by technicianId) as appropriate for solo-tech environments
+
+### Debug Log
+- Test run with pipe-delimited pattern (`quality-streak|quality-metrics|...`) caused "No test files found" error in vitest 1.6.1; resolved by running each file individually
+- `Flame` icon missing from `@ultranos/ui-kit/icons` caused `undefined` component error in dashboard tests; fixed by adding `Flame, Trophy, Medal, Gem, Zap` to icons catalog
+- Snapshot captured loading state from prior run; updated with `-u` flag after fixing `waitFor` condition in RTL test (was using `toBeDefined()` which passes for `null`)
+
+## Change Log
+
+| Date | Change |
+|------|--------|
+| 2026-05-31 | Implemented full Story 46.7: quality streak types, Dexie v19 schema, streak calculator, metrics calculator, badge definitions, badge evaluator, QualityDashboard, BadgeShowcase, quality-sync, page route, i18n (4 locales), sidebar nav, settings integration, 48 tests passing |
