@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { ClipboardList } from '@ultranos/ui-kit/icons'
 import type { PrioritizedSample } from '@/lib/prioritization-engine'
 import { WorklistItem } from './WorklistItem'
 
@@ -152,15 +153,7 @@ export function PriorityWorklist({
   if (samples.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 px-6 py-12 text-center">
-        <svg
-          className="mb-3 h-10 w-10 text-neutral-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
+        <ClipboardList size={40} className="mb-3 text-neutral-300" aria-hidden="true" />
         <p className="text-sm font-medium text-neutral-500">No samples in queue</p>
         <p className="mt-1 text-xs text-neutral-400">Received samples will appear here automatically.</p>
       </div>

@@ -10,6 +10,7 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { CircleCheck } from '@ultranos/ui-kit/icons'
 import { useRouter } from 'next/navigation'
 import { getDb } from '@/lib/db'
 import { canAuthorize, canReject, canHold } from '@/lib/permissions'
@@ -53,18 +54,7 @@ function FlagBadge({ flag }: { flag: AbnormalityFlag }) {
 function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-neutral-500">
-      {/* checkmark circle */}
-      <svg
-        className="mb-4 h-14 w-14 text-green-400"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="9 12 11 14 15 10" />
-      </svg>
+      <CircleCheck size={56} className="mb-4 text-green-400" aria-hidden="true" />
       <p className="text-lg font-medium">{t('emptyTitle')}</p>
       <p className="mt-1 text-sm">{t('emptySubtitle')}</p>
     </div>

@@ -29,6 +29,7 @@ export {
   Minimize2,
   PanelLeftClose,
   PanelLeftOpen,
+  MapPin,
 } from 'lucide-react'
 
 // ─── Users & Identity ───────────────────────────────────────────────

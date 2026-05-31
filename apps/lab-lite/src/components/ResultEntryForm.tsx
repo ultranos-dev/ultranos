@@ -11,6 +11,8 @@
 
 import { useState, useEffect, useCallback, useId } from 'react'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { MessageSquare } from '@ultranos/ui-kit/icons'
 import type { ResultTemplate, TemplateField } from '@/lib/result-templates'
 import type { LabResult, LabObservation } from '@/lib/db'
 import { evaluateFlag, evaluateSelectFlag } from '@/lib/abnormal-flags'
@@ -76,6 +78,7 @@ export function ResultEntryForm({
   existingDraft,
 }: ResultEntryFormProps) {
   const t = useTranslations('resultEntry')
+  const tAtlas = useTranslations('visualAtlas')
   const formId = useId()
 
   // ---------------------------------------------------------------------------
@@ -352,9 +355,7 @@ export function ResultEntryForm({
               aria-expanded={commentOpen}
               className="rounded p-1 text-neutral-400 hover:text-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-neutral-500 dark:hover:text-blue-400"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-              </svg>
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -413,6 +414,17 @@ export function ResultEntryForm({
           </label>
         </div>
       )}
+
+      {/* ---- Open Atlas contextual link (AC 10) ---- */}
+      <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-2 dark:border-neutral-800">
+        <Link
+          href="/atlas"
+          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          aria-label={tAtlas('openAtlasAriaLabel')}
+        >
+          {tAtlas('openAtlas')}
+        </Link>
+      </div>
 
       {/* ---- Template fields ---- */}
       <div className="px-4 py-2">

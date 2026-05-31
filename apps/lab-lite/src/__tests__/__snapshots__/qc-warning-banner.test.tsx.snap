@@ -1,0 +1,229 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`QcWarningBanner — failing state (Task 9.4) > shows alert when QC is failing (LTR) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    role="alert"
+    style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; background-color: rgb(254, 242, 242); border: 1px solid rgb(252, 165, 165); color: rgb(153, 27, 27); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0; margin-block-start: 0.125rem;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <path
+        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span>
+      qcFailing({"analyte":"718-7","time":"2026-05-31"})
+    </span>
+  </div>
+</div>
+`;
+
+exports[`QcWarningBanner — failing state (Task 9.4) > shows alert when QC is failing (RTL) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    role="alert"
+    style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; background-color: rgb(254, 242, 242); border: 1px solid rgb(252, 165, 165); color: rgb(153, 27, 27); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0; margin-block-start: 0.125rem;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <path
+        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span>
+      qcFailing({"analyte":"718-7","time":"2026-05-31"})
+    </span>
+  </div>
+</div>
+`;
+
+exports[`QcWarningBanner — no_qc_today state (Task 9.4) > shows amber warning when no QC run today (LTR) 1`] = `
+<div>
+  <div
+    aria-live="polite"
+    role="alert"
+    style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; background-color: rgb(255, 251, 235); border: 1px solid rgb(252, 211, 77); color: rgb(146, 64, 14); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0; margin-block-start: 0.125rem;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <path
+        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span>
+      noQcToday({"analyte":"718-7"})
+    </span>
+  </div>
+</div>
+`;
+
+exports[`QcWarningBanner — no_qc_today state (Task 9.4) > shows amber warning when no QC run today (RTL) 1`] = `
+<div>
+  <div
+    aria-live="polite"
+    role="alert"
+    style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; border-radius: 0.375rem; background-color: rgb(255, 251, 235); border: 1px solid rgb(252, 211, 77); color: rgb(146, 64, 14); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0; margin-block-start: 0.125rem;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <path
+        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+      />
+      <line
+        x1="12"
+        x2="12"
+        y1="9"
+        y2="13"
+      />
+      <line
+        x1="12"
+        x2="12.01"
+        y1="17"
+        y2="17"
+      />
+    </svg>
+    <span>
+      noQcToday({"analyte":"718-7"})
+    </span>
+  </div>
+</div>
+`;
+
+exports[`QcWarningBanner — passing state (Task 9.4) > shows passing status (LTR) 1`] = `
+<div>
+  <div
+    aria-label="qcPassingLabel({"analyte":"718-7"})"
+    role="status"
+    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background-color: rgb(240, 253, 244); border: 1px solid rgb(134, 239, 172); color: rgb(22, 101, 52); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <polyline
+        points="20 6 9 17 4 12"
+      />
+    </svg>
+    <span>
+      qcPassing({"analyte":"718-7"})
+    </span>
+  </div>
+</div>
+`;
+
+exports[`QcWarningBanner — passing state (Task 9.4) > shows passing status (RTL) 1`] = `
+<div>
+  <div
+    aria-label="qcPassingLabel({"analyte":"718-7"})"
+    role="status"
+    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 0.375rem; background-color: rgb(240, 253, 244); border: 1px solid rgb(134, 239, 172); color: rgb(22, 101, 52); font-size: 0.875rem;"
+  >
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="16"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      style="flex-shrink: 0;"
+      viewBox="0 0 24 24"
+      width="16"
+    >
+      <polyline
+        points="20 6 9 17 4 12"
+      />
+    </svg>
+    <span>
+      qcPassing({"analyte":"718-7"})
+    </span>
+  </div>
+</div>
+`;

@@ -1,0 +1,146 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AmendmentChainView > renders AmendmentChainView snapshot in RTL 1`] = `
+<div>
+  <div
+    class="py-4 text-sm text-gray-500"
+    data-testid="chain-empty"
+  >
+    No amendments on record for this result.
+  </div>
+</div>
+`;
+
+exports[`SupervisorAuthGate > RTL Snapshots > renders correctly in LTR 1`] = `
+<div>
+  <div
+    aria-labelledby="supervisor-auth-title"
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    role="dialog"
+  >
+    <div
+      class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+    >
+      <h2
+        class="text-lg font-semibold text-gray-900 mb-4"
+        id="supervisor-auth-title"
+      >
+        Supervisor Authorization Required
+      </h2>
+      <p
+        class="text-sm text-gray-600 mb-6"
+      >
+        This amendment requires supervisor authorization. Ask your supervisor to enter their practitioner ID.
+      </p>
+      <div
+        class="space-y-4"
+      >
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 mb-1"
+            for="supervisor-id-input"
+          >
+            Supervisor Practitioner ID
+          </label>
+          <input
+            autocomplete="off"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-testid="supervisor-id-input"
+            id="supervisor-id-input"
+            placeholder="Enter supervisor ID"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+      <div
+        class="flex justify-end gap-3 mt-6"
+      >
+        <button
+          class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          data-testid="auth-cancel-btn"
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          data-testid="auth-authorize-btn"
+          disabled=""
+          type="button"
+        >
+          Authorize Amendment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SupervisorAuthGate > RTL Snapshots > renders correctly in RTL 1`] = `
+<div>
+  <div
+    aria-labelledby="supervisor-auth-title"
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    role="dialog"
+  >
+    <div
+      class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6"
+    >
+      <h2
+        class="text-lg font-semibold text-gray-900 mb-4"
+        id="supervisor-auth-title"
+      >
+        Supervisor Authorization Required
+      </h2>
+      <p
+        class="text-sm text-gray-600 mb-6"
+      >
+        This amendment requires supervisor authorization. Ask your supervisor to enter their practitioner ID.
+      </p>
+      <div
+        class="space-y-4"
+      >
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 mb-1"
+            for="supervisor-id-input"
+          >
+            Supervisor Practitioner ID
+          </label>
+          <input
+            autocomplete="off"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-testid="supervisor-id-input"
+            id="supervisor-id-input"
+            placeholder="Enter supervisor ID"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+      <div
+        class="flex justify-end gap-3 mt-6"
+      >
+        <button
+          class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          data-testid="auth-cancel-btn"
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          data-testid="auth-authorize-btn"
+          disabled=""
+          type="button"
+        >
+          Authorize Amendment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

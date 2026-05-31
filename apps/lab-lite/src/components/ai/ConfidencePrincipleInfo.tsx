@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Info } from '@ultranos/ui-kit/icons'
 
 /**
  * Explains the Confidence Inversion Principle to end users.
@@ -27,7 +28,7 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
     return (
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-center gap-2 mb-2">
-          <InfoIcon className="text-blue-600 shrink-0" />
+          <Info size={16} className="text-blue-600 shrink-0" aria-hidden="true" />
           <h3 className="text-sm font-semibold text-blue-900">{t('principle.title')}</h3>
         </div>
         <p className="text-sm text-blue-800 leading-relaxed">{t('principle.body')}</p>
@@ -45,7 +46,7 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
         onClick={() => setOpen((prev) => !prev)}
         className="inline-flex items-center justify-center w-5 h-5 rounded-full text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
-        <InfoIcon />
+        <Info size={16} aria-hidden="true" />
       </button>
 
       {open && (
@@ -71,19 +72,3 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
   )
 }
 
-function InfoIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      className={className}
-    >
-      <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="8" y1="7" x2="8" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="8" cy="4.5" r="0.9" fill="currentColor" />
-    </svg>
-  )
-}

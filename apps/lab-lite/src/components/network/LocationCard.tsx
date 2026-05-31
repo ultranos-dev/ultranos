@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import type { LabLocation, NetworkStatusSnapshot } from '@/types/lab-network'
+import { Clock } from '@ultranos/ui-kit/icons'
 
 interface LocationCardProps {
   location: LabLocation
@@ -108,19 +109,7 @@ export function LocationCard({ location, snapshot }: LocationCardProps) {
 
       {/* Last sync row */}
       <div className="mt-3 flex items-center gap-1.5">
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className={isStale ? 'text-amber-500' : 'text-neutral-400'}
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
+        <Clock size={12} className={isStale ? 'text-amber-500' : 'text-neutral-400'} aria-hidden="true" />
         <span className={`text-xs ${isStale ? 'text-amber-600' : 'text-neutral-500'}`}>
           {formatRelativeTime(snapshot.lastSyncTimestamp)}
           {!isOnline && <span className="ms-1 font-medium">{t('staleDataWarning')}</span>}

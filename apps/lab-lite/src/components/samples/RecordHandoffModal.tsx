@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { recordHandoff } from '@/lib/sample-service'
+import { X } from '@ultranos/ui-kit/icons'
 
 /**
  * RecordHandoffModal — log a custody transfer between lab staff.
@@ -65,9 +66,7 @@ export function RecordHandoffModal({
             aria-label={t('modal.close')}
             className="rounded p-1 text-neutral-400 hover:text-neutral-600"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 

@@ -7,6 +7,7 @@ import { AudioRecorder } from '@/components/consent/AudioRecorder'
 import { ThumbprintCapture } from '@/components/consent/ThumbprintCapture'
 import { ConsentAudioPlayer } from '@/components/consent/ConsentAudioPlayer'
 import { addConsentRecord, type ConsentMethod, type ConsentLanguage } from '@/lib/db'
+import { Check } from '@ultranos/ui-kit/icons'
 import { CURRENT_CONSENT_VERSION } from '@/lib/consent-versions'
 import { hlc, serializeHlc } from '@/lib/hlc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -139,9 +140,7 @@ export default function ConsentPage() {
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600 dark:text-green-400">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <Check size={32} className="text-green-600 dark:text-green-400" />
           </div>
           <p className="text-lg font-medium">{t('review.success')}</p>
         </div>

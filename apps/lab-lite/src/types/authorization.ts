@@ -83,6 +83,8 @@ export interface LabResultForAuthorization {
   autoVerifyEvaluation?: AutoVerifyEvaluation
   releasedAt?: string
   syncStatus: AuthSyncStatus
+  /** FHIR DiagnosticReport conclusion field — clinical interpretation text */
+  conclusion?: string
 }
 
 /**
@@ -110,6 +112,8 @@ export interface AuthorizationAction {
   criticalValueAcknowledged?: boolean
   autoVerifyCriteria?: AutoVerifyCriteria
   syncStatus: AuthSyncStatus
+  /** FHIR DiagnosticReport conclusion field — clinical interpretation text */
+  conclusion?: string
 }
 
 /**

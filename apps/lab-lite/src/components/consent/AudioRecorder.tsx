@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { encryptBlob } from '@/lib/consent-crypto'
+import { Check, Mic, StopCircle } from '@ultranos/ui-kit/icons'
 
 const MAX_RECORDING_DURATION_S = 120
 
@@ -154,9 +155,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
     return (
       <div className="flex flex-col items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600 dark:text-green-400">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <Check size={32} className="text-green-600 dark:text-green-400" />
         </div>
         <p className="text-sm font-medium">{t('recording.recorded')}</p>
         {elapsed >= MAX_RECORDING_DURATION_S && (
@@ -188,10 +187,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
             className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
             aria-label={t('recording.idle')}
           >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
+            <Mic size={32} aria-hidden="true" />
           </button>
           <p className="text-sm text-gray-500 dark:text-gray-400">{t('recording.idle')}</p>
         </>
@@ -205,9 +201,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
             className="flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-red-600 text-white shadow-lg"
             aria-label="Stop recording"
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="6" width="12" height="12" rx="2" />
-            </svg>
+            <StopCircle size={28} aria-hidden="true" />
           </button>
           <p className="text-sm font-medium text-red-600 dark:text-red-400">
             {t('recording.recording', { elapsed })}

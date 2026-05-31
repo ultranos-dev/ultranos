@@ -15,6 +15,7 @@ import { getDb } from './db'
 import { hlc, serializeHlc } from './hlc'
 import { reportAuthorizationAuditEvent } from './audit-client'
 import { dispatchResultRelease } from './result-release'
+import { checkAndInitiateEscalation } from './escalation-integration'
 import {
   AuthorizationStatus,
   AuthorizationActionType,
@@ -104,6 +105,16 @@ export async function approveResult(options: ApproveOptions): Promise<void> {
 
   // 4. Dispatch notification to ordering physician (queues offline if needed)
   void dispatchResultRelease(result)
+
+  // 5. Check for critical values and initiate escalation chain if needed (Story 48.4)
+  void checkAndInitiateEscalation({
+    resultId: result.id,
+    loincCode: result.loincCode,
+    analyte: result.testCategory,
+    patientRef: result.patientRef,
+    orderingPhysicianId: result.authorizedBy ?? actorId,
+    abnormalityFlags: result.abnormalityFlags,
+  })
 }
 
 /**

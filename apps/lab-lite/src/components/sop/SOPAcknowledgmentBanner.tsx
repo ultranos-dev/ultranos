@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getUnacknowledgedSOPs } from '@/lib/sop-sync'
 import type { SOP } from '@/lib/sop-types'
@@ -44,21 +45,7 @@ export function SOPAcknowledgmentBanner() {
   return (
     <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
       <div className="flex items-start gap-3">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400"
-        >
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
+        <AlertTriangle size={20} className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
         <div className="flex-1">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             {t('bannerTitle', { count: unacked.length })}

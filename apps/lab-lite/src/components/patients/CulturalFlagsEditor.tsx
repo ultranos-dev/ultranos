@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { X } from '@ultranos/ui-kit/icons'
 import {
   CulturalFlagType,
   PREDEFINED_FLAG_TYPES,
@@ -205,9 +206,7 @@ export function CulturalFlagsEditor({
                 className="text-gray-400 hover:text-red-500"
                 aria-label={`Remove ${custom.description}`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
+                <X size={16} aria-hidden="true" />
               </button>
             </div>
           ))}

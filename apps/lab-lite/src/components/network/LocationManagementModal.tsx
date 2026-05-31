@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { X } from '@ultranos/ui-kit/icons'
 import type { LabLocation, CreateLocationInput } from '@/types/lab-network'
 import {
   addSatelliteLocation,
@@ -141,10 +142,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
             aria-label={t('close')}
             className="rounded p-1 text-neutral-400 hover:text-neutral-600"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 

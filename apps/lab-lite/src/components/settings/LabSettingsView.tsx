@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
@@ -316,9 +317,7 @@ export function LabSettingsView() {
               Generator schedule &amp; test time estimates
             </p>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400 rtl:-scale-x-100">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          <ChevronRight size={20} className="text-neutral-400 rtl:-scale-x-100" aria-hidden="true" />
         </Link>
 
         {/* Reference Ranges — Story 43.8 (AC #1) */}
@@ -333,9 +332,7 @@ export function LabSettingsView() {
               {t('referenceRangesDesc')}
             </p>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400 rtl:-scale-x-100">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+          <ChevronRight size={20} className="text-neutral-400 rtl:-scale-x-100" aria-hidden="true" />
         </Link>
 
         {/* Security Alert — lab_manager only (Story 49.4) */}

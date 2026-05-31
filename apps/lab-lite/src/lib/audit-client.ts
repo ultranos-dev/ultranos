@@ -1058,3 +1058,129 @@ export function reportDailyLogAuditEvent(payload: {
 
   void emitClientAudit(input)
 }
+
+// ---------------------------------------------------------------------------
+// Story 48.4 — Critical Value Escalation Audit Events
+// Tracks every step of the multi-step escalation chain triggered by critical lab values.
+// PHI rule: critical VALUE is NEVER logged — only chain/result IDs (opaque) and step metadata.
+// ---------------------------------------------------------------------------
+
+export type EscalationAuditAction =
+  | 'CRITICAL_VALUE_DETECTED'
+  | 'ESCALATION_INITIATED'
+  | 'ESCALATION_STEP_SENT'
+  | 'ESCALATION_STEP_ACKNOWLEDGED'
+  | 'ESCALATION_STEP_ESCALATED'
+  | 'ESCALATION_COMPLETED'
+  | 'ESCALATION_EXPIRED'
+
+/**
+ * Emit an escalation chain audit event.
+ * Never throws — escalation workflow must not be blocked by audit failures.
+ * Metadata NEVER includes the critical value itself — only opaque IDs and step metadata.
+ */
+export function reportEscalationEvent(payload: {
+  action: EscalationAuditAction
+  chainId: string
+  resultId: string
+  stepNumber?: number
+  recipientRole?: string
+  notificationType?: string
+  timestamp: string
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<EscalationAuditAction, AuditAction> = {
+    CRITICAL_VALUE_DETECTED: AuditAction.CREATE,
+    ESCALATION_INITIATED: AuditAction.CREATE,
+    ESCALATION_STEP_SENT: AuditAction.CREATE,
+    ESCALATION_STEP_ACKNOWLEDGED: AuditAction.UPDATE,
+    ESCALATION_STEP_ESCALATED: AuditAction.UPDATE,
+    ESCALATION_COMPLETED: AuditAction.UPDATE,
+    ESCALATION_EXPIRED: AuditAction.UPDATE,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: AuditResourceType.LAB_RESULT,
+    resourceId: payload.chainId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      escalationEvent: payload.action,
+      outcome: 'SUCCESS',
+      chainId: payload.chainId,
+      resultId: payload.resultId,
+      // NEVER include criticalValue, value, or analyte name — PHI
+      ...(payload.stepNumber != null ? { stepNumber: payload.stepNumber } : {}),
+      ...(payload.recipientRole ? { recipientRole: payload.recipientRole } : {}),
+      ...(payload.notificationType ? { notificationType: payload.notificationType } : {}),
+      timestamp: payload.timestamp,
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+export function reportAtlasView(payload: { entryId: string; categoryId: string }): void {
+  const session = useAuthSessionStore.getState().session
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: AuditAction.READ,
+    resourceType: 'VISUAL_ATLAS' as AuditResourceType,
+    resourceId: payload.entryId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      atlasEvent: 'ATLAS_ENTRY_VIEWED',
+      outcome: 'SUCCESS',
+      entryId: payload.entryId,
+      categoryId: payload.categoryId,
+      source: 'lab-lite',
+    },
+  }
+  void emitClientAudit(input)
+}
+
+/**
+ * Emit an audit event for the amendment workflow.
+ * Story 43.3 AC #8: Every amendment action is audited.
+ * CLAUDE.md Rule #1: No PHI in audit metadata — opaque IDs only.
+ */
+export function reportAmendmentEvent(payload: {
+  action: 'AMENDMENT_INITIATED' | 'AMENDMENT_AUTHORIZED' | 'AMENDMENT_AUTH_DENIED' | 'AMENDMENT_COMMITTED'
+  amendmentId: string
+  originalReportId: string
+  initiatedBy: string
+  outcome: 'SUCCESS' | 'FAILURE'
+  meta?: Record<string, unknown>
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<string, AuditAction> = {
+    AMENDMENT_INITIATED: AuditAction.UPDATE,
+    AMENDMENT_AUTHORIZED: AuditAction.UPDATE,
+    AMENDMENT_AUTH_DENIED: AuditAction.SECURITY_VIOLATION,
+    AMENDMENT_COMMITTED: AuditAction.RESULT_AMENDED,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.initiatedBy,
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action] ?? AuditAction.UPDATE,
+    resourceType: AuditResourceType.LAB_RESULT,
+    resourceId: payload.originalReportId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      amendmentEvent: payload.action,
+      amendmentId: payload.amendmentId,
+      outcome: payload.outcome,
+      source: 'lab-lite',
+      ...payload.meta,
+    },
+  }
+
+  void emitClientAudit(input)
+}

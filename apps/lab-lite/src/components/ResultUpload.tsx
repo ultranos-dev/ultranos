@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { formatFileSize } from '@/lib/format'
+import { X, Upload } from '@ultranos/ui-kit/icons'
 
 const ACCEPTED_TYPES = new Set([
   'application/pdf',
@@ -114,13 +115,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           aria-label="Remove file"
           className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <X size={20} />
         </button>
       </div>
     )
@@ -146,9 +141,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
+        <Upload size={32} className="text-neutral-400" aria-hidden="true" />
         <p className="text-sm text-neutral-600">
           Drag and drop your lab result file here, or{' '}
           <span className="font-semibold text-primary-600">browse files</span>

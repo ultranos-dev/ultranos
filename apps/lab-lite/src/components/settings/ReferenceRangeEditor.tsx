@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { reportRangeChangeEvent } from '@/lib/audit-client'
@@ -391,22 +392,13 @@ export function ReferenceRangeEditor() {
                 {group.ranges.some((r) => r.source !== 'DEFAULT') && (
                   <SourceBadge source="LAB_CUSTOM" />
                 )}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <ChevronDown
+                  size={16}
                   className={`text-neutral-400 transition-transform ${
                     expandedLoinc === group.loincCode ? 'rotate-180' : ''
                   }`}
                   aria-hidden="true"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                />
               </div>
             </button>
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import type { SOP } from '@/lib/sop-types'
 import { addSOPAcknowledgment } from '@/lib/db'
 
@@ -110,9 +111,7 @@ export function SOPDetailView({
         onClick={onBack}
         className="mb-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
+        <ChevronLeft size={16} aria-hidden="true" />
         {t('backToLibrary')}
       </button>
 

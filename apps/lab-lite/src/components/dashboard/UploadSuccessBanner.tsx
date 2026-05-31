@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { CircleCheck } from '@ultranos/ui-kit/icons'
 
 export function UploadSuccessBanner() {
   const t = useTranslations('dashboard')
@@ -28,13 +29,7 @@ export function UploadSuccessBanner() {
       aria-live="polite"
     >
       <div className="flex items-center gap-2">
-        <svg className="h-5 w-5 shrink-0 text-green-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path
-            fillRule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <CircleCheck size={20} className="shrink-0 text-green-600" aria-hidden="true" />
         <span className="font-medium">{t('uploadSuccess')}</span>
       </div>
       <button

@@ -2,16 +2,21 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import type { LabRole } from '@ultranos/shared-types'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
 import { getMyRole } from '@/lib/trpc'
+import { getPendingHandoverReports, type HandoverReport } from '@/lib/db'
+import { HandoverAcknowledgment } from '@/components/shift/HandoverAcknowledgment'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
+  const [pendingHandover, setPendingHandover] = useState<HandoverReport | null>(null)
   const pathname = usePathname()
   const isLoginPage = pathname === '/login'
+  const session = useAuthSessionStore((s) => s.session)
 
   useEffect(() => {
     if (isLoginPage) return
@@ -44,7 +49,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             // Malformed JWT — use empty sessionId rather than blocking auth
           }
           // Fetch lab role from Hub API (Story 42.1 AC 3, 6)
-          let labRole: import('@ultranos/shared-types').LabRole | null = null
+          let labRole: LabRole | null = null
           try {
             const token = data.session.access_token
             const roleResult = await getMyRole(token)
@@ -56,7 +61,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           } catch {
             // Offline-safe: use cached role if available, fall back to LAB_TECH
             const cached = (() => { try { return localStorage.getItem(`ultranos_lab_role_${user.id}`) } catch { return null } })()
-            labRole = (cached as import('@ultranos/shared-types').LabRole) ?? 'LAB_TECH' as import('@ultranos/shared-types').LabRole
+            labRole = (cached as LabRole) ?? 'LAB_TECH' as LabRole
           }
 
           useAuthSessionStore.getState().setSession({
@@ -70,6 +75,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         }
 
         setReady(true)
+
+        // Check for pending handover reports after session is established
+        try {
+          const pending = await getPendingHandoverReports()
+          if (!cancelled && pending.length > 0) setPendingHandover(pending[0])
+        } catch {
+          // Offline or Dexie unavailable — skip handover check
+        }
       } catch {
         const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
         window.location.href = `/login?returnUrl=${returnUrl}`
@@ -117,6 +130,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       status={entitlementStatus}
       onSignOut={handleSignOut}
     >
+      {pendingHandover && session && (
+        <HandoverAcknowledgment
+          report={pendingHandover}
+          incomingTechId={session.userId}
+          onAcknowledged={() => setPendingHandover(null)}
+        />
+      )}
       {children}
     </EntitlementGate>
   )

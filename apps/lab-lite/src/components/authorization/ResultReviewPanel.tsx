@@ -10,6 +10,7 @@
  */
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { AlertTriangle, X } from '@ultranos/ui-kit/icons'
 import { approveResult, rejectResult, holdResult } from '@/lib/authorization-actions'
 import { canAuthorize, canReject, canHold, isCriticalResult } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -227,11 +228,7 @@ export function ResultReviewPanel({
             role="alert"
             aria-live="assertive"
           >
-            <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
+            <AlertTriangle size={20} className="shrink-0" aria-hidden="true" />
             <span className="font-semibold">{t('criticalValueBanner')}</span>
           </div>
         )}
@@ -246,10 +243,7 @@ export function ResultReviewPanel({
             onClick={onClose}
             aria-label={t('closePanel')}
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 

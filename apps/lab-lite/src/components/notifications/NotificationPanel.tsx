@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { X } from '@ultranos/ui-kit/icons'
 import { listNotifications, acknowledgeNotification, type NotificationItem } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { NotificationItemRow } from './NotificationItem'
@@ -129,9 +130,7 @@ export function NotificationPanel({
           className="p-2 text-neutral-400 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-600 active:brightness-[0.88] transition-all duration-150"
           aria-label="Close notifications"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-          </svg>
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
 

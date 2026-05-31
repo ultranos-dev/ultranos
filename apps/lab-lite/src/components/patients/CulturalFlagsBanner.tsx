@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import type { CulturalFlag } from '@/lib/cultural-flags'
+import { Pencil } from '@ultranos/ui-kit/icons'
 import {
   CulturalFlagType,
   CULTURAL_FLAG_COLORS,
@@ -69,20 +70,7 @@ export function CulturalFlagsBanner({ flags, onEditClick }: CulturalFlagsBannerP
           aria-label={t('culturalFlags.editPreferences')}
           data-testid="cultural-flags-edit-btn"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-3.5 w-3.5"
-            aria-hidden="true"
-          >
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
+          <Pencil size={14} className="h-3.5 w-3.5" aria-hidden="true" />
           {t('culturalFlags.editPreferences')}
         </button>
       )}

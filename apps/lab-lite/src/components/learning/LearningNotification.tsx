@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { TriggerResult } from '@/lib/micro-learning-types'
+import { BookOpen } from '@ultranos/ui-kit/icons'
 
 // In-memory set: procedure refs dismissed in this browser session (AC 5, Dev Notes)
 const sessionDismissed = new Set<string>()
@@ -75,21 +76,7 @@ export function LearningNotification({
     >
       <div className="flex items-start gap-3">
         {/* Book icon — not a directional icon, no RTL mirroring needed */}
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400"
-        >
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
+        <BookOpen size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
 
         <div className="flex-1">
           <p className="text-sm font-medium text-blue-800 dark:text-blue-200">

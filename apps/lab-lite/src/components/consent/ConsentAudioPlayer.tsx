@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { getAudioPath, type ConsentLocale } from '@/lib/consent-versions'
+import { Play, Pause, RotateCcw } from '@ultranos/ui-kit/icons'
 
 export interface ConsentAudioPlayerProps {
   locale: ConsentLocale
@@ -105,9 +106,7 @@ export function ConsentAudioPlayer({
             className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
             aria-label={t('audio.play')}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <Play size={20} aria-hidden="true" />
           </button>
         ) : (
           <button
@@ -116,10 +115,7 @@ export function ConsentAudioPlayer({
             className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700"
             aria-label={t('audio.pause')}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" />
-              <rect x="14" y="4" width="4" height="16" />
-            </svg>
+            <Pause size={20} aria-hidden="true" />
           </button>
         )}
 
@@ -129,10 +125,7 @@ export function ConsentAudioPlayer({
           className="flex h-10 w-10 items-center justify-center rounded-full border hover:bg-gray-50 dark:hover:bg-gray-800"
           aria-label={t('audio.restart')}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="1 4 1 10 7 10" />
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-          </svg>
+          <RotateCcw size={16} aria-hidden="true" />
         </button>
       </div>
 

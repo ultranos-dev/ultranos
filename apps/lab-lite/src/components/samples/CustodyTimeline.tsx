@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl'
 import type { CustodyEvent, CustodyEventType } from '@/types/custody-event'
+import { RefreshCw, CircleX } from '@ultranos/ui-kit/icons'
 
 /**
  * CustodyTimeline — read-only vertical timeline of all custody events for a sample.
@@ -69,47 +70,14 @@ const EVENT_TYPE_CONFIG: Record<
     colorClass: 'text-green-600',
     bgClass: 'bg-green-50 ring-green-200',
     icon: (
-      // Refresh icon — semantic (indicates transition), not directional
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        style={{ transform: 'none' }}
-      >
-        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-        <path d="M21 3v5h-5" />
-        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-        <path d="M3 21v-5h5" />
-      </svg>
+      <RefreshCw size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
   rejection: {
     colorClass: 'text-red-600',
     bgClass: 'bg-red-50 ring-red-200',
     icon: (
-      // X-circle icon — semantic, not directional
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        style={{ transform: 'none' }}
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="m15 9-6 6" />
-        <path d="m9 9 6 6" />
-      </svg>
+      <CircleX size={14} aria-hidden="true" style={{ transform: 'none' }} />
     ),
   },
 }

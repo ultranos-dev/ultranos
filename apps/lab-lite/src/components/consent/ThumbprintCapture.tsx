@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { encryptBlob } from '@/lib/consent-crypto'
+import { Check } from '@ultranos/ui-kit/icons'
 
 const CANVAS_CSS_SIZE = 200
 const CANVAS_DPR = 2
@@ -151,9 +152,7 @@ export function ThumbprintCapture({ onCaptureComplete }: ThumbprintCaptureProps)
     return (
       <div className="flex flex-col items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600 dark:text-green-400">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <Check size={32} className="text-green-600 dark:text-green-400" />
         </div>
         <p className="text-sm font-medium">{t('thumbprint.captured')}</p>
         <button

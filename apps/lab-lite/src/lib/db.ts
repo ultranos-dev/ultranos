@@ -1,5 +1,5 @@
 import Dexie from 'dexie'
-import type { FhirSpecimen, PatientVerificationRecord } from '@ultranos/shared-types'
+import type { FhirSpecimen, PatientVerificationRecord, AmendmentRecord } from '@ultranos/shared-types'
 import type { CustodyEvent } from '@/types/custody-event'
 import type { MentorshipPairing, LearningJournalEntry, CheckInRecord } from '@/lib/mentorship-types'
 import type { SOP, SOPAcknowledgment } from '@/lib/sop-types'
@@ -21,6 +21,7 @@ import type { SafetyReport } from '@/types/safety-reporting'
 import type { LabLocation } from '@/types/lab-network'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
+import type { AtlasEntry, AtlasCategory } from '@/lib/visual-atlas'
 
 // Re-export with Dexie-friendly names to avoid collision with result-templates.ts ReferenceRange
 export type ReferenceRangeEntry = ReferenceRange
@@ -244,6 +245,36 @@ export interface DataUsageRecord {
   requestCount: number
 }
 
+// ---------------------------------------------------------------------------
+// Shift Handover types (v13) — Story 51.1
+// No PHI: outgoingTechName is display name only (not email/ID tied to patient data)
+// ---------------------------------------------------------------------------
+
+export interface HandoverReport {
+  id: string
+  outgoingTechId: string
+  outgoingTechName: string  // display name only — NOT email
+  incomingTechId: string | null
+  status: 'PENDING' | 'ACKNOWLEDGED' | 'EXPIRED'
+  createdAt: string
+  acknowledgedAt: string | null
+  pendingSamples: { stat: number; routine: number; sampleIds: string[] }
+  equipmentAlerts: { instrumentId: string; instrumentName: string; alertType: string }[]
+  qcStatus: { analyte: string; status: 'PASS' | 'FAIL' | 'NOT_RUN' }[]
+  incompleteOrders: { orderId: string; urgency: string; receivedAt: string }[]
+  outgoingNotes: string
+  incomingNotes: string | null
+  shiftDate: string  // YYYY-MM-DD
+}
+
+export interface ShiftSession {
+  id: string
+  techId: string
+  startedAt: string
+  endedAt: string | null
+  status: 'ACTIVE' | 'ENDED'
+}
+
 class LabLiteDatabase extends Dexie {
   uploadQueue!: Dexie.Table<UploadQueueEntry, number>
   practitioner_keys!: Dexie.Table<PractitionerKeyCache, string>
@@ -302,6 +333,16 @@ class LabLiteDatabase extends Dexie {
   // v7 — Infection Control Self-Audit (Story 47.7)
   checklist_templates!: Dexie.Table<ChecklistItemTemplate, string>
   infection_control_audits!: Dexie.Table<InfectionControlAudit, string>
+  // v13 — Shift Handover Protocol (Story 51.1)
+  handover_reports!: Dexie.Table<HandoverReport, string>
+  shift_sessions!: Dexie.Table<ShiftSession, string>
+  // v14 — Amendment & Correction Protocol (Story 43.3)
+  amendments!: Dexie.Table<AmendmentRecord, string>
+  // v14 — Digital Lab Logbook (Story 42.8)
+  labLogbook!: Dexie.Table<LabLogbookEntry, string>
+  // v15 — Visual Atlas for Microscopy (Story 53.2)
+  atlas_entries!: Dexie.Table<AtlasEntry, string>
+  atlas_categories!: Dexie.Table<AtlasCategory, string>
 
   constructor() {
     super('lab-lite-db')
@@ -560,6 +601,117 @@ class LabLiteDatabase extends Dexie {
       employee_health_records: '&id, &practitionerId, lastUpdated',
       dataBudgetConfig: '&id',
       dataUsage: '++id, date, category, [date+category]',
+    })
+    // v14 — Shift Handover + Amendment Protocol (Stories 51.1, 43.3, 42.8)
+    this.version(14).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      // New in v14 (Stories 51.1, 43.3, 42.8):
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      // New in v14 (Story 43.3 + 42.8):
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+    })
+    // v15 — Visual Atlas for Microscopy (Story 53.2)
+    this.version(15).stores({
+      uploadQueue: '++id, status, queuedAt',
+      practitioner_keys: '&practitionerId, cachedAt',
+      verified_patients: '&patientId, verifiedAt',
+      patients: '&id, _ultranos.nameLocal, _ultranos.nameLatin, meta.lastUpdated',
+      syncQueue: '&id, resourceType, resourceId, status, createdAt',
+      reagent_inventory: '++id, &reagentId, linkedTestCode, status, expiryDate, syncStatus',
+      reagent_consumption_log: '++id, reagentId, loggedAt',
+      samples: '&id, _ultranos.labSampleId, _ultranos.pipelineStatus, subject.reference, meta.lastUpdated',
+      custody_events: '&id, sampleId, eventType, timestamp',
+      patientVerifications: '&id, sampleId, patientRef, verifiedAt',
+      mentorship_pairings: '&id, mentorId, menteeId, status, [mentorId+status], [menteeId+status]',
+      learning_journal: '&id, pairingId, authorId, createdAt, syncStatus',
+      check_in_records: '&id, pairingId, completedAt, syncStatus',
+      incident_reports: '&id, type, techId, occurredAt, sourcePatientRef',
+      pep_providers: '&id, name',
+      dailyLogs: '&id, techId, date, syncStatus',
+      daily_log_settings: '&id',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status',
+      sops: '&id, status, meta.lastUpdated',
+      sop_acknowledgments: '&id, sopId, technicianId, syncStatus, [sopId+technicianId]',
+      micro_learning_modules: '&id, procedureRef, version, meta.lastUpdated',
+      module_completions: '&id, moduleId, technicianId, completedAt, syncStatus, [moduleId+technicianId]',
+      orders: '&orderId, status, urgency, patientRef, authoredOn',
+      queueEntries: '++id, status, tokenDisplayKey, registeredAt, patientRef',
+      tat_overrides: '&loincCode, tatCategory',
+      checklist_templates: '&id, category, order',
+      infection_control_audits: '&id, auditMonth, status, conductedBy, completedAt',
+      referenceRanges: '&id, loincCode, gender, [loincCode+gender+ageMin], effectiveFrom',
+      rangeVersions: '&id, rangeId, version, changedAt',
+      consentRecords: '++id, patientRef, encounterId, status, syncStatus',
+      waste_containers: '&id, status, location, [location+type], hlcTimestamp',
+      waste_disposal_records: '&id, containerId, disposedAt, hlcTimestamp',
+      culturalPreferences: '&patientRef, lastUpdatedAt',
+      payments: '++id, &paymentId, patientRef, createdAt, syncStatus',
+      priorityOverrides: '&sampleId, overriddenAt',
+      peer_posts: '&id, status, syncStatus, createdAt, *tags, [status+createdAt]',
+      peer_responses: '&id, postId, syncStatus, createdAt',
+      moderation_flags: '&id, targetId, targetType, syncStatus, createdAt',
+      safety_reports: '&id, status, submittedAt, category',
+      lab_locations: '&id, name, type, mode, status',
+      temperature_readings: '&id, locationId, timestamp',
+      temperature_locations: '&id, name',
+      temperature_excursions: '&id, locationId, startTime, acknowledged',
+      employee_health_records: '&id, &practitionerId, lastUpdated',
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+      handover_reports: '&id, outgoingTechId, incomingTechId, status, createdAt, shiftDate',
+      shift_sessions: '&id, techId, startedAt, endedAt, status',
+      amendments: '&id, originalReportId, amendedReportId, initiatedAt',
+      labLogbook: '&id, seqNo, diagnosticReportId, date, syncStatus, entryType',
+      // New in v15 — Visual Atlas (Story 53.2):
+      atlas_entries: '&id, categoryId, subcategoryId, *tags, version',
+      atlas_categories: '&id',
     })
   }
 }
@@ -1630,4 +1782,157 @@ export async function checkAndRolloverCycle(): Promise<boolean> {
     return true
   }
   return false
+}
+
+// ---------------------------------------------------------------------------
+// Handover helpers (v13) — Story 51.1
+// ---------------------------------------------------------------------------
+
+export async function putHandoverReport(report: HandoverReport): Promise<void> {
+  const db = getDb()
+  await db.handover_reports.put(report)
+}
+
+export async function getHandoverReport(id: string): Promise<HandoverReport | undefined> {
+  const db = getDb()
+  return db.handover_reports.get(id)
+}
+
+export async function getPendingHandoverReports(): Promise<HandoverReport[]> {
+  const db = getDb()
+  return db.handover_reports.where('status').equals('PENDING').toArray()
+}
+
+export async function getAllHandoverReports(): Promise<HandoverReport[]> {
+  const db = getDb()
+  return db.handover_reports.orderBy('createdAt').reverse().toArray()
+}
+
+export async function putShiftSession(session: ShiftSession): Promise<void> {
+  const db = getDb()
+  await db.shift_sessions.put(session)
+}
+
+export async function getActiveShiftSession(techId: string): Promise<ShiftSession | undefined> {
+  const db = getDb()
+  return db.shift_sessions
+    .where('[techId+status]')
+    .equals([techId, 'ACTIVE'])
+    .first()
+    .catch(() =>
+      db.shift_sessions
+        .where('techId')
+        .equals(techId)
+        .filter((s) => s.status === 'ACTIVE')
+        .first(),
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Lab Logbook types (v14) — Story 42.8: Digital Lab Logbook
+// Clinical data — stored locally, synced to Hub.
+// patientFirstName is stored (data minimization: first name only, CLAUDE.md Rule #7).
+// ---------------------------------------------------------------------------
+
+export interface LabLogbookEntry {
+  id: string
+  seqNo: number
+  facilityPrefix: string
+  displayNumber: string
+  date: string                   // ISO date YYYY-MM-DD
+  patientRef: string             // opaque Patient/{uuid}
+  patientFirstName: string       // first name only — CLAUDE.md Rule #7
+  patientAge: number
+  testType: string               // LOINC display name
+  testLoincCode: string
+  resultSummary: string          // clinical data — stored locally, never logged
+  technicianId: string
+  technicianName: string
+  authorizerId: string
+  authorizerName: string
+  authorizationStatus: 'authorized' | 'amended'
+  authorizedAt: string           // ISO 8601
+  diagnosticReportId: string
+  entryType: 'original' | 'amendment'
+  amendmentOf?: string           // set when entryType='amendment'
+  amendmentReason?: string       // set when entryType='amendment'
+  createdAt: string              // ISO 8601
+  syncStatus: 'pending' | 'synced' | 'failed'
+}
+
+// ---------------------------------------------------------------------------
+// Lab Logbook helpers (v14) — Story 42.8: Digital Lab Logbook
+// Append-only: entries are never modified or deleted after creation.
+// ---------------------------------------------------------------------------
+
+/** Append a new logbook entry (original). */
+export async function appendLogbookEntry(entry: LabLogbookEntry): Promise<void> {
+  const db = getDb()
+  await db.labLogbook.add(entry)
+}
+
+/** Append a logbook amendment entry. */
+export async function appendLogbookAmendment(
+  entry: LabLogbookEntry & { entryType: 'amendment'; amendmentOf: string; amendmentReason: string },
+): Promise<void> {
+  const db = getDb()
+  await db.labLogbook.add(entry)
+}
+
+/** Look up a logbook entry by diagnosticReportId (original entries only). Returns undefined if not found. */
+export async function getLogbookEntryByDiagnosticReportId(
+  diagnosticReportId: string,
+): Promise<LabLogbookEntry | undefined> {
+  const db = getDb()
+  const results = await db.labLogbook
+    .where('diagnosticReportId')
+    .equals(diagnosticReportId)
+    .filter((e) => e.entryType === 'original')
+    .toArray()
+  return results[0]
+}
+
+/** Return all logbook entries ordered by seqNo ascending. */
+export async function getAllLogbookEntries(): Promise<LabLogbookEntry[]> {
+  const db = getDb()
+  return db.labLogbook.orderBy('seqNo').toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Visual Atlas helpers (v15) — Story 53.2
+// ---------------------------------------------------------------------------
+
+/** Returns true if semver string `a` is strictly newer than `b`. */
+export function semverIsNewer(a: string, b: string): boolean {
+  const parse = (s: string) => s.split('.').map((n) => parseInt(n, 10) || 0)
+  const [aMaj, aMin, aPat] = parse(a)
+  const [bMaj, bMin, bPat] = parse(b)
+  if (aMaj !== bMaj) return aMaj > bMaj
+  if (aMin !== bMin) return aMin > bMin
+  return aPat > bPat
+}
+
+/**
+ * Seed the atlas tables with built-in category/entry data.
+ * Version-checks each entry before upserting — only updates if the
+ * bundled version is newer than what's already stored offline.
+ * Never throws — atlas seeding failures must not break the app.
+ */
+export async function seedAtlas(): Promise<void> {
+  try {
+    const { ALL_SEED_ENTRIES } = await import('@/lib/atlas-seed-data')
+    const { ATLAS_CATEGORY_TREE } = await import('@/lib/visual-atlas')
+    const db = getDb()
+    for (const category of ATLAS_CATEGORY_TREE) {
+      await db.atlas_categories.put(category)
+    }
+    for (const entry of ALL_SEED_ENTRIES) {
+      const stored = await db.atlas_entries.get(entry.id)
+      if (!stored || semverIsNewer(entry.version, stored.version)) {
+        await db.atlas_entries.put(entry)
+      }
+    }
+  } catch {
+    // Never throw — atlas seeding failures must not break the app
+  }
 }
