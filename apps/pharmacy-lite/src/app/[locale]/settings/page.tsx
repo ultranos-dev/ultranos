@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { PharmacySettingsView } from '@/components/pharmacy/PharmacySettingsView'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ArrowLeft } from '@ultranos/ui-kit/icons'
 
 export default function SettingsPage() {
   return (
@@ -12,20 +14,9 @@ export default function SettingsPage() {
           className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
           aria-label="Back to dashboard"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="h-5 w-5 rtl:scale-x-[-1]"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-            />
-          </svg>
+          <DirectionalIcon category="navigation">
+            <ArrowLeft className="h-5 w-5" />
+          </DirectionalIcon>
         </Link>
         <h1 className="text-2xl font-bold text-neutral-900">Settings</h1>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Check, X } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 import {
@@ -482,19 +483,7 @@ export default function PaperRxPage() {
       {phase === 'success' && (
         <div className="space-y-4 text-center py-8">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-6 w-6 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.5 12.75l6 6 9-13.5"
-              />
-            </svg>
+            <Check className="h-6 w-6 text-green-600" />
           </div>
           <p className="text-lg font-medium text-neutral-900">
             Paper prescription recorded as LEGACY_PAPER
@@ -516,19 +505,7 @@ export default function PaperRxPage() {
       {phase === 'error' && (
         <div className="space-y-4 text-center py-8">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <svg
-              className="h-6 w-6 text-red-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="h-6 w-6 text-red-600" />
           </div>
           <p className="text-lg font-medium text-red-900">Submission Failed</p>
           <p className="text-sm text-red-600">{errorMessage}</p>

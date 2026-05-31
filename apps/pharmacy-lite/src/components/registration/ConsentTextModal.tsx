@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { X } from '@ultranos/ui-kit/icons'
 
 interface ConsentTextModalProps {
   open: boolean
@@ -99,9 +100,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
             onClick={onClose}
             aria-label={t('cancel')}
           >
-            <svg className="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="h-6 w-6 mx-auto" />
           </Button>
         </div>
 

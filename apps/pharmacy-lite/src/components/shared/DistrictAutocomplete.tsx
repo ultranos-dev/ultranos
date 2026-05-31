@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLocale } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { X } from '@ultranos/ui-kit/icons'
 import { getDistrictsByProvince } from '@ultranos/shared-types'
 import type { AfghanProvince, AfghanDistrict } from '@ultranos/shared-types'
 
@@ -165,9 +166,7 @@ export function DistrictAutocomplete({
                 }}
                 aria-label="Clear district"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>
