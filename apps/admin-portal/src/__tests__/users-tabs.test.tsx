@@ -51,8 +51,6 @@ vi.mock('@/stores/auth-session-store', () => ({
   },
 }))
 
-const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
-
 describe('LabAssignmentsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -61,6 +59,7 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('renders the lab staff table with rows', async () => {
+    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({
       items: [
         {
@@ -88,6 +87,7 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('shows empty state when no staff found', async () => {
+    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
 
     render(<LabAssignmentsTab />)
@@ -98,6 +98,7 @@ describe('LabAssignmentsTab', () => {
   })
 
   it('shows managerless labs warning when count > 0', async () => {
+    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
     mockGetManagerlessLabs.mockResolvedValue([{ id: 'lab1' }, { id: 'lab2' }])
     mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
 
