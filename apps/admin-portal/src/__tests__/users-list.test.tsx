@@ -15,33 +15,13 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// Mock supabase (required by TopHeader)
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseBrowserClient: () => ({
-    auth: {
-      signOut: vi.fn().mockResolvedValue({}),
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-    },
-  }),
-}))
-
-// Mock auth session store (required by TopHeader)
-vi.mock('@/stores/auth-session-store', () => ({
-  useAuthSessionStore: (selector: any) => {
-    const state = {
-      session: { email: 'admin@ultranos.com', userId: 'u1', practitionerId: 'p1', role: 'admin', sessionId: 's1' },
-      clearSession: vi.fn(),
-    }
-    return selector(state)
-  },
-}))
-
 // Mock trpc client
 const mockListUsers = vi.fn()
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     admin: {
       listUsers: { query: (...args: any[]) => mockListUsers(...args) },
+      exportUsers: { query: vi.fn().mockResolvedValue('') },
     },
   },
   setAccessToken: vi.fn(),
