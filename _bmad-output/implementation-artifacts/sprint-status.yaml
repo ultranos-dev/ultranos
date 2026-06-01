@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-31T23:59:00.000000'
+last_updated: '2026-05-31T23:59:59.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -585,6 +585,7 @@ development_status:
   # Patient identity verification logging, audit chain, PHI compliance
   # ============================================================
   epic-43: in-progress
+  43-1-immutable-result-audit-chain: review
   43-3-amendment-correction-protocol: review
   43-4-patient-id-verification-logging: review
   43-6-analyzer-drift-detection: review
@@ -613,6 +614,7 @@ development_status:
   # ============================================================
   epic-48: in-progress
   48-1-power-aware-workload-scheduler: review
+  48-3-pre-shift-readiness-forecast: review
   48-4-critical-value-escalation-chain: review
   epic-48-retrospective: optional
 
@@ -629,6 +631,10 @@ development_status:
   # ============================================================
   epic-54: in-progress
   54-1-multi-branch-lab-network: review
+  54-2-chw-collection-module: review
+  54-3-courier-transport-tracking: review
+  54-5-outbreak-response-mode: review
+  54-6-seasonal-operations-planner: review
 
   # ============================================================
   # EPIC 44: Lab Financial Operations (2026-05-31)
@@ -659,6 +665,7 @@ development_status:
   # ============================================================
   epic-46: in-progress
   46-2-contextual-micro-learning: review
+  46-6-certification-pathway-tracker: review
   46-7-personal-quality-streak: review
 
   # ============================================================
@@ -667,6 +674,8 @@ development_status:
   # ============================================================
   epic-50: in-progress
   50-1-auto-compiled-hmis-report: review
+  50-2-multi-donor-report-templates: review
+  50-3-automated-disease-surveillance-alerts: review
   50-4-daily-activity-log-whatsapp: review
   # ============================================================
   # EPIC 51: Shift & Workload Management (2026-05-31)
@@ -682,3 +691,12 @@ development_status:
   # ============================================================
   epic-52: in-progress
   52-1-pharmacy-medication-monitoring-flags: in-progress
+  52-2-shared-inventory-visibility: review
+  52-3-hub-managed-coordinated-procurement: review
+
+  # ============================================================
+  # EPIC 53: AI Clinical Intelligence — Lab-Lite (2026-05-31)
+  # Anomaly detection, confidence inversion, provenance trail
+  # ============================================================
+  epic-53: in-progress
+  53-3-ai-anomaly-flagging: review
