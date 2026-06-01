@@ -47,7 +47,7 @@ vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
 }))
 
-const { default: UsersPage, formatRelativeTime } = await import('../app/users/page')
+const { default: AllUsersTab, formatRelativeTime } = await import('../app/users/_components/AllUsersTab')
 
 const mockUsers = [
   {
@@ -96,7 +96,7 @@ describe('Users List Page', () => {
   it('renders table with mock user data', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
@@ -128,7 +128,7 @@ describe('Users List Page', () => {
   it('shows empty state when no users', async () => {
     mockListUsers.mockResolvedValue({ users: [], totalCount: 0 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('No staff users yet')).toBeTruthy()
@@ -146,7 +146,7 @@ describe('Users List Page', () => {
   it('shows "Create User" button', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
@@ -162,7 +162,7 @@ describe('Users List Page', () => {
   it('shows suspended users banner when suspended users exist', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
