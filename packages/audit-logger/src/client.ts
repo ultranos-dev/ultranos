@@ -61,6 +61,8 @@ export interface ClientAuditEvent {
   metadata?: Record<string, unknown>
   queuedAt: string // ISO 8601
   status: ClientAuditEventStatus
+  /** SHA-256 hash linking this event to the previous event in the per-resource chain. */
+  chainHash?: string
 }
 
 export type ClientAuditEventInput = Omit<ClientAuditEvent, 'id' | 'queuedAt' | 'status'>

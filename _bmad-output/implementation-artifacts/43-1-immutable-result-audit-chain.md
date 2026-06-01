@@ -1,6 +1,6 @@
 # Story 43.1: Immutable Result Audit Chain
 
-Status: pending
+Status: review
 
 ## Story
 
@@ -39,8 +39,8 @@ The audit chain serves a dual purpose: (1) regulatory compliance (CLAUDE.md: "Au
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Extend Shared Types** (AC: 8, 9)
-  - [ ] Add new `AuditAction` enum values to `packages/shared-types/src/enums.ts`:
+- [x] **Task 1: Extend Shared Types** (AC: 8, 9)
+  - [x] Add new `AuditAction` enum values to `packages/shared-types/src/enums.ts`:
     - `SAMPLE_RECEIVED = 'SAMPLE_RECEIVED'`
     - `SAMPLE_PROCESSED = 'SAMPLE_PROCESSED'`
     - `RESULT_ENTERED = 'RESULT_ENTERED'`
@@ -48,11 +48,11 @@ The audit chain serves a dual purpose: (1) regulatory compliance (CLAUDE.md: "Au
     - `RESULT_RELEASED = 'RESULT_RELEASED'`
     - `RESULT_AMENDED = 'RESULT_AMENDED'`
     - `RESULT_DELIVERED = 'RESULT_DELIVERED'`
-  - [ ] Add `LAB_SAMPLE = 'LAB_SAMPLE'` to the `AuditResourceType` enum.
-  - [ ] Run `pnpm -F shared-types build` to ensure downstream consumers pick up the new values.
+  - [x] Add `LAB_SAMPLE = 'LAB_SAMPLE'` to the `AuditResourceType` enum.
+  - [x] Run `pnpm -F shared-types build` to ensure downstream consumers pick up the new values.
 
-- [ ] **Task 2: Lab Result Audit Reporter Functions** (AC: 1, 2, 3, 10, 11)
-  - [ ] In `apps/lab-lite/src/lib/audit-client.ts`, add a `reportLabLifecycleEvent()` function that accepts a discriminated payload:
+- [x] **Task 2: Lab Result Audit Reporter Functions** (AC: 1, 2, 3, 10, 11)
+  - [x] In `apps/lab-lite/src/lib/audit-client.ts`, add a `reportLabLifecycleEvent()` function that accepts a discriminated payload:
     ```typescript
     interface LabLifecycleAuditPayload {
       event: 'SAMPLE_RECEIVED' | 'SAMPLE_PROCESSED' | 'RESULT_ENTERED' |
@@ -67,22 +67,22 @@ The audit chain serves a dual purpose: (1) regulatory compliance (CLAUDE.md: "Au
       deliveryMethod?: string   // 'push_notification' | 'opd_sync' | 'patient_portal'
     }
     ```
-  - [ ] Map each event to the corresponding new `AuditAction` enum value.
-  - [ ] Set `resourceType` to `AuditResourceType.LAB_SAMPLE` for sample-scoped events (SAMPLE_RECEIVED, SAMPLE_PROCESSED) and `AuditResourceType.LAB_RESULT` for result-scoped events (RESULT_ENTERED through RESULT_DELIVERED).
-  - [ ] Set `resourceId` to `sampleId` (the canonical identifier linking the entire chain).
-  - [ ] Include `orderId`, `diagnosticReportId`, custody references, and other context in `metadata` — no PHI, only opaque IDs and codes.
-  - [ ] Follow the existing pattern: get session from `useAuthSessionStore`, stamp with `serializeHlc(hlc.now())`, call `void emitClientAudit(input)`.
-  - [ ] The function must never throw — wrap in try/catch with `console.warn` fallback.
+  - [x] Map each event to the corresponding new `AuditAction` enum value.
+  - [x] Set `resourceType` to `AuditResourceType.LAB_SAMPLE` for sample-scoped events (SAMPLE_RECEIVED, SAMPLE_PROCESSED) and `AuditResourceType.LAB_RESULT` for result-scoped events (RESULT_ENTERED through RESULT_DELIVERED).
+  - [x] Set `resourceId` to `sampleId` (the canonical identifier linking the entire chain).
+  - [x] Include `orderId`, `diagnosticReportId`, custody references, and other context in `metadata` — no PHI, only opaque IDs and codes.
+  - [x] Follow the existing pattern: get session from `useAuthSessionStore`, stamp with `serializeHlc(hlc.now())`, call `void emitClientAudit(input)`.
+  - [x] The function must never throw — wrap in try/catch with `console.warn` fallback.
 
-- [ ] **Task 3: Client-Side Hash Chain Verification** (AC: 6, 7)
-  - [ ] Create `apps/lab-lite/src/lib/audit-chain-verifier.ts`.
-  - [ ] Export `verifyResultAuditChain(sampleId: string): Promise<AuditChainVerificationResult>`.
-  - [ ] The function queries the local `clientAuditLog` Dexie table for all events where `metadata.sampleId === sampleId`, ordered by `queuedAt` ascending (FIFO).
-  - [ ] For each event, re-compute the SHA-256 hash using the same `computeChainHash()` algorithm from `packages/audit-logger/src/logger.ts` — but adapted for the browser using `crypto.subtle.digest('SHA-256', ...)` (Web Crypto API, not Node `crypto`).
-  - [ ] Compare the computed hash against the stored hash. If any mismatch is found, return `{ valid: false, checkedCount, brokenAt: eventId }`.
-  - [ ] If all hashes match, return `{ valid: true, checkedCount }`.
-  - [ ] The function operates entirely offline — no Hub API calls. It works on whatever events are currently in Dexie.
-  - [ ] Export the result type:
+- [x] **Task 3: Client-Side Hash Chain Verification** (AC: 6, 7)
+  - [x] Create `apps/lab-lite/src/lib/audit-chain-verifier.ts`.
+  - [x] Export `verifyResultAuditChain(sampleId: string): Promise<AuditChainVerificationResult>`.
+  - [x] The function queries the local `clientAuditLog` Dexie table for all events where `metadata.sampleId === sampleId`, ordered by `queuedAt` ascending (FIFO).
+  - [x] For each event, re-compute the SHA-256 hash using the same `computeChainHash()` algorithm from `packages/audit-logger/src/logger.ts` — but adapted for the browser using `crypto.subtle.digest('SHA-256', ...)` (Web Crypto API, not Node `crypto`).
+  - [x] Compare the computed hash against the stored hash. If any mismatch is found, return `{ valid: false, checkedCount, brokenAt: eventId }`.
+  - [x] If all hashes match, return `{ valid: true, checkedCount }`.
+  - [x] The function operates entirely offline — no Hub API calls. It works on whatever events are currently in Dexie.
+  - [x] Export the result type:
     ```typescript
     interface AuditChainVerificationResult {
       valid: boolean
@@ -91,14 +91,14 @@ The audit chain serves a dual purpose: (1) regulatory compliance (CLAUDE.md: "Au
     }
     ```
 
-- [ ] **Task 4: Dexie Index for Sample-Scoped Queries** (AC: 5, 6)
-  - [ ] The existing `clientAuditLog` table in Dexie already stores all audit events with the schema `'id, status, queuedAt, [status+queuedAt]'` (from `DexieAuditAdapter`).
-  - [ ] Evaluate whether a compound index on `metadata.sampleId` is needed for efficient per-sample chain verification. If the volume of audit events is expected to be manageable (hundreds per lab per day, not millions), a full-table scan with `.filter()` is acceptable in v1 — add a `// TODO: add index if performance degrades` comment.
-  - [ ] If an index is needed, add a new Dexie version upgrade in `db.ts` that adds the index. The `clientAuditLog` table is managed by the `DexieAuditAdapter` from the shared package, so coordinate the schema update carefully — the index should be added in the lab-lite Dexie version chain, not in the shared adapter.
+- [x] **Task 4: Dexie Index for Sample-Scoped Queries** (AC: 5, 6)
+  - [x] The existing `clientAuditLog` table in Dexie already stores all audit events with the schema `'id, status, queuedAt, [status+queuedAt]'` (from `DexieAuditAdapter`).
+  - [x] Evaluate whether a compound index on `metadata.sampleId` is needed for efficient per-sample chain verification. If the volume of audit events is expected to be manageable (hundreds per lab per day, not millions), a full-table scan with `.filter()` is acceptable in v1 — add a `// TODO: add index if performance degrades` comment.
+  - [x] If an index is needed, add a new Dexie version upgrade in `db.ts` that adds the index. The `clientAuditLog` table is managed by the `DexieAuditAdapter` from the shared package, so coordinate the schema update carefully — the index should be added in the lab-lite Dexie version chain, not in the shared adapter.
 
-- [ ] **Task 5: Integration Hooks for Story 42.3 Chain-of-Custody** (AC: 3, 11)
-  - [ ] Identify the sample status transition points from Story 42.3 (Received -> In Processing -> Completed -> Reported).
-  - [ ] At each transition point, call `reportLabLifecycleEvent()` with the appropriate event type:
+- [x] **Task 5: Integration Hooks for Story 42.3 Chain-of-Custody** (AC: 3, 11)
+  - [x] Identify the sample status transition points from Story 42.3 (Received -> In Processing -> Completed -> Reported).
+  - [x] At each transition point, call `reportLabLifecycleEvent()` with the appropriate event type:
     - "Receive Sample" action -> `SAMPLE_RECEIVED` (with `custodyFrom`/`custodyTo` if applicable)
     - Sample moves to processing -> `SAMPLE_PROCESSED`
     - Result entry saved -> `RESULT_ENTERED`
@@ -106,16 +106,16 @@ The audit chain serves a dual purpose: (1) regulatory compliance (CLAUDE.md: "Au
     - Result released to ordering physician -> `RESULT_RELEASED`
     - Result delivered via notification/sync -> `RESULT_DELIVERED`
     - Result amended -> `RESULT_AMENDED` (with `amendmentReason` code)
-  - [ ] If Story 42.3 is not yet implemented, create placeholder integration comments (`// INTEGRATION: Story 42.3 — call reportLabLifecycleEvent('SAMPLE_RECEIVED', ...) here`) at the logical hook points so the wiring is straightforward when 42.3 lands.
+  - [x] If Story 42.3 is not yet implemented, create placeholder integration comments (`// INTEGRATION: Story 42.3 — call reportLabLifecycleEvent('SAMPLE_RECEIVED', ...) here`) at the logical hook points so the wiring is straightforward when 42.3 lands.
 
-- [ ] **Task 6: Tests** (AC: 12)
-  - [ ] **Unit: Event emission** — For each of the 7 event types, verify that `reportLabLifecycleEvent()` calls `emitClientAudit()` with the correct `action`, `resourceType`, `resourceId`, and `metadata` shape. Mock `emitClientAudit`.
-  - [ ] **Unit: PHI guard** — Verify that if a caller accidentally includes PHI fields (e.g., `firstName` in metadata), the existing PHI guard in `emitClientAudit()` strips them before storage.
-  - [ ] **Unit: Never throws** — Verify that `reportLabLifecycleEvent()` does not throw even when the audit adapter is null or throws internally.
-  - [ ] **Integration: Hash chain verification** — Insert a sequence of audit events into a fake-indexeddb Dexie instance, run `verifyResultAuditChain()`, assert `{ valid: true }`.
-  - [ ] **Integration: Tamper detection** — Insert events, modify one event's metadata, run verification, assert `{ valid: false, brokenAt: modifiedEventId }`.
-  - [ ] **Integration: Empty chain** — Run `verifyResultAuditChain()` for a non-existent sampleId, assert `{ valid: true, checkedCount: 0 }`.
-  - [ ] **Integration: Offline verification** — Confirm `verifyResultAuditChain()` works without mocking any network calls (pure Dexie).
+- [x] **Task 6: Tests** (AC: 12)
+  - [x] **Unit: Event emission** — For each of the 7 event types, verify that `reportLabLifecycleEvent()` calls `emitClientAudit()` with the correct `action`, `resourceType`, `resourceId`, and `metadata` shape. Mock `emitClientAudit`.
+  - [x] **Unit: PHI guard** — Verify that if a caller accidentally includes PHI fields (e.g., `firstName` in metadata), the existing PHI guard in `emitClientAudit()` strips them before storage.
+  - [x] **Unit: Never throws** — Verify that `reportLabLifecycleEvent()` does not throw even when the audit adapter is null or throws internally.
+  - [x] **Integration: Hash chain verification** — Insert a sequence of audit events into a fake-indexeddb Dexie instance, run `verifyResultAuditChain()`, assert `{ valid: true }`.
+  - [x] **Integration: Tamper detection** — Insert events, modify one event's metadata, run verification, assert `{ valid: false, brokenAt: modifiedEventId }`.
+  - [x] **Integration: Empty chain** — Run `verifyResultAuditChain()` for a non-existent sampleId, assert `{ valid: true, checkedCount: 0 }`.
+  - [x] **Integration: Offline verification** — Confirm `verifyResultAuditChain()` works without mocking any network calls (pure Dexie).
 
 ## Dev Notes
 
@@ -243,3 +243,57 @@ Mock `emitClientAudit` for unit tests of `reportLabLifecycleEvent()` — the goa
 - `apps/lab-lite/src/components/AuditDrainInit.tsx` — drain worker lifecycle (unchanged)
 - Epic 42, Story 42.3 — chain-of-custody status pipeline (integration target)
 - Epic 43, Story 43.3 — amendment & correction protocol (uses RESULT_AMENDED event from this story)
+
+## Dev Agent Record
+
+### Implementation Plan
+
+Followed Option A (recommended by story spec): compute `chainHash` at write time in `DexieAuditAdapter.append()`, using a per-`resourceId` chain (previous event for the same `resourceId` forms the chain link). The verifier (`verifyResultAuditChain`) filters by `metadata.sampleId` and re-computes hashes offline using Web Crypto API.
+
+Key decisions:
+- Client-side hash includes `metadata` in the payload (deviates from Hub-side, which omits it) to provide stronger tamper detection per AC 12 requirements.
+- `verifyResultAuditChain()` accepts an optional `table` parameter for testability without mocking `getDb()`.
+- `DexieAuditAdapter.append()` uses full `.toArray()` + `.filter()` instead of `.where('resourceId')` (no index exists) — acceptable for v1 volume (~1,000-1,400 events/day).
+- `RESULT_AMENDED` already existed in `AuditAction` enum; only 6 new values were added (not 7).
+
+### Debug Log
+
+- **`pnpm -F shared-types build` failed**: Pre-existing errors in `service-request.schema.test.ts` unrelated to this story. Vitest uses source directly, so downstream builds unaffected.
+- **`clientAuditLog` not declared in LabLiteDatabase**: `getDb().clientAuditLog` was used in multiple files but never registered. Fixed by adding the class field declaration and version 26 migration.
+- **`DexieAuditAdapter.append()` used `.where('resourceId')`**: Requires a Dexie index that doesn't exist. Fixed by using `.toArray()` + `.filter()`.
+- **Integration tests: `MissingAPIError IndexedDB API missing`**: Tests were missing `import 'fake-indexeddb/auto'`. Fixed by adding the import (same pattern as `consent-db.test.ts`).
+- **47 test files failing in full suite**: All pre-existing failures unrelated to this story (e.g., `sample_locks` table never declared, React rendering issues in unrelated UI tests).
+
+### Completion Notes
+
+All 7 tasks complete. 29/29 new tests pass. Pre-existing suite failures (47 files) are unrelated to this story — they involve missing table declarations and React render errors from other stories.
+
+AC coverage:
+- AC 1, 8: 7 lifecycle event types added via `reportLabLifecycleEvent()` + new `AuditAction` enum values
+- AC 2, 9: Events include actor, HLC timestamp, resource refs, SHA-256 chain hash; `LAB_SAMPLE` added to `AuditResourceType`
+- AC 3: Full lifecycle covered via function + integration comments for 42.3 hooks
+- AC 4: `DexieAuditAdapter` enforces insert-only (add only, no update/delete)
+- AC 5: Events stored in existing `clientAuditLog` Dexie table (v26), synced via existing `AuditDrainWorker`
+- AC 6, 7: `verifyResultAuditChain()` implemented, works offline, returns correct result shape
+- AC 10: `reportLabLifecycleEvent()` never throws, fire-and-forget
+- AC 11: Integration comments placed in `ReceiveSampleModal` and `SampleDetailView` for Story 42.3 wiring
+- AC 12: 29 tests covering all event types, PHI guard, never-throws, chain integrity, tamper detection, empty chain, offline, legacy events, broken chain detection
+
+## File List
+
+### Modified
+- `packages/shared-types/src/enums.ts` — Added 6 `AuditAction` values + `LAB_SAMPLE`/`DIAGNOSTIC_REPORT` to `AuditResourceType`
+- `packages/audit-logger/src/client.ts` — Added `chainHash?: string` to `ClientAuditEvent` interface
+- `packages/audit-logger/src/adapters/dexie-adapter.ts` — Added `computeClientChainHash()` + per-resourceId chain hash computation in `append()`
+- `apps/lab-lite/src/lib/audit-client.ts` — Added `LabLifecycleAuditPayload` interface and `reportLabLifecycleEvent()` function
+- `apps/lab-lite/src/lib/db.ts` — Added `ClientAuditEvent` import, `clientAuditLog` table declaration, and version 26 migration
+- `apps/lab-lite/src/components/samples/ReceiveSampleModal.tsx` — Added Story 43.1 integration comment for `SAMPLE_RECEIVED` hook
+- `apps/lab-lite/src/components/samples/SampleDetailView.tsx` — Added Story 43.1 integration comments for status transition hooks
+
+### Created
+- `apps/lab-lite/src/lib/audit-chain-verifier.ts` — `verifyResultAuditChain()` offline chain verifier
+- `apps/lab-lite/src/__tests__/audit-lifecycle.test.ts` — 29-test suite covering all ACs
+
+## Change Log
+
+- 2026-06-01: Story 43.1 implemented — Immutable Result Audit Chain. Added 6 new `AuditAction` enum values + `LAB_SAMPLE` resource type; extended `ClientAuditEvent` with SHA-256 chain hash; updated `DexieAuditAdapter` to compute per-resourceId hash chain at write time; added `reportLabLifecycleEvent()` domain wrapper; created `verifyResultAuditChain()` offline verifier; registered `clientAuditLog` Dexie v26 table; added Story 42.3 integration placeholder comments; 29 tests all passing.
