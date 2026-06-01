@@ -25,9 +25,30 @@ vi.mock('@/lib/trpc', () => ({
       listLabsForFilter: { query: (...args: any[]) => mockListLabsForFilter(...args) },
       getManagerlessLabs: { query: (...args: any[]) => mockGetManagerlessLabs(...args) },
       exportLabStaffCsv: { mutate: vi.fn().mockResolvedValue('') },
+      listUsers: { query: vi.fn().mockResolvedValue({ users: [], totalCount: 0 }) },
+      exportUsers: { query: vi.fn().mockResolvedValue('') },
     },
   },
   setAccessToken: vi.fn(),
+}))
+
+vi.mock('@/lib/supabase', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      signOut: vi.fn().mockResolvedValue({}),
+      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+    },
+  }),
+}))
+
+vi.mock('@/stores/auth-session-store', () => ({
+  useAuthSessionStore: (selector: any) => {
+    const state = {
+      session: { email: 'admin@ultranos.com', userId: 'u1', practitionerId: 'p1', role: 'admin', sessionId: 's1' },
+      clearSession: vi.fn(),
+    }
+    return selector(state)
+  },
 }))
 
 const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
@@ -85,5 +106,21 @@ describe('LabAssignmentsTab', () => {
     await waitFor(() => {
       expect(screen.getByText(/2 labs have no Lab Manager assigned/)).toBeTruthy()
     })
+  })
+})
+
+describe('UsersPage tab shell', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
+    mockListLabsForFilter.mockResolvedValue([])
+    mockGetManagerlessLabs.mockResolvedValue([])
+  })
+
+  it('renders "All Users" tab link and "Lab Assignments" tab link', async () => {
+    const { default: UsersPage } = await import('../app/users/page')
+    render(<UsersPage />)
+    expect(screen.getByRole('link', { name: 'All Users' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Lab Assignments' })).toBeTruthy()
   })
 })
