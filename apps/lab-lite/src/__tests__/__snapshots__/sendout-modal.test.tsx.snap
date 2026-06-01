@@ -1,0 +1,137 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SendOutModal — RTL layout (Task 14.9) > renders correctly in RTL layout 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    aria-labelledby="sendout-modal-title"
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    role="dialog"
+  >
+    <div
+      class="w-full max-w-lg rounded-lg bg-white shadow-xl"
+    >
+      <div
+        class="flex items-center justify-between border-b border-neutral-200 px-5 py-4"
+      >
+        <h2
+          class="text-base font-semibold text-neutral-900"
+          id="sendout-modal-title"
+        >
+          Send to Reference Lab
+        </h2>
+        <button
+          aria-label="Close"
+          class="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          type="button"
+        >
+          <span
+            data-size="20"
+            data-testid="close-icon"
+          />
+        </button>
+      </div>
+      <form
+        class="px-5 py-4 space-y-4"
+      >
+        <div
+          class="rounded-md bg-neutral-50 p-3 text-sm"
+        >
+          <p
+            class="text-neutral-500"
+          >
+            Test Requested
+          </p>
+          <p
+            class="font-medium text-neutral-900"
+          >
+            Cholesterol
+          </p>
+          <p
+            class="text-xs text-neutral-400"
+          >
+            2085-9
+             · 
+            Blood
+          </p>
+        </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-neutral-700 mb-1"
+            for="reflab-select"
+          >
+            Reference Lab 
+            <span
+              aria-hidden="true"
+              class="text-red-500"
+            >
+              *
+            </span>
+          </label>
+          <select
+            class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            id="reflab-select"
+            required=""
+          >
+            <option
+              value=""
+            >
+              Select a reference lab…
+            </option>
+            <option
+              value="lab-001"
+            >
+              Kabul Reference Lab
+               — Avg TAT: 
+              5
+               days
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-neutral-700 mb-1"
+            for="clinical-context"
+          >
+            Clinical Context
+          </label>
+          <textarea
+            class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            id="clinical-context"
+            placeholder="e.g., suspected TB, follow-up after treatment"
+            rows="3"
+          />
+          <p
+            class="mt-1 text-xs text-neutral-400"
+          >
+            Keep brief. No diagnosis codes or full medical history.
+          </p>
+        </div>
+        <div
+          class="flex justify-end gap-3 pt-2"
+        >
+          <button
+            class="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            class="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            disabled=""
+            type="submit"
+          >
+            <span
+              data-size="16"
+              data-testid="send-icon"
+            />
+            Confirm Send-Out
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+`;
