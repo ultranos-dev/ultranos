@@ -1,0 +1,705 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ActivateOutbreakModal — RTL snapshots > LTR: form snapshot (authorized user) 1`] = `
+<div>
+  <div
+    aria-label="Activate Outbreak Mode"
+    aria-modal="true"
+    role="dialog"
+    style="position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.5);"
+  >
+    <div
+      style="background-color: rgb(255, 255, 255); border-radius: 8px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;"
+    >
+      <div
+        style="display: flex; align-items: center; gap: 0.75rem; margin-block-end: 1.5rem;"
+      >
+        <span
+          data-testid="alert-triangle-icon"
+        />
+        <h2
+          style="margin: 0px; font-size: 1.25rem; font-weight: 700;"
+        >
+          Activate Outbreak Mode
+        </h2>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <label
+          for="pathogen-input"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Target Pathogen *
+        </label>
+        <div
+          style="position: relative;"
+        >
+          <input
+            id="pathogen-input"
+            placeholder="Search pathogens or enter custom…"
+            style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem; box-sizing: border-box;"
+            type="text"
+            value=""
+          />
+          <span
+            data-testid="chevron-down-icon"
+          />
+        </div>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <p
+          style="font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Affected Lab Locations *
+        </p>
+        <div
+          style="display: flex; flex-direction: column; gap: 0.375rem;"
+        >
+          <label
+            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+          >
+            <input
+              checked=""
+              type="checkbox"
+            />
+            <span>
+              loc-001
+            </span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+          >
+            <input
+              checked=""
+              type="checkbox"
+            />
+            <span>
+              loc-002
+            </span>
+          </label>
+        </div>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <label
+          for="activation-reason"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Activation Reason *
+        </label>
+        <textarea
+          id="activation-reason"
+          placeholder="e.g. "WHO outbreak alert", "Provincial directive #12""
+          rows="3"
+          style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem; resize: vertical; box-sizing: border-box;"
+        />
+      </div>
+      <div
+        style="margin-block-end: 1.5rem;"
+      >
+        <label
+          for="surge-multiplier"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Surge Inventory Multiplier
+        </label>
+        <div
+          style="display: flex; align-items: center; gap: 0.75rem;"
+        >
+          <input
+            id="surge-multiplier"
+            max="10"
+            min="1.5"
+            step="0.5"
+            style="width: 80px; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem;"
+            type="number"
+            value="3"
+          />
+          <span
+            style="color: rgb(107, 114, 128); font-size: 0.875rem;"
+          >
+            × normal consumption rate (range: 1.5× – 10×, default 3×)
+          </span>
+        </div>
+      </div>
+      <div
+        style="display: flex; gap: 0.75rem; justify-content: flex-end;"
+      >
+        <button
+          style="padding: 0.5rem 1.25rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); cursor: pointer; background-color: rgb(255, 255, 255);"
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          style="padding: 0.5rem 1.25rem; border-radius: 6px; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); cursor: pointer; font-weight: 600;"
+          type="button"
+        >
+          Review & Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ActivateOutbreakModal — RTL snapshots > LTR: renders null for unauthorized user 1`] = `<div />`;
+
+exports[`ActivateOutbreakModal — RTL snapshots > RTL: form snapshot (authorized user) 1`] = `
+<div>
+  <div
+    aria-label="Activate Outbreak Mode"
+    aria-modal="true"
+    role="dialog"
+    style="position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.5);"
+  >
+    <div
+      style="background-color: rgb(255, 255, 255); border-radius: 8px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;"
+    >
+      <div
+        style="display: flex; align-items: center; gap: 0.75rem; margin-block-end: 1.5rem;"
+      >
+        <span
+          data-testid="alert-triangle-icon"
+        />
+        <h2
+          style="margin: 0px; font-size: 1.25rem; font-weight: 700;"
+        >
+          Activate Outbreak Mode
+        </h2>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <label
+          for="pathogen-input"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Target Pathogen *
+        </label>
+        <div
+          style="position: relative;"
+        >
+          <input
+            id="pathogen-input"
+            placeholder="Search pathogens or enter custom…"
+            style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem; box-sizing: border-box;"
+            type="text"
+            value=""
+          />
+          <span
+            data-testid="chevron-down-icon"
+          />
+        </div>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <p
+          style="font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Affected Lab Locations *
+        </p>
+        <div
+          style="display: flex; flex-direction: column; gap: 0.375rem;"
+        >
+          <label
+            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+          >
+            <input
+              checked=""
+              type="checkbox"
+            />
+            <span>
+              loc-001
+            </span>
+          </label>
+          <label
+            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+          >
+            <input
+              checked=""
+              type="checkbox"
+            />
+            <span>
+              loc-002
+            </span>
+          </label>
+        </div>
+      </div>
+      <div
+        style="margin-block-end: 1rem;"
+      >
+        <label
+          for="activation-reason"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Activation Reason *
+        </label>
+        <textarea
+          id="activation-reason"
+          placeholder="e.g. "WHO outbreak alert", "Provincial directive #12""
+          rows="3"
+          style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem; resize: vertical; box-sizing: border-box;"
+        />
+      </div>
+      <div
+        style="margin-block-end: 1.5rem;"
+      >
+        <label
+          for="surge-multiplier"
+          style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+        >
+          Surge Inventory Multiplier
+        </label>
+        <div
+          style="display: flex; align-items: center; gap: 0.75rem;"
+        >
+          <input
+            id="surge-multiplier"
+            max="10"
+            min="1.5"
+            step="0.5"
+            style="width: 80px; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); font-size: 0.9375rem;"
+            type="number"
+            value="3"
+          />
+          <span
+            style="color: rgb(107, 114, 128); font-size: 0.875rem;"
+          >
+            × normal consumption rate (range: 1.5× – 10×, default 3×)
+          </span>
+        </div>
+      </div>
+      <div
+        style="display: flex; gap: 0.75rem; justify-content: flex-end;"
+      >
+        <button
+          style="padding: 0.5rem 1.25rem; border-radius: 6px; border: 1px solid rgb(209, 213, 219); cursor: pointer; background-color: rgb(255, 255, 255);"
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          style="padding: 0.5rem 1.25rem; border-radius: 6px; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); cursor: pointer; font-weight: 600;"
+          type="button"
+        >
+          Review & Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OutbreakModeBanner — RTL snapshots > LTR: renders banner when outbreak is active (authorized user) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    data-testid="outbreak-mode-banner"
+    role="alert"
+    style="position: sticky; top: 0px; z-index: 9000; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); padding: 0.625rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; box-shadow: 0 2px 8px rgba(220,38,38,0.4); min-height: 48px;"
+  >
+    <div
+      style="display: flex; align-items: center; gap: 0.625rem; flex: 1 1 0%; flex-wrap: wrap;"
+    >
+      <span
+        data-testid="alert-triangle-icon"
+      />
+      <span
+        style="font-weight: 700; font-size: 0.9375rem;"
+      >
+        OUTBREAK MODE ACTIVE: 
+        MALARIA
+      </span>
+      <span
+        style="font-size: 0.875rem; opacity: 0.9;"
+      >
+        — Activated by 
+        prac-001
+         on 
+        May 31, 2026
+      </span>
+    </div>
+    <button
+      aria-label="Deactivate Outbreak Mode"
+      class="hover:bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+      style="background-color: rgba(255, 255, 255, 0.2); color: rgb(255, 255, 255); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 4px; padding: 0.3125rem 0.875rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; white-space: nowrap; flex-shrink: 0;"
+      type="button"
+    >
+      Deactivate
+    </button>
+  </div>
+</div>
+`;
+
+exports[`OutbreakModeBanner — RTL snapshots > LTR: renders banner without Deactivate button (unauthorized) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    data-testid="outbreak-mode-banner"
+    role="alert"
+    style="position: sticky; top: 0px; z-index: 9000; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); padding: 0.625rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; box-shadow: 0 2px 8px rgba(220,38,38,0.4); min-height: 48px;"
+  >
+    <div
+      style="display: flex; align-items: center; gap: 0.625rem; flex: 1 1 0%; flex-wrap: wrap;"
+    >
+      <span
+        data-testid="alert-triangle-icon"
+      />
+      <span
+        style="font-weight: 700; font-size: 0.9375rem;"
+      >
+        OUTBREAK MODE ACTIVE: 
+        MALARIA
+      </span>
+      <span
+        style="font-size: 0.875rem; opacity: 0.9;"
+      >
+        — Activated by 
+        prac-001
+         on 
+        May 31, 2026
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OutbreakModeBanner — RTL snapshots > LTR: renders null when no active outbreak 1`] = `<div />`;
+
+exports[`OutbreakModeBanner — RTL snapshots > RTL: renders banner when outbreak is active (authorized user) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    data-testid="outbreak-mode-banner"
+    role="alert"
+    style="position: sticky; top: 0px; z-index: 9000; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); padding: 0.625rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; box-shadow: 0 2px 8px rgba(220,38,38,0.4); min-height: 48px;"
+  >
+    <div
+      style="display: flex; align-items: center; gap: 0.625rem; flex: 1 1 0%; flex-wrap: wrap;"
+    >
+      <span
+        data-testid="alert-triangle-icon"
+      />
+      <span
+        style="font-weight: 700; font-size: 0.9375rem;"
+      >
+        OUTBREAK MODE ACTIVE: 
+        MALARIA
+      </span>
+      <span
+        style="font-size: 0.875rem; opacity: 0.9;"
+      >
+        — Activated by 
+        prac-001
+         on 
+        May 31, 2026
+      </span>
+    </div>
+    <button
+      aria-label="Deactivate Outbreak Mode"
+      class="hover:bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+      style="background-color: rgba(255, 255, 255, 0.2); color: rgb(255, 255, 255); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 4px; padding: 0.3125rem 0.875rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; white-space: nowrap; flex-shrink: 0;"
+      type="button"
+    >
+      Deactivate
+    </button>
+  </div>
+</div>
+`;
+
+exports[`OutbreakModeBanner — RTL snapshots > RTL: renders banner without Deactivate button (unauthorized) 1`] = `
+<div>
+  <div
+    aria-live="assertive"
+    data-testid="outbreak-mode-banner"
+    role="alert"
+    style="position: sticky; top: 0px; z-index: 9000; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); padding: 0.625rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; box-shadow: 0 2px 8px rgba(220,38,38,0.4); min-height: 48px;"
+  >
+    <div
+      style="display: flex; align-items: center; gap: 0.625rem; flex: 1 1 0%; flex-wrap: wrap;"
+    >
+      <span
+        data-testid="alert-triangle-icon"
+      />
+      <span
+        style="font-weight: 700; font-size: 0.9375rem;"
+      >
+        OUTBREAK MODE ACTIVE: 
+        MALARIA
+      </span>
+      <span
+        style="font-size: 0.875rem; opacity: 0.9;"
+      >
+        — Activated by 
+        prac-001
+         on 
+        May 31, 2026
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OutbreakPriorityBadge — RTL snapshots > LTR snapshot 1`] = `
+<div>
+  <span
+    aria-label="Outbreak Priority"
+    data-testid="outbreak-priority-badge"
+    style="display: inline-flex; align-items: center; gap: 0.25rem; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); border-radius: 4px; padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;"
+  >
+    <span
+      data-testid="target-icon"
+    />
+    OUTBREAK PRIORITY
+  </span>
+</div>
+`;
+
+exports[`OutbreakPriorityBadge — RTL snapshots > RTL snapshot 1`] = `
+<div>
+  <span
+    aria-label="Outbreak Priority"
+    data-testid="outbreak-priority-badge"
+    style="display: inline-flex; align-items: center; gap: 0.25rem; background-color: rgb(220, 38, 38); color: rgb(255, 255, 255); border-radius: 4px; padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;"
+  >
+    <span
+      data-testid="target-icon"
+    />
+    OUTBREAK PRIORITY
+  </span>
+</div>
+`;
+
+exports[`SimplifiedResultEntry — RTL snapshots > LTR snapshot 1`] = `
+<div>
+  <div
+    data-testid="simplified-result-entry"
+    style="background-color: rgb(255, 255, 255); border: 2px solid rgb(220, 38, 38); border-radius: 8px; padding: 1.5rem; max-width: 480px; width: 100%;"
+  >
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 1rem;"
+    >
+      <div>
+        <h3
+          style="margin: 0px; font-size: 1.125rem; font-weight: 700;"
+        >
+          Fast Result Entry
+        </h3>
+        <p
+          style="margin: 0px; color: rgb(107, 114, 128); font-size: 0.875rem;"
+        >
+          Malaria
+           — 
+          51587-4
+        </p>
+      </div>
+      <button
+        aria-label="Close simplified entry"
+        style="background: none; cursor: pointer; font-size: 1.25rem; color: rgb(107, 114, 128);"
+        type="button"
+      >
+        ×
+      </button>
+    </div>
+    <div
+      style="margin-block-end: 1.25rem;"
+    >
+      <label
+        for="sample-id-input"
+        style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+      >
+        Sample ID
+      </label>
+      <input
+        id="sample-id-input"
+        placeholder="Scan barcode or type…"
+        style="width: 100%; padding: 0.75rem 1rem; font-size: 1.125rem; border-radius: 6px; border: 2px solid rgb(209, 213, 219); box-sizing: border-box;"
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      style="margin-block-end: 1.25rem;"
+    >
+      <p
+        style="font-weight: 600; margin-block-end: 0.5rem;"
+      >
+        Result
+      </p>
+      <div
+        style="display: flex; gap: 0.625rem; flex-wrap: wrap;"
+      >
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-positive"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          POSITIVE
+        </button>
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-negative"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          NEGATIVE
+        </button>
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-indeterminate"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          INDETERMINATE
+        </button>
+      </div>
+    </div>
+    <div
+      style="background-color: rgb(249, 250, 251); border-radius: 6px; padding: 0.75rem; margin-block-end: 1.25rem; font-size: 0.875rem; color: rgb(107, 114, 128);"
+    >
+      <div>
+        Timestamp: 
+        <strong>
+          6:00:00 AM
+        </strong>
+         (auto)
+      </div>
+      <div>
+        Tech ID: 
+        <strong>
+          prac-001
+        </strong>
+         (session)
+      </div>
+    </div>
+    <button
+      disabled=""
+      style="width: 100%; padding: 0.875rem; font-size: 1rem; font-weight: 700; border-radius: 6px; background-color: rgb(209, 213, 219); color: rgb(255, 255, 255); cursor: not-allowed;"
+      type="button"
+    >
+      Submit Result
+    </button>
+  </div>
+</div>
+`;
+
+exports[`SimplifiedResultEntry — RTL snapshots > RTL snapshot — logical CSS properties preserve layout 1`] = `
+<div>
+  <div
+    data-testid="simplified-result-entry"
+    style="background-color: rgb(255, 255, 255); border: 2px solid rgb(220, 38, 38); border-radius: 8px; padding: 1.5rem; max-width: 480px; width: 100%;"
+  >
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-block-end: 1rem;"
+    >
+      <div>
+        <h3
+          style="margin: 0px; font-size: 1.125rem; font-weight: 700;"
+        >
+          Fast Result Entry
+        </h3>
+        <p
+          style="margin: 0px; color: rgb(107, 114, 128); font-size: 0.875rem;"
+        >
+          Malaria
+           — 
+          51587-4
+        </p>
+      </div>
+      <button
+        aria-label="Close simplified entry"
+        style="background: none; cursor: pointer; font-size: 1.25rem; color: rgb(107, 114, 128);"
+        type="button"
+      >
+        ×
+      </button>
+    </div>
+    <div
+      style="margin-block-end: 1.25rem;"
+    >
+      <label
+        for="sample-id-input"
+        style="display: block; font-weight: 600; margin-block-end: 0.375rem;"
+      >
+        Sample ID
+      </label>
+      <input
+        id="sample-id-input"
+        placeholder="Scan barcode or type…"
+        style="width: 100%; padding: 0.75rem 1rem; font-size: 1.125rem; border-radius: 6px; border: 2px solid rgb(209, 213, 219); box-sizing: border-box;"
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      style="margin-block-end: 1.25rem;"
+    >
+      <p
+        style="font-weight: 600; margin-block-end: 0.5rem;"
+      >
+        Result
+      </p>
+      <div
+        style="display: flex; gap: 0.625rem; flex-wrap: wrap;"
+      >
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-positive"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          POSITIVE
+        </button>
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-negative"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          NEGATIVE
+        </button>
+        <button
+          aria-pressed="false"
+          data-testid="result-btn-indeterminate"
+          style="flex: 1 1 0%; min-width: 100px; padding: 1rem 0.75rem; font-size: 0.9375rem; font-weight: 700; border-radius: 6px; border: 2px solid rgb(209, 213, 219); background-color: rgb(249, 250, 251); color: rgb(55, 65, 81); cursor: pointer; transition: all 0.1s;"
+          type="button"
+        >
+          INDETERMINATE
+        </button>
+      </div>
+    </div>
+    <div
+      style="background-color: rgb(249, 250, 251); border-radius: 6px; padding: 0.75rem; margin-block-end: 1.25rem; font-size: 0.875rem; color: rgb(107, 114, 128);"
+    >
+      <div>
+        Timestamp: 
+        <strong>
+          6:00:00 AM
+        </strong>
+         (auto)
+      </div>
+      <div>
+        Tech ID: 
+        <strong>
+          prac-001
+        </strong>
+         (session)
+      </div>
+    </div>
+    <button
+      disabled=""
+      style="width: 100%; padding: 0.875rem; font-size: 1rem; font-weight: 700; border-radius: 6px; background-color: rgb(209, 213, 219); color: rgb(255, 255, 255); cursor: not-allowed;"
+      type="button"
+    >
+      Submit Result
+    </button>
+  </div>
+</div>
+`;
