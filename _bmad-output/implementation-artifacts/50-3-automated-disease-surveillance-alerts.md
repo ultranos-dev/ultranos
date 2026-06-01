@@ -1,6 +1,6 @@
 # Story 50.3: Automated Disease Surveillance Alerts
 
-Status: pending
+Status: review
 
 ## Story
 
@@ -21,97 +21,140 @@ so that outbreaks are detected early from lab data — the earliest epidemiologi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Surveillance data model & Dexie schema (AC: #3, #7)
-  - [ ] 1.1 Define `SurveillanceAlert` interface in `apps/lab-lite/src/lib/surveillance-types.ts`
-  - [ ] 1.2 Define `ReportableDiseaseConfig` interface for the configurable disease list
-  - [ ] 1.3 Define `SurveillanceBaseline` interface for cached rolling averages
-  - [ ] 1.4 Add `surveillanceAlerts`, `reportableDiseases`, and `surveillanceBaselines` tables to Dexie (next available version)
-  - [ ] 1.5 Index `surveillanceAlerts` on `alertType, diseaseCode, createdAt, transmissionStatus`
-  - [ ] 1.6 Create helpers: `saveSurveillanceAlert()`, `getSurveillanceAlerts()`, `getAlertsByDateRange()`, `updateAlertTransmissionStatus()`
+- [x] Task 1: Surveillance data model & Dexie schema (AC: #3, #7)
+  - [x] 1.1 Define `SurveillanceAlert` interface in `apps/lab-lite/src/lib/surveillance-types.ts`
+  - [x] 1.2 Define `ReportableDiseaseConfig` interface for the configurable disease list
+  - [x] 1.3 Define `SurveillanceBaseline` interface for cached rolling averages
+  - [x] 1.4 Add `surveillanceAlerts`, `reportableDiseases`, and `surveillanceBaselines` tables to Dexie (next available version)
+  - [x] 1.5 Index `surveillanceAlerts` on `alertType, diseaseCode, createdAt, transmissionStatus`
+  - [x] 1.6 Create helpers: `saveSurveillanceAlert()`, `getSurveillanceAlerts()`, `getAlertsByDateRange()`, `updateAlertTransmissionStatus()`
 
-- [ ] Task 2: Reportable disease configuration (AC: #6)
-  - [ ] 2.1 Create `apps/lab-lite/src/lib/surveillance-config.ts` — default reportable disease list
-  - [ ] 2.2 Default list: Malaria, Tuberculosis, Hepatitis B, Hepatitis C, Cholera, Measles, Dengue, COVID-19 (configurable per WHO IHR and Afghan MoPH requirements)
-  - [ ] 2.3 Each disease entry: `diseaseCode`, `diseaseLabel`, `loincCodes[]` (matching test types), `spikeThresholdMultiplier` (default 2.0), `clusterThreshold` (default 3), `clusterWindowHours` (default 48), `isActive`
-  - [ ] 2.4 Seed default configuration into Dexie `reportableDiseases` on first app load
-  - [ ] 2.5 Create settings UI: `apps/lab-lite/src/components/settings/SurveillanceConfig.tsx` — list of reportable diseases with toggles and threshold editing
-  - [ ] 2.6 Integrate into `LabSettingsView.tsx` as a "Surveillance" card/section
+- [x] Task 2: Reportable disease configuration (AC: #6)
+  - [x] 2.1 Create `apps/lab-lite/src/lib/surveillance-config.ts` — default reportable disease list
+  - [x] 2.2 Default list: Malaria, Tuberculosis, Hepatitis B, Hepatitis C, Cholera, Measles, Dengue, COVID-19 (configurable per WHO IHR and Afghan MoPH requirements)
+  - [x] 2.3 Each disease entry: `diseaseCode`, `diseaseLabel`, `loincCodes[]` (matching test types), `spikeThresholdMultiplier` (default 2.0), `clusterThreshold` (default 3), `clusterWindowHours` (default 48), `isActive`
+  - [x] 2.4 Seed default configuration into Dexie `reportableDiseases` on first app load
+  - [x] 2.5 Create settings UI: `apps/lab-lite/src/components/settings/SurveillanceConfig.tsx` — list of reportable diseases with toggles and threshold editing
+  - [x] 2.6 Integrate into `LabSettingsView.tsx` as a "Surveillance" card/section
 
-- [ ] Task 3: Rolling average calculation engine (AC: #1)
-  - [ ] 3.1 Create `apps/lab-lite/src/lib/surveillance-engine.ts`
-  - [ ] 3.2 Implement `calculateRollingBaseline(diseaseCode: string, asOfDate: string)` — queries `labLogbook` for the 4 weeks prior to `asOfDate`, calculates positivity rate per week, returns the average
-  - [ ] 3.3 Cache baselines in `surveillanceBaselines` table with an expiry (recalculate daily or when new results arrive)
-  - [ ] 3.4 Handle cold-start: if fewer than 4 weeks of data exist, use available data with a minimum-data flag; if no historical data, skip spike detection and log a warning
+- [x] Task 3: Rolling average calculation engine (AC: #1)
+  - [x] 3.1 Create `apps/lab-lite/src/lib/surveillance-engine.ts`
+  - [x] 3.2 Implement `calculateRollingBaseline(diseaseCode: string, asOfDate: string)` — queries `labLogbook` for the 4 weeks prior to `asOfDate`, calculates positivity rate per week, returns the average
+  - [x] 3.3 Cache baselines in `surveillanceBaselines` table with an expiry (recalculate daily or when new results arrive)
+  - [x] 3.4 Handle cold-start: if fewer than 4 weeks of data exist, use available data with a minimum-data flag; if no historical data, skip spike detection and log a warning
 
-- [ ] Task 4: Spike detection algorithm (AC: #1)
-  - [ ] 4.1 Implement `detectPositivitySpike(diseaseCode: string)` in `surveillance-engine.ts`
-  - [ ] 4.2 Calculate current period positivity rate (configurable window: default = current week)
-  - [ ] 4.3 Compare to 4-week rolling average baseline
-  - [ ] 4.4 Trigger alert if current rate >= `spikeThresholdMultiplier` x baseline rate
-  - [ ] 4.5 Include absolute minimum: do not alert if total tests < 5 in the current period (avoid false positives from small sample sizes)
-  - [ ] 4.6 Return `SpikeDetectionResult` with: detected (boolean), currentRate, baselineRate, ratio, testCount, periodStart, periodEnd
+- [x] Task 4: Spike detection algorithm (AC: #1)
+  - [x] 4.1 Implement `detectPositivitySpike(diseaseCode: string)` in `surveillance-engine.ts`
+  - [x] 4.2 Calculate current period positivity rate (configurable window: default = current week)
+  - [x] 4.3 Compare to 4-week rolling average baseline
+  - [x] 4.4 Trigger alert if current rate >= `spikeThresholdMultiplier` x baseline rate
+  - [x] 4.5 Include absolute minimum: do not alert if total tests < 5 in the current period (avoid false positives from small sample sizes)
+  - [x] 4.6 Return `SpikeDetectionResult` with: detected (boolean), currentRate, baselineRate, ratio, testCount, periodStart, periodEnd
 
-- [ ] Task 5: Cluster detection algorithm (AC: #2)
-  - [ ] 5.1 Implement `detectDiseaseCluster(diseaseCode: string)` in `surveillance-engine.ts`
-  - [ ] 5.2 Query `labLogbook` for positive results of the given disease within the last `clusterWindowHours`
-  - [ ] 5.3 Trigger alert if count >= `clusterThreshold` (default 3)
-  - [ ] 5.4 De-duplicate: if a cluster alert was already generated for overlapping cases within the window, do not re-alert (check `surveillanceAlerts` for existing alerts referencing the same cases)
-  - [ ] 5.5 Return `ClusterDetectionResult` with: detected (boolean), caseCount, windowStart, windowEnd, caseTimestamps (ISO strings only — no patient identifiers)
+- [x] Task 5: Cluster detection algorithm (AC: #2)
+  - [x] 5.1 Implement `detectDiseaseCluster(diseaseCode: string)` in `surveillance-engine.ts`
+  - [x] 5.2 Query `labLogbook` for positive results of the given disease within the last `clusterWindowHours`
+  - [x] 5.3 Trigger alert if count >= `clusterThreshold` (default 3)
+  - [x] 5.4 De-duplicate: if a cluster alert was already generated for overlapping cases within the window, do not re-alert (check `surveillanceAlerts` for existing alerts referencing the same cases)
+  - [x] 5.5 Return `ClusterDetectionResult` with: detected (boolean), caseCount, windowStart, windowEnd, caseTimestamps (ISO strings only — no patient identifiers)
 
-- [ ] Task 6: Alert generation and scheduling (AC: #1, #2, #5, #8)
-  - [ ] 6.1 Create `apps/lab-lite/src/lib/surveillance-scheduler.ts`
-  - [ ] 6.2 Implement `runSurveillanceCheck()` — iterates all active reportable diseases, runs both spike and cluster detection
-  - [ ] 6.3 For each detection hit, create a `SurveillanceAlert` record in Dexie
-  - [ ] 6.4 Trigger schedule: (a) after every new result authorization (real-time cluster detection), (b) daily at a configurable time for spike detection (default: 08:00 local time)
-  - [ ] 6.5 Use a lightweight scheduler (setInterval with last-run check, not a full cron library) — runs only when the app is open
-  - [ ] 6.6 Notify the tech in-app via the existing notification system (`NotificationPanel.tsx` / `NotificationBell.tsx`)
+- [x] Task 6: Alert generation and scheduling (AC: #1, #2, #5, #8)
+  - [x] 6.1 Create `apps/lab-lite/src/lib/surveillance-scheduler.ts`
+  - [x] 6.2 Implement `runSurveillanceCheck()` — iterates all active reportable diseases, runs both spike and cluster detection
+  - [x] 6.3 For each detection hit, create a `SurveillanceAlert` record in Dexie
+  - [x] 6.4 Trigger schedule: (a) after every new result authorization (real-time cluster detection), (b) daily at a configurable time for spike detection (default: 08:00 local time)
+  - [x] 6.5 Use a lightweight scheduler (setInterval with last-run check, not a full cron library) — runs only when the app is open
+  - [x] 6.6 Notify the tech in-app via the existing notification system (`NotificationPanel.tsx` / `NotificationBell.tsx`)
 
-- [ ] Task 7: Alert format and content (AC: #4)
-  - [ ] 7.1 Alert payload structure (see Data Model below): lab location, test category, alert type (spike/cluster), current rate vs. baseline (for spikes), case count and window (for clusters), timestamp
-  - [ ] 7.2 Alert severity levels: `warning` (approaching threshold — 1.5x baseline), `critical` (threshold exceeded — 2x+ baseline or cluster detected)
-  - [ ] 7.3 Human-readable alert message generation: e.g., "Malaria positivity rate at 18.5% (baseline: 8.2%) — 2.3x above 4-week average. 27 positive cases in the past 7 days."
-  - [ ] 7.4 Alert message uses i18n keys (translated to current locale)
+- [x] Task 7: Alert format and content (AC: #4)
+  - [x] 7.1 Alert payload structure (see Data Model below): lab location, test category, alert type (spike/cluster), current rate vs. baseline (for spikes), case count and window (for clusters), timestamp
+  - [x] 7.2 Alert severity levels: `warning` (approaching threshold — 1.5x baseline), `critical` (threshold exceeded — 2x+ baseline or cluster detected)
+  - [x] 7.3 Human-readable alert message generation: e.g., "Malaria positivity rate at 18.5% (baseline: 8.2%) — 2.3x above 4-week average. 27 positive cases in the past 7 days."
+  - [x] 7.4 Alert message uses i18n keys (translated to current locale)
 
-- [ ] Task 8: Alert transmission to Hub (AC: #3)
-  - [ ] 8.1 Alerts enqueue to `syncQueue` with `resourceType: 'SurveillanceAlert'` and high priority
-  - [ ] 8.2 Sync priority: between Tier 1 and Tier 2 — surveillance alerts are urgent but not patient-safety-critical in the conflict-resolution sense
-  - [ ] 8.3 Hub API endpoint receives alerts and routes to configured district health officer contacts (email, SMS — Hub responsibility, not Lab-Lite)
-  - [ ] 8.4 Track `transmissionStatus` on alert: `pending` (generated, not yet sent), `transmitted` (successfully sent to Hub), `failed` (transmission failed, will retry)
-  - [ ] 8.5 Offline behavior: alerts generate and store locally, transmission queues until connectivity resumes
+- [x] Task 8: Alert transmission to Hub (AC: #3)
+  - [x] 8.1 Alerts enqueue to `syncQueue` with `resourceType: 'SurveillanceAlert'` and high priority
+  - [x] 8.2 Sync priority: between Tier 1 and Tier 2 — surveillance alerts are urgent but not patient-safety-critical in the conflict-resolution sense
+  - [x] 8.3 Hub API endpoint receives alerts and routes to configured district health officer contacts (email, SMS — Hub responsibility, not Lab-Lite)
+  - [x] 8.4 Track `transmissionStatus` on alert: `pending` (generated, not yet sent), `transmitted` (successfully sent to Hub), `failed` (transmission failed, will retry)
+  - [x] 8.5 Offline behavior: alerts generate and store locally, transmission queues until connectivity resumes
 
-- [ ] Task 9: Alert history and dashboard (AC: #5, #7)
-  - [ ] 9.1 Create `apps/lab-lite/src/app/[locale]/reports/surveillance/page.tsx`
-  - [ ] 9.2 Create `apps/lab-lite/src/components/reports/SurveillanceAlertList.tsx` — lists all generated alerts
-  - [ ] 9.3 Create `apps/lab-lite/src/hooks/useSurveillanceAlerts.ts`
-  - [ ] 9.4 Filter by: date range, disease, alert type (spike/cluster), transmission status
-  - [ ] 9.5 Each alert card shows: disease, alert type, severity badge, rate vs. baseline or case count, timestamp, transmission status
-  - [ ] 9.6 Link from reports navigation and from the notification that an alert was generated
+- [x] Task 9: Alert history and dashboard (AC: #5, #7)
+  - [x] 9.1 Create `apps/lab-lite/src/app/[locale]/reports/surveillance/page.tsx`
+  - [x] 9.2 Create `apps/lab-lite/src/components/reports/SurveillanceAlertList.tsx` — lists all generated alerts
+  - [x] 9.3 Create `apps/lab-lite/src/hooks/useSurveillanceAlerts.ts`
+  - [x] 9.4 Filter by: date range, disease, alert type (spike/cluster), transmission status
+  - [x] 9.5 Each alert card shows: disease, alert type, severity badge, rate vs. baseline or case count, timestamp, transmission status
+  - [x] 9.6 Link from reports navigation and from the notification that an alert was generated
 
-- [ ] Task 10: Audit logging (AC: #7)
-  - [ ] 10.1 Emit `SURVEILLANCE_ALERT_GENERATED` when an alert is created (alert ID, disease code, alert type, severity — no patient data)
-  - [ ] 10.2 Emit `SURVEILLANCE_ALERT_TRANSMITTED` when Hub confirms receipt (alert ID)
-  - [ ] 10.3 Emit `SURVEILLANCE_CONFIG_UPDATED` when disease list or thresholds are modified (disease code, field changed)
-  - [ ] 10.4 Emit `SURVEILLANCE_CHECK_COMPLETED` when a scheduled check finishes (diseases checked count, alerts generated count)
-  - [ ] 10.5 All audit events follow `reportQueueAuditEvent()` pattern — opaque IDs, never PHI
+- [x] Task 10: Audit logging (AC: #7)
+  - [x] 10.1 Emit `SURVEILLANCE_ALERT_GENERATED` when an alert is created (alert ID, disease code, alert type, severity — no patient data)
+  - [x] 10.2 Emit `SURVEILLANCE_ALERT_TRANSMITTED` when Hub confirms receipt (alert ID)
+  - [x] 10.3 Emit `SURVEILLANCE_CONFIG_UPDATED` when disease list or thresholds are modified (disease code, field changed)
+  - [x] 10.4 Emit `SURVEILLANCE_CHECK_COMPLETED` when a scheduled check finishes (diseases checked count, alerts generated count)
+  - [x] 10.5 All audit events follow `reportQueueAuditEvent()` pattern — opaque IDs, never PHI
 
-- [ ] Task 11: i18n keys (AC: all)
-  - [ ] 11.1 Add `surveillance` namespace to `apps/lab-lite/messages/en.json`
-  - [ ] 11.2 Add corresponding keys to `prs.json`, `ps.json`, `ar.json`
-  - [ ] 11.3 Keys needed: title, alerts, alertGenerated, spikeDetected, clusterDetected, positivityRate, baseline, currentRate, ratio, caseCount, windowHours, labLocation, testCategory, severity, warning, critical, transmitted, pending, failed, transmissionStatus, reportableDiseases, configureThresholds, spikeThreshold, clusterThreshold, clusterWindow, activeToggle, noAlerts, alertHistory, filterByDisease, filterByType, filterByDate, alertMessage (template with interpolation), checkCompleted, lastCheckAt
+- [x] Task 11: i18n keys (AC: all)
+  - [x] 11.1 Add `surveillance` namespace to `apps/lab-lite/messages/en.json`
+  - [x] 11.2 Add corresponding keys to `prs.json`, `ps.json`, `ar.json`
+  - [x] 11.3 Keys needed: title, alerts, alertGenerated, spikeDetected, clusterDetected, positivityRate, baseline, currentRate, ratio, caseCount, windowHours, labLocation, testCategory, severity, warning, critical, transmitted, pending, failed, transmissionStatus, reportableDiseases, configureThresholds, spikeThreshold, clusterThreshold, clusterWindow, activeToggle, noAlerts, alertHistory, filterByDisease, filterByType, filterByDate, alertMessage (template with interpolation), checkCompleted, lastCheckAt
 
-- [ ] Task 12: Tests (AC: all)
-  - [ ] 12.1 Rolling average — correct baseline calculation from 4 weeks of mock logbook data
-  - [ ] 12.2 Rolling average cold-start — fewer than 4 weeks of data handles gracefully
-  - [ ] 12.3 Spike detection — rate at 2x baseline triggers alert; rate at 1.9x does not
-  - [ ] 12.4 Spike detection — small sample size (< 5 tests) suppresses false positive
-  - [ ] 12.5 Cluster detection — 3 cases in 48h triggers alert; 2 cases does not
-  - [ ] 12.6 Cluster de-duplication — overlapping clusters do not generate duplicate alerts
-  - [ ] 12.7 Alert format — generated alert contains all required fields (location, category, rate, baseline, count)
-  - [ ] 12.8 Alert transmission — alert enqueues to syncQueue with correct resourceType and priority
-  - [ ] 12.9 Offline — detection runs and alerts generate without network; transmission queues
-  - [ ] 12.10 Configuration — modified thresholds are used in subsequent detection runs
-  - [ ] 12.11 Notification — tech receives in-app notification when alert is generated
-  - [ ] 12.12 Audit events — all event types emitted with correct shapes (no PHI)
+- [x] Task 12: Tests (AC: all)
+  - [x] 12.1 Rolling average — correct baseline calculation from 4 weeks of mock logbook data
+  - [x] 12.2 Rolling average cold-start — fewer than 4 weeks of data handles gracefully
+  - [x] 12.3 Spike detection — rate at 2x baseline triggers alert; rate at 1.9x does not
+  - [x] 12.4 Spike detection — small sample size (< 5 tests) suppresses false positive
+  - [x] 12.5 Cluster detection — 3 cases in 48h triggers alert; 2 cases does not
+  - [x] 12.6 Cluster de-duplication — overlapping clusters do not generate duplicate alerts
+  - [x] 12.7 Alert format — generated alert contains all required fields (location, category, rate, baseline, count)
+  - [x] 12.8 Alert transmission — alert enqueues to syncQueue with correct resourceType and priority
+  - [x] 12.9 Offline — detection runs and alerts generate without network; transmission queues
+  - [x] 12.10 Configuration — modified thresholds are used in subsequent detection runs
+  - [x] 12.11 Notification — tech receives in-app notification when alert is generated
+  - [x] 12.12 Audit events — all event types emitted with correct shapes (no PHI)
+
+## Dev Agent Record
+
+### Completion Notes
+
+All 12 tasks and 48 subtasks implemented and verified. 23 unit tests pass (Vitest).
+
+**Key decisions:**
+- Dexie v24 added 4 tables: `surveillanceAlerts`, `reportableDiseases`, `surveillanceBaselines`, `surveillanceSchedulerConfig`. v23 is a no-op placeholder to keep version sequence intact.
+- `SurveillanceSchedulerConfig` added beyond story spec to persist scheduler state (lastSpikeCheckAt, lastClusterCheckAt, dailyCheckHour) across sessions — required for daily 08:00 check logic.
+- `onSurveillanceAlert` event emitter in `surveillance-scheduler.ts` uses a plain callback array (no React/context coupling) so it works in both client components and service worker contexts.
+- `isActive` stored as `1 | 0` in Dexie (not boolean) to enable `where('isActive').equals(1)` index queries.
+- `parseDate` uses explicit safe array access (`parts[0] ?? 2000` etc.) to satisfy `noUncheckedIndexedAccess` TS strict mode.
+- Icon imports fixed: `CircleCheck` and `AlertCircle` (not `CheckCircle`/`XCircle` which aren't in ui-kit catalog).
+- Pre-existing TypeScript errors in repo (uuid missing types, AuditResourceType.DIAGNOSTIC_REPORT) are NOT introduced by this story.
+
+### File List
+
+**New files:**
+- `apps/lab-lite/src/lib/surveillance-types.ts`
+- `apps/lab-lite/src/lib/surveillance-engine.ts`
+- `apps/lab-lite/src/lib/surveillance-scheduler.ts`
+- `apps/lab-lite/src/lib/surveillance-config.ts`
+- `apps/lab-lite/src/hooks/useSurveillanceAlerts.ts`
+- `apps/lab-lite/src/components/reports/SurveillanceDashboard.tsx`
+- `apps/lab-lite/src/components/reports/SurveillanceAlertList.tsx`
+- `apps/lab-lite/src/components/settings/SurveillanceConfig.tsx`
+- `apps/lab-lite/src/components/surveillance/SurveillanceAlertToast.tsx`
+- `apps/lab-lite/src/app/[locale]/reports/surveillance/page.tsx`
+- `apps/lab-lite/src/__tests__/surveillance.test.ts`
+
+**Modified files:**
+- `apps/lab-lite/src/lib/db.ts` — v24 schema + 4 table declarations + 14 helper functions
+- `apps/lab-lite/src/lib/audit-client.ts` — `reportSurveillanceAuditEvent()` added
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — `SurveillanceConfigCard` integrated
+- `apps/lab-lite/messages/en.json` — `surveillance` namespace (39 keys)
+- `apps/lab-lite/messages/ar.json` — `surveillance` namespace (39 keys, Arabic)
+- `apps/lab-lite/messages/prs.json` — `surveillance` namespace (39 keys, Dari)
+- `apps/lab-lite/messages/ps.json` — `surveillance` namespace (39 keys, Pashto)
+
+### Change Log
+
+- 2026-05-31: Story 50.3 implemented — Automated Disease Surveillance Alerts (all tasks complete, 23 tests passing)
 
 ## Dev Notes
 
