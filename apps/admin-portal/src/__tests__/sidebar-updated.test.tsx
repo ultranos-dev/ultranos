@@ -67,4 +67,10 @@ describe('Sidebar — updated nav items and footer', () => {
     render(<Sidebar collapsed={false} onToggle={() => {}} />)
     expect(screen.getByTestId('session-timer')).toBeTruthy()
   })
+
+  it('does NOT render a standalone "Staff" nav item', () => {
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
+    const staffLinks = screen.queryAllByRole('link', { name: 'Staff' })
+    expect(staffLinks).toHaveLength(0)
+  })
 })

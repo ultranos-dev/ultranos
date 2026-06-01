@@ -24,7 +24,6 @@ import {
   Cpu,
   CreditCard,
   Wallet,
-  Award,
   LogOut,
 } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
@@ -37,7 +36,6 @@ const navItems = [
   { label: 'Inventory', href: '/inventory', icon: Package },
   { label: 'Suppliers', href: '/inventory/suppliers', icon: Plus, indent: true },
   { label: 'Network', href: '/network', icon: Globe },
-  { label: 'Staff', href: '/staff', icon: Award },
   { label: 'Mentorship', href: '/mentorship', icon: Users },
   { label: 'Certifications', href: '/certifications', icon: FileCheck },
   { label: 'Users', href: '/users', icon: Users },
