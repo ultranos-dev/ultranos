@@ -178,15 +178,15 @@ describe('EmployeeHealthPage', () => {
     })
   })
 
-  it('navigates back to staff overview on back link click', async () => {
+  it('navigates back to lab assignments on back link click', async () => {
     const user = userEvent.setup()
     render(<EmployeeHealthPage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Back to Staff Overview/)).toBeDefined()
+      expect(screen.getByText(/Back to Lab Assignments/)).toBeDefined()
     })
 
-    await user.click(screen.getByText(/Back to Staff Overview/))
-    expect(mockPush).toHaveBeenCalledWith('/staff')
+    await user.click(screen.getByText(/Back to Lab Assignments/))
+    expect(mockPush).toHaveBeenCalledWith('/users?tab=lab-assignments')
   })
 })

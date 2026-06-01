@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { TopHeader } from '@/components/TopHeader'
@@ -13,16 +14,14 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'lab-assignments', label: 'Lab Assignments' },
 ]
 
-export default function UsersPage() {
+function UsersContent() {
   const searchParams = useSearchParams()
   const rawTab = searchParams.get('tab')
   const activeTab: TabId = rawTab === 'lab-assignments' ? 'lab-assignments' : 'all-users'
 
   return (
     <>
-      <TopHeader title="Users" description="Manage staff accounts and lab assignments." />
       <div className="mx-auto max-w-7xl px-8 pt-6">
-        {/* Tab navigation */}
         <div className="flex gap-1 rounded-full border border-border bg-surface p-1 w-fit">
           {TABS.map((tab) => (
             <Link
@@ -42,6 +41,17 @@ export default function UsersPage() {
       </div>
 
       {activeTab === 'all-users' ? <AllUsersTab /> : <LabAssignmentsTab />}
+    </>
+  )
+}
+
+export default function UsersPage() {
+  return (
+    <>
+      <TopHeader title="Users" description="Manage staff accounts and lab assignments." />
+      <Suspense>
+        <UsersContent />
+      </Suspense>
     </>
   )
 }

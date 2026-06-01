@@ -186,10 +186,10 @@ export default function EmployeeHealthPage() {
       <main className="mx-auto max-w-3xl px-6 py-8">
         {/* Back link */}
         <button
-          onClick={() => router.push('/staff')}
+          onClick={() => router.push('/users?tab=lab-assignments')}
           className="mb-4 text-sm text-primary hover:underline"
         >
-          &larr; Back to Staff Overview
+          &larr; Back to Lab Assignments
         </button>
 
         {/* Toast */}
