@@ -296,7 +296,9 @@
     "visualAtlas": "Visual Atlas",
     "teamAchievements": "Team Achievements",
     "qualityDashboard": "My Quality",
-    "reports": "Reports"
+    "reports": "Reports",
+    "networkInventory": "Network Inventory",
+    "certification": "My Certification"
   },
   "network": {
     "networkDashboard": "Lab Network",
@@ -1753,42 +1755,329 @@
       "bodyFluidCells": "Body Fluid Cells"
     },
     "entries": {
-      "neutrophil": { "name": "Neutrophil", "description": "The most common white blood cell, with a segmented multi-lobed nucleus (2–5 lobes). Cytoplasm contains fine pinkish granules.", "clinicalSignificance": "Elevated in bacterial infections, inflammation, and stress. Decreased in viral infections, chemotherapy, or bone marrow failure.", "nextSteps": { "correlate": "Correlate with clinical history and differential white cell count.", "flag": "Flag if hypersegmented (>5 lobes) — may indicate megaloblastic anaemia." } },
-      "lymphocyte": { "name": "Lymphocyte", "description": "Small, round cell with a large nucleus occupying most of the cell. Scant pale-blue cytoplasm.", "clinicalSignificance": "Elevated in viral infections and chronic lymphocytic leukaemia. Low in immunodeficiency states.", "nextSteps": { "correlate": "Correlate with lymphocyte morphology; note any atypical or reactive forms.", "flag": "Flag if atypical — may indicate viral illness or lymphoma." } },
-      "monocyte": { "name": "Monocyte", "description": "Large cell with kidney-shaped or horseshoe nucleus. Grey-blue cytoplasm with fine vacuoles.", "clinicalSignificance": "Elevated in chronic infections (TB, SBE), inflammatory conditions, and monocytic leukaemia.", "nextSteps": { "correlate": "Correlate with clinical findings if persistently elevated." } },
-      "eosinophil": { "name": "Eosinophil", "description": "Bilobed nucleus with large orange-red granules filling the cytoplasm.", "clinicalSignificance": "Elevated in allergic conditions, parasitic infections, and eosinophilic disorders.", "nextSteps": { "correlate": "Consider parasitic workup if markedly elevated.", "report": "Report absolute eosinophil count." } },
-      "basophil": { "name": "Basophil", "description": "Large dark-blue to purple granules, often obscuring the bi-lobed nucleus.", "clinicalSignificance": "Elevated in myeloproliferative disorders, chronic myeloid leukaemia, and hypersensitivity reactions.", "nextSteps": { "flag": "Flag if basophilia is marked — consider haematology referral." } },
-      "platelet": { "name": "Platelet", "description": "Small, anucleate disc-shaped cell fragment. Purple granular appearance on Romanowsky stain.", "clinicalSignificance": "Thrombocytopenia indicates bleeding risk; thrombocytosis may occur in reactive states or myeloproliferative disease.", "nextSteps": { "estimate": "Estimate platelet count from film if automated count is flagged.", "morphology": "Note giant platelets or platelet clumps." } },
-      "erythrocyte": { "name": "Erythrocyte (Red Blood Cell)", "description": "Biconcave disc, pale central pallor occupying less than one third of cell diameter. Pink with Wright stain.", "clinicalSignificance": "Morphological changes reflect haematological disorders: microcytes in iron deficiency, macrocytes in B12/folate deficiency.", "nextSteps": { "describe": "Describe size, shape, and staining characteristics systematically.", "correlate": "Correlate with MCV and reticulocyte count." } },
-      "hypersegmentedNeutrophil": { "name": "Hypersegmented Neutrophil", "description": "Neutrophil with 5 or more lobes in the nucleus. Associated with megaloblastic changes.", "clinicalSignificance": "Classic indicator of B12 or folate deficiency. Also seen in iron deficiency and renal failure.", "nextSteps": { "request": "Request B12, folate, and reticulocyte count.", "report": "Report percentage of hypersegmented neutrophils." } },
-      "blastCell": { "name": "Blast Cell", "description": "Large immature cell with high nuclear-to-cytoplasmic ratio, fine chromatin, and prominent nucleolus.", "clinicalSignificance": "Presence of blasts in peripheral blood is a critical finding suggesting acute leukaemia.", "nextSteps": { "urgent": "Flag as URGENT. Contact clinical team immediately.", "bone": "Bone marrow examination is required." } },
-      "targetCell": { "name": "Target Cell (Codocyte)", "description": "Erythrocyte with a central dense area surrounded by a pale ring and outer dense rim, resembling a shooting target.", "clinicalSignificance": "Seen in haemoglobin C disease, thalassaemia, liver disease, and post-splenectomy.", "nextSteps": { "correlate": "Correlate with haemoglobin electrophoresis and liver function tests." } },
-      "schistocyte": { "name": "Schistocyte (Fragmented RBC)", "description": "Helmet-shaped or triangular red cell fragment caused by mechanical destruction.", "clinicalSignificance": "Indicates microangiopathic haemolytic anaemia (TTP, HUS, DIC).", "nextSteps": { "urgent": "Report immediately — associated with life-threatening conditions.", "count": "Count percentage of schistocytes per 1000 cells." } },
-      "sickleCell": { "name": "Sickle Cell", "description": "Crescent or sickle-shaped red cell resulting from HbS polymerisation.", "clinicalSignificance": "Diagnostic of sickle cell disease (HbSS) or trait in context. Causes vaso-occlusive crises.", "nextSteps": { "confirm": "Confirm with haemoglobin electrophoresis or HPLC.", "correlate": "Correlate with reticulocyte count and LDH." } },
-      "teardropCell": { "name": "Teardrop Cell (Dacrocyte)", "description": "Pear or teardrop-shaped erythrocyte, often seen with poikilocytosis.", "clinicalSignificance": "Seen in myelofibrosis, thalassaemia, and infiltrative marrow disorders.", "nextSteps": { "flag": "Flag if prominent — consider bone marrow infiltration.", "correlate": "Correlate with bone marrow findings." } },
-      "spherocyte": { "name": "Spherocyte", "description": "Small, dense, spherical red cell lacking central pallor.", "clinicalSignificance": "Present in hereditary spherocytosis and autoimmune haemolytic anaemia.", "nextSteps": { "request": "Request direct Coombs test (DAT) to differentiate causes.", "count": "Estimate percentage of spherocytes." } },
-      "rouleauxFormation": { "name": "Rouleaux Formation", "description": "Stack of red cells resembling coins, caused by elevated plasma proteins.", "clinicalSignificance": "Associated with multiple myeloma, chronic infection, and inflammatory conditions. Increases ESR.", "nextSteps": { "protein": "Request serum protein electrophoresis if marked rouleaux present.", "esr": "Correlate with ESR result." } },
-      "plasmodiumFalciparum": { "name": "Plasmodium falciparum", "description": "Ring-form trophozoites: delicate rings, multiple rings per cell, applique positions. No enlarged RBCs.", "clinicalSignificance": "Most dangerous malaria species. Can cause cerebral malaria, organ failure, and death.", "nextSteps": { "urgent": "Notify clinician URGENTLY. Start treatment per protocol.", "count": "Count percent parasitaemia — greater than 2 percent indicates severe malaria.", "speciate": "Confirm species on thick and thin films." } },
-      "plasmodiumVivax": { "name": "Plasmodium vivax", "description": "Enlarged, pale, Schuffner-dotted RBCs with amoeboid trophozoites.", "clinicalSignificance": "Causes relapsing malaria due to liver hypnozoites. Less severe than P. falciparum but significant morbidity.", "nextSteps": { "report": "Report species and stage. Note enlarged RBCs with Schuffner dots.", "primaquine": "Discuss primaquine for radical cure with clinician." } },
-      "plasmodiumMalariae": { "name": "Plasmodium malariae", "description": "Band-form trophozoites spanning the RBC diameter. Normal-sized RBCs. Rosette schizonts.", "clinicalSignificance": "Causes quartan (72-hour) fever. Associated with chronic nephrotic syndrome in children.", "nextSteps": { "report": "Report band forms if seen.", "correlate": "Correlate with 72-hour fever pattern." } },
-      "plasmodiumOvale": { "name": "Plasmodium ovale", "description": "Oval, fimbriated (jagged edge) RBCs with Schuffner dots. Fewer merozoites than P. vivax.", "clinicalSignificance": "Similar clinical course to P. vivax. Causes relapsing malaria.", "nextSteps": { "differentiate": "Differentiate from P. vivax by oval fimbriated RBC morphology.", "primaquine": "Primaquine required for radical cure." } },
-      "plasmodiumKnowlesi": { "name": "Plasmodium knowlesi", "description": "Morphologically similar to P. malariae in early stages. Found in South and Southeast Asia.", "clinicalSignificance": "Zoonotic malaria from macaques. Can cause rapidly progressing severe disease.", "nextSteps": { "pcr": "PCR confirmation recommended if P. knowlesi suspected in travellers from SE Asia.", "urgent": "Treat urgently — can be severe." } },
-      "giardiaCyst": { "name": "Giardia lamblia Cyst", "description": "Oval cyst, 8 to 12 micrometres, with 4 nuclei and curved median bodies visible on trichrome stain.", "clinicalSignificance": "Cause of giardiasis — chronic diarrhoea and malabsorption.", "nextSteps": { "stool": "Confirm on stool O and P or antigen test.", "treat": "Metronidazole or tinidazole as per local protocol." } },
-      "entamoebaHistolytica": { "name": "Entamoeba histolytica Trophozoite", "description": "12 to 60 micrometre amoeba with a single nucleus, fine peripheral chromatin, and central karyosome. May contain ingested RBCs.", "clinicalSignificance": "Cause of amoebic dysentery and liver abscess.", "nextSteps": { "urgent": "Presence of RBCs in trophozoite confirms invasive disease — notify clinician.", "serology": "Request amoeba serology if liver abscess suspected." } },
-      "gramPositiveCocci": { "name": "Gram-Positive Cocci", "description": "Spherical bacteria retaining crystal violet stain, appearing purple. May appear in clusters (staphylococci) or chains (streptococci).", "clinicalSignificance": "Common pathogens include S. aureus, S. pneumoniae, and Enterococcus species.", "nextSteps": { "culture": "Report arrangement (clusters, chains, or pairs) and request culture and sensitivity.", "isolate": "Isolation and susceptibility testing required." } },
-      "gramNegativeRods": { "name": "Gram-Negative Rods", "description": "Rod-shaped bacteria that lose crystal violet and stain pink or red with safranin counterstain.", "clinicalSignificance": "Include Enterobacteriaceae (E. coli, Klebsiella), Pseudomonas, and other pathogens.", "nextSteps": { "culture": "Culture and sensitivity is essential.", "antibiotic": "Notify clinician promptly — empirical antibiotics may be started." } },
-      "gramPositiveRods": { "name": "Gram-Positive Rods", "description": "Rod-shaped bacteria retaining purple crystal violet stain.", "clinicalSignificance": "Include Listeria, Bacillus, Clostridium, Corynebacterium species.", "nextSteps": { "correlate": "Correlate with clinical context (wound, food exposure, etc.).", "culture": "Culture and spore stain if anthrax or Clostridium suspected." } },
-      "gramNegativeCocci": { "name": "Gram-Negative Cocci", "description": "Spherical bacteria that do not retain crystal violet stain, appearing pink. Often in pairs (diplococci).", "clinicalSignificance": "Neisseria gonorrhoeae (STI), Neisseria meningitidis (meningitis), Moraxella catarrhalis (respiratory).", "nextSteps": { "urgent": "Intracellular diplococci in CSF — URGENT. Treat for meningococcal meningitis.", "culture": "Confirm with culture on selective media." } },
-      "acidFastBacilli": { "name": "Acid-Fast Bacilli (AFB)", "description": "Slender, slightly curved red rods on Ziehl-Neelsen stain against a blue background. Beaded appearance.", "clinicalSignificance": "Positive AFB smear is presumptive evidence of tuberculosis or other mycobacterial infection.", "nextSteps": { "urgent": "Notify clinician and infection control immediately.", "culture": "Send for mycobacterial culture (MGIT or LJ medium).", "grade": "Grade positivity: scanty, 1+, 2+, 3+." } },
-      "hyalineCast": { "name": "Hyaline Cast", "description": "Colourless, transparent cylindrical structure. Low refractive index — best seen under reduced light.", "clinicalSignificance": "Small numbers are normal, especially after exercise. Increased in dehydration and renal disease.", "nextSteps": { "correlate": "Correlate with clinical history and urine protein.", "count": "Report casts per low-power field." } },
-      "granularCast": { "name": "Granular Cast", "description": "Cast containing coarse or fine dark granules within the cylindrical matrix.", "clinicalSignificance": "Indicates renal tubular damage or glomerulonephritis.", "nextSteps": { "urgent": "Report presence — associated with significant renal pathology.", "rft": "Correlate with renal function tests and proteinuria." } },
-      "waxyBroadCast": { "name": "Waxy/Broad Cast", "description": "Wide, homogeneous, waxy-appearing cast with sharp edges and broken ends.", "clinicalSignificance": "Indicates severe or chronic renal disease with reduced tubular flow.", "nextSteps": { "urgent": "Report immediately — indicates advanced renal failure.", "nephrology": "Refer for nephrology review." } },
-      "calciumOxalateCrystal": { "name": "Calcium Oxalate Crystal", "description": "Envelope-shaped (dihydrate) or dumbbell-shaped (monohydrate) colourless crystals.", "clinicalSignificance": "Common in normal acidic urine; may be increased with oxalate-rich diet. Abundant in ethylene glycol poisoning.", "nextSteps": { "correlate": "Correlate with urine pH and clinical history.", "toxicology": "If ethylene glycol poisoning suspected, notify clinician URGENTLY." } },
-      "uricAcidCrystal": { "name": "Uric Acid Crystal", "description": "Yellow-brown rhomboid or barrel-shaped crystals. Polarise brightly.", "clinicalSignificance": "Found in acidic urine. Associated with gout, high-purine diet, and uric acid stones.", "nextSteps": { "correlate": "Correlate with urine pH and serum uric acid.", "report": "Report abundance and morphology." } },
-      "transitionalEpithelialCell": { "name": "Transitional Epithelial Cell", "description": "Large, pear-shaped or round cells from the bladder or ureter lining. Larger than renal tubular cells.", "clinicalSignificance": "Small numbers are normal. Clusters may indicate urothelial carcinoma or catheter trauma.", "nextSteps": { "flag": "Flag clusters of transitional cells for cytology referral.", "correlate": "Correlate with haematuria and clinical symptoms." } },
-      "pleuralMesothelialCell": { "name": "Pleural Mesothelial Cell", "description": "Round to oval cells with central nucleus, abundant cytoplasm, and characteristic window between cells in clusters.", "clinicalSignificance": "Present in pleural effusions. Reactive mesothelial cells are common in benign effusions; malignant transformation must be excluded.", "nextSteps": { "cytology": "Send fluid for formal cytology.", "ldh": "Correlate with LDH, protein, and glucose (Light's criteria)." } },
-      "lymphocyteFluid": { "name": "Lymphocyte (Body Fluid)", "description": "Predominance of small lymphocytes in body fluid — large nucleus occupying most of the cell.", "clinicalSignificance": "Predominant lymphocytes in pleural fluid suggest tuberculosis, lymphoma, or chylothorax.", "nextSteps": { "tb": "Consider TB work-up: ADA, culture, PCR.", "flow": "Flow cytometry if lymphoma suspected." } },
-      "neutrophilFluid": { "name": "Neutrophil (Body Fluid)", "description": "Segmented neutrophils seen in body fluid, similar morphology to peripheral blood.", "clinicalSignificance": "Predominant neutrophils suggest acute bacterial infection, parapneumonic effusion, or pancreatitis.", "nextSteps": { "urgent": "If ascites or pleural fluid: request culture urgently.", "sba": "Calculate serum-ascites albumin gradient (SAAG) for ascitic fluid." } }
+      "neutrophil": {
+        "name": "Neutrophil",
+        "description": "The most common white blood cell, with a segmented multi-lobed nucleus (2–5 lobes). Cytoplasm contains fine pinkish granules.",
+        "clinicalSignificance": "Elevated in bacterial infections, inflammation, and stress. Decreased in viral infections, chemotherapy, or bone marrow failure.",
+        "nextSteps": {
+          "correlate": "Correlate with clinical history and differential white cell count.",
+          "flag": "Flag if hypersegmented (>5 lobes) — may indicate megaloblastic anaemia."
+        }
+      },
+      "lymphocyte": {
+        "name": "Lymphocyte",
+        "description": "Small, round cell with a large nucleus occupying most of the cell. Scant pale-blue cytoplasm.",
+        "clinicalSignificance": "Elevated in viral infections and chronic lymphocytic leukaemia. Low in immunodeficiency states.",
+        "nextSteps": {
+          "correlate": "Correlate with lymphocyte morphology; note any atypical or reactive forms.",
+          "flag": "Flag if atypical — may indicate viral illness or lymphoma."
+        }
+      },
+      "monocyte": {
+        "name": "Monocyte",
+        "description": "Large cell with kidney-shaped or horseshoe nucleus. Grey-blue cytoplasm with fine vacuoles.",
+        "clinicalSignificance": "Elevated in chronic infections (TB, SBE), inflammatory conditions, and monocytic leukaemia.",
+        "nextSteps": {
+          "correlate": "Correlate with clinical findings if persistently elevated."
+        }
+      },
+      "eosinophil": {
+        "name": "Eosinophil",
+        "description": "Bilobed nucleus with large orange-red granules filling the cytoplasm.",
+        "clinicalSignificance": "Elevated in allergic conditions, parasitic infections, and eosinophilic disorders.",
+        "nextSteps": {
+          "correlate": "Consider parasitic workup if markedly elevated.",
+          "report": "Report absolute eosinophil count."
+        }
+      },
+      "basophil": {
+        "name": "Basophil",
+        "description": "Large dark-blue to purple granules, often obscuring the bi-lobed nucleus.",
+        "clinicalSignificance": "Elevated in myeloproliferative disorders, chronic myeloid leukaemia, and hypersensitivity reactions.",
+        "nextSteps": {
+          "flag": "Flag if basophilia is marked — consider haematology referral."
+        }
+      },
+      "platelet": {
+        "name": "Platelet",
+        "description": "Small, anucleate disc-shaped cell fragment. Purple granular appearance on Romanowsky stain.",
+        "clinicalSignificance": "Thrombocytopenia indicates bleeding risk; thrombocytosis may occur in reactive states or myeloproliferative disease.",
+        "nextSteps": {
+          "estimate": "Estimate platelet count from film if automated count is flagged.",
+          "morphology": "Note giant platelets or platelet clumps."
+        }
+      },
+      "erythrocyte": {
+        "name": "Erythrocyte (Red Blood Cell)",
+        "description": "Biconcave disc, pale central pallor occupying less than one third of cell diameter. Pink with Wright stain.",
+        "clinicalSignificance": "Morphological changes reflect haematological disorders: microcytes in iron deficiency, macrocytes in B12/folate deficiency.",
+        "nextSteps": {
+          "describe": "Describe size, shape, and staining characteristics systematically.",
+          "correlate": "Correlate with MCV and reticulocyte count."
+        }
+      },
+      "hypersegmentedNeutrophil": {
+        "name": "Hypersegmented Neutrophil",
+        "description": "Neutrophil with 5 or more lobes in the nucleus. Associated with megaloblastic changes.",
+        "clinicalSignificance": "Classic indicator of B12 or folate deficiency. Also seen in iron deficiency and renal failure.",
+        "nextSteps": {
+          "request": "Request B12, folate, and reticulocyte count.",
+          "report": "Report percentage of hypersegmented neutrophils."
+        }
+      },
+      "blastCell": {
+        "name": "Blast Cell",
+        "description": "Large immature cell with high nuclear-to-cytoplasmic ratio, fine chromatin, and prominent nucleolus.",
+        "clinicalSignificance": "Presence of blasts in peripheral blood is a critical finding suggesting acute leukaemia.",
+        "nextSteps": {
+          "urgent": "Flag as URGENT. Contact clinical team immediately.",
+          "bone": "Bone marrow examination is required."
+        }
+      },
+      "targetCell": {
+        "name": "Target Cell (Codocyte)",
+        "description": "Erythrocyte with a central dense area surrounded by a pale ring and outer dense rim, resembling a shooting target.",
+        "clinicalSignificance": "Seen in haemoglobin C disease, thalassaemia, liver disease, and post-splenectomy.",
+        "nextSteps": {
+          "correlate": "Correlate with haemoglobin electrophoresis and liver function tests."
+        }
+      },
+      "schistocyte": {
+        "name": "Schistocyte (Fragmented RBC)",
+        "description": "Helmet-shaped or triangular red cell fragment caused by mechanical destruction.",
+        "clinicalSignificance": "Indicates microangiopathic haemolytic anaemia (TTP, HUS, DIC).",
+        "nextSteps": {
+          "urgent": "Report immediately — associated with life-threatening conditions.",
+          "count": "Count percentage of schistocytes per 1000 cells."
+        }
+      },
+      "sickleCell": {
+        "name": "Sickle Cell",
+        "description": "Crescent or sickle-shaped red cell resulting from HbS polymerisation.",
+        "clinicalSignificance": "Diagnostic of sickle cell disease (HbSS) or trait in context. Causes vaso-occlusive crises.",
+        "nextSteps": {
+          "confirm": "Confirm with haemoglobin electrophoresis or HPLC.",
+          "correlate": "Correlate with reticulocyte count and LDH."
+        }
+      },
+      "teardropCell": {
+        "name": "Teardrop Cell (Dacrocyte)",
+        "description": "Pear or teardrop-shaped erythrocyte, often seen with poikilocytosis.",
+        "clinicalSignificance": "Seen in myelofibrosis, thalassaemia, and infiltrative marrow disorders.",
+        "nextSteps": {
+          "flag": "Flag if prominent — consider bone marrow infiltration.",
+          "correlate": "Correlate with bone marrow findings."
+        }
+      },
+      "spherocyte": {
+        "name": "Spherocyte",
+        "description": "Small, dense, spherical red cell lacking central pallor.",
+        "clinicalSignificance": "Present in hereditary spherocytosis and autoimmune haemolytic anaemia.",
+        "nextSteps": {
+          "request": "Request direct Coombs test (DAT) to differentiate causes.",
+          "count": "Estimate percentage of spherocytes."
+        }
+      },
+      "rouleauxFormation": {
+        "name": "Rouleaux Formation",
+        "description": "Stack of red cells resembling coins, caused by elevated plasma proteins.",
+        "clinicalSignificance": "Associated with multiple myeloma, chronic infection, and inflammatory conditions. Increases ESR.",
+        "nextSteps": {
+          "protein": "Request serum protein electrophoresis if marked rouleaux present.",
+          "esr": "Correlate with ESR result."
+        }
+      },
+      "plasmodiumFalciparum": {
+        "name": "Plasmodium falciparum",
+        "description": "Ring-form trophozoites: delicate rings, multiple rings per cell, applique positions. No enlarged RBCs.",
+        "clinicalSignificance": "Most dangerous malaria species. Can cause cerebral malaria, organ failure, and death.",
+        "nextSteps": {
+          "urgent": "Notify clinician URGENTLY. Start treatment per protocol.",
+          "count": "Count percent parasitaemia — greater than 2 percent indicates severe malaria.",
+          "speciate": "Confirm species on thick and thin films."
+        }
+      },
+      "plasmodiumVivax": {
+        "name": "Plasmodium vivax",
+        "description": "Enlarged, pale, Schuffner-dotted RBCs with amoeboid trophozoites.",
+        "clinicalSignificance": "Causes relapsing malaria due to liver hypnozoites. Less severe than P. falciparum but significant morbidity.",
+        "nextSteps": {
+          "report": "Report species and stage. Note enlarged RBCs with Schuffner dots.",
+          "primaquine": "Discuss primaquine for radical cure with clinician."
+        }
+      },
+      "plasmodiumMalariae": {
+        "name": "Plasmodium malariae",
+        "description": "Band-form trophozoites spanning the RBC diameter. Normal-sized RBCs. Rosette schizonts.",
+        "clinicalSignificance": "Causes quartan (72-hour) fever. Associated with chronic nephrotic syndrome in children.",
+        "nextSteps": {
+          "report": "Report band forms if seen.",
+          "correlate": "Correlate with 72-hour fever pattern."
+        }
+      },
+      "plasmodiumOvale": {
+        "name": "Plasmodium ovale",
+        "description": "Oval, fimbriated (jagged edge) RBCs with Schuffner dots. Fewer merozoites than P. vivax.",
+        "clinicalSignificance": "Similar clinical course to P. vivax. Causes relapsing malaria.",
+        "nextSteps": {
+          "differentiate": "Differentiate from P. vivax by oval fimbriated RBC morphology.",
+          "primaquine": "Primaquine required for radical cure."
+        }
+      },
+      "plasmodiumKnowlesi": {
+        "name": "Plasmodium knowlesi",
+        "description": "Morphologically similar to P. malariae in early stages. Found in South and Southeast Asia.",
+        "clinicalSignificance": "Zoonotic malaria from macaques. Can cause rapidly progressing severe disease.",
+        "nextSteps": {
+          "pcr": "PCR confirmation recommended if P. knowlesi suspected in travellers from SE Asia.",
+          "urgent": "Treat urgently — can be severe."
+        }
+      },
+      "giardiaCyst": {
+        "name": "Giardia lamblia Cyst",
+        "description": "Oval cyst, 8 to 12 micrometres, with 4 nuclei and curved median bodies visible on trichrome stain.",
+        "clinicalSignificance": "Cause of giardiasis — chronic diarrhoea and malabsorption.",
+        "nextSteps": {
+          "stool": "Confirm on stool O and P or antigen test.",
+          "treat": "Metronidazole or tinidazole as per local protocol."
+        }
+      },
+      "entamoebaHistolytica": {
+        "name": "Entamoeba histolytica Trophozoite",
+        "description": "12 to 60 micrometre amoeba with a single nucleus, fine peripheral chromatin, and central karyosome. May contain ingested RBCs.",
+        "clinicalSignificance": "Cause of amoebic dysentery and liver abscess.",
+        "nextSteps": {
+          "urgent": "Presence of RBCs in trophozoite confirms invasive disease — notify clinician.",
+          "serology": "Request amoeba serology if liver abscess suspected."
+        }
+      },
+      "gramPositiveCocci": {
+        "name": "Gram-Positive Cocci",
+        "description": "Spherical bacteria retaining crystal violet stain, appearing purple. May appear in clusters (staphylococci) or chains (streptococci).",
+        "clinicalSignificance": "Common pathogens include S. aureus, S. pneumoniae, and Enterococcus species.",
+        "nextSteps": {
+          "culture": "Report arrangement (clusters, chains, or pairs) and request culture and sensitivity.",
+          "isolate": "Isolation and susceptibility testing required."
+        }
+      },
+      "gramNegativeRods": {
+        "name": "Gram-Negative Rods",
+        "description": "Rod-shaped bacteria that lose crystal violet and stain pink or red with safranin counterstain.",
+        "clinicalSignificance": "Include Enterobacteriaceae (E. coli, Klebsiella), Pseudomonas, and other pathogens.",
+        "nextSteps": {
+          "culture": "Culture and sensitivity is essential.",
+          "antibiotic": "Notify clinician promptly — empirical antibiotics may be started."
+        }
+      },
+      "gramPositiveRods": {
+        "name": "Gram-Positive Rods",
+        "description": "Rod-shaped bacteria retaining purple crystal violet stain.",
+        "clinicalSignificance": "Include Listeria, Bacillus, Clostridium, Corynebacterium species.",
+        "nextSteps": {
+          "correlate": "Correlate with clinical context (wound, food exposure, etc.).",
+          "culture": "Culture and spore stain if anthrax or Clostridium suspected."
+        }
+      },
+      "gramNegativeCocci": {
+        "name": "Gram-Negative Cocci",
+        "description": "Spherical bacteria that do not retain crystal violet stain, appearing pink. Often in pairs (diplococci).",
+        "clinicalSignificance": "Neisseria gonorrhoeae (STI), Neisseria meningitidis (meningitis), Moraxella catarrhalis (respiratory).",
+        "nextSteps": {
+          "urgent": "Intracellular diplococci in CSF — URGENT. Treat for meningococcal meningitis.",
+          "culture": "Confirm with culture on selective media."
+        }
+      },
+      "acidFastBacilli": {
+        "name": "Acid-Fast Bacilli (AFB)",
+        "description": "Slender, slightly curved red rods on Ziehl-Neelsen stain against a blue background. Beaded appearance.",
+        "clinicalSignificance": "Positive AFB smear is presumptive evidence of tuberculosis or other mycobacterial infection.",
+        "nextSteps": {
+          "urgent": "Notify clinician and infection control immediately.",
+          "culture": "Send for mycobacterial culture (MGIT or LJ medium).",
+          "grade": "Grade positivity: scanty, 1+, 2+, 3+."
+        }
+      },
+      "hyalineCast": {
+        "name": "Hyaline Cast",
+        "description": "Colourless, transparent cylindrical structure. Low refractive index — best seen under reduced light.",
+        "clinicalSignificance": "Small numbers are normal, especially after exercise. Increased in dehydration and renal disease.",
+        "nextSteps": {
+          "correlate": "Correlate with clinical history and urine protein.",
+          "count": "Report casts per low-power field."
+        }
+      },
+      "granularCast": {
+        "name": "Granular Cast",
+        "description": "Cast containing coarse or fine dark granules within the cylindrical matrix.",
+        "clinicalSignificance": "Indicates renal tubular damage or glomerulonephritis.",
+        "nextSteps": {
+          "urgent": "Report presence — associated with significant renal pathology.",
+          "rft": "Correlate with renal function tests and proteinuria."
+        }
+      },
+      "waxyBroadCast": {
+        "name": "Waxy/Broad Cast",
+        "description": "Wide, homogeneous, waxy-appearing cast with sharp edges and broken ends.",
+        "clinicalSignificance": "Indicates severe or chronic renal disease with reduced tubular flow.",
+        "nextSteps": {
+          "urgent": "Report immediately — indicates advanced renal failure.",
+          "nephrology": "Refer for nephrology review."
+        }
+      },
+      "calciumOxalateCrystal": {
+        "name": "Calcium Oxalate Crystal",
+        "description": "Envelope-shaped (dihydrate) or dumbbell-shaped (monohydrate) colourless crystals.",
+        "clinicalSignificance": "Common in normal acidic urine; may be increased with oxalate-rich diet. Abundant in ethylene glycol poisoning.",
+        "nextSteps": {
+          "correlate": "Correlate with urine pH and clinical history.",
+          "toxicology": "If ethylene glycol poisoning suspected, notify clinician URGENTLY."
+        }
+      },
+      "uricAcidCrystal": {
+        "name": "Uric Acid Crystal",
+        "description": "Yellow-brown rhomboid or barrel-shaped crystals. Polarise brightly.",
+        "clinicalSignificance": "Found in acidic urine. Associated with gout, high-purine diet, and uric acid stones.",
+        "nextSteps": {
+          "correlate": "Correlate with urine pH and serum uric acid.",
+          "report": "Report abundance and morphology."
+        }
+      },
+      "transitionalEpithelialCell": {
+        "name": "Transitional Epithelial Cell",
+        "description": "Large, pear-shaped or round cells from the bladder or ureter lining. Larger than renal tubular cells.",
+        "clinicalSignificance": "Small numbers are normal. Clusters may indicate urothelial carcinoma or catheter trauma.",
+        "nextSteps": {
+          "flag": "Flag clusters of transitional cells for cytology referral.",
+          "correlate": "Correlate with haematuria and clinical symptoms."
+        }
+      },
+      "pleuralMesothelialCell": {
+        "name": "Pleural Mesothelial Cell",
+        "description": "Round to oval cells with central nucleus, abundant cytoplasm, and characteristic window between cells in clusters.",
+        "clinicalSignificance": "Present in pleural effusions. Reactive mesothelial cells are common in benign effusions; malignant transformation must be excluded.",
+        "nextSteps": {
+          "cytology": "Send fluid for formal cytology.",
+          "ldh": "Correlate with LDH, protein, and glucose (Light's criteria)."
+        }
+      },
+      "lymphocyteFluid": {
+        "name": "Lymphocyte (Body Fluid)",
+        "description": "Predominance of small lymphocytes in body fluid — large nucleus occupying most of the cell.",
+        "clinicalSignificance": "Predominant lymphocytes in pleural fluid suggest tuberculosis, lymphoma, or chylothorax.",
+        "nextSteps": {
+          "tb": "Consider TB work-up: ADA, culture, PCR.",
+          "flow": "Flow cytometry if lymphoma suspected."
+        }
+      },
+      "neutrophilFluid": {
+        "name": "Neutrophil (Body Fluid)",
+        "description": "Segmented neutrophils seen in body fluid, similar morphology to peripheral blood.",
+        "clinicalSignificance": "Predominant neutrophils suggest acute bacterial infection, parapneumonic effusion, or pancreatitis.",
+        "nextSteps": {
+          "urgent": "If ascites or pleural fluid: request culture urgently.",
+          "sba": "Calculate serum-ascites albumin gradient (SAAG) for ascitic fluid."
+        }
+      }
     }
   },
   "criticalValueChecklist": {
@@ -1920,5 +2209,223 @@
     "statusDraft": "Draft",
     "statusFinalized": "Finalized",
     "noReports": "No reports for this period"
+  },
+  "anomalyFlags": {
+    "sectionTitle": "Statistical Pattern Flags",
+    "contextLabel": "{count, plural, one {1 pattern detected} other {# patterns detected}}",
+    "matchedFields": "Triggered by fields",
+    "disclaimer": "Statistical pattern flag — not a diagnosis. Clinical correlation required.",
+    "severity": {
+      "urgent": "Urgent",
+      "elevated": "Elevated",
+      "notable": "Notable"
+    },
+    "confidence": {
+      "high": "High Confidence",
+      "medium": "Medium Confidence",
+      "low": "Low Confidence"
+    },
+    "patterns": {
+      "hemo001": "Combination of elevated LDH, low haptoglobin, and elevated indirect bilirubin detected",
+      "dic001": "Combination of low platelet count, prolonged prothrombin time, elevated D-dimer, and low fibrinogen detected",
+      "pancy001": "Simultaneous reduction in white blood cell count, red blood cell count, and platelet count detected",
+      "tls001": "Combination of elevated potassium, elevated phosphate, elevated uric acid, and low calcium detected",
+      "deltaHgb001": "Hemoglobin decrease of more than 3 g/dL from most recent prior result",
+      "deltaPlt001": "Platelet count decrease of more than 50% from most recent prior result",
+      "deltaCr001": "Creatinine increase of more than 50% from most recent prior result",
+      "extremeWbc001": "Extreme leukocyte count detected (above 100 × 10³/µL)",
+      "extremeK001": "Severe potassium elevation detected (above 7.0 mEq/L)"
+    },
+    "notification": {
+      "title": "Statistical Pattern Flag",
+      "body": "A statistical pattern in a lab result requires your review.",
+      "actionLabel": "Review Result"
+    }
+  },
+  "inventory": {
+    "networkInventoryTitle": "Network Inventory",
+    "networkInventorySubtitle": "Reagent stock levels across all labs in your district",
+    "inventoryTabs": "Inventory tabs",
+    "networkView": "Network View",
+    "myLabView": "My Lab",
+    "transferRecommendations": "Transfer Recommendations",
+    "networkDataMayBeOutdated": "Network data may be outdated. Connect to update.",
+    "lastSynced": "Last synced",
+    "stockoutAlertTitle": "Stockout Alert",
+    "syncing": "Syncing…",
+    "syncNow": "Sync Now",
+    "noNetworkData": "No network inventory data available.",
+    "lab": "Lab",
+    "myLab": "My Lab",
+    "stockedOut": "Stocked Out",
+    "daysOfSupply": "Days of Supply",
+    "days": "days",
+    "currentQuantity": "Current Quantity",
+    "dailyRate": "Daily Rate",
+    "day": "day",
+    "nearestExpiry": "Nearest Expiry",
+    "close": "Close",
+    "legendGreen": ">30 days",
+    "legendYellow": "7–30 days",
+    "noInventoryData": "No inventory data for your lab.",
+    "reagent": "Reagent",
+    "qty": "Qty",
+    "expiry": "Expiry",
+    "networkComparison": "Network",
+    "pctile": "{pct}th percentile",
+    "networkAvg": "Network avg",
+    "noRedistributionRecommendations": "No redistribution recommendations at this time.",
+    "redistributionRecommendations": "Redistribution recommendations",
+    "dismiss": "Dismiss recommendation",
+    "yourLabNeeds": "Your lab needs",
+    "yourLabCanSupply": "Your lab can supply",
+    "deficit": "Deficit",
+    "source": "Source",
+    "suggested": "Suggested transfer",
+    "units": "units",
+    "transferRequested": "Transfer Requested",
+    "initiateTransfer": "Initiate Transfer"
+  },
+  "surveillance": {
+    "title": "Disease Surveillance",
+    "alerts": "Surveillance Alerts",
+    "alertGenerated": "Surveillance Alert",
+    "spikeDetected": "Positivity Spike",
+    "clusterDetected": "Disease Cluster",
+    "positivityRate": "Positivity Rate",
+    "baseline": "4-Week Baseline",
+    "currentRate": "Current Rate",
+    "ratio": "Spike Ratio",
+    "caseCount": "Case Count",
+    "windowHours": "Window (hours)",
+    "labLocation": "Lab Location",
+    "testCategory": "Test Category",
+    "severity": "Severity",
+    "warning": "Warning",
+    "critical": "Critical",
+    "transmitted": "Transmitted",
+    "pending": "Pending",
+    "failed": "Failed",
+    "transmissionStatus": "Transmission Status",
+    "reportableDiseases": "Reportable Diseases",
+    "configureThresholds": "Configure Thresholds",
+    "spikeThreshold": "Spike Threshold (x baseline)",
+    "clusterThreshold": "Cluster Threshold (cases)",
+    "clusterWindow": "Cluster Window (hours)",
+    "activeToggle": "Active",
+    "noAlerts": "No surveillance alerts found.",
+    "alertHistory": "View Alert History",
+    "filterByDisease": "Filter by disease",
+    "filterByType": "Alert type",
+    "filterByDate": "Filter by date",
+    "alertMessage": "{disease} positivity rate at {rate}% (baseline: {baseline}%) -- {ratio}x above 4-week average. {count} positive cases out of {total} tests in the past 7 days.",
+    "clusterMessage": "{disease} cluster detected: {count} confirmed cases within the last {hours} hours.",
+    "checkCompleted": "Surveillance check completed",
+    "lastCheckAt": "Last check",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "ihrReportable": "IHR Reportable",
+    "diseaseCode": "Disease Code"
+  },
+  "donorReport": {
+    "title": "Donor Reports",
+    "reportHistory": "Report History",
+    "noReports": "No donor reports yet",
+    "noPrograms": "No donor programs configured",
+    "selectProgram": "Select Program",
+    "programName": "Program Name",
+    "selectPeriod": "Reporting Period",
+    "periodStart": "Start Date",
+    "periodEnd": "End Date",
+    "generate": "Generate Report",
+    "generating": "Generating…",
+    "generateError": "Failed to generate report",
+    "reviewTitle": "Review Report",
+    "back": "Back",
+    "statusDraft": "Draft",
+    "statusFinalized": "Finalized",
+    "finalize": "Finalize Report",
+    "finalizeConfirm": "Once finalized, this report cannot be edited. Continue?",
+    "exportPdf": "Export PDF",
+    "share": "Share",
+    "sharing": "Sharing…",
+    "corrections": "Corrections",
+    "noDataForPeriod": "No data for this period",
+    "partialData": "Partial data — some entries may be missing",
+    "reimbursement": "Reimbursement Summary",
+    "grandTotal": "Grand Total",
+    "addProgram": "Add Program",
+    "editProgram": "Edit Program",
+    "programCode": "Program Code",
+    "templateCode": "Template",
+    "reportingFrequency": "Reporting Frequency",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "annually": "Annually",
+    "donorName": "Donor / Funder",
+    "contactEmail": "Contact Email",
+    "save": "Save",
+    "saving": "Saving…",
+    "programActive": "Active",
+    "programInactive": "Inactive",
+    "tagTests": "Tag Tests",
+    "autoTagged": "Auto-tagged",
+    "manualTag": "Manual",
+    "noProgramsHint": "Register a donor program in Settings to enable donor reporting",
+    "programRegistration": "Donor Program Registration",
+    "validationRequired": "Program name and code are required",
+    "programCodeExists": "A program with this code already exists",
+    "active": "Active",
+    "inactive": "Inactive",
+    "selectPreset": "Start from preset",
+    "customProgram": "Custom program",
+    "contactInfo": "Contact Info",
+    "contractDates": "Contract Dates",
+    "donorOrg": "Donor Organization",
+    "saveProgram": "Save Program",
+    "cancel": "Cancel"
+  },
+  "certification": {
+    "pageTitle": "My Certification Pathway",
+    "pageSubtitle": "Track your professional development milestones",
+    "loading": "Loading certification data…",
+    "noCertificationPaths": "No certification pathways available",
+    "noCertificationPathsHint": "Pathways are configured by your district health officer and sync automatically when you connect.",
+    "overallProgress": "Overall Progress",
+    "currentLevel": "Current Level",
+    "completedOn": "Completed on {date}",
+    "earnedCertificates": "Earned Certificates",
+    "view": "View",
+    "refreshProgress": "Refresh Progress",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "logSupervisedProcedure": "Log Supervised Procedure",
+    "procedure": "Procedure",
+    "selectProcedure": "Select a procedure…",
+    "customProcedure": "Other (enter manually)",
+    "loincCode": "LOINC Code",
+    "procedureName": "Procedure Name",
+    "procedureNamePlaceholder": "e.g. Peripheral blood smear",
+    "performedAt": "Date & Time Performed",
+    "supervisorNotes": "Supervisor Notes",
+    "optional": "optional",
+    "supervisorNotesPlaceholder": "Observations, corrections, or comments…",
+    "logProcedure": "Log Procedure",
+    "logging": "Logging…",
+    "logError": "Failed to log procedure. Please try again.",
+    "cancel": "Cancel",
+    "certificate": "Certificate",
+    "certificateOf": "Certificate of Achievement",
+    "hasCompletedMilestone": "has successfully completed",
+    "issuedOn": "Issued on",
+    "verificationCode": "Verification Code",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "copyVerificationCode": "Copy verification code",
+    "downloadPdf": "Download PDF",
+    "downloading": "Downloading…",
+    "verifiableOnline": "Verifiable at the Ultranos Hub",
+    "pendingSync": "Pending sync — will be verifiable once connected",
+    "technician": "Technician"
   }
 }

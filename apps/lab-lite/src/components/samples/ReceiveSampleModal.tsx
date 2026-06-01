@@ -114,6 +114,17 @@ export function ReceiveSampleModal({
           }
         }
         setConfirmedSampleId(specimen._ultranos.labSampleId)
+
+        // INTEGRATION: Story 43.1 — emit SAMPLE_RECEIVED audit event.
+        // Call reportLabLifecycleEvent() here once wired up.
+        // Example (import reportLabLifecycleEvent from '@/lib/audit-client'):
+        // reportLabLifecycleEvent({
+        //   event: 'SAMPLE_RECEIVED',
+        //   sampleId: specimen.id,
+        //   orderId,
+        //   custodyFrom: receivedFrom || undefined,
+        //   custodyTo: session?.practitionerId,
+        // })
       } else {
         if (!rejectionReason) {
           setError(t('validation.rejectionReasonRequired'))

@@ -24,11 +24,13 @@ import {
   BarChart3,
   Calculator,
   Globe,
+  Network,
   FileText,
   FlaskConical,
   Microscope,
   RefreshCw,
   TrendingUp,
+  Award,
 } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -235,6 +237,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     { label: t('shiftHandover'), href: '/shift-handover', icon: <RefreshCw size={20} />, active: pathname.startsWith('/shift-handover'), badge: handoverBadge, group: 'clinical' },
     { label: t('qualityDashboard'), href: '/quality', icon: <TrendingUp size={20} />, active: pathname.startsWith('/quality'), group: 'clinical' },
     { label: t('teamAchievements'), href: '/achievements', icon: <span aria-hidden="true" className="text-base leading-none">🏆</span>, active: pathname.startsWith('/achievements'), group: 'clinical' },
+    { label: t('certification'), href: '/certification', icon: <Award size={20} />, active: pathname.startsWith('/certification'), group: 'clinical' },
     // Finance
     { label: t('newPayment'), href: '/finance/payment', icon: <Banknote size={20} />, active: pathname === '/finance/payment', group: 'finance' },
     { label: t('receipts'), href: '/finance/receipts', icon: <Receipt size={20} />, active: pathname === '/finance/receipts', group: 'finance' },
@@ -253,7 +256,10 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     // System
     { label: t('notifications'), href: '/notifications', icon: <Bell size={20} />, active: pathname === '/notifications', group: 'system' },
     ...(canAccessNetwork
-      ? [{ label: t('network'), href: '/network', icon: <Globe size={20} />, active: pathname.startsWith('/network'), group: 'system' as const }]
+      ? [
+          { label: t('network'), href: '/network', icon: <Globe size={20} />, active: pathname.startsWith('/network'), group: 'system' as const },
+          { label: t('networkInventory'), href: '/inventory/network', icon: <Network size={20} />, active: pathname.startsWith('/inventory/network'), group: 'system' as const },
+        ]
       : []),
     { label: t('settings'), href: '/settings', icon: <Settings size={20} />, active: pathname === '/settings', group: 'system' },
   ]

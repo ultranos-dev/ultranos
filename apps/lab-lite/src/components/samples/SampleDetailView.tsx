@@ -45,6 +45,7 @@ export function SampleDetailView({
   const [showHandoffModal, setShowHandoffModal] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [transitionError, setTransitionError] = useState<string | null>(null)
+  const [transportFlagsAcknowledged, setTransportFlagsAcknowledged] = useState(false)
 
   const pipelineStatus = specimen._ultranos.pipelineStatus
 
@@ -72,6 +73,22 @@ export function SampleDetailView({
       await transitionSampleStatus(specimen.id, newStatus, actorId)
       await loadEvents()
       onStatusChange?.({ ...specimen, _ultranos: { ...specimen._ultranos, pipelineStatus: newStatus } })
+
+      // INTEGRATION: Story 43.1 — emit lab lifecycle audit events on status transitions.
+      // Call reportLabLifecycleEvent() here once Story 42.3 pipeline is fully wired.
+      // Transition map:
+      //   'in-processing' → SAMPLE_PROCESSED
+      //   'completed'     → RESULT_ENTERED  (result data saved to template)
+      //   'reported'      → RESULT_RELEASED  (result released to ordering physician)
+      //
+      // Example (uncomment and import reportLabLifecycleEvent from '@/lib/audit-client'):
+      // if (newStatus === 'in-processing') {
+      //   reportLabLifecycleEvent({ event: 'SAMPLE_PROCESSED', sampleId: specimen.id })
+      // } else if (newStatus === 'completed') {
+      //   reportLabLifecycleEvent({ event: 'RESULT_ENTERED', sampleId: specimen.id })
+      // } else if (newStatus === 'reported') {
+      //   reportLabLifecycleEvent({ event: 'RESULT_RELEASED', sampleId: specimen.id })
+      // }
     } catch (err) {
       setTransitionError(err instanceof Error ? err.message : t('errors.transitionFailed'))
     } finally {
@@ -81,6 +98,39 @@ export function SampleDetailView({
 
   return (
     <div className="space-y-6" data-testid="sample-detail-view">
+      {/* Pre-analytical transport flags (AC 4, Story 54.3) — must acknowledge before processing */}
+      {specimen._ultranos.transportFlags && specimen._ultranos.transportFlags.length > 0 && !transportFlagsAcknowledged && (
+        <div
+          className="rounded-xl border border-red-400 bg-red-50 p-5 space-y-3"
+          role="alert"
+          data-testid="pre-analytical-flag-banner"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-red-600 text-xl font-bold" aria-hidden>⚠</span>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-red-800">
+                Pre-Analytical Concern — Transport Flag
+              </p>
+              <ul className="mt-2 space-y-1">
+                {specimen._ultranos.transportFlags.map((flag, i) => (
+                  <li key={i} className="text-sm text-red-700">
+                    {flag.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTransportFlagsAcknowledged(true)}
+            className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+            data-testid="acknowledge-transport-flag-button"
+          >
+            I acknowledge this sample has a pre-analytical concern
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="rounded-xl border border-neutral-200 bg-white p-5 space-y-3">
         {/* Sample ID + status */}

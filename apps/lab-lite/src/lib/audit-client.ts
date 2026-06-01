@@ -1087,6 +1087,101 @@ export function reportRangeChangeEvent(payload: {
   void emitClientAudit(input)
 }
 
+// ---------------------------------------------------------------------------
+// Story 43.1 — Lab Lifecycle Audit Events (Immutable Result Audit Chain)
+// Covers the full sample-to-report lifecycle: receipt → processing →
+// result entry → authorization → release → delivery → amendment.
+//
+// PHI rule (CLAUDE.md Rule #7): metadata uses only opaque IDs and codes.
+// NEVER include patient names, diagnoses, or result values in any field.
+// ---------------------------------------------------------------------------
+
+/**
+ * Discriminated payload for the seven lab lifecycle audit events.
+ */
+interface LabLifecycleAuditPayload {
+  event:
+    | 'SAMPLE_RECEIVED'
+    | 'SAMPLE_PROCESSED'
+    | 'RESULT_ENTERED'
+    | 'RESULT_AUTHORIZED'
+    | 'RESULT_RELEASED'
+    | 'RESULT_AMENDED'
+    | 'RESULT_DELIVERED'
+  sampleId: string
+  orderId?: string
+  diagnosticReportId?: string
+  technicianId?: string
+  custodyFrom?: string   // actorId of person handing off the sample
+  custodyTo?: string     // actorId of person receiving the sample
+  amendmentReason?: string  // reason code for RESULT_AMENDED (opaque code only)
+  deliveryMethod?: string   // 'push_notification' | 'opd_sync' | 'patient_portal'
+}
+
+/**
+ * Emit a lab lifecycle audit event covering the full sample-to-report chain.
+ *
+ * Maps each lifecycle event to its canonical AuditAction and resourceType:
+ *   SAMPLE_RECEIVED / SAMPLE_PROCESSED → AuditResourceType.LAB_SAMPLE
+ *   RESULT_ENTERED … RESULT_DELIVERED  → AuditResourceType.LAB_RESULT
+ *
+ * resourceId is always sampleId — the canonical chain identifier.
+ * Never throws — lab workflows must not be blocked by audit failures.
+ * Metadata contains only opaque IDs and codes — no PHI.
+ */
+export function reportLabLifecycleEvent(payload: LabLifecycleAuditPayload): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+
+    const actionMap: Record<LabLifecycleAuditPayload['event'], AuditAction> = {
+      SAMPLE_RECEIVED:   AuditAction.SAMPLE_RECEIVED,
+      SAMPLE_PROCESSED:  AuditAction.SAMPLE_PROCESSED,
+      RESULT_ENTERED:    AuditAction.RESULT_ENTERED,
+      RESULT_AUTHORIZED: AuditAction.RESULT_AUTHORIZED,
+      RESULT_RELEASED:   AuditAction.RESULT_RELEASED,
+      RESULT_AMENDED:    AuditAction.RESULT_AMENDED,
+      RESULT_DELIVERED:  AuditAction.RESULT_DELIVERED,
+    }
+
+    const sampleScopedEvents = new Set<LabLifecycleAuditPayload['event']>([
+      'SAMPLE_RECEIVED',
+      'SAMPLE_PROCESSED',
+    ])
+
+    const resourceType = sampleScopedEvents.has(payload.event)
+      ? AuditResourceType.LAB_SAMPLE
+      : AuditResourceType.LAB_RESULT
+
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? payload.technicianId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
+      action: actionMap[payload.event],
+      resourceType,
+      // sampleId is the canonical chain identifier for the full lifecycle
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        lifecycleEvent: payload.event,
+        outcome: 'SUCCESS',
+        sampleId: payload.sampleId,
+        ...(payload.orderId ? { orderId: payload.orderId } : {}),
+        ...(payload.diagnosticReportId ? { diagnosticReportId: payload.diagnosticReportId } : {}),
+        ...(payload.technicianId ? { technicianId: payload.technicianId } : {}),
+        ...(payload.custodyFrom ? { custodyFrom: payload.custodyFrom } : {}),
+        ...(payload.custodyTo ? { custodyTo: payload.custodyTo } : {}),
+        ...(payload.amendmentReason ? { amendmentReason: payload.amendmentReason } : {}),
+        ...(payload.deliveryMethod ? { deliveryMethod: payload.deliveryMethod } : {}),
+        source: 'lab-lite',
+      },
+    }
+
+    void emitClientAudit(input)
+  } catch {
+    // Never throw — lab workflows must not be blocked by audit failures.
+    console.warn('[audit] reportLabLifecycleEvent failed — continuing')
+  }
+}
+
 /**
  * Emit a daily log audit event (GENERATED, SHARED, DOWNLOADED).
  * Payload uses only opaque IDs — never PHI.
@@ -1331,6 +1426,219 @@ export function reportAmendmentEvent(payload: {
       outcome: payload.outcome,
       source: 'lab-lite',
       ...payload.meta,
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.3 — Transport Audit Events
+// Tracks courier transport session lifecycle: start, delivery, stability flags.
+// No PHI: transportSessionId, courierId, and sampleCount are non-PHI operational data.
+// ---------------------------------------------------------------------------
+
+/**
+ * Emit a transport lifecycle audit event.
+ *
+ * Never throws — transport workflow must not be blocked by audit failures.
+ * Metadata NEVER includes: patient name, specimen type details, or any PHI.
+ * Only opaque IDs, counts, and flag type enums are logged.
+ */
+export function reportTransportAuditEvent(payload: {
+  action: 'TRANSPORT_STARTED' | 'TRANSPORT_DELIVERED' | 'TRANSPORT_STABILITY_FLAG' | 'TRANSPORT_MANIFEST_GENERATED'
+  transportSessionId: string
+  courierId: string
+  sampleCount?: number
+  flagCount?: number
+  flagTypes?: string[]
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<string, AuditAction> = {
+    TRANSPORT_STARTED: AuditAction.CREATE,
+    TRANSPORT_DELIVERED: AuditAction.UPDATE,
+    TRANSPORT_STABILITY_FLAG: AuditAction.CREATE,
+    TRANSPORT_MANIFEST_GENERATED: AuditAction.READ,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? payload.courierId,
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: 'TRANSPORT_SESSION' as AuditResourceType,
+    resourceId: payload.transportSessionId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      transportEvent: payload.action,
+      outcome: 'SUCCESS',
+      transportSessionId: payload.transportSessionId,
+      courierId: payload.courierId,
+      ...(payload.sampleCount != null ? { sampleCount: payload.sampleCount } : {}),
+      ...(payload.flagCount != null ? { flagCount: payload.flagCount } : {}),
+      ...(payload.flagTypes ? { flagTypes: payload.flagTypes } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.2 — Donor Report Audit Events
+// PHI-safe: no patient-level data, only opaque IDs, program codes, periods.
+// ---------------------------------------------------------------------------
+
+type DonorAuditAction =
+  | 'DONOR_PROGRAM_REGISTERED'
+  | 'DONOR_REPORT_GENERATED'
+  | 'DONOR_REPORT_FINALIZED'
+  | 'DONOR_REPORT_EXPORTED'
+
+/**
+ * Emit a donor report lifecycle audit event.
+ * Contains NO PHI — all identifiers are opaque UUIDs or program codes.
+ * Financial data (programCode, period) is permissible in audit trail.
+ */
+export function reportDonorAuditEvent(payload: {
+  action: DonorAuditAction
+  programCode?: string
+  programId?: string
+  reportId?: string
+  periodStart?: string
+  periodEnd?: string
+  finalizerId?: string
+  format?: 'pdf' | 'share'
+}): void {
+  const session = useAuthSessionStore.getState().session
+  const resourceId = payload.reportId ?? payload.programId ?? 'unknown'
+  const auditAction =
+    payload.action === 'DONOR_REPORT_GENERATED' || payload.action === 'DONOR_PROGRAM_REGISTERED'
+      ? AuditAction.CREATE
+      : AuditAction.UPDATE
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: session?.labRole ? (session.labRole as unknown as UserRole) : UserRole.LAB_TECH,
+    action: auditAction,
+    resourceType: AuditResourceType.DIAGNOSTIC_REPORT,
+    resourceId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      donorEvent: payload.action,
+      ...(payload.programCode ? { programCode: payload.programCode } : {}),
+      ...(payload.programId ? { programId: payload.programId } : {}),
+      ...(payload.reportId ? { reportId: payload.reportId } : {}),
+      ...(payload.periodStart ? { periodStart: payload.periodStart } : {}),
+      ...(payload.periodEnd ? { periodEnd: payload.periodEnd } : {}),
+      ...(payload.finalizerId ? { finalizerId: payload.finalizerId } : {}),
+      ...(payload.format ? { format: payload.format } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.5 — Outbreak Mode Audit Events
+// HIGH-ACCOUNTABILITY events: activation MUST include actorRole, pathogenCode,
+// scope, and activationReason so the record is auditable by health authorities.
+// ---------------------------------------------------------------------------
+
+export type OutbreakAuditAction =
+  | 'OUTBREAK_MODE_ACTIVATED'
+  | 'OUTBREAK_MODE_DEACTIVATED'
+  | 'OUTBREAK_SITREP_GENERATED'
+  | 'OUTBREAK_SURGE_ALERT'
+  | 'OUTBREAK_CONFIG_CHANGED'
+
+export function reportOutbreakAuditEvent(payload: {
+  action: OutbreakAuditAction
+  outbreakConfigId: string
+  actorId: string
+  actorRole: string
+  pathogenCode: string
+  scope: string[]
+  activationReason?: string
+}): void {
+  const actionMap: Record<OutbreakAuditAction, AuditAction> = {
+    OUTBREAK_MODE_ACTIVATED: AuditAction.CREATE,
+    OUTBREAK_MODE_DEACTIVATED: AuditAction.UPDATE,
+    OUTBREAK_SITREP_GENERATED: AuditAction.CREATE,
+    OUTBREAK_SURGE_ALERT: AuditAction.CREATE,
+    OUTBREAK_CONFIG_CHANGED: AuditAction.UPDATE,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: payload.actorId,
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: 'OUTBREAK_CONFIG' as AuditResourceType,
+    resourceId: payload.outbreakConfigId,
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      outbreakEvent: payload.action,
+      outcome: 'SUCCESS',
+      actorRole: payload.actorRole,
+      pathogenCode: payload.pathogenCode,
+      scope: payload.scope,
+      ...(payload.activationReason ? { activationReason: payload.activationReason } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Surveillance audit events
+// PHI Safety: NO patient IDs, names, or results in any metadata field.
+// ---------------------------------------------------------------------------
+
+type SurveillanceAuditAction =
+  | 'SURVEILLANCE_ALERT_GENERATED'
+  | 'SURVEILLANCE_CHECK_COMPLETED'
+  | 'SURVEILLANCE_CONFIG_UPDATED'
+  | 'SURVEILLANCE_ALERT_TRANSMITTED'
+
+/**
+ * Emit a surveillance audit event.
+ * Metadata contains only: alertId (UUID), diseaseCode, alertType, severity, counts.
+ * NO patient identifiers are permitted.
+ */
+export function reportSurveillanceAuditEvent(payload: {
+  action: SurveillanceAuditAction
+  alertId?: string
+  diseaseCode?: string
+  alertType?: 'spike' | 'cluster'
+  severity?: 'warning' | 'critical'
+  diseasesChecked?: number
+  alertsGenerated?: number
+}): void {
+  const actionMap: Record<SurveillanceAuditAction, AuditAction> = {
+    SURVEILLANCE_ALERT_GENERATED: AuditAction.CREATE,
+    SURVEILLANCE_CHECK_COMPLETED: AuditAction.READ,
+    SURVEILLANCE_CONFIG_UPDATED: AuditAction.UPDATE,
+    SURVEILLANCE_ALERT_TRANSMITTED: AuditAction.UPDATE,
+  }
+
+  const input: ClientAuditEventInput = {
+    actorId: 'system',
+    actorRole: UserRole.LAB_TECH,
+    action: actionMap[payload.action],
+    resourceType: 'SURVEILLANCE_ALERT' as AuditResourceType,
+    resourceId: payload.alertId ?? payload.diseaseCode ?? 'system',
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      surveillanceEvent: payload.action,
+      outcome: 'SUCCESS',
+      ...(payload.diseaseCode ? { diseaseCode: payload.diseaseCode } : {}),
+      ...(payload.alertType ? { alertType: payload.alertType } : {}),
+      ...(payload.severity ? { severity: payload.severity } : {}),
+      ...(payload.diseasesChecked !== undefined ? { diseasesChecked: payload.diseasesChecked } : {}),
+      ...(payload.alertsGenerated !== undefined ? { alertsGenerated: payload.alertsGenerated } : {}),
+      source: 'lab-lite',
     },
   }
 

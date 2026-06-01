@@ -1,5 +1,14 @@
-import { getQueueItems, updateQueueItemStatus, removeQueueItem, type UploadQueueEntry } from './db'
+import {
+  getQueueItems,
+  updateQueueItemStatus,
+  removeQueueItem,
+  type UploadQueueEntry,
+  getPendingSyncItems,
+  markCHWSampleSynced,
+  markCourierHandoffSynced,
+} from './db'
 import type { UploadResultInput, UploadResultResponse } from './trpc'
+import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 
 export interface QueueAuditEvent {
   action: 'QUEUE_ENTRY_CREATED' | 'QUEUE_DRAIN_SUCCESS' | 'QUEUE_ITEM_EXPIRED' | 'QUEUE_ITEM_DISCARDED'
@@ -161,5 +170,99 @@ export function startQueueDrainListener(
 
   return () => {
     if (intervalId) clearInterval(intervalId)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.2 — CHW Store-and-Forward Sync (Tier 2 priority)
+// CHW records sync after allergies/consent but before metadata.
+// ---------------------------------------------------------------------------
+
+export interface CHWSyncDependencies {
+  uploadCHWSampleFn: (record: CHWSampleCollection, token: string) => Promise<void>
+  uploadHandoffFn: (record: CourierHandoff, token: string) => Promise<void>
+  getToken: () => Promise<string>
+  sleep?: (ms: number) => Promise<void>
+}
+
+let chwDraining = false
+
+/** Reset CHW drain guard — for testing only. */
+export function _resetCHWDrainGuard(): void {
+  chwDraining = false
+}
+
+/**
+ * Drain CHW pending records (samples + handoffs) in FIFO order.
+ * On success marks each record as 'synced' in Dexie.
+ */
+export async function drainCHWQueue(deps: CHWSyncDependencies): Promise<void> {
+  if (chwDraining) return
+  chwDraining = true
+  try {
+    const pending = await getPendingSyncItems()
+    const token = await deps.getToken()
+
+    for (const item of pending) {
+      try {
+        if ('sampleType' in item) {
+          await deps.uploadCHWSampleFn(item as CHWSampleCollection, token)
+          await markCHWSampleSynced((item as CHWSampleCollection).id)
+        } else {
+          await deps.uploadHandoffFn(item as CourierHandoff, token)
+          await markCourierHandoffSynced((item as CourierHandoff).id)
+        }
+      } catch {
+        // Soft failure — leave as pending, retry on next drain cycle
+      }
+    }
+  } finally {
+    chwDraining = false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.3 — Transport Session Sync
+// Syncs pending transport_sessions to Hub when connectivity is restored.
+// No PHI in the sync payload — courierId, locationIds, sampleIds are opaque IDs.
+// ---------------------------------------------------------------------------
+
+export interface TransportSyncDependencies {
+  syncFn: (sessions: import('@/types/transport').TransportSession[]) => Promise<void>
+  getToken: () => Promise<string>
+}
+
+/**
+ * Drain pending transport sessions to the Hub.
+ * Transport sessions created while offline have _ultranos.syncStatus = 'pending'.
+ * This function syncs them and marks them as 'synced' on success or 'failed' on error.
+ *
+ * Never throws — sync failures are logged by marking syncStatus as 'failed'.
+ */
+export async function drainTransportSessions(deps: TransportSyncDependencies): Promise<void> {
+  const { getDb, updateTransportSession } = await import('./db')
+  const db = getDb()
+
+  const pending = await db.transport_sessions
+    .filter((s) => s._ultranos.syncStatus === 'pending')
+    .toArray()
+
+  if (pending.length === 0) return
+
+  try {
+    await deps.getToken()
+    await deps.syncFn(pending)
+
+    for (const session of pending) {
+      await updateTransportSession(session.id, {
+        _ultranos: { ...session._ultranos, syncStatus: 'synced' },
+      })
+    }
+  } catch {
+    for (const session of pending) {
+      await updateTransportSession(session.id, {
+        _ultranos: { ...session._ultranos, syncStatus: 'failed' },
+      })
+    }
   }
 }

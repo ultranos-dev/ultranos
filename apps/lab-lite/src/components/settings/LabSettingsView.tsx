@@ -18,6 +18,8 @@ import type { DailyLogSettings } from '@/lib/daily-log-types'
 import type { ChecklistConfigItem, CriticalValueThreshold } from '@/lib/critical-values/types'
 import { DEFAULT_CHECKLIST_CONFIG_ITEMS, DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
 import { BadgeShowcase } from '@/components/quality/BadgeShowcase'
+import { SurveillanceConfigCard } from '@/components/settings/SurveillanceConfig'
+import { ProgramRegistration } from '@/components/settings/ProgramRegistration'
 
 /** Map LabRole enum to i18n key under settings namespace */
 const ROLE_I18N_KEY: Record<LabRole, string> = {
@@ -562,6 +564,9 @@ export function LabSettingsView() {
           </div>
         )}
 
+        {/* Surveillance Config — Story 50.3: Reportable disease thresholds, lab_manager only */}
+        {isManager && <SurveillanceConfigCard />}
+
         {/* Security Alert — lab_manager only (Story 49.4) */}
         {isManager && (
           <button
@@ -659,6 +664,13 @@ export function LabSettingsView() {
             )}
           </div>
         </div>
+
+        {/* Donor Program Registration — lab_manager only (Story 50.2) */}
+        {isManager && (
+          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+            <ProgramRegistration />
+          </div>
+        )}
 
         {/* Sign Out */}
         <Button

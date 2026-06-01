@@ -1,5 +1,6 @@
 import Dexie from 'dexie'
 import type { FhirSpecimen, PatientVerificationRecord, AmendmentRecord } from '@ultranos/shared-types'
+import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { CustodyEvent } from '@/types/custody-event'
 import type { MentorshipPairing, LearningJournalEntry, CheckInRecord } from '@/lib/mentorship-types'
 import type { SOP, SOPAcknowledgment } from '@/lib/sop-types'
@@ -9,6 +10,8 @@ import type {
 } from '@/lib/micro-learning-types'
 import type { ChecklistItemTemplate, InfectionControlAudit } from '@/types/infection-control-audit'
 import { DEFAULT_CHECKLIST_ITEMS } from '@/lib/safety/default-checklist'
+import type { CertificationPathway, TechnicianProgress, DigitalCertificate } from '@/lib/certification-types'
+import type { SupervisedProcedure } from '@/lib/supervised-procedure-types'
 
 import type { DailyActivityLog, DailyLogSettings } from '@/lib/daily-log-types'
 import type { HmisMonthlyReport } from '@/lib/hmis-types'
@@ -20,10 +23,12 @@ import type { PatientCulturalPreferences, CulturalFlag } from '@/lib/cultural-fl
 import type { PeerPost, PeerResponse, ModerationFlag } from '@/lib/peer-network-types'
 import type { SafetyReport } from '@/types/safety-reporting'
 import type { LabLocation } from '@/types/lab-network'
+import type { TransportSession } from '@/types/transport'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
 import type { AtlasEntry, AtlasCategory } from '@/lib/visual-atlas'
 import type { QcRun, DriftAlert } from '@/lib/qc/types'
+import type { SurveillanceAlert, ReportableDiseaseConfig, SurveillanceBaseline, SurveillanceSchedulerConfig } from '@/lib/surveillance-types'
 import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
 import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
 import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
@@ -415,6 +420,27 @@ class LabLiteDatabase extends Dexie {
   earned_badges!: Dexie.Table<EarnedBadge, string>
   // v20 — Auto-Compiled HMIS Monthly Report (Story 50.1)
   hmisReports!: Dexie.Table<HmisMonthlyReport, string>
+  // v21 — Courier & Sample Transport Tracking (Story 54.3)
+  // No PHI: courierId, sampleIds, locationIds are all opaque identifiers.
+  transport_sessions!: Dexie.Table<TransportSession, string>
+  // v22 — Multi-Donor Report Templates (Story 50.2)
+  donorPrograms!: Dexie.Table<import('./donor-types').DonorProgram, string>
+  donorReportTemplates!: Dexie.Table<import('./donor-types').DonorReportTemplate, string>
+  donorReports!: Dexie.Table<import('./donor-types').DonorReport, string>
+  // v24 — Automated Disease Surveillance Alerts (Story 50.3)
+  surveillanceAlerts!: Dexie.Table<SurveillanceAlert, string>
+  reportableDiseases!: Dexie.Table<ReportableDiseaseConfig, string>
+  surveillanceBaselines!: Dexie.Table<SurveillanceBaseline, string>
+  surveillanceSchedulerConfig!: Dexie.Table<SurveillanceSchedulerConfig, string>
+  // v25 — Certification Pathway Tracker (Story 46.6)
+  // No PHI: technicianId is opaque, no patient data in any certification record.
+  certification_pathways!: Dexie.Table<CertificationPathway, string>
+  technician_progress!: Dexie.Table<TechnicianProgress, string>
+  digital_certificates!: Dexie.Table<DigitalCertificate, string>
+  supervised_procedures!: Dexie.Table<SupervisedProcedure, string>
+  // v26 — Immutable Result Audit Chain (Story 43.1)
+  // Append-only audit log for all lab lifecycle events. No PHI — opaque IDs only.
+  clientAuditLog!: Dexie.Table<ClientAuditEvent, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1128,6 +1154,46 @@ class LabLiteDatabase extends Dexie {
       earned_badges: '&id, technicianId, badgeId, earnedAt, syncStatus',
       // New in v20 — HMIS Monthly Report (Story 50.1)
       hmisReports: '&id, [reportYear+reportMonth], status, finalizedAt, syncStatus',
+    })
+    // v21 — Courier & Sample Transport Tracking (Story 54.3)
+    // No PHI: courierId, sampleIds, locationIds are all opaque identifiers.
+    // transport_sessions indexed by courierId and status for active-transport queries.
+    this.version(21).stores({
+      transport_sessions: '&id, courierId, status, [courierId+status], pickupTimestamp',
+    })
+    // v22 — Multi-Donor Report Templates (Story 50.2)
+    this.version(22).stores({
+      donorPrograms: '&id, &programCode, status, templateCode',
+      donorReportTemplates: '&templateCode, reportingFrequency',
+      donorReports: '&id, programCode, status, periodStart, periodEnd, generatedAt',
+    })
+    // v23 — no-op placeholder (Story 50.3 uses v24)
+    this.version(23).stores({})
+    // v24 — Automated Disease Surveillance Alerts (Story 50.3)
+    this.version(24).stores({
+      surveillanceAlerts: '&id, alertType, diseaseCode, createdAt, transmissionStatus, [diseaseCode+alertType]',
+      reportableDiseases: '&diseaseCode, isActive',
+      surveillanceBaselines: '&id, diseaseCode, asOfDate, [diseaseCode+asOfDate]',
+      surveillanceSchedulerConfig: '&id',
+    })
+    // v25 — Certification Pathway Tracker (Story 46.6)
+    // certification_pathways: pathway definitions pulled from Hub; jurisdictionCode for locale filtering.
+    // technician_progress: local-first progress aggregated from modules, competencies, supervised procedures.
+    // digital_certificates: certificate metadata + Blob; Blob not synced, metadata synced to Hub registry.
+    // supervised_procedures: supervisor-confirmed procedure log (no patient data — LOINC codes only).
+    // No PHI in any of these tables.
+    this.version(25).stores({
+      certification_pathways: '&id, jurisdictionCode, version',
+      technician_progress: '&id, technicianId, pathwayId, [technicianId+pathwayId]',
+      digital_certificates: '&id, technicianId, pathwayId, issuedAt, syncStatus',
+      supervised_procedures: '&id, technicianId, procedureRef, performedAt, syncStatus',
+    })
+    // v26 — Immutable Result Audit Chain (Story 43.1)
+    // clientAuditLog: append-only audit events for the full lab sample lifecycle.
+    // Indexed for FIFO drain and status-based queries by the AuditDrainWorker.
+    // No PHI — all metadata fields are opaque IDs and action codes only.
+    this.version(26).stores({
+      clientAuditLog: 'id, status, queuedAt, [status+queuedAt]',
     })
   }
 }
@@ -2274,6 +2340,10 @@ export interface LabLogbookEntry {
   amendmentReason?: string       // set when entryType='amendment'
   createdAt: string              // ISO 8601
   syncStatus: 'pending' | 'synced' | 'failed'
+  programTags?: string[]         // v22 — donor program codes (Story 50.2)
+  submittedBy?: string           // alias for technicianId for backward compatibility
+  facilityId?: string
+  updatedAt?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -2608,4 +2678,294 @@ export async function finalizeHmisReport(id: string, finalizedBy: string): Promi
   } catch {
     // Sync enqueue failure must not block finalization
   }
+}
+
+// ---------------------------------------------------------------------------
+// Transport Session helpers (v21) — Story 54.3: Courier & Sample Transport Tracking
+// No PHI: courierId, sampleIds, locationIds are all opaque identifiers.
+// ---------------------------------------------------------------------------
+
+/** Save a new transport session. */
+export async function createTransportSession(session: TransportSession): Promise<void> {
+  const db = getDb()
+  await db.transport_sessions.put(session)
+}
+
+/** Look up a transport session by UUID. Returns undefined if not found. */
+export async function getTransportSession(id: string): Promise<TransportSession | undefined> {
+  const db = getDb()
+  return db.transport_sessions.get(id)
+}
+
+/** Apply partial updates to an existing transport session. */
+export async function updateTransportSession(
+  id: string,
+  updates: Partial<TransportSession>,
+): Promise<void> {
+  const db = getDb()
+  await db.transport_sessions.update(id, updates)
+}
+
+/** Return all sessions with status 'in-transit' across all couriers. */
+export async function getActiveTransports(): Promise<TransportSession[]> {
+  const db = getDb()
+  return db.transport_sessions.where('status').equals('in-transit').toArray()
+}
+
+/** Return all sessions (all statuses) for a given courierId. */
+export async function getTransportsByCourier(courierId: string): Promise<TransportSession[]> {
+  const db = getDb()
+  return db.transport_sessions.where('courierId').equals(courierId).toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Donor Program helpers (v22) — Story 50.2: Multi-Donor Report Templates
+// No PHI: program codes, template codes, financial rates only.
+// ---------------------------------------------------------------------------
+
+import type { DonorProgram, DonorReport, DonorReportTemplate } from './donor-types'
+
+/** Upsert a donor program (add or overwrite). */
+export async function saveDonorProgram(program: DonorProgram): Promise<void> {
+  const db = getDb()
+  await db.donorPrograms.put(program)
+}
+
+/** Get all donor programs. */
+export async function getDonorPrograms(): Promise<DonorProgram[]> {
+  const db = getDb()
+  return db.donorPrograms.toArray()
+}
+
+/** Get only active donor programs. */
+export async function getActiveDonorPrograms(): Promise<DonorProgram[]> {
+  const db = getDb()
+  return db.donorPrograms.where('status').equals('active').toArray()
+}
+
+/** Look up a single program by code. Returns undefined if not found. */
+export async function getDonorProgramByCode(programCode: string): Promise<DonorProgram | undefined> {
+  const db = getDb()
+  return db.donorPrograms.where('programCode').equals(programCode).first()
+}
+
+/** Upsert a custom donor report template. */
+export async function saveDonorReportTemplate(template: DonorReportTemplate): Promise<void> {
+  const db = getDb()
+  await db.donorReportTemplates.put(template)
+}
+
+/** Get all custom (user-defined) donor report templates stored in Dexie. */
+export async function getCustomDonorTemplates(): Promise<DonorReportTemplate[]> {
+  const db = getDb()
+  return db.donorReportTemplates.where('isCustom').equals(1 as unknown as string).toArray()
+}
+
+/** Upsert a donor report. */
+export async function saveDonorReport(report: DonorReport): Promise<void> {
+  const db = getDb()
+  await db.donorReports.put(report)
+}
+
+/** Get a single donor report by ID. */
+export async function getDonorReport(id: string): Promise<DonorReport | undefined> {
+  const db = getDb()
+  return db.donorReports.get(id)
+}
+
+/**
+ * Get donor reports, optionally filtered by program code.
+ * Returns newest-first by generatedAt.
+ */
+export async function getDonorReports(programCode?: string): Promise<DonorReport[]> {
+  const db = getDb()
+  const query = programCode
+    ? db.donorReports.where('programCode').equals(programCode)
+    : db.donorReports.toCollection()
+  const reports = await query.sortBy('generatedAt')
+  return reports.reverse()
+}
+
+/**
+ * Finalize a donor report.
+ * - Transitions status draft → finalized
+ * - Records finalizedBy and finalizedAt
+ * - Enqueues for Hub sync (Tier 3 — operational/financial, LWW)
+ */
+export async function finalizeDonorReport(id: string, finalizedBy: string): Promise<void> {
+  const db = getDb()
+  const now = new Date().toISOString()
+  await db.transaction('rw', db.donorReports, async () => {
+    const report = await db.donorReports.get(id)
+    if (!report) throw new Error(`Donor report not found: ${id}`)
+    if (report.status === 'finalized') throw new Error(`Donor report ${id} is already finalized`)
+    await db.donorReports.update(id, { status: 'finalized', finalizedBy, finalizedAt: now })
+  })
+
+  // Enqueue for Hub sync — Tier 3 (financial operational data, LWW)
+  try {
+    const finalized = await db.donorReports.get(id)
+    if (finalized) {
+      await enqueueSyncEvent({
+        resourceType: 'DonorReport',
+        resourceId: id,
+        status: 'pending',
+        payload: finalized,
+        createdAt: now,
+        lastAttemptAt: null,
+        retryCount: 0,
+      })
+    }
+  } catch {
+    // Sync enqueue failure must not block finalization
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Surveillance Alert helpers
+// PHI Safety: All functions operate on aggregate data only — no patient fields.
+// ---------------------------------------------------------------------------
+
+/** Save (upsert) a SurveillanceAlert. */
+export async function saveSurveillanceAlert(alert: SurveillanceAlert): Promise<void> {
+  const db = getDb()
+  await db.surveillanceAlerts.put(alert)
+}
+
+/** Get all surveillance alerts, newest first. */
+export async function getSurveillanceAlerts(): Promise<SurveillanceAlert[]> {
+  const db = getDb()
+  return db.surveillanceAlerts.orderBy('createdAt').reverse().toArray()
+}
+
+/** Get surveillance alerts within a date range (by createdAt). */
+export async function getAlertsByDateRange(
+  fromISO: string,
+  toISO: string,
+): Promise<SurveillanceAlert[]> {
+  const db = getDb()
+  return db.surveillanceAlerts
+    .where('createdAt')
+    .between(fromISO, toISO, true, true)
+    .reverse()
+    .sortBy('createdAt')
+    .then((items) => items.reverse())
+}
+
+/** Update alert transmission status. */
+export async function updateAlertTransmissionStatus(
+  id: string,
+  status: SurveillanceAlert['transmissionStatus'],
+  transmittedAt?: string,
+): Promise<void> {
+  const db = getDb()
+  await db.surveillanceAlerts.update(id, {
+    transmissionStatus: status,
+    ...(transmittedAt ? { transmittedAt } : {}),
+  })
+}
+
+/** Increment transmission attempts counter. */
+export async function incrementAlertTransmissionAttempts(id: string): Promise<void> {
+  const db = getDb()
+  const alert = await db.surveillanceAlerts.get(id)
+  if (alert) {
+    await db.surveillanceAlerts.update(id, {
+      transmissionAttempts: (alert.transmissionAttempts ?? 0) + 1,
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Reportable Disease Config helpers
+// ---------------------------------------------------------------------------
+
+/** Get all reportable disease configs. */
+export async function getAllReportableDiseases(): Promise<ReportableDiseaseConfig[]> {
+  const db = getDb()
+  return db.reportableDiseases.toArray()
+}
+
+/** Get only active reportable disease configs. */
+export async function getActiveReportableDiseases(): Promise<ReportableDiseaseConfig[]> {
+  const db = getDb()
+  return db.reportableDiseases.where('isActive').equals(1).toArray()
+}
+
+/** Upsert a single reportable disease config. */
+export async function putReportableDisease(disease: ReportableDiseaseConfig): Promise<void> {
+  const db = getDb()
+  await db.reportableDiseases.put(disease)
+}
+
+/** Upsert multiple reportable disease configs. */
+export async function putReportableDiseases(diseases: ReportableDiseaseConfig[]): Promise<void> {
+  const db = getDb()
+  await db.reportableDiseases.bulkPut(diseases)
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Surveillance Baseline helpers
+// ---------------------------------------------------------------------------
+
+/** Get cached baseline for a disease+date. */
+export async function getSurveillanceBaseline(
+  diseaseCode: string,
+  asOfDate: string,
+): Promise<SurveillanceBaseline | undefined> {
+  const db = getDb()
+  return db.surveillanceBaselines.get(`${diseaseCode}_${asOfDate}`)
+}
+
+/** Upsert a surveillance baseline. */
+export async function putSurveillanceBaseline(baseline: SurveillanceBaseline): Promise<void> {
+  const db = getDb()
+  await db.surveillanceBaselines.put(baseline)
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Scheduler Config helpers
+// ---------------------------------------------------------------------------
+
+const SCHEDULER_CONFIG_DEFAULTS: SurveillanceSchedulerConfig = {
+  id: 'surveillance-scheduler',
+  lastSpikeCheckAt: null,
+  lastClusterCheckAt: null,
+  dailyCheckHour: 8,
+  isEnabled: true,
+}
+
+/** Get scheduler config (with defaults if not yet stored). */
+export async function getSurveillanceSchedulerConfig(): Promise<SurveillanceSchedulerConfig> {
+  const db = getDb()
+  const stored = await db.surveillanceSchedulerConfig.get('surveillance-scheduler')
+  return stored ?? SCHEDULER_CONFIG_DEFAULTS
+}
+
+/** Upsert scheduler config. */
+export async function putSurveillanceSchedulerConfig(
+  config: SurveillanceSchedulerConfig,
+): Promise<void> {
+  const db = getDb()
+  await db.surveillanceSchedulerConfig.put(config)
+}
+
+// ---------------------------------------------------------------------------
+// Story 50.3 — Cluster deduplication helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Get recent cluster alerts for a disease since a given ISO timestamp.
+ * Used to check for duplicate cluster alerts before generating a new one.
+ */
+export async function getRecentClusterAlerts(
+  diseaseCode: string,
+  sinceISO: string,
+): Promise<SurveillanceAlert[]> {
+  const db = getDb()
+  return db.surveillanceAlerts
+    .where('[diseaseCode+alertType]')
+    .equals([diseaseCode, 'cluster'])
+    .filter((a) => a.createdAt >= sinceISO)
+    .toArray()
 }

@@ -26,6 +26,7 @@ export const SYNC_PRIORITY: Record<string, number> = {
   Appointment: 5,
   Slot: 5,
   Patient: 6,
+  InventorySnapshot: 6,  // Operational metadata — same priority as Patient demographics (Story 52.2)
 }
 
 /**

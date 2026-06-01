@@ -10,6 +10,8 @@ export type CustodyEventType =
   | 'handoff'
   | 'status-change'
   | 'rejection'
+  | 'transport-pickup'
+  | 'transport-delivery'
 
 export interface CustodyEvent {
   id: string // UUID
@@ -24,4 +26,8 @@ export interface CustodyEvent {
   fromStatus?: string
   /** For status-change events: the new status after this transition */
   toStatus?: string
+  /** For transport-pickup and transport-delivery events: FK to transport_sessions */
+  transportSessionId?: string
+  /** For transport events: ambient temperature at the time of event (Celsius) */
+  temperature?: number
 }

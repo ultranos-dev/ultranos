@@ -63,6 +63,14 @@ const SpecimenUltranosExtSchema = z.object({
   originLocationId: z.string().optional(),       // lab location where sample was collected
   destinationLocationId: z.string().optional(),  // lab location where results will be routed back
   transitStatus: TransitStatusSchema.optional(), // tracks routing lifecycle
+  // Story 54.3 / Task 9 — pre-analytical transport flags requiring technician acknowledgement
+  transportFlags: z.array(z.object({
+    sampleId: z.string(),
+    labSampleId: z.string(),
+    flagType: z.enum(['stability-exceeded', 'temperature-excursion', 'damaged']),
+    message: z.string(),
+    timestamp: z.string(),
+  })).optional(),
 })
 
 const AnnotationSchema = z.object({

@@ -203,6 +203,7 @@ export {
   CloudDownload,
   CloudCheck,
   Globe,
+  Network,
   MessageSquare,
   MessageCircle,
   Languages,

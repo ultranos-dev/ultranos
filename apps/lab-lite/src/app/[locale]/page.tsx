@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useDriftAlerts } from '@/hooks/useDriftAlerts'
 import { DriftAlertBanner } from '@/components/qc/DriftAlertBanner'
+import { ReadinessBriefingCard } from '@/components/dashboard/ReadinessBriefingCard'
 
 function RecentUploadsSkeleton() {
   return (
@@ -55,6 +56,8 @@ export default function LabHomePage() {
         </div>
       )}
       <DashboardHeader />
+      {/* Story 48.3: Pre-shift readiness briefing — first card on dashboard */}
+      <ReadinessBriefingCard />
       <QuickActions />
       <QueueStatusCard counts={queueCounts} />
       <ActivitySummaryCard
