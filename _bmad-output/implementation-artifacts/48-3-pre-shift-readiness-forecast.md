@@ -1,6 +1,6 @@
 # Story 48.3: Pre-Shift Readiness Forecast
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,83 +28,55 @@ This story builds a morning briefing component that evaluates five readiness dim
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Readiness Evaluation Engine** (AC: 2, 3, 4, 5)
-  - [ ] Create `apps/lab-lite/src/lib/readiness-engine.ts`.
-  - [ ] Define `ReadinessDimension` type: `'personnel' | 'reagents' | 'equipment' | 'pendingOrders' | 'power'`.
-  - [ ] Define `RAGStatus` type: `'green' | 'amber' | 'red'`.
-  - [ ] Define `DimensionResult` interface: `{ dimension: ReadinessDimension, status: RAGStatus, title: string, summary: string, details: string[], recommendations: string[] }`.
-  - [ ] Define `ReadinessBriefing` interface: `{ dimensions: DimensionResult[], overallStatus: RAGStatus, generatedAt: string, refreshable: boolean }`.
-  - [ ] `evaluatePersonnel(): Promise<DimensionResult>` — checks Dexie for today's scheduled staff (from settings/roster if available). If no roster data exists, returns amber with recommendation "Set up staff roster in Settings." For MVP: check if current user is logged in = green, else red.
-  - [ ] `evaluateReagents(): Promise<DimensionResult>` — queries reagent inventory (from Story 44.3 / Story 48.2 burndown data). For each test type: sufficient stock = green, stock below 14-day threshold = amber, stock below 7-day threshold or expired = red. Details list each test type with status. Recommendations for amber/red items (e.g., "Chemistry strips low — defer non-urgent chemistry panels").
-  - [ ] `evaluateEquipment(): Promise<DimensionResult>` — queries equipment status from Dexie (if equipment tracking table exists from future stories). For MVP: if no equipment data, return amber "Equipment tracking not configured." If equipment data exists: all operational = green, maintenance due = amber, any down = red.
-  - [ ] `evaluatePendingOrders(): Promise<DimensionResult>` — queries Dexie for pending/received orders not yet processed. Count total, count urgent. 0 pending = green, any pending = amber, any urgent pending = red. Details: "X orders pending (Y urgent)."
-  - [ ] `evaluatePower(): Promise<DimensionResult>` — queries power schedule from Story 48.1. If no schedule configured: amber "No power schedule set." If schedule set: green if power window has not started yet (upcoming), amber if partially elapsed, red if power window has passed for today.
-  - [ ] `generateReadinessBriefing(): Promise<ReadinessBriefing>` — runs all five evaluations, computes overall status (worst of all dimensions), returns complete briefing.
+- [x] **Task 1: Readiness Evaluation Engine** (AC: 2, 3, 4, 5)
+  - [x] Create `apps/lab-lite/src/lib/readiness-engine.ts`.
+  - [x] Define `ReadinessDimension` type: `'personnel' | 'reagents' | 'equipment' | 'pendingOrders' | 'power'`.
+  - [x] Define `RAGStatus` type: `'green' | 'amber' | 'red'`.
+  - [x] Define `DimensionResult` interface with i18n key fields (titleKey, summaryKey, summaryArgs, details, recommendations, recommendationArgs).
+  - [x] Define `ReadinessBriefing` interface: `{ dimensions: DimensionResult[], overallStatus: RAGStatus, generatedAt: string, refreshable: boolean }`.
+  - [x] `evaluatePersonnel(): Promise<DimensionResult>` — checks Zustand auth session store; red if no session, amber if no roster configured.
+  - [x] `evaluateReagents(): Promise<DimensionResult>` — queries getActiveReagents(); green >14 days, amber ≤14 days, red ≤7 days or expired or stockout. Graceful degradation on Dexie error.
+  - [x] `evaluateEquipment(): Promise<DimensionResult>` — graceful amber "not configured" (future story).
+  - [x] `evaluatePendingOrders(): Promise<DimensionResult>` — queries getOrders(); green=0 pending, amber=pending non-urgent, red=urgent pending.
+  - [x] `evaluatePower(): Promise<DimensionResult>` — calls calculatePowerBudget(); null=amber, elapsed=red, partial=amber, upcoming=green.
+  - [x] `generateReadinessBriefing(): Promise<ReadinessBriefing>` — Promise.all, worstStatus for overall.
 
-- [ ] **Task 2: Recommendation Rules Engine** (AC: 4)
-  - [ ] Create `apps/lab-lite/src/lib/readiness-recommendations.ts`.
-  - [ ] Define recommendation templates keyed by dimension + status + context:
-    - **Reagents amber:** "{{reagentName}} stock low ({{daysRemaining}} days remaining) — defer non-urgent {{testType}} panels"
-    - **Reagents red:** "{{reagentName}} STOCKOUT — cannot perform {{testType}}. Contact supplier: {{supplierName}}"
-    - **Equipment amber:** "Maintenance due on {{equipmentName}} — schedule maintenance for today"
-    - **Equipment red:** "{{equipmentName}} is DOWN — {{affectedTests}} tests unavailable until repaired"
-    - **Pending orders red:** "{{urgentCount}} URGENT orders from overnight — prioritize these first"
-    - **Power amber:** "Power window {{percentElapsed}}% elapsed — {{remainingMinutes}} minutes remaining for analyzer tests"
-    - **Power red:** "No remaining power for today — defer all analyzer-dependent tests to tomorrow"
-    - **Personnel amber:** "Staff roster not configured — set up in Settings for accurate readiness"
-  - [ ] `generateRecommendations(dimension: ReadinessDimension, status: RAGStatus, context: Record<string, unknown>): string[]` — fills templates with context data. Returns empty array for green status.
-  - [ ] All recommendation strings are i18n keys, not hardcoded text.
+- [x] **Task 2: Recommendation Rules Engine** (AC: 4)
+  - [x] Create `apps/lab-lite/src/lib/readiness-recommendations.ts`.
+  - [x] `generateRecommendations(dimension, status, context): RecommendationItem[]` — maps dimension×status×context to i18n key + args objects.
+  - [x] Returns empty array for green status.
+  - [x] Supports multi-issue context (issues array) for reagents with slice(0,3) cap.
+  - [x] All recommendation strings are i18n keys, not hardcoded text.
 
-- [ ] **Task 3: Morning Briefing Card Component** (AC: 1, 2, 3, 4, 6)
-  - [ ] Create `apps/lab-lite/src/components/dashboard/ReadinessBriefingCard.tsx`.
-  - [ ] Card header: "Pre-Shift Readiness" with overall RAG indicator (colored dot or border).
-  - [ ] Five dimension rows, each showing:
-    - Icon (medical/operational — do NOT mirror medical icons per CLAUDE.md)
-    - Dimension label
-    - RAG status badge: green pill = "Ready", amber pill = "Caution", red pill = "Action Needed"
-    - Summary text (one line)
-    - Expandable detail section (click to reveal details + recommendations)
-  - [ ] Recommendations section: each recommendation in a distinct callout box with:
-    - Amber recommendations: `bg-amber-50 border-amber-200 text-amber-800`
-    - Red recommendations: `bg-red-50 border-red-200 text-red-800`
-    - Action icon (arrow or chevron — DOES mirror for RTL)
-  - [ ] Refresh button: re-runs `generateReadinessBriefing()` and updates UI. Shows loading spinner during computation.
-  - [ ] Timestamp footer: "Last evaluated: HH:mm" using device local time.
-  - [ ] Collapsed state: shows overall RAG + one-line summary ("3 of 5 dimensions ready"). Expanded by default on first dashboard load of the day.
-  - [ ] RTL-aware layout (logical CSS properties throughout).
+- [x] **Task 3: Morning Briefing Card Component** (AC: 1, 2, 3, 4, 6)
+  - [x] Create `apps/lab-lite/src/components/dashboard/ReadinessBriefingCard.tsx`.
+  - [x] Card header with overall RAG colored dot + border.
+  - [x] Five dimension rows with icon, title, RAG badge, summary, expandable details+recommendations.
+  - [x] Recommendations in `bg-amber-50`/`bg-red-50` callout boxes with `AlertTriangle` icon (DirectionalIcon navigation category → mirrors RTL).
+  - [x] Refresh button with spinning `RefreshCw` icon when loading.
+  - [x] Timestamp footer: "Last evaluated: HH:mm".
+  - [x] `sessionStorage` key for auto-expand on first load of the day.
+  - [x] RTL-aware layout with logical CSS properties (ps-8, pe-2, ms-auto etc.).
 
-- [ ] **Task 4: Custom Hook — `useReadinessBriefing`** (AC: 5, 6)
-  - [ ] Create `apps/lab-lite/src/hooks/useReadinessBriefing.ts`.
-  - [ ] On mount: calls `generateReadinessBriefing()` from the engine.
-  - [ ] Returns `{ briefing: ReadinessBriefing | null, isLoading: boolean, refresh: () => void, lastRefreshedAt: Date | null }`.
-  - [ ] Auto-refresh: evaluates once on mount. Subsequent refreshes are manual (user taps Refresh button).
-  - [ ] Caches the briefing result in component state (not Dexie — it is cheap to recompute).
+- [x] **Task 4: Custom Hook — `useReadinessBriefing`** (AC: 5, 6)
+  - [x] Create `apps/lab-lite/src/hooks/useReadinessBriefing.ts`.
+  - [x] Returns `{ briefing, isLoading, refresh, lastRefreshedAt }`.
+  - [x] Evaluates once on mount; subsequent refreshes are manual.
+  - [x] Caches in React state (not Dexie).
 
-- [ ] **Task 5: Dashboard Integration** (AC: 1)
-  - [ ] Add `ReadinessBriefingCard` as the FIRST card on the lab dashboard, above `QueueStatusCard` and `ActivitySummaryCard`.
-  - [ ] The briefing card should be visually prominent — slightly larger, with a distinct border or background.
-  - [ ] On the first dashboard load of each calendar day, auto-expand the briefing. On subsequent loads, remember collapsed/expanded state in `sessionStorage` (not `localStorage` — no PHI, just UI preference).
+- [x] **Task 5: Dashboard Integration** (AC: 1)
+  - [x] `ReadinessBriefingCard` added as first card after `DashboardHeader` in `apps/lab-lite/src/app/[locale]/page.tsx`, above `QuickActions` and `QueueStatusCard`.
+  - [x] Card uses `border-2` with RAG-colored border for visual prominence.
+  - [x] `sessionStorage` remembers expanded/collapsed state per calendar day.
 
-- [ ] **Task 6: i18n — Translation Keys** (AC: 1-4)
-  - [ ] Add `readiness` namespace to all locale files (`en.json`, `ar.json`, `prs.json`, `ps.json`) in `apps/lab-lite/messages/`.
-  - [ ] Keys: `readiness.title`, `readiness.overallReady`, `readiness.overallCaution`, `readiness.overallActionNeeded`, `readiness.dimensions.personnel.*`, `readiness.dimensions.reagents.*`, `readiness.dimensions.equipment.*`, `readiness.dimensions.pendingOrders.*`, `readiness.dimensions.power.*`, `readiness.recommendations.*`, `readiness.refresh`, `readiness.lastEvaluated`.
+- [x] **Task 6: i18n — Translation Keys** (AC: 1-4)
+  - [x] `readiness.*` namespace added to all 4 locale files: `en.json`, `ar.json`, `prs.json`, `ps.json`.
+  - [x] Full key coverage: title, status, dimensions (all 5), recommendations (all templates).
 
-- [ ] **Task 7: Tests** (AC: 1-6)
-  - [ ] Unit tests for `readiness-engine.ts`:
-    - `evaluateReagents`: green when all stocked, amber when any below 14-day threshold, red when any at stockout or expired.
-    - `evaluatePendingOrders`: green when zero, amber when pending, red when urgent pending.
-    - `evaluatePower`: amber when no schedule set, red when power window passed.
-    - `generateReadinessBriefing`: overall status is worst of all dimensions (e.g., 4 green + 1 red = overall red).
-  - [ ] Unit tests for `readiness-recommendations.ts`:
-    - Returns empty array for green dimensions.
-    - Fills templates correctly with context data.
-    - Returns multiple recommendations for dimension with multiple issues.
-  - [ ] Component tests for `ReadinessBriefingCard.tsx`:
-    - Renders all 5 dimensions with correct RAG badges.
-    - Expands to show recommendations on click.
-    - Refresh button triggers re-evaluation.
-    - Renders empty/loading states.
-  - [ ] RTL snapshot tests for `ReadinessBriefingCard`.
+- [x] **Task 7: Tests** (AC: 1-6)
+  - [x] Unit tests for `readiness-engine.ts` — 29 tests: all 5 evaluators, overall status, graceful degradation, caps.
+  - [x] Unit tests for `readiness-recommendations.ts` — 17 tests: green returns empty, all dimension×status combos, multi-issue array, args interpolation.
+  - [x] Component tests for `ReadinessBriefingCard.tsx` — 10 tests: loading skeleton, 5 dimensions rendered, RAG badges, recommendations visible, refresh button, spinner, timestamp, collapsed summary, red card, RTL snapshot.
 
 ## Dev Notes
 
@@ -217,3 +189,40 @@ POWER:
 - Dashboard components: `apps/lab-lite/src/components/dashboard/`
 - Auth session store: `apps/lab-lite/src/stores/auth-session-store.ts`
 - CLAUDE.md: Offline-first mandate, RTL rules, data minimization (Rule #7)
+
+## File List
+
+### Created
+- `apps/lab-lite/src/lib/readiness-engine.ts`
+- `apps/lab-lite/src/lib/readiness-recommendations.ts`
+- `apps/lab-lite/src/components/dashboard/ReadinessBriefingCard.tsx`
+- `apps/lab-lite/src/hooks/useReadinessBriefing.ts`
+- `apps/lab-lite/src/__tests__/readiness-engine.test.ts`
+- `apps/lab-lite/src/__tests__/readiness-recommendations.test.ts`
+- `apps/lab-lite/src/__tests__/readiness-briefing-card.test.tsx`
+- `apps/lab-lite/src/__tests__/__snapshots__/readiness-briefing-card.test.tsx.snap`
+
+### Modified
+- `apps/lab-lite/src/app/[locale]/page.tsx` — added `ReadinessBriefingCard` as first dashboard card
+- `apps/lab-lite/src/lib/db.ts` — added `PowerScheduleEntry`, `TestTimeEstimate` types/tables/helpers (Story 48.1 db dependency)
+- `apps/lab-lite/messages/en.json` — added `readiness.*` namespace
+- `apps/lab-lite/messages/ar.json` — added `readiness.*` namespace (Arabic)
+- `apps/lab-lite/messages/prs.json` — added `readiness.*` namespace (Dari)
+- `apps/lab-lite/messages/ps.json` — added `readiness.*` namespace (Pashto)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status updated to review
+
+## Dev Agent Record
+
+### Completion Notes
+
+- All 6 ACs satisfied and tested (56 total tests: 29 engine + 17 recommendations + 10 component).
+- `DimensionResult` interface uses i18n keys (not hardcoded strings) throughout — `titleKey`, `summaryKey`, `summaryArgs`, `details[]`, `recommendations[]`, `recommendationArgs[]`.
+- `evaluateEquipment` gracefully returns amber "not configured" — equipment table not yet implemented (future story).
+- Power evaluation delegates to `calculatePowerBudget()` from Story 48.1's `workload-scheduler.ts`. This required completing the missing db.ts helpers (`PowerScheduleEntry`, `TestTimeEstimate`, `power_schedules` table, `test_time_estimates` table) that Story 48.1 depended on but had not been committed.
+- `sessionStorage` key `readiness_briefing_expanded_date` stores today's date string to auto-expand on first daily load only.
+- RTL: All layout uses logical CSS properties (`ps-`, `pe-`, `ms-`, `me-`). Navigation icons (`ChevronRight`, `ChevronDown`, `AlertTriangle`) wrapped in `DirectionalIcon category="navigation"` for RTL mirroring. Medical icons (`FlaskConical`, `Microscope`) wrapped in `DirectionalIcon category="medical"` to prevent mirroring.
+- CLAUDE.md Rule #7 enforced: pending orders display count only, never patient names/IDs.
+
+### Change Log
+
+- 2026-06-01: Implemented Story 48.3 — Pre-Shift Readiness Forecast (all 7 tasks, 56 tests)
