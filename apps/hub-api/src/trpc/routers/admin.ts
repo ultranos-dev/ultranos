@@ -316,7 +316,7 @@ export const adminRouter = createTRPCRouter({
   listLabs: adminProcedure
     .input(
       z.object({
-        status: z.enum(['ALL', 'PENDING', 'ACTIVE', 'SUSPENDED']).default('ALL'),
+        status: z.enum(['ALL', 'ACTIVE', 'SUSPENDED', 'PENDING']).default('ALL'),
         cursor: z.number().int().min(0).default(0),
         limit: z.number().int().min(1).max(100).default(25),
       }),
@@ -325,9 +325,10 @@ export const adminRouter = createTRPCRouter({
       let query = ctx.supabase
         .from('labs')
         .select(`
-          id, name, license_ref, accreditation_ref, status, created_at,
-          lab_technicians!inner(practitioner_id, practitioners!inner(given_name, family_name))
+          id, lab_name, license_ref, accreditation_ref, status, created_at,
+          lab_technicians(practitioner_id, practitioners!inner(given_name, family_name))
         `, { count: 'exact' })
+        .eq('org_id', ctx.user.orgId)
         .order('created_at', { ascending: false })
         .range(input.cursor, input.cursor + input.limit - 1)
 
@@ -348,15 +349,15 @@ export const adminRouter = createTRPCRouter({
         const techs = row.lab_technicians as Array<{
           practitioner_id: string
           practitioners: { given_name: string; family_name: string }
-        }>
+        }> | null
         const tech = techs?.[0]
         const techName = tech?.practitioners
           ? `${tech.practitioners.given_name ?? ''} ${tech.practitioners.family_name ?? ''}`.trim()
-          : 'Unknown'
+          : '—'
 
         return {
           id: row.id as string,
-          labName: row.name as string,
+          labName: row.lab_name as string,
           licenseReference: row.license_ref as string,
           accreditationReference: (row.accreditation_ref as string) ?? null,
           technicianName: techName,
@@ -385,7 +386,7 @@ export const adminRouter = createTRPCRouter({
       const { data: lab, error: labError } = await ctx.supabase
         .from('labs')
         .select(`
-          id, name, license_ref, accreditation_ref, status, created_at,
+          id, lab_name, license_ref, accreditation_ref, status, created_at,
           lab_technicians(id, practitioner_id, credential_ref,
             practitioners(given_name, family_name, telecom_email, qualification_display)
           )
@@ -428,7 +429,7 @@ export const adminRouter = createTRPCRouter({
 
       return {
         id: lab.id,
-        labName: lab.name,
+        labName: (lab as any).lab_name,
         licenseReference: lab.license_ref,
         accreditationReference: lab.accreditation_ref ?? null,
         status: lab.status,
@@ -455,6 +456,53 @@ export const adminRouter = createTRPCRouter({
         }),
         uploadCount: uploadCount ?? 0,
       }
+    }),
+
+  createLab: adminProcedure
+    .input(
+      z.object({
+        labName: z.string().min(1).max(200),
+        licenseRef: z.string().min(1).max(100),
+        accreditationRef: z.string().max(100).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data: lab, error } = await ctx.supabase
+        .from('labs')
+        .insert({
+          lab_name: input.labName,
+          license_ref: input.licenseRef,
+          accreditation_ref: input.accreditationRef ?? null,
+          org_id: ctx.user.orgId,
+          status: 'ACTIVE',
+        })
+        .select('id')
+        .single()
+
+      if (error || !lab) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create lab',
+        })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'LAB',
+          resourceId: lab.id,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { endpoint: 'admin.createLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'LAB' })
+      }
+
+      return { id: lab.id }
     }),
 
   /**
@@ -3425,12 +3473,12 @@ export const adminRouter = createTRPCRouter({
 
   /**
    * Export labs as CSV.
-   * Labs are global (not org-scoped) — follows existing listLabs pattern.
    */
   exportLabs: adminProcedure.query(async ({ ctx }) => {
     const { data: rows, error } = await ctx.supabase
       .from('labs')
-      .select('id, name, license_ref, accreditation_ref, status, created_at, verified_at')
+      .select('id, lab_name, license_ref, accreditation_ref, status, created_at')
+      .eq('org_id', ctx.user.orgId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -3440,15 +3488,14 @@ export const adminRouter = createTRPCRouter({
       })
     }
 
-    const headers = ['ID', 'Name', 'License Ref', 'Accreditation Ref', 'Status', 'Created At', 'Verified At']
+    const headers = ['ID', 'Lab Name', 'License Ref', 'Accreditation Ref', 'Status', 'Created At']
     const csvRows = (rows ?? []).map((row: Record<string, unknown>) => [
       row.id as string,
-      (row.name as string) ?? '',
+      (row.lab_name as string) ?? '',
       (row.license_ref as string) ?? '',
       (row.accreditation_ref as string) ?? '',
       (row.status as string) ?? '',
       (row.created_at as string) ?? '',
-      (row.verified_at as string) ?? '',
     ])
 
     return buildCsvExport(headers, csvRows, 'labs')
