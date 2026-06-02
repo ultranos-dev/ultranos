@@ -319,6 +319,9 @@ export default function LabAssignmentsTab() {
             setShowAssignModal(false)
             resetPagination()
             await fetchStaff()
+            trpc.admin.getManagerlessLabs.query()
+              .then((labs) => setManagerlessCount(labs.length))
+              .catch(() => {})
           }}
           onClose={() => setShowAssignModal(false)}
         />

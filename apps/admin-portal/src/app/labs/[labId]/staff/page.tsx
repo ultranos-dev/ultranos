@@ -152,7 +152,8 @@ export default function LabStaffPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [submittingRoleChange, setSubmittingRoleChange] = useState(false)
+  const [submittingRemove, setSubmittingRemove] = useState(false)
 
   // Modal state
   const [pendingChange, setPendingChange] = useState<{
@@ -197,7 +198,7 @@ export default function LabStaffPage() {
   async function handleConfirmRoleChange() {
     if (!pendingChange) return
     try {
-      setSubmitting(true)
+      setSubmittingRoleChange(true)
       setError(null)
       await trpc.admin.updateLabStaffRole.mutate({
         labId,
@@ -217,14 +218,14 @@ export default function LabStaffPage() {
       }
       setPendingChange(null)
     } finally {
-      setSubmitting(false)
+      setSubmittingRoleChange(false)
     }
   }
 
   async function handleConfirmRemove() {
     if (!pendingRemove) return
     try {
-      setSubmitting(true)
+      setSubmittingRemove(true)
       setError(null)
       await trpc.admin.removeStaffFromLab.mutate({
         labId,
@@ -238,7 +239,7 @@ export default function LabStaffPage() {
       setError(err?.message ?? 'Failed to remove staff member')
       setPendingRemove(null)
     } finally {
-      setSubmitting(false)
+      setSubmittingRemove(false)
     }
   }
 
@@ -348,7 +349,7 @@ export default function LabStaffPage() {
             newRole={pendingChange.newRole}
             onConfirm={handleConfirmRoleChange}
             onCancel={() => setPendingChange(null)}
-            submitting={submitting}
+            submitting={submittingRoleChange}
           />
         )}
 
@@ -357,7 +358,7 @@ export default function LabStaffPage() {
             email={pendingRemove.email}
             onConfirm={handleConfirmRemove}
             onCancel={() => setPendingRemove(null)}
-            submitting={submitting}
+            submitting={submittingRemove}
           />
         )}
 

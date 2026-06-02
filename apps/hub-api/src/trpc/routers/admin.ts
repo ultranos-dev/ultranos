@@ -4194,7 +4194,7 @@ export const adminRouter = createTRPCRouter({
           metadata: { labId: input.labId, initialRole: input.initialRole, endpoint: 'admin.assignStaffToLab' },
         })
       } catch {
-        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'PRACTITIONER', resourceId: input.practitionerId })
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'PRACTITIONER' })
       }
 
       return { success: true }
@@ -4220,44 +4220,23 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Lab not found in this organisation' })
       }
 
-      // Fetch all staff for this lab to run the last-manager invariant
-      const { data: currentStaff, error: fetchError } = await ctx.supabase
-        .from('lab_technicians')
-        .select('practitioner_id, lab_role')
-        .eq('lab_id', input.labId)
+      // Atomically check last-manager invariant + delete in a single DB transaction
+      const { data: result, error: rpcError } = await ctx.supabase.rpc('remove_lab_staff_safe', {
+        p_lab_id: input.labId,
+        p_practitioner_id: input.practitionerId,
+      })
 
-      if (fetchError) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch lab staff' })
+      if (rpcError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to remove staff from lab' })
       }
 
-      const target = (currentStaff ?? []).find(
-        (s: { practitioner_id: string; lab_role: string }) => s.practitioner_id === input.practitionerId,
-      )
-
-      if (!target) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Staff member is not assigned to this lab' })
-      }
-
-      // Invariant: must not remove the last LAB_MANAGER
-      if (target.lab_role === 'LAB_MANAGER') {
-        const managerCount = (currentStaff ?? []).filter(
-          (s: { lab_role: string }) => s.lab_role === 'LAB_MANAGER',
-        ).length
-        if (managerCount <= 1) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'Cannot remove the last Lab Manager from this lab',
-          })
+      if (!result.success) {
+        if (result.error_code === 'NOT_FOUND') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Staff member is not assigned to this lab' })
         }
-      }
-
-      const { error: deleteError } = await ctx.supabase
-        .from('lab_technicians')
-        .delete()
-        .eq('lab_id', input.labId)
-        .eq('practitioner_id', input.practitionerId)
-
-      if (deleteError) {
+        if (result.error_code === 'LAST_MANAGER') {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Cannot remove the last Lab Manager from this lab' })
+        }
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to remove staff from lab' })
       }
 
@@ -4271,10 +4250,10 @@ export const adminRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { labId: input.labId, removedRole: target.lab_role, endpoint: 'admin.removeStaffFromLab' },
+          metadata: { labId: input.labId, removedRole: result.removed_role, endpoint: 'admin.removeStaffFromLab' },
         })
       } catch {
-        console.warn('[AUDIT_FAILURE]', { action: 'DELETE', resourceType: 'PRACTITIONER', resourceId: input.practitionerId })
+        console.warn('[AUDIT_FAILURE]', { action: 'DELETE', resourceType: 'PRACTITIONER' })
       }
 
       return { success: true }
