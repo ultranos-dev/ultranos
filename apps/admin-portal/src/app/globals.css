@@ -4,46 +4,76 @@
 
 @import '@ultranos/ui-kit/tokens.css';
 
-/* ── Light theme (default) ── */
+/* ── Light mode ── */
 :root {
-  --color-canvas: oklch(0.97 0.005 100);
-  --color-surface: oklch(0.99 0.003 100);
-  --color-surface-raised: oklch(1.0 0.0 0);
-  --color-sidebar: oklch(0.18 0.01 150);
-  --color-text-primary: oklch(0.15 0.005 100);
-  --color-text-secondary: oklch(0.45 0.005 100);
-  --color-text-on-dark: oklch(0.92 0.005 100);
-  --color-accent: oklch(0.82 0.19 128);
-  --color-accent-hover: oklch(0.87 0.15 128);
-  --color-accent-subtle: oklch(0.82 0.19 128 / 0.1);
-  --color-border: oklch(0.90 0.005 100);
-  --color-danger: oklch(0.63 0.2 25);
-  --color-danger-subtle: oklch(0.63 0.2 25 / 0.1);
-  --color-warning: oklch(0.75 0.15 70);
-  --color-warning-subtle: oklch(0.75 0.15 70 / 0.1);
-  --color-success: oklch(0.72 0.17 145);
-  --color-success-subtle: oklch(0.72 0.17 145 / 0.1);
-  --shadow-card: 0 1px 3px oklch(0.15 0.005 100 / 0.06);
+  /* Raw L C H channel values — enables bg-primary/10, text-destructive/80, etc. */
+  --background:           1 0 0;
+  --foreground:           0.145 0 0;
+  --card:                 1 0 0;
+  --card-foreground:      0.145 0 0;
+  --popover:              1 0 0;
+  --popover-foreground:   0.145 0 0;
+  --primary:              0.527 0.154 150.069;
+  --primary-foreground:   0.985 0 0;
+  --secondary:            0.967 0.001 286.375;
+  --secondary-foreground: 0.205 0.006 286.033;
+  --muted:                0.97 0 0;
+  --muted-foreground:     0.556 0.005 17.567;
+  --accent:               0.97 0 0;
+  --accent-foreground:    0.205 0 0;
+  --destructive:          0.577 0.245 27.325;
+  --border:               0.922 0 0;
+  --input:                0.922 0 0;
+  --ring:                 0.527 0.154 150.069;
+  --radius:               0.625rem;
+
+  /* Sidebar — light (near-white, border-separated) */
+  --sidebar:                    0.985 0 0;
+  --sidebar-foreground:         0.145 0 0;
+  --sidebar-primary:            0.527 0.154 150.069;
+  --sidebar-primary-foreground: 0.985 0 0;
+  --sidebar-accent:             0.97 0 0;
+  --sidebar-accent-foreground:  0.205 0 0;
+  --sidebar-border:             0.922 0 0;
+  --sidebar-ring:               0.527 0.154 150.069;
+
+  /* Custom extensions — no ShadCN equivalent */
+  --warning:  0.75 0.15 70;
+  --success:  0.72 0.17 145;
+
+  --shadow-card: 0 1px 3px oklch(0.145 0 0 / 0.06);
 }
 
-/* ── Dark theme ── */
+/* ── Dark mode ── */
 [data-theme="dark"] {
-  --color-canvas: oklch(0.14 0.008 150);
-  --color-surface: oklch(0.18 0.01 150);
-  --color-surface-raised: oklch(0.22 0.01 150);
-  --color-sidebar: oklch(0.11 0.01 150);
-  --color-text-primary: oklch(0.92 0.005 100);
-  --color-text-secondary: oklch(0.60 0.005 100);
-  --color-text-on-dark: oklch(0.92 0.005 100);
-  --color-accent: oklch(0.82 0.19 128);
-  --color-accent-hover: oklch(0.87 0.15 128);
-  --color-accent-subtle: oklch(0.82 0.19 128 / 0.1);
-  --color-border: oklch(0.25 0.008 150);
-  --color-danger: oklch(0.63 0.2 25);
-  --color-danger-subtle: oklch(0.63 0.2 25 / 0.1);
-  --color-warning: oklch(0.75 0.15 70);
-  --color-warning-subtle: oklch(0.75 0.15 70 / 0.1);
-  --color-success: oklch(0.72 0.17 145);
-  --color-success-subtle: oklch(0.72 0.17 145 / 0.1);
+  --background:           0.145 0 0;
+  --foreground:           0.985 0 0;
+  --card:                 0.205 0 0;
+  --card-foreground:      0.985 0 0;
+  --popover:              0.205 0 0;
+  --popover-foreground:   0.985 0 0;
+  --primary:              0.448 0.119 151.328;
+  --primary-foreground:   0.985 0 0;
+  --secondary:            0.274 0.006 286.033;
+  --secondary-foreground: 0.985 0 0;
+  --muted:                0.274 0.006 286.033;
+  --muted-foreground:     0.707 0.005 286.286;
+  --accent:               0.274 0.006 286.033;
+  --accent-foreground:    0.985 0 0;
+  --destructive:          0.704 0.191 22.216;
+  --border:               0.274 0.006 286.033;
+  --input:                0.322 0.006 286.033;
+  --ring:                 0.448 0.119 151.328;
+
+  /* Sidebar — dark */
+  --sidebar:                    0.205 0 0;
+  --sidebar-foreground:         0.985 0 0;
+  --sidebar-primary:            0.448 0.119 151.328;
+  --sidebar-primary-foreground: 0.985 0 0;
+  --sidebar-accent:             0.274 0.006 286.033;
+  --sidebar-accent-foreground:  0.985 0 0;
+  --sidebar-border:             0.274 0.006 286.033;
+  --sidebar-ring:               0.448 0.119 151.328;
+
   --shadow-card: none;
 }
