@@ -46,11 +46,12 @@ export default function AssignStaffModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load all active org users on mount for the dropdown
+  // Load active + pending-invite org users on mount for the dropdown
   useEffect(() => {
-    trpc.admin.listUsers.query({ cursor: 0, limit: 100, status: 'ACTIVE' })
+    trpc.admin.listUsers.query({ cursor: 0, limit: 100, status: 'ALL' })
       .then((result) => {
         const sorted = result.users
+          .filter((u: { status: string }) => u.status === 'ACTIVE' || u.status === 'PENDING_INVITE')
           .map((u: { id: string; name: string; email: string }) => ({
             id: u.id,
             name: u.name,

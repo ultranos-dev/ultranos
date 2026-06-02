@@ -30,8 +30,10 @@ const mockOnClose = vi.fn()
 const { default: AssignStaffModal } = await import('../components/lab-staff/AssignStaffModal')
 
 const mockUsers = [
-  { id: 'p1', name: 'Alice Smith', email: 'alice@clinic.com' },
-  { id: 'p2', name: 'Bob Jones', email: 'bob@clinic.com' },
+  { id: 'p1', name: 'Alice Smith', email: 'alice@clinic.com', status: 'ACTIVE' },
+  { id: 'p2', name: 'Bob Jones', email: 'bob@clinic.com', status: 'ACTIVE' },
+  { id: 'p3', name: 'Carol Invite', email: 'carol@clinic.com', status: 'PENDING_INVITE' },
+  { id: 'p4', name: 'Dave Suspended', email: 'dave@clinic.com', status: 'SUSPENDED' },
 ]
 
 const mockLabs = [
@@ -42,7 +44,7 @@ const mockLabs = [
 describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockListUsers.mockResolvedValue({ users: mockUsers, total: 2 })
+    mockListUsers.mockResolvedValue({ users: mockUsers, total: 4 })
   })
 
   it('renders the modal with title and role selector', async () => {
@@ -70,12 +72,14 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
 
     await waitFor(() => {
       const select = screen.getByLabelText('Practitioner') as HTMLSelectElement
-      // placeholder + 2 practitioners
-      expect(select.options.length).toBe(3)
+      // placeholder + 3 practitioners (ACTIVE + PENDING_INVITE, SUSPENDED excluded)
+      expect(select.options.length).toBe(4)
     })
 
     expect(screen.getByText('Alice Smith — alice@clinic.com')).toBeTruthy()
     expect(screen.getByText('Bob Jones — bob@clinic.com')).toBeTruthy()
+    expect(screen.getByText('Carol Invite — carol@clinic.com')).toBeTruthy()
+    expect(screen.queryByText('Dave Suspended — dave@clinic.com')).toBeNull()
   })
 
   it('calls assignStaffToLab with correct args and invokes onAssigned', async () => {
@@ -91,7 +95,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
     )
 
     await waitFor(() => {
-      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(4)
     })
 
     await user.selectOptions(screen.getByLabelText('Practitioner'), 'p1')
@@ -120,7 +124,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
     )
 
     await waitFor(() => {
-      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(4)
     })
 
     await user.selectOptions(screen.getByLabelText('Practitioner'), 'p1')
@@ -149,7 +153,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
 describe('AssignStaffModal — org-wide context (labs prop)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockListUsers.mockResolvedValue({ users: mockUsers, total: 2 })
+    mockListUsers.mockResolvedValue({ users: mockUsers, total: 4 })
   })
 
   it('renders lab dropdown when labs prop is provided', async () => {
@@ -180,7 +184,7 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
     )
 
     await waitFor(() => {
-      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(4)
     })
 
     await user.selectOptions(screen.getByLabelText('Lab'), 'lab-2')
