@@ -392,6 +392,7 @@ export const adminRouter = createTRPCRouter({
           )
         `)
         .eq('id', input.labId)
+        .eq('org_id', ctx.user.orgId)
         .single()
 
       if (labError || !lab) {
@@ -611,7 +612,6 @@ export const adminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', {
           action: auditActionMap[input.action],
           resourceType: 'LAB_REGISTRATION',
-          resourceId: input.labId,
         })
       }
 
