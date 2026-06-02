@@ -4124,6 +4124,138 @@ export const adminRouter = createTRPCRouter({
       return { success: true, previousRole: result.previousRole, newRole: result.newRole }
     }),
 
+  assignStaffToLab: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        practitionerId: z.string().uuid(),
+        initialRole: z.nativeEnum(LabRole),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify practitioner belongs to this org
+      const { data: practitioner, error: practError } = await ctx.supabase
+        .from('practitioners')
+        .select('id')
+        .eq('id', input.practitionerId)
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      if (practError || !practitioner) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Practitioner not found in this organisation' })
+      }
+
+      // Reject duplicate assignment
+      const { data: existing } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id')
+        .eq('lab_id', input.labId)
+        .eq('practitioner_id', input.practitionerId)
+        .maybeSingle()
+
+      if (existing) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Staff member is already assigned to this lab' })
+      }
+
+      const { error: insertError } = await ctx.supabase
+        .from('lab_technicians')
+        .insert({
+          lab_id: input.labId,
+          practitioner_id: input.practitionerId,
+          lab_role: input.initialRole,
+        })
+
+      if (insertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to assign staff to lab' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CREATE',
+          resourceType: 'PRACTITIONER',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { labId: input.labId, initialRole: input.initialRole, endpoint: 'admin.assignStaffToLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'PRACTITIONER', resourceId: input.practitionerId })
+      }
+
+      return { success: true }
+    }),
+
+  removeStaffFromLab: adminProcedure
+    .input(
+      z.object({
+        labId: z.string().uuid(),
+        practitionerId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Fetch all staff for this lab to run the last-manager invariant
+      const { data: currentStaff, error: fetchError } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_role')
+        .eq('lab_id', input.labId)
+
+      if (fetchError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch lab staff' })
+      }
+
+      const target = (currentStaff ?? []).find(
+        (s: { practitioner_id: string; lab_role: string }) => s.practitioner_id === input.practitionerId,
+      )
+
+      if (!target) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Staff member is not assigned to this lab' })
+      }
+
+      // Invariant: must not remove the last LAB_MANAGER
+      if (target.lab_role === 'LAB_MANAGER') {
+        const managerCount = (currentStaff ?? []).filter(
+          (s: { lab_role: string }) => s.lab_role === 'LAB_MANAGER',
+        ).length
+        if (managerCount <= 1) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Cannot remove the last Lab Manager from this lab',
+          })
+        }
+      }
+
+      const { error: deleteError } = await ctx.supabase
+        .from('lab_technicians')
+        .delete()
+        .eq('lab_id', input.labId)
+        .eq('practitioner_id', input.practitionerId)
+
+      if (deleteError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to remove staff from lab' })
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'DELETE',
+          resourceType: 'PRACTITIONER',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { labId: input.labId, removedRole: target.lab_role, endpoint: 'admin.removeStaffFromLab' },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'DELETE', resourceType: 'PRACTITIONER', resourceId: input.practitionerId })
+      }
+
+      return { success: true }
+    }),
+
   // ================================================================
   // Story 55.2: Cross-Lab Staff Overview Dashboard
   // ================================================================
