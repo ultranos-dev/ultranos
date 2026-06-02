@@ -33,6 +33,7 @@ const navItems = [
   { label: 'Providers', href: '/providers', icon: User },
   { label: 'License Expiry', href: '/providers/expiry', icon: Clock, indent: true },
   { label: 'Labs', href: '/labs', icon: FlaskConical },
+  { label: 'Create Lab', href: '/labs/create', icon: Plus, indent: true },
   { label: 'Inventory', href: '/inventory', icon: Package },
   { label: 'Suppliers', href: '/inventory/suppliers', icon: Plus, indent: true },
   { label: 'Network', href: '/network', icon: Globe },

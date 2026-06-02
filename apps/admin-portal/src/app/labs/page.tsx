@@ -83,7 +83,7 @@ export default function LabsPage() {
       <TopHeader title="Lab Registrations" description="Review and manage lab registration approvals." />
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Filter tabs + Export — AC #7 */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
@@ -99,7 +99,15 @@ export default function LabsPage() {
               </button>
             ))}
           </div>
-          <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/labs/create')}
+              className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
+            >
+              Create Lab
+            </button>
+            <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
+          </div>
         </div>
 
         {error && (
