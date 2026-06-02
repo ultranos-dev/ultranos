@@ -51,6 +51,7 @@ export default function AssignStaffModal({
   // Debounced practitioner search
   useEffect(() => {
     if (search.length < 2) {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
       setResults([])
       return
     }
