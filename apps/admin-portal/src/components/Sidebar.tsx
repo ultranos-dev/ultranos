@@ -73,15 +73,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`${collapsed ? 'w-16' : 'w-60'} relative bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 ease-out`}
+      className={`${collapsed ? 'w-16' : 'w-60'} relative bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 min-h-screen transition-[width] duration-200 ease-out`}
     >
       {/* Logo */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 border-b border-sidebar-border">
         {collapsed ? (
-          <span className="flex items-center justify-center text-lg font-bold text-accent">U</span>
+          <span className="flex items-center justify-center text-lg font-bold text-sidebar-primary">U</span>
         ) : (
-          <h1 className="text-lg font-bold tracking-tight text-text-on-dark">
-            <span className="text-accent">U</span>ltranos Admin
+          <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground">
+            <span className="text-sidebar-primary">U</span>ltranos Admin
           </h1>
         )}
       </div>
@@ -100,8 +100,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 href={item.href}
                 className={`flex items-center gap-3 ${collapsed ? 'justify-center px-2' : indent ? 'px-8' : 'px-4'} py-2.5 text-sm rounded-xl mx-2 transition-colors ${
                   isActive
-                    ? 'bg-white/[0.12] text-accent font-medium'
-                    : 'text-white/80 hover:bg-white/[0.08] hover:text-white'
+                    ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
@@ -110,7 +110,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               </Link>
               {/* Tooltip when collapsed */}
               {collapsed && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-lg bg-surface-raised text-text-primary text-xs font-medium shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 rounded-lg bg-popover text-foreground text-xs font-medium shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
                   {item.label}
                 </div>
               )}
@@ -120,16 +120,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-white/10 p-4 space-y-3">
+      <div className="border-t border-sidebar-border p-4 space-y-3">
         {!collapsed && session && (
           <div className="space-y-1">
-            <p className="text-xs text-white/60 truncate">{session.email}</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{session.email}</p>
             <SessionTimer />
           </div>
         )}
         <button
           onClick={handleSignOut}
-          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2'} w-full py-2 rounded-xl text-white/80 hover:bg-white/[0.08] hover:text-white transition-colors text-sm`}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2'} w-full py-2 rounded-xl text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors text-sm`}
           aria-label="Sign Out"
         >
           <LogOut size={16} className="shrink-0" />
@@ -140,7 +140,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Collapse toggle — floating on sidebar edge */}
       <button
         onClick={onToggle}
-        className="absolute top-1/2 -translate-y-1/2 -right-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface-raised text-text-secondary shadow-card hover:bg-accent-subtle hover:text-text-primary transition-colors duration-200"
+        className="absolute top-1/2 -translate-y-1/2 -right-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-popover text-muted-foreground shadow-card hover:bg-primary/10 hover:text-foreground transition-colors duration-200"
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         <DirectionalIcon category="navigation">
