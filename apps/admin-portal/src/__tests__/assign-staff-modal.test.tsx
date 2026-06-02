@@ -30,8 +30,8 @@ const mockOnClose = vi.fn()
 const { default: AssignStaffModal } = await import('../components/lab-staff/AssignStaffModal')
 
 const mockUsers = [
-  { id: 'p1', name: 'Alice Smith', email: 'alice@clinic.com', role: 'LAB_TECH', status: 'ACTIVE', moduleCode: null, moduleName: null, mfaEnrolled: true, lastLoginAt: null, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'p2', name: 'Bob Jones', email: 'bob@clinic.com', role: 'LAB_TECH', status: 'ACTIVE', moduleCode: null, moduleName: null, mfaEnrolled: false, lastLoginAt: null, createdAt: '2026-01-02T00:00:00Z' },
+  { id: 'p1', name: 'Alice Smith', email: 'alice@clinic.com' },
+  { id: 'p2', name: 'Bob Jones', email: 'bob@clinic.com' },
 ]
 
 const mockLabs = [
@@ -42,10 +42,10 @@ const mockLabs = [
 describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockListUsers.mockResolvedValue({ users: [], totalCount: 0 })
+    mockListUsers.mockResolvedValue({ users: mockUsers, total: 2 })
   })
 
-  it('renders the modal with title and role selector', () => {
+  it('renders the modal with title and role selector', async () => {
     render(
       <AssignStaffModal
         fixedLabId="lab-1"
@@ -59,10 +59,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
     expect(screen.queryByLabelText('Lab')).toBeNull()
   })
 
-  it('shows search results when user types 2+ characters', async () => {
-    mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 2 })
-    const user = userEvent.setup()
-
+  it('loads and displays practitioners in the dropdown', async () => {
     render(
       <AssignStaffModal
         fixedLabId="lab-1"
@@ -71,17 +68,17 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       />
     )
 
-    const searchInput = screen.getByPlaceholderText('Search by name or email...')
-    await user.type(searchInput, 'ali')
-
     await waitFor(() => {
-      expect(screen.getByText('Alice Smith')).toBeTruthy()
+      const select = screen.getByLabelText('Practitioner') as HTMLSelectElement
+      // placeholder + 2 practitioners
+      expect(select.options.length).toBe(3)
     })
-    expect(screen.getByText('alice@clinic.com')).toBeTruthy()
+
+    expect(screen.getByText('Alice Smith — alice@clinic.com')).toBeTruthy()
+    expect(screen.getByText('Bob Jones — bob@clinic.com')).toBeTruthy()
   })
 
   it('calls assignStaffToLab with correct args and invokes onAssigned', async () => {
-    mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 2 })
     mockAssignStaffToLab.mockResolvedValue({ success: true })
     const user = userEvent.setup()
 
@@ -93,16 +90,12 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       />
     )
 
-    await user.type(screen.getByPlaceholderText('Search by name or email...'), 'ali')
-
     await waitFor(() => {
-      expect(screen.getByText('Alice Smith')).toBeTruthy()
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
     })
 
-    await user.click(screen.getByText('Alice Smith'))
-
-    const assignBtn = screen.getByRole('button', { name: 'Assign' })
-    await user.click(assignBtn)
+    await user.selectOptions(screen.getByLabelText('Practitioner'), 'p1')
+    await user.click(screen.getByRole('button', { name: 'Assign' }))
 
     await waitFor(() => {
       expect(mockAssignStaffToLab).toHaveBeenCalledWith({
@@ -115,7 +108,6 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
   })
 
   it('shows error message on CONFLICT (already assigned)', async () => {
-    mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 2 })
     mockAssignStaffToLab.mockRejectedValue(new Error('Staff member is already assigned to this lab'))
     const user = userEvent.setup()
 
@@ -127,9 +119,11 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       />
     )
 
-    await user.type(screen.getByPlaceholderText('Search by name or email...'), 'ali')
-    await waitFor(() => { expect(screen.getByText('Alice Smith')).toBeTruthy() })
-    await user.click(screen.getByText('Alice Smith'))
+    await waitFor(() => {
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
+    })
+
+    await user.selectOptions(screen.getByLabelText('Practitioner'), 'p1')
     await user.click(screen.getByRole('button', { name: 'Assign' }))
 
     await waitFor(() => {
@@ -155,10 +149,10 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
 describe('AssignStaffModal — org-wide context (labs prop)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockListUsers.mockResolvedValue({ users: [], totalCount: 0 })
+    mockListUsers.mockResolvedValue({ users: mockUsers, total: 2 })
   })
 
-  it('renders lab dropdown when labs prop is provided', () => {
+  it('renders lab dropdown when labs prop is provided', async () => {
     render(
       <AssignStaffModal
         labs={mockLabs}
@@ -166,13 +160,14 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
         onClose={mockOnClose}
       />
     )
-    expect(screen.getByLabelText('Lab')).toBeTruthy()
+    await waitFor(() => {
+      expect(screen.getByLabelText('Lab')).toBeTruthy()
+    })
     expect(screen.getByText('Lab Alpha')).toBeTruthy()
     expect(screen.getByText('Lab Beta')).toBeTruthy()
   })
 
   it('calls assignStaffToLab with selected lab when submitted', async () => {
-    mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 2 })
     mockAssignStaffToLab.mockResolvedValue({ success: true })
     const user = userEvent.setup()
 
@@ -184,11 +179,12 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
       />
     )
 
-    await user.selectOptions(screen.getByLabelText('Lab'), 'lab-2')
-    await user.type(screen.getByPlaceholderText('Search by name or email...'), 'bob')
+    await waitFor(() => {
+      expect((screen.getByLabelText('Practitioner') as HTMLSelectElement).options.length).toBe(3)
+    })
 
-    await waitFor(() => { expect(screen.getByText('Bob Jones')).toBeTruthy() })
-    await user.click(screen.getByText('Bob Jones'))
+    await user.selectOptions(screen.getByLabelText('Lab'), 'lab-2')
+    await user.selectOptions(screen.getByLabelText('Practitioner'), 'p2')
     await user.click(screen.getByRole('button', { name: 'Assign' }))
 
     await waitFor(() => {

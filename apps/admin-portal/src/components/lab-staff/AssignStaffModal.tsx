@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
@@ -17,7 +17,7 @@ interface LabOption {
   labName: string
 }
 
-interface PractitionerResult {
+interface PractitionerOption {
   id: string
   name: string
   email: string
@@ -39,57 +39,42 @@ export default function AssignStaffModal({
   onClose,
 }: AssignStaffModalProps) {
   const [selectedLabId, setSelectedLabId] = useState(fixedLabId ?? '')
-  const [search, setSearch] = useState('')
-  const [results, setResults] = useState<PractitionerResult[]>([])
-  const [searching, setSearching] = useState(false)
-  const [selectedPractitioner, setSelectedPractitioner] = useState<PractitionerResult | null>(null)
+  const [selectedPractitionerId, setSelectedPractitionerId] = useState('')
   const [selectedRole, setSelectedRole] = useState<LabRole>('LAB_TECH')
+  const [practitioners, setPractitioners] = useState<PractitionerOption[]>([])
+  const [loadingPractitioners, setLoadingPractitioners] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Debounced practitioner search
+  // Load all active org users on mount for the dropdown
   useEffect(() => {
-    if (search.length < 2) {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      setResults([])
-      return
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      try {
-        setSearching(true)
-        const result = await trpc.admin.listUsers.query({ page: 1, pageSize: 8, search })
-        setResults(
-          result.users.map((u: { id: string; name: string; email: string }) => ({
+    trpc.admin.listUsers.query({ cursor: 0, limit: 100, status: 'ACTIVE' })
+      .then((result) => {
+        const sorted = result.users
+          .map((u: { id: string; name: string; email: string }) => ({
             id: u.id,
             name: u.name,
             email: u.email,
-          })),
-        )
-      } catch {
-        // search errors are non-critical; just clear results
-        setResults([])
-      } finally {
-        setSearching(false)
-      }
-    }, 300)
+          }))
+          .sort((a: PractitionerOption, b: PractitionerOption) => a.name.localeCompare(b.name))
+        setPractitioners(sorted)
+      })
+      .catch(() => {
+        // Non-critical; dropdown stays empty, user sees error via empty state
+      })
+      .finally(() => setLoadingPractitioners(false))
+  }, [])
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [search])
-
-  const canSubmit = selectedLabId !== '' && selectedPractitioner !== null && !submitting
+  const canSubmit = selectedLabId !== '' && selectedPractitionerId !== '' && !submitting
 
   async function handleSubmit() {
-    if (!canSubmit || !selectedPractitioner) return
+    if (!canSubmit) return
     try {
       setSubmitting(true)
       setError(null)
       await trpc.admin.assignStaffToLab.mutate({
         labId: selectedLabId,
-        practitionerId: selectedPractitioner.id,
+        practitionerId: selectedPractitionerId,
         initialRole: selectedRole,
       })
       onAssigned()
@@ -138,55 +123,31 @@ export default function AssignStaffModal({
             </div>
           )}
 
-          {/* Practitioner search */}
+          {/* Practitioner dropdown */}
           <div>
             <label
-              htmlFor="assign-practitioner-search"
+              htmlFor="assign-practitioner-select"
               className="block text-sm font-medium text-text-secondary mb-1"
             >
               Practitioner
             </label>
-            <input
-              id="assign-practitioner-search"
-              type="text"
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setSelectedPractitioner(null)
-              }}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-
-            {/* Search results */}
-            {search.length >= 2 && (
-              <div className="mt-1 rounded-xl border border-border bg-surface-raised shadow-sm overflow-hidden">
-                {searching ? (
-                  <p className="px-3 py-2 text-sm text-text-secondary">Searching…</p>
-                ) : results.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-text-secondary">No practitioners found</p>
-                ) : (
-                  <ul>
-                    {results.map((p) => (
-                      <li
-                        key={p.id}
-                        onClick={() => {
-                          setSelectedPractitioner(p)
-                          setSearch(p.name)
-                          setResults([])
-                        }}
-                        className={`px-3 py-2 cursor-pointer text-sm hover:bg-accent-subtle ${
-                          selectedPractitioner?.id === p.id ? 'bg-accent-subtle font-medium' : ''
-                        }`}
-                      >
-                        <span className="text-text-primary">{p.name}</span>
-                        <span className="ml-2 text-text-secondary">{p.email}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+            <select
+              id="assign-practitioner-select"
+              aria-label="Practitioner"
+              value={selectedPractitionerId}
+              onChange={(e) => setSelectedPractitionerId(e.target.value)}
+              disabled={loadingPractitioners}
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+            >
+              <option value="">
+                {loadingPractitioners ? 'Loading…' : 'Select a practitioner…'}
+              </option>
+              {practitioners.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {p.email}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Role selector */}
