@@ -41,6 +41,9 @@ vi.mock('@/lib/trpc', () => ({
     admin: {
       listLabStaff: { query: (...args: any[]) => mockQuery('listLabStaff', ...args) },
       updateLabStaffRole: { mutate: (...args: any[]) => mockMutate('updateLabStaffRole', ...args) },
+      removeStaffFromLab: { mutate: (...args: any[]) => mockMutate('removeStaffFromLab', ...args) },
+      listUsers: { query: (...args: any[]) => mockQuery('listUsers', ...args) },
+      assignStaffToLab: { mutate: (...args: any[]) => mockMutate('assignStaffToLab', ...args) },
     },
   },
 }))
@@ -249,5 +252,149 @@ describe('Lab Staff Page', () => {
 
     // No mutation called
     expect(mockMutate).not.toHaveBeenCalled()
+  })
+
+  it('renders "Add Staff" button', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('tech1@lab.com')).toBeInTheDocument()
+    })
+
+    expect(screen.getByRole('button', { name: 'Add Staff' })).toBeInTheDocument()
+  })
+
+  it('"Add Staff" button opens AssignStaffModal', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+    const user = userEvent.setup()
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Add Staff' })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Add Staff' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Assign Staff to Lab')).toBeInTheDocument()
+    })
+  })
+
+  it('each staff row has a "Remove" button', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('tech1@lab.com')).toBeInTheDocument()
+    })
+
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
+    expect(removeButtons).toHaveLength(3)
+  })
+
+  it('"Remove" button opens confirmation modal', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+    const user = userEvent.setup()
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('tech1@lab.com')).toBeInTheDocument()
+    })
+
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
+    await user.click(removeButtons[0])
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()
+      expect(screen.getByText(/are you sure/i)).toBeInTheDocument()
+    })
+  })
+
+  it('confirmed removal calls removeStaffFromLab and refreshes list', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+    mockMutate.mockImplementation((name: string) => {
+      if (name === 'removeStaffFromLab') return Promise.resolve({ success: true })
+      return Promise.resolve({})
+    })
+    const user = userEvent.setup()
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('tech1@lab.com')).toBeInTheDocument()
+    })
+
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
+    await user.click(removeButtons[0])
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Confirm Remove' }))
+
+    await waitFor(() => {
+      expect(mockMutate).toHaveBeenCalledWith('removeStaffFromLab', {
+        labId: 'lab-1',
+        practitionerId: '11111111-aaaa-bbbb-cccc-dddddddddddd',
+      })
+    })
+
+    // Refreshes after removal
+    expect(mockQuery).toHaveBeenCalledWith('listLabStaff', { labId: 'lab-1' })
+  })
+
+  it('last-manager removal error shows error message', async () => {
+    mockQuery.mockImplementation((name: string) => {
+      if (name === 'listLabStaff') return Promise.resolve(mockStaffList)
+      return Promise.resolve({ users: [], totalCount: 0 })
+    })
+    mockMutate.mockImplementation((name: string) => {
+      if (name === 'removeStaffFromLab') {
+        return Promise.reject(new Error('Cannot remove the last Lab Manager from this lab'))
+      }
+      return Promise.resolve({})
+    })
+    const user = userEvent.setup()
+
+    render(<LabStaffPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('manager@lab.com')).toBeInTheDocument()
+    })
+
+    // Remove the LAB_MANAGER (index 1)
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' })
+    await user.click(removeButtons[1])
+
+    await waitFor(() => {
+      expect(screen.getByText('Remove Staff Member')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Confirm Remove' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Cannot remove the last Lab Manager from this lab')).toBeInTheDocument()
+    })
   })
 })

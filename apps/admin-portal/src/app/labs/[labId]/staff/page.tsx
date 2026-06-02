@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 
@@ -100,6 +101,48 @@ function RoleChangeModal({
   )
 }
 
+/** Confirmation modal for staff removal */
+function RemoveStaffModal({
+  email,
+  onConfirm,
+  onCancel,
+  submitting,
+}: {
+  email: string
+  onConfirm: () => void
+  onCancel: () => void
+  submitting: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
+      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-text-primary">Remove Staff Member</h2>
+        <p className="mt-3 text-sm text-text-secondary">
+          Are you sure you want to remove{' '}
+          <span className="font-medium text-text-primary">{truncate(email, 30) || 'this staff member'}</span>{' '}
+          from this lab? This cannot be undone.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="rounded-full border border-border text-text-primary px-6 py-2.5 text-sm hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={submitting}
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-danger text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+            aria-label="Confirm Remove"
+          >
+            {submitting ? 'Removing…' : 'Confirm Remove'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function LabStaffPage() {
   const params = useParams()
   const router = useRouter()
@@ -117,6 +160,11 @@ export default function LabStaffPage() {
     email: string
     currentRole: LabRole
     newRole: LabRole
+  } | null>(null)
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [pendingRemove, setPendingRemove] = useState<{
+    practitionerId: string
+    email: string
   } | null>(null)
 
   const fetchStaff = useCallback(async () => {
@@ -173,16 +221,46 @@ export default function LabStaffPage() {
     }
   }
 
+  async function handleConfirmRemove() {
+    if (!pendingRemove) return
+    try {
+      setSubmitting(true)
+      setError(null)
+      await trpc.admin.removeStaffFromLab.mutate({
+        labId,
+        practitionerId: pendingRemove.practitionerId,
+      })
+      setPendingRemove(null)
+      setSuccessMessage('Staff member removed successfully')
+      await fetchStaff()
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to remove staff member')
+      setPendingRemove(null)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <>
       <TopHeader title="Lab Staff" description="Manage staff roles for this lab" />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button
-          onClick={() => router.push(`/labs/${labId}`)}
-          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
-        >
-          &larr; Back to Lab Detail
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => router.push(`/labs/${labId}`)}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            &larr; Back to Lab Detail
+          </button>
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
+            aria-label="Add Staff"
+          >
+            Add Staff
+          </button>
+        </div>
 
         {/* Success toast */}
         {successMessage && (
@@ -205,18 +283,19 @@ export default function LabStaffPage() {
                 <th className="px-4 py-3 text-start font-medium">Email</th>
                 <th className="px-4 py-3 text-start font-medium">Role</th>
                 <th className="px-4 py-3 text-start font-medium">Assigned</th>
+                <th className="px-4 py-3 text-start font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
                     Loading staff...
                   </td>
                 </tr>
               ) : staff.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
                     No staff assigned to this lab
                   </td>
                 </tr>
@@ -245,6 +324,15 @@ export default function LabStaffPage() {
                     <td className="px-4 py-3 text-text-secondary">
                       {formatDate(member.createdAt)}
                     </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
+                        className="rounded-full border border-danger px-3 py-1 text-xs font-medium text-danger hover:bg-danger-subtle transition-colors"
+                        aria-label="Remove"
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -261,6 +349,28 @@ export default function LabStaffPage() {
             onConfirm={handleConfirmRoleChange}
             onCancel={() => setPendingChange(null)}
             submitting={submitting}
+          />
+        )}
+
+        {pendingRemove && (
+          <RemoveStaffModal
+            email={pendingRemove.email}
+            onConfirm={handleConfirmRemove}
+            onCancel={() => setPendingRemove(null)}
+            submitting={submitting}
+          />
+        )}
+
+        {showAssignModal && (
+          <AssignStaffModal
+            fixedLabId={labId}
+            onAssigned={async () => {
+              setShowAssignModal(false)
+              setSuccessMessage('Staff member assigned successfully')
+              await fetchStaff()
+              setTimeout(() => setSuccessMessage(null), 5000)
+            }}
+            onClose={() => setShowAssignModal(false)}
           />
         )}
       </div>
