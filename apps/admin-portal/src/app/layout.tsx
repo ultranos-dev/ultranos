@@ -1,7 +1,20 @@
 import type { Metadata } from 'next'
+import { Manrope, Public_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthGuard } from '@/components/AuthGuard'
 import { ThemeProvider } from '@/components/ThemeProvider'
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  variable: '--font-public-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Ultranos Admin Portal',
@@ -10,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning className={`${manrope.variable} ${publicSans.variable}`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -18,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="font-sans bg-canvas text-text-primary antialiased">
+      <body className="font-sans bg-background text-foreground antialiased">
         <ThemeProvider>
           <AuthGuard>
             {children}
