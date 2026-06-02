@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { TriangleAlert } from '@ultranos/ui-kit/icons'
+import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 
 type LabRoleFilter = 'ALL' | 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 type ActivityFilter = 'ALL' | 'ACTIVE_7D' | 'INACTIVE'
@@ -91,6 +92,7 @@ export default function LabAssignmentsTab() {
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>('ALL')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAssignModal, setShowAssignModal] = useState(false)
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined])
   const [pageIndex, setPageIndex] = useState(0)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
@@ -203,17 +205,25 @@ export default function LabAssignmentsTab() {
           </select>
         </div>
 
-        {/* Export */}
-        <ExportButton
-          exportFn={() =>
-            trpc.admin.exportLabStaffCsv.mutate({
-              ...(roleFilter !== 'ALL' && { roleFilter }),
-              ...(labFilter && { labFilter }),
-              activityFilter,
-            })
-          }
-          filters={{}}
-        />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
+            aria-label="Assign to Lab"
+          >
+            Assign to Lab
+          </button>
+          <ExportButton
+            exportFn={() =>
+              trpc.admin.exportLabStaffCsv.mutate({
+                ...(roleFilter !== 'ALL' && { roleFilter }),
+                ...(labFilter && { labFilter }),
+                activityFilter,
+              })
+            }
+            filters={{}}
+          />
+        </div>
       </div>
 
       {error && (
@@ -300,6 +310,18 @@ export default function LabAssignmentsTab() {
             </div>
           </div>
         </>
+      )}
+
+      {showAssignModal && (
+        <AssignStaffModal
+          labs={labs}
+          onAssigned={async () => {
+            setShowAssignModal(false)
+            resetPagination()
+            await fetchStaff()
+          }}
+          onClose={() => setShowAssignModal(false)}
+        />
       )}
     </div>
   )

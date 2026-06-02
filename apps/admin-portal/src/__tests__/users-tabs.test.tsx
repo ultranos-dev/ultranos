@@ -27,6 +27,7 @@ vi.mock('@/lib/trpc', () => ({
       exportLabStaffCsv: { mutate: vi.fn().mockResolvedValue('') },
       listUsers: { query: vi.fn().mockResolvedValue({ users: [], totalCount: 0 }) },
       exportUsers: { query: vi.fn().mockResolvedValue('') },
+      assignStaffToLab: { mutate: vi.fn().mockResolvedValue({ success: true }) },
     },
   },
   setAccessToken: vi.fn(),
@@ -106,6 +107,43 @@ describe('LabAssignmentsTab', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/2 labs have no Lab Manager assigned/)).toBeTruthy()
+    })
+  })
+
+  it('renders "Assign to Lab" button', async () => {
+    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
+    mockListLabsForFilter.mockResolvedValue([{ id: 'lab-1', labName: 'Lab Alpha' }])
+
+    render(<LabAssignmentsTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Assign to Lab' })).toBeTruthy()
+    })
+  })
+
+  it('"Assign to Lab" button opens AssignStaffModal with lab dropdown', async () => {
+    const { default: LabAssignmentsTab } = await import('../app/users/_components/LabAssignmentsTab')
+    mockListAllLabStaff.mockResolvedValue({ items: [], nextCursor: null })
+    mockListLabsForFilter.mockResolvedValue([
+      { id: 'lab-1', labName: 'Lab Alpha' },
+      { id: 'lab-2', labName: 'Lab Beta' },
+    ])
+    const { default: userEvent } = await import('@testing-library/user-event')
+    const user = userEvent.setup()
+
+    render(<LabAssignmentsTab />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Assign to Lab' })).toBeTruthy()
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Assign to Lab' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Assign Staff to Lab')).toBeTruthy()
+      // Lab dropdown is present (org-wide context)
+      expect(screen.getByLabelText('Lab')).toBeTruthy()
     })
   })
 })
