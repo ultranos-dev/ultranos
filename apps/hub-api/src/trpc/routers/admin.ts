@@ -4133,6 +4133,18 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify lab belongs to this org
+      const { data: lab, error: labError } = await ctx.supabase
+        .from('labs')
+        .select('id')
+        .eq('id', input.labId)
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      if (labError || !lab) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Lab not found in this organisation' })
+      }
+
       // Verify practitioner belongs to this org
       const { data: practitioner, error: practError } = await ctx.supabase
         .from('practitioners')
@@ -4196,6 +4208,18 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify lab belongs to this org
+      const { data: lab, error: labError } = await ctx.supabase
+        .from('labs')
+        .select('id')
+        .eq('id', input.labId)
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      if (labError || !lab) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Lab not found in this organisation' })
+      }
+
       // Fetch all staff for this lab to run the last-manager invariant
       const { data: currentStaff, error: fetchError } = await ctx.supabase
         .from('lab_technicians')
