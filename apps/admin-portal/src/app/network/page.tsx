@@ -78,7 +78,7 @@ export default function NetworkPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => setShowOutbreakModal(true)}
-            className="rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full bg-destructive px-6 py-2.5 text-sm font-semibold text-white hover:scale-[1.02] transition-transform duration-200"
           >
             Activate Outbreak Mode
           </button>
@@ -91,15 +91,15 @@ export default function NetworkPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="mt-4 flex gap-1 rounded-full bg-surface p-1 w-fit">
+        <div className="mt-4 flex gap-1 rounded-full bg-card p-1 w-fit">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === s
-                  ? 'bg-accent text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-primary text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -108,17 +108,17 @@ export default function NetworkPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading network data...</div>
+          <div className="mt-6 text-muted-foreground">Loading network data...</div>
         ) : (
           <>
             {/* Lab grid */}
             {filteredLabs.length === 0 ? (
               <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-                <p className="text-text-secondary">
+                <p className="text-muted-foreground">
                   No labs found{filter !== 'ALL' ? ` with status ${filter}` : ''}.
                 </p>
               </div>

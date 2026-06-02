@@ -39,7 +39,7 @@ const ROLE_COLORS: Record<string, string> = {
   LAB_TECH: 'bg-blue-100 text-blue-800',
   SENIOR_TECH: 'bg-purple-100 text-purple-800',
   SUPERVISOR: 'bg-amber-100 text-amber-800',
-  LAB_MANAGER: 'bg-success-subtle text-success',
+  LAB_MANAGER: 'bg-success/10 text-success',
 }
 
 const PAGE_SIZE = 20
@@ -74,7 +74,7 @@ function formatDate(iso: string | null | undefined): string {
 function RoleBadge({ role }: { role: string }) {
   const label = ROLE_LABELS[role as LabRoleFilter] ?? role
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[role] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[role] ?? 'bg-card text-muted-foreground'}`}>
       {label}
     </span>
   )
@@ -168,7 +168,7 @@ export default function LabAssignmentsTab() {
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                   roleFilter === r
                     ? 'bg-black text-white'
-                    : 'bg-surface text-text-secondary hover:bg-accent-subtle'
+                    : 'bg-card text-muted-foreground hover:bg-primary/10'
                 }`}
               >
                 {ROLE_LABELS[r]}
@@ -180,7 +180,7 @@ export default function LabAssignmentsTab() {
           <select
             value={labFilter}
             onChange={(e) => { setLabFilter(e.target.value); resetPagination() }}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by lab"
           >
             <option value="">All Labs</option>
@@ -196,7 +196,7 @@ export default function LabAssignmentsTab() {
           <select
             value={activityFilter}
             onChange={(e) => { setActivityFilter(e.target.value as ActivityFilter); resetPagination() }}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by activity"
           >
             <option value="ALL">All Activity</option>
@@ -227,23 +227,23 @@ export default function LabAssignmentsTab() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Org-wide managerless lab warning banner (AC #4) */}
       {managerlessCount > 0 && (
-        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-warning-subtle p-3 text-sm text-warning">
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-warning/10 p-3 text-sm text-warning">
           <TriangleAlert className="h-4 w-4 shrink-0" />
           Warning: {managerlessCount} lab{managerlessCount > 1 ? 's' : ''} have no Lab Manager assigned
         </div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-text-secondary">Loading staff...</div>
+        <div className="mt-6 text-muted-foreground">Loading staff...</div>
       ) : staff.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-          <p className="text-lg font-medium text-text-primary">No staff found</p>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="text-lg font-medium text-foreground">No staff found</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Adjust your filters or add staff to a lab.
           </p>
         </div>
@@ -261,7 +261,7 @@ export default function LabAssignmentsTab() {
                   <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Assigned</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {staff.map((row) => (
                   <tr
                     key={`${row.practitionerId}-${row.labId}`}
@@ -269,10 +269,10 @@ export default function LabAssignmentsTab() {
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/labs/${row.labId}/staff`) }}
                     tabIndex={0}
                     role="button"
-                    className="cursor-pointer transition-colors hover:bg-brand-lime/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
+                    className="cursor-pointer transition-colors hover:bg-brand-lime/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                   >
-                    <td className="ps-4 pe-4 py-3 text-text-muted">{truncateEmail(row.email)}</td>
-                    <td className="ps-4 pe-4 py-3 font-medium text-text-primary">
+                    <td className="ps-4 pe-4 py-3 text-muted-foreground">{truncateEmail(row.email)}</td>
+                    <td className="ps-4 pe-4 py-3 font-medium text-foreground">
                       <span className="flex items-center gap-1.5">
                         {row.labName}
                         {!row.labHasManager && (
@@ -281,8 +281,8 @@ export default function LabAssignmentsTab() {
                       </span>
                     </td>
                     <td className="ps-4 pe-4 py-3"><RoleBadge role={row.labRole} /></td>
-                    <td className="ps-4 pe-4 py-3 text-text-muted">{formatRelativeTime(row.lastActiveAt)}</td>
-                    <td className="ps-4 pe-4 py-3 text-text-muted">{formatDate(row.createdAt)}</td>
+                    <td className="ps-4 pe-4 py-3 text-muted-foreground">{formatRelativeTime(row.lastActiveAt)}</td>
+                    <td className="ps-4 pe-4 py-3 text-muted-foreground">{formatDate(row.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -290,20 +290,20 @@ export default function LabAssignmentsTab() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
             <span>Page {pageIndex + 1}</span>
             <div className="flex gap-2">
               <button
                 onClick={handlePrevious}
                 disabled={pageIndex === 0}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Previous
               </button>
               <button
                 onClick={handleNext}
                 disabled={!nextCursor}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Next
               </button>

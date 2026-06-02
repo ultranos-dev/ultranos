@@ -20,13 +20,13 @@ interface LabEntry {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    PENDING: 'bg-warning-subtle text-warning',
-    ACTIVE: 'bg-success-subtle text-success',
-    SUSPENDED: 'bg-danger-subtle text-danger',
+    PENDING: 'bg-warning/10 text-warning',
+    ACTIVE: 'bg-success/10 text-success',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status}
     </span>
   )
@@ -84,15 +84,15 @@ export default function LabsPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Filter tabs + Export — AC #7 */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-accent text-text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -111,42 +111,42 @@ export default function LabsPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading lab registrations...</div>
+          <div className="mt-6 text-muted-foreground">Loading lab registrations...</div>
         ) : labs.length === 0 ? (
           <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-text-secondary">No lab registrations found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
+            <p className="text-muted-foreground">No lab registrations found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
           </div>
         ) : (
           <>
             {/* Lab queue table — AC #1, #2 */}
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Lab Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">License Ref</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Accreditation</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Technician</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Registered</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab Name</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">License Ref</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Accreditation</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Technician</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Registered</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {labs.map((lab) => (
                     <tr
                       key={lab.id}
                       onClick={() => router.push(`/labs/${lab.id}`)}
-                      className="cursor-pointer hover:bg-accent-subtle transition-colors"
+                      className="cursor-pointer hover:bg-primary/10 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{lab.labName}</td>
-                      <td className="px-4 py-3 text-text-secondary">{lab.licenseReference}</td>
-                      <td className="px-4 py-3 text-text-secondary">{lab.accreditationReference ?? '—'}</td>
-                      <td className="px-4 py-3 text-text-secondary">{lab.technicianName}</td>
-                      <td className="px-4 py-3 text-text-secondary">{formatDate(lab.registeredAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{lab.licenseReference}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{lab.accreditationReference ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{lab.technicianName}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(lab.registeredAt)}</td>
                       <td className="px-4 py-3"><StatusBadge status={lab.status} /></td>
                     </tr>
                   ))}
@@ -156,7 +156,7 @@ export default function LabsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
@@ -164,7 +164,7 @@ export default function LabsPage() {
                   <button
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
                   </button>
@@ -172,7 +172,7 @@ export default function LabsPage() {
                   <button
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
                   </button>

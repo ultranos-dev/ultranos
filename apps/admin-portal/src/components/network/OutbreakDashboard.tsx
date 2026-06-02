@@ -60,37 +60,37 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-text-primary">Outbreak Dashboard</h2>
+      <h2 className="text-lg font-semibold text-foreground">Outbreak Dashboard</h2>
 
       {error && (
-        <div className="mt-3 rounded-xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+        <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Active Outbreaks */}
       <div className="mt-4">
-        <h3 className="text-sm font-medium text-text-secondary uppercase tracking-wide">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
           Active Outbreaks ({active.length})
         </h3>
         {active.length === 0 ? (
-          <p className="mt-2 text-sm text-text-secondary">No active outbreaks.</p>
+          <p className="mt-2 text-sm text-muted-foreground">No active outbreaks.</p>
         ) : (
           <div className="mt-2 space-y-3">
             {active.map((ob) => (
-              <div key={ob.id} className="rounded-2xl border border-danger/30 bg-danger-subtle/30 p-4">
+              <div key={ob.id} className="rounded-2xl border border-destructive/30 bg-destructive/10/30 p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-semibold text-text-primary">{ob.pathogen}</h4>
-                    <p className="mt-1 text-sm text-text-secondary">
+                    <h4 className="font-semibold text-foreground">{ob.pathogen}</h4>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {ob.affectedLabNames.length} lab{ob.affectedLabNames.length > 1 ? 's' : ''} affected
                     </p>
-                    <p className="text-xs text-text-secondary mt-1" title={ob.affectedLabNames.join(', ')}>
+                    <p className="text-xs text-muted-foreground mt-1" title={ob.affectedLabNames.join(', ')}>
                       Labs: {ob.affectedLabNames.join(', ')}
                     </p>
-                    <p className="text-xs text-text-secondary mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Activated: {formatDate(ob.activatedAt)}
                     </p>
                     {ob.notes && (
-                      <p className="text-xs text-text-secondary mt-1">Notes: {ob.notes}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Notes: {ob.notes}</p>
                     )}
                   </div>
                   <div>
@@ -98,7 +98,7 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
                       <div className="flex gap-2">
                         <button
                           onClick={() => setConfirmId(null)}
-                          className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface"
+                          className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-card"
                         >
                           Cancel
                         </button>
@@ -131,7 +131,7 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
         <div className="mt-6">
           <button
             onClick={() => setShowResolved(!showResolved)}
-            className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <DirectionalIcon category="navigation">
               <ChevronRight className={`h-4 w-4 transition-transform ${showResolved ? 'rotate-90' : ''}`} />
@@ -142,25 +142,25 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
           {showResolved && (
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Pathogen</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Labs</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Activated</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Resolved</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Duration</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Pathogen</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Labs</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Activated</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Resolved</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duration</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {resolved.map((ob) => (
                     <tr key={ob.id}>
                       <td className="px-4 py-3 font-medium">{ob.pathogen}</td>
-                      <td className="px-4 py-3 text-text-secondary" title={ob.affectedLabNames.join(', ')}>
+                      <td className="px-4 py-3 text-muted-foreground" title={ob.affectedLabNames.join(', ')}>
                         {ob.affectedLabNames.length} lab{ob.affectedLabNames.length > 1 ? 's' : ''}
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">{formatDate(ob.activatedAt)}</td>
-                      <td className="px-4 py-3 text-text-secondary">{ob.resolvedAt ? formatDate(ob.resolvedAt) : '—'}</td>
-                      <td className="px-4 py-3 text-text-secondary">
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(ob.activatedAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{ob.resolvedAt ? formatDate(ob.resolvedAt) : '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
                         {ob.resolvedAt ? formatDuration(ob.activatedAt, ob.resolvedAt) : '—'}
                       </td>
                     </tr>

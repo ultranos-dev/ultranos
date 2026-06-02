@@ -23,7 +23,7 @@ export function ExpiryWarningWidget() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-warning bg-warning-subtle p-3 text-sm text-warning">
+      <div className="rounded-2xl border border-warning bg-warning/10 p-3 text-sm text-warning">
         Unable to load credential expiry data.
       </div>
     )

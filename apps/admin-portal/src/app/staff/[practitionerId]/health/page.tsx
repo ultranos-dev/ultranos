@@ -171,9 +171,9 @@ export default function EmployeeHealthPage() {
         <TopHeader title="Employee Health Record" />
         <main className="mx-auto max-w-3xl px-6 py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 rounded bg-surface" />
-            <div className="h-40 rounded bg-surface" />
-            <div className="h-40 rounded bg-surface" />
+            <div className="h-8 w-48 rounded bg-card" />
+            <div className="h-40 rounded bg-card" />
+            <div className="h-40 rounded bg-card" />
           </div>
         </main>
       </div>
@@ -210,11 +210,11 @@ export default function EmployeeHealthPage() {
         {reminders && <ScreeningBanner reminders={reminders} />}
 
         {/* Hepatitis B */}
-        <section className="mb-8 rounded-lg border border-border bg-surface p-6">
+        <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">Hepatitis B</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">Status</span>
               <select
                 value={form.hepBStatus}
                 onChange={(e) => setForm({ ...form, hepBStatus: e.target.value as VaccinationStatus })}
@@ -226,7 +226,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Titer Date</span>
+              <span className="text-sm font-medium text-muted-foreground">Titer Date</span>
               <input
                 type="date"
                 value={form.hepBTiterDate}
@@ -238,11 +238,11 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* Tetanus */}
-        <section className="mb-8 rounded-lg border border-border bg-surface p-6">
+        <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">Tetanus</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">Status</span>
               <select
                 value={form.tetanusStatus}
                 onChange={(e) => setForm({ ...form, tetanusStatus: e.target.value as VaccinationStatus })}
@@ -254,7 +254,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Vaccination Date</span>
+              <span className="text-sm font-medium text-muted-foreground">Vaccination Date</span>
               <input
                 type="date"
                 value={form.tetanusDate}
@@ -266,11 +266,11 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* COVID-19 */}
-        <section className="mb-8 rounded-lg border border-border bg-surface p-6">
+        <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">COVID-19</h2>
           <div className="grid grid-cols-3 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">Status</span>
               <select
                 value={form.covidStatus}
                 onChange={(e) => setForm({ ...form, covidStatus: e.target.value as VaccinationStatus })}
@@ -282,7 +282,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Doses</span>
+              <span className="text-sm font-medium text-muted-foreground">Doses</span>
               <input
                 type="number"
                 min={0}
@@ -292,7 +292,7 @@ export default function EmployeeHealthPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Last Dose Date</span>
+              <span className="text-sm font-medium text-muted-foreground">Last Dose Date</span>
               <input
                 type="date"
                 value={form.covidLastDoseDate}
@@ -304,11 +304,11 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* TB Screening */}
-        <section className="mb-8 rounded-lg border border-border bg-surface p-6">
+        <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">TB Screening</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Screening Date</span>
+              <span className="text-sm font-medium text-muted-foreground">Screening Date</span>
               <input
                 type="date"
                 value={form.tbScreeningDate}
@@ -317,7 +317,7 @@ export default function EmployeeHealthPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-text-secondary">Result</span>
+              <span className="text-sm font-medium text-muted-foreground">Result</span>
               <select
                 value={form.tbScreeningResult}
                 onChange={(e) => setForm({ ...form, tbScreeningResult: e.target.value as TbResult })}
@@ -332,7 +332,7 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* Exposure History */}
-        <section className="mb-8 rounded-lg border border-border bg-surface p-6">
+        <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">Exposure History</h2>
             <button
@@ -345,13 +345,13 @@ export default function EmployeeHealthPage() {
           </div>
 
           {form.exposureHistory.length === 0 && (
-            <p className="text-sm text-text-secondary">No exposure history entries.</p>
+            <p className="text-sm text-muted-foreground">No exposure history entries.</p>
           )}
 
           {form.exposureHistory.map((entry, i) => (
             <div key={i} className="mb-3 grid grid-cols-4 gap-3 items-end">
               <label className="block">
-                <span className="text-sm font-medium text-text-secondary">Date</span>
+                <span className="text-sm font-medium text-muted-foreground">Date</span>
                 <input
                   type="date"
                   value={entry.date}
@@ -360,7 +360,7 @@ export default function EmployeeHealthPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-text-secondary">Type</span>
+                <span className="text-sm font-medium text-muted-foreground">Type</span>
                 <input
                   type="text"
                   value={entry.type}
@@ -370,7 +370,7 @@ export default function EmployeeHealthPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-text-secondary">Outcome</span>
+                <span className="text-sm font-medium text-muted-foreground">Outcome</span>
                 <input
                   type="text"
                   value={entry.outcome}

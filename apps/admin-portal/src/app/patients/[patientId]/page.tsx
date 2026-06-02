@@ -26,13 +26,13 @@ interface PatientDetail {
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
   if (!warn) {
     return (
-      <span className="inline-block rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
+      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
         Clear
       </span>
     )
   }
   return (
-    <span className="inline-block rounded-full bg-warning-subtle px-2.5 py-0.5 text-xs font-medium text-warning">
+    <span className="inline-block rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
       Warning
     </span>
   )
@@ -41,13 +41,13 @@ function MpiWarnBadge({ warn }: { warn: boolean | null }) {
 function StatusBadge({ active }: { active: boolean }) {
   if (active) {
     return (
-      <span className="inline-block rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
+      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
         Active
       </span>
     )
   }
   return (
-    <span className="inline-block rounded-full bg-danger-subtle px-2.5 py-0.5 text-xs font-medium text-danger">
+    <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
       Inactive
     </span>
   )
@@ -67,8 +67,8 @@ function formatDateTime(iso: string | null): string {
 function DetailRow({ label, value }: { label: string; value: string | React.ReactNode }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-text-secondary">{label}</dt>
-      <dd className="mt-1 text-sm text-text-primary">{value}</dd>
+      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-sm text-foreground">{value}</dd>
     </div>
   )
 }
@@ -103,14 +103,14 @@ export default function PatientDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-text-secondary p-8">Loading patient details...</div>
+    return <div className="text-muted-foreground p-8">Loading patient details...</div>
   }
 
   if (error && !patient) {
     return (
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/patients" className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Patients</Link>
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
   }
@@ -121,16 +121,16 @@ export default function PatientDetailPage() {
     <>
       <TopHeader title={formatName(patient)} description={`Patient ID: ${patient.id}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/patients" className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Patients</Link>
+        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Demographics card */}
           <div className="rounded-3xl bg-white p-5 border border-border">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Demographics</span>
             </h2>
             <div className="mt-4 space-y-4">
@@ -146,7 +146,7 @@ export default function PatientDetailPage() {
 
           {/* MPI & Status card */}
           <div className="rounded-3xl bg-white p-5 border border-border">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">MPI &amp; Status</span>
             </h2>
             <div className="mt-4 space-y-4">
@@ -155,12 +155,12 @@ export default function PatientDetailPage() {
                 value={patient.mpi_score != null ? String(patient.mpi_score) : '-'}
               />
               <div>
-                <dt className="text-sm font-medium text-text-secondary">MPI Warn</dt>
+                <dt className="text-sm font-medium text-muted-foreground">MPI Warn</dt>
                 <dd className="mt-1"><MpiWarnBadge warn={patient.mpi_warn} /></dd>
               </div>
               <DetailRow label="Patient Tier" value={patient.patient_tier ?? '-'} />
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Status</dt>
+                <dt className="text-sm font-medium text-muted-foreground">Status</dt>
                 <dd className="mt-1"><StatusBadge active={patient.is_active} /></dd>
               </div>
               <DetailRow label="Created At" value={formatDateTime(patient.created_at)} />

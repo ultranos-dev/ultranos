@@ -20,8 +20,8 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
         status === 'ACTIVE'
-          ? 'bg-success-subtle text-success'
-          : 'bg-surface text-text-secondary'
+          ? 'bg-success/10 text-success'
+          : 'bg-card text-muted-foreground'
       }`}
     >
       {status}
@@ -140,14 +140,14 @@ export default function SuppliersPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading suppliers...</div>
+          <div className="mt-6 text-muted-foreground">Loading suppliers...</div>
         ) : suppliers.length === 0 ? (
           <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-text-secondary">No suppliers registered yet.</p>
+            <p className="text-muted-foreground">No suppliers registered yet.</p>
           </div>
         ) : (
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
@@ -162,19 +162,19 @@ export default function SuppliersPage() {
                   <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {suppliers.map((supplier) => (
                   <tr key={supplier.id}>
                     <td className="px-4 py-3 font-medium">{supplier.name}</td>
-                    <td className="px-4 py-3 text-text-secondary">{supplier.contactEmail ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{supplier.phone ?? '—'}</td>
-                    <td className="px-4 py-3 text-center text-text-secondary">{supplier.leadTimeDays ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{supplier.contactEmail ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{supplier.phone ?? '—'}</td>
+                    <td className="px-4 py-3 text-center text-muted-foreground">{supplier.leadTimeDays ?? '—'}</td>
                     <td className="px-4 py-3 text-center"><StatusBadge status={supplier.status} /></td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => openEdit(supplier)}
-                          className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-accent-subtle transition-colors"
+                          className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
                         >
                           Edit
                         </button>
@@ -182,8 +182,8 @@ export default function SuppliersPage() {
                           onClick={() => handleToggleStatus(supplier)}
                           className={`rounded-full border border-border px-3 py-1 text-xs font-medium transition-colors ${
                             supplier.status === 'ACTIVE'
-                              ? 'hover:bg-danger-subtle hover:text-danger'
-                              : 'hover:bg-success-subtle hover:text-success'
+                              ? 'hover:bg-destructive/10 hover:text-destructive'
+                              : 'hover:bg-success/10 hover:text-success'
                           }`}
                         >
                           {supplier.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
@@ -201,52 +201,52 @@ export default function SuppliersPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowModal(false)}>
             <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-text-primary">
+              <h2 className="text-lg font-semibold text-foreground">
                 {editingSupplier ? 'Edit Supplier' : 'Add Supplier'}
               </h2>
 
               <div className="mt-4 space-y-4">
                 <div>
-                  <label htmlFor="sup-name" className="block text-sm font-medium text-text-primary">
-                    Name <span className="text-danger">*</span>
+                  <label htmlFor="sup-name" className="block text-sm font-medium text-foreground">
+                    Name <span className="text-destructive">*</span>
                   </label>
                   <input
                     id="sup-name"
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
-                  <label htmlFor="sup-email" className="block text-sm font-medium text-text-primary">Email</label>
+                  <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">Email</label>
                   <input
                     id="sup-email"
                     type="email"
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
-                  <label htmlFor="sup-phone" className="block text-sm font-medium text-text-primary">Phone</label>
+                  <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">Phone</label>
                   <input
                     id="sup-phone"
                     type="tel"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
-                  <label htmlFor="sup-lead" className="block text-sm font-medium text-text-primary">Lead Time (days)</label>
+                  <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">Lead Time (days)</label>
                   <input
                     id="sup-lead"
                     type="number"
                     min="0"
                     value={formLeadTime}
                     onChange={(e) => setFormLeadTime(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function SuppliersPage() {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Cancel
                 </button>

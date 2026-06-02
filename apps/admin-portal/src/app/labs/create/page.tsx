@@ -39,19 +39,19 @@ export default function CreateLabPage() {
       <div className="mx-auto max-w-2xl px-8 py-6">
         <button
           onClick={() => router.push('/labs')}
-          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           &larr; Back to Labs
         </button>
 
-        <div className="mt-6 rounded-2xl border border-border bg-surface-raised p-6">
+        <div className="mt-6 rounded-2xl border border-border bg-popover p-6">
           <div className="space-y-5">
             <div>
               <label
                 htmlFor="lab-name"
-                className="block text-sm font-medium text-text-secondary mb-1"
+                className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                Lab Name <span className="text-danger">*</span>
+                Lab Name <span className="text-destructive">*</span>
               </label>
               <input
                 id="lab-name"
@@ -60,16 +60,16 @@ export default function CreateLabPage() {
                 value={labName}
                 onChange={(e) => setLabName(e.target.value)}
                 placeholder="e.g. Central Diagnostics Lab"
-                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
               <label
                 htmlFor="license-ref"
-                className="block text-sm font-medium text-text-secondary mb-1"
+                className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                License Reference <span className="text-danger">*</span>
+                License Reference <span className="text-destructive">*</span>
               </label>
               <input
                 id="license-ref"
@@ -78,17 +78,17 @@ export default function CreateLabPage() {
                 value={licenseRef}
                 onChange={(e) => setLicenseRef(e.target.value)}
                 placeholder="e.g. LIC-2026-001"
-                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
               <label
                 htmlFor="accreditation-ref"
-                className="block text-sm font-medium text-text-secondary mb-1"
+                className="block text-sm font-medium text-muted-foreground mb-1"
               >
                 Accreditation Reference{' '}
-                <span className="text-text-muted text-xs font-normal">(optional)</span>
+                <span className="text-muted-foreground text-xs font-normal">(optional)</span>
               </label>
               <input
                 id="accreditation-ref"
@@ -97,13 +97,13 @@ export default function CreateLabPage() {
                 value={accreditationRef}
                 onChange={(e) => setAccreditationRef(e.target.value)}
                 placeholder="e.g. ACCR-ISO15189-001"
-                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
 
           {error && (
-            <div role="alert" className="mt-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">
+            <div role="alert" className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -111,7 +111,7 @@ export default function CreateLabPage() {
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={() => router.push('/labs')}
-              className="rounded-full border border-border px-6 py-2.5 text-sm text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+              className="rounded-full border border-border px-6 py-2.5 text-sm text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
             >
               Cancel
             </button>

@@ -45,15 +45,15 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-text-primary">Enroll Community Health Worker</h2>
+        <h2 className="text-lg font-semibold text-foreground">Enroll Community Health Worker</h2>
 
         {error && (
-          <div className="mt-3 rounded-xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {createdId ? (
           <div className="mt-4">
-            <div className="rounded-xl bg-success-subtle border border-success/20 p-4 text-sm text-success">
+            <div className="rounded-xl bg-success/10 border border-success/20 p-4 text-sm text-success">
               <p className="font-semibold">CHW enrolled successfully</p>
               <p className="mt-1">
                 CHW ID: <code className="rounded bg-success/10 px-2 py-0.5 font-mono text-xs">{createdId}</code>
@@ -73,7 +73,7 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               </button>
               <button
                 onClick={() => { onSuccess(); onClose() }}
-                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Done
               </button>
@@ -83,22 +83,22 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
           <>
             {/* Full Name */}
             <div className="mt-4">
-              <label htmlFor="chw-name" className="block text-sm font-medium text-text-primary">
-                Full Name <span className="text-danger">*</span>
+              <label htmlFor="chw-name" className="block text-sm font-medium text-foreground">
+                Full Name <span className="text-destructive">*</span>
               </label>
               <input
                 id="chw-name"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
             {/* Phone Number */}
             <div className="mt-4">
-              <label htmlFor="chw-phone" className="block text-sm font-medium text-text-primary">
-                Phone Number <span className="text-danger">*</span>
+              <label htmlFor="chw-phone" className="block text-sm font-medium text-foreground">
+                Phone Number <span className="text-destructive">*</span>
               </label>
               <input
                 id="chw-phone"
@@ -106,23 +106,23 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+93 700 000 000"
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               {phone.length > 0 && !phoneValid && (
-                <p className="mt-1 text-xs text-danger">Invalid phone format</p>
+                <p className="mt-1 text-xs text-destructive">Invalid phone format</p>
               )}
             </div>
 
             {/* Assigned Collection Point */}
             <div className="mt-4">
-              <label htmlFor="chw-lab" className="block text-sm font-medium text-text-primary">
-                Assigned Collection Point <span className="text-danger">*</span>
+              <label htmlFor="chw-lab" className="block text-sm font-medium text-foreground">
+                Assigned Collection Point <span className="text-destructive">*</span>
               </label>
               <select
                 id="chw-lab"
                 value={assignedLabId}
                 onChange={(e) => setAssignedLabId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 {labs.map((lab) => (
                   <option key={lab.labId} value={lab.labId}>{lab.labName}</option>
@@ -133,7 +133,7 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={onClose}
-                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Cancel
               </button>

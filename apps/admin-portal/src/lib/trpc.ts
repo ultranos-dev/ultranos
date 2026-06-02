@@ -3,7 +3,7 @@ import superjson from 'superjson'
 import type { AppRouter } from 'hub-api/src/trpc/routers/_app'
 
 function getHubApiUrl(): string {
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 // Access token stored in memory only — never localStorage/sessionStorage.

@@ -45,7 +45,7 @@ export default function DashboardPage() {
         <DunningBanner />
 
         {statsError && (
-          <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
             Failed to load dashboard stats. Data shown may be stale.
           </div>
         )}
@@ -55,18 +55,18 @@ export default function DashboardPage() {
           {/* Pending KYC Reviews */}
           <div
             onClick={() => router.push('/providers')}
-            className={`rounded-2xl bg-accent-subtle p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
+            className={`rounded-2xl bg-primary/10 p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
               stats && stats.slaBreachedKycCount > 0
-                ? 'border-danger'
-                : 'border-accent/20'
+                ? 'border-destructive'
+                : 'border-primary/20'
             }`}
           >
-            <p className="text-sm font-medium text-text-secondary">Pending KYC Reviews</p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">
+            <p className="text-sm font-medium text-muted-foreground">Pending KYC Reviews</p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {stats?.pendingKycReviews ?? '\u2014'}
             </p>
             {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.slaBreachedKycCount > 0 ? 'text-danger' : 'text-text-secondary'}`}>
+              <p className={`mt-1 text-sm font-medium ${stats.slaBreachedKycCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                 {stats.slaBreachedKycCount} breaching SLA
               </p>
             )}
@@ -75,14 +75,14 @@ export default function DashboardPage() {
           {/* Pending Lab Approvals */}
           <div
             onClick={() => router.push('/labs')}
-            className="rounded-2xl bg-surface-raised border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
+            className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
           >
-            <p className="text-sm font-medium text-text-secondary">Pending Lab Approvals</p>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-text-primary">
+            <p className="text-sm font-medium text-muted-foreground">Pending Lab Approvals</p>
+            <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
               {stats?.pendingLabApprovals ?? '\u2014'}
             </p>
             {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-text-secondary'}`}>
+              <p className={`mt-1 text-sm font-medium ${stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
                 oldest: {stats.oldestPendingLabDays}d ago
               </p>
             )}
@@ -91,18 +91,18 @@ export default function DashboardPage() {
           {/* Active Alerts */}
           <div
             onClick={() => router.push('/alerts')}
-            className={`rounded-2xl bg-surface-raised p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
+            className={`rounded-2xl bg-popover p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card border ${
               stats && stats.activeAlerts > 0
-                ? 'border-s-2 border-s-danger border-border'
+                ? 'border-s-2 border-s-destructive border-border'
                 : 'border-border'
             }`}
           >
-            <p className="text-sm font-medium text-text-secondary">Active Alerts</p>
-            <p className={`mt-2 text-xl font-semibold tracking-tight ${stats && stats.activeAlerts > 0 ? 'text-danger' : 'text-text-primary'}`}>
+            <p className="text-sm font-medium text-muted-foreground">Active Alerts</p>
+            <p className={`mt-2 text-xl font-semibold tracking-tight ${stats && stats.activeAlerts > 0 ? 'text-destructive' : 'text-foreground'}`}>
               {stats?.activeAlerts ?? '\u2014'}
             </p>
             {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.highSeverityAlertCount > 0 ? 'text-danger' : 'text-text-secondary'}`}>
+              <p className={`mt-1 text-sm font-medium ${stats.highSeverityAlertCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                 {stats.highSeverityAlertCount} HIGH severity
               </p>
             )}
@@ -111,14 +111,14 @@ export default function DashboardPage() {
           {/* Audit Events — clickable to /audit */}
           <div
             onClick={() => router.push('/audit')}
-            className="rounded-2xl bg-surface-raised border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
+            className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
           >
-            <p className="text-sm font-medium text-text-secondary">Recent Audit Events</p>
-            <p className="mt-2 text-xl font-semibold tracking-tight text-text-primary">
+            <p className="text-sm font-medium text-muted-foreground">Recent Audit Events</p>
+            <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
               {stats?.recentAuditEvents ?? '\u2014'}
             </p>
             {stats && (
-              <p className={`mt-1 text-sm font-medium ${stats.auditChainHealthy ? 'text-success' : 'text-danger'}`}>
+              <p className={`mt-1 text-sm font-medium ${stats.auditChainHealthy ? 'text-success' : 'text-destructive'}`}>
                 {stats.auditChainHealthy ? 'Healthy' : 'Broken'}
               </p>
             )}

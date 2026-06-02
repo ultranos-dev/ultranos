@@ -132,12 +132,12 @@ export default function RegisterPage() {
   const stepLabels = ['Organization', 'Admin Account', 'Modules']
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl">
-        <h1 className="mb-2 text-center text-xl font-bold text-text-primary">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl">
+        <h1 className="mb-2 text-center text-xl font-bold text-foreground">
           Register Your Organization
         </h1>
-        <p className="mb-6 text-center text-sm text-text-secondary">
+        <p className="mb-6 text-center text-sm text-muted-foreground">
           Get started with a 30-day free trial
         </p>
 
@@ -152,15 +152,15 @@ export default function RegisterPage() {
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium ${
                     isActive
-                      ? 'bg-sidebar text-text-on-dark'
+                      ? 'bg-sidebar text-primary-foreground'
                       : isComplete
-                        ? 'bg-accent text-text-primary'
-                        : 'bg-surface text-text-secondary'
+                        ? 'bg-primary text-foreground'
+                        : 'bg-card text-muted-foreground'
                   }`}
                 >
                   {isComplete ? '\u2713' : stepNum}
                 </div>
-                <span className="mt-1 text-xs text-text-secondary">{label}</span>
+                <span className="mt-1 text-xs text-muted-foreground">{label}</span>
               </div>
             )
           })}
@@ -170,7 +170,7 @@ export default function RegisterPage() {
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger"
+            className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           >
             {error}
           </div>
@@ -205,9 +205,9 @@ export default function RegisterPage() {
         )}
 
         {/* Sign-in link */}
-        <p className="mt-6 text-center text-xs text-text-secondary">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Already have an account?{' '}
-          <a href="/login" className="font-medium text-text-primary hover:text-accent transition-colors duration-200">
+          <a href="/login" className="font-medium text-foreground hover:text-primary transition-colors duration-200">
             Sign in
           </a>
         </p>

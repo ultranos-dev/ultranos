@@ -43,7 +43,7 @@ function timeAgo(iso: string): string {
 function ChainStatusBadge({ valid }: { valid: boolean | null }) {
   if (valid === true) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-success-subtle px-3 py-1 text-sm font-medium text-success">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-sm font-medium text-success">
         <span className="h-2 w-2 rounded-full bg-success" />
         Healthy
       </span>
@@ -51,14 +51,14 @@ function ChainStatusBadge({ valid }: { valid: boolean | null }) {
   }
   if (valid === false) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-subtle px-3 py-1 text-sm font-medium text-danger">
-        <span className="h-2 w-2 rounded-full bg-danger" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-3 py-1 text-sm font-medium text-destructive">
+        <span className="h-2 w-2 rounded-full bg-destructive" />
         Broken
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-sm font-medium text-text-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-sm font-medium text-muted-foreground">
       <span className="h-2 w-2 rounded-full bg-text-secondary" />
       Unknown
     </span>
@@ -67,8 +67,8 @@ function ChainStatusBadge({ valid }: { valid: boolean | null }) {
 
 function ResultIcon({ valid }: { valid: boolean | null }) {
   if (valid === true) return <span className="text-success" title="Pass">&#10003;</span>
-  if (valid === false) return <span className="text-danger" title="Fail">&#10007;</span>
-  return <span className="text-text-secondary" title="Job failed">&#8212;</span>
+  if (valid === false) return <span className="text-destructive" title="Fail">&#10007;</span>
+  return <span className="text-muted-foreground" title="Job failed">&#8212;</span>
 }
 
 const PAGE_SIZE = 30
@@ -154,7 +154,7 @@ export default function AuditChainPage() {
           <button
             onClick={() => setTab('integrity')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'integrity' ? 'bg-brand-lime text-black' : 'border border-border text-text-muted hover:bg-surface'
+              tab === 'integrity' ? 'bg-brand-lime text-black' : 'border border-border text-muted-foreground hover:bg-card'
             }`}
           >
             Chain Integrity
@@ -162,7 +162,7 @@ export default function AuditChainPage() {
           <button
             onClick={() => setTab('events')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'events' ? 'bg-brand-lime text-black' : 'border border-border text-text-muted hover:bg-surface'
+              tab === 'events' ? 'bg-brand-lime text-black' : 'border border-border text-muted-foreground hover:bg-card'
             }`}
           >
             Event Browser
@@ -173,41 +173,41 @@ export default function AuditChainPage() {
 
         {tab === 'integrity' && (<>
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading audit chain status...</div>
+          <div className="mt-6 text-muted-foreground">Loading audit chain status...</div>
         ) : (
           <>
             {/* Status cards (AC #8) */}
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-text-secondary">Chain Status</p>
+              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-muted-foreground">Chain Status</p>
                 <div className="mt-2">
                   <ChainStatusBadge valid={status?.chainHealthy ?? null} />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-text-secondary">Last Verified</p>
+              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-muted-foreground">Last Verified</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
                 </p>
                 {status?.lastVerifiedAt && (
-                  <p className="text-xs text-text-secondary">{formatDate(status.lastVerifiedAt)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(status.lastVerifiedAt)}</p>
                 )}
               </div>
 
-              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-text-secondary">Entries Verified</p>
+              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-muted-foreground">Entries Verified</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastCheckedCount?.toLocaleString() ?? '0'}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-surface-raised p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-text-secondary">Consecutive Successes</p>
+              <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
+                <p className="text-sm font-medium text-muted-foreground">Consecutive Successes</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.consecutiveSuccesses ?? 0}
                 </p>
@@ -217,7 +217,7 @@ export default function AuditChainPage() {
             {/* 30-day health trend (AC #8) */}
             {trendDays.length > 0 && (
               <div className="mt-6">
-                <h2 className="text-sm font-medium text-text-secondary">30-Day Health Trend</h2>
+                <h2 className="text-sm font-medium text-muted-foreground">30-Day Health Trend</h2>
                 <div className="mt-2 flex items-end gap-0.5">
                   {trendDays.map((day) => (
                     <div
@@ -225,16 +225,16 @@ export default function AuditChainPage() {
                       title={`${day.date}: ${day.status}`}
                       className={`h-6 w-2 rounded-sm ${
                         day.status === 'pass' ? 'bg-success' :
-                        day.status === 'fail' ? 'bg-danger' :
+                        day.status === 'fail' ? 'bg-destructive' :
                         day.status === 'error' ? 'bg-warning' :
                         'bg-border'
                       }`}
                     />
                   ))}
                 </div>
-                <div className="mt-1 flex gap-4 text-xs text-text-secondary">
+                <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success" /> Pass</span>
-                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-danger" /> Fail</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-destructive" /> Fail</span>
                   <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-warning" /> Error</span>
                   <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-border" /> No data</span>
                 </div>
@@ -251,41 +251,41 @@ export default function AuditChainPage() {
                 {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
               </button>
               {fullVerifyResult && (
-                <p className="text-sm text-text-secondary">{fullVerifyResult}</p>
+                <p className="text-sm text-muted-foreground">{fullVerifyResult}</p>
               )}
             </div>
 
             {/* Verification history table (AC #6) */}
             <div className="mt-6 rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Result</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Entries Checked</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Duration</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Type</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Triggered By</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Broken Event ID</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Result</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Entries Checked</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duration</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Triggered By</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {verifications.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-text-secondary">
+                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                         No verification history found in the last 30 days.
                       </td>
                     </tr>
                   ) : (
                     verifications.map((v) => (
-                      <tr key={v.id} className="hover:bg-accent-subtle transition-colors">
+                      <tr key={v.id} className="hover:bg-primary/10 transition-colors">
                         <td className="px-4 py-3">{formatDate(v.verifiedAt)}</td>
                         <td className="px-4 py-3"><ResultIcon valid={v.valid} /></td>
-                        <td className="px-4 py-3 text-text-secondary">{v.checkedCount.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-text-secondary">{v.jobDurationMs}ms</td>
-                        <td className="px-4 py-3 text-text-secondary">{v.isFullVerification ? 'Full' : 'Daily'}</td>
-                        <td className="px-4 py-3 text-text-secondary">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
-                        <td className="px-4 py-3 text-text-secondary font-mono text-xs">
+                        <td className="px-4 py-3 text-muted-foreground">{v.checkedCount.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{v.jobDurationMs}ms</td>
+                        <td className="px-4 py-3 text-muted-foreground">{v.isFullVerification ? 'Full' : 'Daily'}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{v.triggeredBy === 'CRON' ? 'Scheduled' : 'Manual'}</td>
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                           {v.brokenAtEventId ? v.brokenAtEventId.slice(0, 8) + '...' : ''}
                         </td>
                       </tr>
@@ -297,7 +297,7 @@ export default function AuditChainPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>

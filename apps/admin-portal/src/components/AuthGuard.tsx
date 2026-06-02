@@ -129,10 +129,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (state === 'access-denied') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
-        <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-danger-subtle p-8 text-center">
-          <h1 className="text-xl font-bold text-danger">Access Denied</h1>
-          <p className="mt-2 text-sm text-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-destructive/10 p-8 text-center">
+          <h1 className="text-xl font-bold text-destructive">Access Denied</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             You do not have admin privileges. This portal is restricted to users with the ADMIN role.
           </p>
           <button
@@ -143,7 +143,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="mt-4 rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
+            className="mt-4 rounded-full bg-destructive px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
           >
             Sign Out
           </button>
@@ -168,15 +168,15 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
 function TrialExpiredInterstitial() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-surface-raised p-8 text-center shadow-card">
-        <h1 className="text-xl font-bold text-text-primary">Your free trial has expired</h1>
-        <p className="mt-2 text-sm text-text-secondary">
+    <div className="flex min-h-screen items-center justify-center bg-card">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
+        <h1 className="text-xl font-bold text-foreground">Your free trial has expired</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Add a payment method to continue using Ultranos.
         </p>
         <a
           href="/subscriptions/billing"
-          className="mt-6 inline-block rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-text-primary hover:opacity-90 transition-opacity"
+          className="mt-6 inline-block rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-foreground hover:opacity-90 transition-opacity"
         >
           Set Up Billing
         </a>
@@ -189,7 +189,7 @@ function TrialExpiredInterstitial() {
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="text-sm text-text-secondary underline hover:text-text-primary transition-colors"
+            className="text-sm text-muted-foreground underline hover:text-foreground transition-colors"
           >
             Sign Out
           </button>

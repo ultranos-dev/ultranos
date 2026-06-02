@@ -92,10 +92,10 @@ export default function AssignStaffModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-text-primary">Assign Staff to Lab</h2>
+        <h2 className="text-lg font-semibold text-foreground">Assign Staff to Lab</h2>
 
         <div className="mt-4 space-y-4">
           {/* Lab selector — only shown in org-wide context */}
@@ -103,7 +103,7 @@ export default function AssignStaffModal({
             <div>
               <label
                 htmlFor="assign-lab-select"
-                className="block text-sm font-medium text-text-secondary mb-1"
+                className="block text-sm font-medium text-muted-foreground mb-1"
               >
                 Lab
               </label>
@@ -112,7 +112,7 @@ export default function AssignStaffModal({
                 aria-label="Lab"
                 value={selectedLabId}
                 onChange={(e) => setSelectedLabId(e.target.value)}
-                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Select a lab…</option>
                 {labs.map((l) => (
@@ -128,7 +128,7 @@ export default function AssignStaffModal({
           <div>
             <label
               htmlFor="assign-practitioner-select"
-              className="block text-sm font-medium text-text-secondary mb-1"
+              className="block text-sm font-medium text-muted-foreground mb-1"
             >
               Practitioner
             </label>
@@ -138,7 +138,7 @@ export default function AssignStaffModal({
               value={selectedPractitionerId}
               onChange={(e) => setSelectedPractitionerId(e.target.value)}
               disabled={loadingPractitioners}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             >
               <option value="">
                 {loadingPractitioners ? 'Loading…' : 'Select a practitioner…'}
@@ -155,7 +155,7 @@ export default function AssignStaffModal({
           <div>
             <label
               htmlFor="assign-role-select"
-              className="block text-sm font-medium text-text-secondary mb-1"
+              className="block text-sm font-medium text-muted-foreground mb-1"
             >
               Initial role
             </label>
@@ -164,7 +164,7 @@ export default function AssignStaffModal({
               aria-label="Initial role"
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value as LabRole)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {LAB_ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -176,20 +176,20 @@ export default function AssignStaffModal({
         </div>
 
         {error && (
-          <div className="mt-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border px-6 py-2.5 text-sm text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-text-primary disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-foreground disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
           >
             {submitting ? 'Assigning…' : 'Assign'}
           </button>

@@ -71,7 +71,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        isActive ? 'bg-success-subtle text-success' : 'bg-surface text-text-secondary'
+        isActive ? 'bg-success/10 text-success' : 'bg-card text-muted-foreground'
       }`}
     >
       {status}
@@ -111,32 +111,32 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
     {
       label: 'Paired Techs',
       value: stats?.totalPaired ?? placeholder,
-      className: 'bg-accent-subtle border-accent/20',
+      className: 'bg-primary/10 border-primary/20',
     },
     {
       label: 'Unmatched Techs',
       value: stats?.unmatchedTechs ?? placeholder,
       className:
         stats && stats.unmatchedTechs > 0
-          ? 'bg-warning-subtle border-warning/20'
-          : 'bg-surface-raised border-border',
+          ? 'bg-warning/10 border-warning/20'
+          : 'bg-popover border-border',
     },
     {
       label: 'Avg Duration',
       value: stats ? formatDuration(stats.avgPairingDurationDays) : placeholder,
-      className: 'bg-surface-raised border-border',
+      className: 'bg-popover border-border',
     },
     {
       label: 'Check-in Rate',
       value: stats ? `${stats.checkinCompletionRate}%` : placeholder,
       className:
         stats && stats.checkinCompletionRate >= 80
-          ? 'bg-success-subtle border-success/20'
+          ? 'bg-success/10 border-success/20'
           : stats && stats.checkinCompletionRate >= 50
-            ? 'bg-warning-subtle border-warning/20'
+            ? 'bg-warning/10 border-warning/20'
             : stats
-              ? 'bg-danger-subtle border-danger/20'
-              : 'bg-surface-raised border-border',
+              ? 'bg-destructive/10 border-destructive/20'
+              : 'bg-popover border-border',
     },
   ]
 
@@ -147,8 +147,8 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
           key={card.label}
           className={`rounded-2xl border p-6 shadow-card ${card.className}`}
         >
-          <p className="text-sm font-medium text-text-secondary">{card.label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">
+          <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
             {loading ? '...' : card.value}
           </p>
         </div>
@@ -236,19 +236,19 @@ function CreatePairingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-2xl bg-surface-raised p-6 shadow-lg border border-border">
-        <h2 className="text-lg font-semibold text-text-primary">Create Mentorship Pairing</h2>
+      <div className="w-full max-w-lg rounded-2xl bg-popover p-6 shadow-lg border border-border">
+        <h2 className="text-lg font-semibold text-foreground">Create Mentorship Pairing</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Mentor selector */}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Mentor (Supervisor / Lab Manager)
             </label>
             <select
               value={selectedMentor}
               onChange={(e) => setSelectedMentor(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               required
             >
               <option value="">Select a mentor...</option>
@@ -262,11 +262,11 @@ function CreatePairingModal({
 
           {/* Mentee selector */}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Mentee</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Mentee</label>
             <select
               value={selectedMentee}
               onChange={(e) => setSelectedMentee(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               required
             >
               <option value="">Select a mentee...</option>
@@ -282,36 +282,36 @@ function CreatePairingModal({
 
           {/* Goals */}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Goals</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Goals</label>
             <textarea
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
               rows={3}
               maxLength={2000}
               placeholder="Mentorship goals..."
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </div>
 
           {/* Start date */}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Start Date</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
 
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors"
+              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors"
             >
               Cancel
             </button>
@@ -380,19 +380,19 @@ function DissolveModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-lg border border-border">
-        <h2 className="text-lg font-semibold text-text-primary">Dissolve Pairing</h2>
-        <p className="mt-1 text-sm text-text-secondary">
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-lg border border-border">
+        <h2 className="text-lg font-semibold text-foreground">Dissolve Pairing</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           This will end the mentorship pairing. This action cannot be undone.
         </p>
 
         <div className="mt-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Reason</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Reason</label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value as typeof reason)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="COMPLETED">Completed</option>
               <option value="REASSIGNED">Reassigned</option>
@@ -402,7 +402,7 @@ function DissolveModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Notes (optional)
             </label>
             <textarea
@@ -411,17 +411,17 @@ function DissolveModal({
               rows={3}
               maxLength={1000}
               placeholder="Additional notes..."
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </div>
 
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors"
+              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors"
             >
               Cancel
             </button>
@@ -429,7 +429,7 @@ function DissolveModal({
               type="button"
               onClick={handleDissolve}
               disabled={submitting}
-              className="rounded-full bg-danger px-5 py-2 text-sm font-semibold text-white hover:bg-danger/90 transition-colors disabled:opacity-50"
+              className="rounded-full bg-destructive px-5 py-2 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors disabled:opacity-50"
             >
               {submitting ? 'Dissolving...' : 'Dissolve Pairing'}
             </button>
@@ -463,27 +463,27 @@ function PairingDetailPanel({
       .finally(() => setLoading(false))
   }, [pairingId])
 
-  if (loading) return <tr><td colSpan={6} className="px-4 py-6 text-center text-text-secondary">Loading details...</td></tr>
+  if (loading) return <tr><td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">Loading details...</td></tr>
   if (!detail) return null
 
   return (
     <tr>
-      <td colSpan={6} className="bg-accent-subtle/30 px-6 py-4">
+      <td colSpan={6} className="bg-primary/10/30 px-6 py-4">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-text-primary">
-              Goals: <span className="font-normal text-text-secondary">{detail.goals || 'None set'}</span>
+            <p className="text-sm font-medium text-foreground">
+              Goals: <span className="font-normal text-muted-foreground">{detail.goals || 'None set'}</span>
             </p>
             {detail.dissolvedReason && (
-              <p className="mt-1 text-sm text-text-secondary">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Dissolved: {detail.dissolvedReason}
                 {detail.dissolvedNotes && ` — ${detail.dissolvedNotes}`}
               </p>
             )}
             <div className="mt-3">
-              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Check-in History</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Check-in History</p>
               {detail.checkins.length === 0 ? (
-                <p className="text-sm text-text-muted">No check-ins recorded</p>
+                <p className="text-sm text-muted-foreground">No check-ins recorded</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {detail.checkins.map((c) => (
@@ -491,10 +491,10 @@ function PairingDetailPanel({
                       key={c.id}
                       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         c.status === 'COMPLETED'
-                          ? 'bg-success-subtle text-success'
+                          ? 'bg-success/10 text-success'
                           : c.status === 'SKIPPED'
-                            ? 'bg-warning-subtle text-warning'
-                            : 'bg-surface text-text-secondary'
+                            ? 'bg-warning/10 text-warning'
+                            : 'bg-card text-muted-foreground'
                       }`}
                     >
                       {c.month}: {c.status}
@@ -506,7 +506,7 @@ function PairingDetailPanel({
           </div>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-text-primary text-sm"
+            className="text-muted-foreground hover:text-foreground text-sm"
             aria-label="Close detail"
           >
             Close
@@ -598,15 +598,15 @@ export default function MentorshipPage() {
 
         {/* Top bar: filter tabs + CTA */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 rounded-full border border-border bg-surface p-0.5">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-0.5">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleFilterChange(tab)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === tab
-                    ? 'bg-accent text-white'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary text-white'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {tab === 'ALL' ? 'All' : tab.charAt(0) + tab.slice(1).toLowerCase()}
@@ -623,16 +623,16 @@ export default function MentorshipPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Pairings table */}
         {loading && pairings.length === 0 ? (
-          <div className="mt-6 text-text-secondary">Loading pairings...</div>
+          <div className="mt-6 text-muted-foreground">Loading pairings...</div>
         ) : pairings.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-            <p className="text-lg font-medium text-text-primary">No mentorship pairings yet</p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="text-lg font-medium text-foreground">No mentorship pairings yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Create a pairing to connect experienced techs with junior staff.
             </p>
             <button
@@ -656,7 +656,7 @@ export default function MentorshipPage() {
                     <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {pairings.map((p) => (
                     <Fragment key={p.id}>
                       <tr
@@ -664,15 +664,15 @@ export default function MentorshipPage() {
                         className="cursor-pointer transition-colors hover:bg-brand-lime/5"
                       >
                         <td className="px-4 py-3">
-                          <p className="font-medium text-text-primary">{p.mentorName}</p>
-                          <p className="text-xs text-text-muted">{truncateEmail(p.mentorEmail)}</p>
+                          <p className="font-medium text-foreground">{p.mentorName}</p>
+                          <p className="text-xs text-muted-foreground">{truncateEmail(p.mentorEmail)}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-text-primary">{p.menteeName}</p>
-                          <p className="text-xs text-text-muted">{truncateEmail(p.menteeEmail)}</p>
+                          <p className="font-medium text-foreground">{p.menteeName}</p>
+                          <p className="text-xs text-muted-foreground">{truncateEmail(p.menteeEmail)}</p>
                         </td>
-                        <td className="px-4 py-3 text-text-primary">{p.labName}</td>
-                        <td className="px-4 py-3 text-text-muted">{formatDate(p.startDate)}</td>
+                        <td className="px-4 py-3 text-foreground">{p.labName}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(p.startDate)}</td>
                         <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                         <td className="px-4 py-3">
                           {p.status === 'ACTIVE' && (
@@ -681,7 +681,7 @@ export default function MentorshipPage() {
                                 e.stopPropagation()
                                 setDissolvePairingId(p.id)
                               }}
-                              className="rounded-full border border-danger/30 px-3 py-1 text-xs font-medium text-danger hover:bg-danger-subtle transition-colors"
+                              className="rounded-full border border-destructive/30 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                             >
                               Dissolve
                             </button>
@@ -706,7 +706,7 @@ export default function MentorshipPage() {
                 <button
                   onClick={() => fetchPairings(nextCursor)}
                   disabled={loading}
-                  className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors disabled:opacity-50"
+                  className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Loading...' : 'Load More'}
                 </button>

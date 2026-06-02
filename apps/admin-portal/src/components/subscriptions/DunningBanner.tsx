@@ -52,14 +52,14 @@ export function DunningBanner() {
     return (
       <div
         role="alert"
-        className="rounded-2xl bg-danger-subtle border border-danger/20 px-5 py-3 flex items-center justify-between gap-4"
+        className="rounded-2xl bg-destructive/10 border border-destructive/20 px-5 py-3 flex items-center justify-between gap-4"
       >
-        <p className="text-sm font-semibold text-danger">
+        <p className="text-sm font-semibold text-destructive">
           Your subscription has been suspended due to a failed payment.
         </p>
         <Link
           href="/subscriptions/billing"
-          className="shrink-0 rounded-full bg-danger px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          className="shrink-0 rounded-full bg-destructive px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
         >
           Update Payment Method
         </Link>
@@ -79,7 +79,7 @@ export function DunningBanner() {
         </p>
         <Link
           href="/subscriptions/billing"
-          className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-text-primary hover:brightness-95 transition-all"
+          className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-foreground hover:brightness-95 transition-all"
         >
           Update Payment Method
         </Link>
@@ -98,7 +98,7 @@ export function DunningBanner() {
       </p>
       <Link
         href="/subscriptions/billing"
-        className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-text-primary hover:brightness-95 transition-all"
+        className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-foreground hover:brightness-95 transition-all"
       >
         Update Payment Method
       </Link>

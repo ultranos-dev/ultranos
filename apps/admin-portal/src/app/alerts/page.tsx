@@ -29,11 +29,11 @@ const ANOMALY_TYPE_LABELS: Record<string, string> = {
 
 function SeverityBadge({ severity }: { severity: string }) {
   const colorMap: Record<string, string> = {
-    HIGH: 'bg-danger-subtle text-danger',
-    MEDIUM: 'bg-warning-subtle text-warning',
+    HIGH: 'bg-destructive/10 text-destructive',
+    MEDIUM: 'bg-warning/10 text-warning',
   }
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[severity] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[severity] ?? 'bg-card text-muted-foreground'}`}>
       {severity}
     </span>
   )
@@ -41,13 +41,13 @@ function SeverityBadge({ severity }: { severity: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    UNREVIEWED: 'bg-warning-subtle text-warning',
+    UNREVIEWED: 'bg-warning/10 text-warning',
     ESCALATED: 'bg-purple-100 text-purple-800',
-    DISMISSED: 'bg-surface text-text-secondary',
-    SUSPENDED: 'bg-danger-subtle text-danger',
+    DISMISSED: 'bg-card text-muted-foreground',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status.charAt(0) + status.slice(1).toLowerCase()}
     </span>
   )
@@ -101,24 +101,24 @@ function MetricCard({ label, value, status, detail }: {
   detail?: string
 }) {
   const statusColor = {
-    OK: 'border-success/20 bg-success-subtle',
-    WARNING: 'border-warning/20 bg-warning-subtle',
-    ALERT: 'border-danger/20 bg-danger-subtle',
+    OK: 'border-success/20 bg-success/10',
+    WARNING: 'border-warning/20 bg-warning/10',
+    ALERT: 'border-destructive/20 bg-destructive/10',
   }
   const dotColor = {
     OK: 'bg-success',
     WARNING: 'bg-warning',
-    ALERT: 'bg-danger',
+    ALERT: 'bg-destructive',
   }
 
   return (
     <div className={`rounded-2xl border p-4 ${statusColor[status]}`}>
       <div className="flex items-center gap-2">
         <div className={`h-2.5 w-2.5 rounded-full ${dotColor[status]}`} />
-        <span className="text-sm font-medium text-text-primary">{label}</span>
+        <span className="text-sm font-medium text-foreground">{label}</span>
       </div>
-      <p className="mt-2 text-2xl font-bold text-text-primary">{value}</p>
-      {detail && <p className="mt-1 text-xs text-text-secondary">{detail}</p>}
+      <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+      {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
     </div>
   )
 }
@@ -163,8 +163,8 @@ function ClinicalSafetySection() {
     }
   }
 
-  if (loading) return <div className="mt-6 text-text-secondary">Loading clinical safety metrics...</div>
-  if (error) return <div className="mt-6 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+  if (loading) return <div className="mt-6 text-muted-foreground">Loading clinical safety metrics...</div>
+  if (error) return <div className="mt-6 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
   if (!metrics) return null
 
   return (
@@ -195,29 +195,29 @@ function ClinicalSafetySection() {
 
       {/* Monthly reports list */}
       <div>
-        <h3 className="text-lg font-semibold text-text-primary">Monthly Reports</h3>
+        <h3 className="text-lg font-semibold text-foreground">Monthly Reports</h3>
         {reports.length === 0 ? (
-          <p className="mt-2 text-sm text-text-secondary">No monthly reports generated yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground">No monthly reports generated yet.</p>
         ) : (
           <div className="mt-2 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-surface">
+              <thead className="bg-card">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Period</th>
-                  <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Generated</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Period</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Generated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {reports.map((r) => (
                   <tr
                     key={r.id}
                     onClick={() => viewReport(r.month, r.year)}
-                    className="cursor-pointer hover:bg-accent-subtle transition-colors"
+                    className="cursor-pointer hover:bg-primary/10 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">
                       {new Date(r.year, r.month - 1).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">{formatDate(r.generatedAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDate(r.generatedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -226,19 +226,19 @@ function ClinicalSafetySection() {
         )}
 
         {/* Report detail panel */}
-        {reportLoading && <p className="mt-3 text-sm text-text-secondary">Loading report...</p>}
+        {reportLoading && <p className="mt-3 text-sm text-muted-foreground">Loading report...</p>}
         {selectedReport && !reportLoading && (
-          <div className="mt-4 rounded-2xl border border-border bg-surface-raised p-4 shadow-card">
+          <div className="mt-4 rounded-2xl border border-border bg-popover p-4 shadow-card">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-text-primary">Report Detail</h4>
+              <h4 className="font-semibold text-foreground">Report Detail</h4>
               <button
                 onClick={() => setSelectedReport(null)}
-                className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Close
               </button>
             </div>
-            <pre className="mt-3 max-h-96 overflow-auto rounded bg-surface p-3 text-xs text-text-primary">
+            <pre className="mt-3 max-h-96 overflow-auto rounded bg-card p-3 text-xs text-foreground">
               {JSON.stringify(selectedReport, null, 2)}
             </pre>
           </div>
@@ -300,8 +300,8 @@ export default function AlertsPage() {
             onClick={() => setActiveTab('anomalies')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'anomalies'
-                ? 'border-accent text-text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Prescribing Anomalies
@@ -310,8 +310,8 @@ export default function AlertsPage() {
             onClick={() => setActiveTab('clinical-safety')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'clinical-safety'
-                ? 'border-accent text-text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             Clinical Safety
@@ -324,15 +324,15 @@ export default function AlertsPage() {
         <>
         {/* Filter tabs + Export — AC #11 */}
         <div className="mt-6 flex items-center gap-3">
-          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-accent text-text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -343,41 +343,41 @@ export default function AlertsPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading anomaly alerts...</div>
+          <div className="mt-6 text-muted-foreground">Loading anomaly alerts...</div>
         ) : alerts.length === 0 ? (
           <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-text-secondary">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
+            <p className="text-muted-foreground">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
           </div>
         ) : (
           <>
             {/* Alert queue table — AC #1, #2 */}
             <div className="mt-4 rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Provider Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Anomaly Type</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Threshold Breached</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Date Range</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Severity</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Provider Name</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Anomaly Type</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Threshold Breached</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date Range</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Severity</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {alerts.map((alert) => (
                     <tr
                       key={alert.id}
                       onClick={() => router.push(`/alerts/${alert.id}`)}
-                      className="cursor-pointer hover:bg-accent-subtle transition-colors"
+                      className="cursor-pointer hover:bg-primary/10 transition-colors"
                     >
                       <td className="px-4 py-3 font-medium">{alert.practitionerName}</td>
-                      <td className="px-4 py-3 text-text-secondary">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</td>
-                      <td className="px-4 py-3 text-text-secondary">{formatThreshold(alert.anomalyType, alert.threshold, alert.actualValue)}</td>
-                      <td className="px-4 py-3 text-text-secondary">{formatDateRange(alert.dateRangeStart, alert.dateRangeEnd)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatThreshold(alert.anomalyType, alert.threshold, alert.actualValue)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDateRange(alert.dateRangeStart, alert.dateRangeEnd)}</td>
                       <td className="px-4 py-3"><SeverityBadge severity={alert.severity} /></td>
                       <td className="px-4 py-3"><StatusBadge status={alert.status} /></td>
                     </tr>
@@ -388,7 +388,7 @@ export default function AlertsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>

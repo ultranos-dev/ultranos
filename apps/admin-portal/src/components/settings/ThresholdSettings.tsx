@@ -65,7 +65,7 @@ export function ThresholdSettings() {
   }
 
   if (loading) {
-    return <p className="text-sm text-text-secondary">Loading thresholds...</p>
+    return <p className="text-sm text-muted-foreground">Loading thresholds...</p>
   }
 
   return (
@@ -73,54 +73,54 @@ export function ThresholdSettings() {
       {/* KYC Review SLA */}
       <div>
         <label className="block">
-          <span className="text-xs font-medium text-text-secondary">KYC Review SLA (days)</span>
+          <span className="text-xs font-medium text-muted-foreground">KYC Review SLA (days)</span>
           <input
             type="number"
             min={1}
             max={30}
             value={data.kycReviewSlaDays}
             onChange={(e) => updateField('kycReviewSlaDays', Number(e.target.value))}
-            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </label>
-        <p className="mt-1 text-xs text-text-secondary">Days before a pending KYC submission is flagged as SLA-breached</p>
+        <p className="mt-1 text-xs text-muted-foreground">Days before a pending KYC submission is flagged as SLA-breached</p>
       </div>
 
       {/* Controlled Substance Daily Limit */}
       <div>
         <label className="block">
-          <span className="text-xs font-medium text-text-secondary">Controlled Substance Daily Limit</span>
+          <span className="text-xs font-medium text-muted-foreground">Controlled Substance Daily Limit</span>
           <input
             type="number"
             min={1}
             max={100}
             value={data.controlledSubstanceDailyLimit}
             onChange={(e) => updateField('controlledSubstanceDailyLimit', Number(e.target.value))}
-            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </label>
-        <p className="mt-1 text-xs text-text-secondary">Prescriptions per day per provider before triggering anomaly alert</p>
+        <p className="mt-1 text-xs text-muted-foreground">Prescriptions per day per provider before triggering anomaly alert</p>
       </div>
 
       {/* Drug Frequency Threshold */}
       <div>
         <label className="block">
-          <span className="text-xs font-medium text-text-secondary">Drug Frequency Threshold (%)</span>
+          <span className="text-xs font-medium text-muted-foreground">Drug Frequency Threshold (%)</span>
           <input
             type="number"
             min={1}
             max={100}
             value={data.drugFrequencyThresholdPct}
             onChange={(e) => updateField('drugFrequencyThresholdPct', Number(e.target.value))}
-            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </label>
-        <p className="mt-1 text-xs text-text-secondary">Percentage of patients receiving same drug in 7 days before alert</p>
+        <p className="mt-1 text-xs text-muted-foreground">Percentage of patients receiving same drug in 7 days before alert</p>
       </div>
 
       {/* License Expiry Warning Bands */}
       <div>
-        <p className="text-xs font-medium text-text-secondary mb-2">License Expiry Warning Bands</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">License Expiry Warning Bands</p>
         <div className="grid grid-cols-3 gap-3">
           <label className="block">
             <span className="text-xs text-warning">Yellow (days)</span>
@@ -130,7 +130,7 @@ export function ThresholdSettings() {
               max={365}
               value={data.licenseExpiryWarningDays[0] ?? 60}
               onChange={(e) => updateWarningBand(0, Number(e.target.value))}
-              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </label>
           <label className="block">
@@ -141,31 +141,31 @@ export function ThresholdSettings() {
               max={365}
               value={data.licenseExpiryWarningDays[1] ?? 30}
               onChange={(e) => updateWarningBand(1, Number(e.target.value))}
-              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </label>
           <label className="block">
-            <span className="text-xs text-danger">Red (days)</span>
+            <span className="text-xs text-destructive">Red (days)</span>
             <input
               type="number"
               min={1}
               max={365}
               value={data.licenseExpiryWarningDays[2] ?? 7}
               onChange={(e) => updateWarningBand(2, Number(e.target.value))}
-              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </label>
         </div>
       </div>
 
       {error && (
-        <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">
+        <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {success && (
-        <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+        <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
           Thresholds saved successfully.
         </div>
       )}
@@ -174,7 +174,7 @@ export function ThresholdSettings() {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+        className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save Thresholds'}
       </button>

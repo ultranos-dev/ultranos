@@ -38,11 +38,11 @@ const MERGE_FIELDS = [
 function PatientCard({ patient, label }: { patient: Patient; label: string }) {
   return (
     <div className="rounded-3xl bg-white p-5 border border-border">
-      <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-text-primary">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-foreground">
         {[patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'}
       </p>
-      <div className="mt-3 space-y-1 text-sm text-text-muted">
+      <div className="mt-3 space-y-1 text-sm text-muted-foreground">
         <p>Gender: {patient.gender ?? '-'}</p>
         <p>Birth Year: {patient.birth_year ?? '-'}</p>
         <p>District: {patient.address_district_origin ?? '-'}</p>
@@ -173,14 +173,14 @@ export default function MergeWizardPage() {
         <TopHeader title="Merge Complete" description="The patients have been merged successfully." />
         <div className="mx-auto max-w-7xl px-8 py-6">
           <div className="rounded-3xl bg-white p-8 border border-border text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-subtle">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
             </div>
-            <p className="mt-4 text-lg font-semibold text-text-primary">Patients merged successfully</p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="mt-4 text-lg font-semibold text-foreground">Patients merged successfully</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Merge audit ID: {mergeResult.mergeAuditId}
             </p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="mt-1 text-sm text-muted-foreground">
               This merge can be reversed within 72 hours.
             </p>
             <div className="mt-6 flex items-center justify-center gap-3">
@@ -192,7 +192,7 @@ export default function MergeWizardPage() {
               </Link>
               <Link
                 href="/patients"
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-surface transition-colors"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
               >
                 Back to Patients
               </Link>
@@ -207,10 +207,10 @@ export default function MergeWizardPage() {
     <>
       <TopHeader title="Merge Patients" description="Combine duplicate patient records into one." />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/patients" className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Patients</Link>
+        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Step indicator */}
@@ -222,8 +222,8 @@ export default function MergeWizardPage() {
                   s === step
                     ? 'bg-brand-lime text-black'
                     : s < step
-                      ? 'bg-success-subtle text-success'
-                      : 'bg-surface border border-border text-text-muted'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-card border border-border text-muted-foreground'
                 }`}
               >
                 {s < step ? (
@@ -232,7 +232,7 @@ export default function MergeWizardPage() {
                   s
                 )}
               </span>
-              <span className={`text-sm ${s === step ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
+              <span className={`text-sm ${s === step ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                 {s === 1 ? 'Select Patients' : s === 2 ? 'Resolve Fields' : 'Preview & Confirm'}
               </span>
               {s < 3 && <span className="mx-2 h-px w-8 bg-border" />}
@@ -245,15 +245,15 @@ export default function MergeWizardPage() {
           <div className="mt-6 space-y-6">
             {/* Survivor */}
             <div>
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-3">Survivor Patient</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Survivor Patient</h3>
               {loadingSurvivor ? (
-                <div className="text-sm text-text-secondary">Loading survivor...</div>
+                <div className="text-sm text-muted-foreground">Loading survivor...</div>
               ) : survivor ? (
                 <PatientCard patient={survivor} label="Survivor (will be kept)" />
               ) : (
                 <div className="rounded-3xl border border-dashed border-border bg-white p-6 text-center">
-                  <p className="text-sm text-text-muted">
-                    No survivor selected. Navigate from a patient detail page or provide a <code className="text-xs bg-surface rounded px-1">?survivor=</code> URL parameter.
+                  <p className="text-sm text-muted-foreground">
+                    No survivor selected. Navigate from a patient detail page or provide a <code className="text-xs bg-card rounded px-1">?survivor=</code> URL parameter.
                   </p>
                 </div>
               )}
@@ -262,18 +262,18 @@ export default function MergeWizardPage() {
             {/* Duplicate search */}
             {survivor && (
               <div>
-                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-3">Find Duplicate</h3>
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Find Duplicate</h3>
                 <input
                   type="text"
                   placeholder="Search by name to find duplicate..."
                   value={duplicateSearch}
                   onChange={(e) => setDuplicateSearch(e.target.value)}
-                  className="w-full max-w-md rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  className="w-full max-w-md rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   aria-label="Search for duplicate patient"
                 />
 
                 {searchLoading && (
-                  <div className="mt-2 text-sm text-text-secondary">Searching...</div>
+                  <div className="mt-2 text-sm text-muted-foreground">Searching...</div>
                 )}
 
                 {duplicateResults.length > 0 && !duplicate && (
@@ -284,8 +284,8 @@ export default function MergeWizardPage() {
                         onClick={() => setDuplicate(p)}
                         className="w-full text-start rounded-2xl border border-border bg-white p-4 hover:bg-brand-lime/5 transition-colors"
                       >
-                        <p className="text-sm font-medium text-text-primary">{formatName(p)}</p>
-                        <p className="text-xs text-text-muted">
+                        <p className="text-sm font-medium text-foreground">{formatName(p)}</p>
+                        <p className="text-xs text-muted-foreground">
                           {p.gender ?? '-'} | Birth: {p.birth_year ?? '-'} | District: {p.address_district_origin ?? '-'}
                         </p>
                       </button>
@@ -298,7 +298,7 @@ export default function MergeWizardPage() {
                     <PatientCard patient={duplicate} label="Duplicate (will be deactivated)" />
                     <button
                       onClick={() => setDuplicate(null)}
-                      className="mt-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                      className="mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Change selection
                     </button>
@@ -324,7 +324,7 @@ export default function MergeWizardPage() {
         {/* ── Step 2: Field Resolution ──────────────────────────── */}
         {step === 2 && survivor && duplicate && (
           <div className="mt-6 space-y-6">
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-muted-foreground">
               For each field, choose whether to keep the survivor&apos;s value or use the duplicate&apos;s value.
               Fields with different values are highlighted.
             </p>
@@ -340,7 +340,7 @@ export default function MergeWizardPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-surface transition-colors"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
               >
                 Back
               </button>
@@ -367,15 +367,15 @@ export default function MergeWizardPage() {
 
             {/* Confirmation input */}
             <div className="rounded-3xl bg-white p-5 border border-border">
-              <p className="text-sm text-text-secondary">
-                Type <span className="font-mono font-semibold text-text-primary">MERGE</span> below to confirm this operation.
+              <p className="text-sm text-muted-foreground">
+                Type <span className="font-mono font-semibold text-foreground">MERGE</span> below to confirm this operation.
               </p>
               <input
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder='Type "MERGE" to confirm'
-                className="mt-3 w-full max-w-xs rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-3 w-full max-w-xs rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 aria-label="Type MERGE to confirm"
               />
             </div>
@@ -383,14 +383,14 @@ export default function MergeWizardPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(2)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-surface transition-colors"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={handleMerge}
                 disabled={confirmText !== 'MERGE' || merging}
-                className="rounded-full border border-danger/30 bg-danger-subtle px-6 py-2.5 text-sm font-semibold text-danger disabled:opacity-50 hover:bg-danger-subtle/80 transition-colors"
+                className="rounded-full border border-destructive/30 bg-destructive/10 px-6 py-2.5 text-sm font-semibold text-destructive disabled:opacity-50 hover:bg-destructive/10/80 transition-colors"
               >
                 {merging ? 'Merging...' : 'Confirm Merge'}
               </button>

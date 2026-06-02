@@ -35,12 +35,12 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-text-primary">Purchase Order Details</h2>
-            <p className="mt-0.5 text-xs font-mono text-text-secondary">{order.id}</p>
+            <h2 className="text-lg font-semibold text-foreground">Purchase Order Details</h2>
+            <p className="mt-0.5 text-xs font-mono text-muted-foreground">{order.id}</p>
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-surface text-text-secondary transition-colors"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-card text-muted-foreground transition-colors"
             aria-label="Close"
           >
             &times;
@@ -49,27 +49,27 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
 
         <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
-            <dt className="text-text-secondary">Supplier</dt>
-            <dd className="font-medium text-text-primary">{order.supplierName}</dd>
+            <dt className="text-muted-foreground">Supplier</dt>
+            <dd className="font-medium text-foreground">{order.supplierName}</dd>
           </div>
           <div>
-            <dt className="text-text-secondary">Status</dt>
-            <dd className="font-medium text-text-primary">{order.status}</dd>
+            <dt className="text-muted-foreground">Status</dt>
+            <dd className="font-medium text-foreground">{order.status}</dd>
           </div>
           <div>
-            <dt className="text-text-secondary">Created</dt>
-            <dd className="text-text-primary">{formatDate(order.createdAt)}</dd>
+            <dt className="text-muted-foreground">Created</dt>
+            <dd className="text-foreground">{formatDate(order.createdAt)}</dd>
           </div>
           {order.notes && (
             <div className="col-span-2">
-              <dt className="text-text-secondary">Notes</dt>
-              <dd className="text-text-primary">{order.notes}</dd>
+              <dt className="text-muted-foreground">Notes</dt>
+              <dd className="text-foreground">{order.notes}</dd>
             </div>
           )}
         </dl>
 
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-text-primary">Line Items ({order.items.length})</h3>
+          <h3 className="text-sm font-semibold text-foreground">Line Items ({order.items.length})</h3>
           <div className="mt-2 overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead>
@@ -80,13 +80,13 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
                   <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide">Unit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {order.items.map((item, idx) => (
                   <tr key={idx}>
                     <td className="px-4 py-2.5 font-medium">{labNames[item.lab_id] ?? item.lab_id.slice(0, 8) + '…'}</td>
-                    <td className="px-4 py-2.5 text-text-secondary">{item.reagent_category}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{item.reagent_category}</td>
                     <td className="px-4 py-2.5 text-center font-mono">{item.quantity}</td>
-                    <td className="px-4 py-2.5 text-text-secondary">{item.unit}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{item.unit}</td>
                   </tr>
                 ))}
               </tbody>
@@ -97,7 +97,7 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Close
           </button>

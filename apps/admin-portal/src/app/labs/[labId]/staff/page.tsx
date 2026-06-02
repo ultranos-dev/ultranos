@@ -33,7 +33,7 @@ interface StaffMember {
 
 function RoleBadge({ role }: { role: LabRole }) {
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_BADGE_COLORS[role] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_BADGE_COLORS[role] ?? 'bg-card text-muted-foreground'}`}>
       {ROLE_LABELS[role] ?? role}
     </span>
   )
@@ -68,10 +68,10 @@ function RoleChangeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-text-primary">Change Staff Role</h2>
-        <p className="mt-3 text-sm text-text-secondary">
-          Change <span className="font-medium text-text-primary">{truncate(email, 30) || 'this staff member'}</span> from{' '}
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-foreground">Change Staff Role</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Change <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span> from{' '}
           <RoleBadge role={currentRole} /> to <RoleBadge role={newRole} />?
         </p>
 
@@ -84,14 +84,14 @@ function RoleChangeModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-full border border-border text-text-primary px-6 py-2.5 text-sm hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={submitting}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-accent text-text-primary disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-primary text-foreground disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
           >
             {submitting ? 'Updating...' : 'Confirm'}
           </button>
@@ -115,24 +115,24 @@ function RemoveStaffModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-text-primary">Remove Staff Member</h2>
-        <p className="mt-3 text-sm text-text-secondary">
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-foreground">Remove Staff Member</h2>
+        <p className="mt-3 text-sm text-muted-foreground">
           Are you sure you want to remove{' '}
-          <span className="font-medium text-text-primary">{truncate(email, 30) || 'this staff member'}</span>{' '}
+          <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span>{' '}
           from this lab? This cannot be undone.
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-full border border-border text-text-primary px-6 py-2.5 text-sm hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={submitting}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-danger text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-destructive text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
             aria-label="Confirm Remove"
           >
             {submitting ? 'Removing…' : 'Confirm Remove'}
@@ -250,7 +250,7 @@ export default function LabStaffPage() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.push(`/labs/${labId}`)}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             &larr; Back to Lab Detail
           </button>
@@ -265,14 +265,14 @@ export default function LabStaffPage() {
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">
+          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">
             {successMessage}
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Staff table */}
@@ -290,30 +290,30 @@ export default function LabStaffPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                     Loading staff...
                   </td>
                 </tr>
               ) : staff.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                     No staff assigned to this lab
                   </td>
                 </tr>
               ) : (
                 staff.map((member) => (
-                  <tr key={member.practitionerId} className="border-t border-border hover:bg-surface">
-                    <td className="px-4 py-3 font-mono text-xs text-text-secondary">
+                  <tr key={member.practitionerId} className="border-t border-border hover:bg-card">
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                       {member.practitionerId.slice(0, 8)}...
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-foreground">
                       {truncate(member.email, 25)}
                     </td>
                     <td className="px-4 py-3">
                       <select
                         value={member.labRole}
                         onChange={(e) => handleRoleSelect(member, e.target.value as LabRole)}
-                        className="rounded-lg border border-border bg-surface px-2 py-1 text-xs focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                        className="rounded-lg border border-border bg-card px-2 py-1 text-xs focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                       >
                         {LAB_ROLES.map((role) => (
                           <option key={role} value={role}>
@@ -322,13 +322,13 @@ export default function LabStaffPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(member.createdAt)}
                     </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
-                        className="rounded-full border border-danger px-3 py-1 text-xs font-medium text-danger hover:bg-danger-subtle transition-colors"
+                        className="rounded-full border border-destructive px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                         aria-label="Remove"
                       >
                         Remove

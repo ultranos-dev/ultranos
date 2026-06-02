@@ -35,12 +35,12 @@ interface LabDetail {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    PENDING: 'bg-warning-subtle text-warning',
-    ACTIVE: 'bg-success-subtle text-success',
-    SUSPENDED: 'bg-danger-subtle text-danger',
+    PENDING: 'bg-warning/10 text-warning',
+    ACTIVE: 'bg-success/10 text-success',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status}
     </span>
   )
@@ -90,7 +90,7 @@ function ConfirmationDialog({
       title: 'Reactivate Lab',
       description: `Reactivate "${labName}"? This will restore upload access. The technician will be notified.`,
       buttonLabel: 'Reactivate',
-      buttonColor: 'bg-accent',
+      buttonColor: 'bg-primary',
     },
   }
 
@@ -98,13 +98,13 @@ function ConfirmationDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-text-primary">{c.title}</h2>
-        <p className="mt-3 text-sm text-text-secondary">{c.description}</p>
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold text-foreground">{c.title}</h2>
+        <p className="mt-3 text-sm text-muted-foreground">{c.description}</p>
 
         <div className="mt-4">
-          <label htmlFor="reason" className="block text-sm font-medium text-text-secondary">
-            Reason <span className="text-text-secondary/60">(optional)</span>
+          <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">
+            Reason <span className="text-muted-foreground/60">(optional)</span>
           </label>
           <textarea
             id="reason"
@@ -112,7 +112,7 @@ function ConfirmationDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="Enter a reason for this action..."
           />
         </div>
@@ -120,14 +120,14 @@ function ConfirmationDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-full border border-border text-text-primary px-6 py-2.5 text-sm hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(reason)}
             disabled={submitting}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor} ${action === 'REACTIVATE' ? 'text-text-primary' : 'text-white'}`}
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor} ${action === 'REACTIVATE' ? 'text-foreground' : 'text-white'}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </button>
@@ -189,14 +189,14 @@ export default function LabDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-text-secondary">Loading lab details...</div>
+    return <div className="text-muted-foreground">Loading lab details...</div>
   }
 
   if (error && !lab) {
     return (
       <div>
-        <button onClick={() => router.push('/labs')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Labs</button>
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <button onClick={() => router.push('/labs')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Labs</button>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
   }
@@ -207,7 +207,7 @@ export default function LabDetailPage() {
     <>
       <TopHeader title={lab.labName} description={`Registered ${formatDate(lab.registeredAt)}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button onClick={() => router.push('/labs')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Labs</button>
+        <button onClick={() => router.push('/labs')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Labs</button>
 
         {/* Header */}
         <div className="mt-4 flex items-center justify-end">
@@ -216,19 +216,19 @@ export default function LabDetailPage() {
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Action buttons — AC #3, status-dependent + Story 55.1 AC #6: Staff link */}
         <div className="mt-6 flex gap-3">
           <button
             onClick={() => router.push(`/labs/${labId}/staff`)}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold border border-border text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full px-6 py-2.5 text-sm font-semibold border border-border text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             View Staff
           </button>
@@ -251,7 +251,7 @@ export default function LabDetailPage() {
           {lab.status === 'SUSPENDED' && (
             <button
               onClick={() => setPendingAction('REACTIVATE')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-accent text-text-primary hover:scale-[1.02] transition-transform duration-200"
+              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-primary text-foreground hover:scale-[1.02] transition-transform duration-200"
             >
               Reactivate
             </button>
@@ -261,57 +261,57 @@ export default function LabDetailPage() {
         {/* Lab details grid — AC #9 */}
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Registration Documents */}
-          <div className="rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Registration Details</h2>
+          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Registration Details</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-secondary">License Reference</dt>
-                <dd className="font-medium text-text-primary">{lab.licenseReference}</dd>
+                <dt className="text-muted-foreground">License Reference</dt>
+                <dd className="font-medium text-foreground">{lab.licenseReference}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Accreditation (ISO 15189)</dt>
-                <dd className="font-medium text-text-primary">{lab.accreditationReference ?? '—'}</dd>
+                <dt className="text-muted-foreground">Accreditation (ISO 15189)</dt>
+                <dd className="font-medium text-foreground">{lab.accreditationReference ?? '—'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Upload History</dt>
-                <dd className="font-medium text-text-primary">{lab.uploadCount} result{lab.uploadCount !== 1 ? 's' : ''}</dd>
+                <dt className="text-muted-foreground">Upload History</dt>
+                <dd className="font-medium text-foreground">{lab.uploadCount} result{lab.uploadCount !== 1 ? 's' : ''}</dd>
               </div>
             </dl>
           </div>
 
           {/* Technician Credentials */}
-          <div className="rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Technician</h2>
+          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Technician</h2>
             {lab.technician ? (
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Name</dt>
-                  <dd className="font-medium text-text-primary">{lab.technician.name}</dd>
+                  <dt className="text-muted-foreground">Name</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.name}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Email</dt>
-                  <dd className="font-medium text-text-primary">{lab.technician.email ?? '—'}</dd>
+                  <dt className="text-muted-foreground">Email</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.email ?? '—'}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Credential Ref</dt>
-                  <dd className="font-medium text-text-primary">{lab.technician.credentialRef}</dd>
+                  <dt className="text-muted-foreground">Credential Ref</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.credentialRef}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Qualification</dt>
-                  <dd className="font-medium text-text-primary">{lab.technician.qualification ?? '—'}</dd>
+                  <dt className="text-muted-foreground">Qualification</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.qualification ?? '—'}</dd>
                 </div>
               </dl>
             ) : (
-              <p className="mt-3 text-sm text-text-secondary">No technician associated.</p>
+              <p className="mt-3 text-sm text-muted-foreground">No technician associated.</p>
             )}
           </div>
         </div>
 
         {/* Status Transition History — AC #9 */}
-        <div className="mt-6 rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
-          <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Status History</h2>
+        <div className="mt-6 rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Status History</h2>
           {lab.statusHistory.length === 0 ? (
-            <p className="mt-3 text-sm text-text-secondary">No status transitions recorded.</p>
+            <p className="mt-3 text-sm text-muted-foreground">No status transitions recorded.</p>
           ) : (
             <div className="mt-3 space-y-3">
               {lab.statusHistory.map((entry, i) => (
@@ -320,12 +320,12 @@ export default function LabDetailPage() {
                     <div className="flex items-center gap-2">
                       <StatusBadge status={entry.status} />
                       {entry.changedByName && (
-                        <span className="text-xs font-medium text-text-primary">{entry.changedByName}</span>
+                        <span className="text-xs font-medium text-foreground">{entry.changedByName}</span>
                       )}
-                      <span className="text-xs text-text-secondary">{formatDateTime(entry.changedAt)}</span>
+                      <span className="text-xs text-muted-foreground">{formatDateTime(entry.changedAt)}</span>
                     </div>
                     {entry.reason && (
-                      <p className="mt-1 text-sm text-text-secondary">{entry.reason}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{entry.reason}</p>
                     )}
                   </div>
                 </div>

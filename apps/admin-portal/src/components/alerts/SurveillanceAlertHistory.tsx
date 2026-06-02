@@ -82,17 +82,17 @@ export function SurveillanceAlertHistory() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-text-primary">Alert History</h3>
+        <h3 className="text-lg font-semibold text-foreground">Alert History</h3>
         {/* Filter tabs */}
-        <div className="flex gap-1 rounded-full bg-surface p-1">
+        <div className="flex gap-1 rounded-full bg-card p-1">
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => handleFilterChange(f)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === f
-                  ? 'bg-accent text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-primary text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
@@ -102,14 +102,14 @@ export function SurveillanceAlertHistory() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-text-secondary">Loading alerts...</div>
+        <div className="mt-6 text-muted-foreground">Loading alerts...</div>
       ) : alerts.length === 0 ? (
         <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-          <p className="text-text-secondary">
+          <p className="text-muted-foreground">
             No surveillance alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.
           </p>
         </div>
@@ -127,23 +127,23 @@ export function SurveillanceAlertHistory() {
                   <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {alerts.map((alert) => (
-                  <tr key={alert.id} className="hover:bg-accent-subtle transition-colors">
-                    <td className="px-4 py-3 text-text-secondary">{formatDateTime(alert.triggeredAt)}</td>
+                  <tr key={alert.id} className="hover:bg-primary/10 transition-colors">
+                    <td className="px-4 py-3 text-muted-foreground">{formatDateTime(alert.triggeredAt)}</td>
                     <td className="px-4 py-3 font-medium">{alert.labName}</td>
-                    <td className="px-4 py-3 text-text-secondary">{alert.testCategory}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{alert.testCategory}</td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-danger">{alert.currentRate}%</span>
-                      <span className="text-text-secondary"> / {alert.threshold}%</span>
+                      <span className="font-medium text-destructive">{alert.currentRate}%</span>
+                      <span className="text-muted-foreground"> / {alert.threshold}%</span>
                     </td>
                     <td className="px-4 py-3">
                       {alert.acknowledgedAt ? (
-                        <span className="inline-block rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
+                        <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
                           Acknowledged
                         </span>
                       ) : (
-                        <span className="inline-block rounded-full bg-danger-subtle px-2.5 py-0.5 text-xs font-medium text-danger">
+                        <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
                           Unacknowledged
                         </span>
                       )}
@@ -152,7 +152,7 @@ export function SurveillanceAlertHistory() {
                       {!alert.acknowledgedAt && (
                         <button
                           onClick={() => setAckAlert(alert)}
-                          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-text-primary hover:bg-accent-subtle transition-colors"
+                          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 transition-colors"
                         >
                           Acknowledge
                         </button>
@@ -166,7 +166,7 @@ export function SurveillanceAlertHistory() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
               <span>
                 Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
               </span>

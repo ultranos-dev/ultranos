@@ -54,11 +54,11 @@ const ANOMALY_TYPE_LABELS: Record<string, string> = {
 
 function SeverityBadge({ severity }: { severity: string }) {
   const colorMap: Record<string, string> = {
-    HIGH: 'bg-danger-subtle text-danger',
-    MEDIUM: 'bg-warning-subtle text-warning',
+    HIGH: 'bg-destructive/10 text-destructive',
+    MEDIUM: 'bg-warning/10 text-warning',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[severity] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[severity] ?? 'bg-card text-muted-foreground'}`}>
       {severity}
     </span>
   )
@@ -66,13 +66,13 @@ function SeverityBadge({ severity }: { severity: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    UNREVIEWED: 'bg-warning-subtle text-warning',
+    UNREVIEWED: 'bg-warning/10 text-warning',
     ESCALATED: 'bg-purple-100 text-purple-800',
-    DISMISSED: 'bg-surface text-text-secondary',
-    SUSPENDED: 'bg-danger-subtle text-danger',
+    DISMISSED: 'bg-card text-muted-foreground',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status.charAt(0) + status.slice(1).toLowerCase()}
     </span>
   )
@@ -128,19 +128,19 @@ function ReviewDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">{c.title}</h2>
-        <p className="mt-3 text-sm text-text-primary">{c.description}</p>
+        <p className="mt-3 text-sm text-foreground">{c.description}</p>
 
         {action === 'SUSPEND_PROVIDER' && (
-          <div className="mt-3 rounded-xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">
+          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
             Warning: This will immediately terminate the provider&apos;s active sessions and block clinical access.
           </div>
         )}
 
         <div className="mt-4">
-          <label htmlFor="reason" className="block text-sm font-medium text-text-primary">
-            Reason <span className="text-danger">*</span>
+          <label htmlFor="reason" className="block text-sm font-medium text-foreground">
+            Reason <span className="text-destructive">*</span>
           </label>
           <textarea
             id="reason"
@@ -148,7 +148,7 @@ function ReviewDialog({
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="Enter a reason for this action (required)..."
           />
         </div>
@@ -156,7 +156,7 @@ function ReviewDialog({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
           </button>
@@ -226,14 +226,14 @@ export default function AlertDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-text-secondary">Loading alert details...</div>
+    return <div className="text-muted-foreground">Loading alert details...</div>
   }
 
   if (error && !alert) {
     return (
       <div>
-        <button onClick={() => router.push('/alerts')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Alerts</button>
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <button onClick={() => router.push('/alerts')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Alerts</button>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
   }
@@ -248,7 +248,7 @@ export default function AlertDetailPage() {
     <>
       <TopHeader title={alert.practitionerName} description={`${ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType} — Detected ${formatDate(alert.createdAt)}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button onClick={() => router.push('/alerts')} className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Alerts</button>
+        <button onClick={() => router.push('/alerts')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Alerts</button>
 
         {/* Header badges */}
         <div className="mt-4 flex items-center gap-2">
@@ -258,19 +258,19 @@ export default function AlertDetailPage() {
 
         {/* Provider link */}
         <div className="mt-2">
-          <Link href={`/providers/profile/${alert.practitionerId}`} className="text-sm font-medium text-accent hover:underline">
+          <Link href={`/providers/profile/${alert.practitionerId}`} className="text-sm font-medium text-primary hover:underline">
             View provider profile
           </Link>
         </div>
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Action buttons — AC #5 */}
@@ -300,34 +300,34 @@ export default function AlertDetailPage() {
         {/* Detail grid — AC #9 */}
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Prescribing Summary */}
-          <div className="rounded-2xl border border-border bg-surface-raised p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Prescribing Summary</h2>
+          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Prescribing Summary</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Total Prescriptions</dt>
+                <dt className="text-muted-foreground">Total Prescriptions</dt>
                 <dd className="font-medium">{alert.prescribingSummary.totalPrescriptions}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Controlled Substances</dt>
+                <dt className="text-muted-foreground">Controlled Substances</dt>
                 <dd className="font-medium">{alert.prescribingSummary.controlledSubstanceCount}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Unique Patients</dt>
+                <dt className="text-muted-foreground">Unique Patients</dt>
                 <dd className="font-medium">{alert.prescribingSummary.patientCount}</dd>
               </div>
             </dl>
           </div>
 
           {/* Flagged Pattern Details */}
-          <div className="rounded-2xl border border-border bg-surface-raised p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Flagged Pattern</h2>
+          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Flagged Pattern</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Anomaly Type</dt>
+                <dt className="text-muted-foreground">Anomaly Type</dt>
                 <dd className="font-medium">{ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Threshold</dt>
+                <dt className="text-muted-foreground">Threshold</dt>
                 <dd className="font-medium">
                   {alert.anomalyType === 'CONTROLLED_SUBSTANCE_VOLUME'
                     ? `>${alert.threshold} Rx/day`
@@ -335,15 +335,15 @@ export default function AlertDetailPage() {
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Actual Value</dt>
-                <dd className="font-medium text-danger">
+                <dt className="text-muted-foreground">Actual Value</dt>
+                <dd className="font-medium text-destructive">
                   {alert.anomalyType === 'CONTROLLED_SUBSTANCE_VOLUME'
                     ? `${alert.actualValue} Rx/day`
                     : `${alert.actualValue}% of patients`}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Date Range</dt>
+                <dt className="text-muted-foreground">Date Range</dt>
                 <dd className="font-medium">{formatDate(alert.dateRangeStart)} – {formatDate(alert.dateRangeEnd)}</dd>
               </div>
             </dl>
@@ -372,19 +372,19 @@ export default function AlertDetailPage() {
 
         {/* Timeline visualization — AC #9: dates and counts, no patient identifiers */}
         {alert.timeline.length > 0 && (
-          <div className="mt-6 rounded-2xl border border-border bg-surface-raised p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Prescription Timeline</h2>
+          <div className="mt-6 rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Prescription Timeline</h2>
             <div className="mt-4 space-y-2">
               {alert.timeline.map((entry) => (
                 <div key={entry.date} className="flex items-center gap-3">
-                  <span className="w-28 text-xs text-text-secondary shrink-0">{formatDate(entry.date)}</span>
-                  <div className="flex-1 h-5 bg-surface rounded-full overflow-hidden">
+                  <span className="w-28 text-xs text-muted-foreground shrink-0">{formatDate(entry.date)}</span>
+                  <div className="flex-1 h-5 bg-card rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${entry.count > alert.threshold ? 'bg-danger' : 'bg-success'}`}
+                      className={`h-full rounded-full ${entry.count > alert.threshold ? 'bg-destructive' : 'bg-success'}`}
                       style={{ width: `${Math.max(4, (entry.count / maxTimelineCount) * 100)}%` }}
                     />
                   </div>
-                  <span className="w-8 text-xs font-medium text-text-primary text-end">{entry.count}</span>
+                  <span className="w-8 text-xs font-medium text-foreground text-end">{entry.count}</span>
                 </div>
               ))}
             </div>
@@ -393,22 +393,22 @@ export default function AlertDetailPage() {
 
         {/* Review history (if already reviewed) */}
         {alert.reviewAction && (
-          <div className="mt-6 rounded-2xl border border-border bg-surface-raised p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Review History</h2>
+          <div className="mt-6 rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Review History</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-secondary">Action Taken</dt>
+                <dt className="text-muted-foreground">Action Taken</dt>
                 <dd className="font-medium">{alert.reviewAction}</dd>
               </div>
               {alert.reviewedAt && (
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Reviewed At</dt>
+                  <dt className="text-muted-foreground">Reviewed At</dt>
                   <dd className="font-medium">{formatDateTime(alert.reviewedAt)}</dd>
                 </div>
               )}
               {alert.reviewReason && (
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Reason</dt>
+                  <dt className="text-muted-foreground">Reason</dt>
                   <dd className="font-medium">{alert.reviewReason}</dd>
                 </div>
               )}

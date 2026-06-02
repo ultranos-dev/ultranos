@@ -20,10 +20,10 @@ export function OrderStatusPipeline({ currentStatus }: OrderStatusPipelineProps)
             <div
               className={`flex items-center justify-center rounded-full text-[10px] font-semibold px-2 py-0.5 transition-colors ${
                 isCurrent
-                  ? 'bg-accent text-text-primary'
+                  ? 'bg-primary text-foreground'
                   : isComplete
-                    ? 'bg-success-subtle text-success'
-                    : 'bg-surface text-text-secondary'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-card text-muted-foreground'
               }`}
             >
               {status.charAt(0) + status.slice(1).toLowerCase()}

@@ -25,12 +25,12 @@ function getUrgencyBadge(daysRemaining: number | null): {
   label: string
   className: string
 } {
-  if (daysRemaining === null) return { label: 'Unknown', className: 'bg-surface text-text-secondary' }
-  if (daysRemaining <= 0) return { label: 'Expired', className: 'bg-danger-subtle text-danger font-semibold' }
-  if (daysRemaining <= 7) return { label: `${daysRemaining}d`, className: 'bg-danger-subtle text-danger font-semibold' }
-  if (daysRemaining <= 30) return { label: `${daysRemaining}d`, className: 'bg-warning-subtle text-warning' }
-  if (daysRemaining <= 60) return { label: `${daysRemaining}d`, className: 'bg-warning-subtle text-warning' }
-  return { label: `${daysRemaining}d`, className: 'bg-surface text-text-secondary' }
+  if (daysRemaining === null) return { label: 'Unknown', className: 'bg-card text-muted-foreground' }
+  if (daysRemaining <= 0) return { label: 'Expired', className: 'bg-destructive/10 text-destructive font-semibold' }
+  if (daysRemaining <= 7) return { label: `${daysRemaining}d`, className: 'bg-destructive/10 text-destructive font-semibold' }
+  if (daysRemaining <= 30) return { label: `${daysRemaining}d`, className: 'bg-warning/10 text-warning' }
+  if (daysRemaining <= 60) return { label: `${daysRemaining}d`, className: 'bg-warning/10 text-warning' }
+  return { label: `${daysRemaining}d`, className: 'bg-card text-muted-foreground' }
 }
 
 export default function LicenseExpiryPage() {
@@ -99,8 +99,8 @@ export default function LicenseExpiryPage() {
                 onClick={() => { setExpiryWindow(w); setCursor(0) }}
                 className={`px-4 py-1.5 text-sm rounded-full border transition-colors duration-200 ${
                   expiryWindow === w
-                    ? 'bg-accent text-text-primary border-accent'
-                    : 'bg-surface-raised text-text-primary border-border hover:bg-surface hover:scale-[1.02]'
+                    ? 'bg-primary text-foreground border-primary'
+                    : 'bg-popover text-foreground border-border hover:bg-card hover:scale-[1.02]'
                 }`}
               >
                 {w === 'all' ? 'All' : `≤ ${w.replace('d', '')} days`}
@@ -110,34 +110,34 @@ export default function LicenseExpiryPage() {
         </div>
 
         {error && (
-          <div className="bg-danger-subtle text-danger px-4 py-3 rounded-2xl mb-4">
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-2xl mb-4">
             {error}
           </div>
         )}
 
-        <div className="bg-surface-raised rounded-2xl border border-border overflow-hidden shadow-card">
+        <div className="bg-popover rounded-2xl border border-border overflow-hidden shadow-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-surface">
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">Provider Name</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">License Number</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">Issuing Body</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">Expiry Date</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">Days Remaining</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">KYC Status</th>
-                <th className="text-start px-4 py-3 font-medium text-text-secondary text-xs uppercase tracking-wide">Action</th>
+              <tr className="bg-card">
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Provider Name</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">License Number</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Issuing Body</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Expiry Date</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Days Remaining</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">KYC Status</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                     Loading...
                   </td>
                 </tr>
               ) : providers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                     No providers found for the selected filter
                   </td>
                 </tr>
@@ -147,10 +147,10 @@ export default function LicenseExpiryPage() {
                   return (
                     <tr
                       key={p.practitionerId}
-                      className="border-b border-border hover:bg-accent-subtle cursor-pointer transition-colors"
+                      className="border-b border-border hover:bg-primary/10 cursor-pointer transition-colors"
                       onClick={() => setRenewTarget(p)}
                     >
-                      <td className="px-4 py-3 font-medium text-text-primary">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         <Link
                           href={`/providers/profile/${p.practitionerId}`}
                           className="text-black hover:text-brand-lime font-medium"
@@ -159,9 +159,9 @@ export default function LicenseExpiryPage() {
                           {p.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">{p.licenseNumber}</td>
-                      <td className="px-4 py-3 text-text-secondary">{p.issuingBody}</td>
-                      <td className="px-4 py-3 text-text-secondary">{p.expiryDate}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.licenseNumber}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.issuingBody}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.expiryDate}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${badge.className}`}>
                           {badge.label}
@@ -169,9 +169,9 @@ export default function LicenseExpiryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
-                          p.kycStatus === 'ACTIVE' ? 'bg-success-subtle text-success'
-                            : p.kycStatus === 'SUSPENDED' ? 'bg-danger-subtle text-danger'
-                            : 'bg-warning-subtle text-warning'
+                          p.kycStatus === 'ACTIVE' ? 'bg-success/10 text-success'
+                            : p.kycStatus === 'SUSPENDED' ? 'bg-destructive/10 text-destructive'
+                            : 'bg-warning/10 text-warning'
                         }`}>
                           {p.kycStatus}
                         </span>
@@ -179,7 +179,7 @@ export default function LicenseExpiryPage() {
                       <td className="px-4 py-3">
                         <button
                           onClick={(e) => { e.stopPropagation(); setRenewTarget(p) }}
-                          className="text-sm text-text-primary hover:text-accent font-medium transition-colors"
+                          className="text-sm text-foreground hover:text-primary font-medium transition-colors"
                         >
                           Renew
                         </button>
@@ -193,22 +193,22 @@ export default function LicenseExpiryPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-surface">
-              <span className="text-sm text-text-secondary">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-card">
+              <span className="text-sm text-muted-foreground">
                 Page {currentPage} of {totalPages} ({total} providers)
               </span>
               <div className="flex gap-2">
                 <button
                   disabled={cursor === 0}
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-popover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
                 </button>
                 <button
                   disabled={currentPage >= totalPages}
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
-                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-popover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
                 </button>

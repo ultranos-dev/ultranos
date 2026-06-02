@@ -17,10 +17,10 @@ interface HeatMapGridProps {
 }
 
 const STOCK_COLORS: Record<string, string> = {
-  GREEN: 'bg-success-subtle text-success',
+  GREEN: 'bg-success/10 text-success',
   YELLOW: 'bg-caution-subtle text-caution',
-  AMBER: 'bg-warning-subtle text-warning',
-  RED: 'bg-danger-subtle text-danger',
+  AMBER: 'bg-warning/10 text-warning',
+  RED: 'bg-destructive/10 text-destructive',
 }
 
 function formatDate(iso: string): string {
@@ -37,7 +37,7 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
   if (labs.length === 0 || reagentCategories.length === 0) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-        <p className="text-text-secondary">No inventory data available. Stock snapshots will appear here once labs report their reagent levels.</p>
+        <p className="text-muted-foreground">No inventory data available. Stock snapshots will appear here once labs report their reagent levels.</p>
       </div>
     )
   }
@@ -65,8 +65,8 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
         </thead>
         <tbody className="divide-y divide-border">
           {labs.map((lab) => (
-            <tr key={lab.id} className="bg-surface-raised">
-              <td className="px-4 py-3 font-medium whitespace-nowrap sticky left-0 bg-surface-raised z-10">
+            <tr key={lab.id} className="bg-popover">
+              <td className="px-4 py-3 font-medium whitespace-nowrap sticky left-0 bg-popover z-10">
                 {lab.name}
               </td>
               {reagentCategories.map((cat) => {
@@ -74,7 +74,7 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
                 if (!cell) {
                   return (
                     <td key={cat} className="px-4 py-3 text-center">
-                      <span className="text-text-secondary text-xs">—</span>
+                      <span className="text-muted-foreground text-xs">—</span>
                     </td>
                   )
                 }
@@ -88,10 +88,10 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
                         {cell.quantity} {cell.unit}
                       </span>
                       {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-xl bg-surface-raised text-text-primary text-xs shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-xl bg-popover text-foreground text-xs shadow-card border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 whitespace-nowrap z-50">
                         <p className="font-medium">{cell.labName}</p>
-                        <p className="text-text-secondary">{cell.reagentCategory}</p>
-                        <p className="text-text-secondary">Reported: {formatDate(cell.reportedAt)}</p>
+                        <p className="text-muted-foreground">{cell.reagentCategory}</p>
+                        <p className="text-muted-foreground">Reported: {formatDate(cell.reportedAt)}</p>
                       </div>
                     </div>
                   </td>

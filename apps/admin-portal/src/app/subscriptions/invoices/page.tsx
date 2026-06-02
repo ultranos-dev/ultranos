@@ -19,14 +19,14 @@ interface Invoice {
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   const colorMap: Record<InvoiceStatus, string> = {
-    PAID: 'bg-success-subtle text-success',
-    PENDING: 'bg-warning-subtle text-warning',
-    FAILED: 'bg-danger-subtle text-danger',
-    REFUNDED: 'bg-surface text-text-secondary',
+    PAID: 'bg-success/10 text-success',
+    PENDING: 'bg-warning/10 text-warning',
+    FAILED: 'bg-destructive/10 text-destructive',
+    REFUNDED: 'bg-card text-muted-foreground',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status}
     </span>
   )
@@ -89,7 +89,7 @@ export default function InvoicesPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
-          className="text-sm text-text-muted hover:text-black transition-colors"
+          className="text-sm text-muted-foreground hover:text-black transition-colors"
         >
           &larr; Back to Subscriptions
         </Link>
@@ -99,7 +99,7 @@ export default function InvoicesPage() {
           <select
             value={statusFilter}
             onChange={(e) => handleStatusFilterChange(e.target.value as StatusFilter)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by status"
           >
             {STATUS_FILTERS.map((s) => (
@@ -111,15 +111,15 @@ export default function InvoicesPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading invoices...</div>
+          <div className="mt-6 text-muted-foreground">Loading invoices...</div>
         ) : invoices.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-            <p className="text-lg font-medium text-text-primary">No invoices yet</p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="text-lg font-medium text-foreground">No invoices yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Invoices will appear here once your first billing cycle completes.
             </p>
           </div>
@@ -137,19 +137,19 @@ export default function InvoicesPage() {
                     <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {invoices.map((invoice) => (
                     <tr key={invoice.id} className="transition-colors hover:bg-brand-lime/5">
-                      <td className="px-4 py-3 text-text-primary">{formatDate(invoice.date)}</td>
-                      <td className="px-4 py-3 text-text-muted">{invoice.description}</td>
-                      <td className="px-4 py-3 text-text-primary font-medium">${invoice.amountUsd.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-foreground">{formatDate(invoice.date)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{invoice.description}</td>
+                      <td className="px-4 py-3 text-foreground font-medium">${invoice.amountUsd.toFixed(2)}</td>
                       <td className="px-4 py-3"><InvoiceStatusBadge status={invoice.status} /></td>
                       <td className="px-4 py-3">
                         <a
                           href={invoice.downloadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-accent hover:underline"
+                          className="text-sm font-medium text-primary hover:underline"
                         >
                           Download PDF
                         </a>
@@ -162,7 +162,7 @@ export default function InvoicesPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
                 </span>
@@ -170,7 +170,7 @@ export default function InvoicesPage() {
                   <button
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
                   </button>
@@ -178,7 +178,7 @@ export default function InvoicesPage() {
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page >= totalPages}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
                   </button>

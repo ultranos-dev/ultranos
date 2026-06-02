@@ -20,11 +20,11 @@ export function UserSummaryWidget({ counts }: UserSummaryWidgetProps) {
   return (
     <div
       onClick={() => router.push('/users')}
-      className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+      className="rounded-2xl bg-popover border border-border p-6 shadow-card cursor-pointer hover:scale-[1.02] transition-transform duration-200"
     >
-      <p className="text-sm font-medium text-text-secondary">Users</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">{counts.total}</p>
-      <p className="mt-1 text-sm text-text-secondary">
+      <p className="text-sm font-medium text-muted-foreground">Users</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">{counts.total}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
         {counts.active} active, {counts.suspended} suspended, {counts.pendingInvite} pending invite
       </p>
       {counts.withoutMfa > 0 && (

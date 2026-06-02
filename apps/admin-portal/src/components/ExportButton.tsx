@@ -42,13 +42,13 @@ export function ExportButton({ exportFn, filters, label = 'Export CSV' }: Export
       <button
         onClick={handleClick}
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-full border border-border text-black px-4 py-2 text-sm hover:bg-accent-subtle transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 rounded-full border border-border text-black px-4 py-2 text-sm hover:bg-primary/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <Download className="h-4 w-4 shrink-0" />
         {loading ? 'Exporting...' : label}
       </button>
       {error && (
-        <p className="text-xs text-danger">{error}</p>
+        <p className="text-xs text-destructive">{error}</p>
       )}
     </div>
   )

@@ -362,14 +362,14 @@ export default function SettingsPage() {
       <TopHeader title="Settings" description="Manage your account, organization, and notification preferences." />
 
       {/* Section Navigation (sticky top) */}
-      <div className="sticky top-0 z-10 bg-surface border-b border-border">
+      <div className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="mx-auto max-w-7xl px-8">
           <nav className="flex gap-2 py-3" aria-label="Settings sections">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="rounded-full px-4 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary transition-colors"
+                className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-popover hover:text-foreground transition-colors"
               >
                 {item.label}
               </a>
@@ -382,48 +382,48 @@ export default function SettingsPage() {
 
         {/* ═══ Section 1: My Account ═══ */}
         <section id="my-account" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">My Account</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">My Account</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-0">
 
             {/* a. Profile */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Profile</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Profile</h3>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Full Name</span>
+                  <span className="text-xs font-medium text-muted-foreground">Full Name</span>
                   <input
                     type="text"
                     value={profileName}
                     onChange={(e) => { setProfileName(e.target.value); setProfileSuccess(null) }}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
                 <div>
-                  <span className="text-xs font-medium text-text-secondary">Email</span>
-                  <p className="mt-1 text-sm text-text-primary">{profile?.email ?? '...'}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Email</span>
+                  <p className="mt-1 text-sm text-foreground">{profile?.email ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-text-secondary">Role</span>
-                  <p className="mt-1 text-sm text-text-primary">{profile?.role ?? '...'}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Role</span>
+                  <p className="mt-1 text-sm text-foreground">{profile?.role ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-text-secondary">Created</span>
-                  <p className="mt-1 text-sm text-text-primary">
+                  <span className="text-xs font-medium text-muted-foreground">Created</span>
+                  <p className="mt-1 text-sm text-foreground">
                     {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '...'}
                   </p>
                 </div>
               </div>
               {profileError && (
-                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{profileError}</div>
+                <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{profileError}</div>
               )}
               {profileSuccess && (
-                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{profileSuccess}</div>
+                <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{profileSuccess}</div>
               )}
               <button
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={profileSaving || profileName === (profile?.name ?? '')}
-                className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {profileSaving ? 'Saving...' : 'Save Profile'}
               </button>
@@ -433,47 +433,47 @@ export default function SettingsPage() {
 
             {/* b. Change Password */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Change Password</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Change Password</h3>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Current Password</span>
+                  <span className="text-xs font-medium text-muted-foreground">Current Password</span>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">New Password (min 12 characters)</span>
+                  <span className="text-xs font-medium text-muted-foreground">New Password (min 12 characters)</span>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Confirm New Password</span>
+                  <span className="text-xs font-medium text-muted-foreground">Confirm New Password</span>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
               </div>
               {passwordError && (
-                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{passwordError}</div>
+                <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{passwordError}</div>
               )}
               {passwordSuccess && (
-                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{passwordSuccess}</div>
+                <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{passwordSuccess}</div>
               )}
               <button
                 type="button"
                 onClick={handleChangePassword}
                 disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-                className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {passwordSaving ? 'Changing...' : 'Change Password'}
               </button>
@@ -483,26 +483,26 @@ export default function SettingsPage() {
 
             {/* c. Security Keys (FIDO2) — preserved from original */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Security Keys (FIDO2)</h3>
-              <p className="text-text-secondary text-sm">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Security Keys (FIDO2)</h3>
+              <p className="text-muted-foreground text-sm">
                 Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
                 Once enrolled, you will be prompted for your key on every sign-in.
               </p>
 
               {fidoError && (
-                <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">
+                <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                   {fidoError}
                 </div>
               )}
 
               {fidoSuccess && (
-                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+                <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                   {fidoSuccess}
                 </div>
               )}
 
               {fidoLoading ? (
-                <p className="text-sm text-text-secondary">Loading...</p>
+                <p className="text-sm text-muted-foreground">Loading...</p>
               ) : (
                 <>
                   {verifiedFactors.length > 0 && (
@@ -510,16 +510,16 @@ export default function SettingsPage() {
                       {verifiedFactors.map((factor) => (
                         <div
                           key={factor.id}
-                          className="flex items-center justify-between rounded-xl bg-surface px-4 py-3"
+                          className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
                         >
                           <div className="flex items-center gap-3">
-                            <KeyRound className="h-5 w-5 text-text-secondary" />
+                            <KeyRound className="h-5 w-5 text-muted-foreground" />
                             <div>
-                              <p className="text-sm font-medium text-text-primary">
+                              <p className="text-sm font-medium text-foreground">
                                 {factor.friendly_name || 'Security Key'}
                               </p>
                               {factor.created_at && (
-                                <p className="text-xs text-text-secondary">
+                                <p className="text-xs text-muted-foreground">
                                   Added {new Date(factor.created_at).toLocaleDateString()}
                                 </p>
                               )}
@@ -528,7 +528,7 @@ export default function SettingsPage() {
                           <button
                             type="button"
                             onClick={() => handleUnenroll(factor.id)}
-                            className="rounded-full text-sm text-danger hover:text-danger font-medium"
+                            className="rounded-full text-sm text-destructive hover:text-destructive font-medium"
                           >
                             Remove
                           </button>
@@ -538,7 +538,7 @@ export default function SettingsPage() {
                   )}
 
                   {verifiedFactors.length === 0 && (
-                    <div className="rounded-2xl border border-warning/20 bg-warning-subtle px-4 py-3 text-sm text-warning">
+                    <div className="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning">
                       No security key enrolled. We recommend adding one for stronger account protection.
                     </div>
                   )}
@@ -547,7 +547,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={handleEnroll}
                     disabled={enrolling}
-                    className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                    className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                   >
                     {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
                   </button>
@@ -559,12 +559,12 @@ export default function SettingsPage() {
 
             {/* d. Active Sessions */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Active Sessions</h3>
-              <p className="text-text-secondary text-sm">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Active Sessions</h3>
+              <p className="text-muted-foreground text-sm">
                 Sign out of all other browser sessions. Your current session will remain active.
               </p>
               {sessionsMsg && (
-                <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">
+                <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                   {sessionsMsg}
                 </div>
               )}
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleSignOutOtherSessions}
                 disabled={sessionsLoading}
-                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {sessionsLoading ? 'Signing out...' : 'Sign Out All Other Sessions'}
               </button>
@@ -582,26 +582,26 @@ export default function SettingsPage() {
 
         {/* ═══ Section 2: Organization ═══ */}
         <section id="organization" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Organization</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Organization</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-4">
             {orgDraft ? (
               <>
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Organization Name</span>
+                  <span className="text-xs font-medium text-muted-foreground">Organization Name</span>
                   <input
                     type="text"
                     value={orgDraft.name}
                     onChange={(e) => setOrgDraft({ ...orgDraft, name: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Country</span>
+                  <span className="text-xs font-medium text-muted-foreground">Country</span>
                   <select
                     value={orgDraft.country}
                     onChange={(e) => setOrgDraft({ ...orgDraft, country: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a country</option>
                     {MENA_COUNTRIES.map((c) => (
@@ -611,21 +611,21 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Billing Email</span>
+                  <span className="text-xs font-medium text-muted-foreground">Billing Email</span>
                   <input
                     type="email"
                     value={orgDraft.billingEmail}
                     onChange={(e) => setOrgDraft({ ...orgDraft, billingEmail: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-text-secondary">Timezone</span>
+                  <span className="text-xs font-medium text-muted-foreground">Timezone</span>
                   <select
                     value={orgDraft.timezone}
                     onChange={(e) => setOrgDraft({ ...orgDraft, timezone: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a timezone</option>
                     {IANA_TIMEZONES.map((tz) => (
@@ -635,35 +635,35 @@ export default function SettingsPage() {
                 </label>
 
                 <div>
-                  <span className="text-xs font-medium text-text-secondary">Org ID</span>
-                  <p className="mt-1 text-sm font-mono text-text-primary">{org?.id ?? '...'}</p>
+                  <span className="text-xs font-medium text-muted-foreground">Org ID</span>
+                  <p className="mt-1 text-sm font-mono text-foreground">{org?.id ?? '...'}</p>
                 </div>
 
                 {orgError && (
-                  <div role="alert" className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">{orgError}</div>
+                  <div role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{orgError}</div>
                 )}
                 {orgSuccess && (
-                  <div role="status" className="rounded-2xl border border-success/20 bg-success-subtle px-4 py-3 text-sm text-success">{orgSuccess}</div>
+                  <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{orgSuccess}</div>
                 )}
 
                 <button
                   type="button"
                   onClick={handleSaveOrg}
                   disabled={orgSaving || !orgDirty}
-                  className="rounded-full bg-brand-lime text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                  className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
                   {orgSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </>
             ) : (
-              <p className="text-sm text-text-secondary">Loading organization...</p>
+              <p className="text-sm text-muted-foreground">Loading organization...</p>
             )}
           </div>
         </section>
 
         {/* ═══ Section 3: Notifications ═══ */}
         <section id="notifications" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Notifications</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Notifications</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
             <NotificationPreferences email={profile?.email} />
           </div>
@@ -671,7 +671,7 @@ export default function SettingsPage() {
 
         {/* ═══ Section 4: Thresholds ═══ */}
         <section id="thresholds" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Thresholds</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Thresholds</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
             <ThresholdSettings />
           </div>
@@ -679,10 +679,10 @@ export default function SettingsPage() {
 
         {/* ═══ Section 5: Modules ═══ */}
         <section id="modules" className="scroll-mt-24 mb-12">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Modules</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Modules</h2>
           <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
             {subscribedModules.length === 0 ? (
-              <p className="text-sm text-text-secondary">No modules configured. Subscribe to a module to see its settings.</p>
+              <p className="text-sm text-muted-foreground">No modules configured. Subscribe to a module to see its settings.</p>
             ) : (
               <div className="space-y-4">
                 {subscribedModules.map((mod) => (

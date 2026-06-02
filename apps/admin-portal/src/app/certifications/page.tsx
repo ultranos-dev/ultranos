@@ -20,12 +20,12 @@ interface PathwayEntry {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success-subtle text-success',
-    ARCHIVED: 'bg-surface text-text-secondary',
+    ACTIVE: 'bg-success/10 text-success',
+    ARCHIVED: 'bg-card text-muted-foreground',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {status}
     </span>
   )
@@ -96,15 +96,15 @@ export default function CertificationsPage() {
 
         {/* Filter tabs + Create button */}
         <div className="flex items-center justify-between mt-6">
-          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-accent text-text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -113,48 +113,48 @@ export default function CertificationsPage() {
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-text-primary hover:bg-accent/90 transition-colors"
+            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors"
           >
             Create Pathway
           </button>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading certification pathways...</div>
+          <div className="mt-6 text-muted-foreground">Loading certification pathways...</div>
         ) : pathways.length === 0 ? (
           <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-text-secondary">No certification pathways found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
+            <p className="text-muted-foreground">No certification pathways found{filter !== 'ALL' ? ` with status ${filter}` : ''}.</p>
           </div>
         ) : (
           <>
             {/* Pathway table (AC #1) */}
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Description</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Milestones</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Description</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Milestones</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {pathways.map((pathway) => (
-                    <tr key={pathway.id} className="hover:bg-accent-subtle transition-colors">
+                    <tr key={pathway.id} className="hover:bg-primary/10 transition-colors">
                       <td className="px-4 py-3 font-medium">{pathway.name}</td>
-                      <td className="px-4 py-3 text-text-secondary max-w-xs truncate">{pathway.description ?? '—'}</td>
-                      <td className="px-4 py-3 text-text-secondary">{pathway.milestoneCount}</td>
+                      <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">{pathway.description ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{pathway.milestoneCount}</td>
                       <td className="px-4 py-3"><StatusBadge status={pathway.status} /></td>
                       <td className="px-4 py-3">
                         {pathway.status === 'ACTIVE' && (
                           <button
                             onClick={() => handleArchive(pathway.id)}
-                            className="text-xs text-text-secondary hover:text-danger transition-colors"
+                            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                           >
                             Archive
                           </button>
@@ -168,7 +168,7 @@ export default function CertificationsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
@@ -176,7 +176,7 @@ export default function CertificationsPage() {
                   <button
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
                   </button>
@@ -184,7 +184,7 @@ export default function CertificationsPage() {
                   <button
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
                   </button>

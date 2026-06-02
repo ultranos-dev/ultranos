@@ -80,13 +80,13 @@ function shouldRedact(key: string): boolean {
 function OutcomeBadge({ outcome }: { outcome: string }) {
   if (outcome === 'SUCCESS') {
     return (
-      <span className="inline-block rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
+      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
         SUCCESS
       </span>
     )
   }
   return (
-    <span className="inline-block rounded-full bg-danger-subtle px-2.5 py-0.5 text-xs font-medium text-danger">
+    <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
       DENIED
     </span>
   )
@@ -94,7 +94,7 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="inline-block rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-text-secondary">
+    <span className="inline-block rounded-full bg-card px-2 py-0.5 text-xs font-medium text-muted-foreground">
       {role}
     </span>
   )
@@ -162,22 +162,22 @@ export function EventBrowser() {
             type="date"
             value={dateFrom}
             onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date from"
           />
-          <span className="text-sm text-text-secondary">to</span>
+          <span className="text-sm text-muted-foreground">to</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => handleFilterChange(setDateTo)(e.target.value)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Date to"
           />
 
           <select
             value={actionGroup}
             onChange={(e) => handleFilterChange(setActionGroup)(e.target.value as ActionGroup)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by action type"
           >
             {(Object.keys(ACTION_GROUP_LABELS) as ActionGroup[]).map((g) => (
@@ -190,7 +190,7 @@ export function EventBrowser() {
           <select
             value={outcomeFilter}
             onChange={(e) => handleFilterChange(setOutcomeFilter)(e.target.value as OutcomeFilter)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by outcome"
           >
             <option value="ALL">All Outcomes</option>
@@ -203,7 +203,7 @@ export function EventBrowser() {
             placeholder="Search actor name..."
             value={actorSearch}
             onChange={(e) => handleFilterChange(setActorSearch)(e.target.value)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent w-52"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-52"
             aria-label="Search actor name"
           />
         </div>
@@ -223,15 +223,15 @@ export function EventBrowser() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {loading ? (
-        <div className="mt-6 text-text-secondary">Loading audit events...</div>
+        <div className="mt-6 text-muted-foreground">Loading audit events...</div>
       ) : events.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-          <p className="text-lg font-medium text-text-primary">No audit events found</p>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="text-lg font-medium text-foreground">No audit events found</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Try adjusting your filters or date range.
           </p>
         </div>
@@ -249,7 +249,7 @@ export function EventBrowser() {
                   <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Outcome</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {events.map((event) => (
                   <EventRow
                     key={event.id}
@@ -263,7 +263,7 @@ export function EventBrowser() {
           </div>
 
           {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
             <span>
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
             </span>
@@ -271,7 +271,7 @@ export function EventBrowser() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Previous
               </button>
@@ -279,7 +279,7 @@ export function EventBrowser() {
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Next
               </button>
@@ -308,13 +308,13 @@ function EventRow({
         onClick={onToggle}
         className="cursor-pointer transition-colors hover:bg-brand-lime/5"
       >
-        <td className="px-4 py-3 text-text-muted">{formatTimestamp(event.timestamp)}</td>
-        <td className="px-4 py-3 font-mono text-xs font-medium text-text-primary">{event.action}</td>
+        <td className="px-4 py-3 text-muted-foreground">{formatTimestamp(event.timestamp)}</td>
+        <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">{event.action}</td>
         <td className="px-4 py-3">
-          <span className="font-medium text-text-primary">{event.actorName}</span>
+          <span className="font-medium text-foreground">{event.actorName}</span>
           <span className="ms-2"><RoleBadge role={event.actorRole} /></span>
         </td>
-        <td className="px-4 py-3 text-text-muted">
+        <td className="px-4 py-3 text-muted-foreground">
           {event.resourceType}
           <span className="ms-1 font-mono text-xs">{event.resourceId.slice(0, 8)}...</span>
         </td>
@@ -322,12 +322,12 @@ function EventRow({
       </tr>
       {expanded && metadataEntries.length > 0 && (
         <tr>
-          <td colSpan={5} className="bg-surface px-8 py-4">
+          <td colSpan={5} className="bg-card px-8 py-4">
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
               {metadataEntries.map(([key, value]) => (
                 <div key={key} className="flex gap-2">
-                  <span className="font-medium text-text-secondary">{key}:</span>
-                  <span className="text-text-primary">
+                  <span className="font-medium text-muted-foreground">{key}:</span>
+                  <span className="text-foreground">
                     {shouldRedact(key) ? '[redacted]' : String(value)}
                   </span>
                 </div>

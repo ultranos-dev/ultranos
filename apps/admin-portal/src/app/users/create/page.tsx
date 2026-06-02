@@ -93,7 +93,7 @@ export default function CreateUserPage() {
   }
 
   if (loading) {
-    return <div className="text-text-secondary">Loading available roles...</div>
+    return <div className="text-muted-foreground">Loading available roles...</div>
   }
 
   if (error) {
@@ -103,15 +103,15 @@ export default function CreateUserPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-4xl font-bold tracking-tight">Create Staff User</h1>
-      <p className="mt-4 text-text-secondary">
+      <p className="mt-4 text-muted-foreground">
         Assign roles based on your organization&apos;s active module subscriptions.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6">
-        <div className="rounded-3xl bg-surface-raised p-5 border border-border space-y-6">
+        <div className="rounded-3xl bg-popover p-5 border border-border space-y-6">
           {/* Name Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-text-secondary">
+            <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
               Full Name
             </label>
             <input
@@ -120,13 +120,13 @@ export default function CreateUserPage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
           {/* Email Field */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
+            <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
               Email
             </label>
             <input
@@ -135,13 +135,13 @@ export default function CreateUserPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
+            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground">
               Password
             </label>
             <input
@@ -152,13 +152,13 @@ export default function CreateUserPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
           {/* Confirm Password Field */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground">
               Confirm Password
             </label>
             <input
@@ -168,7 +168,7 @@ export default function CreateUserPage() {
               minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {confirmPassword && password !== confirmPassword && (
               <p className="mt-1.5 text-sm text-red-600">Passwords do not match</p>
@@ -177,7 +177,7 @@ export default function CreateUserPage() {
 
           {/* Role Selector */}
           <div>
-            <p className="text-sm font-medium text-text-secondary mb-2">Role</p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Role</p>
             <div className="space-y-2">
               {/* Available roles — selectable */}
               {availableRoles.map((r) => (
@@ -185,8 +185,8 @@ export default function CreateUserPage() {
                   key={r.role}
                   className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
                     selectedRole === r.role
-                      ? 'border-accent bg-accent/10'
-                      : 'border-border hover:bg-surface'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:bg-card'
                   }`}
                 >
                   <input
@@ -198,9 +198,9 @@ export default function CreateUserPage() {
                     className="accent-accent"
                   />
                   <div>
-                    <span className="font-medium text-sm text-text-primary">{r.role}</span>
+                    <span className="font-medium text-sm text-foreground">{r.role}</span>
                     {r.moduleName && (
-                      <span className="ms-2 text-xs text-text-secondary">({r.moduleName})</span>
+                      <span className="ms-2 text-xs text-muted-foreground">({r.moduleName})</span>
                     )}
                   </div>
                 </label>
@@ -210,16 +210,16 @@ export default function CreateUserPage() {
               {unavailableRoles.map((r) => (
                 <div
                   key={r.role}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 opacity-60"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 opacity-60"
                 >
                   <input type="radio" name="role" disabled className="accent-accent" />
                   <div>
-                    <span className="font-medium text-sm text-text-secondary">{r.role}</span>
-                    <span className="ms-2 text-xs text-text-secondary">
+                    <span className="font-medium text-sm text-muted-foreground">{r.role}</span>
+                    <span className="ms-2 text-xs text-muted-foreground">
                       &mdash;{' '}
                       <a
                         href="/subscriptions"
-                        className="text-accent hover:underline"
+                        className="text-primary hover:underline"
                       >
                         Subscribe to {r.moduleName} to add {r.role} users
                       </a>
@@ -268,13 +268,13 @@ export default function CreateUserPage() {
                   setSelectedRole('')
                   setSubmitError(null)
                 }}
-                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all"
+                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:bg-primary/90 hover:scale-[1.02] transition-all"
               >
                 Create Another User
               </button>
               <a
                 href="/users"
-                className="rounded-full border border-border text-text-primary px-6 py-2.5 hover:bg-surface hover:scale-[1.02] transition-all"
+                className="rounded-full border border-border text-foreground px-6 py-2.5 hover:bg-card hover:scale-[1.02] transition-all"
               >
                 View All Users
               </a>
@@ -287,13 +287,13 @@ export default function CreateUserPage() {
             <button
               type="submit"
               disabled={submitting || !selectedRole || !name || !email || !password || password !== confirmPassword}
-              className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:bg-accent-hover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:bg-primary/90 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Creating...' : 'Create User'}
             </button>
             <a
               href="/users"
-              className="rounded-full border border-border text-text-primary px-6 py-2.5 hover:bg-surface hover:scale-[1.02] transition-all"
+              className="rounded-full border border-border text-foreground px-6 py-2.5 hover:bg-card hover:scale-[1.02] transition-all"
             >
               Cancel
             </a>

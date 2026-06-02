@@ -166,16 +166,16 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
   }
 
   if (loading) {
-    return <div className="text-text-secondary py-8 text-center">Loading configuration...</div>
+    return <div className="text-muted-foreground py-8 text-center">Loading configuration...</div>
   }
 
   return (
     <div className="space-y-8">
       {error && (
-        <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+        <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
       )}
       {success && (
-        <div className="rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">
+        <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">
           Configuration saved successfully.
         </div>
       )}
@@ -183,22 +183,22 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       {/* Section 1: Monitored Labs */}
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-text-primary">Monitored Labs</h3>
+          <h3 className="text-lg font-semibold text-foreground">Monitored Labs</h3>
           <button
             onClick={toggleAll}
-            className="text-sm text-accent hover:underline"
+            className="text-sm text-primary hover:underline"
           >
             {selectedLabIds.size === allLabs.length ? 'Deselect All' : 'Select All'}
           </button>
         </div>
         <div className="mt-3 max-h-60 overflow-y-auto rounded-2xl border border-border divide-y divide-border">
           {allLabs.length === 0 ? (
-            <p className="p-4 text-sm text-text-secondary">No labs found in your organization.</p>
+            <p className="p-4 text-sm text-muted-foreground">No labs found in your organization.</p>
           ) : (
             allLabs.map((lab) => (
               <label
                 key={lab.id}
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent-subtle transition-colors"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary/10 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -206,12 +206,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                   onChange={() => toggleLab(lab.id)}
                   className="accent-accent h-4 w-4"
                 />
-                <span className="text-sm font-medium text-text-primary">{lab.name}</span>
+                <span className="text-sm font-medium text-foreground">{lab.name}</span>
                 <span
                   className={`ms-auto inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                     lab.status === 'ACTIVE'
-                      ? 'bg-success-subtle text-success'
-                      : 'bg-warning-subtle text-warning'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-warning/10 text-warning'
                   }`}
                 >
                   {lab.status}
@@ -224,7 +224,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
       {/* Section 2: Positivity Rate Thresholds */}
       <section>
-        <h3 className="text-lg font-semibold text-text-primary">Positivity Rate Thresholds</h3>
+        <h3 className="text-lg font-semibold text-foreground">Positivity Rate Thresholds</h3>
         <div className="mt-3 rounded-2xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-black text-white">
@@ -234,7 +234,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border bg-surface-raised">
+            <tbody className="divide-y divide-border bg-popover">
               {thresholds.map((t, i) => (
                 <tr key={i}>
                   <td className="px-4 py-3">
@@ -242,7 +242,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                       type="text"
                       value={t.test_category}
                       onChange={(e) => updateThreshold(i, 'test_category', e.target.value)}
-                      className="w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
+                      className="w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -253,15 +253,15 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                         max={100}
                         value={t.threshold_pct}
                         onChange={(e) => updateThreshold(i, 'threshold_pct', Number(e.target.value))}
-                        className="w-24 rounded-lg border border-border px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
+                        className="w-24 rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
                       />
-                      <span className="text-text-secondary">%</span>
+                      <span className="text-muted-foreground">%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-end">
                     <button
                       onClick={() => removeThreshold(i)}
-                      className="text-sm text-danger hover:underline"
+                      className="text-sm text-destructive hover:underline"
                     >
                       Remove
                     </button>
@@ -277,7 +277,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
             placeholder="New test category name"
-            className="flex-1 rounded-full border border-border px-4 py-2 text-sm focus:border-accent focus:outline-none"
+            className="flex-1 rounded-full border border-border px-4 py-2 text-sm focus:border-primary focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -288,7 +288,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           <button
             onClick={addCategory}
             disabled={!newCategory.trim()}
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text-primary hover:bg-accent-subtle disabled:opacity-50 transition-colors"
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-primary/10 disabled:opacity-50 transition-colors"
           >
             Add Category
           </button>
@@ -297,14 +297,14 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
       {/* Section 3: Notification Channels */}
       <section>
-        <h3 className="text-lg font-semibold text-text-primary">Notification Channels</h3>
+        <h3 className="text-lg font-semibold text-foreground">Notification Channels</h3>
         <div className="mt-3 space-y-4">
           {/* In-app — always on */}
-          <div className="flex items-center gap-3 rounded-2xl border border-border p-4 bg-surface">
+          <div className="flex items-center gap-3 rounded-2xl border border-border p-4 bg-card">
             <input type="checkbox" checked disabled className="accent-accent h-4 w-4" />
             <div>
-              <p className="text-sm font-medium text-text-primary">In-App Notifications</p>
-              <p className="text-xs text-text-secondary">Always enabled</p>
+              <p className="text-sm font-medium text-foreground">In-App Notifications</p>
+              <p className="text-xs text-muted-foreground">Always enabled</p>
             </div>
           </div>
 
@@ -323,8 +323,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 className="accent-accent h-4 w-4"
               />
               <div>
-                <p className="text-sm font-medium text-text-primary">SMS Notifications</p>
-                <p className="text-xs text-text-secondary">Receive alerts via text message</p>
+                <p className="text-sm font-medium text-foreground">SMS Notifications</p>
+                <p className="text-xs text-muted-foreground">Receive alerts via text message</p>
               </div>
             </label>
             {smsEnabled && (
@@ -333,7 +333,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 value={channels.sms_phone ?? ''}
                 onChange={(e) => setChannels((prev) => ({ ...prev, sms_phone: e.target.value }))}
                 placeholder="+93701234567"
-                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             )}
           </div>
@@ -353,8 +353,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 className="accent-accent h-4 w-4"
               />
               <div>
-                <p className="text-sm font-medium text-text-primary">Email Notifications</p>
-                <p className="text-xs text-text-secondary">Receive alerts via email</p>
+                <p className="text-sm font-medium text-foreground">Email Notifications</p>
+                <p className="text-xs text-muted-foreground">Receive alerts via email</p>
               </div>
             </label>
             {emailEnabled && (
@@ -363,7 +363,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                 value={channels.email ?? ''}
                 onChange={(e) => setChannels((prev) => ({ ...prev, email: e.target.value }))}
                 placeholder="officer@district.gov"
-                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             )}
           </div>

@@ -121,38 +121,38 @@ export function EscalationSection({
   return (
     <div className="rounded-3xl border border-border bg-white p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Escalation Details</h2>
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Escalation Details</h2>
         {statusBadge}
       </div>
 
       {error && (
-        <div className="mt-3 rounded-xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+        <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <dl className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between">
-          <dt className="text-text-secondary">Assigned to</dt>
+          <dt className="text-muted-foreground">Assigned to</dt>
           <dd className="font-medium">{assigneeName ?? 'Unassigned'}</dd>
         </div>
         <div className="flex justify-between items-center">
-          <dt className="text-text-secondary">Priority</dt>
+          <dt className="text-muted-foreground">Priority</dt>
           <dd>{priorityBadge}</dd>
         </div>
         {escalationNote && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Note</dt>
+            <dt className="text-muted-foreground">Note</dt>
             <dd className="font-medium max-w-xs text-end">{escalationNote}</dd>
           </div>
         )}
         {escalatedByName && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Escalated by</dt>
+            <dt className="text-muted-foreground">Escalated by</dt>
             <dd className="font-medium">{escalatedByName}</dd>
           </div>
         )}
         {escalatedAt && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Escalated at</dt>
+            <dt className="text-muted-foreground">Escalated at</dt>
             <dd className="font-medium">{formatDateTime(escalatedAt)}</dd>
           </div>
         )}
@@ -163,19 +163,19 @@ export function EscalationSection({
         <dl className="mt-4 space-y-2 text-sm border-t border-border pt-4">
           {resolutionNote && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolution note</dt>
+              <dt className="text-muted-foreground">Resolution note</dt>
               <dd className="font-medium max-w-xs text-end">{resolutionNote}</dd>
             </div>
           )}
           {resolvedByName && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolved by</dt>
+              <dt className="text-muted-foreground">Resolved by</dt>
               <dd className="font-medium">{resolvedByName}</dd>
             </div>
           )}
           {resolvedAt && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolved at</dt>
+              <dt className="text-muted-foreground">Resolved at</dt>
               <dd className="font-medium">{formatDateTime(resolvedAt)}</dd>
             </div>
           )}
@@ -193,7 +193,7 @@ export function EscalationSection({
           </button>
           <button
             onClick={() => setShowReassign(!showReassign)}
-            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Re-assign
           </button>
@@ -203,19 +203,19 @@ export function EscalationSection({
       {/* Inline resolve form */}
       {showResolveForm && (
         <div className="mt-4 rounded-xl border border-border p-4">
-          <label htmlFor="resolution-note" className="block text-sm font-medium text-text-primary">
-            Resolution Note <span className="text-danger">*</span>
+          <label htmlFor="resolution-note" className="block text-sm font-medium text-foreground">
+            Resolution Note <span className="text-destructive">*</span>
           </label>
           <textarea
             id="resolution-note"
             value={resolveNote}
             onChange={(e) => setResolveNote(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="Describe how this was resolved..."
           />
           {resolveNote.length > 0 && resolveNote.trim().length < 10 && (
-            <p className="mt-1 text-xs text-text-secondary">Minimum 10 characters required</p>
+            <p className="mt-1 text-xs text-muted-foreground">Minimum 10 characters required</p>
           )}
           <div className="mt-3 flex gap-2">
             <button
@@ -227,7 +227,7 @@ export function EscalationSection({
             </button>
             <button
               onClick={() => setShowResolveForm(false)}
-              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-text-primary hover:bg-surface"
+              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-foreground hover:bg-card"
             >
               Cancel
             </button>
@@ -238,7 +238,7 @@ export function EscalationSection({
       {/* Inline reassign dropdown */}
       {showReassign && (
         <div className="mt-4 rounded-xl border border-border p-4">
-          <label htmlFor="reassign-select" className="block text-sm font-medium text-text-primary">
+          <label htmlFor="reassign-select" className="block text-sm font-medium text-foreground">
             Reassign to
           </label>
           <select
@@ -247,7 +247,7 @@ export function EscalationSection({
             onChange={(e) => {
               if (e.target.value) handleReassign(e.target.value)
             }}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="">Select an admin...</option>
             {adminUsers.map((u) => (
@@ -256,7 +256,7 @@ export function EscalationSection({
           </select>
           <button
             onClick={() => setShowReassign(false)}
-            className="mt-2 text-sm text-text-secondary hover:text-text-primary"
+            className="mt-2 text-sm text-muted-foreground hover:text-foreground"
           >
             Cancel
           </button>

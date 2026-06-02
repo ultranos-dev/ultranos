@@ -24,9 +24,9 @@ interface UserDetail {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success-subtle text-success',
-    SUSPENDED: 'bg-danger-subtle text-danger',
-    PENDING_INVITE: 'bg-warning-subtle text-warning',
+    ACTIVE: 'bg-success/10 text-success',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
+    PENDING_INVITE: 'bg-warning/10 text-warning',
   }
 
   const labelMap: Record<string, string> = {
@@ -36,7 +36,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {labelMap[status] ?? status}
     </span>
   )
@@ -174,14 +174,14 @@ export default function UserDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-text-secondary p-8">Loading user details...</div>
+    return <div className="text-muted-foreground p-8">Loading user details...</div>
   }
 
   if (error && !user) {
     return (
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/users" className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Users</Link>
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Users</Link>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
   }
@@ -192,77 +192,77 @@ export default function UserDetailPage() {
     <>
       <TopHeader title={user.name} description={user.email} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/users" className="text-sm text-text-secondary hover:text-text-primary transition-colors">&larr; Back to Users</Link>
+        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Users</Link>
 
         {/* Messages */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
         {saveMessage && (
-          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{saveMessage}</div>
+          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{saveMessage}</div>
         )}
         {actionMessage && (
-          <div className="mt-4 rounded-2xl bg-success-subtle border border-success/20 p-3 text-sm text-success">{actionMessage}</div>
+          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{actionMessage}</div>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Section A: Profile */}
           <div className="rounded-3xl bg-white p-5 border border-border">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Profile</span>
             </h2>
 
             <div className="mt-4 space-y-4">
               {/* Name — editable */}
               <div>
-                <label htmlFor="user-name" className="block text-sm font-medium text-text-secondary">Name</label>
+                <label htmlFor="user-name" className="block text-sm font-medium text-muted-foreground">Name</label>
                 <input
                   id="user-name"
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
               {/* Email — read-only */}
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Email</dt>
-                <dd className="mt-1 text-sm text-text-primary">{user.email}</dd>
+                <dt className="text-sm font-medium text-muted-foreground">Email</dt>
+                <dd className="mt-1 text-sm text-foreground">{user.email}</dd>
               </div>
 
               {/* Role */}
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Role</dt>
-                <dd className="mt-1 text-sm text-text-primary">
+                <dt className="text-sm font-medium text-muted-foreground">Role</dt>
+                <dd className="mt-1 text-sm text-foreground">
                   {user.role}
-                  {user.moduleName && <span className="text-text-muted"> ({user.moduleName})</span>}
+                  {user.moduleName && <span className="text-muted-foreground"> ({user.moduleName})</span>}
                 </dd>
               </div>
 
               {/* Status */}
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Status</dt>
+                <dt className="text-sm font-medium text-muted-foreground">Status</dt>
                 <dd className="mt-1"><StatusBadge status={user.status} /></dd>
               </div>
 
               {/* Suspension reason alert */}
               {user.status === 'SUSPENDED' && user.suspensionReason && (
-                <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">
+                <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                   <strong>Suspension Reason:</strong> {user.suspensionReason}
                 </div>
               )}
 
               {/* Last Login */}
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Last Login</dt>
-                <dd className="mt-1 text-sm text-text-primary">{formatDateTime(user.lastLoginAt)}</dd>
+                <dt className="text-sm font-medium text-muted-foreground">Last Login</dt>
+                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.lastLoginAt)}</dd>
               </div>
 
               {/* Created */}
               <div>
-                <dt className="text-sm font-medium text-text-secondary">Created</dt>
-                <dd className="mt-1 text-sm text-text-primary">{formatDateTime(user.createdAt)}</dd>
+                <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.createdAt)}</dd>
               </div>
 
               {/* Save button */}
@@ -278,7 +278,7 @@ export default function UserDetailPage() {
 
           {/* Section B: Actions */}
           <div className="rounded-3xl bg-white p-5 border border-border">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Actions</span>
             </h2>
 
@@ -287,8 +287,8 @@ export default function UserDetailPage() {
               {(user.status === 'ACTIVE' || user.status === 'PENDING_INVITE') && (
                 <div>
                   {showSuspendForm ? (
-                    <div className="rounded-2xl border border-danger/20 bg-danger-subtle p-4 space-y-3">
-                      <label htmlFor="suspend-reason" className="block text-sm font-medium text-danger">
+                    <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 space-y-3">
+                      <label htmlFor="suspend-reason" className="block text-sm font-medium text-destructive">
                         Suspension Reason (required)
                       </label>
                       <textarea
@@ -296,7 +296,7 @@ export default function UserDetailPage() {
                         value={suspendReason}
                         onChange={(e) => setSuspendReason(e.target.value)}
                         rows={3}
-                        className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                        className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                         placeholder="Enter reason for suspension..."
                       />
                       <div className="flex gap-2">
@@ -309,7 +309,7 @@ export default function UserDetailPage() {
                         </button>
                         <button
                           onClick={() => { setShowSuspendForm(false); setSuspendReason('') }}
-                          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                         >
                           Cancel
                         </button>
@@ -318,7 +318,7 @@ export default function UserDetailPage() {
                   ) : (
                     <button
                       onClick={() => setShowSuspendForm(true)}
-                      className="rounded-full border border-danger/30 bg-danger-subtle px-6 py-2.5 text-sm font-semibold text-danger hover:bg-danger-subtle/80 hover:scale-[1.02] transition-transform duration-200"
+                      className="rounded-full border border-destructive/30 bg-destructive/10 px-6 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10/80 hover:scale-[1.02] transition-transform duration-200"
                     >
                       Suspend User
                     </button>
@@ -342,7 +342,7 @@ export default function UserDetailPage() {
                 <button
                   onClick={handleResendInvitation}
                   disabled={actionLoading}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text-primary disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   {actionLoading ? 'Sending...' : 'Resend Invitation'}
                 </button>
@@ -353,7 +353,7 @@ export default function UserDetailPage() {
                 <button
                   onClick={handleResetPassword}
                   disabled={actionLoading}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text-primary disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   {actionLoading ? 'Sending...' : 'Reset Password'}
                 </button>

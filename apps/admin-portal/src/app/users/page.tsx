@@ -22,7 +22,7 @@ function UsersContent() {
   return (
     <>
       <div className="mx-auto max-w-7xl px-8 pt-6">
-        <div className="flex gap-1 rounded-full border border-border bg-surface p-1 w-fit">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map((tab) => (
             <Link
               key={tab.id}
@@ -30,7 +30,7 @@ function UsersContent() {
               className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-black text-white'
-                  : 'text-text-secondary hover:text-text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >

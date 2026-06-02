@@ -35,10 +35,10 @@ function formatDate(iso: string | null): string {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-surface text-text-secondary',
-  SUBMITTED: 'bg-warning-subtle text-warning',
-  APPROVED: 'bg-success-subtle text-success',
-  REJECTED: 'bg-danger-subtle text-danger',
+  PENDING: 'bg-card text-muted-foreground',
+  SUBMITTED: 'bg-warning/10 text-warning',
+  APPROVED: 'bg-success/10 text-success',
+  REJECTED: 'bg-destructive/10 text-destructive',
 }
 
 function formatType(type: string): string {
@@ -143,21 +143,21 @@ export default function PractitionerCertificationsPage() {
         <div className="flex justify-end mb-4">
           <button
             onClick={openAssignModal}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-text-primary hover:bg-accent/90 transition-colors"
+            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors"
           >
             Assign Pathway
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mb-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="text-text-secondary">Loading certification progress...</div>
+          <div className="text-muted-foreground">Loading certification progress...</div>
         ) : pathways.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-text-secondary">No certification pathways assigned to this practitioner.</p>
+            <p className="text-muted-foreground">No certification pathways assigned to this practitioner.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -166,30 +166,30 @@ export default function PractitionerCertificationsPage() {
                 {/* Pathway header */}
                 <button
                   onClick={() => togglePathway(pathway.pathwayId)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-surface hover:bg-accent-subtle transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-primary/10 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <DirectionalIcon category="navigation">
                       <ChevronRight
-                        className={`h-4 w-4 text-text-secondary transition-transform ${expandedPathways.has(pathway.pathwayId) ? 'rotate-90' : ''}`}
+                        className={`h-4 w-4 text-muted-foreground transition-transform ${expandedPathways.has(pathway.pathwayId) ? 'rotate-90' : ''}`}
                       />
                     </DirectionalIcon>
-                    <span className="font-medium text-text-primary">{pathway.pathwayName}</span>
+                    <span className="font-medium text-foreground">{pathway.pathwayName}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 h-2 rounded-full bg-surface overflow-hidden">
+                    <div className="w-32 h-2 rounded-full bg-card overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-accent transition-all"
+                        className="h-full rounded-full bg-primary transition-all"
                         style={{ width: `${pathway.completionPct}%` }}
                       />
                     </div>
-                    <span className="text-sm text-text-secondary">{pathway.completionPct}%</span>
+                    <span className="text-sm text-muted-foreground">{pathway.completionPct}%</span>
                   </div>
                 </button>
 
                 {/* Issue Credential button — AC #5 */}
                 {pathway.completionPct === 100 && (
-                  <div className="px-4 py-2 bg-surface border-t border-border flex justify-end">
+                  <div className="px-4 py-2 bg-card border-t border-border flex justify-end">
                     <button
                       onClick={() => handleIssueCredential(pathway.pathwayId)}
                       disabled={issuingPathway === pathway.pathwayId}
@@ -202,18 +202,18 @@ export default function PractitionerCertificationsPage() {
 
                 {/* Milestones */}
                 {expandedPathways.has(pathway.pathwayId) && (
-                  <div className="divide-y divide-border bg-surface-raised">
+                  <div className="divide-y divide-border bg-popover">
                     {pathway.milestones.map((milestone) => (
                       <div key={milestone.progressId} className="flex items-center justify-between px-6 py-3">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-primary">{milestone.title}</p>
-                          <p className="text-xs text-text-secondary">
+                          <p className="text-sm font-medium text-foreground">{milestone.title}</p>
+                          <p className="text-xs text-muted-foreground">
                             {formatType(milestone.type)} &middot; Required: {milestone.requiredCount}
                             {milestone.submittedAt && <> &middot; Submitted: {formatDate(milestone.submittedAt)}</>}
                             {milestone.approvedAt && <> &middot; Approved: {formatDate(milestone.approvedAt)}</>}
                           </p>
                           {milestone.reviewerNote && (
-                            <p className="text-xs text-text-secondary mt-1 italic">Note: {milestone.reviewerNote}</p>
+                            <p className="text-xs text-muted-foreground mt-1 italic">Note: {milestone.reviewerNote}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-3">
@@ -223,7 +223,7 @@ export default function PractitionerCertificationsPage() {
                           {milestone.status === 'SUBMITTED' && (
                             <button
                               onClick={() => setReviewMilestone(milestone)}
-                              className="text-xs text-accent hover:text-accent/80 font-medium transition-colors"
+                              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                             >
                               Review
                             </button>
@@ -255,14 +255,14 @@ export default function PractitionerCertificationsPage() {
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAssignModal(false)}>
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-surface-raised p-6 shadow-card"
+            className="w-full max-w-md rounded-2xl border border-border bg-popover p-6 shadow-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Assign Certification Pathway</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Assign Certification Pathway</h2>
             <select
               value={assigningPathwayId}
               onChange={(e) => setAssigningPathwayId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent mb-4"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
             >
               <option value="">Select a pathway...</option>
               {availablePathways.map((p) => (
@@ -272,14 +272,14 @@ export default function PractitionerCertificationsPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary hover:bg-surface transition-colors"
+                className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAssign}
                 disabled={!assigningPathwayId || assigning}
-                className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-text-primary hover:bg-accent/90 transition-colors disabled:opacity-50"
+                className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {assigning ? 'Assigning...' : 'Assign'}
               </button>

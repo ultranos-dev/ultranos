@@ -97,15 +97,15 @@ describe('Inventory Page — Heat Map', () => {
 
     // RED cell (0 tests)
     const redCell = screen.getByText('0 tests')
-    expect(redCell.className).toContain('bg-danger-subtle')
+    expect(redCell.className).toContain('bg-destructive/10')
 
     // AMBER cell (5 tests)
     const amberCell = screen.getByText('5 tests')
-    expect(amberCell.className).toContain('bg-warning-subtle')
+    expect(amberCell.className).toContain('bg-warning/10')
 
     // GREEN cell (50 tests)
     const greenCell = screen.getByText('50 tests')
-    expect(greenCell.className).toContain('bg-success-subtle')
+    expect(greenCell.className).toContain('bg-success/10')
   })
 
   it('renders redistribution recommendations', async () => {

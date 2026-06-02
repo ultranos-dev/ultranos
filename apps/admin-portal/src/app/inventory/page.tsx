@@ -165,11 +165,11 @@ export default function InventoryPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Tab toggle + Create PO button */}
         <div className="flex items-center justify-between">
-          <div className="flex gap-1 rounded-full bg-surface p-1 w-fit">
+          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
             <button
               onClick={() => setTab('heatmap')}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'heatmap' ? 'bg-accent text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                tab === 'heatmap' ? 'bg-primary text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Heat Map
@@ -177,7 +177,7 @@ export default function InventoryPage() {
             <button
               onClick={() => setTab('orders')}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'orders' ? 'bg-accent text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                tab === 'orders' ? 'bg-primary text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Purchase Orders
@@ -192,14 +192,14 @@ export default function InventoryPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Heat Map Tab */}
         {tab === 'heatmap' && (
           <div className="mt-6 space-y-6">
             {heatmapLoading ? (
-              <div className="text-text-secondary">Loading inventory overview...</div>
+              <div className="text-muted-foreground">Loading inventory overview...</div>
             ) : (
               <>
                 <HeatMapGrid labs={labs} reagentCategories={reagentCategories} cells={cells} />
@@ -207,7 +207,7 @@ export default function InventoryPage() {
                 {/* Redistribution Recommendations */}
                 {recommendations.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold text-text-primary">Redistribution Recommendations</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Redistribution Recommendations</h2>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {recommendations.map((rec, idx) => (
                         <RedistributionCard key={idx} recommendation={rec} />
@@ -224,10 +224,10 @@ export default function InventoryPage() {
         {tab === 'orders' && (
           <div className="mt-6">
             {ordersLoading ? (
-              <div className="text-text-secondary">Loading purchase orders...</div>
+              <div className="text-muted-foreground">Loading purchase orders...</div>
             ) : orders.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-                <p className="text-text-secondary">No purchase orders yet.</p>
+                <p className="text-muted-foreground">No purchase orders yet.</p>
               </div>
             ) : (
               <>
@@ -244,22 +244,22 @@ export default function InventoryPage() {
                         <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border bg-surface-raised">
+                    <tbody className="divide-y divide-border bg-popover">
                       {orders.map((order) => {
                         const next = getNextStatus(order.status)
                         return (
                           <tr key={order.id}>
-                            <td className="px-4 py-3 font-mono text-xs text-text-secondary">{order.id.slice(0, 8)}...</td>
+                            <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{order.id.slice(0, 8)}...</td>
                             <td className="px-4 py-3 font-medium">{order.supplierName}</td>
                             <td className="px-4 py-3 text-center">{order.totalItems}</td>
                             <td className="px-4 py-3">
                               <OrderStatusPipeline currentStatus={order.status} />
                             </td>
-                            <td className="px-4 py-3 text-text-secondary">{formatDate(order.createdAt)}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
                             <td className="px-4 py-3 text-center">
                               <button
                                 onClick={() => setViewingOrder(order)}
-                                className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-accent-subtle transition-colors"
+                                className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
                               >
                                 View
                               </button>
@@ -269,7 +269,7 @@ export default function InventoryPage() {
                                 <button
                                   onClick={() => handleAdvanceStatus(order.id, order.status)}
                                   disabled={advancingId === order.id}
-                                  className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-accent-subtle hover:text-text-primary disabled:opacity-50 transition-colors"
+                                  className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 hover:text-foreground disabled:opacity-50 transition-colors"
                                 >
                                   {advancingId === order.id ? '...' : `→ ${next}`}
                                 </button>
@@ -287,7 +287,7 @@ export default function InventoryPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+                  <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                     <span>
                       Showing {orderCursor + 1}–{Math.min(orderCursor + PAGE_SIZE, orderTotal)} of {orderTotal}
                     </span>
@@ -295,7 +295,7 @@ export default function InventoryPage() {
                       <button
                         onClick={() => setOrderCursor(Math.max(0, orderCursor - PAGE_SIZE))}
                         disabled={orderCursor === 0}
-                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                       >
                         Previous
                       </button>
@@ -303,7 +303,7 @@ export default function InventoryPage() {
                       <button
                         onClick={() => setOrderCursor(orderCursor + PAGE_SIZE)}
                         disabled={orderCursor + PAGE_SIZE >= orderTotal}
-                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                       >
                         Next
                       </button>

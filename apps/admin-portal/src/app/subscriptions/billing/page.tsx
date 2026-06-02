@@ -71,17 +71,17 @@ export default function BillingPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
-          className="text-sm text-text-muted hover:text-black transition-colors"
+          className="text-sm text-muted-foreground hover:text-black transition-colors"
         >
           &larr; Back to Subscriptions
         </Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-text-secondary">Loading billing details...</div>
+          <div className="mt-6 text-muted-foreground">Loading billing details...</div>
         ) : paymentMethod ? (
           <div className="mt-6">
             <PaymentMethodCard
@@ -91,7 +91,7 @@ export default function BillingPage() {
             />
           </div>
         ) : (
-          <div className="mt-6 rounded-3xl border border-warning/20 bg-warning-subtle p-6">
+          <div className="mt-6 rounded-3xl border border-warning/20 bg-warning/10 p-6">
             <p className="text-sm font-medium text-warning">
               No payment method on file. Add one to continue your subscription after the trial period.
             </p>
@@ -108,24 +108,24 @@ export default function BillingPage() {
         {showRemoveModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowRemoveModal(false)}>
             <div
-              className="w-full max-w-md rounded-2xl bg-surface-raised p-6 shadow-xl"
+              className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-lg font-semibold text-text-primary">Remove Payment Method?</h2>
-              <p className="mt-3 text-sm text-text-secondary">
+              <h2 className="text-lg font-semibold text-foreground">Remove Payment Method?</h2>
+              <p className="mt-3 text-sm text-muted-foreground">
                 Your subscription will be suspended if no payment method is on file at your next billing date.
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   onClick={() => setShowRemoveModal(false)}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRemove}
                   disabled={removing}
-                  className="rounded-full bg-danger text-white font-semibold px-6 py-2.5 hover:opacity-90 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
+                  className="rounded-full bg-destructive text-white font-semibold px-6 py-2.5 hover:opacity-90 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
                   {removing ? 'Removing...' : 'Remove'}
                 </button>

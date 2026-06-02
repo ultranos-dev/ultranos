@@ -40,7 +40,7 @@ export function SubscriptionWidget() {
       : 0
 
   const trialProgressColor =
-    trialDaysRemaining > 7 ? 'bg-success' : trialDaysRemaining >= 3 ? 'bg-warning' : 'bg-danger'
+    trialDaysRemaining > 7 ? 'bg-success' : trialDaysRemaining >= 3 ? 'bg-warning' : 'bg-destructive'
 
   // Trial is 30 days; progress bar shows how much time is left
   const trialProgressPct = Math.min(100, Math.max(0, (trialDaysRemaining / 30) * 100))
@@ -60,7 +60,7 @@ export function SubscriptionWidget() {
         </div>
         <Link
           href="/subscriptions/billing"
-          className="rounded-full bg-brand-lime text-text-primary font-semibold px-5 py-2 text-sm hover:brightness-95 transition-all"
+          className="rounded-full bg-brand-lime text-foreground font-semibold px-5 py-2 text-sm hover:brightness-95 transition-all"
         >
           Update Payment
         </Link>
@@ -70,9 +70,9 @@ export function SubscriptionWidget() {
 
   if (status === 'TRIAL') {
     return (
-      <div className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card">
-        <p className="text-sm font-medium text-text-secondary">Subscription</p>
-        <p className="mt-2 text-lg font-semibold text-text-primary">
+      <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
+        <p className="text-sm font-medium text-muted-foreground">Subscription</p>
+        <p className="mt-2 text-lg font-semibold text-foreground">
           Free Trial &mdash; {trialDaysRemaining} days remaining
         </p>
         <div className="mt-3 h-2 w-full rounded-full bg-border">
@@ -84,7 +84,7 @@ export function SubscriptionWidget() {
         </div>
         <button
           onClick={() => router.push('/subscriptions/billing')}
-          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-text-primary hover:opacity-90 transition-opacity"
+          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
         >
           Set Up Billing
         </button>
@@ -94,9 +94,9 @@ export function SubscriptionWidget() {
 
   if (status === 'ACTIVE') {
     return (
-      <div className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card">
-        <p className="text-sm font-medium text-text-secondary">Subscription</p>
-        <p className="mt-2 text-lg font-semibold text-text-primary">
+      <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
+        <p className="text-sm font-medium text-muted-foreground">Subscription</p>
+        <p className="mt-2 text-lg font-semibold text-foreground">
           Active Subscription &mdash; {subscriptions.length} module{subscriptions.length !== 1 ? 's' : ''}, ${totalMonthlyCostUsd.toFixed(2)}/mo
         </p>
       </div>
@@ -106,14 +106,14 @@ export function SubscriptionWidget() {
   if (status === 'SUSPENDED') {
     const isPaymentSuspended = !!organization.paymentFailureReason
     return (
-      <div className="rounded-2xl bg-danger-subtle border border-danger/20 p-6 shadow-card">
-        <p className="text-sm font-medium text-text-secondary">Subscription</p>
-        <p className="mt-2 text-lg font-semibold text-danger">
+      <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-6 shadow-card">
+        <p className="text-sm font-medium text-muted-foreground">Subscription</p>
+        <p className="mt-2 text-lg font-semibold text-destructive">
           {isPaymentSuspended ? 'Suspended — Payment Failed' : 'Suspended'}
         </p>
         <button
           onClick={() => router.push(isPaymentSuspended ? '/subscriptions/billing' : '/subscriptions')}
-          className="mt-4 rounded-xl bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          className="mt-4 rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
         >
           {isPaymentSuspended ? 'Update Payment Method' : 'Manage Subscription'}
         </button>
@@ -123,12 +123,12 @@ export function SubscriptionWidget() {
 
   if (status === 'CANCELLED') {
     return (
-      <div className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card">
-        <p className="text-sm font-medium text-text-secondary">Subscription</p>
-        <p className="mt-2 text-lg font-semibold text-text-secondary">Cancelled</p>
+      <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
+        <p className="text-sm font-medium text-muted-foreground">Subscription</p>
+        <p className="mt-2 text-lg font-semibold text-muted-foreground">Cancelled</p>
         <button
           onClick={() => router.push('/subscriptions')}
-          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-text-primary hover:opacity-90 transition-opacity"
+          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
         >
           Resubscribe
         </button>

@@ -53,51 +53,51 @@ export function MilestoneReviewModal({ milestone, onClose, onReviewed }: Props) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-surface-raised p-6 shadow-card"
+        className="w-full max-w-lg rounded-2xl border border-border bg-popover p-6 shadow-card"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-text-primary mb-4">Review Milestone</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Review Milestone</h2>
 
         {/* Milestone details */}
         <div className="space-y-2 mb-4 text-sm">
           <div className="flex justify-between">
-            <span className="text-text-secondary">Title</span>
-            <span className="font-medium text-text-primary">{milestone.title}</span>
+            <span className="text-muted-foreground">Title</span>
+            <span className="font-medium text-foreground">{milestone.title}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-secondary">Type</span>
-            <span className="text-text-primary">{formatType(milestone.type)}</span>
+            <span className="text-muted-foreground">Type</span>
+            <span className="text-foreground">{formatType(milestone.type)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-secondary">Evidence Reference</span>
-            <span className="text-text-primary">{milestone.evidenceRef ?? '—'}</span>
+            <span className="text-muted-foreground">Evidence Reference</span>
+            <span className="text-foreground">{milestone.evidenceRef ?? '—'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-secondary">Submitted</span>
-            <span className="text-text-primary">{formatDate(milestone.submittedAt)}</span>
+            <span className="text-muted-foreground">Submitted</span>
+            <span className="text-foreground">{formatDate(milestone.submittedAt)}</span>
           </div>
         </div>
 
         {/* Note */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-text-secondary mb-1">Note (optional)</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">Note (optional)</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             placeholder="Add a review note..."
           />
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mb-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Confirmation dialog */}
         {confirmAction && (
-          <div className="mb-4 rounded-xl border border-border bg-surface p-4">
-            <p className="text-sm text-text-primary font-medium">
+          <div className="mb-4 rounded-xl border border-border bg-card p-4">
+            <p className="text-sm text-foreground font-medium">
               Are you sure you want to {confirmAction === 'APPROVE' ? 'approve' : 'reject'} this milestone?
             </p>
             <div className="flex gap-3 mt-3">
@@ -107,14 +107,14 @@ export function MilestoneReviewModal({ milestone, onClose, onReviewed }: Props) 
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
                   confirmAction === 'APPROVE'
                     ? 'bg-success text-white hover:bg-success/90'
-                    : 'bg-danger text-white hover:bg-danger/90'
+                    : 'bg-destructive text-white hover:bg-destructive/90'
                 }`}
               >
                 {submitting ? 'Processing...' : `Confirm ${confirmAction === 'APPROVE' ? 'Approval' : 'Rejection'}`}
               </button>
               <button
                 onClick={() => setConfirmAction(null)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text-secondary hover:bg-surface transition-colors"
+                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
               >
                 Cancel
               </button>
@@ -127,13 +127,13 @@ export function MilestoneReviewModal({ milestone, onClose, onReviewed }: Props) 
           <div className="flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-secondary hover:bg-surface transition-colors"
+              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
             >
               Close
             </button>
             <button
               onClick={() => setConfirmAction('REJECT')}
-              className="rounded-full bg-danger px-5 py-2 text-sm font-medium text-white hover:bg-danger/90 transition-colors"
+              className="rounded-full bg-destructive px-5 py-2 text-sm font-medium text-white hover:bg-destructive/90 transition-colors"
             >
               Reject
             </button>

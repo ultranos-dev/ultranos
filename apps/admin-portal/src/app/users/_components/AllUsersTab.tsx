@@ -24,9 +24,9 @@ interface User {
 
 function StatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success-subtle text-success',
-    SUSPENDED: 'bg-danger-subtle text-danger',
-    PENDING_INVITE: 'bg-warning-subtle text-warning',
+    ACTIVE: 'bg-success/10 text-success',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
+    PENDING_INVITE: 'bg-warning/10 text-warning',
   }
 
   const labelMap: Record<string, string> = {
@@ -36,7 +36,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {labelMap[status] ?? status}
     </span>
   )
@@ -133,7 +133,7 @@ export default function AllUsersTab() {
           <select
             value={roleFilter}
             onChange={(e) => handleRoleFilterChange(e.target.value as RoleFilter)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by role"
           >
             {ROLE_FILTERS.map((r) => (
@@ -147,7 +147,7 @@ export default function AllUsersTab() {
           <select
             value={statusFilter}
             onChange={(e) => handleStatusFilterChange(e.target.value as StatusFilter)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Filter by status"
           >
             {STATUS_FILTERS.map((s) => (
@@ -163,7 +163,7 @@ export default function AllUsersTab() {
             placeholder="Search name or email..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent w-60"
+            className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-60"
             aria-label="Search users"
           />
         </div>
@@ -181,12 +181,12 @@ export default function AllUsersTab() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Suspended users banner */}
       {hasSuspendedUsers && (
-        <div className="mt-4 rounded-2xl bg-warning-subtle p-3 text-sm text-warning">
+        <div className="mt-4 rounded-2xl bg-warning/10 p-3 text-sm text-warning">
           Some users are suspended.{' '}
           <Link href="/subscriptions" className="underline font-medium hover:text-warning/80">
             Review subscriptions
@@ -195,11 +195,11 @@ export default function AllUsersTab() {
       )}
 
       {loading ? (
-        <div className="mt-6 text-text-secondary">Loading users...</div>
+        <div className="mt-6 text-muted-foreground">Loading users...</div>
       ) : users.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-          <p className="text-lg font-medium text-text-primary">No staff users yet</p>
-          <p className="mt-1 text-sm text-text-muted">
+          <p className="text-lg font-medium text-foreground">No staff users yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Get started by inviting your first team member.
           </p>
           <Link
@@ -224,14 +224,14 @@ export default function AllUsersTab() {
                   <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Last Login</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-surface-raised">
+              <tbody className="divide-y divide-border bg-popover">
                 {users.map((user) => (
                   <tr
                     key={user.id}
                     onClick={() => router.push(`/users/${user.id}`)}
                     className="cursor-pointer transition-colors hover:bg-brand-lime/5"
                   >
-                    <td className="px-4 py-3 font-medium text-text-primary">
+                    <td className="px-4 py-3 font-medium text-foreground">
                       <Link
                         href={`/users/${user.id}`}
                         className="hover:underline"
@@ -240,16 +240,16 @@ export default function AllUsersTab() {
                         {user.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-text-muted">{user.email}</td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                    <td className="px-4 py-3 text-foreground">
                       {user.role}
                       {user.moduleName && (
-                        <span className="text-text-muted"> ({user.moduleName})</span>
+                        <span className="text-muted-foreground"> ({user.moduleName})</span>
                       )}
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={user.status} /></td>
                     <td className="px-4 py-3"><MfaBadge enrolled={user.mfaEnrolled} /></td>
-                    <td className="px-4 py-3 text-text-muted">{formatRelativeTime(user.lastLoginAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(user.lastLoginAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -258,7 +258,7 @@ export default function AllUsersTab() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
               <span>
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
               </span>
@@ -266,7 +266,7 @@ export default function AllUsersTab() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
                 </button>
@@ -274,7 +274,7 @@ export default function AllUsersTab() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page >= totalPages}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
                 </button>

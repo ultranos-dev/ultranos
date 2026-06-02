@@ -29,10 +29,10 @@ interface Subscription {
 
 function StatusBadge({ status, trialEndsAt }: { status: string; trialEndsAt?: string | null }) {
   const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success-subtle text-success',
-    TRIAL: 'bg-warning-subtle text-warning',
-    SUSPENDED: 'bg-danger-subtle text-danger',
-    CANCELLED: 'bg-surface text-text-secondary',
+    ACTIVE: 'bg-success/10 text-success',
+    TRIAL: 'bg-warning/10 text-warning',
+    SUSPENDED: 'bg-destructive/10 text-destructive',
+    CANCELLED: 'bg-card text-muted-foreground',
   }
 
   let label = status
@@ -42,7 +42,7 @@ function StatusBadge({ status, trialEndsAt }: { status: string; trialEndsAt?: st
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-surface text-text-secondary'}`}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
       {label}
     </span>
   )
@@ -82,11 +82,11 @@ export default function SubscriptionsPage() {
   }, [fetchData])
 
   if (loading) {
-    return <div className="text-text-secondary">Loading subscription data...</div>
+    return <div className="text-muted-foreground">Loading subscription data...</div>
   }
 
   if (error) {
-    return <div className="rounded-2xl border border-danger/20 bg-danger-subtle px-4 py-3 text-sm text-danger">Error: {error}</div>
+    return <div className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">Error: {error}</div>
   }
 
   const activeSubscriptions = subscriptions.filter((s) => s.status === 'ACTIVE' || s.status === 'TRIAL')
@@ -97,11 +97,11 @@ export default function SubscriptionsPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Org Identity Card */}
         {org && (
-          <div className="rounded-2xl bg-surface-raised p-6 border border-border shadow-card">
+          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">{org.name}</h2>
-                <p className="mt-1 text-sm text-text-secondary">{org.billingEmail}</p>
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{org.name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{org.billingEmail}</p>
               </div>
               <StatusBadge status={org.status} trialEndsAt={org.trialEndsAt} />
             </div>
@@ -111,12 +111,12 @@ export default function SubscriptionsPage() {
         {/* Subscribed Modules Table */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Modules</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Modules</h2>
             <div className="flex items-center gap-3">
               <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
               <button
                 onClick={() => setShowAddDialog(true)}
-                className="rounded-full bg-accent text-text-primary font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
+                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
               >
                 Add Module
               </button>
@@ -124,37 +124,37 @@ export default function SubscriptionsPage() {
           </div>
 
           {subscriptions.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-surface-raised p-8 text-center shadow-card">
-              <p className="text-text-secondary">No modules subscribed. Add your first module to get started.</p>
+            <div className="rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
+              <p className="text-muted-foreground">No modules subscribed. Add your first module to get started.</p>
             </div>
           ) : (
             <div className="rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-surface">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Module</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Start Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-text-secondary text-xs uppercase tracking-wide">Renewal / Expiry</th>
-                    <th className="px-4 py-3 text-end font-medium text-text-secondary text-xs uppercase tracking-wide">Cost / mo</th>
-                    <th className="px-4 py-3 text-end font-medium text-text-secondary text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Module</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Start Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Renewal / Expiry</th>
+                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Cost / mo</th>
+                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {subscriptions.map((sub) => (
-                    <tr key={sub.id} className="hover:bg-accent-subtle transition-colors">
-                      <td className="px-4 py-3 font-medium text-text-primary">{sub.moduleName}</td>
+                    <tr key={sub.id} className="hover:bg-primary/10 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">{sub.moduleName}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={sub.status} />
                       </td>
-                      <td className="px-4 py-3 text-text-secondary">{formatDate(sub.startedAt)}</td>
-                      <td className="px-4 py-3 text-text-secondary">{formatDate(sub.expiresAt)}</td>
-                      <td className="px-4 py-3 text-end text-text-secondary">${sub.monthlyCostUsd.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.startedAt)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(sub.expiresAt)}</td>
+                      <td className="px-4 py-3 text-end text-muted-foreground">${sub.monthlyCostUsd.toFixed(2)}</td>
                       <td className="px-4 py-3 text-end">
                         {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (
                           <button
                             onClick={() => setRemoveTarget(sub)}
-                            className="rounded-full text-sm text-danger hover:text-danger font-medium"
+                            className="rounded-full text-sm text-destructive hover:text-destructive font-medium"
                           >
                             Remove
                           </button>
@@ -164,10 +164,10 @@ export default function SubscriptionsPage() {
                   ))}
                 </tbody>
                 {/* Total monthly cost footer */}
-                <tfoot className="border-t border-border bg-surface-raised">
+                <tfoot className="border-t border-border bg-popover">
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 font-medium text-end text-text-primary">Total Monthly Cost</td>
-                    <td className="px-4 py-3 text-end font-semibold text-text-primary">${totalCost.toFixed(2)}</td>
+                    <td colSpan={4} className="px-4 py-3 font-medium text-end text-foreground">Total Monthly Cost</td>
+                    <td className="px-4 py-3 text-end font-semibold text-foreground">${totalCost.toFixed(2)}</td>
                     <td />
                   </tr>
                 </tfoot>
@@ -195,10 +195,10 @@ export default function SubscriptionsPage() {
         )}
 
         <div className="mt-6 flex gap-6">
-          <a href="/subscriptions/billing" className="text-sm text-text-muted hover:text-black transition-colors">
+          <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-black transition-colors">
             Manage Billing →
           </a>
-          <a href="/subscriptions/invoices" className="text-sm text-text-muted hover:text-black transition-colors">
+          <a href="/subscriptions/invoices" className="text-sm text-muted-foreground hover:text-black transition-colors">
             View Invoices →
           </a>
         </div>

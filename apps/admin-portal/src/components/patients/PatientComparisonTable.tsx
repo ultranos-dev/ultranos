@@ -38,7 +38,7 @@ export function PatientComparisonTable({
             <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Duplicate Value</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border bg-surface-raised">
+        <tbody className="divide-y divide-border bg-popover">
           {fields.map((field) => (
             <FieldResolutionRow
               key={field}

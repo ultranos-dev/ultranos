@@ -23,9 +23,9 @@ interface Patient {
 }
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
-  if (!warn) return <span className="text-xs font-medium text-text-muted">-</span>
+  if (!warn) return <span className="text-xs font-medium text-muted-foreground">-</span>
   return (
-    <span className="inline-block rounded-full bg-warning-subtle px-2.5 py-0.5 text-xs font-medium text-warning">
+    <span className="inline-block rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
       Warning
     </span>
   )
@@ -34,13 +34,13 @@ function MpiWarnBadge({ warn }: { warn: boolean | null }) {
 function StatusBadge({ active }: { active: boolean }) {
   if (active) {
     return (
-      <span className="inline-block rounded-full bg-success-subtle px-2.5 py-0.5 text-xs font-medium text-success">
+      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
         Active
       </span>
     )
   }
   return (
-    <span className="inline-block rounded-full bg-danger-subtle px-2.5 py-0.5 text-xs font-medium text-danger">
+    <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
       Inactive
     </span>
   )
@@ -127,28 +127,28 @@ export default function PatientsPage() {
               placeholder="Search by name..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-72 rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-72 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Search patients"
             />
 
             {/* MPI Warnings Only checkbox */}
-            <label className="flex items-center gap-1.5 text-sm text-text-secondary cursor-pointer">
+            <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
               <input
                 type="checkbox"
                 checked={mpiWarnOnly}
                 onChange={handleMpiWarnToggle}
-                className="h-4 w-4 rounded border-border text-accent focus:ring-accent/30"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
               />
               MPI Warnings Only
             </label>
 
             {/* Include Inactive checkbox */}
-            <label className="flex items-center gap-1.5 text-sm text-text-secondary cursor-pointer">
+            <label className="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeInactive}
                 onChange={handleIncludeInactiveToggle}
-                className="h-4 w-4 rounded border-border text-accent focus:ring-accent/30"
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
               />
               Include Inactive
             </label>
@@ -163,22 +163,22 @@ export default function PatientsPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-danger-subtle p-3 text-sm text-danger">{error}</div>
+          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {!search.trim() && !loading ? (
           <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-            <p className="text-lg font-medium text-text-primary">Search for patients</p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="text-lg font-medium text-foreground">Search for patients</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Enter a name to begin searching patient records.
             </p>
           </div>
         ) : loading ? (
-          <div className="mt-6 text-text-secondary">Searching patients...</div>
+          <div className="mt-6 text-muted-foreground">Searching patients...</div>
         ) : patients.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
-            <p className="text-lg font-medium text-text-primary">No patients found</p>
-            <p className="mt-1 text-sm text-text-muted">
+            <p className="text-lg font-medium text-foreground">No patients found</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               Try a different search term or adjust filters.
             </p>
           </div>
@@ -199,14 +199,14 @@ export default function PatientsPage() {
                     <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Tier</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border bg-surface-raised">
+                <tbody className="divide-y divide-border bg-popover">
                   {patients.map((patient) => (
                     <tr
                       key={patient.id}
                       onClick={() => router.push(`/patients/${patient.id}`)}
                       className="cursor-pointer transition-colors hover:bg-brand-lime/5"
                     >
-                      <td className="px-4 py-3 font-medium text-text-primary">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         <Link
                           href={`/patients/${patient.id}`}
                           className="hover:underline"
@@ -215,13 +215,13 @@ export default function PatientsPage() {
                           {formatName(patient)}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-text-muted">{patient.gender ?? '-'}</td>
-                      <td className="px-4 py-3 text-text-muted">{patient.birth_year ?? '-'}</td>
-                      <td className="px-4 py-3 text-text-muted">{patient.address_district_origin ?? '-'}</td>
-                      <td className="px-4 py-3 text-text-muted">{patient.mpi_score != null ? patient.mpi_score : '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient.gender ?? '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient.birth_year ?? '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient.address_district_origin ?? '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient.mpi_score != null ? patient.mpi_score : '-'}</td>
                       <td className="px-4 py-3"><MpiWarnBadge warn={patient.mpi_warn} /></td>
                       <td className="px-4 py-3"><StatusBadge active={patient.is_active} /></td>
-                      <td className="px-4 py-3 text-text-muted">{patient.patient_tier ?? '-'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient.patient_tier ?? '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -229,7 +229,7 @@ export default function PatientsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-4 flex items-center justify-between text-sm text-text-secondary">
+            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
               <span>
                 Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{(page - 1) * PAGE_SIZE + patients.length}
               </span>
@@ -237,7 +237,7 @@ export default function PatientsPage() {
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
                 </button>
@@ -245,7 +245,7 @@ export default function PatientsPage() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!hasMore}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
+                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
                 </button>
