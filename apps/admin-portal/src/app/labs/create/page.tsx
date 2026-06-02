@@ -103,7 +103,7 @@ export default function CreateLabPage() {
           </div>
 
           {error && (
-            <div className="mt-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">
+            <div role="alert" className="mt-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">
               {error}
             </div>
           )}
