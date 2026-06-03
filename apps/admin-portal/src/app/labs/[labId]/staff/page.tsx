@@ -270,7 +270,7 @@ export default function LabStaffPage() {
         <div className="mt-6 overflow-x-auto rounded-2xl border border-border shadow-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-black text-white">
+              <tr className="bg-card">
                 <th className="px-4 py-3 text-start font-medium">Practitioner ID</th>
                 <th className="px-4 py-3 text-start font-medium">Email</th>
                 <th className="px-4 py-3 text-start font-medium">Role</th>
