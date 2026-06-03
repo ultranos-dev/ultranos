@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 type PrescribingAnomalyLevel = 'HIGH_ONLY' | 'ALL' | 'OFF'
 
@@ -151,14 +152,13 @@ export function NotificationPreferences({ email }: { email?: string }) {
         </div>
       )}
 
-      <button
+      <Button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
       >
         {saving ? 'Saving...' : 'Save Preferences'}
-      </button>
+      </Button>
 
       <p className="text-xs text-muted-foreground">
         Notifications are sent to your account email{email ? ` (${email})` : ''}. To change it, update in My Account.

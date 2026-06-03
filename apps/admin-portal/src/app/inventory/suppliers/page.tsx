@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 interface Supplier {
   id: string
@@ -17,15 +20,9 @@ interface Supplier {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        status === 'ACTIVE'
-          ? 'bg-success/10 text-success'
-          : 'bg-card text-muted-foreground'
-      }`}
-    >
+    <Badge variant={status === 'ACTIVE' ? 'success' : 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -131,12 +128,9 @@ export default function SuppliersPage() {
       <TopHeader title="Suppliers" description="Manage reagent suppliers and their contact details." />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-end">
-          <button
-            onClick={openCreate}
-            className="rounded-full bg-brand-lime px-5 py-2.5 text-sm font-semibold text-brand-lime-contrast hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button onClick={openCreate}>
             Add Supplier
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -172,22 +166,17 @@ export default function SuppliersPage() {
                     <td className="px-4 py-3 text-center"><StatusBadge status={supplier.status} /></td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => openEdit(supplier)}
-                          className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
-                        >
+                        <Button variant="outline" size="xs" onClick={() => openEdit(supplier)}>
                           Edit
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => handleToggleStatus(supplier)}
-                          className={`rounded-full border border-border px-3 py-1 text-xs font-medium transition-colors ${
-                            supplier.status === 'ACTIVE'
-                              ? 'hover:bg-destructive/10 hover:text-destructive'
-                              : 'hover:bg-success/10 hover:text-success'
-                          }`}
+                          className={supplier.status === 'ACTIVE' ? 'hover:bg-destructive/10 hover:text-destructive' : 'hover:bg-success/10 hover:text-success'}
                         >
                           {supplier.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -210,61 +199,54 @@ export default function SuppliersPage() {
                   <label htmlFor="sup-name" className="block text-sm font-medium text-foreground">
                     Name <span className="text-destructive">*</span>
                   </label>
-                  <input
+                  <Input
                     id="sup-name"
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="mt-1"
                   />
                 </div>
                 <div>
                   <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">Email</label>
-                  <input
+                  <Input
                     id="sup-email"
                     type="email"
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="mt-1"
                   />
                 </div>
                 <div>
                   <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">Phone</label>
-                  <input
+                  <Input
                     id="sup-phone"
                     type="tel"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="mt-1"
                   />
                 </div>
                 <div>
                   <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">Lead Time (days)</label>
-                  <input
+                  <Input
                     id="sup-lead"
                     type="number"
                     min="0"
                     value={formLeadTime}
                     onChange={(e) => setFormLeadTime(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="mt-1"
                   />
                 </div>
               </div>
 
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-                >
+                <Button variant="outline" onClick={() => setShowModal(false)}>
                   Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={!formName.trim() || submitting}
-                  className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-                >
+                </Button>
+                <Button onClick={handleSubmit} disabled={!formName.trim() || submitting}>
                   {submitting ? 'Saving...' : editingSupplier ? 'Save Changes' : 'Add Supplier'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export function TrialExpiredBanner() {
   return (
@@ -11,12 +12,9 @@ export function TrialExpiredBanner() {
       <p className="text-sm font-semibold text-destructive">
         Your trial has expired. Set up billing to restore access.
       </p>
-      <Link
-        href="/subscriptions/billing"
-        className="shrink-0 rounded-full bg-white px-5 py-2 text-sm font-semibold text-destructive hover:opacity-90 transition-opacity"
-      >
-        Set Up Billing
-      </Link>
+      <Button asChild variant="destructive" size="sm" className="shrink-0">
+        <Link href="/subscriptions/billing">Set Up Billing</Link>
+      </Button>
     </div>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Supplier {
   id: string
@@ -129,31 +131,31 @@ export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }
                 </div>
                 <div className="flex-1">
                   <label className="block text-xs text-muted-foreground">Reagent Category</label>
-                  <input
+                  <Input
                     type="text"
                     value={row.reagentCategory}
                     onChange={(e) => updateItem(idx, 'reagentCategory', e.target.value)}
-                    className="mt-0.5 w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                    className="mt-0.5 h-8 text-sm"
                     placeholder="e.g. Malaria RDT"
                   />
                 </div>
                 <div className="w-20">
                   <label className="block text-xs text-muted-foreground">Qty</label>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     value={row.quantity}
                     onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                    className="mt-0.5 w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                    className="mt-0.5 h-8 text-sm"
                   />
                 </div>
                 <div className="w-24">
                   <label className="block text-xs text-muted-foreground">Unit</label>
-                  <input
+                  <Input
                     type="text"
                     value={row.unit}
                     onChange={(e) => updateItem(idx, 'unit', e.target.value)}
-                    className="mt-0.5 w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                    className="mt-0.5 h-8 text-sm"
                     placeholder="tests"
                   />
                 </div>
@@ -191,19 +193,12 @@ export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }
 
         {/* Buttons */}
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!isValid || submitting}
-            className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button onClick={handleSubmit} disabled={!isValid || submitting}>
             {submitting ? 'Creating...' : 'Create Order'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

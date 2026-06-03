@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { PaymentMethodCard } from '@/components/subscriptions/PaymentMethodCard'
+import { Button } from '@/components/ui/button'
 
 interface PaymentMethod {
   brand: string
@@ -95,12 +96,9 @@ export default function BillingPage() {
             <p className="text-sm font-medium text-warning">
               No payment method on file. Add one to continue your subscription after the trial period.
             </p>
-            <button
-              onClick={handleAddOrUpdate}
-              className="mt-4 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-            >
+            <Button onClick={handleAddOrUpdate} className="mt-4">
               Add Payment Method
-            </button>
+            </Button>
           </div>
         )}
 
@@ -116,19 +114,12 @@ export default function BillingPage() {
                 Your subscription will be suspended if no payment method is on file at your next billing date.
               </p>
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowRemoveModal(false)}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-                >
+                <Button variant="outline" onClick={() => setShowRemoveModal(false)}>
                   Cancel
-                </button>
-                <button
-                  onClick={handleRemove}
-                  disabled={removing}
-                  className="rounded-full bg-destructive text-white font-semibold px-6 py-2.5 hover:opacity-90 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
-                >
+                </Button>
+                <Button variant="destructive" onClick={handleRemove} disabled={removing}>
                   {removing ? 'Removing...' : 'Remove'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

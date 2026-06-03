@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+
 interface PurchaseOrderItem {
   lab_id: string
   reagent_category: string
@@ -38,13 +40,14 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
             <h2 className="text-lg font-semibold text-foreground">Purchase Order Details</h2>
             <p className="mt-0.5 text-xs font-mono text-muted-foreground">{order.id}</p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-card text-muted-foreground transition-colors"
             aria-label="Close"
           >
             &times;
-          </button>
+          </Button>
         </div>
 
         <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -95,12 +98,9 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -6,6 +6,8 @@ import { AddModuleDialog } from '@/components/subscriptions/AddModuleDialog'
 import { RemoveModuleDialog } from '@/components/subscriptions/RemoveModuleDialog'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface OrgInfo {
   id: string
@@ -28,11 +30,11 @@ interface Subscription {
 }
 
 function StatusBadge({ status, trialEndsAt }: { status: string; trialEndsAt?: string | null }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    TRIAL: 'bg-warning/10 text-warning',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
-    CANCELLED: 'bg-card text-muted-foreground',
+  const variantMap: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
+    ACTIVE: 'success',
+    TRIAL: 'warning',
+    SUSPENDED: 'destructive',
+    CANCELLED: 'secondary',
   }
 
   let label = status
@@ -42,9 +44,9 @@ function StatusBadge({ status, trialEndsAt }: { status: string; trialEndsAt?: st
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {label}
-    </span>
+    </Badge>
   )
 }
 
@@ -114,12 +116,9 @@ export default function SubscriptionsPage() {
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Modules</h2>
             <div className="flex items-center gap-3">
               <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
-              <button
-                onClick={() => setShowAddDialog(true)}
-                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
-              >
+              <Button onClick={() => setShowAddDialog(true)}>
                 Add Module
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -152,12 +151,14 @@ export default function SubscriptionsPage() {
                       <td className="px-4 py-3 text-end text-muted-foreground">${sub.monthlyCostUsd.toFixed(2)}</td>
                       <td className="px-4 py-3 text-end">
                         {(sub.status === 'ACTIVE' || sub.status === 'TRIAL') && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setRemoveTarget(sub)}
-                            className="rounded-full text-sm text-destructive hover:text-destructive font-medium"
+                            className="text-destructive hover:text-destructive"
                           >
                             Remove
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>

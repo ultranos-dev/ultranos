@@ -8,6 +8,7 @@ import { RedistributionCard } from '@/components/inventory/RedistributionCard'
 import { CreatePurchaseOrderModal } from '@/components/inventory/CreatePurchaseOrderModal'
 import { OrderStatusPipeline, getNextStatus } from '@/components/inventory/OrderStatusPipeline'
 import { PurchaseOrderDetailModal } from '@/components/inventory/PurchaseOrderDetailModal'
+import { Button } from '@/components/ui/button'
 
 type ActiveTab = 'heatmap' | 'orders'
 
@@ -183,12 +184,9 @@ export default function InventoryPage() {
               Purchase Orders
             </button>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="rounded-full bg-brand-lime px-5 py-2.5 text-sm font-semibold text-brand-lime-contrast hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button onClick={() => setShowCreateModal(true)}>
             Create Purchase Order
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -257,22 +255,24 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
                             <td className="px-4 py-3 text-center">
-                              <button
+                              <Button
+                                variant="outline"
+                                size="xs"
                                 onClick={() => setViewingOrder(order)}
-                                className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
                               >
                                 View
-                              </button>
+                              </Button>
                             </td>
                             <td className="px-4 py-3 text-center">
                               {next && (
-                                <button
+                                <Button
+                                  variant="outline"
+                                  size="xs"
                                   onClick={() => handleAdvanceStatus(order.id, order.status)}
                                   disabled={advancingId === order.id}
-                                  className="rounded-full border border-border px-3 py-1 text-xs font-medium hover:bg-primary/10 hover:text-foreground disabled:opacity-50 transition-colors"
                                 >
                                   {advancingId === order.id ? '...' : `→ ${next}`}
-                                </button>
+                                </Button>
                               )}
                               {!next && (
                                 <span className="text-xs text-success font-medium">Complete</span>
@@ -292,21 +292,23 @@ export default function InventoryPage() {
                       Showing {orderCursor + 1}–{Math.min(orderCursor + PAGE_SIZE, orderTotal)} of {orderTotal}
                     </span>
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setOrderCursor(Math.max(0, orderCursor - PAGE_SIZE))}
                         disabled={orderCursor === 0}
-                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                       >
                         Previous
-                      </button>
+                      </Button>
                       <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setOrderCursor(orderCursor + PAGE_SIZE)}
                         disabled={orderCursor + PAGE_SIZE >= orderTotal}
-                        className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                       >
                         Next
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

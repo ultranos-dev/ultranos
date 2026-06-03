@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { EventBrowser } from '@/components/audit/EventBrowser'
+import { Button } from '@/components/ui/button'
 
 interface Verification {
   id: string
@@ -154,7 +155,7 @@ export default function AuditChainPage() {
           <button
             onClick={() => setTab('integrity')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'integrity' ? 'bg-brand-lime text-black' : 'border border-border text-muted-foreground hover:bg-card'
+              tab === 'integrity' ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-card'
             }`}
           >
             Chain Integrity
@@ -162,7 +163,7 @@ export default function AuditChainPage() {
           <button
             onClick={() => setTab('events')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'events' ? 'bg-brand-lime text-black' : 'border border-border text-muted-foreground hover:bg-card'
+              tab === 'events' ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-card'
             }`}
           >
             Event Browser
@@ -243,13 +244,12 @@ export default function AuditChainPage() {
 
             {/* Full verification button (AC #9) */}
             <div className="mt-6 flex items-center gap-4">
-              <button
+              <Button
                 onClick={handleFullVerification}
                 disabled={fullVerifyLoading}
-                className="rounded-full bg-text-primary px-6 py-2.5 text-sm font-semibold text-canvas hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 transition-transform duration-200"
               >
                 {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
-              </button>
+              </Button>
               {fullVerifyResult && (
                 <p className="text-sm text-muted-foreground">{fullVerifyResult}</p>
               )}
@@ -302,21 +302,23 @@ export default function AuditChainPage() {
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

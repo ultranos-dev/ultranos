@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+
 interface PaymentMethod {
   brand: string
   last4: string
@@ -27,18 +29,12 @@ export function PaymentMethodCard({ method, onUpdate, onRemove }: PaymentMethodC
           <p className="mt-0.5 text-sm text-muted-foreground">Expires {expiry}</p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={onUpdate}
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
+          <Button onClick={onUpdate}>
             Update
-          </button>
-          <button
-            onClick={onRemove}
-            className="rounded-full border border-destructive px-5 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors"
-          >
+          </Button>
+          <Button variant="outline" onClick={onRemove} className="border-destructive text-destructive hover:bg-destructive/10">
             Remove
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type InvoiceStatus = 'PAID' | 'PENDING' | 'FAILED' | 'REFUNDED'
 type StatusFilter = 'ALL' | InvoiceStatus
@@ -18,17 +20,17 @@ interface Invoice {
 }
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
-  const colorMap: Record<InvoiceStatus, string> = {
-    PAID: 'bg-success/10 text-success',
-    PENDING: 'bg-warning/10 text-warning',
-    FAILED: 'bg-destructive/10 text-destructive',
-    REFUNDED: 'bg-card text-muted-foreground',
+  const variantMap: Record<InvoiceStatus, 'success' | 'warning' | 'destructive' | 'secondary'> = {
+    PAID: 'success',
+    PENDING: 'warning',
+    FAILED: 'destructive',
+    REFUNDED: 'secondary',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -139,7 +141,7 @@ export default function InvoicesPage() {
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
                   {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="transition-colors hover:bg-brand-lime/5">
+                    <tr key={invoice.id} className="transition-colors hover:bg-primary/5">
                       <td className="px-4 py-3 text-foreground">{formatDate(invoice.date)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{invoice.description}</td>
                       <td className="px-4 py-3 text-foreground font-medium">${invoice.amountUsd.toFixed(2)}</td>
@@ -167,21 +169,23 @@ export default function InvoicesPage() {
                   Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {page} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setPage(page + 1)}
                     disabled={page >= totalPages}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

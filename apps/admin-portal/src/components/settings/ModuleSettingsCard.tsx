@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 /* ─── Static config: which controls to render per module ─── */
 
@@ -227,13 +229,13 @@ export function ModuleSettingsCard({ moduleCode, moduleName }: ModuleSettingsCar
               <div key={ctrl.key}>
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">{ctrl.label}</span>
-                  <input
+                  <Input
                     type="number"
                     min={ctrl.min}
                     max={ctrl.max}
                     value={Number(settings[ctrl.key]) || ctrl.defaultValue}
                     onChange={(e) => updateSetting(ctrl.key, Number(e.target.value))}
-                    className="mt-1 block w-full rounded-xl border border-border px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
                 {ctrl.description && <p className="mt-1 text-xs text-muted-foreground">{ctrl.description}</p>}
@@ -306,14 +308,13 @@ export function ModuleSettingsCard({ moduleCode, moduleName }: ModuleSettingsCar
         </div>
       )}
 
-      <button
+      <Button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
       >
         {saving ? 'Saving...' : `Save ${moduleName} Settings`}
-      </button>
+      </Button>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface DunningState {
   kind: 'payment-failed' | 'grace-period' | 'suspended-payment'
@@ -57,12 +58,9 @@ export function DunningBanner() {
         <p className="text-sm font-semibold text-destructive">
           Your subscription has been suspended due to a failed payment.
         </p>
-        <Link
-          href="/subscriptions/billing"
-          className="shrink-0 rounded-full bg-destructive px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-        >
-          Update Payment Method
-        </Link>
+        <Button asChild variant="destructive" size="sm" className="shrink-0">
+          <Link href="/subscriptions/billing">Update Payment Method</Link>
+        </Button>
       </div>
     )
   }
@@ -77,12 +75,9 @@ export function DunningBanner() {
           Payment failed. You have {dunning.graceDays} day(s) to update your payment method
           before your subscription is suspended.
         </p>
-        <Link
-          href="/subscriptions/billing"
-          className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-foreground hover:brightness-95 transition-all"
-        >
-          Update Payment Method
-        </Link>
+        <Button asChild size="sm" className="shrink-0">
+          <Link href="/subscriptions/billing">Update Payment Method</Link>
+        </Button>
       </div>
     )
   }
@@ -96,12 +91,9 @@ export function DunningBanner() {
       <p className="text-sm font-semibold text-amber-800">
         Your last payment failed. Update your payment method to avoid service interruption.
       </p>
-      <Link
-        href="/subscriptions/billing"
-        className="shrink-0 rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-foreground hover:brightness-95 transition-all"
-      >
-        Update Payment Method
-      </Link>
+      <Button asChild size="sm" className="shrink-0">
+        <Link href="/subscriptions/billing">Update Payment Method</Link>
+      </Button>
     </div>
   )
 }

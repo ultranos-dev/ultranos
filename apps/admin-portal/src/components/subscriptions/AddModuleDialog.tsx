@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface AvailableModule {
   id: string
@@ -95,13 +96,12 @@ export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps
                       ${mod.basePriceUsd.toFixed(2)} / month
                     </p>
                   </div>
-                  <button
+                  <Button
                     onClick={() => handleAdd(mod.code)}
                     disabled={adding !== null}
-                    className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                   >
                     {adding === mod.code ? 'Adding...' : 'Add'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}

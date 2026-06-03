@@ -8,6 +8,8 @@ import { NotificationPreferences } from '@/components/settings/NotificationPrefe
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
 import { KeyRound } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 /* ─── Types ─── */
 
@@ -391,11 +393,11 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Full Name</span>
-                  <input
+                  <Input
                     type="text"
                     value={profileName}
                     onChange={(e) => { setProfileName(e.target.value); setProfileSuccess(null) }}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
                 <div>
@@ -419,14 +421,13 @@ export default function SettingsPage() {
               {profileSuccess && (
                 <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{profileSuccess}</div>
               )}
-              <button
+              <Button
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={profileSaving || profileName === (profile?.name ?? '')}
-                className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {profileSaving ? 'Saving...' : 'Save Profile'}
-              </button>
+              </Button>
             </div>
 
             <hr className="border-border" />
@@ -437,29 +438,29 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Current Password</span>
-                  <input
+                  <Input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">New Password (min 12 characters)</span>
-                  <input
+                  <Input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Confirm New Password</span>
-                  <input
+                  <Input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
               </div>
@@ -469,14 +470,13 @@ export default function SettingsPage() {
               {passwordSuccess && (
                 <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{passwordSuccess}</div>
               )}
-              <button
+              <Button
                 type="button"
                 onClick={handleChangePassword}
                 disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
-                className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {passwordSaving ? 'Changing...' : 'Change Password'}
-              </button>
+              </Button>
             </div>
 
             <hr className="border-border" />
@@ -525,13 +525,15 @@ export default function SettingsPage() {
                               )}
                             </div>
                           </div>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleUnenroll(factor.id)}
-                            className="rounded-full text-sm text-destructive hover:text-destructive font-medium"
+                            className="text-destructive hover:text-destructive"
                           >
                             Remove
-                          </button>
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -543,14 +545,13 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  <button
+                  <Button
                     type="button"
                     onClick={handleEnroll}
                     disabled={enrolling}
-                    className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                   >
                     {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -568,14 +569,13 @@ export default function SettingsPage() {
                   {sessionsMsg}
                 </div>
               )}
-              <button
+              <Button
                 type="button"
                 onClick={handleSignOutOtherSessions}
                 disabled={sessionsLoading}
-                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
               >
                 {sessionsLoading ? 'Signing out...' : 'Sign Out All Other Sessions'}
-              </button>
+              </Button>
             </div>
           </div>
         </section>
@@ -588,11 +588,11 @@ export default function SettingsPage() {
               <>
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Organization Name</span>
-                  <input
+                  <Input
                     type="text"
                     value={orgDraft.name}
                     onChange={(e) => setOrgDraft({ ...orgDraft, name: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
 
@@ -612,11 +612,11 @@ export default function SettingsPage() {
 
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Billing Email</span>
-                  <input
+                  <Input
                     type="email"
                     value={orgDraft.billingEmail}
                     onChange={(e) => setOrgDraft({ ...orgDraft, billingEmail: e.target.value })}
-                    className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="mt-1"
                   />
                 </label>
 
@@ -646,14 +646,13 @@ export default function SettingsPage() {
                   <div role="status" className="rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{orgSuccess}</div>
                 )}
 
-                <button
+                <Button
                   type="button"
                   onClick={handleSaveOrg}
                   disabled={orgSaving || !orgDirty}
-                  className="rounded-full bg-brand-lime text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
                   {orgSaving ? 'Saving...' : 'Save Changes'}
-                </button>
+                </Button>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">Loading organization...</p>

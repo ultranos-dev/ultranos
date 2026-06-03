@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { ROLE_MODULE_MAP } from '@ultranos/shared-types'
+import { Button } from '@/components/ui/button'
 
 interface Subscription {
   id: string
@@ -84,19 +85,12 @@ export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModu
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onClose}>
             Keep Subscription
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={cancelling}
-            className="rounded-full bg-destructive text-white font-semibold px-6 py-2.5 hover:opacity-90 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleCancel} disabled={cancelling}>
             {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
