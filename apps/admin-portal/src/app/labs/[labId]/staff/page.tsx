@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
@@ -17,11 +19,11 @@ const ROLE_LABELS: Record<LabRole, string> = {
   LAB_MANAGER: 'Lab Manager',
 }
 
-const ROLE_BADGE_COLORS: Record<LabRole, string> = {
-  LAB_TECH: 'bg-gray-100 text-gray-700',
-  SENIOR_TECH: 'bg-blue-100 text-blue-700',
-  SUPERVISOR: 'bg-amber-100 text-amber-700',
-  LAB_MANAGER: 'bg-green-100 text-green-700',
+const ROLE_BADGE_VARIANTS: Record<LabRole, 'secondary' | 'default' | 'warning' | 'success'> = {
+  LAB_TECH: 'secondary',
+  SENIOR_TECH: 'default',
+  SUPERVISOR: 'warning',
+  LAB_MANAGER: 'success',
 }
 
 interface StaffMember {
@@ -33,9 +35,9 @@ interface StaffMember {
 
 function RoleBadge({ role }: { role: LabRole }) {
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_BADGE_COLORS[role] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={ROLE_BADGE_VARIANTS[role] ?? 'secondary'}>
       {ROLE_LABELS[role] ?? role}
-    </span>
+    </Badge>
   )
 }
 
@@ -82,19 +84,12 @@ function RoleChangeModal({
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={submitting}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-primary text-foreground disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button onClick={onConfirm} disabled={submitting}>
             {submitting ? 'Updating...' : 'Confirm'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -123,20 +118,17 @@ function RemoveStaffModal({
           from this lab? This cannot be undone.
         </p>
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="destructive"
             onClick={onConfirm}
             disabled={submitting}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold bg-destructive text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
             aria-label="Confirm Remove"
           >
             {submitting ? 'Removing…' : 'Confirm Remove'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -248,19 +240,18 @@ export default function LabStaffPage() {
       <TopHeader title="Lab Staff" description="Manage staff roles for this lab" />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-between">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push(`/labs/${labId}`)}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             &larr; Back to Lab Detail
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setShowAssignModal(true)}
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
             aria-label="Add Staff"
           >
             Add Staff
-          </button>
+          </Button>
         </div>
 
         {/* Success toast */}
@@ -326,13 +317,15 @@ export default function LabStaffPage() {
                       {formatDate(member.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
-                        className="rounded-full border border-destructive px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                         aria-label="Remove"
+                        className="text-destructive border-destructive hover:bg-destructive/10"
                       >
                         Remove
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))

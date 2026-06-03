@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED'
 
@@ -19,16 +21,16 @@ interface LabEntry {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    PENDING: 'bg-warning/10 text-warning',
-    ACTIVE: 'bg-success/10 text-success',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
+  const variantMap: Record<string, 'warning' | 'success' | 'destructive'> = {
+    PENDING: 'warning',
+    ACTIVE: 'success',
+    SUSPENDED: 'destructive',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -100,12 +102,9 @@ export default function LabsPage() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/labs/create')}
-              className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-            >
+            <Button onClick={() => router.push('/labs/create')}>
               Create Lab
-            </button>
+            </Button>
             <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
           </div>
         </div>
@@ -161,21 +160,23 @@ export default function LabsPage() {
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 
@@ -180,19 +181,12 @@ export default function AssignStaffModal({
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-foreground disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
             {submitting ? 'Assigning…' : 'Assign'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

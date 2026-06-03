@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function CreateLabPage() {
   const router = useRouter()
@@ -37,12 +39,9 @@ export default function CreateLabPage() {
     <>
       <TopHeader title="Create Lab" description="Register a new lab for your organisation." />
       <div className="mx-auto max-w-2xl px-8 py-6">
-        <button
-          onClick={() => router.push('/labs')}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <Button variant="outline" onClick={() => router.push('/labs')}>
           &larr; Back to Labs
-        </button>
+        </Button>
 
         <div className="mt-6 rounded-2xl border border-border bg-popover p-6">
           <div className="space-y-5">
@@ -53,14 +52,13 @@ export default function CreateLabPage() {
               >
                 Lab Name <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="lab-name"
                 aria-label="Lab Name"
                 type="text"
                 value={labName}
                 onChange={(e) => setLabName(e.target.value)}
                 placeholder="e.g. Central Diagnostics Lab"
-                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -71,14 +69,13 @@ export default function CreateLabPage() {
               >
                 License Reference <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="license-ref"
                 aria-label="License Reference"
                 type="text"
                 value={licenseRef}
                 onChange={(e) => setLicenseRef(e.target.value)}
                 placeholder="e.g. LIC-2026-001"
-                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -90,14 +87,13 @@ export default function CreateLabPage() {
                 Accreditation Reference{' '}
                 <span className="text-muted-foreground text-xs font-normal">(optional)</span>
               </label>
-              <input
+              <Input
                 id="accreditation-ref"
                 aria-label="Accreditation Reference"
                 type="text"
                 value={accreditationRef}
                 onChange={(e) => setAccreditationRef(e.target.value)}
                 placeholder="e.g. ACCR-ISO15189-001"
-                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -109,19 +105,12 @@ export default function CreateLabPage() {
           )}
 
           <div className="mt-6 flex justify-end gap-3">
-            <button
-              onClick={() => router.push('/labs')}
-              className="rounded-full border border-border px-6 py-2.5 text-sm text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-            >
+            <Button variant="outline" onClick={() => router.push('/labs')}>
               Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-black disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-            >
+            </Button>
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
               {submitting ? 'Creating…' : 'Create Lab'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

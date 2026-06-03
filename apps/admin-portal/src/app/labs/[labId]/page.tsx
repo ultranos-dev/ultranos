@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type LabAction = 'APPROVE' | 'SUSPEND' | 'REACTIVATE'
 
@@ -34,15 +36,15 @@ interface LabDetail {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    PENDING: 'bg-warning/10 text-warning',
-    ACTIVE: 'bg-success/10 text-success',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
+  const variantMap: Record<string, 'warning' | 'success' | 'destructive'> = {
+    PENDING: 'warning',
+    ACTIVE: 'success',
+    SUSPENDED: 'destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -73,24 +75,27 @@ function ConfirmationDialog({
 }) {
   const [reason, setReason] = useState('')
 
-  const config: Record<LabAction, { title: string; description: string; buttonLabel: string; buttonColor: string }> = {
+  const variantMap: Record<LabAction, 'success' | 'destructive' | 'default'> = {
+    APPROVE: 'success',
+    SUSPEND: 'destructive',
+    REACTIVATE: 'default',
+  }
+
+  const config: Record<LabAction, { title: string; description: string; buttonLabel: string }> = {
     APPROVE: {
       title: 'Approve Lab',
       description: `Approve "${labName}" for active operation? The lab technician will be notified and can begin uploading results.`,
       buttonLabel: 'Approve',
-      buttonColor: 'bg-green-600 hover:bg-green-700',
     },
     SUSPEND: {
       title: 'Suspend Lab',
       description: `Suspend "${labName}"? This will immediately block the lab from uploading results. The technician will be notified.`,
       buttonLabel: 'Suspend',
-      buttonColor: 'bg-red-600 hover:bg-red-700',
     },
     REACTIVATE: {
       title: 'Reactivate Lab',
       description: `Reactivate "${labName}"? This will restore upload access. The technician will be notified.`,
       buttonLabel: 'Reactivate',
-      buttonColor: 'bg-primary',
     },
   }
 
@@ -118,19 +123,16 @@ function ConfirmationDialog({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-full border border-border text-foreground px-6 py-2.5 text-sm hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={variantMap[action]}
             onClick={() => onConfirm(reason)}
             disabled={submitting}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor} ${action === 'REACTIVATE' ? 'text-foreground' : 'text-white'}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -195,7 +197,7 @@ export default function LabDetailPage() {
   if (error && !lab) {
     return (
       <div>
-        <button onClick={() => router.push('/labs')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Labs</button>
+        <Button variant="ghost" onClick={() => router.push('/labs')}>&larr; Back to Labs</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -207,7 +209,7 @@ export default function LabDetailPage() {
     <>
       <TopHeader title={lab.labName} description={`Registered ${formatDate(lab.registeredAt)}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button onClick={() => router.push('/labs')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Labs</button>
+        <Button variant="ghost" onClick={() => router.push('/labs')}>&larr; Back to Labs</Button>
 
         {/* Header */}
         <div className="mt-4 flex items-center justify-end">
@@ -226,35 +228,34 @@ export default function LabDetailPage() {
 
         {/* Action buttons — AC #3, status-dependent + Story 55.1 AC #6: Staff link */}
         <div className="mt-6 flex gap-3">
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push(`/labs/${labId}/staff`)}
-            className="rounded-full px-6 py-2.5 text-sm font-semibold border border-border text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             View Staff
-          </button>
+          </Button>
           {lab.status === 'PENDING' && (
-            <button
+            <Button
+              variant="success"
               onClick={() => setPendingAction('APPROVE')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-green-600 text-white hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Approve
-            </button>
+            </Button>
           )}
           {lab.status === 'ACTIVE' && (
-            <button
+            <Button
+              variant="destructive"
               onClick={() => setPendingAction('SUSPEND')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Suspend
-            </button>
+            </Button>
           )}
           {lab.status === 'SUSPENDED' && (
-            <button
+            <Button
               onClick={() => setPendingAction('REACTIVATE')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-primary text-foreground hover:scale-[1.02] transition-transform duration-200"
             >
               Reactivate
-            </button>
+            </Button>
           )}
         </div>
 
