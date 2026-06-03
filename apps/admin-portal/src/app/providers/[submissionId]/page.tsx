@@ -102,10 +102,10 @@ function ConfirmationDialog({
 }) {
   const [reason, setReason] = useState('')
 
-  const actionVariantMap: Record<KycAction, 'success' | 'destructive' | 'warning'> = {
+  const actionVariantMap: Record<KycAction, 'success' | 'destructive' | 'outline'> = {
     APPROVE: 'success',
     REJECT: 'destructive',
-    REQUEST_MORE_INFO: 'warning',
+    REQUEST_MORE_INFO: 'outline',
   }
 
   const config: Record<KycAction, {
