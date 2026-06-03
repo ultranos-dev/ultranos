@@ -168,8 +168,6 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
   // Derived state
   // ---------------------------------------------------------------------------
 
-  const activePairings = pairings.filter((p) => p.status === 'active')
-
   const currentPairing =
     activeView.type !== 'list'
       ? pairings.find((p) => p.id === activeView.pairingId) ?? null
@@ -197,7 +195,12 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
   // Check-In form view
   // ---------------------------------------------------------------------------
 
-  if (activeView.type === 'checkIn' && currentPairing) {
+  if (activeView.type === 'checkIn') {
+    const checkInPairing = pairings.find((p) => p.id === activeView.pairingId)
+    if (!checkInPairing || checkInPairing.status !== 'active') {
+      setActiveView({ type: 'list' })
+      return null
+    }
     return (
       <section aria-label={t('checkInFormSection')} className="flex flex-col gap-4">
         {/* Back navigation */}
@@ -207,15 +210,15 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
           className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
             focus:outline-none focus:ring-2 focus:ring-primary-300"
         >
-          ← {t('dashboardBack')}
+          <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBack')}
         </button>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-neutral-800">
-            {t('checkInFormTitle', { name: getPartnerName(currentPairing, currentUserId) })}
+            {t('checkInFormTitle', { name: getPartnerName(checkInPairing, currentUserId) })}
           </h2>
           <CheckInForm
-            pairing={currentPairing}
+            pairing={checkInPairing}
             currentUserId={currentUserId}
             onComplete={handleCheckInComplete}
             onCancel={handleCheckInCancel}
@@ -239,7 +242,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
           className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
             focus:outline-none focus:ring-2 focus:ring-primary-300"
         >
-          ← {t('dashboardBack')}
+          <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBack')}
         </button>
 
         <LearningJournal
@@ -265,7 +268,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
           className="self-start text-sm text-primary-600 underline-offset-2 hover:underline
             focus:outline-none focus:ring-2 focus:ring-primary-300"
         >
-          ← {t('dashboardBackToJournal')}
+          <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBackToJournal')}
         </button>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
@@ -302,7 +305,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
       )}
 
       {/* No pairings state */}
-      {activePairings.length === 0 && (
+      {pairings.length === 0 && (
         <div
           role="status"
           className="rounded-xl border border-dashed border-neutral-300 px-6 py-10 text-center"
