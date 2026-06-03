@@ -246,7 +246,8 @@
     "competency": "My Skills",
     "equipment": "المعدات",
     "portfolio": "محفظتي",
-    "readinessBoard": "لوحة الاستعداد"
+    "readinessBoard": "لوحة الاستعداد",
+    "mentorship": "Mentorship"
   },
   "network": {
     "networkDashboard": "شبكة المختبر",
@@ -1819,7 +1820,8 @@
     "checkInFormSection": "Check-in form",
     "checkInFormTitle": "Check-in with {name}",
     "journalViewSection": "Learning journal",
-    "journalAddEntrySection": "Add journal entry"
+    "journalAddEntrySection": "Add journal entry",
+    "pageTitle": "Mentorship"
   },
   "shift": {
     "handoverTitle": "تسليم الوردية",

@@ -301,7 +301,8 @@
     "competency": "My Skills",
     "equipment": "تجهیزات",
     "portfolio": "پورتفولیوی من",
-    "readinessBoard": "تابلوی آمادگی"
+    "readinessBoard": "تابلوی آمادگی",
+    "mentorship": "Mentorship"
   },
   "network": {
     "networkDashboard": "شبکه لابراتوار",
@@ -1874,7 +1875,8 @@
     "checkInFormSection": "Check-in form",
     "checkInFormTitle": "Check-in with {name}",
     "journalViewSection": "Learning journal",
-    "journalAddEntrySection": "Add journal entry"
+    "journalAddEntrySection": "Add journal entry",
+    "pageTitle": "Mentorship"
   },
   "shift": {
     "handoverTitle": "تحویل شفت",

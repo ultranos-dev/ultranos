@@ -110,6 +110,52 @@ export async function syncMentorshipPairings(technicianId: string): Promise<void
 }
 
 // ---------------------------------------------------------------------------
+// DHO Reporting Helper (Task 6 — District Health Officer Visibility)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a summary suitable for DHO reporting — no PHI, only counts and dates.
+ *
+ * Data coverage for DHO dashboard:
+ *   - Check-in dates: covered by _pushPendingCheckIns (check_in_records synced to Hub)
+ *   - Journal entry counts: covered by _pushPendingJournalEntries (learning_journal synced to Hub)
+ *   - Pairing status: covered by _pullPairings (mentorship_pairings pulled from Hub, status field included)
+ *
+ * This helper reads only from local Dexie — no network calls.
+ * Safe to call offline at any frequency.
+ */
+export async function getMentorshipActivityForSync(pairingId: string): Promise<{
+  journalEntryCount: number
+  lastCheckInAt: string | null
+  status: MentorshipPairing['status']
+}> {
+  try {
+    const db = getDb()
+
+    const [pairing, journalEntryCount, lastCheckIn] = await Promise.all([
+      db.mentorship_pairings.get(pairingId),
+      db.learning_journal
+        .where('pairingId')
+        .equals(pairingId)
+        .count(),
+      db.check_in_records
+        .where('pairingId')
+        .equals(pairingId)
+        .sortBy('completedAt')
+        .then((records) => records.at(-1) ?? null),
+    ])
+
+    return {
+      journalEntryCount,
+      lastCheckInAt: lastCheckIn?.completedAt ?? pairing?.lastCheckInAt ?? null,
+      status: pairing?.status ?? 'completed',
+    }
+  } catch {
+    return { journalEntryCount: 0, lastCheckInAt: null, status: 'completed' }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Phase 1 — Pull pairing registry from Hub
 // ---------------------------------------------------------------------------
 

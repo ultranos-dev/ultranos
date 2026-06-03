@@ -302,7 +302,8 @@
     "competency": "My Skills",
     "equipment": "Equipment",
     "portfolio": "My Portfolio",
-    "readinessBoard": "Readiness Board"
+    "readinessBoard": "Readiness Board",
+    "mentorship": "Mentorship"
   },
   "network": {
     "networkDashboard": "Lab Network",
@@ -1890,7 +1891,8 @@
     "checkInFormSection": "Check-in form",
     "checkInFormTitle": "Check-in with {name}",
     "journalViewSection": "Learning journal",
-    "journalAddEntrySection": "Add journal entry"
+    "journalAddEntrySection": "Add journal entry",
+    "pageTitle": "Mentorship"
   },
   "shift": {
     "handoverTitle": "Shift Handover",

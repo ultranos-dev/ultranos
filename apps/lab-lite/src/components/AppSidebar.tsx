@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Upload,
   UserPlus,
+  UserCheck,
   History,
   ListOrdered,
   Bell,
@@ -238,6 +239,7 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     { label: t('qualityDashboard'), href: '/quality', icon: <TrendingUp size={20} />, active: pathname.startsWith('/quality'), group: 'clinical' },
     { label: t('teamAchievements'), href: '/achievements', icon: <span aria-hidden="true" className="text-base leading-none">🏆</span>, active: pathname.startsWith('/achievements'), group: 'clinical' },
     { label: t('certification'), href: '/certification', icon: <Award size={20} />, active: pathname.startsWith('/certification'), group: 'clinical' },
+    { label: t('mentorship'), href: '/mentorship', icon: <UserCheck size={20} />, active: pathname.startsWith('/mentorship'), group: 'clinical' as const },
     // Finance
     { label: t('newPayment'), href: '/finance/payment', icon: <Banknote size={20} />, active: pathname === '/finance/payment', group: 'finance' },
     { label: t('receipts'), href: '/finance/receipts', icon: <Receipt size={20} />, active: pathname === '/finance/receipts', group: 'finance' },
