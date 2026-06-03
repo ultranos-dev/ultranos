@@ -7,6 +7,14 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 
@@ -58,6 +66,7 @@ function RoleChangeModal({
   onConfirm,
   onCancel,
   submitting,
+  open,
 }: {
   email: string
   currentRole: LabRole
@@ -65,34 +74,37 @@ function RoleChangeModal({
   onConfirm: () => void
   onCancel: () => void
   submitting: boolean
+  open: boolean
 }) {
   const isDemotingManager = currentRole === 'LAB_MANAGER' && newRole !== 'LAB_MANAGER'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">Change Staff Role</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Change <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span> from{' '}
-          <RoleBadge role={currentRole} /> to <RoleBadge role={newRole} />?
-        </p>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Change Staff Role</DialogTitle>
+          <DialogDescription>
+            Change <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span> from{' '}
+            <RoleBadge role={currentRole} /> to <RoleBadge role={newRole} />?
+          </DialogDescription>
+        </DialogHeader>
 
         {isDemotingManager && (
-          <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-1 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
             This will remove their manager privileges. If they are the last manager, this operation will be blocked.
           </div>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
+        <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button onClick={onConfirm} disabled={submitting}>
             {submitting ? 'Updating...' : 'Confirm'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -102,22 +114,26 @@ function RemoveStaffModal({
   onConfirm,
   onCancel,
   submitting,
+  open,
 }: {
   email: string
   onConfirm: () => void
   onCancel: () => void
   submitting: boolean
+  open: boolean
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">Remove Staff Member</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Are you sure you want to remove{' '}
-          <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span>{' '}
-          from this lab? This cannot be undone.
-        </p>
-        <div className="mt-6 flex justify-end gap-3">
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Remove Staff Member</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to remove{' '}
+            <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span>{' '}
+            from this lab? This cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
@@ -129,9 +145,9 @@ function RemoveStaffModal({
           >
             {submitting ? 'Removing…' : 'Confirm Remove'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -337,6 +353,7 @@ export default function LabStaffPage() {
         {/* Confirmation modal */}
         {pendingChange && (
           <RoleChangeModal
+            open={pendingChange !== null}
             email={pendingChange.email}
             currentRole={pendingChange.currentRole}
             newRole={pendingChange.newRole}
@@ -348,6 +365,7 @@ export default function LabStaffPage() {
 
         {pendingRemove && (
           <RemoveStaffModal
+            open={pendingRemove !== null}
             email={pendingRemove.email}
             onConfirm={handleConfirmRemove}
             onCancel={() => setPendingRemove(null)}

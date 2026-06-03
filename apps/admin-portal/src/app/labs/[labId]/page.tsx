@@ -7,6 +7,14 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type LabAction = 'APPROVE' | 'SUSPEND' | 'REACTIVATE'
 
@@ -67,12 +75,14 @@ function ConfirmationDialog({
   onConfirm,
   onCancel,
   submitting,
+  open,
 }: {
   action: LabAction
   labName: string
   onConfirm: (reason: string) => void
   onCancel: () => void
   submitting: boolean
+  open: boolean
 }) {
   const [reason, setReason] = useState('')
 
@@ -103,12 +113,14 @@ function ConfirmationDialog({
   const c = config[action]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">{c.title}</h2>
-        <p className="mt-3 text-sm text-muted-foreground">{c.description}</p>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{c.title}</DialogTitle>
+          <DialogDescription>{c.description}</DialogDescription>
+        </DialogHeader>
 
-        <div className="mt-4">
+        <div className="mt-1">
           <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">
             Reason <span className="text-muted-foreground/60">(optional)</span>
           </label>
@@ -123,7 +135,7 @@ function ConfirmationDialog({
           />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
@@ -134,9 +146,9 @@ function ConfirmationDialog({
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -339,6 +351,7 @@ export default function LabDetailPage() {
         {/* Confirmation Dialog — AC #8 */}
         {pendingAction && (
           <ConfirmationDialog
+            open={pendingAction !== null}
             action={pendingAction}
             labName={lab.labName}
             onConfirm={handleAction}

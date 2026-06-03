@@ -9,6 +9,13 @@ import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface MilestoneProgress {
   progressId: string
@@ -253,40 +260,37 @@ export default function PractitionerCertificationsPage() {
       )}
 
       {/* Assign Pathway Modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAssignModal(false)}>
-          <div
-            className="w-full max-w-md rounded-2xl border border-border bg-popover p-6 shadow-card"
-            onClick={(e) => e.stopPropagation()}
+      <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Certification Pathway</DialogTitle>
+          </DialogHeader>
+          <select
+            value={assigningPathwayId}
+            onChange={(e) => setAssigningPathwayId(e.target.value)}
+            className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <h2 className="text-lg font-semibold text-foreground mb-4">Assign Certification Pathway</h2>
-            <select
-              value={assigningPathwayId}
-              onChange={(e) => setAssigningPathwayId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+            <option value="">Select a pathway...</option>
+            {availablePathways.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAssignModal(false)}
             >
-              <option value="">Select a pathway...</option>
-              {availablePathways.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowAssignModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAssign}
-                disabled={!assigningPathwayId || assigning}
-              >
-                {assigning ? 'Assigning...' : 'Assign'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssign}
+              disabled={!assigningPathwayId || assigning}
+            >
+              {assigning ? 'Assigning...' : 'Assign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -6,6 +6,14 @@ import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { PaymentMethodCard } from '@/components/subscriptions/PaymentMethodCard'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface PaymentMethod {
   brand: string
@@ -103,27 +111,24 @@ export default function BillingPage() {
         )}
 
         {/* Remove Confirmation Modal */}
-        {showRemoveModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowRemoveModal(false)}>
-            <div
-              className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-lg font-semibold text-foreground">Remove Payment Method?</h2>
-              <p className="mt-3 text-sm text-muted-foreground">
+        <Dialog open={showRemoveModal} onOpenChange={setShowRemoveModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Remove Payment Method?</DialogTitle>
+              <DialogDescription>
                 Your subscription will be suspended if no payment method is on file at your next billing date.
-              </p>
-              <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowRemoveModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={handleRemove} disabled={removing}>
-                  {removing ? 'Removing...' : 'Remove'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRemoveModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleRemove} disabled={removing}>
+                {removing ? 'Removing...' : 'Remove'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   )
