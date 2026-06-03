@@ -25,7 +25,7 @@ vi.mock('@/lib/trpc', () => ({
 }))
 
 const mockOnAssigned = vi.fn()
-const mockOnClose = vi.fn()
+const mockOnOpenChange = vi.fn()
 
 const { default: AssignStaffModal } = await import('../components/lab-staff/AssignStaffModal')
 
@@ -52,7 +52,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       <AssignStaffModal
         fixedLabId="lab-1"
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
     expect(screen.getByText('Assign Staff to Lab')).toBeTruthy()
@@ -66,7 +66,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       <AssignStaffModal
         fixedLabId="lab-1"
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
 
@@ -90,7 +90,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       <AssignStaffModal
         fixedLabId="lab-1"
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
 
@@ -119,7 +119,7 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
       <AssignStaffModal
         fixedLabId="lab-1"
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
 
@@ -136,17 +136,17 @@ describe('AssignStaffModal — per-lab context (fixedLabId)', () => {
     expect(mockOnAssigned).not.toHaveBeenCalled()
   })
 
-  it('calls onClose when Cancel is clicked', async () => {
+  it('calls onOpenChange(false) when Cancel is clicked', async () => {
     const user = userEvent.setup()
     render(
       <AssignStaffModal
         fixedLabId="lab-1"
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(mockOnClose).toHaveBeenCalled()
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
   })
 })
 
@@ -161,7 +161,7 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
       <AssignStaffModal
         labs={mockLabs}
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
     await waitFor(() => {
@@ -179,7 +179,7 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
       <AssignStaffModal
         labs={mockLabs}
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
 
@@ -205,7 +205,7 @@ describe('AssignStaffModal — org-wide context (labs prop)', () => {
       <AssignStaffModal
         labs={mockLabs}
         onAssigned={mockOnAssigned}
-        onClose={mockOnClose}
+        open={true} onOpenChange={mockOnOpenChange}
       />
     )
     expect(screen.getByRole('button', { name: 'Assign' })).toBeDisabled()

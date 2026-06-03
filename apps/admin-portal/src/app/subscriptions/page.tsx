@@ -178,22 +178,20 @@ export default function SubscriptionsPage() {
         </div>
 
         {/* Add Module Dialog */}
-        {showAddDialog && (
-          <AddModuleDialog
-            onClose={() => setShowAddDialog(false)}
-            onModuleAdded={fetchData}
-          />
-        )}
+        <AddModuleDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onModuleAdded={fetchData}
+        />
 
         {/* Remove Module Dialog */}
-        {removeTarget && (
-          <RemoveModuleDialog
-            subscription={removeTarget}
-            isLastActive={activeSubscriptions.length === 1 && activeSubscriptions[0]?.id === removeTarget.id}
-            onClose={() => setRemoveTarget(null)}
-            onModuleRemoved={fetchData}
-          />
-        )}
+        <RemoveModuleDialog
+          subscription={removeTarget ?? { id: '', moduleName: '', moduleCode: '', expiresAt: null }}
+          isLastActive={activeSubscriptions.length === 1 && activeSubscriptions[0]?.id === removeTarget?.id}
+          open={removeTarget !== null}
+          onOpenChange={(open) => { if (!open) setRemoveTarget(null) }}
+          onModuleRemoved={fetchData}
+        />
 
         <div className="mt-6 flex gap-6">
           <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

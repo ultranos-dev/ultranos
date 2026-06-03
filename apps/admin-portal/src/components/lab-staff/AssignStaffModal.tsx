@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 
@@ -29,26 +37,30 @@ interface AssignStaffModalProps {
   fixedLabId?: string
   /** Available labs for the dropdown. Use from the org-wide tab. */
   labs?: LabOption[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onAssigned: () => void
-  onClose: () => void
 }
 
 export default function AssignStaffModal({
   fixedLabId,
   labs,
+  open,
+  onOpenChange,
   onAssigned,
-  onClose,
 }: AssignStaffModalProps) {
   const [selectedLabId, setSelectedLabId] = useState(fixedLabId ?? '')
   const [selectedPractitionerId, setSelectedPractitionerId] = useState('')
   const [selectedRole, setSelectedRole] = useState<LabRole>('LAB_TECH')
   const [practitioners, setPractitioners] = useState<PractitionerOption[]>([])
-  const [loadingPractitioners, setLoadingPractitioners] = useState(true)
+  const [loadingPractitioners, setLoadingPractitioners] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load active + pending-invite org users on mount for the dropdown
+  // Load active + pending-invite org users when the dialog opens
   useEffect(() => {
+    if (!open) return
+    setLoadingPractitioners(true)
     trpc.admin.listUsers.query({ cursor: 0, limit: 100, status: 'ALL' })
       .then((result) => {
         const sorted = result.users
@@ -65,7 +77,7 @@ export default function AssignStaffModal({
         // Non-critical; dropdown stays empty, user sees error via empty state
       })
       .finally(() => setLoadingPractitioners(false))
-  }, [])
+  }, [open])
 
   const canSubmit = selectedLabId !== '' && selectedPractitionerId !== '' && !submitting
 
@@ -88,15 +100,12 @@ export default function AssignStaffModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-foreground">Assign Staff to Lab</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Assign Staff to Lab</DialogTitle>
+          <DialogDescription className="sr-only">Assign a practitioner to a lab with an initial role</DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4 space-y-4">
           {/* Lab selector — only shown in org-wide context */}
@@ -180,15 +189,15 @@ export default function AssignStaffModal({
           <div className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
             {submitting ? 'Assigning…' : 'Assign'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

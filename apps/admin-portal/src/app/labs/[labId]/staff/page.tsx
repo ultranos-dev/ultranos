@@ -355,18 +355,17 @@ export default function LabStaffPage() {
           />
         )}
 
-        {showAssignModal && (
-          <AssignStaffModal
-            fixedLabId={labId}
-            onAssigned={async () => {
-              setShowAssignModal(false)
-              setSuccessMessage('Staff member assigned successfully')
-              await fetchStaff()
-              setTimeout(() => setSuccessMessage(null), 5000)
-            }}
-            onClose={() => setShowAssignModal(false)}
-          />
-        )}
+        <AssignStaffModal
+          fixedLabId={labId}
+          open={showAssignModal}
+          onOpenChange={setShowAssignModal}
+          onAssigned={async () => {
+            setShowAssignModal(false)
+            setSuccessMessage('Staff member assigned successfully')
+            await fetchStaff()
+            setTimeout(() => setSuccessMessage(null), 5000)
+          }}
+        />
       </div>
     </>
   )

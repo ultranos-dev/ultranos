@@ -111,7 +111,7 @@ describe('Story 27.5 — Admin Portal Subscription Components', () => {
 
       mockQuery.mockResolvedValue(availableModules)
 
-      render(<AddModuleDialog onClose={vi.fn()} onModuleAdded={vi.fn()} />)
+      render(<AddModuleDialog open={true} onOpenChange={vi.fn()} onModuleAdded={vi.fn()} />)
 
       await waitFor(() => {
         expect(screen.getByText('Pharmacy Lite')).toBeInTheDocument()
@@ -124,7 +124,7 @@ describe('Story 27.5 — Admin Portal Subscription Components', () => {
     it('shows empty state when all modules subscribed', async () => {
       mockQuery.mockResolvedValue({ modules: [] })
 
-      render(<AddModuleDialog onClose={vi.fn()} onModuleAdded={vi.fn()} />)
+      render(<AddModuleDialog open={true} onOpenChange={vi.fn()} onModuleAdded={vi.fn()} />)
 
       await waitFor(() => {
         expect(screen.getByText(/subscribed to all available modules/)).toBeInTheDocument()
@@ -147,7 +147,8 @@ describe('Story 27.5 — Admin Portal Subscription Components', () => {
         <RemoveModuleDialog
           subscription={sub}
           isLastActive={false}
-          onClose={vi.fn()}
+          open={true}
+          onOpenChange={vi.fn()}
           onModuleRemoved={vi.fn()}
         />,
       )
@@ -171,7 +172,8 @@ describe('Story 27.5 — Admin Portal Subscription Components', () => {
         <RemoveModuleDialog
           subscription={sub}
           isLastActive={true}
-          onClose={vi.fn()}
+          open={true}
+          onOpenChange={vi.fn()}
           onModuleRemoved={vi.fn()}
         />,
       )

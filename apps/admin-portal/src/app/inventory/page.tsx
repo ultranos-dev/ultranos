@@ -318,26 +318,24 @@ export default function InventoryPage() {
         )}
 
         {/* Create PO Modal */}
-        {showCreateModal && (
-          <CreatePurchaseOrderModal
-            suppliers={suppliers}
-            labs={labs}
-            onClose={() => setShowCreateModal(false)}
-            onSuccess={() => {
-              setShowCreateModal(false)
-              if (tab === 'orders') fetchOrders()
-            }}
-          />
-        )}
+        <CreatePurchaseOrderModal
+          suppliers={suppliers}
+          labs={labs}
+          open={showCreateModal}
+          onOpenChange={setShowCreateModal}
+          onSuccess={() => {
+            setShowCreateModal(false)
+            if (tab === 'orders') fetchOrders()
+          }}
+        />
 
         {/* PO Detail Modal */}
-        {viewingOrder && (
-          <PurchaseOrderDetailModal
-            order={viewingOrder}
-            labNames={Object.fromEntries(labs.map((l) => [l.id, l.name]))}
-            onClose={() => setViewingOrder(null)}
-          />
-        )}
+        <PurchaseOrderDetailModal
+          order={viewingOrder ?? { id: '', supplierName: '', status: '', notes: null, createdAt: '', items: [] }}
+          labNames={Object.fromEntries(labs.map((l) => [l.id, l.name]))}
+          open={viewingOrder !== null}
+          onOpenChange={(open) => { if (!open) setViewingOrder(null) }}
+        />
       </div>
     </>
   )

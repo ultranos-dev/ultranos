@@ -1,6 +1,14 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface PurchaseOrderItem {
   lab_id: string
@@ -21,34 +29,22 @@ interface PurchaseOrder {
 interface PurchaseOrderDetailModalProps {
   order: PurchaseOrder
   labNames: Record<string, string>
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseOrderDetailModalProps) {
+export function PurchaseOrderDetailModal({ order, labNames, open, onOpenChange }: PurchaseOrderDetailModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 mx-4 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Purchase Order Details</h2>
-            <p className="mt-0.5 text-xs font-mono text-muted-foreground">{order.id}</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            &times;
-          </Button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Purchase Order Details</DialogTitle>
+          <DialogDescription className="font-mono text-xs text-muted-foreground">{order.id}</DialogDescription>
+        </DialogHeader>
 
         <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
@@ -97,12 +93,12 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

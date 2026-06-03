@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { ROLE_MODULE_MAP } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Subscription {
   id: string
@@ -15,7 +23,8 @@ interface Subscription {
 interface RemoveModuleDialogProps {
   subscription: Subscription
   isLastActive: boolean
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onModuleRemoved: () => void
 }
 
@@ -24,7 +33,7 @@ function formatDate(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModuleRemoved }: RemoveModuleDialogProps) {
+export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenChange, onModuleRemoved }: RemoveModuleDialogProps) {
   const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [affectedUserCount, setAffectedUserCount] = useState<number | null>(null)
@@ -47,7 +56,7 @@ export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModu
       setError(null)
       await trpc.subscription.removeModule.mutate({ subscriptionId: subscription.id })
       onModuleRemoved()
-      onClose()
+      onOpenChange(false)
     } catch (err: any) {
       setError(err?.message ?? 'Failed to cancel subscription')
     } finally {
@@ -56,12 +65,12 @@ export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModu
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-foreground">Remove Module</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Remove Module</DialogTitle>
+          <DialogDescription className="sr-only">Confirm removal of this subscription module</DialogDescription>
+        </DialogHeader>
 
         {error && (
           <div className="mt-3 rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
@@ -84,15 +93,15 @@ export function RemoveModuleDialog({ subscription, isLastActive, onClose, onModu
           </div>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Keep Subscription
           </Button>
           <Button variant="destructive" onClick={handleCancel} disabled={cancelling}>
             {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

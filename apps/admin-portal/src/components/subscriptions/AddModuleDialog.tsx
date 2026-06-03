@@ -3,6 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface AvailableModule {
   id: string
@@ -13,11 +20,12 @@ interface AvailableModule {
 }
 
 interface AddModuleDialogProps {
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onModuleAdded: () => void
 }
 
-export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps) {
+export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModuleDialogProps) {
   const [modules, setModules] = useState<AvailableModule[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState<string | null>(null)
@@ -49,7 +57,7 @@ export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps
       setError(null)
       await trpc.subscription.addModule.mutate({ moduleCode })
       onModuleAdded()
-      onClose()
+      onOpenChange(false)
     } catch (err: any) {
       if (mountedRef.current) {
         setError(err?.message ?? 'Failed to add module')
@@ -62,15 +70,12 @@ export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-2xl bg-popover p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Add Module</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-muted-foreground" aria-label="Close">&times;</Button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add Module</DialogTitle>
+          <DialogDescription className="sr-only">Select a module to add to your subscription</DialogDescription>
+        </DialogHeader>
 
         {error && (
           <div className="mt-3 rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
@@ -107,7 +112,7 @@ export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

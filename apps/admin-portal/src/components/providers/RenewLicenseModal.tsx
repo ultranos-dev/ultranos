@@ -4,6 +4,14 @@ import { useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Provider {
   practitionerId: string
@@ -16,11 +24,12 @@ interface Provider {
 
 interface RenewLicenseModalProps {
   provider: Provider
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onRenewed: () => void
 }
 
-export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicenseModalProps) {
+export function RenewLicenseModal({ provider, open, onOpenChange, onRenewed }: RenewLicenseModalProps) {
   const mounted = useRef(true)
   const [newExpiryDate, setNewExpiryDate] = useState('')
   const [documentUrl, setDocumentUrl] = useState('')
@@ -58,20 +67,14 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
-      onClick={onClose}
-    >
-      <div
-        className="rounded-2xl bg-popover p-6 shadow-xl w-full max-w-md mx-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="pb-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">Renew License</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Renew License</DialogTitle>
+          <DialogDescription>
             {provider.name} — {provider.licenseNumber}
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="pt-4 space-y-4">
           {error && (
@@ -146,10 +149,10 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
         </div>
 
         {!showConfirmation && (
-          <div className="pt-4 border-t border-border mt-4 flex justify-end gap-2">
+          <DialogFooter className="mt-4">
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
@@ -159,9 +162,9 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
             >
               Renew License
             </Button>
-          </div>
+          </DialogFooter>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

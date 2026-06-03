@@ -222,16 +222,15 @@ export default function LicenseExpiryPage() {
           )}
         </div>
 
-        {renewTarget && (
-          <RenewLicenseModal
-            provider={renewTarget}
-            onClose={() => setRenewTarget(null)}
-            onRenewed={() => {
-              setRenewTarget(null)
-              fetchData(expiryWindow, cursor, search)
-            }}
-          />
-        )}
+        <RenewLicenseModal
+          provider={renewTarget ?? { practitionerId: '', name: '', licenseNumber: '', kycStatus: '', expiryDate: '', daysRemaining: null }}
+          open={renewTarget !== null}
+          onOpenChange={(open) => { if (!open) setRenewTarget(null) }}
+          onRenewed={() => {
+            setRenewTarget(null)
+            fetchData(expiryWindow, cursor, search)
+          }}
+        />
       </div>
     </>
   )

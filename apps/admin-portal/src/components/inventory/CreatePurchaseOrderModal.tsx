@@ -5,6 +5,14 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Supplier {
   id: string
@@ -26,13 +34,14 @@ interface ItemRow {
 interface CreatePurchaseOrderModalProps {
   suppliers: Supplier[]
   labs: Lab[]
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
 const EMPTY_ROW: ItemRow = { labId: '', reagentCategory: '', quantity: '', unit: '' }
 
-export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }: CreatePurchaseOrderModalProps) {
+export function CreatePurchaseOrderModal({ suppliers, labs, open, onOpenChange, onSuccess }: CreatePurchaseOrderModalProps) {
   const [supplierId, setSupplierId] = useState('')
   const [items, setItems] = useState<ItemRow[]>([{ ...EMPTY_ROW }])
   const [notes, setNotes] = useState('')
@@ -80,12 +89,12 @@ export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 mx-4 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-foreground">Create Purchase Order</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Purchase Order</DialogTitle>
+          <DialogDescription className="sr-only">Create a new purchase order for reagents</DialogDescription>
+        </DialogHeader>
 
         {error && (
           <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
@@ -196,16 +205,15 @@ export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }
           />
         </div>
 
-        {/* Buttons */}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!isValid || submitting}>
             {submitting ? 'Creating...' : 'Create Order'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

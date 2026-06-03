@@ -313,20 +313,19 @@ export default function LabAssignmentsTab() {
         </>
       )}
 
-      {showAssignModal && (
-        <AssignStaffModal
-          labs={labs}
-          onAssigned={async () => {
-            setShowAssignModal(false)
-            resetPagination()
-            await fetchStaff()
-            trpc.admin.getManagerlessLabs.query()
-              .then((labs) => setManagerlessCount(labs.length))
-              .catch(() => {})
-          }}
-          onClose={() => setShowAssignModal(false)}
-        />
-      )}
+      <AssignStaffModal
+        labs={labs}
+        open={showAssignModal}
+        onOpenChange={setShowAssignModal}
+        onAssigned={async () => {
+          setShowAssignModal(false)
+          resetPagination()
+          await fetchStaff()
+          trpc.admin.getManagerlessLabs.query()
+            .then((labs) => setManagerlessCount(labs.length))
+            .catch(() => {})
+        }}
+      />
     </div>
   )
 }
