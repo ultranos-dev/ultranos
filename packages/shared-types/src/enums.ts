@@ -57,6 +57,8 @@ export enum AuditAction {
   RESULT_AUTHORIZED = 'RESULT_AUTHORIZED',
   RESULT_RELEASED = 'RESULT_RELEASED',
   RESULT_DELIVERED = 'RESULT_DELIVERED',
+  // Story 49.3 — P2P Sync audit events
+  P2P_SYNC = 'P2P_SYNC',
 }
 
 export enum AuditResourceType {
@@ -86,6 +88,10 @@ export enum AuditResourceType {
   LAB_SAMPLE = 'LAB_SAMPLE',
   // Story 50.2 — donor reports
   DIAGNOSTIC_REPORT = 'DIAGNOSTIC_REPORT',
+  // Story 49.1 — Data Budget Mode
+  DATA_BUDGET = 'DATA_BUDGET',
+  REFERENCE_RANGE = 'REFERENCE_RANGE',
+  PAYMENT = 'PAYMENT',
 }
 
 export enum AuditOutcome {

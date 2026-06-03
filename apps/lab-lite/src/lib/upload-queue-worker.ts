@@ -6,7 +6,10 @@ import {
   getPendingSyncItems,
   markCHWSampleSynced,
   markCourierHandoffSynced,
+  recordDataUsage,
 } from './db'
+import { createMeterFetch } from '@/lib/data-meter'
+import { compressBody, isCompressionAvailable } from '@/lib/compress'
 import type { UploadResultInput, UploadResultResponse } from './trpc'
 import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 
@@ -26,6 +29,8 @@ export interface DrainDependencies {
   sleep?: (ms: number) => Promise<void>
   /** Override for testing — defaults to real Blob-to-base64 conversion */
   blobToBase64Fn?: (blob: Blob) => Promise<string>
+  /** When true, compress request bodies before upload */
+  lowDataMode?: boolean
 }
 
 const BACKOFF_BASE_MS = 1000
@@ -145,6 +150,12 @@ export function startQueueDrainListener(
   if (lowData) {
     // Low Data Mode: batch drain every 30 minutes
     const LOW_DATA_DRAIN_INTERVAL_MS = 30 * 60 * 1000
+
+    // Also attempt drain on startup if already online (same as normal mode)
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      drainQueue(deps)
+    }
+
     intervalId = setInterval(() => {
       if (typeof navigator !== 'undefined' && navigator.onLine) {
         drainQueue(deps)
@@ -265,4 +276,45 @@ export async function drainTransportSessions(deps: TransportSyncDependencies): P
       })
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Metered & Compressed fetch helpers for Low Data Mode
+// ---------------------------------------------------------------------------
+
+/** Create a metered version of the global fetch for use in sync operations. */
+export function createMeteredFetch(): typeof fetch {
+  return createMeterFetch(fetch, recordDataUsage)
+}
+
+/** Wrap fetch to gzip-compress POST/PUT request bodies in Low Data Mode. */
+export function createCompressedFetch(baseFetch: typeof fetch): typeof fetch {
+  return async function compressedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    if (init?.body && typeof init.body === 'string' && isCompressionAvailable()) {
+      const { body, headers } = await compressBody(init.body)
+      return baseFetch(input, {
+        ...init,
+        body,
+        headers: {
+          ...Object.fromEntries(new Headers(init.headers).entries()),
+          ...headers,
+        },
+      })
+    }
+    return baseFetch(input, init)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mode toggle restart support
+// ---------------------------------------------------------------------------
+
+let currentCleanup: (() => void) | null = null
+
+export function restartQueueDrainListener(
+  deps: DrainDependencies,
+  options?: { lowDataMode?: boolean },
+): void {
+  if (currentCleanup) currentCleanup()
+  currentCleanup = startQueueDrainListener(deps, options)
 }

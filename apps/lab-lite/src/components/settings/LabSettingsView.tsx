@@ -20,6 +20,7 @@ import { DEFAULT_CHECKLIST_CONFIG_ITEMS, DEFAULT_CRITICAL_THRESHOLDS } from '@/l
 import { BadgeShowcase } from '@/components/quality/BadgeShowcase'
 import { SurveillanceConfigCard } from '@/components/settings/SurveillanceConfig'
 import { ProgramRegistration } from '@/components/settings/ProgramRegistration'
+import { SmsGatewayConfig } from '@/components/settings/SmsGatewayConfig'
 
 /** Map LabRole enum to i18n key under settings namespace */
 const ROLE_I18N_KEY: Record<LabRole, string> = {
@@ -563,6 +564,9 @@ export function LabSettingsView() {
             </div>
           </div>
         )}
+
+        {/* SMS Gateway Config — Story 49.2 AC #9: SMS provider settings, lab_manager only */}
+        {isManager && <SmsGatewayConfig isManager={isManager} />}
 
         {/* Surveillance Config — Story 50.3: Reportable disease thresholds, lab_manager only */}
         {isManager && <SurveillanceConfigCard />}

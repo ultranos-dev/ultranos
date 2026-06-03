@@ -412,9 +412,9 @@ export function reportDataBudgetConfigEvent(payload: {
 
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
-    actorRole: UserRole.LAB_TECH,
+    actorRole: (session?.labRole as unknown as UserRole) ?? UserRole.LAB_TECH,
     action: AuditAction.UPDATE,
-    resourceType: 'DATA_BUDGET' as AuditResourceType,
+    resourceType: AuditResourceType.DATA_BUDGET,
     resourceId: 'config',
     hlcTimestamp: serializeHlc(hlc.now()),
     metadata: {
@@ -553,6 +553,63 @@ export function reportNetworkAuditEvent(payload: {
 }
 
 export { AuditAction, AuditResourceType }
+
+// ---------------------------------------------------------------------------
+// Story 49.2 — SMS Audit Events
+// Tracks SMS delivery lifecycle for critical value notifications.
+// PHI rule: NEVER include phone number, message body, patient ID code, or
+// test values in audit metadata. Only opaque references and status codes.
+// ---------------------------------------------------------------------------
+
+type SmsAuditAction =
+  | 'SMS_QUEUED'
+  | 'SMS_SENT'
+  | 'SMS_DELIVERED'
+  | 'SMS_FAILED'
+  | 'SMS_CONFIRMED'
+  | 'SMS_RATE_LIMITED'
+
+export interface SmsAuditPayload {
+  action: SmsAuditAction
+  smsQueueEntryId: number
+  criticalResultRef: string
+  escalationStep: number
+  recipientRole: string  // 'physician' | 'medical_director' | 'dho'
+}
+
+/**
+ * Emit an SMS delivery audit event.
+ * Never throws — SMS workflow must not be blocked by audit failures.
+ * Metadata NEVER includes: phone number, message body, patient ID code, or test values.
+ */
+export function reportSmsAuditEvent(payload: SmsAuditPayload): void {
+  const session = useAuthSessionStore.getState().session
+
+  const outcome = payload.action === 'SMS_FAILED' || payload.action === 'SMS_RATE_LIMITED'
+    ? 'FAILURE'
+    : 'SUCCESS'
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: AuditAction.CREATE,
+    resourceType: 'SMS_NOTIFICATION' as AuditResourceType,
+    resourceId: String(payload.smsQueueEntryId),
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      smsEvent: payload.action,
+      outcome,
+      smsQueueEntryId: payload.smsQueueEntryId,
+      criticalResultRef: payload.criticalResultRef,
+      escalationStep: payload.escalationStep,
+      recipientRole: payload.recipientRole,
+      // NEVER include: recipientPhone, messageBody, patientIdCode, value
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
 
 // ---------------------------------------------------------------------------
 // Story 50.1 — HMIS Report Audit Events
@@ -1638,6 +1695,44 @@ export function reportSurveillanceAuditEvent(payload: {
       ...(payload.severity ? { severity: payload.severity } : {}),
       ...(payload.diseasesChecked !== undefined ? { diseasesChecked: payload.diseasesChecked } : {}),
       ...(payload.alertsGenerated !== undefined ? { alertsGenerated: payload.alertsGenerated } : {}),
+      source: 'lab-lite',
+    },
+  }
+
+  void emitClientAudit(input)
+}
+
+/**
+ * Emit a P2P sync audit event (Story 49.3).
+ * Never throws — P2P transfer must not be blocked by audit failures.
+ * NEVER include patient data in audit metadata — only opaque IDs and operational fields.
+ */
+export function reportP2PAuditEvent(payload: {
+  action: 'P2P_DISCOVERY_STARTED' | 'P2P_DEVICE_PAIRED' | 'P2P_RESULT_SENT' | 'P2P_TRANSFER_FAILED'
+  remoteDeviceId: string
+  diagnosticReportRef?: string
+  transferMethod: 'ble' | 'wifi-direct' | 'local-network'
+  transferSizeBytes?: number
+  durationMs?: number
+}): void {
+  const session = useAuthSessionStore.getState().session
+  const outcome = payload.action === 'P2P_TRANSFER_FAILED' ? 'FAILURE' : 'SUCCESS'
+
+  const input: ClientAuditEventInput = {
+    actorId: session?.userId ?? 'unknown',
+    actorRole: UserRole.LAB_TECH,
+    action: AuditAction.P2P_SYNC,
+    resourceType: AuditResourceType.DIAGNOSTIC_REPORT,
+    resourceId: payload.diagnosticReportRef ?? 'n/a',
+    hlcTimestamp: serializeHlc(hlc.now()),
+    metadata: {
+      p2pEvent: payload.action,
+      outcome,
+      remoteDeviceId: payload.remoteDeviceId,
+      transferMethod: payload.transferMethod,
+      ...(payload.diagnosticReportRef ? { diagnosticReportRef: payload.diagnosticReportRef } : {}),
+      ...(payload.transferSizeBytes !== undefined ? { transferSizeBytes: payload.transferSizeBytes } : {}),
+      ...(payload.durationMs !== undefined ? { durationMs: payload.durationMs } : {}),
       source: 'lab-lite',
     },
   }

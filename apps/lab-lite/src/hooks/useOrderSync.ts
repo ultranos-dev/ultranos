@@ -9,8 +9,10 @@ import {
 } from '@/lib/db'
 import { pullOrders, acknowledgeOrder } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 const POLL_INTERVAL_MS = 60_000
+const LOW_DATA_POLL_INTERVAL_MS = 300_000 // 5 min in low data mode
 const FULL_SYNC_EVERY_N = 10
 
 // P6: In-memory sync timestamp — never use localStorage (CLAUDE.md prohibition)
@@ -26,6 +28,7 @@ export interface OrderSyncState {
 }
 
 export function useOrderSync(): OrderSyncState {
+  const lowDataMode = useDataBudgetStore((s) => s.lowDataMode)
   const [orders, setOrders] = useState<LabOrderEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -153,12 +156,13 @@ export function useOrderSync(): OrderSyncState {
       .catch(() => {})
 
     sync()
-    intervalRef.current = setInterval(sync, POLL_INTERVAL_MS)
+    const interval = lowDataMode ? LOW_DATA_POLL_INTERVAL_MS : POLL_INTERVAL_MS
+    intervalRef.current = setInterval(sync, interval)
     return () => {
       cancelledRef.current = true
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [sync])
+  }, [sync, lowDataMode])
 
   const refresh = useCallback(() => {
     setError(null)

@@ -958,7 +958,7 @@ export function getTemplateRangeFallback(
         r.gender === normalizedGender
       const ageMin = r.ageMin ?? 0
       const ageMax = r.ageMax ?? 999
-      const ageMatch = patientAge >= ageMin && patientAge <= ageMax
+      const ageMatch = patientAge >= ageMin && patientAge < ageMax
       return genderMatch && ageMatch
     }) ?? field.referenceRanges[0]
 

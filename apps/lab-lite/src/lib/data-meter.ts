@@ -18,13 +18,14 @@ export interface RecordUsageFn {
   }): Promise<void>
 }
 
-/** Estimate outgoing request payload size in bytes. */
+/** Estimate outgoing request payload size in bytes (UTF-8 aware). */
 export function estimateRequestSize(body: BodyInit | null | undefined): number {
   if (!body) return 0
 
   let raw = 0
   if (typeof body === 'string') {
-    raw = body.length
+    // Use TextEncoder for accurate UTF-8 byte count (Arabic/Dari text is multi-byte)
+    raw = typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(body).byteLength : body.length
   } else if (body instanceof Blob) {
     raw = body.size
   } else if (body instanceof ArrayBuffer) {
@@ -70,8 +71,10 @@ export function categorizeUrl(url: string): DataUsageCategory {
   return 'other'
 }
 
+/** Local-date ISO string (YYYY-MM-DD) — avoids UTC offset issues in MENA timezones. */
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /**
@@ -91,11 +94,28 @@ export function createMeterFetch(
     const category = categorizeUrl(url)
     const bytesOut = estimateRequestSize(init?.body)
 
-    const response = await baseFetch(input, init)
+    let response: Response
+    try {
+      response = await baseFetch(input, init)
+    } catch (err) {
+      // Record outbound bytes even on network failure — they were sent on the wire
+      try {
+        void recordUsage({ date: todayISO(), category, bytesOut, bytesIn: 0, requestCount: 1 }).catch(() => {})
+      } catch { /* Swallow */ }
+      throw err
+    }
 
     // Record usage asynchronously — never block the response
     try {
-      const bytesIn = estimateResponseSize(response.headers, null)
+      // Clone response to read body size without consuming the original stream
+      let bytesIn = estimateResponseSize(response.headers, null)
+      if (bytesIn === 0) {
+        try {
+          const clone = response.clone()
+          const text = await clone.text()
+          bytesIn = typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(text).byteLength : text.length
+        } catch { /* Stream may not be cloneable — accept 0 */ }
+      }
       void recordUsage({
         date: todayISO(),
         category,

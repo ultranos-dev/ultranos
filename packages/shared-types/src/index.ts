@@ -58,6 +58,9 @@ export * from './fhir/guardian-link.js'
 // Feature tier definitions (Story 27.11)
 export * from './feature-tiers.js'
 
+// P2P sync types (Story 49.3)
+export * from './p2p/types.js'
+
 // Afghanistan geographic reference data
 export { AFGHAN_PROVINCES } from './reference/afghanistan-geo.js'
 export type { AfghanProvince } from './reference/afghanistan-geo.js'

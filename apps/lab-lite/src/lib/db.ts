@@ -32,6 +32,7 @@ import type { SurveillanceAlert, ReportableDiseaseConfig, SurveillanceBaseline, 
 import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
 import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
 import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
+import type { SmsQueueEntry, SmsGatewayConfig, SmsEscalationScheduleEntry } from '@/lib/sms/sms-gateway'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -84,6 +85,28 @@ export interface AchievementSchedulerConfig {
 // Re-export with Dexie-friendly names to avoid collision with result-templates.ts ReferenceRange
 export type ReferenceRangeEntry = ReferenceRange
 export type RangeVersionEntry = RangeVersion
+
+// ---------------------------------------------------------------------------
+// Security Alert State types (v29) — Story 49.4: Conflict Zone Security Protocols
+// ---------------------------------------------------------------------------
+
+export interface ChecklistItem {
+  id: string
+  label: string
+  checked: boolean
+  checkedAt: string | null
+}
+
+export interface SecurityAlertStateRecord {
+  id: number // singleton record, always id=1
+  isActive: boolean
+  activatedAt: string | null
+  activatedBy: string | null
+  readOnlyMode: boolean
+  checklistItems: ChecklistItem[]
+  backupGenerated: boolean
+  wipeCompleted: boolean
+}
 
 const QUEUE_LIMIT = 50
 
@@ -293,7 +316,7 @@ export interface DataBudgetConfig {
   currentCycleStart: string  // ISO 8601 date of current cycle start
 }
 
-export type DataUsageCategory = 'sync' | 'upload' | 'download' | 'other'
+export type DataUsageCategory = 'upload' | 'audit' | 'notification' | 'other'
 
 export interface DataUsageRecord {
   date: string                 // YYYY-MM-DD
@@ -441,6 +464,17 @@ class LabLiteDatabase extends Dexie {
   // v26 — Immutable Result Audit Chain (Story 43.1)
   // Append-only audit log for all lab lifecycle events. No PHI — opaque IDs only.
   clientAuditLog!: Dexie.Table<ClientAuditEvent, string>
+  // v27 — SMS Fallback for Critical Results (Story 49.2)
+  // PHI note: smsQueue contains recipientPhone and messageBody for delivery only — NEVER in audit.
+  smsQueue!: Dexie.Table<SmsQueueEntry, number>
+  smsGatewayConfig!: Dexie.Table<SmsGatewayConfig, string>
+  smsEscalationSchedule!: Dexie.Table<SmsEscalationScheduleEntry, number>
+  // v28 — P2P Trusted Devices (Story 49.3)
+  // No PHI — deviceId/deviceName are operational only.
+  trusted_devices!: Dexie.Table<import('@ultranos/shared-types').TrustedDevice, string>
+  // v29 — Conflict Zone Security Protocols (Story 49.4)
+  // Persists Security Alert activation state so mode survives browser restart.
+  securityAlertState!: Dexie.Table<SecurityAlertStateRecord, number>
 
   constructor() {
     super('lab-lite-db')
@@ -1195,6 +1229,26 @@ class LabLiteDatabase extends Dexie {
     this.version(26).stores({
       clientAuditLog: 'id, status, queuedAt, [status+queuedAt]',
     })
+    // v27 — SMS Fallback for Critical Results (Story 49.2)
+    // smsQueue: offline SMS delivery queue with rate limiting indexes.
+    // smsGatewayConfig: singleton config for SMS provider credentials (encrypted at rest).
+    // smsEscalationSchedule: durable escalation timers (survive tab close).
+    this.version(27).stores({
+      smsQueue: '++id, status, confirmCode, criticalResultRef, [criticalResultRef+escalationStep], createdAt',
+      smsGatewayConfig: 'id',
+      smsEscalationSchedule: '++id, criticalResultRef, escalationStep, scheduledAt, fired',
+    })
+    // v28 — P2P Trusted Devices (Story 49.3)
+    // Stores paired device records for skip-pairing on reconnect. No PHI.
+    this.version(28).stores({
+      trusted_devices: 'deviceId, appType',
+    })
+    // v29 — Conflict Zone Security Protocols (Story 49.4)
+    // securityAlertState: singleton record persisting Security Alert activation across restarts.
+    // No PHI — stores activation metadata only (userId, timestamps, checklist state).
+    this.version(29).stores({
+      securityAlertState: '&id',
+    })
   }
 }
 
@@ -1203,6 +1257,10 @@ let dbInstance: LabLiteDatabase | null = null
 export function getDb(): LabLiteDatabase {
   if (!dbInstance) {
     dbInstance = new LabLiteDatabase()
+    // Auto-install the read-only guard (Story 49.4) — idempotent, safe to call multiple times.
+    import('@/lib/security/read-only-guard').then(({ installReadOnlyGuard }) => {
+      if (dbInstance) installReadOnlyGuard(dbInstance)
+    }).catch(() => { /* best-effort — guard is a defense-in-depth layer */ })
   }
   return dbInstance
 }
@@ -2233,37 +2291,41 @@ export async function getUsageForCycle(): Promise<DataUsageRecord[]> {
 /**
  * Check if billing cycle has expired and roll it over if so.
  * Returns true if a rollover happened.
+ * Wrapped in a Dexie transaction to prevent TOCTOU races across tabs.
  */
 export async function checkAndRolloverCycle(): Promise<boolean> {
   const db = getDb()
-  const config = await getDataBudgetConfig()
-  const today = new Date()
-  const cycleStart = new Date(config.currentCycleStart)
+  return db.transaction('rw', db.dataBudgetConfig, async () => {
+    const stored = await db.dataBudgetConfig.get(DATA_BUDGET_CONFIG_ID)
+    const config = stored ?? { ...DEFAULT_DATA_BUDGET_CONFIG }
+    const today = new Date()
+    const cycleStart = new Date(config.currentCycleStart)
 
-  // Has a full calendar month passed since cycle start?
-  const nextCycleDate = new Date(
-    cycleStart.getFullYear(),
-    cycleStart.getMonth() + 1,
-    config.billingCycleDay,
-  )
-
-  if (today >= nextCycleDate) {
-    const newCycleStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      config.billingCycleDay,
+    // Has a full calendar month passed since cycle start?
+    const nextCycleDate = new Date(
+      cycleStart.getFullYear(),
+      cycleStart.getMonth() + 1,
+      Math.min(config.billingCycleDay, 28), // clamp to 28 for safety
     )
-    // If cycle day hasn't arrived this month yet, use last month
-    if (newCycleStart > today) {
-      newCycleStart.setMonth(newCycleStart.getMonth() - 1)
+
+    if (today >= nextCycleDate) {
+      const newCycleStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        Math.min(config.billingCycleDay, 28),
+      )
+      // If cycle day hasn't arrived this month yet, use last month
+      if (newCycleStart > today) {
+        newCycleStart.setMonth(newCycleStart.getMonth() - 1)
+      }
+      await db.dataBudgetConfig.put({
+        ...config,
+        currentCycleStart: newCycleStart.toISOString().slice(0, 10),
+      })
+      return true
     }
-    await db.dataBudgetConfig.put({
-      ...config,
-      currentCycleStart: newCycleStart.toISOString().slice(0, 10),
-    })
-    return true
-  }
-  return false
+    return false
+  })
 }
 
 // ---------------------------------------------------------------------------

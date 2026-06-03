@@ -1,5 +1,8 @@
+'use client'
+
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import { DataBudgetDashboard } from '@/components/settings/DataBudgetDashboard'
 
@@ -11,10 +14,12 @@ export default function DataBudgetPage() {
       <div className="flex items-center gap-2 mb-6">
         <Link
           href="/settings"
-          className="text-neutral-400 hover:text-neutral-600 rtl:-scale-x-100"
+          className="text-neutral-400 hover:text-neutral-600"
           aria-label="Back"
         >
-          <ChevronLeft size={20} />
+          <DirectionalIcon category="navigation">
+            <ChevronLeft size={20} />
+          </DirectionalIcon>
         </Link>
         <h1 className="text-2xl font-bold text-neutral-900">{t('usageTitle')}</h1>
       </div>

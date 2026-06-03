@@ -23,6 +23,7 @@ export interface DataBudgetState {
   categoryBreakdown: Record<string, number> // category -> MB
   thresholdLevel: ThresholdLevel
   isLoaded: boolean
+  _loading: boolean
   loadFromDexie: () => Promise<void>
   updateConfig: (
     config: Partial<{ planSizeMB: number; billingCycleDay: number; lowDataMode: boolean }>,
@@ -40,27 +41,34 @@ export const useDataBudgetStore = create<DataBudgetState>()((set, get) => ({
   categoryBreakdown: {},
   thresholdLevel: 'normal' as ThresholdLevel,
   isLoaded: false,
+  _loading: false, // guard against concurrent loadFromDexie calls
 
   loadFromDexie: async () => {
-    // Check and handle billing cycle rollover on app init
-    const rolledOver = await checkAndRolloverCycle()
-    if (rolledOver) {
-      try {
-        const { reportDataBudgetConfigEvent } = await import('@/lib/audit-client')
-        reportDataBudgetConfigEvent({ action: 'DATA_BUDGET_CYCLE_ROLLOVER' })
-      } catch {
-        // Audit must never block
+    if (get()._loading) return
+    set({ _loading: true })
+    try {
+      // Check and handle billing cycle rollover on app init
+      const rolledOver = await checkAndRolloverCycle()
+      if (rolledOver) {
+        try {
+          const { reportDataBudgetConfigEvent } = await import('@/lib/audit-client')
+          reportDataBudgetConfigEvent({ action: 'DATA_BUDGET_CYCLE_ROLLOVER' })
+        } catch {
+          // Audit must never block
+        }
       }
-    }
 
-    const config = await getDataBudgetConfig()
-    set({
-      planSizeMB: config.planSizeMB,
-      billingCycleDay: config.billingCycleDay,
-      lowDataMode: config.lowDataMode,
-      isLoaded: true,
-    })
-    await get().refreshUsageStats()
+      const config = await getDataBudgetConfig()
+      set({
+        planSizeMB: config.planSizeMB,
+        billingCycleDay: config.billingCycleDay,
+        lowDataMode: config.lowDataMode,
+        isLoaded: true,
+      })
+      await get().refreshUsageStats()
+    } finally {
+      set({ _loading: false })
+    }
   },
 
   updateConfig: async (updates) => {
@@ -89,12 +97,15 @@ export const useDataBudgetStore = create<DataBudgetState>()((set, get) => ({
       categoryBreakdown[r.category] = (categoryBreakdown[r.category] ?? 0) + mb
     }
 
-    // Daily usage for last 14 days
+    // Daily usage for last 14 days — use local dates to avoid UTC offset issues
+    const toLocalISO = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
     const today = new Date()
     const fourteenDaysAgo = new Date(today)
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13)
-    const startDate = fourteenDaysAgo.toISOString().slice(0, 10)
-    const endDate = today.toISOString().slice(0, 10)
+    const startDate = toLocalISO(fourteenDaysAgo)
+    const endDate = toLocalISO(today)
 
     const recentUsage = await getUsageByDay(startDate, endDate)
     const dailyMap = new Map<string, number>()
@@ -104,8 +115,10 @@ export const useDataBudgetStore = create<DataBudgetState>()((set, get) => ({
     }
 
     const dailyUsage: Array<{ date: string; totalMB: number }> = []
-    for (let d = new Date(fourteenDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().slice(0, 10)
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(fourteenDaysAgo)
+      d.setDate(d.getDate() + i)
+      const dateStr = toLocalISO(d)
       dailyUsage.push({ date: dateStr, totalMB: dailyMap.get(dateStr) ?? 0 })
     }
 

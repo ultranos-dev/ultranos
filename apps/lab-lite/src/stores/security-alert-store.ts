@@ -62,12 +62,25 @@ const INITIAL_STATE = {
   wipeCompleted: false,
 }
 
+/** Extract only serializable data fields from the store state. */
+function extractDataFields(state: SecurityAlertState): Omit<SecurityAlertStateRecord, 'id'> {
+  return {
+    isActive: state.isActive,
+    activatedAt: state.activatedAt,
+    activatedBy: state.activatedBy,
+    readOnlyMode: state.readOnlyMode,
+    checklistItems: state.checklistItems,
+    backupGenerated: state.backupGenerated,
+    wipeCompleted: state.wipeCompleted,
+  }
+}
+
 async function persistToDb(
-  record: Omit<SecurityAlertStateRecord, 'id'>,
+  data: Omit<SecurityAlertStateRecord, 'id'>,
 ): Promise<void> {
   try {
     const db = getDb()
-    await db.securityAlertState.put({ id: 1, ...record })
+    await db.securityAlertState.put({ id: 1, ...data })
   } catch {
     // Best-effort — never throw from state persistence
   }
@@ -134,17 +147,17 @@ export const useSecurityAlertStore = create<SecurityAlertState>((set, get) => ({
         : item,
     )
     set({ checklistItems: updated })
-    void persistToDb({ ...get(), checklistItems: updated })
+    void persistToDb(extractDataFields(get()))
   },
 
   markBackupGenerated: async () => {
     set({ backupGenerated: true })
-    await persistToDb({ ...get(), backupGenerated: true })
+    await persistToDb(extractDataFields(get()))
   },
 
   markWipeCompleted: async () => {
     set({ wipeCompleted: true })
-    await persistToDb({ ...get(), wipeCompleted: true })
+    await persistToDb(extractDataFields(get()))
   },
 
   reset: () => {

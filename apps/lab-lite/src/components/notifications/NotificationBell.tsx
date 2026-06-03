@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react'
 import { getUnreadCount } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { useDataBudgetStore } from '@/stores/data-budget-store'
 import { NotificationPanel } from './NotificationPanel'
 import { Bell } from '@ultranos/ui-kit/icons'
 
-const POLL_INTERVAL_MS = 30_000 // 30s polling — meets 60s SLA (Epic 12 decision)
-
 /**
- * Bell icon with unread count badge. Polls Hub API every 30 seconds.
+ * Bell icon with unread count badge. Polls Hub API every 30 seconds (10 min in low data mode).
  * Story 17.4 — Task 1 (AC #1, #5)
  */
 export function NotificationBell() {
+  const lowDataMode = useDataBudgetStore((s) => s.lowDataMode)
+  const pollIntervalMs = lowDataMode ? 600_000 : 30_000 // 10 min in low data mode, 30s normal
+
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [hasSession, setHasSession] = useState(false)
@@ -39,12 +41,12 @@ export function NotificationBell() {
     }
 
     poll()
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
+    const interval = setInterval(poll, pollIntervalMs)
     return () => {
       active = false
       clearInterval(interval)
     }
-  }, [])
+  }, [lowDataMode, pollIntervalMs])
 
   if (!hasSession) return null
 
