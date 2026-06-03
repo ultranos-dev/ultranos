@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 interface ModelEntry {
   modelId: string
@@ -48,17 +51,17 @@ function formatDate(iso: string): string {
 }
 
 function ModelTypeBadge({ type }: { type: string }) {
-  const colorMap: Record<string, string> = {
-    SOAP_MACRO_TEMPLATES: 'bg-card text-muted-foreground',
-    DRUG_DB_OFFLINE: 'bg-destructive/10 text-destructive',
-    TTS_FRAGMENT_BUNDLE: 'bg-purple-100 text-purple-800',
-    ONNX_SOAP_MODEL: 'bg-warning/10 text-warning',
+  const variantMap: Record<string, 'secondary' | 'destructive' | 'warning' | 'default'> = {
+    SOAP_MACRO_TEMPLATES: 'secondary',
+    DRUG_DB_OFFLINE: 'destructive',
+    TTS_FRAGMENT_BUNDLE: 'default',
+    ONNX_SOAP_MODEL: 'warning',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[type] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[type] ?? 'secondary'}>
       {type.replace(/_/g, ' ')}
-    </span>
+    </Badge>
   )
 }
 
@@ -97,12 +100,9 @@ export default function AIModelsPage() {
       <TopHeader title="AI Models" description="Manage offline model bundles distributed to spoke devices." />
       <div className="mx-auto max-w-7xl px-8 py-6 space-y-6">
         <div className="flex items-start justify-end">
-          <button
-            onClick={() => setShowPublishForm(!showPublishForm)}
-            className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button onClick={() => setShowPublishForm(!showPublishForm)}>
             {showPublishForm ? 'Cancel' : 'Publish New Version'}
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -274,12 +274,11 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">Model ID</label>
-          <input
+          <Input
             type="text"
             required
             value={formData.modelId}
             onChange={(e) => setFormData((p) => ({ ...p, modelId: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="e.g., soap-macros"
           />
         </div>
@@ -297,68 +296,60 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">Version</label>
-          <input
+          <Input
             type="text"
             required
             value={formData.version}
             onChange={(e) => setFormData((p) => ({ ...p, version: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="e.g., 2.1.0"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">File Size (bytes)</label>
-          <input
+          <Input
             type="number"
             required
             min="1"
             value={formData.fileSize}
             onChange={(e) => setFormData((p) => ({ ...p, fileSize: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-muted-foreground mb-1">Download URL</label>
-          <input
+          <Input
             type="url"
             required
             value={formData.downloadUrl}
             onChange={(e) => setFormData((p) => ({ ...p, downloadUrl: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">SHA-256 Checksum</label>
-          <input
+          <Input
             type="text"
             required
             pattern="[a-f0-9]{64}"
             value={formData.checksum}
             onChange={(e) => setFormData((p) => ({ ...p, checksum: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-mono focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="font-mono"
             placeholder="64-character hex string"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">Delta From Version (optional)</label>
-          <input
+          <Input
             type="text"
             value={formData.deltaFromVersion}
             onChange={(e) => setFormData((p) => ({ ...p, deltaFromVersion: e.target.value }))}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="e.g., 2.0.0"
           />
         </div>
       </div>
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Publishing...' : 'Publish'}
-        </button>
+        </Button>
       </div>
     </form>
   )

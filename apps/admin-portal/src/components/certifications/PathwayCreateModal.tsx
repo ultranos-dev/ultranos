@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Trash2 } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type MilestoneType = 'MODULE_COMPLETION' | 'SUPERVISED_PROCEDURE' | 'ASSESSMENT_PASS' | 'CONTINUING_ED_HOURS'
 
@@ -88,11 +90,10 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">Name *</label>
-            <input
+            <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="e.g. Lab Technician Level 1"
               required
             />
@@ -127,11 +128,11 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
               {milestones.map((milestone, index) => (
                 <div key={index} className="flex gap-2 items-start p-3 rounded-xl bg-card border border-border">
                   <div className="flex-1 space-y-2">
-                    <input
+                    <Input
                       type="text"
                       value={milestone.title}
                       onChange={(e) => updateMilestone(index, 'title', e.target.value)}
-                      className="w-full rounded-lg border border-border bg-popover px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="h-8 rounded-lg px-3 py-1.5 text-sm"
                       placeholder="Milestone title"
                     />
                     <div className="flex gap-2">
@@ -144,12 +145,12 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
                           <option key={mt.value} value={mt.value}>{mt.label}</option>
                         ))}
                       </select>
-                      <input
+                      <Input
                         type="number"
                         min={1}
                         value={milestone.required_count}
                         onChange={(e) => updateMilestone(index, 'required_count', parseInt(e.target.value) || 1)}
-                        className="w-20 rounded-lg border border-border bg-popover px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-20 h-8 rounded-lg px-3 py-1.5 text-sm"
                         title="Required count"
                       />
                     </div>
@@ -175,20 +176,12 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
+            </Button>
+            <Button type="submit" disabled={submitting}>
               {submitting ? 'Creating...' : 'Create Pathway'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

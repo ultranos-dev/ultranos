@@ -1,16 +1,18 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    PENDING: 'bg-warning/10 text-warning',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
+  const variantMap: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
+    ACTIVE: 'success',
+    PENDING: 'warning',
+    SUSPENDED: 'destructive',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 

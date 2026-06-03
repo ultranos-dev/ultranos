@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Lab {
   labId: string
@@ -60,23 +62,19 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               </p>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button
+              <Button
                 onClick={() => {
                   setCreatedId(null)
                   setFullName('')
                   setPhone('')
                   setError(null)
                 }}
-                className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast hover:scale-[1.02] transition-transform duration-200"
               >
                 Enroll Another
-              </button>
-              <button
-                onClick={() => { onSuccess(); onClose() }}
-                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-              >
+              </Button>
+              <Button variant="outline" onClick={() => { onSuccess(); onClose() }}>
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -86,12 +84,12 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               <label htmlFor="chw-name" className="block text-sm font-medium text-foreground">
                 Full Name <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="chw-name"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-1"
               />
             </div>
 
@@ -100,13 +98,13 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               <label htmlFor="chw-phone" className="block text-sm font-medium text-foreground">
                 Phone Number <span className="text-destructive">*</span>
               </label>
-              <input
+              <Input
                 id="chw-phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+93 700 000 000"
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-1"
               />
               {phone.length > 0 && !phoneValid && (
                 <p className="mt-1 text-xs text-destructive">Invalid phone format</p>
@@ -131,19 +129,15 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={onClose}
-                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-              >
+              <Button variant="outline" onClick={onClose}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={!isValid || submitting}
-                className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
               >
                 {submitting ? 'Enrolling...' : 'Enroll CHW'}
-              </button>
+              </Button>
             </div>
           </>
         )}

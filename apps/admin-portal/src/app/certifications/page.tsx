@@ -5,6 +5,8 @@ import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { PathwayCreateModal } from '@/components/certifications/PathwayCreateModal'
 import { ExpiryWarningWidget } from '@/components/certifications/ExpiryWarningWidget'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'ARCHIVED'
 
@@ -19,15 +21,15 @@ interface PathwayEntry {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    ARCHIVED: 'bg-card text-muted-foreground',
+  const variantMap: Record<string, 'success' | 'secondary'> = {
+    ACTIVE: 'success',
+    ARCHIVED: 'secondary',
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -111,12 +113,9 @@ export default function CertificationsPage() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors"
-          >
+          <Button onClick={() => setShowCreateModal(true)}>
             Create Pathway
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -152,12 +151,14 @@ export default function CertificationsPage() {
                       <td className="px-4 py-3"><StatusBadge status={pathway.status} /></td>
                       <td className="px-4 py-3">
                         {pathway.status === 'ACTIVE' && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="xs"
                             onClick={() => handleArchive(pathway.id)}
-                            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                            className="text-muted-foreground hover:text-destructive"
                           >
                             Archive
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -173,21 +174,23 @@ export default function CertificationsPage() {
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

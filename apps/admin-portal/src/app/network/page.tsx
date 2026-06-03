@@ -7,6 +7,7 @@ import { LabNetworkCard } from '@/components/network/LabNetworkCard'
 import { OutbreakActivationModal } from '@/components/network/OutbreakActivationModal'
 import { OutbreakDashboard } from '@/components/network/OutbreakDashboard'
 import { ChwEnrollmentModal } from '@/components/network/ChwEnrollmentModal'
+import { Button } from '@/components/ui/button'
 
 type StatusFilter = 'ALL' | 'ACTIVE' | 'PENDING' | 'SUSPENDED'
 
@@ -76,18 +77,12 @@ export default function NetworkPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Action buttons */}
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => setShowOutbreakModal(true)}
-            className="rounded-full bg-destructive px-6 py-2.5 text-sm font-semibold text-white hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
             Activate Outbreak Mode
-          </button>
-          <button
-            onClick={() => setShowChwModal(true)}
-            className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button size="lg" onClick={() => setShowChwModal(true)}>
             Enroll CHW
-          </button>
+          </Button>
         </div>
 
         {/* Filter tabs */}

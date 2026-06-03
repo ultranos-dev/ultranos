@@ -3,6 +3,9 @@
 import { Fragment, useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 // ================================================================
 // Types
@@ -67,15 +70,10 @@ interface PairingDetail {
 // ================================================================
 
 function StatusBadge({ status }: { status: string }) {
-  const isActive = status === 'ACTIVE'
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        isActive ? 'bg-success/10 text-success' : 'bg-card text-muted-foreground'
-      }`}
-    >
+    <Badge variant={status === 'ACTIVE' ? 'success' : 'secondary'}>
       {status}
-    </span>
+    </Badge>
   )
 }
 
@@ -296,11 +294,10 @@ function CreatePairingModal({
           {/* Start date */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">Start Date</label>
-            <input
+            <Input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               required
             />
           </div>
@@ -308,20 +305,15 @@ function CreatePairingModal({
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors"
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={submitting || !selectedMentor || !selectedMentee}
-              className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors disabled:opacity-50"
             >
               {submitting ? 'Creating...' : 'Create Pairing'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -418,21 +410,17 @@ function DissolveModal({
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors"
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="destructive"
               onClick={handleDissolve}
               disabled={submitting}
-              className="rounded-full bg-destructive px-5 py-2 text-sm font-semibold text-white hover:bg-destructive/90 transition-colors disabled:opacity-50"
             >
               {submitting ? 'Dissolving...' : 'Dissolve Pairing'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -487,18 +475,16 @@ function PairingDetailPanel({
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {detail.checkins.map((c) => (
-                    <span
+                    <Badge
                       key={c.id}
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        c.status === 'COMPLETED'
-                          ? 'bg-success/10 text-success'
-                          : c.status === 'SKIPPED'
-                            ? 'bg-warning/10 text-warning'
-                            : 'bg-card text-muted-foreground'
-                      }`}
+                      variant={
+                        c.status === 'COMPLETED' ? 'success'
+                          : c.status === 'SKIPPED' ? 'warning'
+                          : 'secondary'
+                      }
                     >
                       {c.month}: {c.status}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -614,12 +600,9 @@ export default function MentorshipPage() {
             ))}
           </div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
+          <Button onClick={() => setShowCreateModal(true)}>
             Create Pairing
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -635,12 +618,9 @@ export default function MentorshipPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Create a pairing to connect experienced techs with junior staff.
             </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="mt-4 inline-block rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-            >
+            <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
               Create Pairing
-            </button>
+            </Button>
           </div>
         ) : (
           <>
@@ -661,7 +641,7 @@ export default function MentorshipPage() {
                     <Fragment key={p.id}>
                       <tr
                         onClick={() => setExpandedPairingId(expandedPairingId === p.id ? null : p.id)}
-                        className="cursor-pointer transition-colors hover:bg-brand-lime/5"
+                        className="cursor-pointer transition-colors hover:bg-primary/5"
                       >
                         <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{p.mentorName}</p>
@@ -676,15 +656,16 @@ export default function MentorshipPage() {
                         <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                         <td className="px-4 py-3">
                           {p.status === 'ACTIVE' && (
-                            <button
+                            <Button
+                              variant="destructive"
+                              size="xs"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 setDissolvePairingId(p.id)
                               }}
-                              className="rounded-full border border-destructive/30 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
                             >
                               Dissolve
-                            </button>
+                            </Button>
                           )}
                         </td>
                       </tr>
@@ -703,13 +684,13 @@ export default function MentorshipPage() {
             {/* Load more */}
             {nextCursor && (
               <div className="mt-4 flex justify-center">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => fetchPairings(nextCursor)}
                   disabled={loading}
-                  className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-card transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Loading...' : 'Load More'}
-                </button>
+                </Button>
               </div>
             )}
           </>

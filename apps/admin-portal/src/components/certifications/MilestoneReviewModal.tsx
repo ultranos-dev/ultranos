@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface MilestoneInfo {
   progressId: string
@@ -101,23 +102,21 @@ export function MilestoneReviewModal({ milestone, onClose, onReviewed }: Props) 
               Are you sure you want to {confirmAction === 'APPROVE' ? 'approve' : 'reject'} this milestone?
             </p>
             <div className="flex gap-3 mt-3">
-              <button
+              <Button
+                variant={confirmAction === 'APPROVE' ? 'success' : 'destructive'}
+                size="sm"
                 onClick={() => handleReview(confirmAction)}
                 disabled={submitting}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-                  confirmAction === 'APPROVE'
-                    ? 'bg-success text-white hover:bg-success/90'
-                    : 'bg-destructive text-white hover:bg-destructive/90'
-                }`}
               >
                 {submitting ? 'Processing...' : `Confirm ${confirmAction === 'APPROVE' ? 'Approval' : 'Rejection'}`}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setConfirmAction(null)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -125,24 +124,15 @@ export function MilestoneReviewModal({ milestone, onClose, onReviewed }: Props) 
         {/* Actions */}
         {!confirmAction && (
           <div className="flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
-            >
+            <Button variant="outline" onClick={onClose}>
               Close
-            </button>
-            <button
-              onClick={() => setConfirmAction('REJECT')}
-              className="rounded-full bg-destructive px-5 py-2 text-sm font-medium text-white hover:bg-destructive/90 transition-colors"
-            >
+            </Button>
+            <Button variant="destructive" onClick={() => setConfirmAction('REJECT')}>
               Reject
-            </button>
-            <button
-              onClick={() => setConfirmAction('APPROVE')}
-              className="rounded-full bg-success px-5 py-2 text-sm font-medium text-white hover:bg-success/90 transition-colors"
-            >
+            </Button>
+            <Button variant="success" onClick={() => setConfirmAction('APPROVE')}>
               Approve
-            </button>
+            </Button>
           </div>
         )}
       </div>
