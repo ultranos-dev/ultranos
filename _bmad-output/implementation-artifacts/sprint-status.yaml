@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-31T23:59:59.000000'
+last_updated: '2026-06-03T18:30:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -590,7 +590,7 @@ development_status:
   43-4-patient-id-verification-logging: review
   43-6-analyzer-drift-detection: review
   43-7-pre-release-critical-value-checklist: review
-  43-8-localized-reference-ranges: review
+  43-8-localized-reference-ranges: in-progress
 
   # ============================================================
   # EPIC 55: Admin Portal People & Facility Management (2026-05-30)
@@ -623,7 +623,8 @@ development_status:
   # Emergency data protection, read-only mode, device wipe, backup
   # ============================================================
   epic-49: in-progress
-  49-4-conflict-zone-security-protocols: review
+  49-2-sms-critical-result-fallback: done
+  49-4-conflict-zone-security-protocols: done
 
   # ============================================================
   # EPIC 54: Multi-Branch Lab Network Management (2026-05-30)

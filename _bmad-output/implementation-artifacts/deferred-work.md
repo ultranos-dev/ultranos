@@ -842,3 +842,24 @@
 - **D-55.6-W1: No role differentiation for PO approval workflow.** Any admin can approve their own purchase order — no separation of duties between requester and approver. `approved_by` is recorded but not enforced to differ from `created_by`. V1 simplification; add role-gated approval when procurement roles are defined.
 - **D-55.2-W5: `formatDate` uses `undefined` locale.** `page.tsx` calls `toLocaleDateString(undefined, ...)` which renders dates in the browser's locale. For the MENA/Central Asia target, this produces inconsistent formats across devices. Defer until a locale context/i18n system is in place.
 - **D-55.2-W6: No test for `listLabsForFilter` failure path.** The `.catch(() => {})` in `StaffPage` silently hides labs-dropdown fetch failures. Should add a test that asserts the dropdown remains in a usable empty state on failure.
+
+## Deferred from: code review of 49-1-data-budget-mode (2026-06-03)
+
+- **D-49.1-W1: No 30-day usage data pruning.** `dataUsage` Dexie table grows unbounded — no cleanup of records older than 30 days. Storage growth is gradual but will accumulate on devices with limited IndexedDB quota.
+- **D-49.1-W2: Multi-month absence cycle skip.** If the app is not opened for 2+ billing periods, `checkAndRolloverCycle` advances one period but `getUsageForCycle` queries from `currentCycleStart` to today, spanning multiple billing periods and showing inflated usage.
+- **D-49.1-W3: No compress.ts test coverage.** `compressBody()` and `isCompressionAvailable()` have zero tests. Blocked on wiring decision — tests should follow once compression is integrated into the request path.
+- **D-49.1-W4: No RTL snapshot tests for DataBudgetDashboard/DataBudgetIndicator.** CLAUDE.md requires RTL snapshots for patient-facing components in both LTR and RTL. Only LTR tests exist.
+- **D-49.1-W5: No Low Data Mode behavioral tests.** Tests cover Dexie persistence of the `lowDataMode` boolean but not behavioral effects (30-min batching, polling reduction). Blocked on wiring decisions for AC6b-d.
+
+## Deferred from: code review of 49-3-bluetooth-p2p-sync (2026-06-03)
+
+- **D-49.3-W1: Trusted device reconnect skips identity verification.** No check that reconnecting device matches stored `TrustedDevice` record. Accepted risk for local-network clinic scenario. Future story can add long-term device identity key binding. [P2PSendDialog.tsx, handshake.ts]
+- **D-49.3-W2: BLE `connect()` re-prompts user via `requestDevice()`.** Ignores selected device, opens browser picker again. BLE is secondary transport and deferred per spec. [ble-transport.ts:116-128]
+- **D-49.3-W3: `stopDiscovery` method reassignment in LocalNetworkTransport.** `startDiscovery` replaces `stopDiscovery` with a closure that becomes stale after timeout fires. Low impact — same-device dev/test only. [local-network-transport.ts:120-127]
+- **D-49.3-W4: `P2PSendDialog` hardcodes `LocalNetworkTransport`.** BLE transport path never used. Expected per spec (BLE deferred to future native wrapper). [P2PSendDialog.tsx:113]
+
+## Deferred from: code review of 49-4-conflict-zone-security-protocols (2026-06-03)
+
+- **D-49.4-W1: Encryption key displayed in DOM as plaintext.** One-time AES key stored in React state and rendered as `<code>` — extractable via DevTools if device seized with browser open. MVP-accepted (no QR library installed). Future hardening: add QR code generation or secure key ceremony. [SecurityAlertFlow.tsx]
+- **D-49.4-W2: `getOrCreateDeviceId` in localStorage survives device wipe.** Device wipe clears IndexedDB + SW caches but not `localStorage`. Device ID (`lab-lite-device-id`) persists and could correlate device to audit trail entries. Non-PHI but undesirable in extreme threat scenarios. [backup-generator.ts:152]
+- **D-49.4-W3: Unrelated `lab-network.ts` (Story 54.1) included in 49.4 commit.** Process issue — should have been in a separate commit. Not actionable in this review. [types/lab-network.ts]
