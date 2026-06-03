@@ -6,6 +6,8 @@ import { trpc } from '@/lib/trpc'
 import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type ExpiryWindow = '7d' | '30d' | '60d' | 'all'
 
@@ -23,14 +25,14 @@ const PAGE_SIZE = 25
 
 function getUrgencyBadge(daysRemaining: number | null): {
   label: string
-  className: string
+  variant: 'secondary' | 'destructive' | 'warning'
 } {
-  if (daysRemaining === null) return { label: 'Unknown', className: 'bg-card text-muted-foreground' }
-  if (daysRemaining <= 0) return { label: 'Expired', className: 'bg-destructive/10 text-destructive font-semibold' }
-  if (daysRemaining <= 7) return { label: `${daysRemaining}d`, className: 'bg-destructive/10 text-destructive font-semibold' }
-  if (daysRemaining <= 30) return { label: `${daysRemaining}d`, className: 'bg-warning/10 text-warning' }
-  if (daysRemaining <= 60) return { label: `${daysRemaining}d`, className: 'bg-warning/10 text-warning' }
-  return { label: `${daysRemaining}d`, className: 'bg-card text-muted-foreground' }
+  if (daysRemaining === null) return { label: 'Unknown', variant: 'secondary' }
+  if (daysRemaining <= 0) return { label: 'Expired', variant: 'destructive' }
+  if (daysRemaining <= 7) return { label: `${daysRemaining}d`, variant: 'destructive' }
+  if (daysRemaining <= 30) return { label: `${daysRemaining}d`, variant: 'warning' }
+  if (daysRemaining <= 60) return { label: `${daysRemaining}d`, variant: 'warning' }
+  return { label: `${daysRemaining}d`, variant: 'secondary' }
 }
 
 export default function LicenseExpiryPage() {
@@ -153,7 +155,7 @@ export default function LicenseExpiryPage() {
                       <td className="px-4 py-3 font-medium text-foreground">
                         <Link
                           href={`/providers/profile/${p.practitionerId}`}
-                          className="text-black hover:text-brand-lime font-medium"
+                          className="font-medium text-foreground hover:text-primary transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {p.name}
@@ -163,26 +165,27 @@ export default function LicenseExpiryPage() {
                       <td className="px-4 py-3 text-muted-foreground">{p.issuingBody}</td>
                       <td className="px-4 py-3 text-muted-foreground">{p.expiryDate}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${badge.className}`}>
+                        <Badge variant={badge.variant}>
                           {badge.label}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs ${
-                          p.kycStatus === 'ACTIVE' ? 'bg-success/10 text-success'
-                            : p.kycStatus === 'SUSPENDED' ? 'bg-destructive/10 text-destructive'
-                            : 'bg-warning/10 text-warning'
-                        }`}>
+                        <Badge variant={
+                          p.kycStatus === 'ACTIVE' ? 'success'
+                            : p.kycStatus === 'SUSPENDED' ? 'destructive'
+                            : 'warning'
+                        }>
                           {p.kycStatus}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={(e) => { e.stopPropagation(); setRenewTarget(p) }}
-                          className="text-sm text-foreground hover:text-primary font-medium transition-colors"
                         >
                           Renew
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   )
@@ -198,20 +201,22 @@ export default function LicenseExpiryPage() {
                 Page {currentPage} of {totalPages} ({total} providers)
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={cursor === 0}
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
-                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-popover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={currentPage >= totalPages}
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
-                  className="px-4 py-1.5 text-sm rounded-full border border-border bg-popover disabled:opacity-50 disabled:cursor-not-allowed hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}

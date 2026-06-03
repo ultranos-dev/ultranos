@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type KycAction = 'APPROVE' | 'REJECT' | 'REQUEST_MORE_INFO'
 
@@ -44,25 +46,25 @@ interface SubmissionDetail {
   slaRemainingHours: number | null
 }
 
+const kycVariantMap: Record<string, 'warning' | 'success' | 'destructive' | 'secondary'> = {
+  PENDING_VERIFICATION: 'warning',
+  ACTIVE: 'success',
+  REJECTED: 'destructive',
+  REQUEST_MORE_INFO: 'warning',
+}
+
+const kycLabelMap: Record<string, string> = {
+  PENDING_VERIFICATION: 'Pending Verification',
+  ACTIVE: 'Active',
+  REJECTED: 'Rejected',
+  REQUEST_MORE_INFO: 'More Info Requested',
+}
+
 function KycStatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    PENDING_VERIFICATION: 'bg-warning/10 text-warning',
-    ACTIVE: 'bg-success/10 text-success',
-    REJECTED: 'bg-destructive/10 text-destructive',
-    REQUEST_MORE_INFO: 'bg-warning/10 text-warning',
-  }
-
-  const labelMap: Record<string, string> = {
-    PENDING_VERIFICATION: 'Pending Verification',
-    ACTIVE: 'Active',
-    REJECTED: 'Rejected',
-    REQUEST_MORE_INFO: 'More Info Requested',
-  }
-
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
-      {labelMap[status] ?? status}
-    </span>
+    <Badge size="lg" variant={kycVariantMap[status] ?? 'secondary'}>
+      {kycLabelMap[status] ?? status}
+    </Badge>
   )
 }
 
@@ -100,14 +102,19 @@ function ConfirmationDialog({
 }) {
   const [reason, setReason] = useState('')
 
+  const actionVariantMap: Record<KycAction, 'success' | 'destructive' | 'warning'> = {
+    APPROVE: 'success',
+    REJECT: 'destructive',
+    REQUEST_MORE_INFO: 'warning',
+  }
+
   const config: Record<KycAction, {
-    title: string; description: string; buttonLabel: string; buttonColor: string; reasonRequired: boolean; reasonLabel: string
+    title: string; description: string; buttonLabel: string; reasonRequired: boolean; reasonLabel: string
   }> = {
     APPROVE: {
       title: 'Approve Provider',
       description: `Approve "${providerName}"? The provider will be notified and can begin using the platform.`,
       buttonLabel: 'Approve',
-      buttonColor: 'bg-green-600 hover:bg-green-700',
       reasonRequired: false,
       reasonLabel: 'Notes (optional)',
     },
@@ -115,7 +122,6 @@ function ConfirmationDialog({
       title: 'Reject Provider',
       description: `Reject "${providerName}"? The provider will be notified with the rejection reason.`,
       buttonLabel: 'Reject',
-      buttonColor: 'bg-red-600 hover:bg-red-700',
       reasonRequired: true,
       reasonLabel: 'Rejection reason (required)',
     },
@@ -123,7 +129,6 @@ function ConfirmationDialog({
       title: 'Request More Information',
       description: `Request additional information from "${providerName}"? The provider will be notified.`,
       buttonLabel: 'Request Info',
-      buttonColor: 'bg-amber-600 hover:bg-amber-700',
       reasonRequired: false,
       reasonLabel: 'Message to provider (optional)',
     },
@@ -154,19 +159,19 @@ function ConfirmationDialog({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
+          <Button
+            variant="outline"
             onClick={onCancel}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={actionVariantMap[action]}
             onClick={() => onConfirm(reason)}
             disabled={submitting || !canSubmit}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -234,7 +239,7 @@ export default function KycSubmissionDetailPage() {
   if (error && !detail) {
     return (
       <div>
-        <button onClick={() => router.push('/providers')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to KYC Queue</button>
+        <Button variant="ghost" onClick={() => router.push('/providers')}>&larr; Back to KYC Queue</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -248,13 +253,13 @@ export default function KycSubmissionDetailPage() {
     <>
       <TopHeader title={detail.providerName} description={`Submitted ${formatDateTime(detail.submission.submittedAt)}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button onClick={() => router.push('/providers')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to KYC Queue</button>
+        <Button variant="ghost" onClick={() => router.push('/providers')}>&larr; Back to KYC Queue</Button>
 
         {/* Header */}
         <div className="mt-4 flex items-center justify-between">
           <div>
             {detail.slaBreached && (
-              <span className="inline-block rounded bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">SLA Breached</span>
+              <Badge variant="destructive">SLA Breached</Badge>
             )}
           </div>
           <KycStatusBadge status={detail.kycStatus} />
@@ -273,24 +278,24 @@ export default function KycSubmissionDetailPage() {
         {/* Action buttons — AC #4 */}
         {isPending && (
           <div className="mt-6 flex gap-3">
-            <button
+            <Button
+              variant="success"
               onClick={() => setPendingAction('APPROVE')}
-              className="rounded-full bg-green-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Approve
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="destructive"
               onClick={() => setPendingAction('REJECT')}
-              className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-red-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Reject
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setPendingAction('REQUEST_MORE_INFO')}
-              className="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 hover:scale-[1.02] transition-transform duration-200"
             >
               Request More Info
-            </button>
+            </Button>
           </div>
         )}
 

@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { FileText } from '@ultranos/ui-kit/icons'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'SLA_BREACHED'
@@ -24,27 +26,27 @@ interface KycQueueEntry {
   slaRemainingHours: number | null
 }
 
+const kycVariantMap: Record<string, 'warning' | 'success' | 'destructive' | 'secondary'> = {
+  PENDING_VERIFICATION: 'warning',
+  ACTIVE: 'success',
+  REJECTED: 'destructive',
+  REQUEST_MORE_INFO: 'warning',
+  SUSPENDED: 'secondary',
+}
+
+const kycLabelMap: Record<string, string> = {
+  PENDING_VERIFICATION: 'Pending',
+  ACTIVE: 'Active',
+  REJECTED: 'Rejected',
+  REQUEST_MORE_INFO: 'More Info',
+  SUSPENDED: 'Suspended',
+}
+
 function KycStatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    PENDING_VERIFICATION: 'bg-warning/10 text-warning',
-    ACTIVE: 'bg-success/10 text-success',
-    REJECTED: 'bg-destructive/10 text-destructive',
-    REQUEST_MORE_INFO: 'bg-warning/10 text-warning',
-    SUSPENDED: 'bg-card text-muted-foreground',
-  }
-
-  const labelMap: Record<string, string> = {
-    PENDING_VERIFICATION: 'Pending',
-    ACTIVE: 'Active',
-    REJECTED: 'Rejected',
-    REQUEST_MORE_INFO: 'More Info',
-    SUSPENDED: 'Suspended',
-  }
-
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
-      {labelMap[status] ?? status}
-    </span>
+    <Badge variant={kycVariantMap[status] ?? 'secondary'}>
+      {kycLabelMap[status] ?? status}
+    </Badge>
   )
 }
 
@@ -195,7 +197,7 @@ export default function KycQueuePage() {
                       <td className="px-4 py-3 font-medium">
                         <Link
                           href={`/providers/profile/${sub.practitionerId}`}
-                          className="text-black hover:text-brand-lime font-medium"
+                          className="font-medium text-start text-foreground hover:text-primary transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {sub.providerName}
@@ -230,21 +232,23 @@ export default function KycQueuePage() {
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

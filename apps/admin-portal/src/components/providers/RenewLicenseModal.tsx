@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Provider {
   practitionerId: string
@@ -88,20 +90,19 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                 <strong>PENDING_VERIFICATION</strong> status until reviewed.
               </p>
               <div className="flex gap-2 mt-4">
-                <button
+                <Button
                   onClick={handleConfirm}
                   disabled={submitting}
-                  className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
                   {submitting ? 'Renewing...' : 'Confirm Renewal'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setShowConfirmation(false)}
                   disabled={submitting}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -119,13 +120,12 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                 <label htmlFor="expiry-date" className="block text-sm font-medium text-muted-foreground mb-1">
                   New Expiry Date
                 </label>
-                <input
+                <Input
                   id="expiry-date"
                   type="date"
                   value={newExpiryDate}
                   onChange={(e) => setNewExpiryDate(e.target.value)}
                   min={new Date().toLocaleDateString('sv')}
-                  className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -133,13 +133,12 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
                 <label htmlFor="document-url" className="block text-sm font-medium text-muted-foreground mb-1">
                   Renewal Document URL
                 </label>
-                <input
+                <Input
                   id="document-url"
                   type="url"
                   value={documentUrl}
                   onChange={(e) => setDocumentUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
             </>
@@ -148,19 +147,18 @@ export function RenewLicenseModal({ provider, onClose, onRenewed }: RenewLicense
 
         {!showConfirmation && (
           <div className="pt-4 border-t border-border mt-4 flex justify-end gap-2">
-            <button
+            <Button
+              variant="outline"
               onClick={onClose}
-              className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSubmitClick}
               disabled={!canSubmit}
-              className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Renew License
-            </button>
+            </Button>
           </div>
         )}
       </div>

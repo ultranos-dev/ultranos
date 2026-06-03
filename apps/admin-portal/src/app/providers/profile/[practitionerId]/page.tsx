@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Badge } from '@/components/ui/badge'
 
 interface Practitioner {
   id: string
@@ -49,108 +50,108 @@ interface ProviderProfile {
   alertSummary: AlertSummary
 }
 
+const kycVariantMap: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
+  ACTIVE: 'success',
+  PENDING_VERIFICATION: 'warning',
+  REJECTED: 'destructive',
+  SUSPENDED: 'destructive',
+}
+
+const kycLabelMap: Record<string, string> = {
+  ACTIVE: 'Active',
+  PENDING_VERIFICATION: 'Pending Verification',
+  REJECTED: 'Rejected',
+  SUSPENDED: 'Suspended',
+}
+
 function KycStatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    PENDING_VERIFICATION: 'bg-warning/10 text-warning',
-    REJECTED: 'bg-destructive/10 text-destructive',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
-  }
-
-  const labelMap: Record<string, string> = {
-    ACTIVE: 'Active',
-    PENDING_VERIFICATION: 'Pending Verification',
-    REJECTED: 'Rejected',
-    SUSPENDED: 'Suspended',
-  }
-
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
-      {labelMap[status] ?? status}
-    </span>
+    <Badge variant={kycVariantMap[status] ?? 'secondary'}>
+      {kycLabelMap[status] ?? status}
+    </Badge>
   )
+}
+
+const submissionVariantMap: Record<string, 'warning' | 'success' | 'destructive' | 'secondary'> = {
+  PENDING: 'warning',
+  APPROVED: 'success',
+  REJECTED: 'destructive',
+  REQUEST_MORE_INFO: 'warning',
+}
+
+const submissionLabelMap: Record<string, string> = {
+  PENDING: 'Pending',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  REQUEST_MORE_INFO: 'More Info',
 }
 
 function SubmissionStatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    PENDING: 'bg-warning/10 text-warning',
-    APPROVED: 'bg-success/10 text-success',
-    REJECTED: 'bg-destructive/10 text-destructive',
-    REQUEST_MORE_INFO: 'bg-warning/10 text-warning',
-  }
-
-  const labelMap: Record<string, string> = {
-    PENDING: 'Pending',
-    APPROVED: 'Approved',
-    REJECTED: 'Rejected',
-    REQUEST_MORE_INFO: 'More Info',
-  }
-
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
-      {labelMap[status] ?? status}
-    </span>
+    <Badge variant={submissionVariantMap[status] ?? 'secondary'}>
+      {submissionLabelMap[status] ?? status}
+    </Badge>
   )
+}
+
+const alertStatusVariantMap: Record<string, 'warning' | 'secondary' | 'destructive' | 'success'> = {
+  UNREVIEWED: 'warning',
+  DISMISSED: 'secondary',
+  ESCALATED: 'destructive',
+  RESOLVED: 'success',
+}
+
+const alertStatusLabelMap: Record<string, string> = {
+  UNREVIEWED: 'Unreviewed',
+  DISMISSED: 'Dismissed',
+  ESCALATED: 'Escalated',
+  RESOLVED: 'Resolved',
 }
 
 function AlertStatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    UNREVIEWED: 'bg-warning/10 text-warning',
-    DISMISSED: 'bg-card text-muted-foreground',
-    ESCALATED: 'bg-destructive/10 text-destructive',
-    RESOLVED: 'bg-success/10 text-success',
-  }
-
-  const labelMap: Record<string, string> = {
-    UNREVIEWED: 'Unreviewed',
-    DISMISSED: 'Dismissed',
-    ESCALATED: 'Escalated',
-    RESOLVED: 'Resolved',
-  }
-
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
-      {labelMap[status] ?? status}
-    </span>
+    <Badge variant={alertStatusVariantMap[status] ?? 'secondary'}>
+      {alertStatusLabelMap[status] ?? status}
+    </Badge>
   )
 }
 
-function SeverityBadge({ severity }: { severity: string }) {
-  const colorMap: Record<string, string> = {
-    HIGH: 'bg-destructive/10 text-destructive',
-    MEDIUM: 'bg-warning/10 text-warning',
-    LOW: 'bg-card text-muted-foreground',
-  }
+const severityVariantMap: Record<string, 'destructive' | 'warning' | 'secondary'> = {
+  HIGH: 'destructive',
+  MEDIUM: 'warning',
+  LOW: 'secondary',
+}
 
+function SeverityBadge({ severity }: { severity: string }) {
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[severity] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={severityVariantMap[severity] ?? 'secondary'}>
       {severity}
-    </span>
+    </Badge>
   )
 }
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className="inline-block rounded-full bg-card px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+    <Badge variant="secondary">
       {role}
-    </span>
+    </Badge>
   )
 }
 
 function LicenseUrgencyBadge({ daysRemaining }: { daysRemaining: number }) {
   if (daysRemaining <= 0) {
-    return <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">Expired</span>
+    return <Badge variant="destructive">Expired</Badge>
   }
   if (daysRemaining <= 7) {
-    return <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">{daysRemaining} days remaining</span>
+    return <Badge variant="destructive">{daysRemaining} days remaining</Badge>
   }
   if (daysRemaining <= 30) {
-    return <span className="inline-block rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">{daysRemaining} days remaining</span>
+    return <Badge variant="warning">{daysRemaining} days remaining</Badge>
   }
   if (daysRemaining <= 60) {
-    return <span className="inline-block rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">{daysRemaining} days remaining</span>
+    return <Badge variant="warning">{daysRemaining} days remaining</Badge>
   }
-  return <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">{daysRemaining} days remaining</span>
+  return <Badge variant="success">{daysRemaining} days remaining</Badge>
 }
 
 function formatDate(iso: string): string {
@@ -283,7 +284,7 @@ export default function ProviderProfilePage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/providers/${sub.id}`}
-                          className="text-sm font-medium text-black hover:text-brand-lime transition-colors"
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                         >
                           View Details
                         </Link>
@@ -362,7 +363,7 @@ export default function ProviderProfilePage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/alerts/${alert.id}`}
-                          className="text-sm font-medium text-black hover:text-brand-lime transition-colors"
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                         >
                           View
                         </Link>
