@@ -22,7 +22,11 @@ export default function MentorshipPage() {
     <AuthGuard>
       <div className="p-6">
         <h1 className="text-2xl font-semibold mb-6">{t('pageTitle')}</h1>
-        {session && <MentorshipDashboard currentUserId={session.userId} />}
+        {session ? (
+          <MentorshipDashboard currentUserId={session.userId} />
+        ) : (
+          <div className="animate-pulse h-8 w-32 bg-gray-200 rounded" />
+        )}
       </div>
     </AuthGuard>
   )

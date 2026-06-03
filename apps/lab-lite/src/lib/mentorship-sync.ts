@@ -128,7 +128,7 @@ export async function getMentorshipActivityForSync(pairingId: string): Promise<{
   journalEntryCount: number
   lastCheckInAt: string | null
   status: MentorshipPairing['status']
-}> {
+} | null> {
   try {
     const db = getDb()
 
@@ -145,13 +145,15 @@ export async function getMentorshipActivityForSync(pairingId: string): Promise<{
         .then((records) => records.at(-1) ?? null),
     ])
 
+    if (!pairing) return null
+
     return {
       journalEntryCount,
-      lastCheckInAt: lastCheckIn?.completedAt ?? pairing?.lastCheckInAt ?? null,
-      status: pairing?.status ?? 'completed',
+      lastCheckInAt: lastCheckIn?.completedAt ?? pairing.lastCheckInAt ?? null,
+      status: pairing.status,
     }
   } catch {
-    return { journalEntryCount: 0, lastCheckInAt: null, status: 'completed' }
+    return null
   }
 }
 
