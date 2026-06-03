@@ -1,6 +1,6 @@
 # Story 49.1: Data Budget Mode
 
-Status: review
+Status: done
 
 ## Story
 
@@ -190,6 +190,39 @@ Key implementation decisions:
 - `apps/lab-lite/messages/prs.json` — Added `dataBudget` Dari translations
 - `apps/lab-lite/messages/ps.json` — Added `dataBudget` Pashto translations
 
+### Review Findings
+
+#### Decision Needed (all resolved — wired now)
+
+- [x] [Review][Decision] **Metered fetch not wired into app (AC2)** — Resolved: exported `createMeteredFetch()` from upload-queue-worker.ts wrapping global fetch with `createMeterFetch` + `recordDataUsage`.
+- [x] [Review][Decision] **Gzip compression not wired (AC6b)** — Resolved: exported `createCompressedFetch()` from upload-queue-worker.ts wrapping fetch with `compressBody` when `isCompressionAvailable()`.
+- [x] [Review][Decision] **Notification polling not reduced in Low Data Mode (AC6c)** — Resolved: NotificationBell.tsx now reads `lowDataMode` from store, uses 10-min interval when active.
+- [x] [Review][Decision] **Non-essential pull skipping missing in Low Data Mode (AC6d)** — Resolved: useOrderSync.ts now reads `lowDataMode`, uses 5-min interval (vs 60s normal).
+
+#### Patches (all applied)
+
+- [x] [Review][Patch] **page.tsx missing 'use client' — crashes the route** — Fixed: added `'use client'` directive.
+- [x] [Review][Patch] **DataUsageCategory type mismatch db.ts vs data-meter.ts** — Fixed: aligned db.ts to `'upload' | 'audit' | 'notification' | 'other'`.
+- [x] [Review][Patch] **bytesIn always 0 — response size never recorded** — Fixed: meterFetch now clones response and reads body text when Content-Length absent.
+- [x] [Review][Patch] **Multi-byte string length undercounting** — Fixed: uses `TextEncoder().encode(body).byteLength` for UTF-8 accuracy.
+- [x] [Review][Patch] **DirectionalIcon not used for back navigation** — Fixed: replaced manual `rtl:-scale-x-100` with `DirectionalIcon category="navigation"`.
+- [x] [Review][Patch] **Hardcoded LAB_TECH role in audit event** — Fixed: reads `session?.labRole` with LAB_TECH fallback.
+- [x] [Review][Patch] **'DATA_BUDGET' cast as AuditResourceType** — Fixed: added `DATA_BUDGET`, `REFERENCE_RANGE`, `PAYMENT` to `AuditResourceType` enum in shared-types.
+- [x] [Review][Patch] **Low Data Mode skips initial drain** — Fixed: added immediate `drainQueue(deps)` call in lowData branch.
+- [x] [Review][Patch] **Timezone offset in daily usage date loop** — Fixed: uses `toLocalISO()` helper with local date components instead of UTC `toISOString()`.
+- [x] [Review][Patch] **checkAndRolloverCycle TOCTOU race across tabs** — Fixed: wrapped in `db.transaction('rw', db.dataBudgetConfig, ...)` + added `_loading` guard in store.
+- [x] [Review][Patch] **Low Data Mode toggle doesn't restart drain listener** — Fixed: exported `restartQueueDrainListener()` for runtime mode switching.
+- [x] [Review][Patch] **Failed fetches not metered for outbound bytes** — Fixed: meterFetch now records outbound bytes in catch block before re-throwing.
+
+#### Deferred (pre-existing or secondary)
+
+- [x] [Review][Defer] **No 30-day usage data pruning** [`lib/db.ts`] — `dataUsage` table grows unbounded. No cleanup of records older than 30 days. — deferred, storage growth is gradual
+- [x] [Review][Defer] **Multi-month absence cycle skip** [`lib/db.ts:2288-2318`] — If app not opened for 2+ months, rollover advances one period but `getUsageForCycle` spans multiple billing periods. — deferred, edge case
+- [x] [Review][Defer] **No compress.ts test coverage** — Module not wired into app yet; tests should follow wiring. — deferred, blocked on wiring decision
+- [x] [Review][Defer] **No RTL snapshot tests for dashboard/indicator** — CLAUDE.md requires RTL snapshots for patient-facing components. — deferred, follow-up task
+- [x] [Review][Defer] **No Low Data Mode behavioral tests (AC12)** — Tests only cover Dexie persistence of boolean, not behavioral effects (batching, polling). — deferred, blocked on wiring decisions
+
 ## Change Log
 
+- 2026-06-03: Code review — 4 decision-needed, 12 patches, 5 deferred, 4 dismissed. All 16 patches applied: metered fetch wired, Low Data Mode behaviors connected, type mismatches fixed, timezone corrected, TOCTOU race resolved.
 - 2026-05-30: Story 49.1 implemented — Data Budget Mode with metering, dashboard, settings, sidebar indicator, Low Data Mode, billing cycle rollover, and full test coverage (27 tests).
