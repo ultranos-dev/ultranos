@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
+import { Button } from '@/components/ui/button'
 
 interface Outbreak {
   id: string
@@ -96,27 +97,30 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
                   <div>
                     {confirmId === ob.id ? (
                       <div className="flex gap-2">
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setConfirmId(null)}
-                          className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-card"
                         >
                           Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="success"
+                          size="sm"
                           onClick={() => handleResolve(ob.id)}
                           disabled={resolving === ob.id}
-                          className="rounded-full bg-success px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
                         >
                           {resolving === ob.id ? 'Resolving...' : 'Confirm'}
-                        </button>
+                        </Button>
                       </div>
                     ) : (
-                      <button
+                      <Button
+                        variant="success"
+                        size="sm"
                         onClick={() => setConfirmId(ob.id)}
-                        className="rounded-full bg-success px-4 py-1.5 text-xs font-semibold text-white hover:scale-[1.02] transition-transform duration-200"
                       >
                         Resolve
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -129,15 +133,17 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
       {/* Resolved Outbreaks */}
       {resolved.length > 0 && (
         <div className="mt-6">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowResolved(!showResolved)}
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2"
           >
             <DirectionalIcon category="navigation">
               <ChevronRight className={`h-4 w-4 transition-transform ${showResolved ? 'rotate-90' : ''}`} />
             </DirectionalIcon>
             Resolved Outbreaks ({resolved.length})
-          </button>
+          </Button>
 
           {showResolved && (
             <div className="mt-3 overflow-hidden rounded-2xl border border-border">

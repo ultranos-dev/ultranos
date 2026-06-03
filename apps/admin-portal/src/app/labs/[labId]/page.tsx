@@ -6,6 +6,7 @@ import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 type LabAction = 'APPROVE' | 'SUSPEND' | 'REACTIVATE'
 
@@ -111,13 +112,13 @@ function ConfirmationDialog({
           <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">
             Reason <span className="text-muted-foreground/60">(optional)</span>
           </label>
-          <textarea
+          <Textarea
             id="reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="mt-1"
             placeholder="Enter a reason for this action..."
           />
         </div>

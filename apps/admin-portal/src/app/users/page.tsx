@@ -29,7 +29,7 @@ function UsersContent() {
               href={tab.id === 'all-users' ? '/users' : `/users?tab=${tab.id}`}
               className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-black text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               aria-current={activeTab === tab.id ? 'page' : undefined}

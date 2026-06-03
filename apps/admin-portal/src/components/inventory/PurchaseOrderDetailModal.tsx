@@ -76,11 +76,11 @@ export function PurchaseOrderDetailModal({ order, labNames, onClose }: PurchaseO
           <div className="mt-2 overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-black text-white">
-                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide">Lab</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide">Reagent Category</th>
-                  <th className="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide">Qty</th>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide">Unit</th>
+                <tr className="bg-card">
+                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Lab</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Reagent Category</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">Qty</th>
+                  <th className="px-4 py-2.5 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground">Unit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">

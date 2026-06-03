@@ -175,12 +175,12 @@ function TrialExpiredInterstitial() {
         <p className="mt-2 text-sm text-muted-foreground">
           Add a payment method to continue using Ultranos.
         </p>
-        <a
-          href="/subscriptions/billing"
-          className="mt-6 inline-block rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-foreground hover:opacity-90 transition-opacity"
+        <Button
+          asChild
+          className="mt-6"
         >
-          Set Up Billing
-        </a>
+          <a href="/subscriptions/billing">Set Up Billing</a>
+        </Button>
         <div className="mt-3">
           <Button
             variant="link"

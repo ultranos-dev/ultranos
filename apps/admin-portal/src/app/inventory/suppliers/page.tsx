@@ -147,13 +147,13 @@ export default function SuppliersPage() {
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-black text-white">
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Email</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Phone</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Lead Time (days)</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Actions</th>
+                <tr className="bg-card">
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Name</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Phone</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Lead Time (days)</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">

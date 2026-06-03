@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Lab {
   labId: string
@@ -123,12 +124,12 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
               <label htmlFor="outbreak-notes" className="block text-sm font-medium text-foreground">
                 Notes (optional)
               </label>
-              <textarea
+              <Textarea
                 id="outbreak-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-1"
                 placeholder="Additional context..."
               />
             </div>

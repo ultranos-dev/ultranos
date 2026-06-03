@@ -385,7 +385,7 @@ export default function SettingsPage() {
         {/* ═══ Section 1: My Account ═══ */}
         <section id="my-account" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">My Account</h2>
-          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-0">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-0">
 
             {/* a. Profile */}
             <div className="space-y-4 py-4">
@@ -583,7 +583,7 @@ export default function SettingsPage() {
         {/* ═══ Section 2: Organization ═══ */}
         <section id="organization" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">Organization</h2>
-          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border space-y-4">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-4">
             {orgDraft ? (
               <>
                 <label className="block">
@@ -663,7 +663,7 @@ export default function SettingsPage() {
         {/* ═══ Section 3: Notifications ═══ */}
         <section id="notifications" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">Notifications</h2>
-          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             <NotificationPreferences email={profile?.email} />
           </div>
         </section>
@@ -671,7 +671,7 @@ export default function SettingsPage() {
         {/* ═══ Section 4: Thresholds ═══ */}
         <section id="thresholds" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">Thresholds</h2>
-          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             <ThresholdSettings />
           </div>
         </section>
@@ -679,7 +679,7 @@ export default function SettingsPage() {
         {/* ═══ Section 5: Modules ═══ */}
         <section id="modules" className="scroll-mt-24 mb-12">
           <h2 className="text-lg font-semibold text-foreground mb-4">Modules</h2>
-          <div className="max-w-2xl rounded-3xl bg-white p-5 border border-border">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             {subscribedModules.length === 0 ? (
               <p className="text-sm text-muted-foreground">No modules configured. Subscribe to a module to see its settings.</p>
             ) : (

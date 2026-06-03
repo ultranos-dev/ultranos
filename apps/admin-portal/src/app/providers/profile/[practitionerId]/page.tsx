@@ -227,7 +227,7 @@ export default function ProviderProfilePage() {
         )}
 
         {/* Section A: Identity Card */}
-        <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">Provider Identity</span>
           </h2>
@@ -253,7 +253,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section B: KYC History */}
-        <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">KYC History</span>
           </h2>
@@ -265,13 +265,13 @@ export default function ProviderProfilePage() {
           ) : (
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-black text-white">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Submission ID</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Submitted</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Reviewed</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Submission ID</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Submitted</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Reviewed</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
@@ -298,7 +298,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section C: License Timeline */}
-        <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">License Timeline</span>
           </h2>
@@ -318,7 +318,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section D: Prescribing Alert History */}
-        <div className="mt-6 rounded-3xl bg-white p-5 border border-border">
+        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">Prescribing Alert History</span>
           </h2>
@@ -342,14 +342,14 @@ export default function ProviderProfilePage() {
           ) : (
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-black text-white">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Alert ID</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Type</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Severity</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Alert ID</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Type</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Severity</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

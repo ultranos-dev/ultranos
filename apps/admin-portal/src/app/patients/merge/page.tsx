@@ -39,7 +39,7 @@ const MERGE_FIELDS = [
 
 function PatientCard({ patient, label }: { patient: Patient; label: string }) {
   return (
-    <div className="rounded-3xl bg-white p-5 border border-border">
+    <div className="rounded-3xl bg-card p-5 border border-border">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
       <p className="mt-2 text-lg font-semibold text-foreground">
         {[patient.name_given, patient.name_father].filter(Boolean).join(' ') || 'Unknown'}
@@ -174,7 +174,7 @@ export default function MergeWizardPage() {
       <>
         <TopHeader title="Merge Complete" description="The patients have been merged successfully." />
         <div className="mx-auto max-w-7xl px-8 py-6">
-          <div className="rounded-3xl bg-white p-8 border border-border text-center">
+          <div className="rounded-3xl bg-card p-8 border border-border text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
             </div>
@@ -247,7 +247,7 @@ export default function MergeWizardPage() {
               ) : survivor ? (
                 <PatientCard patient={survivor} label="Survivor (will be kept)" />
               ) : (
-                <div className="rounded-3xl border border-dashed border-border bg-white p-6 text-center">
+                <div className="rounded-3xl border border-dashed border-border bg-card p-6 text-center">
                   <p className="text-sm text-muted-foreground">
                     No survivor selected. Navigate from a patient detail page or provide a <code className="text-xs bg-card rounded px-1">?survivor=</code> URL parameter.
                   </p>
@@ -354,7 +354,7 @@ export default function MergeWizardPage() {
             />
 
             {/* Confirmation input */}
-            <div className="rounded-3xl bg-white p-5 border border-border">
+            <div className="rounded-3xl bg-card p-5 border border-border">
               <p className="text-sm text-muted-foreground">
                 Type <span className="font-mono font-semibold text-foreground">MERGE</span> below to confirm this operation.
               </p>

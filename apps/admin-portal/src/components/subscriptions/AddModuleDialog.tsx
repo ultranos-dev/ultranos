@@ -69,7 +69,7 @@ export function AddModuleDialog({ onClose, onModuleAdded }: AddModuleDialogProps
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Add Module</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl leading-none">&times;</button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-muted-foreground" aria-label="Close">&times;</Button>
         </div>
 
         {error && (

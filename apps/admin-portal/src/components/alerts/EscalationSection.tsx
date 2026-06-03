@@ -122,7 +122,7 @@ export function EscalationSection({
   )
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5">
+    <div className="rounded-3xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Escalation Details</h2>
         {statusBadge}

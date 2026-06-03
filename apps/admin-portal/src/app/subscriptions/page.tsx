@@ -196,10 +196,10 @@ export default function SubscriptionsPage() {
         )}
 
         <div className="mt-6 flex gap-6">
-          <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-black transition-colors">
+          <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Manage Billing →
           </a>
-          <a href="/subscriptions/invoices" className="text-sm text-muted-foreground hover:text-black transition-colors">
+          <a href="/subscriptions/invoices" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             View Invoices →
           </a>
         </div>

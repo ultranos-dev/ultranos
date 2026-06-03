@@ -72,7 +72,7 @@ export default function BillingPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
-          className="text-sm text-muted-foreground hover:text-black transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           &larr; Back to Subscriptions
         </Link>

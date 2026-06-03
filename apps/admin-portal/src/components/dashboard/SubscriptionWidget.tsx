@@ -59,12 +59,9 @@ export function SubscriptionWidget() {
             <p className="text-xs text-amber-700 mt-1">{graceDays} day(s) until suspension</p>
           )}
         </div>
-        <Link
-          href="/subscriptions/billing"
-          className="rounded-full bg-brand-lime text-foreground font-semibold px-5 py-2 text-sm hover:brightness-95 transition-all"
-        >
-          Update Payment
-        </Link>
+        <Button asChild>
+          <Link href="/subscriptions/billing">Update Payment</Link>
+        </Button>
       </div>
     )
   }

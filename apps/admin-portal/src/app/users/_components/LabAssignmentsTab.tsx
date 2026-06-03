@@ -242,7 +242,7 @@ export default function LabAssignmentsTab() {
       {loading ? (
         <div className="mt-6 text-muted-foreground">Loading staff...</div>
       ) : staff.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
           <p className="text-lg font-medium text-foreground">No staff found</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Adjust your filters or add staff to a lab.
@@ -253,13 +253,13 @@ export default function LabAssignmentsTab() {
           {/* Staff table */}
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-black">
+              <thead className="bg-card">
                 <tr>
-                  <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Email</th>
-                  <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Lab Name</th>
-                  <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Role</th>
-                  <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Last Active</th>
-                  <th className="ps-4 pe-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Assigned</th>
+                  <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
+                  <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab Name</th>
+                  <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Role</th>
+                  <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Last Active</th>
+                  <th className="ps-4 pe-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Assigned</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">

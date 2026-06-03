@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Supplier {
   id: string
@@ -159,34 +160,38 @@ export function CreatePurchaseOrderModal({ suppliers, labs, onClose, onSuccess }
                     placeholder="tests"
                   />
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => removeRow(idx)}
                   disabled={items.length <= 1}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30 transition-colors"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   aria-label="Remove item"
                 >
                   &times;
-                </button>
+                </Button>
               </div>
             ))}
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={addRow}
-            className="mt-2 text-sm text-primary font-medium hover:underline"
+            className="mt-2"
           >
             + Add item
-          </button>
+          </Button>
         </div>
 
         {/* Notes */}
         <div className="mt-4">
           <label htmlFor="po-notes" className="block text-sm font-medium text-foreground">Notes</label>
-          <textarea
+          <Textarea
             id="po-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="mt-1"
             placeholder="Optional notes..."
           />
         </div>

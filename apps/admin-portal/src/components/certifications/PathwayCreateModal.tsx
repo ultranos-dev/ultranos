@@ -115,13 +115,15 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-muted-foreground">Milestones *</label>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={addMilestone}
-                className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                className="text-xs font-medium"
               >
                 + Add Milestone
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3">
@@ -156,14 +158,16 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
                     </div>
                   </div>
                   {milestones.length > 1 && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeMilestone(index)}
-                      className="mt-1 text-muted-foreground hover:text-destructive transition-colors"
+                      className="mt-1 h-8 w-8 text-muted-foreground hover:text-destructive"
                       aria-label="Remove milestone"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}

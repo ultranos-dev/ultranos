@@ -52,8 +52,8 @@ export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps
     <div className="overflow-x-auto rounded-2xl border border-border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-black text-white">
-            <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide sticky left-0 bg-black z-10">
+          <tr className="bg-card">
+            <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground sticky left-0 bg-card z-10">
               Lab
             </th>
             {reagentCategories.map((cat) => (

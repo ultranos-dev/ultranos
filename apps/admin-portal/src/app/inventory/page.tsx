@@ -232,14 +232,14 @@ export default function InventoryPage() {
                 <div className="overflow-hidden rounded-2xl border border-border">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-black text-white">
-                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">PO ID</th>
-                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Supplier</th>
-                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Items</th>
-                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
-                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Created</th>
-                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Details</th>
-                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide">Actions</th>
+                      <tr className="bg-card">
+                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">PO ID</th>
+                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Supplier</th>
+                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Items</th>
+                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
+                        <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Created</th>
+                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Details</th>
+                        <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-popover">

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
 
 interface AuditEvent {
   id: string
@@ -229,7 +230,7 @@ export function EventBrowser() {
       {loading ? (
         <div className="mt-6 text-muted-foreground">Loading audit events...</div>
       ) : events.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
           <p className="text-lg font-medium text-foreground">No audit events found</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Try adjusting your filters or date range.
@@ -240,13 +241,13 @@ export function EventBrowser() {
           {/* Events table */}
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-black">
+              <thead className="bg-card">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Timestamp</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Action</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Actor</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Resource</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Outcome</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Timestamp</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Action</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actor</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Resource</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Outcome</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">
@@ -268,21 +269,23 @@ export function EventBrowser() {
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
             </span>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Previous
-              </button>
+              </Button>
               <span className="flex items-center px-2">Page {page} of {totalPages}</span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         </>
@@ -306,7 +309,7 @@ function EventRow({
     <>
       <tr
         onClick={onToggle}
-        className="cursor-pointer transition-colors hover:bg-brand-lime/5"
+        className="cursor-pointer transition-colors hover:bg-primary/5"
       >
         <td className="px-4 py-3 text-muted-foreground">{formatTimestamp(event.timestamp)}</td>
         <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">{event.action}</td>

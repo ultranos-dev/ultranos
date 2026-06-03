@@ -30,12 +30,12 @@ export function PatientComparisonTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-border">
       <table className="w-full text-sm">
-        <thead className="bg-black">
+        <thead className="bg-card">
           <tr>
-            <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Field</th>
-            <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Survivor Value</th>
-            <th className="px-4 py-3 text-center font-medium text-white text-xs uppercase tracking-wide">Source</th>
-            <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Duplicate Value</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Field</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Survivor Value</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground text-xs uppercase tracking-wide">Source</th>
+            <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duplicate Value</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border bg-popover">

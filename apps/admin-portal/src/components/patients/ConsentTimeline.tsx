@@ -6,7 +6,7 @@ interface ConsentTimelineProps {
 
 export function ConsentTimeline({ patientId }: ConsentTimelineProps) {
   return (
-    <div className="rounded-3xl bg-white p-5 border border-border">
+    <div className="rounded-3xl bg-card p-5 border border-border">
       <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
         <span className="wavy-divider">Consent Timeline</span>
       </h2>

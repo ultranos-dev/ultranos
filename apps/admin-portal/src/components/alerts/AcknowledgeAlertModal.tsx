@@ -42,7 +42,7 @@ export function AcknowledgeAlertModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-popover p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-3xl bg-popover p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-foreground">Acknowledge Alert</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {testCategory} alert for <span className="font-medium">{labName}</span>

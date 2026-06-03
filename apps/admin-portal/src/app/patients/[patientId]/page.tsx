@@ -111,7 +111,7 @@ export default function PatientDetailPage() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Demographics card */}
-          <div className="rounded-3xl bg-white p-5 border border-border">
+          <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Demographics</span>
             </h2>
@@ -127,7 +127,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* MPI & Status card */}
-          <div className="rounded-3xl bg-white p-5 border border-border">
+          <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">MPI &amp; Status</span>
             </h2>

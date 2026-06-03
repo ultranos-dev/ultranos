@@ -152,7 +152,7 @@ export default function PatientsPage() {
         )}
 
         {!search.trim() && !loading ? (
-          <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
             <p className="text-lg font-medium text-foreground">Search for patients</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Enter a name to begin searching patient records.
@@ -161,7 +161,7 @@ export default function PatientsPage() {
         ) : loading ? (
           <div className="mt-6 text-muted-foreground">Searching patients...</div>
         ) : patients.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
             <p className="text-lg font-medium text-foreground">No patients found</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Try a different search term or adjust filters.
@@ -172,16 +172,16 @@ export default function PatientsPage() {
             {/* Patients table */}
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-black">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Gender</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Birth Year</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">District</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">MPI Score</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">MPI Warn</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Tier</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Gender</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Birth Year</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">District</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MPI Score</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MPI Warn</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Tier</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

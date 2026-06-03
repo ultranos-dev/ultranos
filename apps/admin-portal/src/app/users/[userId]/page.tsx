@@ -8,6 +8,7 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 interface UserDetail {
   id: string
@@ -210,7 +211,7 @@ export default function UserDetailPage() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Section A: Profile */}
-          <div className="rounded-3xl bg-white p-5 border border-border">
+          <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Profile</span>
             </h2>
@@ -279,7 +280,7 @@ export default function UserDetailPage() {
           </div>
 
           {/* Section B: Actions */}
-          <div className="rounded-3xl bg-white p-5 border border-border">
+          <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               <span className="wavy-divider">Actions</span>
             </h2>
@@ -293,12 +294,11 @@ export default function UserDetailPage() {
                       <label htmlFor="suspend-reason" className="block text-sm font-medium text-destructive">
                         Suspension Reason (required)
                       </label>
-                      <textarea
+                      <Textarea
                         id="suspend-reason"
                         value={suspendReason}
                         onChange={(e) => setSuspendReason(e.target.value)}
                         rows={3}
-                        className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                         placeholder="Enter reason for suspension..."
                       />
                       <div className="flex gap-2">

@@ -224,11 +224,11 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         <h3 className="text-lg font-semibold text-foreground">Positivity Rate Thresholds</h3>
         <div className="mt-3 rounded-2xl border border-border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-black text-white">
+            <thead className="bg-card">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Threshold (%)</th>
-                <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
+                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Test Category</th>
+                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Threshold (%)</th>
+                <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-popover">

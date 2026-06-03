@@ -196,7 +196,7 @@ export default function AllUsersTab() {
       {loading ? (
         <div className="mt-6 text-muted-foreground">Loading users...</div>
       ) : users.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+        <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
           <p className="text-lg font-medium text-foreground">No staff users yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Get started by inviting your first team member.
@@ -210,14 +210,14 @@ export default function AllUsersTab() {
           {/* Users table */}
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-black">
+              <thead className="bg-card">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Email</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Role</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">MFA</th>
-                  <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Last Login</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Email</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Role</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MFA</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Last Login</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">

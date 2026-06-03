@@ -614,7 +614,7 @@ export default function MentorshipPage() {
         {loading && pairings.length === 0 ? (
           <div className="mt-6 text-muted-foreground">Loading pairings...</div>
         ) : pairings.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
             <p className="text-lg font-medium text-foreground">No mentorship pairings yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Create a pairing to connect experienced techs with junior staff.
@@ -627,14 +627,14 @@ export default function MentorshipPage() {
           <>
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-black">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Mentor</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Mentee</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Lab</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Start Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Mentor</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Mentee</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Start Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

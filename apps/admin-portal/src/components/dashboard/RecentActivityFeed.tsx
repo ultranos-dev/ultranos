@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface Activity {
   type: string
@@ -45,12 +46,14 @@ export function RecentActivityFeed() {
     <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">Recent Activity</p>
-        <button
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => router.push('/audit')}
-          className="text-sm font-medium text-primary hover:underline"
+          className="p-0 h-auto"
         >
           View All &rarr;
-        </button>
+        </Button>
       </div>
 
       {activities.length === 0 ? (

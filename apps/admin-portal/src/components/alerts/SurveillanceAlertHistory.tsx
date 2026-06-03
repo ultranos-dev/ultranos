@@ -119,14 +119,14 @@ export function SurveillanceAlertHistory() {
         <>
           <div className="mt-4 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-black text-white">
+              <thead className="bg-card">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Date/Time</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Lab</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Positivity Rate</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Date/Time</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Lab</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Test Category</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Positivity Rate</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">

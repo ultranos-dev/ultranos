@@ -91,7 +91,7 @@ export default function InvoicesPage() {
       <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
-          className="text-sm text-muted-foreground hover:text-black transition-colors"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           &larr; Back to Subscriptions
         </Link>
@@ -119,7 +119,7 @@ export default function InvoicesPage() {
         {loading ? (
           <div className="mt-6 text-muted-foreground">Loading invoices...</div>
         ) : invoices.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-border bg-white p-12 text-center">
+          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
             <p className="text-lg font-medium text-foreground">No invoices yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Invoices will appear here once your first billing cycle completes.
@@ -130,13 +130,13 @@ export default function InvoicesPage() {
             {/* Invoice table */}
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
-                <thead className="bg-black">
+                <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Description</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Amount</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-white text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Description</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
