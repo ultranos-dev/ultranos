@@ -30,7 +30,9 @@ import type { ReferenceRange, FlagResult, ResultFlag, ResultFlagCode } from './t
  * @returns FlagResult containing both the FHIR code ('N','L','H','LL','HH')
  *          and the semantic level ('NORMAL','LOW','HIGH','CRITICAL_LOW','CRITICAL_HIGH')
  */
-export function flagResult(value: number, range: ReferenceRange): FlagResult {
+export function flagResult(value: number, range: ReferenceRange): FlagResult | null {
+  if (!Number.isFinite(value)) return null
+
   // Critical low — evaluated first (LL beats L at boundary)
   if (range.criticalMin !== undefined && value <= range.criticalMin) {
     return { flag: 'LL', level: 'CRITICAL_LOW' }
@@ -59,14 +61,14 @@ export function flagResult(value: number, range: ReferenceRange): FlagResult {
 // Convenience: flag code only (for callers that just need the FHIR code)
 // ---------------------------------------------------------------------------
 
-export function getFlagCode(value: number, range: ReferenceRange): ResultFlagCode {
-  return flagResult(value, range).flag
+export function getFlagCode(value: number, range: ReferenceRange): ResultFlagCode | null {
+  return flagResult(value, range)?.flag ?? null
 }
 
 // ---------------------------------------------------------------------------
 // Convenience: flag level only (for callers that just need the semantic level)
 // ---------------------------------------------------------------------------
 
-export function getFlagLevel(value: number, range: ReferenceRange): ResultFlag {
-  return flagResult(value, range).level
+export function getFlagLevel(value: number, range: ReferenceRange): ResultFlag | null {
+  return flagResult(value, range)?.level ?? null
 }

@@ -55,7 +55,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -64,9 +64,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -99,7 +100,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -108,9 +109,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -143,7 +145,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -152,9 +154,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -187,7 +190,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -196,9 +199,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -231,7 +235,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -240,9 +244,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -275,7 +280,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -284,9 +289,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -319,7 +325,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -328,9 +334,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -363,7 +370,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -372,9 +379,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -407,7 +415,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -416,9 +424,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -451,7 +460,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -460,9 +469,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -495,7 +505,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -504,9 +514,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -539,7 +550,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -548,9 +559,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -583,7 +595,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -592,9 +604,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -627,7 +640,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -636,9 +649,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -671,7 +685,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -680,9 +694,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -749,7 +764,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -758,9 +773,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -793,7 +809,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -802,9 +818,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -837,7 +854,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -846,9 +863,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -881,7 +899,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -890,9 +908,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -925,7 +944,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -934,9 +953,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -969,7 +989,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -978,9 +998,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1013,7 +1034,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1022,9 +1043,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1057,7 +1079,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1066,9 +1088,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1101,7 +1124,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1110,9 +1133,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1145,7 +1169,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1154,9 +1178,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1189,7 +1214,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1198,9 +1223,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1233,7 +1259,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1242,9 +1268,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1277,7 +1304,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1286,9 +1313,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1321,7 +1349,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1330,9 +1358,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>
@@ -1365,7 +1394,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="text-neutral-400 transition-transform "
+                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1374,9 +1403,10 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
                 stroke-width="2"
                 viewBox="0 0 24 24"
                 width="16"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <polyline
-                  points="6 9 12 15 18 9"
+                <path
+                  d="m6 9 6 6 6-6"
                 />
               </svg>
             </div>

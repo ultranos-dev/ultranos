@@ -1,6 +1,6 @@
 # Story 43.8: Localized Reference Ranges
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -308,6 +308,78 @@ All 10 tasks and 17 subtasks implemented and tested. Key decisions:
 - `apps/lab-lite/messages/prs.json` — added Dari translations
 - `apps/lab-lite/messages/ps.json` — added Pashto translations
 
+## Code Review — Completed 2026-06-03
+
+A 5-chunk adversarial code review was completed. All domain logic, infrastructure, and test patches are applied and stable. The ReferenceRangeEditor.tsx rewrite keeps getting reverted by `code-simplifier@claude-plugins-official` — that plugin has been disabled globally in `~/.claude/settings.json` (line 1781, set to `false`) but requires a Claude Code restart to take effect.
+
+### Patches Applied and Stable
+
+**Chunk 1 — Core domain logic (applied, verified stable):**
+- `range-resolver.ts`: effectiveFrom filter, CUSTOM_SOURCES (POPULATION_STUDY/MANUFACTURER), non-altitude fallback ignores altitude, findBestMatchAllGender filters DEFAULT only, findBestMatchMultiSource helper
+- `result-flagger.ts`: NaN guard (`FlagResult | null`), getFlagCode/getFlagLevel null-safe
+- `default-ranges.ts`: criticalMin: 0.0 removed from ALT/AST/Bilirubin (use undefined)
+- `result-templates.ts`: ageMax exclusive (`<` not `<=`)
+
+**Chunk 3 — Infrastructure (applied, verified stable):**
+- `enums.ts`: REFERENCE_RANGE added to AuditResourceType
+- `audit-client.ts`: uses `AuditResourceType.REFERENCE_RANGE` (not `as` cast), uses `session.labRole` (not hardcoded LAB_TECH)
+- `db.ts`: putReferenceRange uses `.add()`, supersedeRange returns boolean
+- `ReferenceRangeEditor.tsx` (partial — Chunk 1/3 patches only): rangeId = editTarget.id, handleResetToDefault writes RangeVersion + unconditional audit
+
+**Chunk 4 — Tests (applied, verified stable):**
+- `reference-ranges.test.ts`: imports real canEditRanges + LabRole, uses SOURCE_BADGE_VARIANT, versioning test uses resolveRange, added effectiveTo/NaN/age-boundary/gender-fallback/audit tests
+- `plausibility-checker.test.ts`: checks by type name not count, added absoluteMax boundary test
+- `reference-range-editor.test.tsx`: correct getDb() mock, non-conditional assertions, edit modal opens and verifies dialog + diff
+
+### Remaining Work — For Next Session
+
+#### PRIORITY 1: Re-apply ReferenceRangeEditor.tsx Rewrite (Chunk 2)
+
+The `code-simplifier` plugin keeps reverting this file. After restarting Claude Code (plugin now disabled), apply all these changes to `apps/lab-lite/src/components/settings/ReferenceRangeEditor.tsx`:
+
+1. **Imports**: Add `useMemo, useRef` to React import. Add `useTranslations` call: `const t = useTranslations('settings')`
+2. **EditFormValues**: Change all numeric fields (`ageMin`, `ageMax`, `altitudeMin`, `rangeMin`, `rangeMax`) from `number` to `string` — prevents `Number('')` → `0` bug
+3. **buildAnalyteGroups**: Add `customKeys` Set to filter out DEFAULT ranges overridden by custom ranges for the same bracket
+4. **Add `validateForm()`**: Validates ageMin < ageMax, rangeMin < rangeMax, criticalMin < rangeMin, criticalMax > rangeMax, altitudeMin >= 0, changeReason >= 10 chars
+5. **Add `formatCritical()`**: Handles asymmetric criticalMin/criticalMax display (avoids `>undefined`)
+6. **State**: Add `resetting`, `confirmResetId` state. Add `modalRef = useRef<HTMLDivElement>(null)`
+7. **Memoize**: `const analyteGroups = useMemo(() => buildAnalyteGroups(...), [customRanges])`
+8. **Add `closeModal()`**: Wrapped in useCallback, clears all modal state
+9. **Escape key handler**: useEffect listens for Escape when modal open
+10. **Focus trap**: useEffect auto-focuses first input in modal on open
+11. **loadVersionHistory**: Clear `setVersionHistory([])` at start to prevent stale flash; query by LOINC → range IDs → filter versions
+12. **handleSave**: Use `validateForm()`, wrap Dexie writes in `db.transaction('rw', ...)`, use `Number(editForm.field)` since form is string state
+13. **handleResetToDefault**: Add `resetting` guard, wrap in transaction
+14. **Reset button**: Two-click confirm/cancel gate (confirmResetId state), disabled during resetting
+15. **Modal**: Add `onClick` on backdrop (`e.target === e.currentTarget → closeModal`), add `ref={modalRef}`, add `overflow-y-auto max-h-[90vh]`
+16. **Diff preview**: Show all fields (critical, age, gender, altitude, source) not just rangeMin/rangeMax
+17. **altitudeMax input**: Add missing input field to modal form
+18. **Header**: Use `t('referenceRanges')` instead of hardcoded "Reference Ranges"
+19. **SourceBadge**: Remove hardcoded English aria-label
+
+After applying, update snapshots: `pnpm -F lab-lite exec vitest run src/__tests__/reference-range-editor.test.tsx --update`
+
+#### PRIORITY 2: Implement AC #2 — Wire Localized Ranges into Auto-Flagging
+
+`abnormal-flags.ts` currently uses template inline ranges. Modify `evaluateFlag()` to accept an optional `localizedRange` parameter that takes priority over template inline ranges.
+
+In `ResultEntryForm.tsx` (around line 138), load custom ranges from Dexie on mount, build a `RangeResolutionContext`, and for each numeric field call `resolveLocalizedRange(field.loincCode, ctx)`. If a localized range is found, convert it to the format `evaluateFlag` expects (rangeMin→referenceLow, rangeMax→referenceHigh, criticalMin→criticalLow, criticalMax→criticalHigh) and pass it. Otherwise fall back to the existing template inline path.
+
+In `results/[sampleId]/enter/page.tsx` (line 174), build `rangeSnapshots` Map from the resolved ranges and pass to `mapResultToFhirBundle()`.
+
+#### PRIORITY 3: Implement AC #3 — Range Source on Result Display
+
+In `ResultReviewPanel.tsx` observations table (around line 285), add a "Range" column showing `[rangeMin]–[rangeMax] [unit]` with a SourceBadge. Read from `observation._ultranos.referenceRange` if available.
+
+#### PRIORITY 4: Implement AC #5 — "Range Updated" Note
+
+In `ResultReviewPanel.tsx`, after rendering each observation row, if `observation._ultranos.referenceRange` exists, resolve the current active range via `resolveLocalizedRange` and compare. If they differ, show: "Reference range has been updated since this result was produced."
+
+#### After All Priorities Complete
+- Run full test suite: `pnpm -F lab-lite exec vitest run`
+- Set story status to `done` in this file and in `sprint-status.yaml`
+
 ## Change Log
 
+- 2026-06-03: Code review completed (5 chunks). 44 patches applied across domain logic, infrastructure, tests. ReferenceRangeEditor rewrite blocked by code-simplifier plugin (now disabled, needs restart). AC #2/#3/#5 display integration identified as remaining work.
 - 2026-05-31: Story implemented — reference range system created with 51 unit + 18 component + 17 integration tests (all pass). Status set to review.

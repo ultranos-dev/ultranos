@@ -139,9 +139,9 @@ const POTASSIUM: ReferenceRange[] = [
 // ---------------------------------------------------------------------------
 
 const ALT: ReferenceRange[] = [
-  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 0, ageMax: 18, gender: 'ALL', altitudeMin: 0, rangeMin: 7.0, rangeMax: 56.0, criticalMin: 0.0, criticalMax: 1000.0, unit: 'U/L' }),
-  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 18, ageMax: 999, gender: 'M', altitudeMin: 0, rangeMin: 7.0, rangeMax: 56.0, criticalMin: 0.0, criticalMax: 1000.0, unit: 'U/L' }),
-  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 18, ageMax: 999, gender: 'F', altitudeMin: 0, rangeMin: 7.0, rangeMax: 45.0, criticalMin: 0.0, criticalMax: 1000.0, unit: 'U/L' }),
+  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 0, ageMax: 18, gender: 'ALL', altitudeMin: 0, rangeMin: 7.0, rangeMax: 56.0, criticalMax: 1000.0, unit: 'U/L' }),
+  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 18, ageMax: 999, gender: 'M', altitudeMin: 0, rangeMin: 7.0, rangeMax: 56.0, criticalMax: 1000.0, unit: 'U/L' }),
+  defaultRange({ loincCode: '1742-6', analyteName: 'ALT (SGPT)', ageMin: 18, ageMax: 999, gender: 'F', altitudeMin: 0, rangeMin: 7.0, rangeMax: 45.0, criticalMax: 1000.0, unit: 'U/L' }),
 ]
 
 // ---------------------------------------------------------------------------
@@ -149,8 +149,8 @@ const ALT: ReferenceRange[] = [
 // ---------------------------------------------------------------------------
 
 const AST: ReferenceRange[] = [
-  defaultRange({ loincCode: '1920-8', analyteName: 'AST (SGOT)', ageMin: 0, ageMax: 18, gender: 'ALL', altitudeMin: 0, rangeMin: 10.0, rangeMax: 40.0, criticalMin: 0.0, criticalMax: 1000.0, unit: 'U/L' }),
-  defaultRange({ loincCode: '1920-8', analyteName: 'AST (SGOT)', ageMin: 18, ageMax: 999, gender: 'ALL', altitudeMin: 0, rangeMin: 10.0, rangeMax: 40.0, criticalMin: 0.0, criticalMax: 1000.0, unit: 'U/L' }),
+  defaultRange({ loincCode: '1920-8', analyteName: 'AST (SGOT)', ageMin: 0, ageMax: 18, gender: 'ALL', altitudeMin: 0, rangeMin: 10.0, rangeMax: 40.0, criticalMax: 1000.0, unit: 'U/L' }),
+  defaultRange({ loincCode: '1920-8', analyteName: 'AST (SGOT)', ageMin: 18, ageMax: 999, gender: 'ALL', altitudeMin: 0, rangeMin: 10.0, rangeMax: 40.0, criticalMax: 1000.0, unit: 'U/L' }),
 ]
 
 // ---------------------------------------------------------------------------
@@ -159,8 +159,8 @@ const AST: ReferenceRange[] = [
 
 const BILIRUBIN: ReferenceRange[] = [
   // Neonates: higher physiological bilirubin is expected
-  defaultRange({ loincCode: '1975-2', analyteName: 'Total Bilirubin', ageMin: 0, ageMax: 0.1, gender: 'ALL', altitudeMin: 0, rangeMin: 0.3, rangeMax: 12.0, criticalMin: 0.0, criticalMax: 25.0, unit: 'mg/dL' }),
-  defaultRange({ loincCode: '1975-2', analyteName: 'Total Bilirubin', ageMin: 0.1, ageMax: 999, gender: 'ALL', altitudeMin: 0, rangeMin: 0.1, rangeMax: 1.2, criticalMin: 0.0, criticalMax: 20.0, unit: 'mg/dL' }),
+  defaultRange({ loincCode: '1975-2', analyteName: 'Total Bilirubin', ageMin: 0, ageMax: 0.1, gender: 'ALL', altitudeMin: 0, rangeMin: 0.3, rangeMax: 12.0, criticalMax: 25.0, unit: 'mg/dL' }),
+  defaultRange({ loincCode: '1975-2', analyteName: 'Total Bilirubin', ageMin: 0.1, ageMax: 999, gender: 'ALL', altitudeMin: 0, rangeMin: 0.1, rangeMax: 1.2, criticalMax: 20.0, unit: 'mg/dL' }),
 ]
 
 // ---------------------------------------------------------------------------

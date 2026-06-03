@@ -24,6 +24,9 @@
 
 import type { ReferenceRange, RangeSource } from './types'
 
+/** Sources treated as lab-configured overrides (highest priority tier). */
+const CUSTOM_SOURCES: RangeSource[] = ['LAB_CUSTOM', 'POPULATION_STUDY', 'MANUFACTURER']
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -47,16 +50,20 @@ export function resolveRange(
 ): ReferenceRange | null {
   const gender = normalizeGender(patientGender)
 
-  // Filter to only ranges for this LOINC code, currently active (no effectiveTo)
+  const now = new Date().toISOString()
+  // Filter to ranges for this LOINC code that are currently active
   const candidates = ranges.filter(
-    (r) => r.loincCode === loincCode && !r.effectiveTo,
+    (r) => r.loincCode === loincCode && !r.effectiveTo && r.effectiveFrom <= now,
   )
   if (candidates.length === 0) return null
 
   // Attempt each priority tier in order
+  // Tier 1-2: Lab-configured overrides (LAB_CUSTOM, POPULATION_STUDY, MANUFACTURER)
+  // Tier 3-4: Bundled defaults
+  // Tier 5: Gender='ALL' fallback (DEFAULT source only)
   return (
-    findBestMatch(candidates, patientAge, gender, labAltitude, 'LAB_CUSTOM', true) ??
-    findBestMatch(candidates, patientAge, gender, labAltitude, 'LAB_CUSTOM', false) ??
+    findBestMatchMultiSource(candidates, patientAge, gender, labAltitude, CUSTOM_SOURCES, true) ??
+    findBestMatchMultiSource(candidates, patientAge, gender, labAltitude, CUSTOM_SOURCES, false) ??
     findBestMatch(candidates, patientAge, gender, labAltitude, 'DEFAULT', true) ??
     findBestMatch(candidates, patientAge, gender, labAltitude, 'DEFAULT', false) ??
     findBestMatchAllGender(candidates, patientAge, labAltitude) ??
@@ -117,8 +124,8 @@ function findBestMatch(
     if (requireAltitudeFilter) {
       return altitudeMatches(r, labAltitude)
     } else {
-      // Non-altitude pass: only ranges that have altitudeMin = 0 (sea-level baseline)
-      return r.altitudeMin === 0
+      // Non-altitude pass: ignore altitude — match on loincCode + age + gender only
+      return true
     }
   })
 
@@ -133,8 +140,26 @@ function findBestMatch(
 }
 
 /**
- * Fallback: find a range where gender='ALL' that covers this patient's age/altitude.
- * Used when no gender-specific range is found.
+ * Match against multiple source types (e.g., all lab-configured overrides).
+ */
+function findBestMatchMultiSource(
+  candidates: ReferenceRange[],
+  patientAge: number,
+  gender: 'M' | 'F' | null,
+  labAltitude: number,
+  sources: RangeSource[],
+  requireAltitudeFilter: boolean,
+): ReferenceRange | null {
+  for (const source of sources) {
+    const result = findBestMatch(candidates, patientAge, gender, labAltitude, source, requireAltitudeFilter)
+    if (result) return result
+  }
+  return null
+}
+
+/**
+ * Fallback: find a DEFAULT range where gender='ALL' that covers this patient's age/altitude.
+ * Only considers DEFAULT source per spec tier 5.
  */
 function findBestMatchAllGender(
   candidates: ReferenceRange[],
@@ -142,7 +167,7 @@ function findBestMatchAllGender(
   labAltitude: number,
 ): ReferenceRange | null {
   const matching = candidates.filter(
-    (r) => r.gender === 'ALL' && ageMatches(r, patientAge) && altitudeMatches(r, labAltitude),
+    (r) => r.source === 'DEFAULT' && r.gender === 'ALL' && ageMatches(r, patientAge) && altitudeMatches(r, labAltitude),
   )
   if (matching.length === 0) return null
   // Prefer most specific altitude match
