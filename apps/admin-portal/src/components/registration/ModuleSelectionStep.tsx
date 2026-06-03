@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export interface ModuleOption {
   code: string
@@ -103,21 +104,22 @@ export function ModuleSelectionStep({
       </p>
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className="flex-1"
           onClick={onBack}
           disabled={loading}
-          className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           Back
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          className="flex-1"
           disabled={loading}
-          className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-foreground hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           {loading ? 'Creating account\u2026' : 'Complete Registration'}
-        </button>
+        </Button>
       </div>
     </form>
   )

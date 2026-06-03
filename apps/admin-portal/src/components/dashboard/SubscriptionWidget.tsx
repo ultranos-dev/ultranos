@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface OrgSubscriptionData {
   organization: {
@@ -82,12 +83,9 @@ export function SubscriptionWidget() {
             data-testid="trial-progress"
           />
         </div>
-        <button
-          onClick={() => router.push('/subscriptions/billing')}
-          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
-        >
+        <Button className="mt-4 w-full" onClick={() => router.push('/subscriptions/billing')}>
           Set Up Billing
-        </button>
+        </Button>
       </div>
     )
   }
@@ -111,12 +109,13 @@ export function SubscriptionWidget() {
         <p className="mt-2 text-lg font-semibold text-destructive">
           {isPaymentSuspended ? 'Suspended — Payment Failed' : 'Suspended'}
         </p>
-        <button
+        <Button
+          variant="destructive"
+          className="mt-4 w-full"
           onClick={() => router.push(isPaymentSuspended ? '/subscriptions/billing' : '/subscriptions')}
-          className="mt-4 rounded-xl bg-destructive px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
         >
           {isPaymentSuspended ? 'Update Payment Method' : 'Manage Subscription'}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -126,12 +125,9 @@ export function SubscriptionWidget() {
       <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
         <p className="text-sm font-medium text-muted-foreground">Subscription</p>
         <p className="mt-2 text-lg font-semibold text-muted-foreground">Cancelled</p>
-        <button
-          onClick={() => router.push('/subscriptions')}
-          className="mt-4 rounded-xl bg-brand-lime px-4 py-2 text-sm font-medium text-foreground hover:opacity-90 transition-opacity"
-        >
+        <Button className="mt-4 w-full" onClick={() => router.push('/subscriptions')}>
           Resubscribe
-        </button>
+        </Button>
       </div>
     )
   }

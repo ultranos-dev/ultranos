@@ -6,6 +6,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken, trpc } from '@/lib/trpc'
 import { Sidebar } from '@/components/Sidebar'
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse'
+import { Button } from '@/components/ui/button'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
 
@@ -135,18 +136,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           <p className="mt-2 text-sm text-muted-foreground">
             You do not have admin privileges. This portal is restricted to users with the ADMIN role.
           </p>
-          <button
-            type="button"
+          <Button
+            variant="destructive"
+            className="mt-4"
             onClick={() => {
               useAuthSessionStore.getState().clearSession()
               setAccessToken(null)
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="mt-4 rounded-full bg-destructive px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
           >
             Sign Out
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -181,18 +182,18 @@ function TrialExpiredInterstitial() {
           Set Up Billing
         </a>
         <div className="mt-3">
-          <button
-            type="button"
+          <Button
+            variant="link"
+            className="text-muted-foreground"
             onClick={() => {
               useAuthSessionStore.getState().clearSession()
               setAccessToken(null)
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="text-sm text-muted-foreground underline hover:text-foreground transition-colors"
           >
             Sign Out
-          </button>
+          </Button>
         </div>
       </div>
     </div>

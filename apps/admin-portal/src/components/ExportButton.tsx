@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Download } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
 
 interface ExportButtonProps {
   exportFn: (filters: Record<string, unknown>) => Promise<{ data: string; filename: string; mimeType: string }>
@@ -39,18 +40,13 @@ export function ExportButton({ exportFn, filters, label = 'Export CSV' }: Export
 
   return (
     <div className="inline-flex flex-col items-start gap-1">
-      <button
-        onClick={handleClick}
-        disabled={loading}
-        className="inline-flex items-center gap-2 rounded-full border border-border text-black px-4 py-2 text-sm hover:bg-primary/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      >
+      <Button variant="outline" onClick={handleClick} disabled={loading}>
         <Download className="h-4 w-4 shrink-0" />
         {loading ? 'Exporting...' : label}
-      </button>
+      </Button>
       {error && (
         <p className="text-xs text-destructive">{error}</p>
       )}
     </div>
   )
 }
-

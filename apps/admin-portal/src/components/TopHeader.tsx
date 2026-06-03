@@ -5,7 +5,9 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { setAccessToken } from '@/lib/trpc'
 import { useState } from 'react'
+import Link from 'next/link'
 import { Search, Bell, Moon, Sun } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
 
 interface TopHeaderProps {
   title: string
@@ -42,25 +44,20 @@ export function TopHeader({ title, description }: TopHeaderProps) {
       {/* Right: actions */}
       <div className="flex items-center gap-3">
         {/* Search placeholder */}
-        <button
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-popover text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-colors duration-200"
-          aria-label="Search"
-        >
+        <Button variant="outline" size="icon" aria-label="Search">
           <Search className="h-4 w-4" />
-        </button>
+        </Button>
 
         {/* Notifications placeholder */}
-        <button
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-popover text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-colors duration-200"
-          aria-label="Notifications"
-        >
+        <Button variant="outline" size="icon" aria-label="Notifications">
           <Bell className="h-4 w-4" />
-        </button>
+        </Button>
 
         {/* Theme toggle */}
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={toggleTheme}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-popover text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-colors duration-200"
           aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
           {theme === 'light' ? (
@@ -68,20 +65,22 @@ export function TopHeader({ title, description }: TopHeaderProps) {
           ) : (
             <Sun className="h-4 w-4" />
           )}
-        </button>
+        </Button>
 
         {/* Date */}
         <span className="hidden lg:block text-sm text-muted-foreground">{dateStr}</span>
 
         {/* User avatar */}
         <div className="relative">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors duration-200"
+            className="rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20"
             aria-label="User menu"
           >
             {initials}
-          </button>
+          </Button>
           {showUserMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
@@ -91,15 +90,18 @@ export function TopHeader({ title, description }: TopHeaderProps) {
                   <p className="text-xs text-muted-foreground">Administrator</p>
                 </div>
                 <div className="my-1 border-t border-border" />
-                <a href="/settings" className="flex w-full items-center rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-colors">
-                  Settings
-                </a>
-                <button
+                <Button variant="ghost" size="sm" className="w-full justify-start rounded-xl" asChild>
+                  <Link href="/settings">
+                    Settings
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start rounded-xl px-3 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={handleSignOut}
-                  className="flex w-full items-center rounded-xl px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   Sign Out
-                </button>
+                </Button>
               </div>
             </>
           )}
