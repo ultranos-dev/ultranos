@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type AuthStep = 'credentials' | 'mfa'
 
@@ -228,41 +231,35 @@ export default function AdminLoginPage() {
         {step === 'credentials' && (
           <form onSubmit={handleCredentialSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-muted-foreground">
+              <Label htmlFor="email" className="mb-1">
                 Email
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 placeholder="admin@hospital.example"
                 autoComplete="email"
               />
             </div>
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-muted-foreground">
+              <Label htmlFor="password" className="mb-1">
                 Password
-              </label>
-              <input
+              </Label>
+              <Input
                 id="password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                 autoComplete="current-password"
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-foreground hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
-            >
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing in\u2026' : 'Sign In'}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -274,21 +271,17 @@ export default function AdminLoginPage() {
                 Please tap your FIDO2 security key when prompted by your browser.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleMfaVerify}
-              disabled={loading}
-              className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-foreground hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
-            >
+            <Button type="button" onClick={handleMfaVerify} disabled={loading} className="w-full">
               {loading ? 'Verifying\u2026' : 'Verify Security Key'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleBackToSignIn}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+              className="w-full"
             >
               Back to sign in
-            </button>
+            </Button>
           </div>
         )}
         <p className="mt-6 text-center text-xs text-muted-foreground">
