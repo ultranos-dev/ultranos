@@ -6,6 +6,8 @@ import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
 import { TriangleAlert } from '@ultranos/ui-kit/icons'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type LabRoleFilter = 'ALL' | 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
 type ActivityFilter = 'ALL' | 'ACTIVE_7D' | 'INACTIVE'
@@ -35,11 +37,11 @@ const ROLE_LABELS: Record<LabRoleFilter, string> = {
   LAB_MANAGER: 'Lab Manager',
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  LAB_TECH: 'bg-blue-100 text-blue-800',
-  SENIOR_TECH: 'bg-purple-100 text-purple-800',
-  SUPERVISOR: 'bg-amber-100 text-amber-800',
-  LAB_MANAGER: 'bg-success/10 text-success',
+const ROLE_VARIANTS: Record<string, 'default' | 'secondary' | 'warning' | 'success'> = {
+  LAB_TECH: 'default',
+  SENIOR_TECH: 'secondary',
+  SUPERVISOR: 'warning',
+  LAB_MANAGER: 'success',
 }
 
 const PAGE_SIZE = 20
@@ -74,9 +76,9 @@ function formatDate(iso: string | null | undefined): string {
 function RoleBadge({ role }: { role: string }) {
   const label = ROLE_LABELS[role as LabRoleFilter] ?? role
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[role] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={ROLE_VARIANTS[role] ?? 'secondary'}>
       {label}
-    </span>
+    </Badge>
   )
 }
 
@@ -206,13 +208,12 @@ export default function LabAssignmentsTab() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <Button
             onClick={() => setShowAssignModal(true)}
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
             aria-label="Assign to Lab"
           >
             Assign to Lab
-          </button>
+          </Button>
           <ExportButton
             exportFn={() =>
               trpc.admin.exportLabStaffCsv.mutate({
@@ -269,7 +270,7 @@ export default function LabAssignmentsTab() {
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/labs/${row.labId}/staff`) }}
                     tabIndex={0}
                     role="button"
-                    className="cursor-pointer transition-colors hover:bg-brand-lime/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                    className="cursor-pointer transition-colors hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                   >
                     <td className="ps-4 pe-4 py-3 text-muted-foreground">{truncateEmail(row.email)}</td>
                     <td className="ps-4 pe-4 py-3 font-medium text-foreground">
@@ -293,20 +294,20 @@ export default function LabAssignmentsTab() {
           <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
             <span>Page {pageIndex + 1}</span>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={handlePrevious}
                 disabled={pageIndex === 0}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={handleNext}
                 disabled={!nextCursor}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
               >
                 Next
-              </button>
+              </Button>
             </div>
           </div>
         </>

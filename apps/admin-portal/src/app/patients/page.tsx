@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Patient {
   id: string
@@ -24,26 +26,12 @@ interface Patient {
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
   if (!warn) return <span className="text-xs font-medium text-muted-foreground">-</span>
-  return (
-    <span className="inline-block rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
-      Warning
-    </span>
-  )
+  return <Badge variant="warning">Warning</Badge>
 }
 
 function StatusBadge({ active }: { active: boolean }) {
-  if (active) {
-    return (
-      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-        Active
-      </span>
-    )
-  }
-  return (
-    <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-      Inactive
-    </span>
-  )
+  if (active) return <Badge variant="success">Active</Badge>
+  return <Badge variant="destructive">Inactive</Badge>
 }
 
 const PAGE_SIZE = 20
@@ -154,12 +142,9 @@ export default function PatientsPage() {
             </label>
           </div>
 
-          <Link
-            href="/patients/merge"
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
-            Merge Patients
-          </Link>
+          <Button asChild>
+            <Link href="/patients/merge">Merge Patients</Link>
+          </Button>
         </div>
 
         {error && (
@@ -204,7 +189,7 @@ export default function PatientsPage() {
                     <tr
                       key={patient.id}
                       onClick={() => router.push(`/patients/${patient.id}`)}
-                      className="cursor-pointer transition-colors hover:bg-brand-lime/5"
+                      className="cursor-pointer transition-colors hover:bg-primary/5"
                     >
                       <td className="px-4 py-3 font-medium text-foreground">
                         <Link
@@ -234,21 +219,21 @@ export default function PatientsPage() {
                 Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{(page - 1) * PAGE_SIZE + patients.length}
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
-                </button>
+                </Button>
                 <span className="flex items-center px-2">Page {page}</span>
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setPage(page + 1)}
                   disabled={!hasMore}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           </>

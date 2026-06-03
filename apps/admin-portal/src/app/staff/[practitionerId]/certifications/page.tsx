@@ -7,6 +7,8 @@ import { TopHeader } from '@/components/TopHeader'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface MilestoneProgress {
   progressId: string
@@ -34,11 +36,11 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-card text-muted-foreground',
-  SUBMITTED: 'bg-warning/10 text-warning',
-  APPROVED: 'bg-success/10 text-success',
-  REJECTED: 'bg-destructive/10 text-destructive',
+const STATUS_VARIANTS: Record<string, 'secondary' | 'warning' | 'success' | 'destructive'> = {
+  PENDING: 'secondary',
+  SUBMITTED: 'warning',
+  APPROVED: 'success',
+  REJECTED: 'destructive',
 }
 
 function formatType(type: string): string {
@@ -141,12 +143,9 @@ export default function PractitionerCertificationsPage() {
       <TopHeader title="Certification Progress" description={`Practitioner: ${practitionerId}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex justify-end mb-4">
-          <button
-            onClick={openAssignModal}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors"
-          >
+          <Button onClick={openAssignModal}>
             Assign Pathway
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -190,13 +189,13 @@ export default function PractitionerCertificationsPage() {
                 {/* Issue Credential button — AC #5 */}
                 {pathway.completionPct === 100 && (
                   <div className="px-4 py-2 bg-card border-t border-border flex justify-end">
-                    <button
+                    <Button
+                      variant="success"
                       onClick={() => handleIssueCredential(pathway.pathwayId)}
                       disabled={issuingPathway === pathway.pathwayId}
-                      className="rounded-full bg-success px-5 py-1.5 text-sm font-medium text-white hover:bg-success/90 transition-colors disabled:opacity-50"
                     >
                       {issuingPathway === pathway.pathwayId ? 'Issuing...' : 'Issue Credential'}
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -217,16 +216,17 @@ export default function PractitionerCertificationsPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[milestone.status] ?? ''}`}>
+                          <Badge variant={STATUS_VARIANTS[milestone.status] ?? 'secondary'}>
                             {milestone.status}
-                          </span>
+                          </Badge>
                           {milestone.status === 'SUBMITTED' && (
-                            <button
+                            <Button
+                              variant="link"
+                              size="sm"
                               onClick={() => setReviewMilestone(milestone)}
-                              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                             >
                               Review
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -270,19 +270,18 @@ export default function PractitionerCertificationsPage() {
               ))}
             </select>
             <div className="flex justify-end gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setShowAssignModal(false)}
-                className="rounded-full border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-card transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleAssign}
                 disabled={!assigningPathwayId || assigning}
-                className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {assigning ? 'Assigning...' : 'Assign'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

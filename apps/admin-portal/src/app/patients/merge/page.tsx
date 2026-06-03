@@ -8,6 +8,7 @@ import { TopHeader } from '@/components/TopHeader'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
 import { MergePreview } from '@/components/patients/MergePreview'
 import { Check } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/button'
 
 interface Patient {
   id: string
@@ -184,18 +185,12 @@ export default function MergeWizardPage() {
               This merge can be reversed within 72 hours.
             </p>
             <div className="mt-6 flex items-center justify-center gap-3">
-              <Link
-                href={`/patients/${survivor.id}`}
-                className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-              >
-                View Survivor Record
-              </Link>
-              <Link
-                href="/patients"
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
-              >
-                Back to Patients
-              </Link>
+              <Button asChild>
+                <Link href={`/patients/${survivor.id}`}>View Survivor Record</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/patients">Back to Patients</Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -220,7 +215,7 @@ export default function MergeWizardPage() {
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
                   s === step
-                    ? 'bg-brand-lime text-black'
+                    ? 'bg-primary text-primary-foreground'
                     : s < step
                       ? 'bg-success/10 text-success'
                       : 'bg-card border border-border text-muted-foreground'
@@ -282,7 +277,7 @@ export default function MergeWizardPage() {
                       <button
                         key={p.id}
                         onClick={() => setDuplicate(p)}
-                        className="w-full text-start rounded-2xl border border-border bg-white p-4 hover:bg-brand-lime/5 transition-colors"
+                        className="w-full text-start rounded-2xl border border-border bg-white p-4 hover:bg-primary/5 transition-colors"
                       >
                         <p className="text-sm font-medium text-foreground">{formatName(p)}</p>
                         <p className="text-xs text-muted-foreground">
@@ -310,12 +305,9 @@ export default function MergeWizardPage() {
             {/* Proceed to step 2 */}
             {survivor && duplicate && (
               <div className="flex gap-3">
-                <button
-                  onClick={proceedToStep2}
-                  className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-                >
+                <Button onClick={proceedToStep2}>
                   Continue to Field Resolution
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -338,19 +330,12 @@ export default function MergeWizardPage() {
             />
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setStep(1)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
-              >
+              <Button variant="outline" onClick={() => setStep(1)}>
                 Back
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                disabled={!allResolved}
-                className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black disabled:opacity-50 hover:bg-brand-lime/90 transition-colors"
-              >
+              </Button>
+              <Button onClick={() => setStep(3)} disabled={!allResolved}>
                 Continue to Preview
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -381,19 +366,16 @@ export default function MergeWizardPage() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setStep(2)}
-                className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-card transition-colors"
-              >
+              <Button variant="outline" onClick={() => setStep(2)}>
                 Back
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={handleMerge}
                 disabled={confirmText !== 'MERGE' || merging}
-                className="rounded-full border border-destructive/30 bg-destructive/10 px-6 py-2.5 text-sm font-semibold text-destructive disabled:opacity-50 hover:bg-destructive/10/80 transition-colors"
               >
                 {merging ? 'Merging...' : 'Confirm Merge'}
-              </button>
+              </Button>
             </div>
           </div>
         )}

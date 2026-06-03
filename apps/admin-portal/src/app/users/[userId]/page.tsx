@@ -5,6 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
 interface UserDetail {
   id: string
@@ -23,10 +26,10 @@ interface UserDetail {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
-    PENDING_INVITE: 'bg-warning/10 text-warning',
+  const variantMap: Record<string, 'success' | 'destructive' | 'warning' | 'secondary'> = {
+    ACTIVE: 'success',
+    SUSPENDED: 'destructive',
+    PENDING_INVITE: 'warning',
   }
 
   const labelMap: Record<string, string> = {
@@ -36,9 +39,9 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {labelMap[status] ?? status}
-    </span>
+    </Badge>
   )
 }
 
@@ -216,12 +219,12 @@ export default function UserDetailPage() {
               {/* Name — editable */}
               <div>
                 <label htmlFor="user-name" className="block text-sm font-medium text-muted-foreground">Name</label>
-                <input
+                <Input
                   id="user-name"
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="mt-1"
                 />
               </div>
 
@@ -266,13 +269,12 @@ export default function UserDetailPage() {
               </div>
 
               {/* Save button */}
-              <button
+              <Button
                 onClick={handleSave}
                 disabled={!isDirty || saving}
-                className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-black disabled:opacity-50 hover:bg-brand-lime/90 transition-colors hover:scale-[1.02] transition-transform duration-200"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -300,63 +302,63 @@ export default function UserDetailPage() {
                         placeholder="Enter reason for suspension..."
                       />
                       <div className="flex gap-2">
-                        <button
+                        <Button
+                          variant="destructive"
                           onClick={handleSuspend}
                           disabled={!suspendReason.trim() || actionLoading}
-                          className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-red-700 hover:scale-[1.02] transition-transform duration-200"
                         >
                           {actionLoading ? 'Suspending...' : 'Confirm Suspend'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="outline"
                           onClick={() => { setShowSuspendForm(false); setSuspendReason('') }}
-                          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : (
-                    <button
+                    <Button
+                      variant="destructive"
                       onClick={() => setShowSuspendForm(true)}
-                      className="rounded-full border border-destructive/30 bg-destructive/10 px-6 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10/80 hover:scale-[1.02] transition-transform duration-200"
                     >
                       Suspend User
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
 
               {/* Reactivate User — visible when SUSPENDED */}
               {user.status === 'SUSPENDED' && (
-                <button
+                <Button
+                  variant="success"
                   onClick={handleReactivate}
                   disabled={actionLoading}
-                  className="rounded-full bg-green-600 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
                 >
                   {actionLoading ? 'Reactivating...' : 'Reactivate User'}
-                </button>
+                </Button>
               )}
 
               {/* Resend Invitation — visible when PENDING_INVITE */}
               {user.status === 'PENDING_INVITE' && (
-                <button
+                <Button
+                  variant="outline"
                   onClick={handleResendInvitation}
                   disabled={actionLoading}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   {actionLoading ? 'Sending...' : 'Resend Invitation'}
-                </button>
+                </Button>
               )}
 
               {/* Reset Password — visible when ACTIVE */}
               {user.status === 'ACTIVE' && (
-                <button
+                <Button
+                  variant="outline"
                   onClick={handleResetPassword}
                   disabled={actionLoading}
-                  className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   {actionLoading ? 'Sending...' : 'Reset Password'}
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type RoleFilter = 'ALL' | 'ADMIN' | 'CLINICIAN' | 'DOCTOR' | 'PHARMACIST' | 'LAB_TECH'
 type StatusFilter = 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE'
@@ -23,10 +25,10 @@ interface User {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    ACTIVE: 'bg-success/10 text-success',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
-    PENDING_INVITE: 'bg-warning/10 text-warning',
+  const variantMap: Record<string, 'success' | 'destructive' | 'warning' | 'secondary'> = {
+    ACTIVE: 'success',
+    SUSPENDED: 'destructive',
+    PENDING_INVITE: 'warning',
   }
 
   const labelMap: Record<string, string> = {
@@ -36,17 +38,17 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {labelMap[status] ?? status}
-    </span>
+    </Badge>
   )
 }
 
 function MfaBadge({ enrolled }: { enrolled: boolean }) {
   if (enrolled) {
-    return <span className="text-xs font-medium text-success">Enrolled</span>
+    return <Badge variant="success">Enrolled</Badge>
   }
-  return <span className="text-xs font-medium text-warning">&#x26A0; Not Enrolled</span>
+  return <Badge variant="warning">&#x26A0; Not Enrolled</Badge>
 }
 
 export function formatRelativeTime(iso: string | null): string {
@@ -171,12 +173,9 @@ export default function AllUsersTab() {
         {/* Export + Create User CTA */}
         <div className="flex items-center gap-3">
           <ExportButton exportFn={() => trpc.admin.exportUsers.query()} filters={{}} />
-          <Link
-            href="/users/create"
-            className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
-            Create User
-          </Link>
+          <Button asChild>
+            <Link href="/users/create">Create User</Link>
+          </Button>
         </div>
       </div>
 
@@ -202,12 +201,9 @@ export default function AllUsersTab() {
           <p className="mt-1 text-sm text-muted-foreground">
             Get started by inviting your first team member.
           </p>
-          <Link
-            href="/users/create"
-            className="mt-4 inline-block rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-          >
-            Create User
-          </Link>
+          <Button asChild className="mt-4">
+            <Link href="/users/create">Create User</Link>
+          </Button>
         </div>
       ) : (
         <>
@@ -229,7 +225,7 @@ export default function AllUsersTab() {
                   <tr
                     key={user.id}
                     onClick={() => router.push(`/users/${user.id}`)}
-                    className="cursor-pointer transition-colors hover:bg-brand-lime/5"
+                    className="cursor-pointer transition-colors hover:bg-primary/5"
                   >
                     <td className="px-4 py-3 font-medium text-foreground">
                       <Link
@@ -263,21 +259,21 @@ export default function AllUsersTab() {
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
-                </button>
+                </Button>
                 <span className="flex items-center px-2">Page {page} of {totalPages}</span>
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setPage(page + 1)}
                   disabled={page >= totalPages}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:bg-card hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}

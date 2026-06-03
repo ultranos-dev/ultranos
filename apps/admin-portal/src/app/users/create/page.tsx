@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES } from '@ultranos/shared-types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface AvailableRole {
   role: string
@@ -114,13 +116,13 @@ export default function CreateUserPage() {
             <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
               Full Name
             </label>
-            <input
+            <Input
               id="name"
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="mt-1.5"
             />
           </div>
 
@@ -129,13 +131,13 @@ export default function CreateUserPage() {
             <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="mt-1.5"
             />
           </div>
 
@@ -144,7 +146,7 @@ export default function CreateUserPage() {
             <label htmlFor="password" className="block text-sm font-medium text-muted-foreground">
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               required
@@ -152,7 +154,7 @@ export default function CreateUserPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 8 characters"
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="mt-1.5"
             />
           </div>
 
@@ -161,14 +163,14 @@ export default function CreateUserPage() {
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground">
               Confirm Password
             </label>
-            <input
+            <Input
               id="confirmPassword"
               type="password"
               required
               minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1.5 block w-full rounded-xl border border-border px-4 py-2.5 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="mt-1.5"
             />
             {confirmPassword && password !== confirmPassword && (
               <p className="mt-1.5 text-sm text-red-600">Passwords do not match</p>
@@ -256,7 +258,7 @@ export default function CreateUserPage() {
               </div>
             )}
             <div className="mt-4 flex gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   setCreatedUser(null)
@@ -268,35 +270,27 @@ export default function CreateUserPage() {
                   setSelectedRole('')
                   setSubmitError(null)
                 }}
-                className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:bg-primary/90 hover:scale-[1.02] transition-all"
               >
                 Create Another User
-              </button>
-              <a
-                href="/users"
-                className="rounded-full border border-border text-foreground px-6 py-2.5 hover:bg-card hover:scale-[1.02] transition-all"
-              >
-                View All Users
-              </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/users">View All Users</a>
+              </Button>
             </div>
           </div>
         )}
 
         {!submitSuccess && (
           <div className="mt-6 flex gap-3">
-            <button
+            <Button
               type="submit"
               disabled={submitting || !selectedRole || !name || !email || !password || password !== confirmPassword}
-              className="rounded-full bg-primary text-foreground font-semibold px-6 py-2.5 hover:bg-primary/90 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Creating...' : 'Create User'}
-            </button>
-            <a
-              href="/users"
-              className="rounded-full border border-border text-foreground px-6 py-2.5 hover:bg-card hover:scale-[1.02] transition-all"
-            >
-              Cancel
-            </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href="/users">Cancel</a>
+            </Button>
           </div>
         )}
       </form>

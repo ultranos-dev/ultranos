@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
+import { Button } from '@/components/ui/button'
 
 type VaccinationStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE'
 type TbResult = 'NEGATIVE' | 'POSITIVE' | 'INDETERMINATE' | ''
@@ -185,12 +186,13 @@ export default function EmployeeHealthPage() {
       <TopHeader title="Employee Health Record" />
       <main className="mx-auto max-w-3xl px-6 py-8">
         {/* Back link */}
-        <button
+        <Button
+          variant="link"
           onClick={() => router.push('/users?tab=lab-assignments')}
-          className="mb-4 text-sm text-primary hover:underline"
+          className="mb-4 px-0"
         >
           &larr; Back to Lab Assignments
-        </button>
+        </Button>
 
         {/* Toast */}
         {toast && (
@@ -335,13 +337,13 @@ export default function EmployeeHealthPage() {
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">Exposure History</h2>
-            <button
+            <Button
               type="button"
+              size="sm"
               onClick={addExposureEntry}
-              className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90"
             >
               + Add Entry
-            </button>
+            </Button>
           </div>
 
           {form.exposureHistory.length === 0 && (
@@ -379,26 +381,26 @@ export default function EmployeeHealthPage() {
                   className="mt-1 block w-full rounded border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
-              <button
+              <Button
                 type="button"
+                variant="destructive"
+                size="sm"
                 onClick={() => removeExposureEntry(i)}
-                className="rounded border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
               >
                 Remove
-              </button>
+              </Button>
             </div>
           ))}
         </section>
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <button
+          <Button
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-primary px-6 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Health Record'}
-          </button>
+          </Button>
         </div>
       </main>
     </div>

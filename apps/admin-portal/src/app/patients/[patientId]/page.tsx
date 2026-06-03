@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ConsentTimeline } from '@/components/patients/ConsentTimeline'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface PatientDetail {
   id: string
@@ -24,33 +26,13 @@ interface PatientDetail {
 }
 
 function MpiWarnBadge({ warn }: { warn: boolean | null }) {
-  if (!warn) {
-    return (
-      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-        Clear
-      </span>
-    )
-  }
-  return (
-    <span className="inline-block rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
-      Warning
-    </span>
-  )
+  if (!warn) return <Badge variant="success">Clear</Badge>
+  return <Badge variant="warning">Warning</Badge>
 }
 
 function StatusBadge({ active }: { active: boolean }) {
-  if (active) {
-    return (
-      <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-        Active
-      </span>
-    )
-  }
-  return (
-    <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-      Inactive
-    </span>
-  )
+  if (active) return <Badge variant="success">Active</Badge>
+  return <Badge variant="destructive">Inactive</Badge>
 }
 
 function formatDateTime(iso: string | null): string {
@@ -168,12 +150,11 @@ export default function PatientDetailPage() {
 
             {/* Actions */}
             <div className="mt-6 pt-4 border-t border-border">
-              <Link
-                href={`/patients/merge?survivor=${patient.id}`}
-                className="rounded-full bg-brand-lime px-5 py-2 text-sm font-semibold text-black hover:bg-brand-lime/90 transition-colors"
-              >
-                Merge with Another Patient
-              </Link>
+              <Button asChild>
+                <Link href={`/patients/merge?survivor=${patient.id}`}>
+                  Merge with Another Patient
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
