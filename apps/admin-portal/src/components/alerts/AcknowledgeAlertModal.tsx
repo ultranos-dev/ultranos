@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 interface AcknowledgeAlertModalProps {
   alertId: string
@@ -54,30 +56,23 @@ export function AcknowledgeAlertModal({
           <label htmlFor="ack-notes" className="block text-sm font-medium text-foreground">
             Notes <span className="text-muted-foreground">(optional)</span>
           </label>
-          <textarea
+          <Textarea
             id="ack-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="mt-1"
             placeholder="Add any notes about this acknowledgment..."
           />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-brand-lime-contrast disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
             {submitting ? 'Acknowledging...' : 'Acknowledge'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { AcknowledgeAlertModal } from './AcknowledgeAlertModal'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type FilterTab = 'ALL' | 'UNACKNOWLEDGED' | 'ACKNOWLEDGED'
 
@@ -139,23 +141,20 @@ export function SurveillanceAlertHistory() {
                     </td>
                     <td className="px-4 py-3">
                       {alert.acknowledgedAt ? (
-                        <span className="inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-                          Acknowledged
-                        </span>
+                        <Badge variant="success">Acknowledged</Badge>
                       ) : (
-                        <span className="inline-block rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-                          Unacknowledged
-                        </span>
+                        <Badge variant="destructive">Unacknowledged</Badge>
                       )}
                     </td>
                     <td className="px-4 py-3 text-end">
                       {!alert.acknowledgedAt && (
-                        <button
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => setAckAlert(alert)}
-                          className="rounded-full border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-primary/10 transition-colors"
                         >
                           Acknowledge
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -171,23 +170,25 @@ export function SurveillanceAlertHistory() {
                 Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                   disabled={cursor === 0}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                 >
                   Previous
-                </button>
+                </Button>
                 <span className="flex items-center px-2">
                   Page {currentPage} of {totalPages}
                 </span>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCursor(cursor + PAGE_SIZE)}
                   disabled={cursor + PAGE_SIZE >= total}
-                  className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}

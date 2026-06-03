@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type AlertTab = 'anomalies' | 'clinical-safety'
 type StatusFilter = 'ALL' | 'UNREVIEWED' | 'ESCALATED' | 'DISMISSED' | 'SUSPENDED'
@@ -28,28 +30,28 @@ const ANOMALY_TYPE_LABELS: Record<string, string> = {
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
-  const colorMap: Record<string, string> = {
-    HIGH: 'bg-destructive/10 text-destructive',
-    MEDIUM: 'bg-warning/10 text-warning',
+  const variantMap: Record<string, 'destructive' | 'warning' | 'secondary'> = {
+    HIGH: 'destructive',
+    MEDIUM: 'warning',
   }
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[severity] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[severity] ?? 'secondary'}>
       {severity}
-    </span>
+    </Badge>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    UNREVIEWED: 'bg-warning/10 text-warning',
-    ESCALATED: 'bg-purple-100 text-purple-800',
-    DISMISSED: 'bg-card text-muted-foreground',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
+  const variantMap: Record<string, 'warning' | 'secondary' | 'destructive'> = {
+    UNREVIEWED: 'warning',
+    ESCALATED: 'secondary',
+    DISMISSED: 'secondary',
+    SUSPENDED: 'destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
+    </Badge>
   )
 }
 
@@ -393,21 +395,23 @@ export default function AlertsPage() {
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(Math.max(0, cursor - PAGE_SIZE))}
                     disabled={cursor === 0}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                   >
                     Previous
-                  </button>
+                  </Button>
                   <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setCursor(cursor + PAGE_SIZE)}
                     disabled={cursor + PAGE_SIZE >= total}
-                    className="rounded-full border border-border px-4 py-1.5 text-sm font-medium disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

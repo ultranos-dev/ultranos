@@ -7,6 +7,9 @@ import { trpc } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
 import { EscalationModal } from '@/components/alerts/EscalationModal'
 import { EscalationSection } from '@/components/alerts/EscalationSection'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 type ReviewAction = 'DISMISS' | 'ESCALATE' | 'SUSPEND_PROVIDER'
 
@@ -53,28 +56,28 @@ const ANOMALY_TYPE_LABELS: Record<string, string> = {
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
-  const colorMap: Record<string, string> = {
-    HIGH: 'bg-destructive/10 text-destructive',
-    MEDIUM: 'bg-warning/10 text-warning',
+  const variantMap: Record<string, 'destructive' | 'warning' | 'secondary'> = {
+    HIGH: 'destructive',
+    MEDIUM: 'warning',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[severity] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[severity] ?? 'secondary'}>
       {severity}
-    </span>
+    </Badge>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    UNREVIEWED: 'bg-warning/10 text-warning',
-    ESCALATED: 'bg-purple-100 text-purple-800',
-    DISMISSED: 'bg-card text-muted-foreground',
-    SUSPENDED: 'bg-destructive/10 text-destructive',
+  const variantMap: Record<string, 'warning' | 'secondary' | 'destructive'> = {
+    UNREVIEWED: 'warning',
+    ESCALATED: 'secondary',
+    DISMISSED: 'secondary',
+    SUSPENDED: 'destructive',
   }
   return (
-    <span className={`inline-block rounded-full px-3 py-1 text-sm font-medium ${colorMap[status] ?? 'bg-card text-muted-foreground'}`}>
+    <Badge variant={variantMap[status] ?? 'secondary'}>
       {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
+    </Badge>
   )
 }
 
@@ -103,24 +106,24 @@ function ReviewDialog({
 }) {
   const [reason, setReason] = useState('')
 
-  const config: Record<ReviewAction, { title: string; description: string; buttonLabel: string; buttonColor: string }> = {
+  const config: Record<ReviewAction, { title: string; description: string; buttonLabel: string; buttonVariant: 'secondary' | 'destructive' }> = {
     DISMISS: {
       title: 'Dismiss Alert',
       description: 'Dismiss this anomaly alert? The alert will be marked as reviewed and closed.',
       buttonLabel: 'Dismiss',
-      buttonColor: 'bg-neutral-600 hover:bg-neutral-700',
+      buttonVariant: 'secondary',
     },
     ESCALATE: {
       title: 'Escalate Alert',
       description: 'Escalate this alert for further investigation? The alert will be flagged for senior review.',
       buttonLabel: 'Escalate',
-      buttonColor: 'bg-purple-600 hover:bg-purple-700',
+      buttonVariant: 'secondary',
     },
     SUSPEND_PROVIDER: {
       title: 'Suspend Provider',
       description: 'This will immediately terminate the provider\'s active sessions and block clinical access.',
       buttonLabel: 'Suspend Provider',
-      buttonColor: 'bg-red-600 hover:bg-red-700',
+      buttonVariant: 'destructive',
     },
   }
 
@@ -142,31 +145,28 @@ function ReviewDialog({
           <label htmlFor="reason" className="block text-sm font-medium text-foreground">
             Reason <span className="text-destructive">*</span>
           </label>
-          <textarea
+          <Textarea
             id="reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="mt-1"
             placeholder="Enter a reason for this action (required)..."
           />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={c.buttonVariant}
             onClick={() => onConfirm(reason)}
             disabled={submitting || !reason.trim()}
-            className={`rounded-full px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200 ${c.buttonColor}`}
           >
             {submitting ? 'Processing...' : c.buttonLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -232,7 +232,7 @@ export default function AlertDetailPage() {
   if (error && !alert) {
     return (
       <div>
-        <button onClick={() => router.push('/alerts')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Alerts</button>
+        <Button variant="ghost" onClick={() => router.push('/alerts')}>&larr; Back to Alerts</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -248,7 +248,7 @@ export default function AlertDetailPage() {
     <>
       <TopHeader title={alert.practitionerName} description={`${ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType} — Detected ${formatDate(alert.createdAt)}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
-        <button onClick={() => router.push('/alerts')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Alerts</button>
+        <Button variant="ghost" onClick={() => router.push('/alerts')}>&larr; Back to Alerts</Button>
 
         {/* Header badges */}
         <div className="mt-4 flex items-center gap-2">
@@ -276,24 +276,15 @@ export default function AlertDetailPage() {
         {/* Action buttons — AC #5 */}
         {isUnreviewed && (
           <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => setPendingAction('DISMISS')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-neutral-600 text-white hover:bg-neutral-700 hover:scale-[1.02] transition-transform duration-200"
-            >
+            <Button variant="secondary" onClick={() => setPendingAction('DISMISS')}>
               Dismiss
-            </button>
-            <button
-              onClick={() => setShowEscalationModal(true)}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.02] transition-transform duration-200"
-            >
+            </Button>
+            <Button variant="secondary" onClick={() => setShowEscalationModal(true)}>
               Escalate
-            </button>
-            <button
-              onClick={() => setPendingAction('SUSPEND_PROVIDER')}
-              className="rounded-full px-6 py-2.5 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02] transition-transform duration-200"
-            >
+            </Button>
+            <Button variant="destructive" onClick={() => setPendingAction('SUSPEND_PROVIDER')}>
               Suspend Provider
-            </button>
+            </Button>
           </div>
         )}
 

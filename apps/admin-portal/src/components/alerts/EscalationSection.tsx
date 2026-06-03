@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 interface AdminUser {
   id: string
@@ -107,15 +110,15 @@ export function EscalationSection({
 
   const statusBadge =
     status === 'ESCALATED' ? (
-      <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">Escalated</span>
+      <Badge variant="warning">Escalated</Badge>
     ) : (
-      <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">Resolved</span>
+      <Badge variant="success">Resolved</Badge>
     )
 
   const priorityBadge = escalationPriority === 'URGENT' ? (
-    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">URGENT</span>
+    <Badge variant="destructive">URGENT</Badge>
   ) : (
-    <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">NORMAL</span>
+    <Badge variant="secondary">NORMAL</Badge>
   )
 
   return (
@@ -185,18 +188,12 @@ export function EscalationSection({
       {/* Action buttons for ESCALATED status */}
       {status === 'ESCALATED' && (
         <div className="mt-4 flex gap-3">
-          <button
-            onClick={() => setShowResolveForm(!showResolveForm)}
-            className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="success" onClick={() => setShowResolveForm(!showResolveForm)}>
             Resolve
-          </button>
-          <button
-            onClick={() => setShowReassign(!showReassign)}
-            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-foreground hover:bg-card hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button variant="outline" onClick={() => setShowReassign(!showReassign)}>
             Re-assign
-          </button>
+          </Button>
         </div>
       )}
 
@@ -206,31 +203,28 @@ export function EscalationSection({
           <label htmlFor="resolution-note" className="block text-sm font-medium text-foreground">
             Resolution Note <span className="text-destructive">*</span>
           </label>
-          <textarea
+          <Textarea
             id="resolution-note"
             value={resolveNote}
             onChange={(e) => setResolveNote(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="mt-1"
             placeholder="Describe how this was resolved..."
           />
           {resolveNote.length > 0 && resolveNote.trim().length < 10 && (
             <p className="mt-1 text-xs text-muted-foreground">Minimum 10 characters required</p>
           )}
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
+              variant="success"
               onClick={handleResolve}
               disabled={resolveNote.trim().length < 10 || resolving}
-              className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
             >
               {resolving ? 'Resolving...' : 'Confirm Resolve'}
-            </button>
-            <button
-              onClick={() => setShowResolveForm(false)}
-              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-foreground hover:bg-card"
-            >
+            </Button>
+            <Button variant="outline" onClick={() => setShowResolveForm(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -254,12 +248,9 @@ export function EscalationSection({
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}
           </select>
-          <button
-            onClick={() => setShowReassign(false)}
-            className="mt-2 text-sm text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" onClick={() => setShowReassign(false)} className="mt-2">
             Cancel
-          </button>
+          </Button>
         </div>
       )}
     </div>

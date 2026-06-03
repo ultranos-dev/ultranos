@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 
 const DEFAULT_THRESHOLDS = [
   { test_category: 'Malaria RDT', threshold_pct: 15 },
@@ -207,15 +210,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                   className="accent-accent h-4 w-4"
                 />
                 <span className="text-sm font-medium text-foreground">{lab.name}</span>
-                <span
-                  className={`ms-auto inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    lab.status === 'ACTIVE'
-                      ? 'bg-success/10 text-success'
-                      : 'bg-warning/10 text-warning'
-                  }`}
+                <Badge
+                  variant={lab.status === 'ACTIVE' ? 'success' : 'warning'}
+                  className="ms-auto"
                 >
                   {lab.status}
-                </span>
+                </Badge>
               </label>
             ))
           )}
@@ -238,33 +238,35 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
               {thresholds.map((t, i) => (
                 <tr key={i}>
                   <td className="px-4 py-3">
-                    <input
+                    <Input
                       type="text"
                       value={t.test_category}
                       onChange={(e) => updateThreshold(i, 'test_category', e.target.value)}
-                      className="w-full rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                      className="w-full"
                     />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <input
+                      <Input
                         type="number"
                         min={0}
                         max={100}
                         value={t.threshold_pct}
                         onChange={(e) => updateThreshold(i, 'threshold_pct', Number(e.target.value))}
-                        className="w-24 rounded-lg border border-border px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                        className="w-24"
                       />
                       <span className="text-muted-foreground">%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-end">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => removeThreshold(i)}
-                      className="text-sm text-destructive hover:underline"
+                      className="text-destructive hover:text-destructive"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -272,12 +274,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           </table>
         </div>
         <div className="mt-3 flex gap-2">
-          <input
+          <Input
             type="text"
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
             placeholder="New test category name"
-            className="flex-1 rounded-full border border-border px-4 py-2 text-sm focus:border-primary focus:outline-none"
+            className="flex-1"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -285,13 +287,13 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
               }
             }}
           />
-          <button
+          <Button
+            variant="outline"
             onClick={addCategory}
             disabled={!newCategory.trim()}
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-primary/10 disabled:opacity-50 transition-colors"
           >
             Add Category
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -328,12 +330,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
               </div>
             </label>
             {smsEnabled && (
-              <input
+              <Input
                 type="tel"
                 value={channels.sms_phone ?? ''}
                 onChange={(e) => setChannels((prev) => ({ ...prev, sms_phone: e.target.value }))}
                 placeholder="+93701234567"
-                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-3"
               />
             )}
           </div>
@@ -358,12 +360,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
               </div>
             </label>
             {emailEnabled && (
-              <input
+              <Input
                 type="email"
                 value={channels.email ?? ''}
                 onChange={(e) => setChannels((prev) => ({ ...prev, email: e.target.value }))}
                 placeholder="officer@district.gov"
-                className="mt-3 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-3"
               />
             )}
           </div>
@@ -372,13 +374,9 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
       {/* Save button */}
       <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-full bg-brand-lime px-8 py-2.5 text-sm font-semibold text-brand-lime-contrast disabled:opacity-50 hover:scale-[1.02] transition-transform duration-200"
-        >
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save Configuration'}
-        </button>
+        </Button>
       </div>
     </div>
   )
