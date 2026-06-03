@@ -229,7 +229,8 @@ describe('Story 55.5: MilestoneReviewModal', () => {
     render(
       <MilestoneReviewModal
         milestone={milestone}
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onReviewed={vi.fn()}
       />,
     )
@@ -257,7 +258,8 @@ describe('Story 55.5: MilestoneReviewModal', () => {
     render(
       <MilestoneReviewModal
         milestone={milestone}
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onReviewed={vi.fn()}
       />,
     )
@@ -284,7 +286,8 @@ describe('Story 55.5: MilestoneReviewModal', () => {
     render(
       <MilestoneReviewModal
         milestone={milestone}
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onReviewed={vi.fn()}
       />,
     )

@@ -196,15 +196,14 @@ export function SurveillanceAlertHistory() {
       )}
 
       {/* Acknowledge modal */}
-      {ackAlert && (
-        <AcknowledgeAlertModal
-          alertId={ackAlert.id}
-          labName={ackAlert.labName}
-          testCategory={ackAlert.testCategory}
-          onClose={() => setAckAlert(null)}
-          onSuccess={handleAckSuccess}
-        />
-      )}
+      <AcknowledgeAlertModal
+        alertId={ackAlert?.id ?? ''}
+        labName={ackAlert?.labName ?? ''}
+        testCategory={ackAlert?.testCategory ?? ''}
+        open={ackAlert !== null}
+        onOpenChange={(open) => { if (!open) setAckAlert(null) }}
+        onSuccess={handleAckSuccess}
+      />
     </div>
   )
 }

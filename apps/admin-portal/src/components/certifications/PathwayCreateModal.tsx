@@ -5,6 +5,14 @@ import { trpc } from '@/lib/trpc'
 import { Trash2 } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type MilestoneType = 'MODULE_COMPLETION' | 'SUPERVISED_PROCEDURE' | 'ASSESSMENT_PASS' | 'CONTINUING_ED_HOURS'
 
@@ -22,11 +30,12 @@ const MILESTONE_TYPES: { value: MilestoneType; label: string }[] = [
 ]
 
 interface Props {
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onCreated: () => void
 }
 
-export function PathwayCreateModal({ onClose, onCreated }: Props) {
+export function PathwayCreateModal({ open, onOpenChange, onCreated }: Props) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [milestones, setMilestones] = useState<MilestoneRow[]>([
@@ -79,12 +88,12 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="relative w-full max-w-2xl rounded-2xl border border-border bg-popover p-6 shadow-card max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-foreground mb-4">Create Certification Pathway</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Certification Pathway</DialogTitle>
+          <DialogDescription className="sr-only">Create a new certification pathway with milestones.</DialogDescription>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
@@ -178,17 +187,16 @@ export function PathwayCreateModal({ onClose, onCreated }: Props) {
             <div className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
           )}
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting ? 'Creating...' : 'Create Pathway'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

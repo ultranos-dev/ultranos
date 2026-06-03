@@ -418,16 +418,15 @@ export default function AlertDetailPage() {
         )}
 
         {/* Escalation Modal */}
-        {showEscalationModal && (
-          <EscalationModal
-            alertId={alertId}
-            onClose={() => setShowEscalationModal(false)}
-            onSuccess={() => {
-              setShowEscalationModal(false)
-              fetchDetail()
-            }}
-          />
-        )}
+        <EscalationModal
+          alertId={alertId}
+          open={showEscalationModal}
+          onOpenChange={setShowEscalationModal}
+          onSuccess={() => {
+            setShowEscalationModal(false)
+            fetchDetail()
+          }}
+        />
       </div>
     </>
   )

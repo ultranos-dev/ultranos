@@ -243,7 +243,8 @@ export default function PractitionerCertificationsPage() {
       {reviewMilestone && (
         <MilestoneReviewModal
           milestone={reviewMilestone}
-          onClose={() => setReviewMilestone(null)}
+          open={reviewMilestone !== null}
+          onOpenChange={(open) => { if (!open) setReviewMilestone(null) }}
           onReviewed={() => {
             setReviewMilestone(null)
             fetchProgress()

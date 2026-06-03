@@ -4,6 +4,14 @@ import { useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Lab {
   labId: string
@@ -12,11 +20,12 @@ interface Lab {
 
 interface ChwEnrollmentModalProps {
   labs: Lab[]
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
-export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentModalProps) {
+export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwEnrollmentModalProps) {
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [assignedLabId, setAssignedLabId] = useState(labs[0]?.labId ?? '')
@@ -45,23 +54,26 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">Enroll Community Health Worker</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Enroll Community Health Worker</DialogTitle>
+          <DialogDescription className="sr-only">Enroll a new community health worker and assign them to a collection point.</DialogDescription>
+        </DialogHeader>
 
         {error && (
-          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {createdId ? (
-          <div className="mt-4">
+          <div>
             <div className="rounded-xl bg-success/10 border border-success/20 p-4 text-sm text-success">
               <p className="font-semibold">CHW enrolled successfully</p>
               <p className="mt-1">
                 CHW ID: <code className="rounded bg-success/10 px-2 py-0.5 font-mono text-xs">{createdId}</code>
               </p>
             </div>
-            <div className="mt-6 flex justify-end gap-3">
+            <DialogFooter className="mt-4">
               <Button
                 onClick={() => {
                   setCreatedId(null)
@@ -72,15 +84,15 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               >
                 Enroll Another
               </Button>
-              <Button variant="outline" onClick={() => { onSuccess(); onClose() }}>
+              <Button variant="outline" onClick={() => { onSuccess(); onOpenChange(false) }}>
                 Done
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         ) : (
           <>
             {/* Full Name */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="chw-name" className="block text-sm font-medium text-foreground">
                 Full Name <span className="text-destructive">*</span>
               </label>
@@ -94,7 +106,7 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
             </div>
 
             {/* Phone Number */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="chw-phone" className="block text-sm font-medium text-foreground">
                 Phone Number <span className="text-destructive">*</span>
               </label>
@@ -112,7 +124,7 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
             </div>
 
             {/* Assigned Collection Point */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="chw-lab" className="block text-sm font-medium text-foreground">
                 Assigned Collection Point <span className="text-destructive">*</span>
               </label>
@@ -128,8 +140,8 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               </select>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="outline" onClick={onClose}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button
@@ -138,10 +150,10 @@ export function ChwEnrollmentModal({ labs, onClose, onSuccess }: ChwEnrollmentMo
               >
                 {submitting ? 'Enrolling...' : 'Enroll CHW'}
               </Button>
-            </div>
+            </DialogFooter>
           </>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -65,7 +65,7 @@ beforeEach(() => {
 describe('EscalationModal', () => {
   it('renders form with priority radio buttons', () => {
     render(
-      <EscalationModal alertId="a1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <EscalationModal alertId="a1" open={true} onOpenChange={vi.fn()} onSuccess={vi.fn()} />,
     )
 
     expect(screen.getByText('Escalate Alert')).toBeDefined()
@@ -83,7 +83,7 @@ describe('EscalationModal', () => {
 
   it('renders NORMAL radio checked by default', () => {
     render(
-      <EscalationModal alertId="a1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <EscalationModal alertId="a1" open={true} onOpenChange={vi.fn()} onSuccess={vi.fn()} />,
     )
 
     const normalRadio = screen.getByDisplayValue('NORMAL') as HTMLInputElement

@@ -416,7 +416,8 @@ describe('AcknowledgeAlertModal', () => {
         alertId="alert-1"
         labName="Central Lab"
         testCategory="Malaria RDT"
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onSuccess={vi.fn()}
       />,
     )
@@ -435,7 +436,8 @@ describe('AcknowledgeAlertModal', () => {
         alertId="alert-1"
         labName="Central Lab"
         testCategory="Malaria RDT"
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onSuccess={onSuccess}
       />,
     )
@@ -458,20 +460,21 @@ describe('AcknowledgeAlertModal', () => {
   })
 
   it('calls onClose when Cancel is clicked', () => {
-    const onClose = vi.fn()
+    const onOpenChange = vi.fn()
 
     render(
       <AcknowledgeAlertModal
         alertId="alert-1"
         labName="Central Lab"
         testCategory="Malaria RDT"
-        onClose={onClose}
+        open={true}
+        onOpenChange={onOpenChange}
         onSuccess={vi.fn()}
       />,
     )
 
     fireEvent.click(screen.getByText('Cancel'))
-    expect(onClose).toHaveBeenCalled()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('shows error message when acknowledgment fails', async () => {
@@ -482,7 +485,8 @@ describe('AcknowledgeAlertModal', () => {
         alertId="alert-1"
         labName="Central Lab"
         testCategory="Malaria RDT"
-        onClose={vi.fn()}
+        open={true}
+        onOpenChange={vi.fn()}
         onSuccess={vi.fn()}
       />,
     )

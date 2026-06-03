@@ -137,24 +137,22 @@ export default function NetworkPage() {
         )}
 
         {/* Modals */}
-        {showOutbreakModal && (
-          <OutbreakActivationModal
-            labs={labs}
-            onClose={() => setShowOutbreakModal(false)}
-            onSuccess={() => {
-              setShowOutbreakModal(false)
-              fetchData()
-            }}
-          />
-        )}
+        <OutbreakActivationModal
+          labs={labs}
+          open={showOutbreakModal}
+          onOpenChange={setShowOutbreakModal}
+          onSuccess={() => {
+            setShowOutbreakModal(false)
+            fetchData()
+          }}
+        />
 
-        {showChwModal && (
-          <ChwEnrollmentModal
-            labs={labs}
-            onClose={() => setShowChwModal(false)}
-            onSuccess={fetchData}
-          />
-        )}
+        <ChwEnrollmentModal
+          labs={labs}
+          open={showChwModal}
+          onOpenChange={setShowChwModal}
+          onSuccess={fetchData}
+        />
       </div>
     </>
   )

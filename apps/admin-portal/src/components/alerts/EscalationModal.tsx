@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface AdminUser {
   id: string
@@ -12,11 +20,12 @@ interface AdminUser {
 
 interface EscalationModalProps {
   alertId: string
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
-export function EscalationModal({ alertId, onClose, onSuccess }: EscalationModalProps) {
+export function EscalationModal({ alertId, open, onOpenChange, onSuccess }: EscalationModalProps) {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([])
   const [assigneeId, setAssigneeId] = useState<string>('')
   const [priority, setPriority] = useState<'URGENT' | 'NORMAL'>('NORMAL')
@@ -64,16 +73,19 @@ export function EscalationModal({ alertId, onClose, onSuccess }: EscalationModal
   const isValid = note.trim().length >= 10
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">Escalate Alert</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Escalate Alert</DialogTitle>
+          <DialogDescription className="sr-only">Escalate this alert to an admin for further investigation.</DialogDescription>
+        </DialogHeader>
 
         {error && (
-          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Assign to */}
-        <div className="mt-4">
+        <div>
           <label htmlFor="escalation-assignee" className="block text-sm font-medium text-foreground">
             Assign to
           </label>
@@ -91,7 +103,7 @@ export function EscalationModal({ alertId, onClose, onSuccess }: EscalationModal
         </div>
 
         {/* Priority */}
-        <div className="mt-4">
+        <div>
           <span className="block text-sm font-medium text-foreground">Priority</span>
           <div className="mt-2 flex gap-4">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -120,7 +132,7 @@ export function EscalationModal({ alertId, onClose, onSuccess }: EscalationModal
         </div>
 
         {/* Note */}
-        <div className="mt-4">
+        <div>
           <label htmlFor="escalation-note" className="block text-sm font-medium text-foreground">
             Note <span className="text-destructive">*</span>
           </label>
@@ -137,16 +149,15 @@ export function EscalationModal({ alertId, onClose, onSuccess }: EscalationModal
           )}
         </div>
 
-        {/* Buttons */}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!isValid || submitting}>
             {submitting ? 'Escalating...' : 'Escalate'}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

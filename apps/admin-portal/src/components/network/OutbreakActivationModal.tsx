@@ -6,6 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Lab {
   labId: string
@@ -15,11 +23,12 @@ interface Lab {
 
 interface OutbreakActivationModalProps {
   labs: Lab[]
-  onClose: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
-export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakActivationModalProps) {
+export function OutbreakActivationModal({ labs, open, onOpenChange, onSuccess }: OutbreakActivationModalProps) {
   const [pathogen, setPathogen] = useState('')
   const [selectedLabs, setSelectedLabs] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
@@ -57,18 +66,21 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-foreground">Activate Outbreak Mode</h2>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Activate Outbreak Mode</DialogTitle>
+          <DialogDescription className="sr-only">Activate outbreak mode for a pathogen across selected labs.</DialogDescription>
+        </DialogHeader>
 
         {error && (
-          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {step === 'form' && (
           <>
             {/* Pathogen */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="outbreak-pathogen" className="block text-sm font-medium text-foreground">
                 Target Pathogen <span className="text-destructive">*</span>
               </label>
@@ -83,7 +95,7 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
             </div>
 
             {/* Affected Labs */}
-            <div className="mt-4">
+            <div>
               <span className="block text-sm font-medium text-foreground">
                 Affected Labs <span className="text-destructive">*</span>
               </span>
@@ -120,7 +132,7 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
             </div>
 
             {/* Notes */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="outbreak-notes" className="block text-sm font-medium text-foreground">
                 Notes (optional)
               </label>
@@ -134,8 +146,8 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
               />
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="outline" onClick={onClose}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button
@@ -145,18 +157,18 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
               >
                 Review
               </Button>
-            </div>
+            </DialogFooter>
           </>
         )}
 
         {step === 'confirm' && (
           <>
-            <div className="mt-4 rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+            <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
               <p className="font-semibold">You are about to activate outbreak mode for {pathogen} at {selectedLabs.size} lab{selectedLabs.size > 1 ? 's' : ''}.</p>
               <p className="mt-1">All staff at these labs will be notified. Proceed?</p>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <DialogFooter>
               <Button variant="outline" onClick={() => setStep('form')}>
                 Back
               </Button>
@@ -167,10 +179,10 @@ export function OutbreakActivationModal({ labs, onClose, onSuccess }: OutbreakAc
               >
                 {submitting ? 'Activating...' : 'Activate Outbreak Mode'}
               </Button>
-            </div>
+            </DialogFooter>
           </>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -198,15 +198,14 @@ export default function CertificationsPage() {
         )}
       </div>
 
-      {showCreateModal && (
-        <PathwayCreateModal
-          onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
-            setShowCreateModal(false)
-            fetchPathways()
-          }}
-        />
-      )}
+      <PathwayCreateModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onCreated={() => {
+          setShowCreateModal(false)
+          fetchPathways()
+        }}
+      />
     </>
   )
 }
