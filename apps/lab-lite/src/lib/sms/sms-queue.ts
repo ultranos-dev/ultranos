@@ -63,6 +63,20 @@ export async function findByConfirmCode(confirmCode: string): Promise<SmsQueueEn
   return db.smsQueue.where('confirmCode').equals(confirmCode).first()
 }
 
+/**
+ * Check if a confirmation code is already in use by an active (non-expired) entry.
+ * Used to prevent collisions before enqueue.
+ */
+export async function isConfirmCodeActive(confirmCode: string): Promise<boolean> {
+  const db = getDb()
+  const entry = await db.smsQueue.where('confirmCode').equals(confirmCode).first()
+  if (!entry) return false
+  // Consider codes older than 24h as expired
+  const EXPIRY_MS = 24 * 60 * 60 * 1000
+  const age = Date.now() - new Date(entry.createdAt).getTime()
+  return age < EXPIRY_MS
+}
+
 export async function getPendingQueue(): Promise<SmsQueueEntry[]> {
   const db = getDb()
   return db.smsQueue
@@ -89,10 +103,11 @@ export async function getPendingQueue(): Promise<SmsQueueEntry[]> {
 export async function canSendSms(criticalResultRef: string): Promise<RateLimitCheckResult> {
   const db = getDb()
 
-  // Check 1: per-result limit
+  // Check 1: per-result limit (exclude failed — allow retries after transient failures)
   const resultCount = await db.smsQueue
     .where('criticalResultRef')
     .equals(criticalResultRef)
+    .filter((e) => e.status !== 'failed')
     .count()
 
   if (resultCount >= MAX_SMS_PER_RESULT) {

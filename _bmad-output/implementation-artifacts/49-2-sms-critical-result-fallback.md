@@ -1,6 +1,6 @@
 # Story 49.2: SMS Fallback for Critical Results
 
-Status: pending
+Status: done
 
 ## Story
 
@@ -168,6 +168,25 @@ In many Lab-Lite deployment environments (rural Afghanistan, conflict zones), in
     - Test: audit events emitted for each status transition.
     - Test: native adapter fallback when gateway is unreachable.
     - Test: SMS is NOT triggered for non-critical results.
+
+### Review Findings (2026-06-03)
+
+- [x] [Review][Patch] D1: SMS Gateway Configuration UI implemented — SmsGatewayConfig.tsx + LabSettingsView integration
+- [x] [Review][Patch] D2: Escalation timers persisted to Dexie smsEscalationSchedule table + checkDueEscalations() recovery
+- [x] [Review][Patch] D3: Em-dash replaced with ASCII hyphen for GSM 7-bit compatibility
+- [x] [Review][Patch] P1: Dexie v27 schema added — smsQueue, smsGatewayConfig, smsEscalationSchedule tables
+- [x] [Review][Patch] P2: reportSmsAuditEvent() added to audit-client.ts
+- [x] [Review][Patch] P3: TwilioSmsAdapter baseUrl param — local provider URL now passed through
+- [x] [Review][Patch] P4: Native SMS adapter phone number encoding fixed
+- [x] [Review][Patch] P5: Escalation checks ANY prior step for confirmation, not just step 1
+- [x] [Review][Patch] P6: Audit events emitted for SMS_QUEUED, SMS_SENT, SMS_FAILED, SMS_RATE_LIMITED
+- [x] [Review][Patch] P7: Retry mechanism added — retryFailedSms() + attempts incremented
+- [x] [Review][Patch] P8: Confirm code collision check via isConfirmCodeActive() before enqueue
+- [x] [Review][Patch] P9: Rate limiter excludes failed entries from count
+- [x] [Review][Patch] P10: Test confirm codes fixed — uses generateConfirmCode()
+- [x] [Review][Patch] P11: PHI guard uses allowlist instead of denylist
+- [x] [Review][Patch] P12: Escalation timing test added with vi.advanceTimersByTimeAsync
+- [x] [Review][Defer] W1: pollForConfirmations acknowledgment — deferred to Hub API endpoint story
 
 ## Dev Notes
 

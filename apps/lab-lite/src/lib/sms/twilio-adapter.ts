@@ -13,22 +13,25 @@ interface TwilioConfig {
   accountSid: string
   authToken: string
   senderNumber: string
+  baseUrl?: string  // Custom base URL for local/regional providers
 }
 
 export class TwilioSmsAdapter implements SmsGatewayAdapter {
   private readonly accountSid: string
   private readonly authToken: string
   private readonly senderNumber: string
+  private readonly baseUrl: string
 
   constructor(config: TwilioConfig) {
     this.accountSid = config.accountSid
     this.authToken = config.authToken
     this.senderNumber = config.senderNumber
+    this.baseUrl = config.baseUrl ?? `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}`
   }
 
   async send(params: { to: string; body: string; from?: string }): Promise<SmsDeliveryResult> {
     const from = params.from ?? this.senderNumber
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`
+    const url = `${this.baseUrl}/Messages.json`
 
     const body = new URLSearchParams({
       To: params.to,
@@ -83,7 +86,7 @@ export class TwilioSmsAdapter implements SmsGatewayAdapter {
   }
 
   async checkStatus(messageId: string): Promise<SmsDeliveryStatus> {
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages/${messageId}.json`
+    const url = `${this.baseUrl}/Messages/${messageId}.json`
     const credentials = btoa(`${this.accountSid}:${this.authToken}`)
 
     try {

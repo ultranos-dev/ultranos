@@ -91,3 +91,16 @@ export interface RateLimitCheckResult {
   allowed: boolean
   reason?: string
 }
+
+// ---------------------------------------------------------------------------
+// Durable escalation schedule entry (stored in Dexie for timer persistence)
+// ---------------------------------------------------------------------------
+
+export interface SmsEscalationScheduleEntry {
+  id?: number
+  criticalResultRef: string
+  escalationStep: 2 | 3
+  scheduledAt: string           // ISO 8601 — when the escalation should fire
+  fired: boolean                // true once the escalation has been processed
+  createdAt: string
+}

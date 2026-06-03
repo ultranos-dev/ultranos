@@ -141,7 +141,7 @@ describe('formatCriticalSms', () => {
       unit: 'g/dL',
       confirmCode: 'NM3P',
     })
-    expect(msg).toContain('\u2014')  // em-dash (—)
+    expect(msg).toContain(' - ')  // ASCII hyphen separator (GSM 7-bit safe)
   })
 })
 
@@ -352,7 +352,7 @@ describe('canSendSms rate limiter — hourly limit', () => {
       await enqueueSms({
         recipientPhone: '+93701234567',
         messageBody: 'test',
-        confirmCode: `H${i}J${i % 10}`,
+        confirmCode: generateConfirmCode(),
         criticalResultRef: `DiagnosticReport/hourly-${i}`,
         status: 'sent',
         escalationStep: 1,
@@ -546,5 +546,55 @@ describe('isValidConfirmCode', () => {
   it('rejects codes of wrong length', () => {
     expect(isValidConfirmCode('ABC')).toBe(false)
     expect(isValidConfirmCode('ABCDE')).toBe(false)
+  })
+})
+
+// ─── Test 11: Escalation timing — step 2 triggers after 15 min ─────────────
+
+describe('escalation timing', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('queues step 2 SMS after 15 minutes without confirmation', async () => {
+    const critical: CriticalResultForSms = {
+      criticalResultRef: 'DiagnosticReport/esc-timer-001',
+      labCode: 'KBL-04',
+      patientIdCode: 'T3U4',
+      testCode: 'K+',
+      value: '7.8',
+      unit: 'mmol/L',
+      isCritical: true,
+      recipients: [
+        { phone: '+93701234567', role: 'physician', step: 1 },
+        { phone: '+93709876543', role: 'medical_director', step: 2 },
+      ],
+    }
+
+    await dispatchCriticalSms(critical, { forceOffline: true })
+
+    // Step 1 should be queued immediately
+    const { getDb } = await import('@/lib/db')
+    const step1 = await getDb().smsQueue
+      .where('criticalResultRef')
+      .equals('DiagnosticReport/esc-timer-001')
+      .toArray()
+    expect(step1).toHaveLength(1)
+    expect(step1[0].escalationStep).toBe(1)
+
+    // Advance 15 minutes — step 2 should fire
+    await vi.advanceTimersByTimeAsync(15 * 60 * 1000 + 100)
+
+    const allEntries = await getDb().smsQueue
+      .where('criticalResultRef')
+      .equals('DiagnosticReport/esc-timer-001')
+      .toArray()
+    const step2 = allEntries.filter((e) => e.escalationStep === 2)
+    expect(step2.length).toBeGreaterThanOrEqual(1)
+    expect(step2[0].recipientRole).toBe('medical_director')
   })
 })

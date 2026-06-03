@@ -20,7 +20,7 @@ export class NativeSmsAdapter implements SmsGatewayAdapter {
 
     try {
       // sms: URI scheme — opens the native SMS app pre-filled
-      const smsUri = `sms:${encodeURIComponent(params.to)}?body=${encodeURIComponent(params.body)}`
+      const smsUri = `sms:${params.to}?body=${encodeURIComponent(params.body)}`
 
       if (typeof window !== 'undefined') {
         window.open(smsUri, '_blank')

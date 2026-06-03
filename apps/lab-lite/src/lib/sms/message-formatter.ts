@@ -27,9 +27,10 @@ export interface CriticalSmsParams {
   confirmCode: string       // 4-char alphanumeric code for reply confirmation
 }
 
-// Fields that must NEVER appear in SMS params — PHI guard
-type ForbiddenFields = 'patientName' | 'dateOfBirth' | 'dob' | 'diagnosis' | 'fullName' | 'firstName' | 'lastName'
-export type SafeCriticalSmsParams = Omit<CriticalSmsParams, ForbiddenFields>
+// Allowlist of valid SMS param keys — PHI guard
+const ALLOWED_SMS_KEYS = new Set<string>([
+  'labCode', 'patientIdCode', 'testCode', 'value', 'unit', 'confirmCode',
+])
 
 /**
  * Format a critical value SMS message.
@@ -39,19 +40,10 @@ export type SafeCriticalSmsParams = Omit<CriticalSmsParams, ForbiddenFields>
  * Only opaque IDs and coded values are accepted.
  */
 export function formatCriticalSms(params: CriticalSmsParams): string {
-  // PHI guard — verify forbidden fields are not present in params object
-  const forbidden: ForbiddenFields[] = [
-    'patientName',
-    'dateOfBirth',
-    'dob',
-    'diagnosis',
-    'fullName',
-    'firstName',
-    'lastName',
-  ]
-  for (const field of forbidden) {
-    if (field in (params as Record<string, unknown>)) {
-      throw new Error(`PHI violation: '${field}' is not allowed in SMS params`)
+  // PHI guard — reject any key not in the allowlist (catches patientName, DOB, diagnosis, etc.)
+  for (const key of Object.keys(params)) {
+    if (!ALLOWED_SMS_KEYS.has(key)) {
+      throw new Error(`PHI violation: '${key}' is not allowed in SMS params`)
     }
   }
 
@@ -59,7 +51,7 @@ export function formatCriticalSms(params: CriticalSmsParams): string {
   let testCode = params.testCode
 
   // Build the invariant suffix (value + unit + confirm code) — never truncated
-  const suffix = ` ${value}${unit} \u2014 Reply CONFIRM ${confirmCode}`
+  const suffix = ` ${value}${unit} - Reply CONFIRM ${confirmCode}`
   // Build the invariant prefix
   const prefix = `${labCode} CRITICAL: Pt ${patientIdCode} `
 
