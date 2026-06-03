@@ -9,6 +9,7 @@ import { PatientComparisonTable } from '@/components/patients/PatientComparisonT
 import { MergePreview } from '@/components/patients/MergePreview'
 import { Check } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Patient {
   id: string
@@ -258,12 +259,12 @@ export default function MergeWizardPage() {
             {survivor && (
               <div>
                 <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Find Duplicate</h3>
-                <input
+                <Input
                   type="text"
                   placeholder="Search by name to find duplicate..."
                   value={duplicateSearch}
                   onChange={(e) => setDuplicateSearch(e.target.value)}
-                  className="w-full max-w-md rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="w-full max-w-md"
                   aria-label="Search for duplicate patient"
                 />
 
@@ -277,7 +278,7 @@ export default function MergeWizardPage() {
                       <button
                         key={p.id}
                         onClick={() => setDuplicate(p)}
-                        className="w-full text-start rounded-2xl border border-border bg-white p-4 hover:bg-primary/5 transition-colors"
+                        className="w-full text-start rounded-2xl border border-border bg-card p-4 hover:bg-primary/5 transition-colors"
                       >
                         <p className="text-sm font-medium text-foreground">{formatName(p)}</p>
                         <p className="text-xs text-muted-foreground">
@@ -291,12 +292,14 @@ export default function MergeWizardPage() {
                 {duplicate && (
                   <div className="mt-3">
                     <PatientCard patient={duplicate} label="Duplicate (will be deactivated)" />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDuplicate(null)}
-                      className="mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="mt-2"
                     >
                       Change selection
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -355,12 +358,12 @@ export default function MergeWizardPage() {
               <p className="text-sm text-muted-foreground">
                 Type <span className="font-mono font-semibold text-foreground">MERGE</span> below to confirm this operation.
               </p>
-              <input
+              <Input
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder='Type "MERGE" to confirm'
-                className="mt-3 w-full max-w-xs rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="mt-3 w-full max-w-xs"
                 aria-label="Type MERGE to confirm"
               />
             </div>

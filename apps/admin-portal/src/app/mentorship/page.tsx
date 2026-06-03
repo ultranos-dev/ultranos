@@ -490,13 +490,14 @@ function PairingDetailPanel({
               )}
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground text-sm"
             aria-label="Close detail"
           >
             Close
-          </button>
+          </Button>
         </div>
       </td>
     </tr>
@@ -591,7 +592,7 @@ export default function MentorshipPage() {
                 onClick={() => handleFilterChange(tab)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === tab
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >

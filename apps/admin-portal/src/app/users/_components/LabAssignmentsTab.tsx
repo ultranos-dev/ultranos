@@ -169,7 +169,7 @@ export default function LabAssignmentsTab() {
                 onClick={() => { setRoleFilter(r); resetPagination() }}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                   roleFilter === r
-                    ? 'bg-black text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-card text-muted-foreground hover:bg-primary/10'
                 }`}
               >
