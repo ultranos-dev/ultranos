@@ -44,13 +44,13 @@ export interface P2PTransport {
 
 /** Get the best available transport for the current environment. */
 export function selectTransport(): 'local-network' | 'ble' | 'none' {
-  // BLE central role requires navigator.bluetooth
-  if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
-    return 'ble'
-  }
-  // BroadcastChannel is universally available in modern browsers
+  // Primary: local network via BroadcastChannel (same-device) or WebRTC
   if (typeof BroadcastChannel !== 'undefined') {
     return 'local-network'
+  }
+  // Secondary: BLE central role (requires navigator.bluetooth)
+  if (typeof navigator !== 'undefined' && 'bluetooth' in navigator) {
+    return 'ble'
   }
   return 'none'
 }

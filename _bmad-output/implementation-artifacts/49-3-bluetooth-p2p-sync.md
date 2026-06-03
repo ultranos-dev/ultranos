@@ -1,6 +1,6 @@
 # Story 49.3: Bluetooth Peer-to-Peer Sync with OPD-Lite
 
-Status: pending
+Status: review
 
 ## Story
 
@@ -188,6 +188,35 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
     - Test: audit events emitted for P2P_RESULT_SENT.
     - Test: trusted device list persists in Dexie and skips re-pairing.
     - Test: PHI guard — no patient name, DOB, or demographics in audit metadata.
+
+### Review Findings
+
+_Code review — 2026-06-03. Layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. 7 dismissed._
+
+#### Patch
+
+- [x] [Review][Patch] **`trusted_devices` table missing from Dexie schema** — Added v28 schema with `trusted_devices` table. [db.ts]
+- [x] [Review][Patch] **`reportP2PAuditEvent` function not implemented** — Added to `audit-client.ts` with P2P_SYNC action enum. [audit-client.ts]
+- [x] [Review][Patch] **shared-types barrel export missing P2P re-export** — Added `export * from './p2p/types.js'` to index.ts. [shared-types/src/index.ts]
+- [x] [Review][Patch] **i18n keys for `p2p` namespace missing from all locale files** — Added 22 keys to en, ar, prs, ps. [messages/*.json]
+- [x] [Review][Patch] **`onReceive` handlers accumulate across protocol phases** — Replaced array with single-handler replacement pattern. [local-network-transport.ts]
+- [x] [Review][Patch] **Session key stored on `window` globals** — Replaced with React refs (`pairingSessionKeyRef`, `pairingCallbackRef`). [P2PSendDialog.tsx]
+- [x] [Review][Patch] **No timeout on protocol message waits** — Added 30s timeouts to handshake, accept, and verify waits. [P2PSendDialog.tsx]
+- [x] [Review][Patch] **`selectTransport()` prefers BLE over local-network** — Swapped: local-network checked first. [transport.ts]
+- [x] [Review][Patch] **Race condition in BroadcastChannel connect** — Added `__p2p_ready` readiness handshake with 5s timeout. [local-network-transport.ts]
+- [x] [Review][Patch] **`unpackIvAndCiphertext` returns IV as view, not copy** — Changed to `packed.slice(0, 12)`. [transfer-protocol.ts]
+- [x] [Review][Patch] **`canonicalJson` includes keys with `undefined` values** — Added `.filter()` to exclude undefined-valued keys. [bundle-signer.ts]
+- [x] [Review][Patch] **`btoa(String.fromCharCode(...spread))` may crash on larger buffers** — Replaced with loop-based `uint8ToBase64` helper. [transfer-protocol.ts, handshake.ts, bundle-signer.ts]
+- [x] [Review][Patch] **`signDiagnosticReportBundle` no validation for non-32-byte keys** — Added length validation (32 or 64 bytes). [bundle-signer.ts]
+- [x] [Review][Patch] **Encrypt full `SignedBundle` instead of only bundle string** — Now encrypts `JSON.stringify(signedBundle)`. TRANSFER_COMPLETE sends `[encrypted]` placeholders. [P2PSendDialog.tsx]
+- [x] [Review][Patch] **`verifyBundleWithCachedKeys` should look up by claimed ID first** — Fast path by `signerPractitionerId`, exhaustive fallback. [bundle-signer.ts]
+
+#### Deferred
+
+- [x] [Review][Defer] **Trusted device reconnect skips identity verification** — Accepted risk for local-network clinic scenario. Future story can add device identity binding. [P2PSendDialog.tsx, handshake.ts]
+- [x] [Review][Defer] **BLE `connect()` re-prompts user via `requestDevice()`** — BLE is secondary transport, deferred per spec. [ble-transport.ts:116-128]
+- [x] [Review][Defer] **`stopDiscovery` method reassignment** — Stale closure after timeout. Low impact, same-device only. [local-network-transport.ts:120-127]
+- [x] [Review][Defer] **`P2PSendDialog` hardcodes `LocalNetworkTransport`** — Expected per spec (BLE deferred). [P2PSendDialog.tsx:113]
 
 ## Dev Notes
 

@@ -31,10 +31,10 @@ export function canonicalJson(obj: unknown): string {
   if (Array.isArray(obj)) {
     return '[' + (obj as unknown[]).map(canonicalJson).join(',') + ']'
   }
-  const sorted = Object.keys(obj as Record<string, unknown>).sort()
+  const record = obj as Record<string, unknown>
+  const sorted = Object.keys(record).sort().filter((k) => record[k] !== undefined)
   const pairs = sorted.map(
-    (k) =>
-      JSON.stringify(k) + ':' + canonicalJson((obj as Record<string, unknown>)[k]),
+    (k) => JSON.stringify(k) + ':' + canonicalJson(record[k]),
   )
   return '{' + pairs.join(',') + '}'
 }
@@ -58,6 +58,10 @@ export function signDiagnosticReportBundle(
   const bundle = canonicalJson(report)
   const messageBytes = new TextEncoder().encode(bundle)
 
+  if (privateKey.length !== 32 && privateKey.length !== 64) {
+    throw new Error(`Invalid Ed25519 key length: expected 32 (seed) or 64 (secret key), got ${privateKey.length}`)
+  }
+
   // nacl.sign.keyPair.fromSeed expects a 32-byte seed and produces a 64-byte secret key
   const keyPair =
     privateKey.length === 32
@@ -66,9 +70,15 @@ export function signDiagnosticReportBundle(
 
   const signatureBytes = nacl.sign.detached(messageBytes, keyPair.secretKey)
 
+  // Loop-based base64 encoding (safe for any buffer size)
+  let sigBinary = ''
+  for (let i = 0; i < signatureBytes.length; i++) {
+    sigBinary += String.fromCharCode(signatureBytes[i])
+  }
+
   return {
     bundle,
-    signature: btoa(String.fromCharCode(...signatureBytes)),
+    signature: btoa(sigBinary),
     signerPractitionerId: practitionerId,
     signedAt: new Date().toISOString(),
   }
@@ -126,8 +136,9 @@ export async function getCachedPublicKey(
 }
 
 /**
- * Verify a signed bundle against ALL cached practitioner keys.
- * Returns the practitioner ID if any key matches, or null if none verify.
+ * Verify a signed bundle against cached practitioner keys.
+ * Tries the claimed signerPractitionerId first (O(1)), then falls back
+ * to exhaustive search. Returns the ACTUAL signer's practitioner ID.
  *
  * Used by the OPD-Lite receiver side to authenticate incoming results.
  */
@@ -135,9 +146,21 @@ export async function verifyBundleWithCachedKeys(
   signedBundle: SignedBundle,
 ): Promise<{ valid: boolean; practitionerId: string | null }> {
   const db = getDb()
-  const keys = await db.practitioner_keys.toArray()
 
+  // Fast path: look up by the claimed signer ID
+  const claimedKey = await db.practitioner_keys.get(signedBundle.signerPractitionerId)
+  if (claimedKey) {
+    const publicKey = Uint8Array.from(atob(claimedKey.publicKey), (c) => c.charCodeAt(0))
+    const result = verifyDiagnosticReportBundle(signedBundle, publicKey)
+    if (result.valid) {
+      return { valid: true, practitionerId: claimedKey.practitionerId }
+    }
+  }
+
+  // Fallback: try all cached keys (handles key rotation / ID mismatch)
+  const keys = await db.practitioner_keys.toArray()
   for (const key of keys) {
+    if (key.practitionerId === signedBundle.signerPractitionerId) continue // already tried
     const publicKey = Uint8Array.from(atob(key.publicKey), (c) => c.charCodeAt(0))
     const result = verifyDiagnosticReportBundle(signedBundle, publicKey)
     if (result.valid) {

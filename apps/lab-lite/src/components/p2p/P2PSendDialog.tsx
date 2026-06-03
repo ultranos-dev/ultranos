@@ -33,10 +33,7 @@ import {
   isTrustedDevice,
   touchTrustedDevice,
 } from '@/lib/p2p/handshake'
-import {
-  signDiagnosticReportBundle,
-  getCachedPublicKey,
-} from '@/lib/p2p/bundle-signer'
+import { signDiagnosticReportBundle } from '@/lib/p2p/bundle-signer'
 import {
   encryptBundle,
   packIvAndCiphertext,
@@ -101,6 +98,8 @@ export function P2PSendDialog({
   const transportRef = useRef<LocalNetworkTransport | null>(null)
   const connRef = useRef<P2PConnection | null>(null)
   const startTimeRef = useRef<number>(0)
+  const pairingSessionKeyRef = useRef<CryptoKey | null>(null)
+  const pairingCallbackRef = useRef<((key: CryptoKey) => void) | null>(null)
 
   // ---------------------------------------------------------------------------
   // Discovery
@@ -164,10 +163,15 @@ export function P2PSendDialog({
         }
         await conn.send(encodeMessage(initMsg))
 
-        // Wait for HANDSHAKE_ACK
-        const ackData = await new Promise<ArrayBuffer>((resolve) => {
-          conn.onReceive((data) => resolve(data))
-        })
+        // Wait for HANDSHAKE_ACK (30s timeout)
+        const ackData = await Promise.race([
+          new Promise<ArrayBuffer>((resolve) => {
+            conn.onReceive((data) => resolve(data))
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Handshake timeout')), 30_000),
+          ),
+        ])
         const ackMsg = decodeMessage(ackData) as Extract<P2PMessage, { type: 'HANDSHAKE_ACK' }>
         if (ackMsg.type !== 'HANDSHAKE_ACK') throw new Error('Expected HANDSHAKE_ACK')
 
@@ -185,9 +189,9 @@ export function P2PSendDialog({
           setPairingCode(code)
           setPhase('pairing')
 
-          // Wait for user to confirm both codes match
-          // Confirmation is handled by the pairingConfirmed callback below
-          ;(window as Window & { __p2pPairingConfirmCallback?: (key: CryptoKey) => void }).__p2pPairingConfirmCallback = (key: CryptoKey) => {
+          // Store session key and callback in refs (not window globals)
+          pairingSessionKeyRef.current = sessionKey
+          pairingCallbackRef.current = (key: CryptoKey) => {
             void (async () => {
               await saveTrustedDevice({
                 deviceId: device.id,
@@ -204,8 +208,6 @@ export function P2PSendDialog({
               await doTransfer(conn, key, reportId, reportPayload, patientIdShort, practitionerId, privateKey, device)
             })()
           }
-          // Store sessionKey for use in pairingConfirmed
-          ;(window as Window & { __p2pSessionKey?: CryptoKey }).__p2pSessionKey = sessionKey
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Connection failed'
@@ -222,9 +224,13 @@ export function P2PSendDialog({
   )
 
   const handlePairingConfirmed = useCallback(() => {
-    const key = (window as Window & { __p2pSessionKey?: CryptoKey }).__p2pSessionKey
-    const cb = (window as Window & { __p2pPairingConfirmCallback?: (key: CryptoKey) => void }).__p2pPairingConfirmCallback
-    if (key && cb) cb(key)
+    const key = pairingSessionKeyRef.current
+    const cb = pairingCallbackRef.current
+    if (key && cb) {
+      cb(key)
+      pairingSessionKeyRef.current = null
+      pairingCallbackRef.current = null
+    }
   }, [])
 
   // ---------------------------------------------------------------------------
@@ -246,8 +252,8 @@ export function P2PSendDialog({
       // Sign the bundle
       const signedBundle = signDiagnosticReportBundle(payload, privKey, practId)
 
-      // Encrypt
-      const { ciphertext, iv } = await encryptBundle(signedBundle.bundle, sessionKey)
+      // Encrypt the full SignedBundle (not just the bundle string) to protect signerPractitionerId
+      const { ciphertext, iv } = await encryptBundle(JSON.stringify(signedBundle), sessionKey)
       const packed = packIvAndCiphertext(iv, ciphertext)
       const chunks = chunkArrayBuffer(packed)
       setProgress({ sent: 0, total: chunks.length })
@@ -261,15 +267,19 @@ export function P2PSendDialog({
       }
       await conn.send(encodeMessage(offerMsg))
 
-      // Wait for TRANSFER_ACCEPT
-      const acceptData = await new Promise<ArrayBuffer>((resolve, reject) => {
-        conn.onReceive((data) => {
-          const msg = decodeMessage(data)
-          if (msg.type === 'TRANSFER_ACCEPT') resolve(data)
-          else if (msg.type === 'TRANSFER_REJECT') reject(new Error((msg as Extract<P2PMessage, {type:'TRANSFER_REJECT'}>).reason))
-        })
-      })
-      void acceptData
+      // Wait for TRANSFER_ACCEPT (30s timeout)
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          conn.onReceive((data) => {
+            const msg = decodeMessage(data)
+            if (msg.type === 'TRANSFER_ACCEPT') resolve()
+            else if (msg.type === 'TRANSFER_REJECT') reject(new Error((msg as Extract<P2PMessage, {type:'TRANSFER_REJECT'}>).reason))
+          })
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Transfer accept timeout')), 30_000),
+        ),
+      ])
 
       // Send chunks
       await sendChunks({
@@ -278,22 +288,27 @@ export function P2PSendDialog({
         onProgress: (sent, total) => setProgress({ sent, total }),
       })
 
-      // Send TRANSFER_COMPLETE
+      // Send TRANSFER_COMPLETE — signature/signerPractitionerId are inside the encrypted payload
       const completeMsg: P2PMessage = {
         type: 'TRANSFER_COMPLETE',
-        signature: signedBundle.signature,
-        signerPractitionerId: signedBundle.signerPractitionerId,
+        signature: '[encrypted]',
+        signerPractitionerId: '[encrypted]',
       }
       await conn.send(encodeMessage(completeMsg))
 
-      // Wait for TRANSFER_VERIFY_OK / FAIL
-      await new Promise<void>((resolve, reject) => {
-        conn.onReceive((data) => {
-          const msg = decodeMessage(data)
-          if (msg.type === 'TRANSFER_VERIFY_OK') resolve()
-          else if (msg.type === 'TRANSFER_VERIFY_FAIL') reject(new Error((msg as Extract<P2PMessage, {type:'TRANSFER_VERIFY_FAIL'}>).reason))
-        })
-      })
+      // Wait for TRANSFER_VERIFY_OK / FAIL (30s timeout)
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          conn.onReceive((data) => {
+            const msg = decodeMessage(data)
+            if (msg.type === 'TRANSFER_VERIFY_OK') resolve()
+            else if (msg.type === 'TRANSFER_VERIFY_FAIL') reject(new Error((msg as Extract<P2PMessage, {type:'TRANSFER_VERIFY_FAIL'}>).reason))
+          })
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Verification timeout')), 30_000),
+        ),
+      ])
 
       const durationMs = Date.now() - startTimeRef.current
       reportP2PAuditEvent({

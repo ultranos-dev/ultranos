@@ -34,6 +34,15 @@ import type { P2PMessage } from '@ultranos/shared-types'
 /** 16KB per chunk — compatible with BLE MTU when the BLE layer reassembles. */
 export const CHUNK_SIZE = 16 * 1024
 
+/** Convert a Uint8Array to a base64 string without spread (safe for any buffer size). */
+function uint8ToBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
 // ---------------------------------------------------------------------------
 // AES-256-GCM encryption / decryption
 // ---------------------------------------------------------------------------
@@ -143,7 +152,7 @@ export function unpackIvAndCiphertext(
   packed: ArrayBuffer,
 ): { iv: Uint8Array; ciphertext: ArrayBuffer } | null {
   if (packed.byteLength < 12) return null
-  const iv = new Uint8Array(packed, 0, 12)
+  const iv = new Uint8Array(packed.slice(0, 12))
   const ciphertext = packed.slice(12)
   return { iv, ciphertext }
 }
@@ -185,7 +194,7 @@ export async function sendChunks({
 }: SendChunksOptions): Promise<void> {
   const totalChunks = chunks.length
   for (let i = 0; i < totalChunks; i++) {
-    const chunkData = btoa(String.fromCharCode(...chunks[i]))
+    const chunkData = uint8ToBase64(chunks[i])
     const msg: P2PMessage = {
       type: 'TRANSFER_CHUNK',
       chunkIndex: i,

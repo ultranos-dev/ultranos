@@ -38,7 +38,12 @@ export async function generateEcdhKeyPair(): Promise<CryptoKeyPair> {
  */
 export async function exportEcdhPublicKey(keyPair: CryptoKeyPair): Promise<string> {
   const raw = await crypto.subtle.exportKey('raw', keyPair.publicKey)
-  return btoa(String.fromCharCode(...new Uint8Array(raw)))
+  const bytes = new Uint8Array(raw)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
 }
 
 /**

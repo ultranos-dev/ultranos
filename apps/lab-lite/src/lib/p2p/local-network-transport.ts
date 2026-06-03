@@ -27,7 +27,7 @@ class BroadcastChannelConnection implements P2PConnection {
   readonly deviceName: string
 
   private channel: BroadcastChannel
-  private receiveHandlers: Array<(data: ArrayBuffer) => void> = []
+  private receiveHandler: ((data: ArrayBuffer) => void) | null = null
   private disconnectHandlers: Array<() => void> = []
 
   constructor(channelName: string, deviceId: string, deviceName: string) {
@@ -36,7 +36,7 @@ class BroadcastChannelConnection implements P2PConnection {
     this.channel = new BroadcastChannel(channelName)
     this.channel.addEventListener('message', (evt: MessageEvent) => {
       if (evt.data instanceof ArrayBuffer) {
-        this.receiveHandlers.forEach((h) => h(evt.data as ArrayBuffer))
+        this.receiveHandler?.(evt.data as ArrayBuffer)
       } else if (evt.data?.type === '__p2p_close') {
         this.disconnectHandlers.forEach((h) => h())
       }
@@ -48,7 +48,7 @@ class BroadcastChannelConnection implements P2PConnection {
   }
 
   onReceive(handler: (data: ArrayBuffer) => void): void {
-    this.receiveHandlers.push(handler)
+    this.receiveHandler = handler
   }
 
   close(): void {
@@ -157,7 +157,26 @@ export class LocalNetworkTransport implements P2PTransport {
     const sessionId = crypto.randomUUID()
     const channelName = `${BROADCAST_SERVICE_PREFIX}${sessionId}`
 
-    // Notify the remote end to open the same channel
+    // Open the data channel first, THEN signal — ensures we receive the READY beacon
+    const conn = new BroadcastChannelConnection(
+      channelName,
+      device.id,
+      device.name,
+    )
+
+    // Wait for the remote end to open its side and signal readiness
+    const readyPromise = new Promise<void>((resolve) => {
+      conn.onReceive((data) => {
+        try {
+          const msg = JSON.parse(new TextDecoder().decode(data))
+          if (msg?.type === '__p2p_ready') resolve()
+        } catch {
+          // Not a readiness message — ignore
+        }
+      })
+    })
+
+    // Now signal the remote end to open the same channel
     const signalChannel = new BroadcastChannel(BROADCAST_CHANNEL_NAME)
     signalChannel.postMessage({
       type: 'CONNECT_REQUEST',
@@ -168,11 +187,17 @@ export class LocalNetworkTransport implements P2PTransport {
     })
     signalChannel.close()
 
-    const conn = new BroadcastChannelConnection(
-      channelName,
-      device.id,
-      device.name,
-    )
+    // Wait for remote readiness (timeout after 5s)
+    await Promise.race([
+      readyPromise,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout: remote device did not respond')), 5000),
+      ),
+    ])
+
+    // Send our own readiness beacon so remote knows we are also connected
+    await conn.send(new TextEncoder().encode(JSON.stringify({ type: '__p2p_ready' })).buffer)
+
     return conn
   }
 
