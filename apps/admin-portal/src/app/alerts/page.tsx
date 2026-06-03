@@ -233,12 +233,9 @@ function ClinicalSafetySection() {
           <div className="mt-4 rounded-2xl border border-border bg-popover p-4 shadow-card">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-foreground">Report Detail</h4>
-              <button
-                onClick={() => setSelectedReport(null)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSelectedReport(null)}>
                 Close
-              </button>
+              </Button>
             </div>
             <pre className="mt-3 max-h-96 overflow-auto rounded bg-card p-3 text-xs text-foreground">
               {JSON.stringify(selectedReport, null, 2)}

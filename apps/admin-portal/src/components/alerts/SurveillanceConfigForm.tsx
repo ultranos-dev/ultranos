@@ -187,12 +187,9 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       <section>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Monitored Labs</h3>
-          <button
-            onClick={toggleAll}
-            className="text-sm text-primary hover:underline"
-          >
+          <Button variant="link" onClick={toggleAll}>
             {selectedLabIds.size === allLabs.length ? 'Deselect All' : 'Select All'}
-          </button>
+          </Button>
         </div>
         <div className="mt-3 max-h-60 overflow-y-auto rounded-2xl border border-border divide-y divide-border">
           {allLabs.length === 0 ? (
