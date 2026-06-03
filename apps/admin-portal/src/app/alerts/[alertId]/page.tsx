@@ -10,6 +10,14 @@ import { EscalationSection } from '@/components/alerts/EscalationSection'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type ReviewAction = 'DISMISS' | 'ESCALATE' | 'SUSPEND_PROVIDER'
 
@@ -95,13 +103,15 @@ function formatDateTime(iso: string): string {
 /** AC #5: Confirmation dialog with required reason field */
 function ReviewDialog({
   action,
+  open,
+  onOpenChange,
   onConfirm,
-  onCancel,
   submitting,
 }: {
   action: ReviewAction
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: (reason: string) => void
-  onCancel: () => void
   submitting: boolean
 }) {
   const [reason, setReason] = useState('')
@@ -130,18 +140,20 @@ function ReviewDialog({
   const c = config[action]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold">{c.title}</h2>
-        <p className="mt-3 text-sm text-foreground">{c.description}</p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{c.title}</DialogTitle>
+          <DialogDescription>{c.description}</DialogDescription>
+        </DialogHeader>
 
         {action === 'SUSPEND_PROVIDER' && (
-          <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
             Warning: This will immediately terminate the provider&apos;s active sessions and block clinical access.
           </div>
         )}
 
-        <div className="mt-4">
+        <div>
           <label htmlFor="reason" className="block text-sm font-medium text-foreground">
             Reason <span className="text-destructive">*</span>
           </label>
@@ -156,8 +168,8 @@ function ReviewDialog({
           />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="outline" onClick={onCancel}>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
@@ -167,9 +179,9 @@ function ReviewDialog({
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -411,8 +423,9 @@ export default function AlertDetailPage() {
         {pendingAction && (
           <ReviewDialog
             action={pendingAction}
+            open={!!pendingAction}
+            onOpenChange={(open) => { if (!open) setPendingAction(null) }}
             onConfirm={handleAction}
-            onCancel={() => setPendingAction(null)}
             submitting={submitting}
           />
         )}

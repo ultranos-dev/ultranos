@@ -6,6 +6,14 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 // ================================================================
 // Types
@@ -230,14 +238,15 @@ function CreatePairingModal({
     }
   }
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-2xl bg-popover p-6 shadow-lg border border-border">
-        <h2 className="text-lg font-semibold text-foreground">Create Mentorship Pairing</h2>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Create Mentorship Pairing</DialogTitle>
+          <DialogDescription className="sr-only">Create a new mentorship pairing between a mentor and mentee.</DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Mentor selector */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">
@@ -304,7 +313,7 @@ function CreatePairingModal({
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -314,10 +323,10 @@ function CreatePairingModal({
             >
               {submitting ? 'Creating...' : 'Create Pairing'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -368,17 +377,17 @@ function DissolveModal({
     }
   }
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-lg border border-border">
-        <h2 className="text-lg font-semibold text-foreground">Dissolve Pairing</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          This will end the mentorship pairing. This action cannot be undone.
-        </p>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Dissolve Pairing</DialogTitle>
+          <DialogDescription>
+            This will end the mentorship pairing. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">Reason</label>
             <select
@@ -408,23 +417,23 @@ function DissolveModal({
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDissolve}
-              disabled={submitting}
-            >
-              {submitting ? 'Dissolving...' : 'Dissolve Pairing'}
-            </Button>
-          </div>
         </div>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDissolve}
+            disabled={submitting}
+          >
+            {submitting ? 'Dissolving...' : 'Dissolve Pairing'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

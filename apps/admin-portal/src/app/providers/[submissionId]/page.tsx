@@ -7,6 +7,14 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 type KycAction = 'APPROVE' | 'REJECT' | 'REQUEST_MORE_INFO'
 
@@ -91,14 +99,16 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 function ConfirmationDialog({
   action,
   providerName,
+  open,
+  onOpenChange,
   onConfirm,
-  onCancel,
   submitting,
 }: {
   action: KycAction
   providerName: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: (reason: string) => void
-  onCancel: () => void
   submitting: boolean
 }) {
   const [reason, setReason] = useState('')
@@ -139,12 +149,14 @@ function ConfirmationDialog({
   const canSubmit = !c.reasonRequired || reason.trim().length > 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold">{c.title}</h2>
-        <p className="mt-3 text-sm text-foreground">{c.description}</p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{c.title}</DialogTitle>
+          <DialogDescription>{c.description}</DialogDescription>
+        </DialogHeader>
 
-        <div className="mt-4">
+        <div>
           <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">
             {c.reasonLabel}
           </label>
@@ -159,10 +171,10 @@ function ConfirmationDialog({
           />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <DialogFooter>
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={() => onOpenChange(false)}
           >
             Cancel
           </Button>
@@ -173,9 +185,9 @@ function ConfirmationDialog({
           >
             {submitting ? 'Processing...' : c.buttonLabel}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -418,8 +430,9 @@ export default function KycSubmissionDetailPage() {
             key={pendingAction}
             action={pendingAction}
             providerName={detail.providerName}
+            open={!!pendingAction}
+            onOpenChange={(open) => { if (!open) setPendingAction(null) }}
             onConfirm={handleAction}
-            onCancel={() => setPendingAction(null)}
             submitting={submitting}
           />
         )}

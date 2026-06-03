@@ -6,6 +6,14 @@ import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface Supplier {
   id: string
@@ -187,70 +195,73 @@ export default function SuppliersPage() {
         )}
 
         {/* Add/Edit Supplier Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowModal(false)}>
-            <div className="w-full max-w-lg rounded-3xl bg-white p-6 mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-foreground">
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
                 {editingSupplier ? 'Edit Supplier' : 'Add Supplier'}
-              </h2>
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                {editingSupplier ? 'Edit supplier details.' : 'Add a new supplier.'}
+              </DialogDescription>
+            </DialogHeader>
 
-              <div className="mt-4 space-y-4">
-                <div>
-                  <label htmlFor="sup-name" className="block text-sm font-medium text-foreground">
-                    Name <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="sup-name"
-                    type="text"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">Email</label>
-                  <Input
-                    id="sup-email"
-                    type="email"
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">Phone</label>
-                  <Input
-                    id="sup-phone"
-                    type="tel"
-                    value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">Lead Time (days)</label>
-                  <Input
-                    id="sup-lead"
-                    type="number"
-                    min="0"
-                    value={formLeadTime}
-                    onChange={(e) => setFormLeadTime(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="sup-name" className="block text-sm font-medium text-foreground">
+                  Name <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="sup-name"
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  className="mt-1"
+                />
               </div>
-
-              <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowModal(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit} disabled={!formName.trim() || submitting}>
-                  {submitting ? 'Saving...' : editingSupplier ? 'Save Changes' : 'Add Supplier'}
-                </Button>
+              <div>
+                <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">Email</label>
+                <Input
+                  id="sup-email"
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">Phone</label>
+                <Input
+                  id="sup-phone"
+                  type="tel"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">Lead Time (days)</label>
+                <Input
+                  id="sup-lead"
+                  type="number"
+                  min="0"
+                  value={formLeadTime}
+                  onChange={(e) => setFormLeadTime(e.target.value)}
+                  className="mt-1"
+                />
               </div>
             </div>
-          </div>
-        )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit} disabled={!formName.trim() || submitting}>
+                {submitting ? 'Saving...' : editingSupplier ? 'Save Changes' : 'Add Supplier'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   )
