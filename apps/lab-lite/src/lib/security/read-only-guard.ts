@@ -5,10 +5,11 @@
  * This module provides:
  *   - SecurityModeError — thrown on blocked write attempts
  *   - isReadOnlyMode() — checks current store state
+ *   - setReadOnlyBypass(active) — temporarily bypasses for privileged ops
  *   - installReadOnlyGuard(db) — installs Dexie DBCore middleware
  *
  * The middleware intercepts all mutate() calls on PHI tables and throws
- * SecurityModeError if readOnlyMode is active.
+ * SecurityModeError if readOnlyMode is active (unless bypass is enabled).
  */
 
 import type Dexie from 'dexie'
@@ -22,6 +23,7 @@ export class SecurityModeError extends Error {
 }
 
 // Inlined here to avoid circular: read-only-guard → emergency-encrypt → db → read-only-guard
+// Must match PHI_TABLES in emergency-encrypt.ts
 const PHI_TABLE_SET = new Set([
   'patients',
   'uploadQueue',
@@ -30,13 +32,28 @@ const PHI_TABLE_SET = new Set([
   'practitioner_keys',
   'consentRecords',
   'culturalPreferences',
+  'lab_results',
+  'samples',
+  'smsQueue',
+  'patientVerifications',
+  'custody_events',
+  'orders',
+  'payments',
+  'employee_health_records',
+  'queueEntries',
+  'amendments',
+  'incident_reports',
+  'labLogbook',
 ])
 
-/** Prevent double-installation on the same Dexie instance. */
-let _guardInstalled = false
+/** Track which Dexie instances have the guard installed (prevents double-install). */
+const _installedInstances = new WeakSet<Dexie>()
 
 /** Module-level flag — updated by the security-alert-store on activate/deactivate. */
 let _readOnlyActive = false
+
+/** Temporary bypass for privileged operations (encryption, wipe, restoration). */
+let _bypassActive = false
 
 /**
  * Called by the security-alert-store when Security Alert is activated or deactivated.
@@ -55,12 +72,21 @@ export function isReadOnlyMode(): boolean {
 }
 
 /**
+ * Temporarily bypass the read-only guard for privileged operations
+ * (emergency encryption, device wipe, restoration).
+ * Call setReadOnlyBypass(false) when the privileged operation is done.
+ */
+export function setReadOnlyBypass(active: boolean): void {
+  _bypassActive = active
+}
+
+/**
  * Install a Dexie DBCore middleware that blocks all mutations on PHI tables
- * when Security Mode is active. Safe to call multiple times — installs once.
+ * when Security Mode is active. Safe to call multiple times per instance.
  */
 export function installReadOnlyGuard(db: Dexie): void {
-  if (_guardInstalled) return
-  _guardInstalled = true
+  if (_installedInstances.has(db)) return
+  _installedInstances.add(db)
   db.use({
     stack: 'dbcore',
     name: 'SecurityReadOnlyGuard',
@@ -74,7 +100,7 @@ export function installReadOnlyGuard(db: Dexie): void {
           return {
             ...table,
             mutate(req: Parameters<typeof table.mutate>[0]) {
-              if (isReadOnlyMode()) {
+              if (isReadOnlyMode() && !_bypassActive) {
                 throw new SecurityModeError(
                   `Write to '${name}' blocked: Security Mode is active`,
                 )

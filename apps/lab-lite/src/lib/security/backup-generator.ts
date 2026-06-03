@@ -121,7 +121,8 @@ export function downloadBackup(backup: SecurityBackup, labCode = 'lab'): void {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  // Delay revocation to ensure browser has time to read the blob (critical on slow tablets)
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
 }
 
 /**

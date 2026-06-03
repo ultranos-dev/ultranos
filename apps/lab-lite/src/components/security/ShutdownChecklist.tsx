@@ -62,7 +62,7 @@ export function ShutdownChecklist({ onComplete }: ShutdownChecklistProps) {
           className={`h-full transition-all duration-300 rounded-full ${
             allComplete ? 'bg-green-500' : 'bg-amber-500'
           }`}
-          style={{ width: `${(completedCount / totalCount) * 100}%` }}
+          style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
         />
       </div>
 

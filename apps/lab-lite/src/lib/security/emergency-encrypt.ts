@@ -16,6 +16,7 @@
  */
 
 import { getDb } from '@/lib/db'
+import { setReadOnlyBypass } from '@/lib/security/read-only-guard'
 
 const AES_GCM = 'AES-GCM'
 const KEY_LENGTH = 256
@@ -30,6 +31,18 @@ export const PHI_TABLES = [
   'practitioner_keys',
   'consentRecords',
   'culturalPreferences',
+  'lab_results',
+  'samples',
+  'smsQueue',
+  'patientVerifications',
+  'custody_events',
+  'orders',
+  'payments',
+  'employee_health_records',
+  'queueEntries',
+  'amendments',
+  'incident_reports',
+  'labLogbook',
 ] as const
 
 /** A record that has been emergency-encrypted. Stored back into the same table. */
@@ -128,29 +141,53 @@ export async function performEmergencyEncryption(
   const db = getDb()
   let totalEncrypted = 0
 
+  // Compute total record count upfront for accurate progress reporting
+  let grandTotal = 0
   for (const tableName of PHI_TABLES) {
-    const table = db.table(tableName)
-    const records = await table.toArray() as Record<string, unknown>[]
-
-    if (records.length === 0) continue
-
-    const encryptedRecords: EncryptedRecord[] = []
-    for (const record of records) {
-      const id = record['id'] ?? record['patientId'] ?? record['practitionerId'] ?? record['orderId']
-      const encryptedData = await encryptValue(key, record)
-      encryptedRecords.push({ id, encryptedData })
+    try {
+      grandTotal += await db.table(tableName).count()
+    } catch {
+      // Table may not exist in this schema version — skip
     }
+  }
 
-    // Replace all records in the table with encrypted versions
-    await db.transaction('rw', table, async () => {
-      await table.clear()
-      for (const encRecord of encryptedRecords) {
-        await table.put(encRecord)
+  // Bypass read-only guard for this privileged operation
+  setReadOnlyBypass(true)
+  try {
+    for (const tableName of PHI_TABLES) {
+      let table
+      try {
+        table = db.table(tableName)
+      } catch {
+        // Table may not exist in this schema version — skip
+        continue
       }
-    })
+      const records = await table.toArray() as Record<string, unknown>[]
 
-    totalEncrypted += encryptedRecords.length
-    onProgress?.(tableName, totalEncrypted, totalEncrypted)
+      if (records.length === 0) continue
+
+      // Extract primary key using Dexie schema (handles all key configurations)
+      const primKeyPath = table.schema.primKey.keyPath as string | null
+      const encryptedRecords: EncryptedRecord[] = []
+      for (const record of records) {
+        const id = primKeyPath ? record[primKeyPath] : record['id']
+        const encryptedData = await encryptValue(key, record)
+        encryptedRecords.push({ id, encryptedData })
+      }
+
+      // Replace all records in the table with encrypted versions
+      await db.transaction('rw', table, async () => {
+        await table.clear()
+        for (const encRecord of encryptedRecords) {
+          await table.put(encRecord)
+        }
+      })
+
+      totalEncrypted += encryptedRecords.length
+      onProgress?.(tableName, totalEncrypted, grandTotal)
+    }
+  } finally {
+    setReadOnlyBypass(false)
   }
 
   return { keyBase64, encryptedCount: totalEncrypted }

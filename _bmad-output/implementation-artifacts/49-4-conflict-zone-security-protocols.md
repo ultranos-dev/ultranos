@@ -1,6 +1,6 @@
 # Story 49.4: Conflict Zone Security Protocols
 
-Status: review
+Status: done
 
 ## Story
 
@@ -184,6 +184,27 @@ The wipe confirmation phrase "ERASE ALL DATA" must be localized. In Arabic: a sp
 - `apps/lab-lite/messages/prs.json` — added `security` namespace
 - `apps/lab-lite/messages/ps.json` — added `security` namespace + `settings.aiBehavior`
 
+### Review Findings
+
+- [x] [Review][Decision] D1: `securityAlertState` table and `installReadOnlyGuard()` missing from `db.ts` — FIXED: added v29 schema, types, guard install in getDb()
+- [x] [Review][Decision] D2: PHI tables missing from encryption/wipe lists — FIXED: expanded PHI_TABLES to 20 tables covering all patient-linked data
+- [x] [Review][Decision] D3: `restoreFromHub()` is a stub — FIXED: implemented full download flow (patients, lab_results, orders, practitioner_keys, samples)
+- [x] [Review][Patch] P1: Read-only guard blocks writes during privileged ops — FIXED: added setReadOnlyBypass() mechanism
+- [x] [Review][Patch] P2: `WIPE_CONFIRMATION_PHRASE` hardcoded English — FIXED: UI now uses localized t('wipe.confirmPhrase')
+- [x] [Review][Patch] P3: Progress callback always 100% — FIXED: computes grandTotal upfront
+- [x] [Review][Patch] P4: `persistToDb` spreads functions — FIXED: added extractDataFields() helper
+- [x] [Review][Patch] P5: RestorationWizard "from Hub" renders blank — FIXED: added Hub import UI branch
+- [x] [Review][Patch] P6: `SECURITY_RESTORE_INITIATED` never emitted — FIXED: emitted at start of both restore paths
+- [x] [Review][Patch] P7: `downloadBackup` revokes URL too early — FIXED: setTimeout 5s delay
+- [x] [Review][Patch] P8: Primary key extraction may yield undefined — FIXED: uses Dexie table.schema.primKey
+- [x] [Review][Patch] P9: Division by zero in checklist progress — FIXED: guard totalCount > 0
+- [x] [Review][Patch] P10: Wipe fails on missing tables — FIXED: per-table try/catch
+- [x] [Review][Patch] P11: Guard uses module-level flag — FIXED: uses WeakSet per Dexie instance
+- [x] [Review][Defer] W1: Encryption key displayed in DOM as plaintext — MVP-accepted (no QR library), hardening story needed — deferred, pre-existing
+- [x] [Review][Defer] W2: `getOrCreateDeviceId` in localStorage survives device wipe — non-PHI device correlation risk [backup-generator.ts:152] — deferred, pre-existing
+- [x] [Review][Defer] W3: Unrelated `lab-network.ts` (Story 54.1) in commit — process issue — deferred, pre-existing
+
 ## Change Log
 
+- 2026-06-03: Code review complete — 3 decision-needed, 11 patch, 3 deferred, 3 dismissed. All 14 patches applied.
 - 2026-05-30: Story 49.4 implemented — conflict zone security protocols for Lab-Lite. All 32 tests pass.

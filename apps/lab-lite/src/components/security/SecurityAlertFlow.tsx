@@ -28,7 +28,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSecurityAlertStore } from '@/stores/security-alert-store'
 import { performEmergencyEncryption } from '@/lib/security/emergency-encrypt'
 import { generateSecurityBackup, downloadBackup } from '@/lib/security/backup-generator'
-import { performDeviceWipe, WIPE_CONFIRMATION_PHRASE } from '@/lib/security/device-wipe'
+import { performDeviceWipe } from '@/lib/security/device-wipe'
 import { ShutdownChecklist } from '@/components/security/ShutdownChecklist'
 import { LabRole } from '@ultranos/shared-types'
 import { reportSecurityAuditEvent } from '@/lib/audit-client'
@@ -54,6 +54,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
   const [showQr, setShowQr] = useState(false)
 
   const isManager = session?.labRole === LabRole.LAB_MANAGER
+  const localizedWipePhrase = t('wipe.confirmPhrase')
 
   // ─── Step: Activate ───────────────────────────────────────────────────────
 
@@ -135,7 +136,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
     setIsWorking(true)
     setError(null)
     try {
-      await performDeviceWipe({ confirmationPhrase: wipePhrase })
+      await performDeviceWipe({ confirmationPhrase: wipePhrase, expectedPhrase: localizedWipePhrase })
       setStep('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.wipeFailed'))
@@ -347,13 +348,13 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
             {/* Typed phrase */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
-                {t('wipe.typeToConfirm', { phrase: WIPE_CONFIRMATION_PHRASE })}
+                {t('wipe.typeToConfirm', { phrase: localizedWipePhrase })}
               </label>
               <input
                 type="text"
                 value={wipePhrase}
                 onChange={(e) => setWipePhrase(e.target.value)}
-                placeholder={WIPE_CONFIRMATION_PHRASE}
+                placeholder={localizedWipePhrase}
                 className="w-full border-2 border-red-300 rounded px-3 py-3 text-base
                   font-mono focus:outline-none focus:ring-2 focus:ring-red-500"
                 aria-label={t('wipe.confirmPhraseAriaLabel')}
@@ -362,7 +363,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
             <button
               type="button"
-              disabled={isWorking || wipePhrase !== WIPE_CONFIRMATION_PHRASE || !wipeConfirm1}
+              disabled={isWorking || wipePhrase !== localizedWipePhrase || !wipeConfirm1}
               onClick={handleWipe}
               className="w-full py-4 bg-red-700 text-white rounded-lg font-bold text-lg
                 disabled:opacity-40 disabled:cursor-not-allowed

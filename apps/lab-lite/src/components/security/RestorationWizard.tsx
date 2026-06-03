@@ -13,7 +13,7 @@
 
 import { useState, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { restoreFromBackup, restoreFromHub } from '@/lib/security/restoration'
+import { restoreFromBackup, restoreFromHub, type HubRestorationOptions } from '@/lib/security/restoration'
 import type { SecurityBackup } from '@/lib/security/backup-generator'
 
 type Step = 'source' | 'import' | 'done' | 'error'
@@ -28,6 +28,8 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
   const [step, setStep] = useState<Step>('source')
   const [source, setSource] = useState<Source | null>(null)
   const [keyInput, setKeyInput] = useState('')
+  const [hubUrl, setHubUrl] = useState('')
+  const [hubToken, setHubToken] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isRestoring, setIsRestoring] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -172,6 +174,72 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               focus-visible:outline-blue-600"
           >
             {isRestoring ? t('restoration.restoring') : t('restoration.restoreButton')}
+          </button>
+        </div>
+      )}
+
+      {step === 'import' && source === 'hub' && (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-neutral-600">{t('restoration.hubInstructions')}</p>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              {t('restoration.hubUrl')}
+            </label>
+            <input
+              type="text"
+              value={hubUrl}
+              onChange={(e) => setHubUrl(e.target.value)}
+              placeholder="https://hub.ultranos.com"
+              className="w-full border border-neutral-300 rounded px-3 py-2 text-sm
+                font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              {t('restoration.authToken')}
+            </label>
+            <input
+              type="password"
+              value={hubToken}
+              onChange={(e) => setHubToken(e.target.value)}
+              placeholder={t('restoration.tokenPlaceholder')}
+              className="w-full border border-neutral-300 rounded px-3 py-2 text-sm
+                font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600 font-medium">{error}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={async () => {
+              if (!hubUrl.trim() || !hubToken.trim()) {
+                setError(t('restoration.hubFieldsRequired'))
+                return
+              }
+              setIsRestoring(true)
+              setError(null)
+              try {
+                await restoreFromHub({ authToken: hubToken.trim(), hubUrl: hubUrl.trim() })
+                setStep('done')
+              } catch (err) {
+                setError(err instanceof Error ? err.message : t('restoration.genericError'))
+                setStep('error')
+              } finally {
+                setIsRestoring(false)
+              }
+            }}
+            disabled={isRestoring}
+            className="w-full py-4 bg-blue-600 text-white rounded-lg font-bold text-base
+              disabled:opacity-40 hover:bg-blue-700
+              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+              focus-visible:outline-blue-600"
+          >
+            {isRestoring ? t('restoration.restoring') : t('restoration.restoreFromHubButton')}
           </button>
         </div>
       )}
