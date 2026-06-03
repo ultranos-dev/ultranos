@@ -3,6 +3,7 @@ import { Manrope, Public_Sans } from 'next/font/google'
 import './globals.css'
 import { AuthGuard } from '@/components/AuthGuard'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { cn } from "@/lib/utils";
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning className={`${manrope.variable} ${publicSans.variable}`}>
+    <html lang="en" dir="ltr" suppressHydrationWarning className={cn(manrope.variable, publicSans.variable)}>
       <head>
         <script
           dangerouslySetInnerHTML={{

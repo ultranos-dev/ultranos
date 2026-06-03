@@ -54,6 +54,13 @@ const config: Config = {
         },
         warning: { DEFAULT: 'oklch(var(--warning) / <alpha-value>)' },
         success: { DEFAULT: 'oklch(var(--success) / <alpha-value>)' },
+        chart: {
+          '1': 'oklch(var(--chart-1) / <alpha-value>)',
+          '2': 'oklch(var(--chart-2) / <alpha-value>)',
+          '3': 'oklch(var(--chart-3) / <alpha-value>)',
+          '4': 'oklch(var(--chart-4) / <alpha-value>)',
+          '5': 'oklch(var(--chart-5) / <alpha-value>)',
+        },
       },
       borderRadius: {
         lg:    'var(--radius)',
