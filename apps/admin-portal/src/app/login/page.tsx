@@ -231,7 +231,7 @@ export default function AdminLoginPage() {
         {step === 'credentials' && (
           <form onSubmit={handleCredentialSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="mb-1">
+              <Label htmlFor="email" className="mb-1 text-muted-foreground">
                 Email
               </Label>
               <Input
@@ -245,7 +245,7 @@ export default function AdminLoginPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password" className="mb-1">
+              <Label htmlFor="password" className="mb-1 text-muted-foreground">
                 Password
               </Label>
               <Input
