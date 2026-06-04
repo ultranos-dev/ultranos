@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { useStockAlerts } from '@/hooks/useStockAlerts'
 import { StockAlertPanel } from './StockAlertPanel'
 import { StockTable } from './StockTable'
@@ -26,7 +26,7 @@ export function StockOverviewPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900">Stock Overview</h1>
         <Link href="/inventory/receive">
-          <Button variant="primary">Receive Stock</Button>
+          <Button variant="default">Receive Stock</Button>
         </Link>
       </div>
 

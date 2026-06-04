@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { db, type SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { SyncQueueEntry } from './SyncQueueEntry'
 import { syncDispenseToHub, retrySyncPayload } from '@/lib/dispense-sync'
@@ -196,7 +196,7 @@ export function SyncQueueDashboard() {
             </h2>
             {entries.failed.length > 1 && (
               <Button
-                variant="danger"
+                variant="destructive"
                 type="button"
                 aria-label="Retry All Failed"
                 disabled={isRetrying}

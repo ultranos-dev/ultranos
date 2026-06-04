@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { SupplierForm } from './SupplierForm'
 import { getAllSuppliers, deactivateSupplier } from '@/lib/procurement/supplier-service'
 import type { Supplier } from '@/lib/procurement/types'

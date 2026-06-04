@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useLocale } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { X } from '@ultranos/ui-kit/icons'
 import { getDistrictsByProvince } from '@ultranos/shared-types'
 import type { AfghanProvince, AfghanDistrict } from '@ultranos/shared-types'
@@ -156,7 +156,8 @@ export function DistrictAutocomplete({
             </span>
             {!disabled && (
               <Button
-                variant="icon"
+                variant="ghost"
+                size="icon"
                 type="button"
                 className="ms-2 p-1"
                 onClick={() => {

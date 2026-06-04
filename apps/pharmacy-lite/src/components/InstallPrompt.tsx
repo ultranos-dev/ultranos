@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -61,7 +61,7 @@ export function InstallPrompt() {
       </p>
       <div className="mt-2 flex gap-2">
         <Button
-          variant="primary"
+          variant="default"
           onClick={handleInstall}
         >
           Install

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { OfflineGraceForm } from './OfflineGraceForm'
 
 interface ManualRxEntryProps {
@@ -136,7 +136,7 @@ export function ManualRxEntry({
       <div className="flex gap-3">
         {isOnline ? (
           <Button
-            variant="primary"
+            variant="default"
             className="flex-1"
             type="button"
             onClick={handleLookup}
@@ -147,8 +147,8 @@ export function ManualRxEntry({
           </Button>
         ) : (
           <Button
-            variant="warning"
-            className="flex-1"
+            variant="outline"
+            className="flex-1 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={() => setShowGraceForm(true)}
             data-testid="grace-dispense-button"

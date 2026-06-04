@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import type { StockTransfer } from '@/lib/transfers/types'
 
 interface TransferCardProps {
@@ -86,7 +86,7 @@ export function TransferCard({
       <div className="flex flex-wrap gap-2">
         {transfer.status === 'requested' && isOutgoing && onApprove && (
           <Button
-            variant="primary"
+            variant="default"
             disabled={actionInProgress}
             onClick={() => onApprove(transfer.id)}
             className="text-xs"
@@ -96,7 +96,7 @@ export function TransferCard({
         )}
         {transfer.status === 'approved' && isOutgoing && onShip && (
           <Button
-            variant="primary"
+            variant="default"
             disabled={actionInProgress}
             onClick={() => onShip(transfer.id)}
             className="text-xs"
@@ -106,7 +106,7 @@ export function TransferCard({
         )}
         {transfer.status === 'shipped' && !isOutgoing && onReceive && (
           <Button
-            variant="primary"
+            variant="default"
             disabled={actionInProgress}
             onClick={() => onReceive(transfer.id)}
             className="text-xs"
@@ -117,7 +117,7 @@ export function TransferCard({
         {(transfer.status === 'requested' || transfer.status === 'approved') &&
           onCancel && (
             <Button
-              variant="danger"
+              variant="destructive"
               disabled={actionInProgress}
               onClick={() => onCancel(transfer.id)}
               className="text-xs"

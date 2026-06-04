@@ -1,7 +1,7 @@
 'use client'
 
 import type { QueueItem, FulfillmentPhaseBadge, SyncStatus } from '@/lib/queue-data'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface QueueItemCardProps {
   item: QueueItem
@@ -125,7 +125,7 @@ export function QueueItemCard({
 
         {onRetry && item.syncStatus === 'failed' && (
           <Button
-            variant="danger"
+            variant="destructive"
             data-testid={`retry-btn-${item.id}`}
             onClick={(e) => {
               e.stopPropagation()

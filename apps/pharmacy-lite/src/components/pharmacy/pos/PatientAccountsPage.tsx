@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import type { LocalPatient } from '@/lib/db'
@@ -179,7 +179,7 @@ export function PatientAccountsPage() {
                 className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 placeholder="0.00"
               />
-              <Button type="submit" variant="primary" disabled={submitting}>
+              <Button type="submit" variant="default" disabled={submitting}>
                 {submitting ? 'Recording...' : 'Record Payment'}
               </Button>
             </div>

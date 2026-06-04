@@ -10,7 +10,7 @@ import { GeographySection } from '@/components/registration/GeographySection'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/Card'
 import { X } from '@ultranos/ui-kit/icons'
 
@@ -763,7 +763,7 @@ export function PatientEditModal({
             {t('cancel')}
           </Button>
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={handleSave}
             disabled={submitting}

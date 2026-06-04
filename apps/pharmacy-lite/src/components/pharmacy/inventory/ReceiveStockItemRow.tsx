@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import type { CatalogItem } from '@/lib/inventory/types'
 
 export interface ReceiveLineItem {

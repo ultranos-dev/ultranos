@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -213,10 +213,10 @@ export default function LoginPage() {
               />
             </div>
             <Button
-              variant="primary"
+              variant="default"
               type="submit"
               disabled={loading}
-              fullWidth
+              className="w-full"
             >
               {loading ? 'Signing in\u2026' : 'Sign In'}
             </Button>
@@ -248,16 +248,16 @@ export default function LoginPage() {
               />
             </div>
             <Button
-              variant="primary"
+              variant="default"
               type="submit"
               disabled={loading || totpCode.length !== 6}
-              fullWidth
+              className="w-full"
             >
               {loading ? 'Verifying\u2026' : 'Verify'}
             </Button>
             <Button
               variant="ghost"
-              fullWidth
+              className="w-full"
               type="button"
               onClick={handleBackToSignIn}
             >

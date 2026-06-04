@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { X } from '@ultranos/ui-kit/icons'
 
 interface ConsentTextModalProps {
@@ -94,7 +94,8 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
             {t('consentDocumentTitle')}
           </h2>
           <Button
-            variant="icon"
+            variant="ghost"
+            size="icon"
             type="button"
             className="min-h-[44px] min-w-[44px]"
             onClick={onClose}
@@ -109,7 +110,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
           {TABS.map((tab) => (
             <Button
               key={tab.locale}
-              variant={activeTab === tab.locale ? 'primary' : 'ghost'}
+              variant={activeTab === tab.locale ? 'default' : 'ghost'}
               role="tab"
               aria-selected={activeTab === tab.locale}
               onClick={() => setActiveTab(tab.locale as 'en' | 'ar' | 'prs')}
@@ -144,7 +145,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         {/* Footer */}
         <div className="flex justify-end rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={onClose}
           >

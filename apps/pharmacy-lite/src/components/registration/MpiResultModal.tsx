@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 
@@ -254,9 +254,8 @@ export function MpiResultModal({
 
                       {/* Go to patient button */}
                       <Button
-                        variant="primary"
-                        fullWidth
-                        className="mt-3"
+                        variant="default"
+                        className="w-full mt-3"
                         type="button"
                         onClick={() => onGoToPatient(candidate.id)}
                       >
@@ -282,7 +281,8 @@ export function MpiResultModal({
 
           {decision === 'WARN' && proceedToken && (
             <Button
-              variant="warning"
+              variant="outline"
+              className="border-warning text-warning hover:bg-warning/10"
               type="button"
               onClick={() => onProceed(proceedToken)}
             >

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { registerPatientLocally, type PatientRegistrationData } from '@/lib/patient-register'
 import type { LocalPatient } from '@/lib/db'
 
@@ -173,7 +173,7 @@ export function PatientRegistrationForm({
       </div>
 
       <div className="flex gap-3 pt-2">
-        <Button type="submit" variant="primary" disabled={!form.nameGiven.trim() || saving} fullWidth>
+        <Button type="submit" variant="default" className="w-full" disabled={!form.nameGiven.trim() || saving}>
           {saving ? 'Registering...' : 'Register Patient'}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>

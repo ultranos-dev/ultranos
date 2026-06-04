@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'

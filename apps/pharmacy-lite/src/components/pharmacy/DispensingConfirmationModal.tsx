@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { AllergyBanner } from './AllergyBanner'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 
@@ -75,9 +75,9 @@ export function DispensingConfirmationModal({
 
         <div className="flex gap-3">
           <Button
-            variant="primary"
+            variant="default"
             type="button"
-            fullWidth
+            className="w-full"
             disabled={!acknowledged}
             onClick={onConfirm}
             data-testid="modal-confirm-dispensing-btn"

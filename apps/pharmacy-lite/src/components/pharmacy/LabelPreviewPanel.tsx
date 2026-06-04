@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import { MedicationLabel } from './MedicationLabel'
 
@@ -83,7 +83,7 @@ export function LabelPreviewPanel({
           </select>
 
           <Button
-            variant="primary"
+            variant="default"
             data-testid="print-all-labels-btn"
             type="button"
             onClick={() => window.print()}

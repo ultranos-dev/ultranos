@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePosStore } from '@/stores/pos-store'
 import {
@@ -159,7 +159,7 @@ export function CashDrawerPage() {
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
+            <Button type="submit" variant="default" className="w-full" disabled={submitting}>
               {submitting ? 'Closing...' : 'Close Drawer'}
             </Button>
           </form>
@@ -183,7 +183,7 @@ export function CashDrawerPage() {
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
+          <Button type="submit" variant="default" className="w-full" disabled={submitting}>
             {submitting ? 'Opening...' : 'Open Drawer'}
           </Button>
         </form>

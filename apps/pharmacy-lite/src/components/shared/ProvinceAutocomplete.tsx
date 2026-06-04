@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocale } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { X } from '@ultranos/ui-kit/icons'
 import { AFGHAN_PROVINCES } from '@ultranos/shared-types'
 import type { AfghanProvince } from '@ultranos/shared-types'
@@ -170,7 +170,8 @@ export function ProvinceAutocomplete({
               {getDisplayName(value)}
             </span>
             <Button
-              variant="icon"
+              variant="ghost"
+              size="icon"
               type="button"
               className="ms-2 p-1"
               onClick={() => {

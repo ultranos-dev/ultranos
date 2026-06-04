@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ConsentTextModal } from './ConsentTextModal'
 import { Card } from '@/components/Card'
 import { FileText } from '@ultranos/ui-kit/icons'

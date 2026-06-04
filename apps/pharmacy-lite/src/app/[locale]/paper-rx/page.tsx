@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Check, X } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
@@ -331,8 +331,8 @@ export default function PaperRxPage() {
               />
               <canvas ref={canvasRef} className="hidden" />
               <Button
-                variant="primary"
-                fullWidth
+                variant="default"
+                className="w-full"
                 disabled={!videoReady}
                 onClick={captureFromWebcam}
               >
@@ -343,7 +343,7 @@ export default function PaperRxPage() {
             <div className="space-y-3">
               <Button
                 variant="outline"
-                fullWidth
+                className="w-full"
                 onClick={startWebcam}
               >
                 <span className="block text-lg font-medium text-neutral-700">
@@ -362,7 +362,7 @@ export default function PaperRxPage() {
 
               <Button
                 variant="outline"
-                fullWidth
+                className="w-full"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <span className="block text-lg font-medium text-neutral-700">
@@ -459,8 +459,8 @@ export default function PaperRxPage() {
             )}
 
             <Button
-              variant="primary"
-              fullWidth
+              variant="default"
+              className="w-full"
               type="submit"
             >
               Confirm & Submit

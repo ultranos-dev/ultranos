@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { recordPayment } from '@/lib/pos/payment-service'
 import type { Invoice, PaymentMethod } from '@/lib/pos/types'
@@ -177,7 +177,7 @@ export function PaymentForm({
       )}
 
       {/* Submit */}
-      <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
+      <Button type="submit" variant="default" className="w-full" disabled={submitting}>
         {submitting ? 'Recording...' : `Record ${method} payment`}
       </Button>
     </form>

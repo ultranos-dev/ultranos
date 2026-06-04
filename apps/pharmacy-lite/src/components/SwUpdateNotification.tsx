@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export function SwUpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false)
@@ -30,7 +30,7 @@ export function SwUpdateNotification() {
       <p className="text-sm font-medium text-neutral-900">A new version is available</p>
       <div className="mt-2 flex gap-2">
         <Button
-          variant="primary"
+          variant="default"
           onClick={() => {
             navigator.serviceWorker.addEventListener('controllerchange', () => {
               window.location.reload()

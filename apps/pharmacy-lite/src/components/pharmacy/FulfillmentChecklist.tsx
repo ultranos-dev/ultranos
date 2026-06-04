@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { AllergyBanner } from './AllergyBanner'
 import { usePatientStore } from '@/stores/patient-store'
@@ -153,8 +153,8 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
 
       {/* Confirm Dispensing button — "Primary Green Pill" per UX spec */}
       <Button
-        variant="primary"
-        fullWidth
+        variant="default"
+        className="w-full"
         data-testid="confirm-dispensing-btn"
         type="button"
         disabled={!hasSelection}
@@ -168,7 +168,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
           <p className="text-sm font-bold text-green-800">Dispensing Complete</p>
           {activeInvoice && (
             <Link href="/pos">
-              <Button variant="primary" fullWidth type="button" data-testid="collect-payment-cta">
+              <Button variant="default" className="w-full" type="button" data-testid="collect-payment-cta">
                 Collect Payment — {activeInvoice.invoiceNumber}
               </Button>
             </Link>

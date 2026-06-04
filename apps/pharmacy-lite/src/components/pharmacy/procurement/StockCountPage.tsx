@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { StockCountForm } from './StockCountForm'
 import {
   startStockCount,
@@ -73,26 +73,23 @@ export function StockCountPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Button
-          variant="primary"
-          fullWidth
+          variant="default"
+          className="w-full py-6 text-base"
           onClick={() => handleStart('full')}
-          className="py-6 text-base"
         >
           Full Count
         </Button>
         <Button
           variant="secondary"
-          fullWidth
+          className="w-full py-6 text-base"
           onClick={() => handleStart('spot')}
-          className="py-6 text-base"
         >
           Spot Check
         </Button>
         <Button
-          variant="danger"
-          fullWidth
+          variant="destructive"
+          className="w-full py-6 text-base"
           onClick={() => handleStart('controlled_only')}
-          className="py-6 text-base"
         >
           Controlled Only
         </Button>

@@ -1,7 +1,7 @@
 'use client'
 
 import type { SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 const STALE_THRESHOLD_MS = 2 * 60 * 1000 // 2 minutes
 
@@ -84,7 +84,7 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
       <div className="flex items-center gap-2 mt-1">
         {entry.status === 'failed' && onRetry && (
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             aria-label="Retry Now"
             disabled={retrying}
@@ -95,7 +95,8 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
         )}
         {stale && onReset && (
           <Button
-            variant="warning"
+            variant="outline"
+            className="border-warning text-warning hover:bg-warning/10"
             type="button"
             aria-label="Stale — Reset"
             onClick={() => onReset(entry)}

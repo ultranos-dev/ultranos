@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { getHistoryPage, type HistoryFilters, type HistoryPage } from '@/lib/history-data'
 import { HistoryFilterBar } from './HistoryFilterBar'
 import { HistoryItemRow } from './HistoryItemRow'

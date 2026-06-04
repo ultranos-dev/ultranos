@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { usePosStore } from '@/stores/pos-store'
 import { db } from '@/lib/db'
 import { getOpenCashDrawer } from '@/lib/pos/cash-drawer-service'
@@ -90,7 +90,7 @@ export function PosPage() {
               <Button variant="secondary" className="flex-1">
                 Print Receipt
               </Button>
-              <Button variant="primary" className="flex-1" onClick={() => clearActiveInvoice()}>
+              <Button variant="default" className="flex-1" onClick={() => clearActiveInvoice()}>
                 Done
               </Button>
             </div>

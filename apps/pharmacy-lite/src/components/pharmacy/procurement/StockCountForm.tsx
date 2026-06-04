@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { CatalogSearchInput } from '@/components/pharmacy/inventory/CatalogSearchInput'
 import { addCountItem, completeStockCount } from '@/lib/procurement/stock-count-service'
 import { getFefoBatches } from '@/lib/inventory/fefo'

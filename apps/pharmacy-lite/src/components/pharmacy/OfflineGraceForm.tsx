@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 const GRACE_DISPENSE_KEY = 'grace_dispense_count'
 const MAX_GRACE_DISPENSES = 5
@@ -132,8 +132,8 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           Cancel
         </Button>
         <Button
-          variant="warning"
-          className="flex-1"
+          variant="outline"
+          className="flex-1 border-warning text-warning hover:bg-warning/10"
           type="submit"
           disabled={!canSubmit}
           data-testid="grace-submit-button"

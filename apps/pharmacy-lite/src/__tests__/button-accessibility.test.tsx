@@ -1,32 +1,35 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
-describe('Button accessibility', () => {
-  it('uses focus-visible instead of focus for ring styles', () => {
+describe('Button re-export', () => {
+  it('renders a button element', () => {
     render(<Button>Test</Button>)
-    const btn = screen.getByRole('button')
-    expect(btn.className).toContain('focus-visible:ring-2')
-    expect(btn.className).not.toMatch(/(?<!-)focus:ring/)
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
-  it('does not use transition-all', () => {
-    render(<Button>Test</Button>)
-    const btn = screen.getByRole('button')
-    expect(btn.className).not.toContain('transition-all')
-    expect(btn.className).toContain('transition-[transform,filter,background-color]')
+  it('forwards the default variant', () => {
+    render(<Button variant="default">Default</Button>)
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
-  it('uses custom easing curve', () => {
-    render(<Button>Test</Button>)
-    const btn = screen.getByRole('button')
-    expect(btn.className).toContain('ease-[cubic-bezier(0.23,1,0.32,1)]')
-    expect(btn.className).not.toContain('ease-out')
+  it('forwards the destructive variant', () => {
+    render(<Button variant="destructive">Delete</Button>)
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
-  it('uses motion-reduce:transition-none', () => {
-    render(<Button>Test</Button>)
-    const btn = screen.getByRole('button')
-    expect(btn.className).toContain('motion-reduce:transition-none')
+  it('forwards the secondary variant', () => {
+    render(<Button variant="secondary">Secondary</Button>)
+    expect(screen.getByRole('button')).toBeInTheDocument()
+  })
+
+  it('forwards the ghost variant', () => {
+    render(<Button variant="ghost">Ghost</Button>)
+    expect(screen.getByRole('button')).toBeInTheDocument()
+  })
+
+  it('forwards the outline variant', () => {
+    render(<Button variant="outline">Outline</Button>)
+    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 })

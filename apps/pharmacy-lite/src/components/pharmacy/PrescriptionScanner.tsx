@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import {
   checkPrescriptionStatus,
   completePrescription,
@@ -260,8 +260,7 @@ export function PrescriptionScanner({
           />
           <Button
             variant="secondary"
-            fullWidth
-            className="mt-3"
+            className="w-full mt-3"
             type="button"
             onClick={() => {
               if (html5QrRef.current) {
@@ -280,7 +279,7 @@ export function PrescriptionScanner({
       {scanState.phase === 'idle' && (
         <>
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={startCameraScanner}
             data-testid="start-scanner-btn"
@@ -307,7 +306,7 @@ export function PrescriptionScanner({
               }}
             />
             <Button
-              variant="primary"
+              variant="default"
               type="button"
               onClick={handleManualCheck}
               disabled={!manualInput.trim()}
@@ -371,8 +370,8 @@ export function PrescriptionScanner({
             may have already been fulfilled elsewhere.
           </p>
           <Button
-            variant="warning"
-            className="mt-4"
+            variant="outline"
+            className="mt-4 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={handleReset}
           >
@@ -390,8 +389,8 @@ export function PrescriptionScanner({
         >
           <p className="text-sm font-bold text-red-800">{scanState.message}</p>
           <Button
-            variant="warning"
-            className="mt-4"
+            variant="outline"
+            className="mt-4 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={handleReset}
           >
@@ -427,7 +426,7 @@ export function PrescriptionScanner({
             This prescription has been marked as fulfilled on the global system.
           </p>
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={handleReset}
           >
@@ -471,7 +470,7 @@ function StatusBanner({
         </p>
         <div className="mt-4 flex gap-3">
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={() => onDispense(result.prescriptionId)}
             disabled={!isAuthenticated}

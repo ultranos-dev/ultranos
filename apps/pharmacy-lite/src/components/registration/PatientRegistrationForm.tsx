@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { z } from 'zod'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { AfghanProvince } from '@ultranos/shared-types'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { NameInputSection } from './NameInputSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'
@@ -751,7 +751,7 @@ export function PatientRegistrationForm({
         )}
 
         {/* Submit button */}
-        <Button variant="primary" type="submit" disabled={submitting} fullWidth>
+        <Button variant="default" type="submit" disabled={submitting} className="w-full">
           {submitting ? t('submitting') : t('submitRegistration')}
         </Button>
       </form>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import {
   verifyPrescriptionQr,
   fetchAndCachePractitionerKey,
@@ -149,7 +149,7 @@ export function PharmacyScannerView({
           />
           <Button
             variant="secondary"
-            fullWidth
+            className="w-full"
             type="button"
             onClick={() => {
               if (html5QrRef.current) {
@@ -168,7 +168,7 @@ export function PharmacyScannerView({
       {phase.step === 'idle' && (
         <>
           <Button
-            variant="primary"
+            variant="default"
             type="button"
             onClick={startCameraScanner}
             data-testid="start-scanner-btn"
@@ -195,7 +195,7 @@ export function PharmacyScannerView({
               }}
             />
             <Button
-              variant="primary"
+              variant="default"
               type="button"
               onClick={handlePasteVerify}
               disabled={!pasteInput.trim()}
@@ -241,7 +241,7 @@ export function PharmacyScannerView({
         >
           <p className="text-sm font-bold text-red-800">{phase.message}</p>
           <Button
-            variant="danger"
+            variant="destructive"
             className="mt-3"
             type="button"
             onClick={handleReset}
@@ -305,7 +305,7 @@ function ResultDisplay({
           </div>
           <div className="mt-4 flex gap-3">
             <Button
-              variant="primary"
+              variant="default"
               type="button"
               onClick={() => onProceedToReview(result.prescriptions, result.practitionerName)}
               data-testid="proceed-to-review-btn"
@@ -342,7 +342,7 @@ function ResultDisplay({
             Report this incident to your supervisor immediately.
           </p>
           <Button
-            variant="danger"
+            variant="destructive"
             className="mt-4"
             type="button"
             onClick={onReset}
@@ -368,8 +368,8 @@ function ResultDisplay({
             It cannot be fulfilled.
           </p>
           <Button
-            variant="warning"
-            className="mt-4"
+            variant="outline"
+            className="mt-4 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={onReset}
           >
@@ -394,8 +394,8 @@ function ResultDisplay({
           </p>
           {result.fallbackAvailable && isAuthenticated && (
             <Button
-              variant="warning"
-              className="mt-3"
+              variant="outline"
+              className="mt-3 border-warning text-warning hover:bg-warning/10"
               type="button"
               onClick={() => onFetchKey(rawQr)}
               data-testid="fetch-key-btn"
@@ -432,7 +432,7 @@ function ResultDisplay({
             Contact the prescribing clinician or your supervisor for a new prescription.
           </p>
           <Button
-            variant="danger"
+            variant="destructive"
             className="mt-4"
             type="button"
             onClick={onReset}
@@ -461,7 +461,8 @@ function ResultDisplay({
           </p>
           <div className="mt-4 flex gap-3">
             <Button
-              variant="warning"
+              variant="outline"
+              className="border-warning text-warning hover:bg-warning/10"
               type="button"
               onClick={() => onRetryVerify(rawQr)}
               data-testid="retry-revalidation-btn"
@@ -492,7 +493,7 @@ function ResultDisplay({
           </p>
           <p className="mt-2 text-sm text-red-800">{result.reason}</p>
           <Button
-            variant="danger"
+            variant="destructive"
             className="mt-4"
             type="button"
             onClick={onReset}
@@ -511,7 +512,7 @@ function ResultDisplay({
         >
           <p className="text-sm font-bold text-red-800">{result.message}</p>
           <Button
-            variant="danger"
+            variant="destructive"
             className="mt-3"
             type="button"
             onClick={onReset}

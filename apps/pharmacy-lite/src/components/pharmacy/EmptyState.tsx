@@ -2,7 +2,7 @@
 
 import { List, Clock, Scan, RefreshCw, ShieldAlert, Bookmark } from '@ultranos/ui-kit/icons'
 import type { LucideIcon } from '@ultranos/ui-kit/icons'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface EmptyStateProps {
   icon: 'queue' | 'history' | 'scan' | 'sync' | 'controlled' | 'dispensing'
@@ -35,10 +35,10 @@ export function EmptyState({ icon, title, description, actionLabel, actionHref, 
       {actionLabel && (actionHref || onAction) && (
         actionHref ? (
           <a href={actionHref}>
-            <Button variant="primary" type="button">{actionLabel}</Button>
+            <Button variant="default" type="button">{actionLabel}</Button>
           </a>
         ) : (
-          <Button variant="primary" type="button" onClick={onAction}>{actionLabel}</Button>
+          <Button variant="default" type="button" onClick={onAction}>{actionLabel}</Button>
         )
       )}
     </div>

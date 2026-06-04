@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
 import { processGoodsReceipt } from '@/lib/inventory/goods-receipt-service'
@@ -95,7 +95,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
             <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-neutral-600">Notes (optional)</label>
             <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Delivery ref #1234" className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
           </div>
-          <Button variant="primary" fullWidth type="button" disabled={!isValid || saving} onClick={handleSubmit} data-testid="confirm-receipt-btn">
+          <Button variant="default" className="w-full" type="button" disabled={!isValid || saving} onClick={handleSubmit} data-testid="confirm-receipt-btn">
             {saving ? 'Processing...' : `Confirm Receipt (${items.length} item${items.length !== 1 ? 's' : ''})`}
           </Button>
         </>
