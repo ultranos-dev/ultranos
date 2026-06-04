@@ -15,7 +15,8 @@
       "types": "./dist/icons.d.ts"
     },
     "./tokens.css": "./src/tokens.css",
-    "./connected-language-selector": "./src/components/ConnectedLanguageSelector.tsx"
+    "./connected-language-selector": "./src/components/ConnectedLanguageSelector.tsx",
+    "./tailwind.preset": "./src/tailwind.preset.ts"
   },
   "scripts": {
     "build": "tsc",
