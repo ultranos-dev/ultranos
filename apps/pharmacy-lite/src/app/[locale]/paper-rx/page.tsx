@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Check, X } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -282,11 +283,7 @@ export default function PaperRxPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-900">
-          Scan Paper Prescription
-        </h2>
-      </div>
+      <TopHeader title="Paper Prescription" />
 
       {/* AC #9: Non-dismissible Manual Verification Required banner */}
       <div
