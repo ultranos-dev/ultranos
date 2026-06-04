@@ -4,6 +4,30 @@
 
 @import '@ultranos/ui-kit/tokens.css';
 
+@import "tw-animate-css";
+
+/* ── Font overrides: Manrope replaces Urbanist as body font ── */
+:root {
+  --font-family-sans:    var(--font-manrope), system-ui, sans-serif;
+  --font-family-heading: var(--font-public-sans), system-ui, sans-serif;
+}
+[dir="rtl"] {
+  --font-family-sans: var(--font-family-sans-ar);
+}
+
+/* ── Base resets (matches admin-portal) ── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden;

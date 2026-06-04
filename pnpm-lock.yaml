@@ -384,6 +384,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.19
+      tw-animate-css:
+        specifier: ^1.2.9
+        version: 1.4.0
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
@@ -660,6 +663,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.19
+      tw-animate-css:
+        specifier: ^1.2.0
+        version: 1.4.0
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
