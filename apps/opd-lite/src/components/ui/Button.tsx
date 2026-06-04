@@ -16,12 +16,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-pill-green text-pill-text',
-  secondary: 'bg-neutral-200 text-neutral-700',
-  danger: 'bg-red-600 text-white',
-  warning: 'bg-amber-600 text-white',
-  ghost: 'bg-transparent text-primary-500',
-  outline: 'border border-neutral-300 bg-white text-neutral-700',
-  icon: 'bg-transparent text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700',
+  secondary: 'bg-secondary text-secondary-foreground',
+  danger: 'bg-destructive text-white',
+  warning: 'bg-warning/20 text-foreground border border-warning/50',
+  ghost: 'bg-transparent text-primary',
+  outline: 'border border-border bg-background text-foreground',
+  icon: 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
 }
 
 const baseText =
@@ -29,7 +29,7 @@ const baseText =
   'px-5 py-2 text-sm font-semibold ' +
   'transition-all duration-100 ease-out ' +
   'hover:brightness-[1.04] active:brightness-[0.88] ' +
-  'focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 ' +
+  'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed ' +
   'disabled:hover:brightness-100 ' +
   'motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100'
@@ -39,7 +39,7 @@ const baseIcon =
   'p-2 ' +
   'transition-all duration-100 ease-out ' +
   'active:brightness-[0.88] ' +
-  'focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 ' +
+  'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed ' +
   'motion-reduce:active:brightness-100'
 
