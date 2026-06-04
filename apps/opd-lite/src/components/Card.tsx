@@ -2,7 +2,7 @@ import type { ElementType, ComponentPropsWithoutRef } from 'react'
 
 const variants = {
   primary:
-    'rounded-xl bg-card-bg/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40',
+    'rounded-xl bg-card p-5 shadow-card ring-[0.65px] ring-border/50',
 } as const
 
 type CardVariant = keyof typeof variants
