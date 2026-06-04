@@ -9,7 +9,7 @@ exports[`DiagnosisSearch > RTL support > matches LTR snapshot 1`] = `
       class="space-y-3"
     >
       <h3
-        class="text-2xl font-black tracking-tight text-neutral-900"
+        class="text-2xl font-black tracking-tight text-foreground"
       >
         Diagnosis
       </h3>
@@ -20,17 +20,15 @@ exports[`DiagnosisSearch > RTL support > matches LTR snapshot 1`] = `
       >
         <button
           aria-checked="true"
-          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors bg-primary-600 text-white"
+          class="inline-flex items-center justify-center rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100 bg-pill-green text-pill-text"
           role="radio"
-          type="button"
         >
           Primary
         </button>
         <button
           aria-checked="false"
-          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+          class="inline-flex items-center justify-center rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100 bg-secondary text-secondary-foreground"
           role="radio"
-          type="button"
         >
           Secondary
         </button>
@@ -42,7 +40,7 @@ exports[`DiagnosisSearch > RTL support > matches LTR snapshot 1`] = `
           aria-controls="diagnosis-results"
           aria-expanded="false"
           aria-label="Search diagnoses"
-          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 focus:border-primary-400 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full rounded-xl border border-neutral-300 bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:border-primary-400 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
           placeholder="Search ICD-10 code or diagnosis name..."
           role="combobox"
           type="text"
@@ -63,7 +61,7 @@ exports[`DiagnosisSearch > RTL support > matches RTL snapshot 1`] = `
       class="space-y-3"
     >
       <h3
-        class="text-2xl font-black tracking-tight text-neutral-900"
+        class="text-2xl font-black tracking-tight text-foreground"
       >
         Diagnosis
       </h3>
@@ -74,17 +72,15 @@ exports[`DiagnosisSearch > RTL support > matches RTL snapshot 1`] = `
       >
         <button
           aria-checked="true"
-          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors bg-primary-600 text-white"
+          class="inline-flex items-center justify-center rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100 bg-pill-green text-pill-text"
           role="radio"
-          type="button"
         >
           Primary
         </button>
         <button
           aria-checked="false"
-          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+          class="inline-flex items-center justify-center rounded-pill px-5 py-2 text-sm font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100 bg-secondary text-secondary-foreground"
           role="radio"
-          type="button"
         >
           Secondary
         </button>
@@ -96,7 +92,7 @@ exports[`DiagnosisSearch > RTL support > matches RTL snapshot 1`] = `
           aria-controls="diagnosis-results"
           aria-expanded="false"
           aria-label="Search diagnoses"
-          class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 focus:border-primary-400 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full rounded-xl border border-neutral-300 bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:border-primary-400 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
           placeholder="Search ICD-10 code or diagnosis name..."
           role="combobox"
           type="text"
