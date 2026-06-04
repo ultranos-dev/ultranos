@@ -195,7 +195,7 @@ export function MpiResultModal({
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="border-t border-neutral-100 px-4 pb-4 pt-3">
+                    <div className="border-t border-border px-4 pb-4 pt-3">
                       {/* Patient details */}
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         {candidate.nameGiven && (
@@ -232,7 +232,7 @@ export function MpiResultModal({
 
                       {/* Score breakdown */}
                       {Object.keys(candidate.scoreBreakdown).length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-neutral-100">
+                        <div className="mt-3 pt-3 border-t border-border">
                           <p className="text-xs font-semibold text-muted-foreground mb-1">
                             {t('mpiScoreBreakdown')}
                           </p>

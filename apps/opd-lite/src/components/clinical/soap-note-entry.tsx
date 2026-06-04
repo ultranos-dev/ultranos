@@ -198,7 +198,7 @@ export function SOAPNoteEntry({
               {/* Left: Original */}
               <div>
                 <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Original</h4>
-                <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-3 text-sm text-foreground whitespace-pre-wrap">
+                <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3 text-sm text-foreground whitespace-pre-wrap">
                   {aiDiff.originalText || <span className="italic text-muted-foreground">No original text</span>}
                 </div>
               </div>
@@ -292,7 +292,7 @@ export function SOAPNoteEntry({
 
       {/* Offline macro suggestions */}
       {!isOnline && macroMatches.length > 0 && (
-        <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-background p-3">
+        <div className="rounded-xl ring-[0.65px] ring-border/50 bg-background p-3">
           <p className="mb-2 text-xs font-bold text-muted-foreground uppercase">Template Suggestions</p>
           <div className="space-y-1">
             {macroMatches.map((template) => (

@@ -93,8 +93,8 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
   switch (status) {
     case 'pending':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800" data-testid="badge-pending">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-500" />
+        <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning" data-testid="badge-pending">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-warning" />
           Pending
         </span>
       )
@@ -317,7 +317,7 @@ export function SyncDashboard() {
 
       {/* Panel */}
       <div
-        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
+        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
         role="dialog"
         aria-label="Sync Dashboard"
       >
@@ -337,7 +337,7 @@ export function SyncDashboard() {
 
           {/* Summary (AC: 6) */}
           <div className="mt-3 flex flex-wrap gap-3 text-xs" data-testid="sync-summary">
-            <span className="rounded-md bg-yellow-50 px-2 py-1 font-medium text-yellow-700">
+            <span className="rounded-md bg-warning/10 px-2 py-1 font-medium text-warning">
               {summary.totalPending} pending
             </span>
             <span className="rounded-md bg-destructive/10 px-2 py-1 font-medium text-destructive">
@@ -414,7 +414,7 @@ export function SyncDashboard() {
             </div>
           ) : (
             groups.map((group) => (
-              <div key={group.resourceType} className="border-b border-neutral-100 last:border-b-0">
+              <div key={group.resourceType} className="border-b border-border last:border-b-0">
                 {/* Group header */}
                 <div className="flex items-center gap-2 bg-muted px-5 py-2">
                   <ResourceIcon resourceType={group.resourceType} />
@@ -428,7 +428,7 @@ export function SyncDashboard() {
                 {group.items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-start gap-3 border-t border-neutral-50 px-5 py-3"
+                    className="flex items-start gap-3 border-t border-border px-5 py-3"
                     data-testid="sync-item"
                   >
                     <div className="min-w-0 flex-1">

@@ -17,7 +17,7 @@ interface AllergyBannerProps {
  * - Yellow (warning): allergy data unavailable (load error)
  *
  * CSS: sticky top, z-50 — always visible, never scrolls off.
- * Accessibility: role="alert", aria-live="assertive", contrast >= 4.5:1.
+ * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
 export function AllergyBanner({ patientId }: AllergyBannerProps) {
   const allergies = useAllergyStore((s) => s.allergies)
@@ -36,7 +36,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
       <div
         className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
         role="alert"
-        aria-live="assertive"
+        aria-live="polite"
         data-testid="allergy-banner"
         data-banner-state="loading"
       >

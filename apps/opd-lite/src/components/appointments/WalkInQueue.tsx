@@ -69,7 +69,7 @@ export function WalkInQueue() {
   }
 
   return (
-    <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-background p-4">
+    <div className="rounded-xl ring-[0.65px] ring-border/50 bg-background p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-base font-bold text-foreground">
           {t('walkInQueue')}
@@ -85,7 +85,7 @@ export function WalkInQueue() {
 
       {/* Inline add form */}
       {showAddForm && (
-        <div className="mb-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-3 space-y-3">
+        <div className="mb-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3 space-y-3">
           <input
             type="text"
             value={patientSearch}

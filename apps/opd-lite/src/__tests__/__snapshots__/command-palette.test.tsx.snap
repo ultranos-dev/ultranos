@@ -20,7 +20,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
     class="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
   />
   <div
-    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-gray-400/40 shadow-lg backdrop-blur-md"
+    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-border/50 shadow-lg backdrop-blur-md"
     cmdk-root=""
     tabindex="-1"
   >
@@ -213,7 +213,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
     class="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
   />
   <div
-    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-gray-400/40 shadow-lg backdrop-blur-md"
+    class="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-border/50 shadow-lg backdrop-blur-md"
     cmdk-root=""
     tabindex="-1"
   >

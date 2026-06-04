@@ -352,7 +352,7 @@ describe('SyncPulse', () => {
     useSyncStore.setState({ pendingCount: 5 })
     render(<SyncPulse />)
     const dot = screen.getByTestId('sync-pulse-dot')
-    expect(dot.className).toContain('bg-yellow-500')
+    expect(dot.className).toContain('bg-warning')
   })
 
   it('renders red pulse when failures exist', () => {

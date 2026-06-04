@@ -93,7 +93,7 @@ export function ConflictList() {
 
   if (loading) {
     return (
-      <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center">
+      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center">
         <p className="text-sm text-muted-foreground">Loading conflicts...</p>
       </div>
     )
@@ -110,7 +110,7 @@ export function ConflictList() {
 
   if (conflicts.length === 0) {
     return (
-      <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center" data-testid="no-conflicts">
+      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center" data-testid="no-conflicts">
         <CircleCheck className="mx-auto h-12 w-12 text-success" />
         <p className="mt-3 text-sm font-semibold text-foreground">No unresolved conflicts</p>
         <p className="mt-1 text-xs text-muted-foreground">All Tier 1 safety-critical data is in sync.</p>

@@ -66,7 +66,7 @@ export function SyncPulse() {
     pulseColor = 'bg-destructive'
     ariaStatus = `Sync errors: ${failedCount} failed, ${conflictCount} conflicts`
   } else if (hasPending) {
-    pulseColor = 'bg-yellow-500'
+    pulseColor = 'bg-warning'
     ariaStatus = `${pendingCount} items pending sync`
   } else {
     pulseColor = 'bg-success'

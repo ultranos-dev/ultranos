@@ -219,7 +219,7 @@ export function ProvinceAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-background shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-border/50 bg-background shadow-lg"
         >
           {filtered.map((province, index) => (
             <li
@@ -253,7 +253,7 @@ export function ProvinceAutocomplete({
       )}
 
       {isOpen && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-border/50 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
           No matching province
         </div>
       )}

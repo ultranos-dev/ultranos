@@ -36,7 +36,7 @@ interface PatientResultTimelineProps {
 
 function flagBorderClass(flag?: string): string {
   switch (flag) {
-    case 'critical': return 'border-s-4 border-s-red-500 bg-destructive/10'
+    case 'critical': return 'border-s-4 border-s-destructive bg-destructive/10'
     case 'abnormal': return 'border-s-4 border-s-amber-400 bg-warning/10'
     default: return 'border-s border-s-border'
   }
@@ -158,7 +158,7 @@ function GroupCard({
       {expanded && (
         <div
           id={`group-body-${group.loincCode}`}
-          className="border-t border-neutral-100 px-4 pb-4 pt-3 space-y-3"
+          className="border-t border-border px-4 pb-4 pt-3 space-y-3"
         >
           {/* Trend visualization — AC #3 */}
           {group.trendData ? (
@@ -194,7 +194,7 @@ function GroupCard({
                       ? 'border-destructive/20 bg-destructive/10'
                       : flag === 'abnormal'
                       ? 'border-warning/20 bg-warning/10/50'
-                      : 'border-neutral-100 bg-background'
+                      : 'border-border bg-background'
                   }`}
                   onClick={() => onSelectReport(report)}
                   data-testid={`result-entry-${report.id}`}

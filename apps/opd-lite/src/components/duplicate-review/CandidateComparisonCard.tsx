@@ -47,7 +47,7 @@ export function CandidateComparisonCard({ candidate }: CandidateComparisonCardPr
   ]
 
   return (
-    <div className="rounded-xl bg-muted/70 backdrop-blur-md p-4 ring-[0.65px] ring-gray-400/40">
+    <div className="rounded-xl bg-muted/70 backdrop-blur-md p-4 ring-[0.65px] ring-border/50">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           {t('candidateId', { id: candidate.id.slice(0, 8) })}

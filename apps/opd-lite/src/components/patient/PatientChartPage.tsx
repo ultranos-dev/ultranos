@@ -351,7 +351,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
 
       {/* Lab results */}
       <section
-        className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+        className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
         aria-label="Lab results"
       >
         {selectedLabReport ? (

@@ -176,7 +176,7 @@ describe('AllergyBanner', () => {
     const banner = container.querySelector('[data-testid="allergy-banner"]')
 
     expect(banner?.getAttribute('data-banner-state')).toBe('loading')
-    expect(banner?.getAttribute('aria-live')).toBe('assertive')
+    expect(banner?.getAttribute('aria-live')).toBe('polite')
     expect(screen.getByText(/Loading allergy data/)).toBeDefined()
   })
 

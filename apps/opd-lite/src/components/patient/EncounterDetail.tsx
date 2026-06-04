@@ -191,7 +191,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
           </h4>
           <div className="mt-1 space-y-4">
             {data.allSoapEntries.map((entry) => (
-              <div key={entry.id} className="rounded-md border border-neutral-100 bg-muted p-3">
+              <div key={entry.id} className="rounded-md border border-border bg-muted p-3">
                 {/* AI source badge */}
                 <div className="mb-2 flex items-center gap-2">
                   {entry.source === 'AI_GENERATED' && (

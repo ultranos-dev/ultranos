@@ -70,7 +70,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
 
   return (
     <div
-      className="rounded-xl bg-background/70 backdrop-blur-md p-5 ring-[0.65px] ring-gray-400/40 shadow-lg"
+      className="rounded-xl bg-background/70 backdrop-blur-md p-5 ring-[0.65px] ring-border/50 shadow-lg"
       role="dialog"
       aria-label={t('customizeWidgets')}
     >
@@ -93,7 +93,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
           const isVisible = localOrder.includes(id)
           const idx = localOrder.indexOf(id)
           return (
-            <li key={id} className="flex items-center gap-2 rounded-lg border border-neutral-100 px-3 py-2">
+            <li key={id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
               <input
                 type="checkbox"
                 checked={isVisible}

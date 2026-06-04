@@ -199,7 +199,7 @@ export function NotificationCenter() {
 
       {/* Notification list */}
       {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40">
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50">
           {filtered.map(n => (
             <NotificationRow
               key={n.id}
@@ -235,7 +235,7 @@ function NotificationRow({
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notification) }}
       className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
         deepLink ? 'cursor-pointer hover:bg-muted' : ''
-      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-red-500' : ''}`}
+      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-destructive' : ''}`}
     >
       {/* Type icon */}
       <div className="mt-0.5 shrink-0">

@@ -258,7 +258,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
         return (
           <li
             key={encounter.id}
-            className="rounded-xl bg-card-bg/70 backdrop-blur-md shadow-sm ring-[0.65px] ring-gray-400/40"
+            className="rounded-xl bg-card/70 backdrop-blur-md shadow-sm ring-[0.65px] ring-border/50"
             data-testid="encounter-item"
           >
             <Button

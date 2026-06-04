@@ -65,7 +65,7 @@ export function PatientDetailsAccordion({
   const isSameAddress = addressesMatch(ext.addressOrigin, ext.addressCurrent)
 
   return (
-    <div className="rounded-xl bg-card-bg shadow-sm ring-[0.65px] ring-gray-400/40">
+    <div className="rounded-xl bg-card shadow-sm ring-[0.65px] ring-border/50">
       {/* Toggle header */}
       <button
         type="button"

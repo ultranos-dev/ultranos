@@ -110,10 +110,10 @@ export function UserDropdown() {
           `}</style>
           <div
             role="menu"
-            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50 shadow-lg"
             data-testid="user-dropdown-menu"
           >
-            <div className="border-b border-neutral-100 px-4 py-3">
+            <div className="border-b border-border px-4 py-3">
               <p className="text-sm font-medium text-foreground">{displayName}</p>
               <p className="text-xs text-muted-foreground">{session.email}</p>
             </div>

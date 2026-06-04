@@ -97,7 +97,7 @@ function renderAttachment(
         <img
           src={dataUri}
           alt={attachment.title ?? `Attachment ${index + 1}`}
-          className="max-w-full rounded-xl ring-[0.65px] ring-gray-400/40"
+          className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
         />
       </div>
     )
@@ -112,7 +112,7 @@ function renderAttachment(
         <embed
           src={dataUri}
           type="application/pdf"
-          className="h-96 w-full rounded-xl ring-[0.65px] ring-gray-400/40"
+          className="h-96 w-full rounded-xl ring-[0.65px] ring-border/50"
           title={attachment.title ?? `PDF ${index + 1}`}
         />
       </div>
@@ -280,7 +280,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
 
       {/* Conclusion */}
       {report.conclusion && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
           <h4 className="text-sm font-bold text-foreground">Conclusion</h4>
           <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{report.conclusion}</p>
         </div>
@@ -296,7 +296,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
 
       {/* Empty state */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4 text-sm text-muted-foreground">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4 text-sm text-muted-foreground">
           No report content or attachments available. Result data may be pending.
         </div>
       )}

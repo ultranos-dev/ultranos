@@ -144,7 +144,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
             return (
               <li
                 key={a.id}
-                className="flex items-center justify-between rounded-xl ring-[0.65px] ring-gray-400/40 bg-background ps-4 pe-4 py-3"
+                className="flex items-center justify-between rounded-xl ring-[0.65px] ring-border/50 bg-background ps-4 pe-4 py-3"
               >
                 <div>
                   <span className="font-semibold text-foreground">
@@ -171,7 +171,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
       )}
 
       {/* Add allergy form */}
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
         <div>
           <label htmlFor="allergy-substance" className="mb-1 block text-sm font-semibold text-foreground">
             Substance

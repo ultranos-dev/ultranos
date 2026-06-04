@@ -129,7 +129,7 @@ export function PatientSummaryPopup({
             </Button>
 
             {showStatusDropdown && (
-              <div className="absolute end-0 top-full z-10 mt-1 w-40 rounded-xl ring-[0.65px] ring-gray-400/40 bg-background py-1 shadow-lg">
+              <div className="absolute end-0 top-full z-10 mt-1 w-40 rounded-xl ring-[0.65px] ring-border/50 bg-background py-1 shadow-lg">
                 {STATUS_OPTIONS.map((status) => (
                   <Button
                     key={status}

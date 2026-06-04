@@ -202,7 +202,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Side-by-side diff grid — uses logical properties for RTL */}
       <div
-        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-gray-400/40 bg-secondary"
+        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
         data-testid="diff-grid"
       >
         {/* Column headers */}
@@ -218,7 +218,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
           <div key={field} className="contents">
             <div
               className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-yellow-50' : 'bg-background'
+                isDifferent ? 'bg-warning/10' : 'bg-background'
               }`}
             >
               <p className="text-xs font-semibold text-muted-foreground">{field}</p>
@@ -226,7 +226,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             </div>
             <div
               className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-yellow-50' : 'bg-background'
+                isDifferent ? 'bg-warning/10' : 'bg-background'
               }`}
             >
               <p className="text-xs font-semibold text-muted-foreground">{field}</p>
@@ -238,7 +238,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Resolution actions */}
       {!canResolve ? (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-3">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3">
           <p className="text-xs font-semibold text-muted-foreground">
             Only physicians can resolve conflicts. Please contact a physician to review.
           </p>

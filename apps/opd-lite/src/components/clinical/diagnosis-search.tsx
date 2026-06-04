@@ -224,7 +224,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
             aria-label="Search results"
             className={
               'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
-              'ring-[0.65px] ring-gray-400/40 bg-background shadow-lg'
+              'ring-[0.65px] ring-border/50 bg-background shadow-lg'
             }
           >
             {results.map((result, idx) => (

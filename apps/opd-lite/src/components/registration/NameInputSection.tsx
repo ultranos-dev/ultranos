@@ -137,7 +137,7 @@ export function NameInputSection({
         {/* Composed nameLocal preview */}
         {nameLocalPreview && (
           <div
-            className="mt-3 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted px-4 py-3"
+            className="mt-3 rounded-xl ring-[0.65px] ring-border/50 bg-muted px-4 py-3"
             aria-live="polite"
           >
             <p className="text-xs font-semibold text-muted-foreground mb-1">

@@ -393,7 +393,7 @@ export function WeekScheduleView() {
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
         <table className="w-full border-collapse">
           <thead>
             <tr>
@@ -442,7 +442,7 @@ export function WeekScheduleView() {
                   return (
                     <td
                       key={dayIdx}
-                      className={`border-b border-neutral-100 px-0.5 py-0.5 ${
+                      className={`border-b border-border px-0.5 py-0.5 ${
                         isToday ? 'bg-primary-50/30' : ''
                       }`}
                     >

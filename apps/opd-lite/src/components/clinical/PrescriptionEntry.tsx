@@ -262,7 +262,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             aria-label="Medication search results"
             className={
               'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
-              'ring-[0.65px] ring-gray-400/40 bg-background shadow-lg'
+              'ring-[0.65px] ring-border/50 bg-background shadow-lg'
             }
           >
             {results.map((result, idx) => (
@@ -298,7 +298,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
       {/* Dosage sub-form — visible when medication is selected */}
       {hasMedication && (
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
           <div className="grid grid-cols-3 gap-4">
             {/* Dosage quantity */}
             <div>

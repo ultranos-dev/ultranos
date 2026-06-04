@@ -22,7 +22,7 @@ function formatCountdown(remainingMs: number): string {
 
 function countdownColor(remainingMs: number): string {
   if (remainingMs > 5 * 60_000) return 'text-success'
-  if (remainingMs > 2 * 60_000) return 'text-yellow-600'
+  if (remainingMs > 2 * 60_000) return 'text-warning'
   return 'text-destructive'
 }
 

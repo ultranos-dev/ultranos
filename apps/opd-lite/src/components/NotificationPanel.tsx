@@ -141,7 +141,7 @@ function NotificationDropdown({
   }, [onCountChange])
 
   return (
-    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg">
+    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
@@ -193,7 +193,7 @@ function NotificationRow({
 
   return (
     <div
-      className={`border-b border-neutral-100 px-4 py-3 ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-red-500' : ''}`}
+      className={`border-b border-border px-4 py-3 ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-destructive' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">

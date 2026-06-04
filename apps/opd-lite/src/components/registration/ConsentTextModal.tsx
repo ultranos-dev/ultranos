@@ -84,7 +84,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         onClick={onClose}
       />
 
-      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl">
+      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-border/50 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
           <h2

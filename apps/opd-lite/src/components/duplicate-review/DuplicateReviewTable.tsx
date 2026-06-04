@@ -155,7 +155,7 @@ export function DuplicateReviewTable() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted text-muted-foreground">
@@ -230,7 +230,7 @@ function TableRow({
   return (
     <>
       <tr
-        className="border-b border-neutral-100 hover:bg-muted cursor-pointer"
+        className="border-b border-border hover:bg-muted cursor-pointer"
         onClick={onToggle}
         aria-expanded={isExpanded}
         role="row"

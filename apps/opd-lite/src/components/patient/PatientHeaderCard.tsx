@@ -169,7 +169,7 @@ export function PatientHeaderCard({
   const bloodGroup = patient._ultranos.bloodGroup ?? '--'
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
+    <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
       <div className="flex items-start gap-5">
         {/* Avatar */}
         <PatientAvatar

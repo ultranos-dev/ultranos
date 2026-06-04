@@ -197,7 +197,7 @@ export function ResultTrendChart({
       {/* Tooltip for hovered point */}
       {hoveredPoint && (
         <div
-          className="absolute top-0 start-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-secondary px-2 py-1 text-xs text-white shadow-lg"
+          className="absolute top-0 start-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-secondary px-2 py-1 text-xs text-foreground shadow-lg"
           style={{ pointerEvents: 'none' }}
           data-testid="trend-tooltip"
           role="tooltip"
@@ -234,14 +234,14 @@ export function ResultSummaryTable({
       aria-label="Result history"
     >
       <thead>
-        <tr className="border-b border-neutral-100">
+        <tr className="border-b border-border">
           <th className="py-1 text-start font-medium text-muted-foreground">Date</th>
           <th className="py-1 text-start font-medium text-muted-foreground">Result</th>
         </tr>
       </thead>
       <tbody>
         {results.map((r, i) => (
-          <tr key={i} className="border-b border-neutral-50">
+          <tr key={i} className="border-b border-border">
             <td className="py-1 text-muted-foreground">
               {new Date(r.date).toLocaleDateString()}
             </td>

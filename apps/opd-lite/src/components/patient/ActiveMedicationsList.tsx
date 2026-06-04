@@ -117,7 +117,7 @@ export function ActiveMedicationsList({
 
   if (loading) {
     return (
-      <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
+      <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
         <h3 className="mb-3 text-sm font-semibold text-foreground">
           Active Medications
         </h3>
@@ -128,7 +128,7 @@ export function ActiveMedicationsList({
 
   if (meds.length === 0) {
     return (
-      <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
+      <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
         <h3 className="mb-3 text-sm font-semibold text-foreground">
           Active Medications
         </h3>
@@ -138,7 +138,7 @@ export function ActiveMedicationsList({
   }
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
+    <div className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50">
       <h3 className="mb-3 text-sm font-semibold text-foreground">
         Active Medications
       </h3>
