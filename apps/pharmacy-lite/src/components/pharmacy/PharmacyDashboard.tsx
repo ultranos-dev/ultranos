@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import { DispensingSummaryCard } from './DispensingSummaryCard'
 import { SyncQueueCard } from './SyncQueueCard'
@@ -98,16 +97,12 @@ async function queryDashboardStats(): Promise<DashboardStats> {
 }
 
 export function PharmacyDashboard() {
-  const session = useAuthSessionStore((s) => s.session)
   const [stats, setStats] = useState<DashboardStats>({
     dispensedToday: 0,
     pendingSync: 0,
     failedSync: 0,
     recentDispenses: [],
   })
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  )
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const refreshStats = useCallback(async () => {
@@ -152,47 +147,8 @@ export function PharmacyDashboard() {
     }
   }, [refreshStats])
 
-  // Online/offline events
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-
-  const pharmacistName = session?.email?.split('@')[0] ?? 'Pharmacist'
-
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Welcome header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-neutral-900">
-            Welcome, {pharmacistName}
-          </h2>
-          <p className="text-sm text-neutral-500">Pharmacy Dashboard</p>
-        </div>
-        <div
-          data-testid="connectivity-indicator"
-          className="flex items-center gap-2"
-        >
-          <span
-            className={`inline-block h-2.5 w-2.5 rounded-full ${
-              isOnline ? 'bg-green-500' : 'bg-red-500'
-            }`}
-          />
-          <span className="text-xs text-neutral-500">
-            {isOnline ? 'Online' : 'Offline'}
-          </span>
-        </div>
-      </div>
-
       {/* Multi-entry action hub */}
       <section className="mb-8">
         <DashboardActionHub />
