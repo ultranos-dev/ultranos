@@ -165,7 +165,7 @@ export function ProvinceAutocomplete({
 
       <div className="relative">
         {value ? (
-          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2">
+          <div className="flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2">
             <span className="flex-1 text-sm text-foreground">
               {getDisplayName(value)}
             </span>
@@ -200,7 +200,7 @@ export function ProvinceAutocomplete({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               error
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={placeholder}
             value={query}
@@ -229,7 +229,7 @@ export function ProvinceAutocomplete({
               aria-selected={highlightedIndex === index}
               className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
                 highlightedIndex === index
-                  ? 'bg-blue-50 text-blue-900'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted'
               }`}
               onMouseDown={(e) => {

@@ -32,7 +32,7 @@ function statusBadge(status: string) {
     case 'amended':
     case 'corrected':
       return (
-        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
+        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary">
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
       )
@@ -186,7 +186,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                 className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-muted ${
                   urgent
                     ? 'border-destructive/30 bg-destructive/10'
-                    : 'border-neutral-200 bg-background'
+                    : 'border-border bg-background'
                 }`}
                 aria-label={`View ${loincDisplay} from ${labName}`}
               >

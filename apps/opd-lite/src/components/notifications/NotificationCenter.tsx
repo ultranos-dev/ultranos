@@ -88,7 +88,7 @@ function getDeepLink(notification: NotificationItem): string | null {
 
 function TypeIcon({ type, id }: { type: string; id: string }) {
   const category = getIconCategory(type)
-  if (category === 'lab') return <Beaker data-testid={`icon-lab-${id}`} className="h-5 w-5 text-blue-600" />
+  if (category === 'lab') return <Beaker data-testid={`icon-lab-${id}`} className="h-5 w-5 text-primary" />
   if (category === 'rx') return <Check data-testid={`icon-rx-${id}`} className="h-5 w-5 text-success" />
   return <Settings data-testid={`icon-system-${id}`} className="h-5 w-5 text-muted-foreground" />
 }
@@ -233,9 +233,9 @@ function NotificationRow({
       tabIndex={0}
       onClick={() => onClick(notification)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notification) }}
-      className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
+      className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
         deepLink ? 'cursor-pointer hover:bg-muted' : ''
-      } ${isUnread ? 'bg-blue-50' : ''} ${isEscalation ? 'border-s-4 border-s-red-500' : ''}`}
+      } ${isUnread ? 'bg-primary/10' : ''} ${isEscalation ? 'border-s-4 border-s-red-500' : ''}`}
     >
       {/* Type icon */}
       <div className="mt-0.5 shrink-0">
@@ -249,7 +249,7 @@ function NotificationRow({
             {notificationLabel(notification.type)}
           </p>
           {isUnread && (
-            <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="Unread" />
+            <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
           )}
         </div>
 

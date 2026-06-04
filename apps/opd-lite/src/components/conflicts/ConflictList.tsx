@@ -140,7 +140,7 @@ export function ConflictList() {
             className={`rounded-xl border bg-background shadow-sm transition-colors ${
               overdue
                 ? 'border-destructive/30 bg-destructive/10'
-                : 'border-neutral-200'
+                : 'border-border'
             }`}
             data-testid="conflict-item"
           >
@@ -184,7 +184,7 @@ export function ConflictList() {
 
             {/* Expanded diff view */}
             {isExpanded && (
-              <div className="border-t border-neutral-200 ps-5 pe-5 py-4">
+              <div className="border-t border-border ps-5 pe-5 py-4">
                 <ConflictDiffView entry={entry} onResolved={handleResolved} />
               </div>
             )}

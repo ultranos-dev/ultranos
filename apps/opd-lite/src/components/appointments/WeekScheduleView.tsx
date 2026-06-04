@@ -84,7 +84,7 @@ function formatWeekRange(start: Date, end: Date): string {
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
   'new-consult': 'bg-success',
-  'follow-up': 'bg-blue-500',
+  'follow-up': 'bg-primary',
   urgent: 'bg-destructive',
   'walk-in': 'bg-warning',
 }
@@ -300,8 +300,8 @@ export function WeekScheduleView() {
                 onClick={() => handleCellClick(currentDay, time)}
                 className={`w-full rounded-lg border p-2.5 text-start ${
                   data
-                    ? 'border-blue-200 bg-blue-50 hover:bg-blue-100'
-                    : 'border-neutral-200 bg-background hover:bg-muted'
+                    ? 'border-primary/20 bg-primary/10 hover:bg-primary'
+                    : 'border-border bg-background hover:bg-muted'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -398,7 +398,7 @@ export function WeekScheduleView() {
           <thead>
             <tr>
               {/* Time column header */}
-              <th className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-muted px-2 py-2 text-start text-xs font-semibold text-muted-foreground">
+              <th className="sticky start-0 z-10 border-b border-e border-border bg-muted px-2 py-2 text-start text-xs font-semibold text-muted-foreground">
                 {t('time')}
               </th>
               {/* Day headers — flex-direction: row auto-reverses in RTL */}
@@ -407,7 +407,7 @@ export function WeekScheduleView() {
                 return (
                   <th
                     key={idx}
-                    className={`border-b border-neutral-200 px-1 py-2 text-center text-xs font-semibold ${
+                    className={`border-b border-border px-1 py-2 text-center text-xs font-semibold ${
                       isToday
                         ? 'bg-primary-50 text-primary-800'
                         : 'bg-muted text-foreground'
@@ -430,7 +430,7 @@ export function WeekScheduleView() {
             {TIME_SLOTS.map((time) => (
               <tr key={time} className="group">
                 {/* Time label */}
-                <td className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
+                <td className="sticky start-0 z-10 border-b border-e border-border bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
                   {time}
                 </td>
                 {/* Cells for each day */}
@@ -452,7 +452,7 @@ export function WeekScheduleView() {
                         onClick={() => handleCellClick(day, time)}
                         className={`flex h-7 w-full items-center justify-center gap-0.5 rounded ${
                           data
-                            ? 'hover:bg-blue-100'
+                            ? 'hover:bg-primary'
                             : 'hover:bg-muted'
                         }`}
                       >

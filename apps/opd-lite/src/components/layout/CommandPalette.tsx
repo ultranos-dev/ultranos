@@ -111,7 +111,7 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
       >
         <Command.Input
           placeholder="Search clinical actions..."
-          className="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
+          className="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
           autoFocus
         />
         <Command.List className="max-h-72 overflow-y-auto p-2">
@@ -129,7 +129,7 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
                 className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
               >
                 <span>{cmd.label}</span>
-                <kbd className="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                   {cmd.shortcut}
                 </kbd>
               </Command.Item>
@@ -138,15 +138,15 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
         </Command.List>
 
         {/* Footer hint */}
-        <div className="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-muted-foreground">
           <span>
-            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
+            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
           </span>
           <span>
-            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">↵</kbd> Select
+            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">↵</kbd> Select
           </span>
           <span>
-            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">Esc</kbd> Close
+            <kbd className="rounded border border-border bg-muted px-1 py-0.5 font-semibold">Esc</kbd> Close
           </span>
         </div>
       </Command>

@@ -100,7 +100,7 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
       )
     case 'syncing':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800" data-testid="badge-syncing">
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary" data-testid="badge-syncing">
           <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
@@ -322,7 +322,7 @@ export function SyncDashboard() {
         aria-label="Sync Dashboard"
       >
         {/* Header */}
-        <div className="border-b border-neutral-200 px-5 py-4">
+        <div className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Sync Status</h2>
             <Button
@@ -359,7 +359,7 @@ export function SyncDashboard() {
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    syncPhase === 'Sync complete' ? 'w-full bg-success' : 'bg-blue-500 animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                    syncPhase === 'Sync complete' ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
                   }`}
                   style={syncPhase !== 'Sync complete' ? { width: '70%' } : undefined}
                 />
@@ -451,7 +451,7 @@ export function SyncDashboard() {
                       {item.status === 'failed' && (
                         <Button
                           variant="outline"
-                          className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          className="bg-primary/10 text-primary hover:bg-primary"
                           type="button"
                           onClick={() => handleRetry(item.id)}
                           data-testid="retry-btn"

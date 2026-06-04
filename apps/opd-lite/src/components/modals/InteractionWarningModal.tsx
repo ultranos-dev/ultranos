@@ -29,9 +29,9 @@ const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string
     border: 'border-warning/20',
   },
   [DrugInteractionSeverity.MINOR]: {
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-800',
-    border: 'border-yellow-200',
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/20',
   },
 }
 
@@ -170,7 +170,7 @@ export function InteractionWarningModal({
         </div>
 
         {/* Override justification */}
-        <div className="border-t border-neutral-200 px-6 py-4">
+        <div className="border-t border-border px-6 py-4">
           <label
             htmlFor="override-justification"
             className="mb-2 block text-sm font-bold text-foreground"
@@ -179,7 +179,7 @@ export function InteractionWarningModal({
           </label>
           <textarea
             id="override-justification"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
             rows={2}
             placeholder="Enter clinical justification for overriding this warning..."
             value={justification}
@@ -188,7 +188,7 @@ export function InteractionWarningModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-muted px-6 py-4">
           <Button
             variant="secondary"
             type="button"

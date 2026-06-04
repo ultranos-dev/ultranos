@@ -225,7 +225,7 @@ export function MfaManagementCard() {
                   value={confirmingCode}
                   onChange={(e) => setConfirmingCode(e.target.value)}
                   placeholder="Current 6-digit code"
-                  className="rounded-xl border border-neutral-300 px-3 py-1.5 text-sm"
+                  className="rounded-xl border border-border px-3 py-1.5 text-sm"
                   maxLength={6}
                   aria-label="Current TOTP code"
                 />
@@ -251,7 +251,7 @@ export function MfaManagementCard() {
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value)}
                   placeholder="Enter 6-digit code"
-                  className="rounded-xl border border-neutral-300 px-3 py-1.5 text-sm"
+                  className="rounded-xl border border-border px-3 py-1.5 text-sm"
                   maxLength={6}
                   aria-label="TOTP verification code"
                 />

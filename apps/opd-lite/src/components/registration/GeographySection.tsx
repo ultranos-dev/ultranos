@@ -94,7 +94,7 @@ export function GeographySection({
           <input
             id="origin-village"
             type="text"
-            className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder={t('villagePlaceholder')}
             value={origin.village}
             onChange={(e) =>
@@ -105,7 +105,7 @@ export function GeographySection({
       </div>
 
       {/* Divider */}
-      <hr className="border-neutral-200 mb-4" />
+      <hr className="border-border mb-4" />
 
       {/* Current address (optional) */}
       <div>
@@ -122,7 +122,7 @@ export function GeographySection({
             type="checkbox"
             checked={sameAsOrigin}
             onChange={(e) => onSameAsOriginChange(e.target.checked)}
-            className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
           <span className="text-sm font-medium text-foreground">
             {t('sameAsOrigin')}
@@ -168,7 +168,7 @@ export function GeographySection({
               <input
                 id="current-village"
                 type="text"
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('villagePlaceholder')}
                 value={current.village}
                 onChange={(e) =>
@@ -183,13 +183,13 @@ export function GeographySection({
       {/* Nomadic toggle — only rendered when parent provides the callback */}
       {onIsNomadicChange && (
         <>
-          <hr className="border-neutral-200 my-4" />
+          <hr className="border-border my-4" />
           <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
             <input
               type="checkbox"
               checked={isNomadic ?? false}
               onChange={(e) => onIsNomadicChange(e.target.checked)}
-              className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+              className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
             />
             <span className="text-sm font-medium text-foreground">
               {t('isNomadic')}

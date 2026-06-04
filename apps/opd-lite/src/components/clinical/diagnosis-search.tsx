@@ -207,7 +207,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
           }
           aria-label="Search diagnoses"
           className={
-            'w-full rounded-xl border border-neutral-300 bg-background px-4 py-3 ' +
+            'w-full rounded-xl border border-border bg-background px-4 py-3 ' +
             'text-base text-foreground placeholder:text-muted-foreground ' +
             'transition-colors focus:outline-none focus:ring-2 ' +
             'focus:border-primary-400 focus:ring-primary-200 ' +

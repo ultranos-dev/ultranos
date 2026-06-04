@@ -18,7 +18,7 @@ function minutesElapsed(isoTimestamp: string): number {
 }
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
-  booked: 'bg-blue-100 text-blue-800',
+  booked: 'bg-primary text-primary',
   arrived: 'bg-warning/20 text-warning',
   fulfilled: 'bg-secondary text-foreground',
   cancelled: 'bg-destructive/20 text-destructive',
@@ -91,7 +91,7 @@ export function WalkInQueue() {
             value={patientSearch}
             onChange={(e) => setPatientSearch(e.target.value)}
             placeholder={t('selectPatient')}
-            className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
 
           <div className="flex gap-3">

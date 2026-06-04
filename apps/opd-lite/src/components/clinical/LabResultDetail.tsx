@@ -110,7 +110,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
         <a
           href={dataUri}
           download={attachment.title ?? `attachment-${index + 1}`}
-          className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+          className="text-sm font-medium text-primary underline hover:text-primary"
         >
           Download {attachment.title ?? `Attachment ${index + 1}`}
         </a>

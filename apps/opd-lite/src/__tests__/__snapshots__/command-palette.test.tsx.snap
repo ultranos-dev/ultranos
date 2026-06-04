@@ -39,7 +39,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       aria-labelledby="radix-_r_3d_"
       autocomplete="off"
       autocorrect="off"
-      class="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
+      class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
       id="radix-_r_3e_"
       placeholder="Search clinical actions..."
@@ -92,7 +92,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
                 Vitals
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 V
               </kbd>
@@ -112,7 +112,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
                 Subjective
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 S
               </kbd>
@@ -132,7 +132,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
                 Objective
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 O
               </kbd>
@@ -152,7 +152,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
                 Assessment
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 A
               </kbd>
@@ -162,11 +162,11 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       </div>
     </div>
     <div
-      class="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-muted-foreground"
+      class="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-muted-foreground"
     >
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           ↑↓
         </kbd>
@@ -174,7 +174,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       </span>
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           ↵
         </kbd>
@@ -182,7 +182,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in LTR direction 1`]
       </span>
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           Esc
         </kbd>
@@ -232,7 +232,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       aria-labelledby="radix-_r_34_"
       autocomplete="off"
       autocorrect="off"
-      class="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
+      class="w-full border-b border-border bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
       cmdk-input=""
       id="radix-_r_35_"
       placeholder="Search clinical actions..."
@@ -285,7 +285,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
                 Vitals
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 V
               </kbd>
@@ -305,7 +305,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
                 Subjective
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 S
               </kbd>
@@ -325,7 +325,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
                 Objective
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 O
               </kbd>
@@ -345,7 +345,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
                 Assessment
               </span>
               <kbd
-                class="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                class="rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
               >
                 A
               </kbd>
@@ -355,11 +355,11 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       </div>
     </div>
     <div
-      class="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-muted-foreground"
+      class="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-muted-foreground"
     >
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           ↑↓
         </kbd>
@@ -367,7 +367,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       </span>
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           ↵
         </kbd>
@@ -375,7 +375,7 @@ exports[`CommandPalette > RTL rendering > renders correctly in RTL direction 1`]
       </span>
       <span>
         <kbd
-          class="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold"
+          class="rounded border border-border bg-muted px-1 py-0.5 font-semibold"
         >
           Esc
         </kbd>

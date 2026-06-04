@@ -146,7 +146,7 @@ export function DistrictAutocomplete({
       <div className="relative">
         {value && selectedDistrict ? (
           <div
-            className={`flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2 ${
+            className={`flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 ${
               disabled ? 'opacity-50' : ''
             }`}
           >
@@ -187,10 +187,10 @@ export function DistrictAutocomplete({
             disabled={disabled}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               disabled
-                ? 'cursor-not-allowed border-neutral-200 bg-muted text-muted-foreground'
+                ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
                 : error
                   ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                  : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                  : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={disabled ? '' : placeholder}
             value={query}
@@ -221,7 +221,7 @@ export function DistrictAutocomplete({
               aria-selected={highlightedIndex === index}
               className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
                 highlightedIndex === index
-                  ? 'bg-blue-50 text-blue-900'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted'
               }`}
               onMouseDown={(e) => {

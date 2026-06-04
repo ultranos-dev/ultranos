@@ -206,8 +206,8 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
         data-testid="diff-grid"
       >
         {/* Column headers */}
-        <div className="bg-blue-50 ps-4 pe-4 py-2">
-          <span className="text-xs font-bold text-blue-800">Local Version</span>
+        <div className="bg-primary/10 ps-4 pe-4 py-2">
+          <span className="text-xs font-bold text-primary">Local Version</span>
         </div>
         <div className="bg-purple-50 ps-4 pe-4 py-2">
           <span className="text-xs font-bold text-purple-800">Remote Version</span>

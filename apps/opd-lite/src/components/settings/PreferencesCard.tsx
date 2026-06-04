@@ -28,7 +28,7 @@ export function PreferencesCard() {
             <input
               type="checkbox"
               disabled
-              className="h-4 w-4 rounded border-neutral-300 text-blue-600 opacity-50"
+              className="h-4 w-4 rounded border-border text-primary opacity-50"
               aria-label={pref.label}
             />
           </label>

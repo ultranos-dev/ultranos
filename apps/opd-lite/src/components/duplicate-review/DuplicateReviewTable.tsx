@@ -158,7 +158,7 @@ export function DuplicateReviewTable() {
       <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-muted text-muted-foreground">
+            <tr className="border-b border-border bg-muted text-muted-foreground">
               <th className="px-4 py-3 text-start font-semibold">{t('colPatient')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colScore')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colDecision')}</th>
@@ -222,7 +222,7 @@ function TableRow({
   const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
     PENDING: { label: t('decisionPending'), classes: 'bg-warning/20 text-warning' },
     DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
-    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-blue-100 text-blue-800' },
+    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-primary text-primary' },
   }
 
   const badge = decisionBadge[row.decision]

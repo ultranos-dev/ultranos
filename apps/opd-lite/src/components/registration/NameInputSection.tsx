@@ -61,7 +61,7 @@ export function NameInputSection({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGiven
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameGivenPlaceholder')}
             value={nameGiven}
@@ -91,7 +91,7 @@ export function NameInputSection({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameFather
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameFatherPlaceholder')}
             value={nameFather}
@@ -121,7 +121,7 @@ export function NameInputSection({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGrandfather
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameGrandfatherPlaceholder')}
             value={nameGrandfather}

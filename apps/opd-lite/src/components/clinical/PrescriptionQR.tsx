@@ -62,7 +62,7 @@ export function PrescriptionQR({
         </p>
         <div
           data-testid="prescription-qr-code"
-          className="rounded-xl border-2 border-neutral-200 bg-background p-4"
+          className="rounded-xl border-2 border-border bg-background p-4"
         >
           <QRCodeSVG
             value={qrData}

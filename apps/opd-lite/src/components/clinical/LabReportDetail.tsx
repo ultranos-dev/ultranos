@@ -125,7 +125,7 @@ function renderAttachment(
         <a
           href={dataUri}
           download={attachment.title ?? `attachment-${index + 1}`}
-          className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+          className="text-sm font-medium text-primary underline hover:text-primary"
         >
           Download {attachment.title ?? `Attachment ${index + 1}`}
         </a>
@@ -211,7 +211,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       <div className="flex flex-wrap items-start gap-2">
         <h3 className="text-xl font-bold text-foreground">{loincDisplay}</h3>
         {isAmended && (
-          <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
+          <span className="rounded bg-primary px-2 py-0.5 text-xs font-bold text-primary">
             {statusLabel(report.status)}
           </span>
         )}

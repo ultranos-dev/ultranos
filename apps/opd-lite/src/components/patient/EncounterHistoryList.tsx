@@ -43,7 +43,7 @@ function getStatusBadge(status: string): { label: string; classes: string } {
     case 'cancelled':
       return { label: 'Cancelled', classes: 'bg-muted text-muted-foreground' }
     case 'in-progress':
-      return { label: 'In Progress', classes: 'bg-blue-100 text-blue-700' }
+      return { label: 'In Progress', classes: 'bg-primary text-primary' }
     default:
       return { label: status, classes: 'bg-muted text-muted-foreground' }
   }
@@ -298,7 +298,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                   </span>
                 ))}
                 {rxCount > 0 && (
-                  <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                     {rxCount} Rx
                   </span>
                 )}

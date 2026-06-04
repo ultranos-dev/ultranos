@@ -31,7 +31,7 @@ export function ProfileCard() {
 
       <div className="flex items-start gap-4">
         {/* Initials avatar */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary">
           {initials}
         </div>
 

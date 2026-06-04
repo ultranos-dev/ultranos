@@ -331,7 +331,7 @@ export function BookingModal({
               className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
                 selectedPatient
                   ? 'border-success bg-success/10'
-                  : 'border-neutral-300'
+                  : 'border-border'
               }`}
             />
             {selectedPatient && (
@@ -341,7 +341,7 @@ export function BookingModal({
             )}
             {/* Dropdown results */}
             {patientResults.length > 0 && !selectedPatient && (
-              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-background shadow-lg">
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
                 <ul className="divide-y divide-neutral-100" role="listbox" aria-label={t('selectPatient')}>
                   {patientResults.map((patient) => (
                     <li
@@ -365,12 +365,12 @@ export function BookingModal({
               </div>
             )}
             {isSearchingPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
                 Searching...
               </div>
             )}
             {patientQuery.trim() && patientResults.length === 0 && !isSearchingPatient && !selectedPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
                 {t('noResults')}
               </div>
             )}
@@ -385,7 +385,7 @@ export function BookingModal({
               type="date"
               value={formatDateInput(bookingDate)}
               onChange={handleDateChange}
-              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
@@ -454,7 +454,7 @@ export function BookingModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
 

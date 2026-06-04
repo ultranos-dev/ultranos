@@ -268,7 +268,7 @@ export function MpiResultModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-muted px-6 py-4">
           <Button
             variant="secondary"
             type="button"

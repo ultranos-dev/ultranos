@@ -200,7 +200,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
   }, [activeIndex])
 
   const inputClasses =
-    'w-full rounded-xl border border-neutral-300 bg-background ps-4 pe-4 py-2.5 ' +
+    'w-full rounded-xl border border-border bg-background ps-4 pe-4 py-2.5 ' +
     'text-base text-foreground placeholder:text-muted-foreground ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
     'focus:border-primary-400 focus:ring-primary-200 ' +

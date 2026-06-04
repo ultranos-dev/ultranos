@@ -121,7 +121,7 @@ export function DayScheduleView() {
             type="date"
             value={formatDate(selectedDate)}
             onChange={handleDateInput}
-            className="rounded-xl border border-neutral-300 px-2 py-1 text-sm"
+            className="rounded-xl border border-border px-2 py-1 text-sm"
             aria-label={t('datePicker')}
           />
         </div>

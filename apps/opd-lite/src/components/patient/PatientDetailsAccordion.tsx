@@ -114,7 +114,7 @@ export function PatientDetailsAccordion({
             </span>
           )}
 
-          <hr className="my-4 border-neutral-200" />
+          <hr className="my-4 border-border" />
 
           {/* ── Identity & Records ──────────────────────── */}
           <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">

@@ -69,7 +69,7 @@ export function ConsentSection({
                 value="WRITTEN"
                 checked={method === 'WRITTEN'}
                 onChange={() => onMethodChange('WRITTEN')}
-                className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                className="h-5 w-5 border-border text-primary focus:ring-ring"
                 aria-invalid={!!errors?.method}
               />
               <span className="text-sm font-medium text-foreground">
@@ -84,7 +84,7 @@ export function ConsentSection({
                 value="VERBAL_WITNESSED"
                 checked={method === 'VERBAL_WITNESSED'}
                 onChange={() => onMethodChange('VERBAL_WITNESSED')}
-                className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                className="h-5 w-5 border-border text-primary focus:ring-ring"
                 aria-invalid={!!errors?.method}
               />
               <span className="text-sm font-medium text-foreground">
@@ -120,7 +120,7 @@ export function ConsentSection({
               className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors?.witnessedBy
                   ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                  : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                  : 'border-border focus:border-primary focus:ring-ring'
               }`}
               placeholder={t('consentWitnessPlaceholder')}
               value={witnessedBy}
@@ -151,7 +151,7 @@ export function ConsentSection({
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.language
                 ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
           >
             {CONSENT_LANGUAGES.map((lang) => (
@@ -171,7 +171,7 @@ export function ConsentSection({
         <Button
           variant="outline"
           onClick={() => setConsentModalOpen(true)}
-          className="gap-1.5 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+          className="gap-1.5 border-primary/20 bg-primary/10 text-primary hover:bg-primary"
         >
           <FileText className="h-4 w-4" />
           {t('viewFullConsent')}

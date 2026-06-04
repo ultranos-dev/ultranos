@@ -150,7 +150,7 @@ export function SOAPNoteEntry({
     return () => window.removeEventListener('keydown', handler)
   }, [handleAIAssist, handleConfirmSave, aiDiff.isActive, aiDiff.isLoading])
 
-  const textareaClass = `w-full rounded-xl border border-neutral-300 bg-background px-4 py-3
+  const textareaClass = `w-full rounded-xl border border-border bg-background px-4 py-3
     text-base text-foreground placeholder:text-muted-foreground
     focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
     transition-colors`
@@ -172,9 +172,9 @@ export function SOAPNoteEntry({
         </div>
 
         {aiDiff.isLoading && (
-          <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            <span className="text-sm font-semibold text-blue-700">AI is parsing your notes...</span>
+          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/10 p-4">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-semibold text-primary">AI is parsing your notes...</span>
           </div>
         )}
 

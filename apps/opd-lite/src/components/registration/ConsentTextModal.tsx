@@ -86,7 +86,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
 
       <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between rounded-t-xl border-b border-neutral-200 bg-muted px-6 py-4">
+        <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-muted px-6 py-4">
           <h2
             id="consent-text-title"
             className="text-xl font-black text-foreground"
@@ -105,7 +105,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         </div>
 
         {/* Language tabs */}
-        <div className="flex border-b border-neutral-200" role="tablist" aria-label={t('consentLanguage')}>
+        <div className="flex border-b border-border" role="tablist" aria-label={t('consentLanguage')}>
           {TABS.map((tab) => (
             <Button
               key={tab.locale}
@@ -142,7 +142,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
+        <div className="flex justify-end rounded-b-xl border-t border-border bg-muted px-6 py-4">
           <Button
             variant="primary"
             type="button"

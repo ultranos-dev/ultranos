@@ -38,7 +38,7 @@ function flagBorderClass(flag?: string): string {
   switch (flag) {
     case 'critical': return 'border-s-4 border-s-red-500 bg-destructive/10'
     case 'abnormal': return 'border-s-4 border-s-amber-400 bg-warning/10'
-    default: return 'border-s border-s-neutral-200'
+    default: return 'border-s border-s-border'
   }
 }
 
@@ -69,7 +69,7 @@ function statusBadge(status: string) {
       return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">Final</span>
     case 'amended':
     case 'corrected':
-      return <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+      return <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
     default:
       return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">{status}</span>
   }
@@ -205,7 +205,7 @@ function GroupCard({
                       <span className="font-medium text-foreground">{flagLabel(flag)}</span>
                       {statusBadge(report.status)}
                       {(report.status === 'amended' || report.status === 'corrected') && (
-                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">Amended</span>
+                        <span className="rounded bg-primary px-1.5 py-0.5 text-xs text-primary">Amended</span>
                       )}
                     </div>
                     <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">

@@ -454,7 +454,7 @@ export function PatientEditModal({
     `w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
       error
         ? 'border-destructive focus:border-destructive focus:ring-destructive'
-        : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+        : 'border-border focus:border-primary focus:ring-ring'
     }`
 
   return (
@@ -466,7 +466,7 @@ export function PatientEditModal({
     >
       <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-background shadow-xl sm:mx-4">
         {/* ── Sticky header ── */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2
             id="edit-patient-title"
             className="text-lg font-bold text-foreground"
@@ -519,7 +519,7 @@ export function PatientEditModal({
                   </span>
                 </label>
                 {hasNationalId ? (
-                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <p className="min-h-[44px] flex items-center rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
                     {t('nationalId')} ••••••
                   </p>
                 ) : (
@@ -528,7 +528,7 @@ export function PatientEditModal({
                     type="text"
                     inputMode="text"
                     maxLength={200}
-                    className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     placeholder={t('nationalIdPlaceholder')}
                     value={nationalId}
                     onChange={(e) => setNationalId(e.target.value)}
@@ -578,7 +578,7 @@ export function PatientEditModal({
                       if (e.target.checked) setBirthDate('')
                       else setBirthYear('')
                     }}
-                    className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                    className="h-5 w-5 border-border text-primary focus:ring-ring"
                   />
                   <span className="text-sm font-medium text-foreground">
                     {t('birthYearOnly')}
@@ -654,7 +654,7 @@ export function PatientEditModal({
                   type="tel"
                   dir="ltr"
                   inputMode="tel"
-                  className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder={t('phonePlaceholder')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -678,7 +678,7 @@ export function PatientEditModal({
                   onChange={(e) =>
                     setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
                   }
-                  className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="en">English</option>
                   <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
@@ -728,7 +728,7 @@ export function PatientEditModal({
                 onChange={(e) => setBloodGroup(e.target.value)}
                 disabled={bloodGroupLocked}
                 aria-disabled={bloodGroupLocked}
-                className={`w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 ${
+                className={`w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring ${
                   bloodGroupLocked ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
                 }`}
               >
@@ -758,7 +758,7 @@ export function PatientEditModal({
         </div>
 
         {/* ── Sticky footer ── */}
-        <div className="flex items-center justify-end gap-3 border-t border-neutral-200 px-5 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-border px-5 py-4">
           <Button variant="ghost" type="button" onClick={onClose} disabled={submitting}>
             {t('cancel')}
           </Button>

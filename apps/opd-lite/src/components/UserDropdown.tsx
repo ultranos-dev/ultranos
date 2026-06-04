@@ -80,7 +80,7 @@ export function UserDropdown() {
     <div className="relative" ref={ref}>
       <Button
         variant="icon"
-        className="h-9 w-9 bg-blue-100 text-sm font-bold text-blue-700 hover:bg-blue-200"
+        className="h-9 w-9 bg-primary text-sm font-bold text-primary hover:bg-primary"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User menu"
         aria-expanded={isOpen}

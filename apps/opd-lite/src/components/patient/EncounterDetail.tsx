@@ -120,7 +120,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
 
   if (loading) {
     return (
-      <div className="border-t border-neutral-200 p-4" data-testid="encounter-detail-loading">
+      <div className="border-t border-border p-4" data-testid="encounter-detail-loading">
         <p className="text-sm text-muted-foreground">Loading details...</p>
       </div>
     )
@@ -128,7 +128,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
 
   if (!data) {
     return (
-      <div className="border-t border-neutral-200 p-4">
+      <div className="border-t border-border p-4">
         <p className="text-sm text-muted-foreground">Unable to load encounter details.</p>
       </div>
     )
@@ -136,7 +136,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
 
   return (
     <div
-      className="border-t border-neutral-200 p-4 space-y-4"
+      className="border-t border-border p-4 space-y-4"
       data-testid="encounter-detail"
     >
       {/* Allergy snapshot at time of visit */}
@@ -196,7 +196,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                 <div className="mb-2 flex items-center gap-2">
                   {entry.source === 'AI_GENERATED' && (
                     <span
-                      className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700"
+                      className="inline-flex rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary"
                       title={entry.aiModelVersion ? `Model: ${entry.aiModelVersion}` : undefined}
                     >
                       AI Generated

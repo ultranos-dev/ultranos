@@ -98,7 +98,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
                 type="checkbox"
                 checked={isVisible}
                 onChange={() => toggleWidget(id)}
-                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                 aria-label={widgetLabels[id]}
               />
               <span className="flex-1 text-sm font-semibold text-foreground">

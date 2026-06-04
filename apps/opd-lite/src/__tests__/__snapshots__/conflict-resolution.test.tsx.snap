@@ -24,10 +24,10 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
     data-testid="diff-grid"
   >
     <div
-      class="bg-blue-50 ps-4 pe-4 py-2"
+      class="bg-primary/10 ps-4 pe-4 py-2"
     >
       <span
-        class="text-xs font-bold text-blue-800"
+        class="text-xs font-bold text-primary"
       >
         Local Version
       </span>
@@ -390,10 +390,10 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
       data-testid="diff-grid"
     >
       <div
-        class="bg-blue-50 ps-4 pe-4 py-2"
+        class="bg-primary/10 ps-4 pe-4 py-2"
       >
         <span
-          class="text-xs font-bold text-blue-800"
+          class="text-xs font-bold text-primary"
         >
           Local Version
         </span>

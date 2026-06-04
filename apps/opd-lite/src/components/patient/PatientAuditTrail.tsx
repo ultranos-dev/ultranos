@@ -185,7 +185,7 @@ export function PatientAuditTrail({
           )}
 
           {entries.length > 0 && (
-            <ul className="space-y-2 border-s-2 border-neutral-200 ps-4">
+            <ul className="space-y-2 border-s-2 border-border ps-4">
               {entries.map((entry) => (
                 <li key={entry.id} className="text-sm text-foreground">
                   <span className="font-medium">
@@ -219,7 +219,7 @@ export function PatientAuditTrail({
               type="button"
               onClick={handleLoadMore}
               disabled={loading}
-              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-muted-foreground"
+              className="mt-3 text-sm font-medium text-primary hover:text-primary disabled:text-muted-foreground"
             >
               {loading ? t('auditLoading') : t('auditLoadMore')}
             </button>

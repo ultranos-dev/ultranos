@@ -25,7 +25,7 @@ export function BiometricStaleBanner({
   return (
     <div
       role="status"
-      className="mb-4 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-sm text-blue-800"
+      className="mb-4 rounded-lg border border-primary bg-primary/10 px-4 py-3 text-sm text-primary"
     >
       <div className="flex items-center justify-between gap-3">
         <p>
