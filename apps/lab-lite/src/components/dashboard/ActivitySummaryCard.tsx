@@ -18,11 +18,11 @@ export function ActivitySummaryCard({ uploadsCompleted, resultsPending, lastRefr
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-neutral-500">{t('todaysActivity')}</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">{t('todaysActivity')}</h2>
         {formattedTime && (
-          <span className="text-xs text-neutral-400">{t('lastRefreshed', { time: formattedTime })}</span>
+          <span className="text-xs text-muted-foreground">{t('lastRefreshed', { time: formattedTime })}</span>
         )}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">

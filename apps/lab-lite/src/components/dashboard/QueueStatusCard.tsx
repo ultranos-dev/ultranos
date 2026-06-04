@@ -34,8 +34,8 @@ export function QueueStatusCard({ counts }: QueueStatusCardProps) {
   const hasFailures = counts.failed > 0
 
   return (
-    <div className={`rounded-lg border p-4 ${hasFailures ? 'border-red-200 bg-red-50/30' : 'border-neutral-200 bg-white'}`}>
-      <h2 className="text-sm font-medium text-neutral-500">{t('uploadQueue')}</h2>
+    <div className={`rounded-lg border p-4 ${hasFailures ? 'border-red-200 bg-red-50/30' : 'border-border bg-card'}`}>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('uploadQueue')}</h2>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <CountBadge label={t('pending')} count={counts.pending} colorClass="bg-amber-50 text-amber-700" ariaLabel={`${counts.pending} ${t('pending')}`} />
         <CountBadge label={t('uploading')} count={counts.uploading} colorClass="bg-amber-50 text-amber-700" ariaLabel={`${counts.uploading} ${t('uploading')}`} />

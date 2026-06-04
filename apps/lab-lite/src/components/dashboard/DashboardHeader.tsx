@@ -11,10 +11,10 @@ export function DashboardHeader() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-xl font-bold text-neutral-900">
+        <h1 className="text-xl font-bold text-foreground">
           {t('greeting', { name: displayName })}
         </h1>
-        <p className="mt-0.5 text-sm text-neutral-500">
+        <p className="mt-0.5 text-sm text-muted-foreground">
           {(session as Record<string, unknown>)?.labName as string ?? t('defaultLabName')}
         </p>
       </div>

@@ -16,16 +16,16 @@ import { ReadinessBriefingCard } from '@/components/dashboard/ReadinessBriefingC
 
 function RecentUploadsSkeleton() {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4" aria-busy="true" aria-label="Loading recent uploads">
-      <div className="h-3.5 w-28 animate-pulse rounded bg-neutral-200" />
+    <div className="rounded-lg border border-border bg-card p-4" aria-busy="true" aria-label="Loading recent uploads">
+      <div className="h-3.5 w-28 animate-pulse rounded bg-muted" />
       <div className="mt-3 space-y-3">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <div className="h-4 w-40 animate-pulse rounded bg-neutral-100" />
-              <div className="mt-1.5 h-3 w-24 animate-pulse rounded bg-neutral-100" />
+              <div className="h-4 w-40 animate-pulse rounded bg-muted/60" />
+              <div className="mt-1.5 h-3 w-24 animate-pulse rounded bg-muted/60" />
             </div>
-            <div className="ms-2 h-5 w-16 animate-pulse rounded-full bg-neutral-100" />
+            <div className="ms-2 h-5 w-16 animate-pulse rounded-full bg-muted/60" />
           </div>
         ))}
       </div>

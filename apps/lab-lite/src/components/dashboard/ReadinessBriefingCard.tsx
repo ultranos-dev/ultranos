@@ -138,25 +138,25 @@ function DimensionRow({ result }: { result: DimensionResult }) {
   const hasDetails = result.details.length > 0 || result.recommendations.length > 0
 
   return (
-    <div className="border-b border-neutral-100 last:border-0">
+    <div className="border-b border-border/50 last:border-0">
       {/* Main row */}
       <button
         type="button"
-        className="flex w-full items-center gap-3 py-3 text-start hover:bg-neutral-50 disabled:cursor-default"
+        className="flex w-full items-center gap-3 py-3 text-start hover:bg-muted/50 disabled:cursor-default"
         onClick={() => hasDetails && setExpanded((v) => !v)}
         aria-expanded={hasDetails ? expanded : undefined}
         disabled={!hasDetails}
       >
-        <span className="text-neutral-500">
+        <span className="text-muted-foreground">
           <DimensionIcon dimension={result.dimension} />
         </span>
 
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-medium text-neutral-800">
+          <span className="block text-sm font-medium text-foreground">
             {t(result.titleKey)}
           </span>
           {result.summaryKey && (
-            <span className="block text-xs text-neutral-500 truncate">
+            <span className="block text-xs text-muted-foreground truncate">
               {t(result.summaryKey, result.summaryArgs as Record<string, string | number | Date> | undefined)}
             </span>
           )}
@@ -165,7 +165,7 @@ function DimensionRow({ result }: { result: DimensionResult }) {
         <RAGBadge status={result.status} />
 
         {hasDetails && (
-          <span className="text-neutral-400 shrink-0">
+          <span className="text-muted-foreground shrink-0">
             <DirectionalIcon category="navigation">
               {expanded ? (
                 <ChevronDown size={14} aria-hidden="true" />
@@ -181,7 +181,7 @@ function DimensionRow({ result }: { result: DimensionResult }) {
       {expanded && hasDetails && (
         <div className="pb-3 ps-8 pe-2 space-y-1.5">
           {result.details.map((detailKey, i) => (
-            <p key={i} className="text-xs text-neutral-600">
+            <p key={i} className="text-xs text-muted-foreground">
               {t(detailKey)}
             </p>
           ))}
@@ -253,16 +253,16 @@ export function ReadinessBriefingCard() {
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-neutral-800">
+            <h2 className="text-sm font-semibold text-foreground">
               {t('readiness.title')}
             </h2>
             {!cardExpanded && (
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-muted-foreground">
                 {t('readiness.collapsedSummary', { ready: readyCount, total: totalCount })}
               </p>
             )}
           </div>
-          <span className="ms-auto text-neutral-400 shrink-0">
+          <span className="ms-auto text-muted-foreground shrink-0">
             <DirectionalIcon category="navigation">
               {cardExpanded ? (
                 <ChevronDown size={16} aria-hidden="true" />
@@ -297,14 +297,14 @@ export function ReadinessBriefingCard() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 border-b border-neutral-100 py-3 last:border-0"
+                  className="flex items-center gap-3 border-b border-border/50 py-3 last:border-0"
                 >
-                  <div className="h-4 w-4 animate-pulse rounded bg-neutral-200" />
+                  <div className="h-4 w-4 animate-pulse rounded bg-muted" />
                   <div className="flex-1 space-y-1">
-                    <div className="h-3 w-28 animate-pulse rounded bg-neutral-200" />
-                    <div className="h-2.5 w-40 animate-pulse rounded bg-neutral-100" />
+                    <div className="h-3 w-28 animate-pulse rounded bg-muted" />
+                    <div className="h-2.5 w-40 animate-pulse rounded bg-muted/60" />
                   </div>
-                  <div className="h-5 w-20 animate-pulse rounded-full bg-neutral-200" />
+                  <div className="h-5 w-20 animate-pulse rounded-full bg-muted" />
                 </div>
               ))}
             </div>
@@ -318,7 +318,7 @@ export function ReadinessBriefingCard() {
 
           {/* Timestamp footer */}
           {lastRefreshedAt && (
-            <p className="mt-3 text-xs text-neutral-400">
+            <p className="mt-3 text-xs text-muted-foreground">
               {t('readiness.lastEvaluated', {
                 time: lastRefreshedAt.toLocaleTimeString([], {
                   hour: '2-digit',

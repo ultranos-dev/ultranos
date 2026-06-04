@@ -78,17 +78,17 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-medium text-neutral-500">{t('recentUploads')}</h2>
-        <p className="mt-3 text-sm text-neutral-400">{t('noUploadsYet')}</p>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-medium text-muted-foreground">{t('recentUploads')}</h2>
+        <p className="mt-3 text-sm text-muted-foreground">{t('noUploadsYet')}</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
-      <h2 className="text-sm font-medium text-neutral-500">{t('recentUploads')}</h2>
-      <ul className="mt-3 divide-y divide-neutral-100" role="list">
+    <div className="rounded-lg border border-border bg-card p-4">
+      <h2 className="text-sm font-medium text-muted-foreground">{t('recentUploads')}</h2>
+      <ul className="mt-3 divide-y divide-border" role="list">
         {items.map((item) => {
           const statusLabel = tStatus(item.status)
           const isConfirming = confirmingId === item.id
@@ -129,10 +129,10 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-900">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {displayLabel}
                     </p>
-                    <p className="text-xs text-neutral-400">{formatTimestamp(item.timestamp, locale)}</p>
+                    <p className="text-xs text-muted-foreground">{formatTimestamp(item.timestamp, locale)}</p>
                   </div>
                   <div className="ms-2 flex shrink-0 items-center gap-2">
                     <span

@@ -14,7 +14,7 @@ function BudgetBar({ used, total }: { used: number; total: number }) {
 
   return (
     <div
-      className="h-3 w-full rounded-full bg-neutral-200"
+      className="h-3 w-full rounded-full bg-muted"
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
@@ -83,11 +83,11 @@ export function WorkloadScheduleCard() {
   // No power schedule configured — show setup prompt
   if (!hasSchedule && !isLoading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-neutral-500 mb-2">
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2">
           {t('workload.title')}
         </h3>
-        <p className="text-sm text-neutral-600 mb-3">
+        <p className="text-sm text-muted-foreground mb-3">
           {t('powerSchedule.setupPrompt')}
         </p>
         <Link href="/settings/power-schedule">
@@ -102,13 +102,13 @@ export function WorkloadScheduleCard() {
   if (isLoading) {
     return (
       <div
-        className="rounded-lg border border-neutral-200 bg-white p-4"
+        className="rounded-lg border border-border bg-card p-4"
         aria-busy="true"
         aria-label={t('workload.title')}
       >
-        <div className="h-4 w-36 animate-pulse rounded bg-neutral-200 mb-3" />
-        <div className="h-3 w-full animate-pulse rounded bg-neutral-100 mb-2" />
-        <div className="h-3 w-3/4 animate-pulse rounded bg-neutral-100" />
+        <div className="h-4 w-36 animate-pulse rounded bg-muted mb-3" />
+        <div className="h-3 w-full animate-pulse rounded bg-muted/60 mb-2" />
+        <div className="h-3 w-3/4 animate-pulse rounded bg-muted/60" />
       </div>
     )
   }
@@ -124,10 +124,10 @@ export function WorkloadScheduleCard() {
   const budgetUsedPct = budget.total > 0 ? schedule.budget.used : 0
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-neutral-500">
+        <h3 className="text-sm font-semibold text-muted-foreground">
           {t('workload.title')}
         </h3>
         <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export function WorkloadScheduleCard() {
       </div>
 
       {/* Power window header */}
-      <p className="text-sm text-neutral-700 mb-2">
+      <p className="text-sm text-foreground mb-2">
         {t('workload.powerWindow', {
           startTime: budget.startTime,
           endTime: budget.endTime,
@@ -155,7 +155,7 @@ export function WorkloadScheduleCard() {
       {/* Budget bar */}
       <div className="mb-3">
         <BudgetBar used={budgetUsedPct} total={budget.totalMinutes} />
-        <div className="flex justify-between text-xs text-neutral-500 mt-1">
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>
             {t('workload.analyzerTimeNeeded')}: {Math.round(schedule.budget.used)}min
           </span>
@@ -170,7 +170,7 @@ export function WorkloadScheduleCard() {
 
       {/* Empty state */}
       {schedule.scheduledGroups.length === 0 && (
-        <p className="text-sm text-neutral-400 text-center py-4">
+        <p className="text-sm text-muted-foreground text-center py-4">
           {t('workload.emptyState')}
         </p>
       )}
@@ -178,7 +178,7 @@ export function WorkloadScheduleCard() {
       {/* Power phase groups */}
       {powerGroups.length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-medium text-neutral-500 mb-1">
+          <p className="text-xs font-medium text-muted-foreground mb-1">
             {t('workload.phaseHeaderPower')}
           </p>
           <div className="flex flex-col gap-1">
@@ -206,7 +206,7 @@ export function WorkloadScheduleCard() {
       {/* Manual phase groups */}
       {manualGroups.length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-medium text-neutral-500 mb-1">
+          <p className="text-xs font-medium text-muted-foreground mb-1">
             {t('workload.phaseHeaderManual')}
           </p>
           <div className="flex flex-col gap-1">
@@ -234,7 +234,7 @@ function GroupRow({ group }: { group: ScheduledGroup }) {
       }`}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <span className="font-medium text-neutral-900 truncate">
+        <span className="font-medium text-foreground truncate">
           {group.displayName}
         </span>
         {group.hasUrgent && (
