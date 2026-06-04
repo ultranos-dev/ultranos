@@ -13,10 +13,14 @@ import {
 } from '@/components/ui/breadcrumb'
 import { buildBreadcrumbs } from '@/lib/route-map'
 import React from 'react'
+import { Badge } from '@/components/ui/badge'
+import { useLocationStore, ALL_LOCATIONS } from '@/stores/location-store'
 
 export function BreadcrumbHeader() {
   const pathname = usePathname()
   const crumbs = buildBreadcrumbs(pathname ?? '/dashboard')
+  const selected = useLocationStore((s) => s.selected)
+  const isFiltered = selected.id !== ALL_LOCATIONS.id
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
@@ -38,6 +42,11 @@ export function BreadcrumbHeader() {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+      {isFiltered && (
+        <Badge variant="outline" className="ml-auto text-xs">
+          {selected.name}
+        </Badge>
+      )}
     </header>
   )
 }
