@@ -1,7 +1,11 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { SyncProvider } from '@/components/providers/SyncProvider'
-import { AppShellWrapper } from '@/components/AppShellWrapper'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import {
+  SidebarInset,
+  SidebarProvider,
+} from '@/components/ui/sidebar'
 
 export default async function LocaleLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages()
@@ -9,9 +13,20 @@ export default async function LocaleLayout({ children }: { children: React.React
   return (
     <NextIntlClientProvider messages={messages}>
       <SyncProvider>
-        <AppShellWrapper>
-          {children}
-        </AppShellWrapper>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:rounded focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline-2 focus:outline-offset-2 focus:outline-ring"
+            >
+              Skip to content
+            </a>
+            <main id="main-content">
+              {children}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
       </SyncProvider>
     </NextIntlClientProvider>
   )
