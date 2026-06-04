@@ -4,12 +4,12 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 
 ## Tech Stack
 
-- **Admin Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS v3, ShadCN UI (radix-ui), oklch semantic tokens, Manrope/Public Sans fonts (`apps/admin-portal/`)
-- **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline, Urbanist font
+- **Admin Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS v3, ShadCN UI (radix-ui), oklch semantic tokens (`apps/admin-portal/`)
+- **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
 - **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
 - **Patient Lite Mobile:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
-- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`), Manrope font, ShadCN via ui-kit re-exports
-- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`), Urbanist font, ShadCN via ui-kit re-exports
+- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`), ShadCN via ui-kit re-exports
+- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`), ShadCN via ui-kit re-exports
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
 - **Infrastructure:** Terraform, Docker, GitHub Actions CI/CD
@@ -125,6 +125,9 @@ className="bg-card border border-border rounded-2xl"
 className="bg-[#9fe870] text-[#163300]"
 style={{ backgroundColor: 'oklch(0.527 0.154 150.069)' }}
 ```
+
+**Fonts — Manrope (sans) + Public Sans (heading), all apps:**
+Every Next.js app loads Manrope and Public Sans as local fonts with CSS variables  and . The  maps them as  and . Arabic/RTL overrides are handled via  (Noto Sans Arabic / Noto Naskh Arabic).
 
 **Shared Tailwind preset — `@ultranos/ui-kit/tailwind.preset`:**
 Every Next.js app's `tailwind.config.ts` MUST use the shared preset and MUST scan the ui-kit source:

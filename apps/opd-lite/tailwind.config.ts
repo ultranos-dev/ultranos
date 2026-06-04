@@ -3,11 +3,15 @@ import preset from '@ultranos/ui-kit/tailwind.preset'
 
 const config: Config = {
   presets: [preset],
-  content: ['./src/**/*.{ts,tsx}'],
+  content: [
+    './src/**/*.{ts,tsx}',
+    '../../packages/ui-kit/src/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-urbanist)', 'system-ui', 'sans-serif'],
+        sans:    ["'Manrope'", 'var(--font-manrope)', 'system-ui', 'sans-serif'],
+        heading: ["'Public Sans'", 'var(--font-public-sans)', 'system-ui', 'sans-serif'],
       },
       fontWeight: {
         black: '900',

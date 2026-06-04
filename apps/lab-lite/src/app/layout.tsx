@@ -6,16 +6,31 @@ import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
-const urbanist = localFont({
-  src: '../../public/fonts/Urbanist-Variable.woff2',
-  weight: '100 900',
-  style: 'normal',
-  variable: '--font-urbanist',
+const manrope = localFont({
+  src: [
+    {
+      path: '../../public/fonts/manrope/Manrope-Regular.woff2',
+      weight: '100 900',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
+const publicSans = localFont({
+  src: [
+    { path: '../../public/fonts/public-sans/PublicSans-Regular.woff2',  weight: '400', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-Medium.woff2',   weight: '500', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-Bold.woff2',     weight: '700', style: 'normal' },
+  ],
+  variable: '--font-public-sans',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Lab Diagnostics Portal \u2014 Ultranos',
+  title: 'Lab Diagnostics Portal — Ultranos',
   description: 'Ultranos Lab Lite PWA for diagnostic result upload',
 }
 
@@ -25,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isRtl = dir === 'rtl'
 
   return (
-    <html lang={locale} dir={dir} className={urbanist.variable} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${manrope.variable} ${publicSans.variable}`} suppressHydrationWarning>
       <head>
         {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
         {/* Inline theme detection: runs before hydration to avoid flash-of-wrong-theme */}

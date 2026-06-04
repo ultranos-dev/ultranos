@@ -7,7 +7,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-family-sans)', 'system-ui', 'sans-serif'],
+        sans:    ["'Manrope'", 'var(--font-manrope)', 'system-ui', 'sans-serif'],
+        heading: ["'Public Sans'", 'var(--font-public-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
         primary: {

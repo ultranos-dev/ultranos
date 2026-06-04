@@ -10,7 +10,7 @@
 
 The Ultranos interface is a clinical-grade workspace that prioritizes clarity, density, and calm. It operates on a warm off-white canvas (`#f4f5f2` to `#ffffff`) with near-black text (`#0e0f0c`) and a signature **Wise Green** (`#9fe870`) accent that signals interactivity with an optimistic, nature-inspired tone — distinct from the sterile blues of legacy healthcare software.
 
-Typography uses **Manrope** as the primary typeface in admin-portal and pharmacy-lite (with **Public Sans** for headings), and **Urbanist** in opd-lite and lab-lite. All are Urbanist-family geometric sans-serifs with similar visual rhythm. The design spec below uses "Inter" as the historical reference — all proportions, weights, and sizes apply equally to Manrope/Urbanist. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
+Typography uses **Manrope** as the primary typeface across all apps, with **Public Sans** for headings. The design spec below uses "Inter" as the historical reference — all proportions, weights, and sizes apply equally to Manrope/Public Sans. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
 
 The interaction palette is driven by the **Wise Green** (`#9fe870`) with **Dark Green** (`#163300`) text — the same fresh, lime-bright pairing from the original Wise system. Primary buttons, active navigation tabs, icon badges on the anatomy viewer, and chart accent points all use this green system. Hover states shift to **Pastel Green** (`#cdffad`) with a subtle `scale(1.03)` expansion; pressed/`:active` states use `scale(0.97)` compression. Every transition specifies exact properties and uses custom easing curves — never `transition: all`, never default CSS easings. This level of craft is invisible to the user individually, but in aggregate it makes the interface feel alive and intentional.
 
@@ -65,10 +65,11 @@ Cards use a **glassmorphic treatment**: 70% opacity background (`bg-card-bg/70`)
 ## 3. Typography Rules
 
 ### Font Family
-- **Admin Portal + Pharmacy Lite**: `Manrope` (sans), `Public Sans` (heading), fallback: `system-ui, sans-serif`
-- **OPD Lite + Lab Lite**: `Urbanist` (variable), fallback: `system-ui, sans-serif`
+- **All apps**: `Manrope` (sans / body), `Public Sans` (heading), fallback: `system-ui, sans-serif`
+- Loaded as local woff2 files in each app's `public/fonts/manrope/` and `public/fonts/public-sans/`
+- CSS variables: `--font-manrope`, `--font-public-sans` injected on `<html>` via Next.js `localFont`
+- Tailwind mapping: `font-sans` → Manrope, `font-heading` → Public Sans (configured in each app's `tailwind.config.ts`)
 - **OpenType features**: `"calt" 1` (contextual alternates) enabled on all text
-- Configured per-app in `tailwind.config.ts` `fontFamily` extension (app-specific concern, not in shared preset)
 
 ### Hierarchy
 
@@ -806,7 +807,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 ## 11. Do's and Don'ts
 
 ### Do
-- Use Manrope (admin-portal, pharmacy-lite) or Urbanist (opd-lite, lab-lite) as the typeface — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers. Never hardcode the font name in component code — always use the `font-sans` Tailwind class.
+- Use `font-sans` (Manrope) for body/UI text and `font-heading` (Public Sans) for headings across all apps — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers. Never hardcode font names in component code.
 - Use Wise Green (`#9fe870`) with Dark Green (`#163300`) text as the primary interactive color system
 - Specify exact transition properties: `transition: transform 160ms var(--ease-out)` — never `transition: all`
 - Use custom easing curves (`--ease-out`, `--ease-in-out`, `--ease-panel`) — never default CSS easings
@@ -904,7 +905,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - "Create the right detail panel: white background, 20px top-left radius, shadow -4px 0 16px rgba(0,0,0,0.08). Entry: translateX(100%) → 0, 250ms cubic-bezier(0.32,0.72,0,1). Exit: 180ms cubic-bezier(0.23,1,0.32,1). Close × top-right. Content stagger 50ms. Bottom sticky bar: green pill '+ Add record' with scale(0.97) active."
 
 ### Iteration Guide
-1. Manrope/Urbanist per app (configured in tailwind.config.ts fontFamily) — weight 600 for headings, 400 for labels, 700 for vital numbers
+1. Manrope (`font-sans`) + Public Sans (`font-heading`) across all apps — weight 600 for headings, 400 for labels, 700 for vital numbers
 2. Wise Green (`#9fe870`) + Dark Green (`#163300`) for all interactive elements
 3. Custom easing curves — `cubic-bezier(0.23, 1, 0.32, 1)` as the primary UI easing
 4. `scale(1.03)` hover, `scale(0.97)` active — subtle physical feedback
