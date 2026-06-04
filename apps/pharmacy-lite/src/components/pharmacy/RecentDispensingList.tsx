@@ -1,6 +1,7 @@
 'use client'
 
 import { EmptyState } from './EmptyState'
+import { Badge } from '@/components/ui/badge'
 
 export interface RecentDispenseItem {
   id: string
@@ -27,9 +28,9 @@ function formatTime(isoString: string): string {
 }
 
 const syncBadgeClasses: Record<RecentDispenseItem['syncStatus'], string> = {
-  synced: 'bg-green-100 text-green-700',
-  pending: 'bg-amber-100 text-amber-700',
-  failed: 'bg-red-100 text-red-700',
+  synced: 'bg-success/10 text-success border-success/20',
+  pending: 'bg-warning/10 text-warning border-warning/20',
+  failed: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
 const syncLabels: Record<RecentDispenseItem['syncStatus'], string> = {
@@ -41,7 +42,7 @@ const syncLabels: Record<RecentDispenseItem['syncStatus'], string> = {
 export function RecentDispensingList({ items }: RecentDispensingListProps) {
   return (
     <div data-testid="recent-dispensing-list" className="space-y-2">
-      <h3 className="text-sm font-semibold text-neutral-600">
+      <h3 className="text-sm font-semibold text-muted-foreground">
         Recent Dispensing
       </h3>
       {items.length === 0 ? (
@@ -53,7 +54,7 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
           actionHref="/scan"
         />
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden">
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
           {items.map((item) => (
             <li
               key={item.id}
@@ -61,19 +62,20 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
               className="flex items-center justify-between px-4 py-3"
             >
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-neutral-900 truncate">
+                <div className="text-sm font-medium text-foreground truncate">
                   {item.medicationName}
                 </div>
-                <div className="text-xs text-neutral-500 truncate">
+                <div className="text-xs text-muted-foreground truncate">
                   {item.patientName ?? item.patientRef} &middot; {formatTime(item.whenHandedOver)}
                 </div>
               </div>
-              <span
+              <Badge
+                variant="outline"
                 data-testid={`sync-badge-${item.id}`}
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ms-2 ${syncBadgeClasses[item.syncStatus]}`}
+                className={`ms-2 ${syncBadgeClasses[item.syncStatus]}`}
               >
                 {syncLabels[item.syncStatus]}
-              </span>
+              </Badge>
             </li>
           ))}
         </ul>

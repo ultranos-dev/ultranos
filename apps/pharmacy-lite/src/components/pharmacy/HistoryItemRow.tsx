@@ -1,6 +1,7 @@
 'use client'
 
 import type { HistoryItem } from '@/lib/history-data'
+import { Badge } from '@/components/ui/badge'
 
 interface HistoryItemRowProps {
   item: HistoryItem
@@ -16,9 +17,9 @@ function formatTimestamp(isoString: string): string {
 }
 
 const syncBadgeClasses: Record<HistoryItem['syncStatus'], string> = {
-  synced: 'bg-green-100 text-green-700',
-  pending: 'bg-amber-100 text-amber-700',
-  failed: 'bg-red-100 text-red-700',
+  synced: 'bg-success/10 text-success border-success/20',
+  pending: 'bg-warning/10 text-warning border-warning/20',
+  failed: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
 const syncLabels: Record<HistoryItem['syncStatus'], string> = {
@@ -34,20 +35,21 @@ export function HistoryItemRow({ item }: HistoryItemRowProps) {
       className="flex items-center justify-between px-4 py-3"
     >
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-neutral-900 truncate">
+        <div className="text-sm font-medium text-foreground truncate">
           {item.medicationNames.join(', ')}
         </div>
-        <div className="text-xs text-neutral-500 truncate">
+        <div className="text-xs text-muted-foreground truncate">
           {item.patientFirstName} &middot; {item.pharmacistDisplay} &middot;{' '}
           {formatTimestamp(item.whenHandedOver)}
         </div>
       </div>
-      <span
+      <Badge
+        variant="outline"
         data-testid={`sync-badge-${item.id}`}
-        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ms-2 ${syncBadgeClasses[item.syncStatus]}`}
+        className={`ms-2 ${syncBadgeClasses[item.syncStatus]}`}
       >
         {syncLabels[item.syncStatus]}
-      </span>
+      </Badge>
     </li>
   )
 }

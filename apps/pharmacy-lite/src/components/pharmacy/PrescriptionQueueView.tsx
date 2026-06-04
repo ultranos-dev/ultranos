@@ -130,13 +130,13 @@ export function PrescriptionQueueView() {
   return (
     <div data-testid="prescription-queue-view" className="space-y-4">
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Tab bar */}
-      <div role="tablist" className="flex border-b border-neutral-200">
+      <div role="tablist" className="flex border-b border-border">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -147,18 +147,18 @@ export function PrescriptionQueueView() {
             className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? 'border-b-2 border-pill-text text-pill-text'
-                : 'text-neutral-500 hover:text-neutral-700'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
             {tab.id === 'active' && activeItems.length > 0 && (
-              <span className="ms-1 inline-flex items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+              <span className="ms-1 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
                 {activeItems.length}
               </span>
             )}
             {tab.id === 'failed' && failedItems.length > 0 && (
-              <span className="ms-1 inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-xs text-red-700">
+              <span className="ms-1 inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
                 {failedItems.length}
               </span>
             )}
@@ -181,7 +181,7 @@ export function PrescriptionQueueView() {
             actionHref={activeTab === 'active' ? '/scan' : undefined}
           />
         ) : (
-          <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden">
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
             {currentItems.map((item) => (
               <QueueItemCard
                 key={item.id}

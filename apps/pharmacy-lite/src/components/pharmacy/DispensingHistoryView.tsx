@@ -52,21 +52,21 @@ export function DispensingHistoryView() {
       </div>
 
       {loading ? (
-        <div data-testid="history-loading" className="py-8 text-center text-sm text-neutral-400">
+        <div data-testid="history-loading" className="py-8 text-center text-sm text-muted-foreground">
           Loading...
         </div>
       ) : error ? (
-        <div data-testid="history-error" className="py-8 text-center text-sm text-red-600">
+        <div data-testid="history-error" className="py-8 text-center text-sm text-destructive">
           {error}
         </div>
       ) : data && data.items.length > 0 ? (
         <>
-          <div className="text-xs text-neutral-500">
+          <div className="text-xs text-muted-foreground">
             {data.totalCount} record{data.totalCount !== 1 ? 's' : ''} found
           </div>
           <ul
             data-testid="history-list"
-            className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden"
+            className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden"
           >
             {data.items.map((item) => (
               <HistoryItemRow key={item.id} item={item} />
@@ -75,7 +75,7 @@ export function DispensingHistoryView() {
           <Pagination page={data.page} totalPages={data.totalPages} onPageChange={setPage} />
         </>
       ) : (
-        <div data-testid="history-empty" className="py-8 text-center text-sm text-neutral-400">
+        <div data-testid="history-empty" className="py-8 text-center text-sm text-muted-foreground">
           No dispensing records found
         </div>
       )}
