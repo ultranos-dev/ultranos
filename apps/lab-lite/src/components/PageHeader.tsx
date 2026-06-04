@@ -1,13 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { buildBreadcrumbs } from '@/lib/route-map'
 
@@ -21,9 +24,18 @@ export function PageHeader() {
       <Separator orientation="vertical" className="mr-2 h-4" />
       <Breadcrumb>
         <BreadcrumbList>
-          {crumbs.map((crumb) => (
+          {crumbs.map((crumb, index) => (
             <BreadcrumbItem key={crumb.href}>
-              <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              {index < crumbs.length - 1 ? (
+                <>
+                  <BreadcrumbLink asChild>
+                    <Link href={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                  <BreadcrumbSeparator />
+                </>
+              ) : (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              )}
             </BreadcrumbItem>
           ))}
         </BreadcrumbList>
