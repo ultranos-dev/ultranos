@@ -465,7 +465,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
           </svg>
-          <p className="font-semibold text-neutral-500">Loading patient...</p>
+          <p className="font-semibold text-muted-foreground">Loading patient...</p>
         </div>
       </main>
     )
@@ -474,7 +474,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   if (!patient) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
+        <p className="font-semibold text-muted-foreground">Patient not found in local session.</p>
         <Button
           variant="ghost"
           onClick={() => router.push('/')}
@@ -516,7 +516,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         >
           ← Back to Search
         </Button>
-        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
+        <h1 className="text-3xl font-black tracking-tight text-foreground">
           Encounter Dashboard
         </h1>
       </header>
@@ -525,15 +525,15 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         as="section"
         aria-label="Patient information"
       >
-        <h2 className="text-xl font-bold text-neutral-900">
+        <h2 className="text-xl font-bold text-foreground">
           {patient._ultranos?.nameLocal}
         </h2>
         {patient._ultranos?.nameLatin && (
-          <p className="text-sm font-semibold text-neutral-500">
+          <p className="text-sm font-semibold text-muted-foreground">
             {patient._ultranos.nameLatin}
           </p>
         )}
-        <div className="mt-3 flex gap-4 text-sm font-semibold text-neutral-600">
+        <div className="mt-3 flex gap-4 text-sm font-semibold text-muted-foreground">
           <span>ID: {patient.id.slice(0, 8)}...</span>
           <span>{patient.gender ?? 'Unknown'}</span>
           <span>{formatAge(patient.birthDate, patient.birthYearOnly)}</span>
@@ -550,14 +550,14 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           <>
             <div className="flex items-center gap-3">
               <span
-                className="inline-block h-3 w-3 rounded-full bg-green-500"
+                className="inline-block h-3 w-3 rounded-full bg-success"
                 aria-hidden="true"
               />
-              <span className="text-lg font-bold text-green-700" role="status">
+              <span className="text-lg font-bold text-success" role="status">
                 Active Consultation
               </span>
             </div>
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className="mt-2 text-sm text-muted-foreground">
               Started: {activeEncounter.period.start
                 ? new Date(activeEncounter.period.start).toLocaleTimeString()
                 : 'Unknown'}
@@ -572,7 +572,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           </>
         ) : (
           <>
-            <p className="mb-4 font-semibold text-neutral-500">
+            <p className="mb-4 font-semibold text-muted-foreground">
               No active consultation
             </p>
             <Button
@@ -611,7 +611,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           tabIndex={-1}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">Vital Signs</h2>
+            <h2 className="text-lg font-bold text-foreground">Vital Signs</h2>
             <AutosaveIndicator status={vitalsAutosaveStatus} />
           </div>
           <VitalsForm
@@ -640,7 +640,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           aria-label="SOAP note entry"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">Clinical Notes</h2>
+            <h2 className="text-lg font-bold text-foreground">Clinical Notes</h2>
             <AutosaveIndicator status={autosaveStatus} />
           </div>
           <SOAPNoteEntry
@@ -673,13 +673,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           {/* Story 10.1 AC 9: Medication history unavailable warning */}
           {!medicationHistoryAvailable && (
             <div
-              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
               role="alert"
             >
-              <p className="text-sm font-bold text-amber-800">
+              <p className="text-sm font-bold text-foreground">
                 Full medication history unavailable — interaction check limited to current encounter
               </p>
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-muted-foreground">
                 The patient&apos;s chronic medication history could not be loaded. Cross-encounter interactions may not be detected.
               </p>
             </div>
@@ -688,25 +688,25 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           {/* Drug interaction check status */}
           {pendingPrescriptions.some((rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE') ? (
             <div
-              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
               role="alert"
             >
-              <p className="text-sm font-bold text-amber-800">
+              <p className="text-sm font-bold text-foreground">
                 ⚠ Drug interaction check partially unavailable
               </p>
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-muted-foreground">
                 One or more prescriptions could not be checked for interactions. Verify manually before dispensing.
               </p>
             </div>
           ) : (
             <div
-              className="mb-4 rounded-lg border border-green-300 bg-green-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3"
               role="status"
             >
-              <p className="text-sm font-bold text-green-800">
+              <p className="text-sm font-bold text-foreground">
                 Drug interaction checking active
               </p>
-              <p className="text-xs text-green-700">
+              <p className="text-xs text-muted-foreground">
                 Checking against {activeMedicationStatements.length} active medication{activeMedicationStatements.length !== 1 ? 's' : ''} and {activeAllergies.length} known allerg{activeAllergies.length !== 1 ? 'ies' : 'y'}.
               </p>
             </div>
@@ -720,8 +720,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           />
 
           {prescriptionBlocked && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3" role="alert">
-              <p className="text-sm font-semibold text-red-800">
+            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3" role="alert">
+              <p className="text-sm font-semibold text-destructive">
                 Prescription creation blocked — resolve safety-critical conflicts first
               </p>
             </div>
@@ -730,54 +730,54 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           <PrescriptionEntry onSubmit={handleAddPrescription} />
 
           {prescriptionError && (
-            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 ps-4 pe-4 py-3" role="alert">
-              <p className="text-sm font-semibold text-red-800">{prescriptionError}</p>
+            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
+              <p className="text-sm font-semibold text-destructive">{prescriptionError}</p>
             </div>
           )}
 
           {/* Pending prescriptions list */}
           {pendingPrescriptions.length > 0 && (
             <div className="mt-6 space-y-3">
-              <h4 className="text-sm font-bold text-neutral-700">
+              <h4 className="text-sm font-bold text-foreground">
                 Pending Prescriptions ({pendingPrescriptions.length})
               </h4>
               <ul className="space-y-2" aria-label="Pending prescriptions list">
                 {pendingPrescriptions.map((rx) => (
                   <li
                     key={rx.id}
-                    className="flex items-center justify-between rounded-xl ring-[0.65px] ring-gray-400/40 bg-white ps-4 pe-4 py-3"
+                    className="flex items-center justify-between rounded-xl ring-[0.65px] ring-border/50 bg-card px-4 py-3"
                   >
                     <div>
-                      <span className="font-semibold text-neutral-900">
+                      <span className="font-semibold text-foreground">
                         {rx.medicationCodeableConcept.text}
                       </span>
-                      <span className="ms-2 me-2 text-neutral-300">|</span>
-                      <span className="text-sm text-neutral-600">
+                      <span className="ms-2 me-2 text-border">|</span>
+                      <span className="text-sm text-muted-foreground">
                         {rx.dosageInstruction?.[0]?.text}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       {rx._ultranos.interactionCheckResult === 'WARNING' && (
-                        <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
+                        <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
                           Interaction Warning
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'BLOCKED' && (
-                        <span className="rounded-full bg-red-100 ps-3 pe-3 py-1 text-xs font-bold text-red-700" title={rx._ultranos.interactionOverrideReason}>
+                        <span className="rounded-full bg-destructive/20 px-3 py-1 text-xs font-bold text-destructive" title={rx._ultranos.interactionOverrideReason}>
                           Override
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'CLEAR' && (
-                        <span className="rounded-full bg-green-100 ps-3 pe-3 py-1 text-xs font-bold text-green-700">
+                        <span className="rounded-full bg-success/20 px-3 py-1 text-xs font-bold text-success">
                           Clear
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'UNAVAILABLE' && (
-                        <span className="rounded-full bg-neutral-100 ps-3 pe-3 py-1 text-xs font-bold text-neutral-500">
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
                           Unchecked
                         </span>
                       )}
-                      <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
+                      <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
                         Pending Fulfillment
                       </span>
                       <Button
@@ -796,8 +796,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
               {/* QR Code Generation — available when prescriptions exist and key is loaded */}
               {signingKey && signingPublicKey && (
-                <div className="mt-6 border-t border-neutral-200 pt-6">
-                  <h4 className="mb-3 text-sm font-bold text-neutral-700">
+                <div className="mt-6 border-t border-border pt-6">
+                  <h4 className="mb-3 text-sm font-bold text-foreground">
                     Digital Prescription
                   </h4>
                   <PrescriptionQR
