@@ -4,8 +4,9 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken, trpc } from '@/lib/trpc'
-import { Sidebar } from '@/components/Sidebar'
-import { useSidebarCollapse } from '@/hooks/useSidebarCollapse'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { Button } from '@/components/ui/button'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
@@ -201,14 +202,15 @@ function TrialExpiredInterstitial() {
 }
 
 function AuthenticatedShell({ children }: { children: ReactNode }) {
-  const { collapsed, toggle } = useSidebarCollapse()
-
   return (
-    <div className="flex min-h-screen">
-      <Sidebar collapsed={collapsed} onToggle={toggle} />
-      <div className="flex-1 flex flex-col min-w-0">
-        {children}
-      </div>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <BreadcrumbHeader />
+        <main className="flex-1">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

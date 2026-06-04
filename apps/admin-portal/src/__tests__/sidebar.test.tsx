@@ -31,15 +31,71 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-vi.mock('@/components/SessionTimer', () => ({
-  SessionTimer: () => <span data-testid="session-timer">Session: 3h 45m</span>,
+vi.mock('radix-ui', () => ({
+  Collapsible: {
+    Root: ({ children }: any) => <div>{children}</div>,
+    Trigger: ({ children }: any) => <div>{children}</div>,
+    Content: ({ children }: any) => <div>{children}</div>,
+  },
 }))
 
-const { Sidebar } = await import('../components/Sidebar')
+vi.mock('@ultranos/ui-kit', () => ({
+  DirectionalIcon: ({ children }: any) => <span>{children}</span>,
+}))
 
-describe('Sidebar', () => {
-  it('renders all 5 navigation sections', () => {
-    render(<Sidebar collapsed={false} onToggle={() => {}} />)
+vi.mock('@ultranos/ui-kit/icons', () => ({
+  ChevronRight: () => <svg />,
+  Home: () => <svg />,
+  User: () => <svg />,
+  FlaskConical: () => <svg />,
+  Package: () => <svg />,
+  Bell: () => <svg />,
+  FileText: () => <svg />,
+  Clock: () => <svg />,
+  Settings: () => <svg />,
+  Users: () => <svg />,
+  Receipt: () => <svg />,
+  Globe: () => <svg />,
+  SlidersHorizontal: () => <svg />,
+  FileCheck: () => <svg />,
+  Cpu: () => <svg />,
+  CreditCard: () => <svg />,
+  Wallet: () => <svg />,
+}))
+
+vi.mock('@/components/ui/sidebar', () => ({
+  Sidebar: ({ children }: any) => <nav data-testid="sidebar">{children}</nav>,
+  SidebarContent: ({ children }: any) => <div>{children}</div>,
+  SidebarFooter: ({ children }: any) => <div>{children}</div>,
+  SidebarHeader: ({ children }: any) => <div>{children}</div>,
+  SidebarRail: () => null,
+  SidebarGroup: ({ children }: any) => <div>{children}</div>,
+  SidebarGroupLabel: ({ children }: any) => <span>{children}</span>,
+  SidebarMenu: ({ children }: any) => <ul>{children}</ul>,
+  SidebarMenuItem: ({ children }: any) => <li>{children}</li>,
+  SidebarMenuButton: ({ children, asChild, isActive, tooltip, ...props }: any) => <button {...props}>{children}</button>,
+  SidebarMenuSub: ({ children }: any) => <ul>{children}</ul>,
+  SidebarMenuSubItem: ({ children }: any) => <li>{children}</li>,
+  SidebarMenuSubButton: ({ children, asChild, isActive, ...props }: any) => <span {...props}>{children}</span>,
+  SidebarProvider: ({ children }: any) => <div>{children}</div>,
+  SidebarInset: ({ children }: any) => <div>{children}</div>,
+  SidebarTrigger: () => null,
+  useSidebar: () => ({ isMobile: false, state: 'expanded', open: true }),
+}))
+
+vi.mock('@/components/sidebar/location-switcher', () => ({
+  LocationSwitcher: () => <div data-testid="location-switcher">Ultranos Admin</div>,
+}))
+
+vi.mock('@/components/sidebar/nav-user', () => ({
+  NavUser: () => <div data-testid="nav-user">admin@ultranos.com</div>,
+}))
+
+const { AppSidebar } = await import('../components/sidebar/app-sidebar')
+
+describe('AppSidebar', () => {
+  it('renders navigation items: Dashboard, Providers, Labs, Alerts, Audit Log', () => {
+    render(<AppSidebar />)
 
     expect(screen.getByText('Dashboard')).toBeTruthy()
     expect(screen.getByText('Providers')).toBeTruthy()
@@ -48,29 +104,29 @@ describe('Sidebar', () => {
     expect(screen.getByText('Audit Log')).toBeTruthy()
   })
 
-  it('renders the Ultranos Admin heading', () => {
-    render(<Sidebar collapsed={false} onToggle={() => {}} />)
-    expect(screen.getByText(/ltranos Admin/)).toBeTruthy()
+  it('renders the location switcher (brand header)', () => {
+    render(<AppSidebar />)
+    expect(screen.getByTestId('location-switcher')).toBeTruthy()
   })
 
-  it('highlights the active section', () => {
-    render(<Sidebar collapsed={false} onToggle={() => {}} />)
-    const dashboardLink = screen.getByText('Dashboard').closest('a')
-    expect(dashboardLink?.getAttribute('aria-current')).toBe('page')
+  it('renders the nav-user footer', () => {
+    render(<AppSidebar />)
+    expect(screen.getByTestId('nav-user')).toBeTruthy()
   })
 
-  it('renders navigation links with correct hrefs', () => {
-    render(<Sidebar collapsed={false} onToggle={() => {}} />)
+  it('renders navigation links with correct hrefs for direct-link items', () => {
+    render(<AppSidebar />)
 
-    const links = [
+    // Single-item groups render as direct <a> links via SidebarMenuButton asChild + Link.
+    // Multi-item groups (Labs, Providers, Alerts) are collapsible triggers — no top-level href.
+    // Dashboard is a single-item group. Settings is a single-item group.
+    // Audit Log is in the Administration group (has icon, no sub-items) — direct link.
+    const directLinks = [
       { text: 'Dashboard', href: '/dashboard' },
-      { text: 'Providers', href: '/providers' },
-      { text: 'Labs', href: '/labs' },
-      { text: 'Alerts', href: '/alerts' },
-      { text: 'Audit Log', href: '/audit' },
+      { text: 'Settings', href: '/settings' },
     ]
 
-    for (const link of links) {
+    for (const link of directLinks) {
       const el = screen.getByText(link.text).closest('a')
       expect(el?.getAttribute('href')).toBe(link.href)
     }
