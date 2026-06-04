@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss'
 
-const preset: Config = {
+const preset: Partial<Config> = {
   darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
