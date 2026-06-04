@@ -29,8 +29,8 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
 
   if (phase === 'empty' || items.length === 0) {
     return (
-      <div data-testid="fulfillment-empty-state" className="rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No prescriptions loaded. Scan a prescription QR code first.</p>
+      <div data-testid="fulfillment-empty-state" className="rounded-2xl border border-border p-8 text-center">
+        <p className="text-muted-foreground">No prescriptions loaded. Scan a prescription QR code first.</p>
       </div>
     )
   }
@@ -42,14 +42,14 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-800">Fulfillment Checklist</h2>
+          <h2 className="text-lg font-semibold text-foreground">Fulfillment Checklist</h2>
           {patientName && (
-            <p data-testid="patient-info" className="text-sm font-medium text-neutral-700">
+            <p data-testid="patient-info" className="text-sm font-medium text-foreground">
               Patient: {patientName}{patientAge != null ? `, ${patientAge} y/o` : ''}
             </p>
           )}
           {practitionerName && (
-            <p className="text-sm text-neutral-500">Prescribed by {practitionerName}</p>
+            <p className="text-sm text-muted-foreground">Prescribed by {practitionerName}</p>
           )}
         </div>
         <div className="flex gap-2">
@@ -80,8 +80,8 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
         {items.map((item) => (
           <li
             key={item.prescription.id}
-            className={`rounded-lg border p-4 transition-colors ${
-              item.selected ? 'border-primary-300 bg-primary-50/50' : 'border-neutral-200 bg-neutral-50'
+            className={`rounded-2xl border p-4 transition-colors ${
+              item.selected ? 'border-primary-300 bg-primary-50/50' : 'border-border bg-muted'
             }`}
           >
             <div className="flex items-start gap-3">
@@ -91,14 +91,14 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                 data-testid={`fulfill-checkbox-${item.prescription.id}`}
                 checked={item.selected}
                 onChange={() => toggleItem(item.prescription.id)}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
                 aria-label={`Fulfill ${item.prescription.medN}`}
               />
 
               <div className="min-w-0 flex-1">
                 {/* Medication info */}
-                <p className="font-medium text-neutral-800">{item.prescription.medT}</p>
-                <p className="text-sm text-neutral-600">
+                <p className="font-medium text-foreground">{item.prescription.medT}</p>
+                <p className="text-sm text-muted-foreground">
                   {item.prescription.dos.qty} {item.prescription.dos.unit}
                   {item.prescription.dos.freqN && (
                     <span> &middot; {formatFrequency(item.prescription.dos.freqN, item.prescription.dos.perU)}</span>
@@ -112,7 +112,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                     <div>
                       <label
                         htmlFor={`brand-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-neutral-600"
+                        className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
                         Brand Name
                       </label>
@@ -123,15 +123,15 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         value={item.brandName}
                         onChange={(e) => setBrandName(item.prescription.id, e.target.value)}
                         placeholder="e.g. Amoxil"
-                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`batch-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-neutral-600"
+                        className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
-                        Batch / Lot No. <span className="text-neutral-400">(Optional)</span>
+                        Batch / Lot No. <span className="text-muted-foreground">(Optional)</span>
                       </label>
                       <input
                         id={`batch-${item.prescription.id}`}
@@ -140,7 +140,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         value={item.batchLot}
                         onChange={(e) => setBatchLot(item.prescription.id, e.target.value)}
                         placeholder="e.g. LOT-2026-04A"
-                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
                   </div>
@@ -164,8 +164,8 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       </Button>
 
       {dispensingComplete && (
-        <div className="rounded-lg border-2 border-green-400 bg-green-50 p-4 space-y-3" data-testid="dispensing-complete-card">
-          <p className="text-sm font-bold text-green-800">Dispensing Complete</p>
+        <div className="rounded-2xl border-2 border-success/20 bg-success/10 p-4 space-y-3" data-testid="dispensing-complete-card">
+          <p className="text-sm font-bold text-success">Dispensing Complete</p>
           {activeInvoice && (
             <Link href="/pos">
               <Button variant="default" className="w-full" type="button" data-testid="collect-payment-cta">

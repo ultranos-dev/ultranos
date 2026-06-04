@@ -78,25 +78,25 @@ export function MedicationLabel({ item, dir, locale = 'en' }: MedicationLabelPro
     <div
       data-testid="medication-label"
       dir={dir ?? 'auto'}
-      className="print-label rounded-lg border-2 border-neutral-300 p-4"
+      className="print-label rounded-2xl border-2 border-border p-4"
     >
       {/* Medication name — largest text for readability */}
-      <h3 data-testid="label-med-name" className="text-xl font-bold text-neutral-900">
+      <h3 data-testid="label-med-name" className="text-xl font-bold text-foreground">
         {prescription.medT}
       </h3>
 
       {/* Brand name */}
       {brandName && (
-        <p data-testid="label-brand-name" className="text-base text-neutral-600">
+        <p data-testid="label-brand-name" className="text-base text-muted-foreground">
           {brandName}
         </p>
       )}
 
       {/* Dosage */}
-      <p data-testid="label-dosage" className="mt-2 text-lg font-semibold text-neutral-800">
+      <p data-testid="label-dosage" className="mt-2 text-lg font-semibold text-foreground">
         {prescription.dos.qty} {prescription.dos.unit}
         {prescription.dos.freqN && prescription.dos.freqN > 3 && (
-          <span className="text-sm font-normal text-neutral-600">
+          <span className="text-sm font-normal text-muted-foreground">
             {' '}({prescription.dos.freqN}× daily)
           </span>
         )}
@@ -110,20 +110,20 @@ export function MedicationLabel({ item, dir, locale = 'en' }: MedicationLabelPro
               {slot === 'morning' && <SunIcon label={labels.morning} />}
               {slot === 'noon' && <FoodIcon label={labels.noon} />}
               {slot === 'night' && <MoonIcon label={labels.night} />}
-              <span className="text-xs font-medium text-neutral-600">{labels[slot]}</span>
+              <span className="text-xs font-medium text-muted-foreground">{labels[slot]}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Duration */}
-      <p data-testid="label-duration" className="mt-3 text-base text-neutral-700">
+      <p data-testid="label-duration" className="mt-3 text-base text-foreground">
         {prescription.dur} days
       </p>
 
       {/* Batch/Lot (optional) */}
       {batchLot && (
-        <p data-testid="label-batch" className="mt-1 text-xs text-neutral-400">
+        <p data-testid="label-batch" className="mt-1 text-xs text-muted-foreground">
           Lot: {batchLot}
         </p>
       )}

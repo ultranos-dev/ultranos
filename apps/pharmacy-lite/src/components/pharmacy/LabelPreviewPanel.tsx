@@ -42,8 +42,8 @@ export function LabelPreviewPanel({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No labels to preview.</p>
+      <div className="rounded-2xl border border-border p-8 text-center">
+        <p className="text-muted-foreground">No labels to preview.</p>
       </div>
     )
   }
@@ -66,14 +66,14 @@ export function LabelPreviewPanel({
               &larr; Back
             </Button>
           )}
-          <h3 className="text-lg font-semibold text-neutral-800">Label Preview</h3>
+          <h3 className="text-lg font-semibold text-foreground">Label Preview</h3>
         </div>
         <div className="flex items-center gap-3">
           <select
             data-testid="language-selector"
             value={locale}
             onChange={(e) => setLocale(e.target.value as LanguageCode)}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             {LANGUAGES.map((lang) => (
               <option key={lang.code} value={lang.code}>
