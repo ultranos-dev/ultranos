@@ -25,13 +25,13 @@ export function AllergyBanner({ allergies, patientName }: AllergyBannerProps) {
       <div
         role="alert"
         aria-live="assertive"
-        className="rounded-xl bg-red-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-red-400/40"
+        className="rounded-xl bg-destructive/10 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-destructive/40"
         data-testid="allergy-banner"
         data-banner-state="active"
       >
         <div className="flex items-center gap-2 mb-2">
-          <AlertTriangle size={20} className="text-red-700 shrink-0" />
-          <span className="text-sm font-bold text-red-800 uppercase tracking-wide">
+          <AlertTriangle size={20} className="text-destructive shrink-0" />
+          <span className="text-sm font-bold text-destructive uppercase tracking-wide">
             Known Allergies{patientName ? ` \u2014 ${patientName}` : ''}
           </span>
         </div>
@@ -39,7 +39,7 @@ export function AllergyBanner({ allergies, patientName }: AllergyBannerProps) {
           {allergies.map((allergy) => (
             <span
               key={allergy}
-              className="inline-flex items-center rounded-full bg-red-200 px-3 py-1 text-sm font-bold text-red-900"
+              className="inline-flex items-center rounded-full bg-destructive/20 px-3 py-1 text-sm font-bold text-destructive"
             >
               {allergy}
             </span>
@@ -54,13 +54,13 @@ export function AllergyBanner({ allergies, patientName }: AllergyBannerProps) {
     <div
       role="alert"
       aria-live="polite"
-      className="rounded-xl bg-neutral-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+      className="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
       data-testid="allergy-banner"
       data-banner-state="nka"
     >
       <div className="flex items-center gap-2">
-        <CircleCheck size={20} className="text-neutral-400 shrink-0" />
-        <span className="text-sm font-semibold text-neutral-600">
+        <CircleCheck size={20} className="text-muted-foreground shrink-0" />
+        <span className="text-sm font-semibold text-muted-foreground">
           No Known Allergies (NKA)
         </span>
       </div>

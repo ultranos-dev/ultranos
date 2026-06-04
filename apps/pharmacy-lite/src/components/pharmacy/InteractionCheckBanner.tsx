@@ -20,25 +20,25 @@ export function InteractionCheckBanner({ status }: InteractionCheckBannerProps) 
   switch (status.state) {
     case 'checking':
       return (
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-center" data-testid="interaction-checking">
-          <p className="text-sm text-neutral-600">Checking drug interactions...</p>
+        <div className="rounded-lg border border-border bg-muted p-3 text-center" data-testid="interaction-checking">
+          <p className="text-sm text-muted-foreground">Checking drug interactions...</p>
         </div>
       )
 
     case 'clear':
       return (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3" data-testid="interaction-clear">
-          <p className="text-sm font-medium text-green-800">No known drug interactions detected.</p>
+        <div className="rounded-lg border border-success/20 bg-success/10 p-3" data-testid="interaction-clear">
+          <p className="text-sm font-medium text-success">No known drug interactions detected.</p>
         </div>
       )
 
     case 'warning':
       return (
-        <div role="alert" className="rounded-lg border-2 border-amber-400 bg-amber-50 p-4" data-testid="interaction-warning">
-          <p className="text-sm font-bold text-amber-800 mb-2">Drug Interaction Warning</p>
+        <div role="alert" className="rounded-lg border-2 border-warning/40 bg-warning/10 p-4" data-testid="interaction-warning">
+          <p className="text-sm font-bold text-warning mb-2">Drug Interaction Warning</p>
           <ul className="space-y-1">
             {status.interactions.map((interaction, i) => (
-              <li key={i} className="text-sm text-amber-700">&bull; {interaction}</li>
+              <li key={i} className="text-sm text-warning">&bull; {interaction}</li>
             ))}
           </ul>
         </div>
@@ -46,14 +46,14 @@ export function InteractionCheckBanner({ status }: InteractionCheckBannerProps) 
 
     case 'contraindicated':
       return (
-        <div role="alert" className="rounded-lg border-2 border-red-500 bg-red-50 p-4" data-testid="interaction-contraindicated">
-          <p className="text-sm font-bold text-red-800 uppercase mb-2">CONTRAINDICATION DETECTED</p>
+        <div role="alert" className="rounded-lg border-2 border-destructive bg-destructive/10 p-4" data-testid="interaction-contraindicated">
+          <p className="text-sm font-bold text-destructive uppercase mb-2">CONTRAINDICATION DETECTED</p>
           <ul className="space-y-1">
             {status.interactions.map((interaction, i) => (
-              <li key={i} className="text-sm font-semibold text-red-700">&bull; {interaction}</li>
+              <li key={i} className="text-sm font-semibold text-destructive">&bull; {interaction}</li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-red-700 font-medium">
+          <p className="mt-3 text-xs text-destructive font-medium">
             Dispensing is blocked. Contact prescribing physician for alternatives.
           </p>
         </div>
@@ -61,12 +61,12 @@ export function InteractionCheckBanner({ status }: InteractionCheckBannerProps) 
 
     case 'unavailable':
       return (
-        <div role="alert" className="rounded-lg border-2 border-amber-500 bg-amber-50 p-4" data-testid="interaction-unavailable">
-          <p className="text-sm font-bold text-amber-900">
+        <div role="alert" className="rounded-lg border-2 border-warning bg-warning/10 p-4" data-testid="interaction-unavailable">
+          <p className="text-sm font-bold text-warning">
             Interaction check unavailable
           </p>
-          <p className="text-xs text-amber-700 mt-1">{status.reason}</p>
-          <p className="text-xs font-semibold text-amber-800 mt-2">
+          <p className="text-xs text-warning mt-1">{status.reason}</p>
+          <p className="text-xs font-semibold text-warning mt-2">
             Proceed with caution. Manually verify drug interactions before dispensing.
           </p>
         </div>
