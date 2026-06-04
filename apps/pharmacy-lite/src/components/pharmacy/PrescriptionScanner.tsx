@@ -245,7 +245,7 @@ export function PrescriptionScanner({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-neutral-900">
+      <h2 className="text-xl font-bold text-foreground">
         Prescription Verification
       </h2>
 
@@ -255,7 +255,7 @@ export function PrescriptionScanner({
           <div
             id="prescription-scanner-viewport"
             ref={scannerRef}
-            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-neutral-300"
+            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-border"
             data-testid="scanner-viewport"
           />
           <Button
@@ -288,9 +288,9 @@ export function PrescriptionScanner({
           </Button>
 
           <div className="flex items-center gap-2">
-            <span className="h-px flex-1 bg-neutral-200" />
-            <span className="text-xs text-neutral-400">or enter ID manually</span>
-            <span className="h-px flex-1 bg-neutral-200" />
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or enter ID manually</span>
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <div className="flex gap-2">
@@ -299,7 +299,7 @@ export function PrescriptionScanner({
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               placeholder="Prescription ID"
-              className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
               data-testid="manual-prescription-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleManualCheck()
@@ -321,11 +321,11 @@ export function PrescriptionScanner({
       {/* Loading state */}
       {scanState.phase === 'checking' && (
         <div
-          className="rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center"
+          className="rounded-2xl border border-border bg-muted p-6 text-center"
           role="status"
           data-testid="checking-status"
         >
-          <p className="text-sm font-semibold text-neutral-600">
+          <p className="text-sm font-semibold text-muted-foreground">
             Verifying prescription status...
           </p>
         </div>
@@ -336,11 +336,11 @@ export function PrescriptionScanner({
         <>
           {scanState.additionalCount != null && scanState.additionalCount > 0 && (
             <div
-              className="rounded-lg border border-amber-300 bg-amber-50 p-3"
+              className="rounded-2xl border border-warning/20 bg-warning/10 p-3"
               role="alert"
               data-testid="multi-prescription-warning"
             >
-              <p className="text-sm font-semibold text-amber-800">
+              <p className="text-sm font-semibold text-warning">
                 This QR contains {scanState.additionalCount + 1} prescriptions.
                 Only the first is being verified. Scan individually for the rest.
               </p>
@@ -357,14 +357,14 @@ export function PrescriptionScanner({
       {/* AC 4: Offline warning */}
       {scanState.phase === 'offline' && (
         <div
-          className="rounded-lg border border-amber-300 bg-amber-50 p-6"
+          className="rounded-2xl border border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="offline-warning"
         >
-          <p className="text-lg font-bold text-amber-800">
+          <p className="text-lg font-bold text-warning">
             Status Cannot Be Verified
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             You are offline or the Hub is unreachable. The prescription status
             cannot be verified globally. Proceed with caution — this prescription
             may have already been fulfilled elsewhere.
@@ -383,11 +383,11 @@ export function PrescriptionScanner({
       {/* Error state */}
       {scanState.phase === 'error' && (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 p-6"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
-          <p className="text-sm font-bold text-red-800">{scanState.message}</p>
+          <p className="text-sm font-bold text-destructive">{scanState.message}</p>
           <Button
             variant="outline"
             className="mt-4 border-warning text-warning hover:bg-warning/10"
@@ -402,11 +402,11 @@ export function PrescriptionScanner({
       {/* Dispensing in progress */}
       {scanState.phase === 'dispensing' && (
         <div
-          className="rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center"
+          className="rounded-2xl border border-border bg-muted p-6 text-center"
           role="status"
           data-testid="dispensing-status"
         >
-          <p className="text-sm font-semibold text-neutral-600">
+          <p className="text-sm font-semibold text-muted-foreground">
             Recording fulfillment...
           </p>
         </div>
@@ -415,14 +415,14 @@ export function PrescriptionScanner({
       {/* Dispensed confirmation */}
       {scanState.phase === 'dispensed' && (
         <div
-          className="rounded-lg border border-green-300 bg-green-50 p-6"
+          className="rounded-2xl border border-success/20 bg-success/10 p-6"
           role="status"
           data-testid="dispensed-confirmation"
         >
-          <p className="text-lg font-bold text-green-800">
+          <p className="text-lg font-bold text-success">
             Prescription Dispensed
           </p>
-          <p className="mt-2 text-sm text-green-700">
+          <p className="mt-2 text-sm text-success">
             This prescription has been marked as fulfilled on the global system.
           </p>
           <Button
@@ -455,17 +455,17 @@ function StatusBanner({
   if (result.status === 'AVAILABLE') {
     return (
       <div
-        className="rounded-lg border-2 border-green-400 bg-green-50 p-6"
+        className="rounded-2xl border-2 border-success/20 bg-success/10 p-6"
         role="status"
         data-testid="status-available"
       >
-        <p className="text-lg font-bold text-green-800">
+        <p className="text-lg font-bold text-success">
           Prescription Valid
         </p>
-        <p className="mt-1 text-sm text-green-700">
+        <p className="mt-1 text-sm text-success">
           {result.medicationDisplay}
         </p>
-        <p className="mt-1 text-xs text-green-600">
+        <p className="mt-1 text-xs text-success">
           Prescribed: {new Date(result.authoredOn).toLocaleDateString()}
         </p>
         <div className="mt-4 flex gap-3">
@@ -494,22 +494,22 @@ function StatusBanner({
   const isFulfilled = result.status === 'FULFILLED'
   return (
     <div
-      className="rounded-lg border-2 border-red-400 bg-red-50 p-6"
+      className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
       role="alert"
       data-testid={isFulfilled ? 'status-fulfilled' : 'status-voided'}
     >
-      <p className="text-lg font-bold text-red-800">
+      <p className="text-lg font-bold text-destructive">
         {isFulfilled ? 'Already Fulfilled' : 'Prescription Voided'}
       </p>
-      <p className="mt-1 text-sm text-red-700">
+      <p className="mt-1 text-sm text-destructive">
         {result.medicationDisplay}
       </p>
       {isFulfilled && result.dispensedAt && (
-        <p className="mt-1 text-xs text-red-600">
+        <p className="mt-1 text-xs text-destructive">
           Dispensed: {new Date(result.dispensedAt).toLocaleDateString()}
         </p>
       )}
-      <p className="mt-3 text-sm font-semibold text-red-800">
+      <p className="mt-3 text-sm font-semibold text-destructive">
         This prescription cannot be dispensed.
       </p>
       <Button

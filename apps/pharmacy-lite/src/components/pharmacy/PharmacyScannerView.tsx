@@ -134,7 +134,7 @@ export function PharmacyScannerView({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-neutral-900">
+      <h2 className="text-xl font-bold text-foreground">
         Pharmacy Prescription Scanner
       </h2>
 
@@ -144,7 +144,7 @@ export function PharmacyScannerView({
           <div
             id="pharmacy-scanner-viewport"
             ref={scannerRef}
-            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-neutral-300"
+            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-border"
             data-testid="scanner-viewport"
           />
           <Button
@@ -177,9 +177,9 @@ export function PharmacyScannerView({
           </Button>
 
           <div className="flex items-center gap-2">
-            <span className="h-px flex-1 bg-neutral-200" />
-            <span className="text-xs text-neutral-400">or paste QR data</span>
-            <span className="h-px flex-1 bg-neutral-200" />
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or paste QR data</span>
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <div className="flex gap-2">
@@ -188,7 +188,7 @@ export function PharmacyScannerView({
               value={pasteInput}
               onChange={(e) => setPasteInput(e.target.value)}
               placeholder="Paste QR payload"
-              className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
               data-testid="qr-paste-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handlePasteVerify()
@@ -210,11 +210,11 @@ export function PharmacyScannerView({
       {/* Verifying state */}
       {phase.step === 'verifying' && (
         <div
-          className="rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center"
+          className="rounded-2xl border border-border bg-muted p-6 text-center"
           role="status"
           data-testid="verifying-status"
         >
-          <p className="text-sm font-semibold text-neutral-600">
+          <p className="text-sm font-semibold text-muted-foreground">
             Verifying prescription signature...
           </p>
         </div>
@@ -235,11 +235,11 @@ export function PharmacyScannerView({
       {/* Error state */}
       {phase.step === 'error' && (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 p-6"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
-          <p className="text-sm font-bold text-red-800">{phase.message}</p>
+          <p className="text-sm font-bold text-destructive">{phase.message}</p>
           <Button
             variant="destructive"
             className="mt-3"
@@ -274,15 +274,15 @@ function ResultDisplay({
     case 'verified':
       return (
         <div
-          className="rounded-lg border-2 border-green-400 bg-green-50 p-6"
+          className="rounded-2xl border-2 border-success/20 bg-success/10 p-6"
           role="status"
           data-testid="verification-success"
         >
-          <p className="text-lg font-bold text-green-800">
+          <p className="text-lg font-bold text-success">
             Verification Successful
           </p>
           {result.practitionerName && (
-            <p className="mt-1 text-sm text-green-700">
+            <p className="mt-1 text-sm text-success">
               Prescribed by: {result.practitionerName}
             </p>
           )}
@@ -290,11 +290,11 @@ function ResultDisplay({
             {result.prescriptions.map((rx) => (
               <div
                 key={rx.id}
-                className="rounded-md border border-green-200 bg-white p-3"
+                className="rounded-md border border-success/20 bg-card p-3"
                 data-testid={`rx-item-${rx.id}`}
               >
-                <p className="font-semibold text-neutral-900">{rx.medN}</p>
-                <p className="text-sm text-neutral-600">
+                <p className="font-semibold text-foreground">{rx.medN}</p>
+                <p className="text-sm text-muted-foreground">
                   {rx.dos.qty} {rx.dos.unit}
                   {rx.dos.freqN ? ` × ${rx.dos.freqN}` : rx.dos.freq ? ` ${rx.dos.freq}` : ''}
                   {rx.dos.perU ? `/${rx.dos.perU}` : ''}
@@ -326,18 +326,18 @@ function ResultDisplay({
     case 'invalid_signature':
       return (
         <div
-          className="rounded-lg border-2 border-red-500 bg-red-100 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="fraud-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             ⚠ Fraud Warning
           </p>
-          <p className="mt-2 text-sm font-semibold text-red-800">
+          <p className="mt-2 text-sm font-semibold text-destructive">
             This prescription has an INVALID cryptographic signature. It may have
             been tampered with or was not issued by an authorized clinician.
           </p>
-          <p className="mt-2 text-sm text-red-700">
+          <p className="mt-2 text-sm text-destructive">
             DO NOT dispense medication based on this prescription.
             Report this incident to your supervisor immediately.
           </p>
@@ -355,14 +355,14 @@ function ResultDisplay({
     case 'expired':
       return (
         <div
-          className="rounded-lg border-2 border-amber-400 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="expired-warning"
         >
-          <p className="text-lg font-bold text-amber-800">
+          <p className="text-lg font-bold text-warning">
             Prescription Expired
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             This prescription expired on{' '}
             {new Date(result.expiry).toLocaleDateString()}.
             It cannot be fulfilled.
@@ -381,14 +381,14 @@ function ResultDisplay({
     case 'unknown_clinician':
       return (
         <div
-          className="rounded-lg border-2 border-amber-400 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="unknown-clinician-warning"
         >
-          <p className="text-lg font-bold text-amber-800">
+          <p className="text-lg font-bold text-warning">
             Unknown Clinician
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             The prescription signature is valid, but the signing clinician is not
             in the local trusted registry.
           </p>
@@ -417,18 +417,18 @@ function ResultDisplay({
     case 'key_revoked':
       return (
         <div
-          className="rounded-lg border-2 border-red-500 bg-red-100 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="key-revoked-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             Prescriber Key Revoked
           </p>
-          <p className="mt-2 text-sm font-semibold text-red-800">
+          <p className="mt-2 text-sm font-semibold text-destructive">
             The prescriber&apos;s signing key has been revoked. This prescription
             cannot be verified and MUST NOT be dispensed.
           </p>
-          <p className="mt-2 text-sm text-red-700">
+          <p className="mt-2 text-sm text-destructive">
             Contact the prescribing clinician or your supervisor for a new prescription.
           </p>
           <Button
@@ -445,18 +445,18 @@ function ResultDisplay({
     case 'key_untrusted_offline':
       return (
         <div
-          className="rounded-lg border-2 border-amber-500 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="key-untrusted-offline-warning"
         >
-          <p className="text-lg font-bold text-amber-900">
+          <p className="text-lg font-bold text-warning">
             Prescriber Verification Unavailable
           </p>
-          <p className="mt-2 text-sm font-semibold text-amber-800">
+          <p className="mt-2 text-sm font-semibold text-warning">
             Prescriber verification unavailable — Hub offline. Key was previously
             valid but has expired. Cannot verify current status.
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             Dispensing is blocked until the prescriber key can be re-verified.
           </p>
           <div className="mt-4 flex gap-3">
@@ -484,14 +484,14 @@ function ResultDisplay({
     case 'untrusted':
       return (
         <div
-          className="rounded-lg border-2 border-red-400 bg-red-50 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="untrusted-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             Verification Blocked
           </p>
-          <p className="mt-2 text-sm text-red-800">{result.reason}</p>
+          <p className="mt-2 text-sm text-destructive">{result.reason}</p>
           <Button
             variant="destructive"
             className="mt-4"
@@ -506,11 +506,11 @@ function ResultDisplay({
     case 'parse_error':
       return (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 p-6"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
-          <p className="text-sm font-bold text-red-800">{result.message}</p>
+          <p className="text-sm font-bold text-destructive">{result.message}</p>
           <Button
             variant="destructive"
             className="mt-3"

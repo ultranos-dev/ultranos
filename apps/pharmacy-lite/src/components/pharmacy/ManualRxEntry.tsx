@@ -64,9 +64,9 @@ export function ManualRxEntry({
     return (
       <div
         data-testid="manual-rx-entry"
-        className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+        className="rounded-2xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="text-sm font-semibold text-neutral-600 mb-3">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">
           Grace Dispensing
         </h3>
         <OfflineGraceForm
@@ -80,16 +80,16 @@ export function ManualRxEntry({
   return (
     <div
       data-testid="manual-rx-entry"
-      className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+      className="rounded-2xl border border-border bg-card p-4 shadow-card"
     >
-      <h3 className="text-sm font-semibold text-neutral-600 mb-3">
+      <h3 className="text-sm font-semibold text-muted-foreground mb-3">
         Manual Prescription Entry
       </h3>
 
       {/* Offline warning banner */}
       {!isOnline && (
-        <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-800">
+        <div className="mb-3 rounded-2xl border border-warning/20 bg-warning/10 p-3">
+          <p className="text-sm font-medium text-warning">
             You are offline. Use grace dispensing for urgent prescriptions.
           </p>
         </div>
@@ -99,7 +99,7 @@ export function ManualRxEntry({
       <div className="mb-3">
         <label
           htmlFor="rx-id-input"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Prescription ID
         </label>
@@ -118,7 +118,7 @@ export function ManualRxEntry({
               handleLookup()
             }
           }}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -126,9 +126,9 @@ export function ManualRxEntry({
       {error && (
         <div
           data-testid="rx-lookup-error"
-          className="mb-3 rounded-lg border border-red-200 bg-red-50 p-2"
+          className="mb-3 rounded-lg border border-destructive/20 bg-destructive/10 p-2"
         >
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 

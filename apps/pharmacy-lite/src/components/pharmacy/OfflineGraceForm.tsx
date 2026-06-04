@@ -51,8 +51,8 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       className="space-y-4"
     >
       {/* Warning banner */}
-      <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
-        <p className="text-sm font-medium text-amber-800">
+      <div className="rounded-2xl border border-warning/20 bg-warning/10 p-3">
+        <p className="text-sm font-medium text-warning">
           Grace dispensing creates an unverified record that must be reviewed
           when connectivity returns.
         </p>
@@ -60,8 +60,8 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
 
       {/* Limit reached banner */}
       {isLimitReached && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3">
-          <p className="text-sm font-medium text-red-800">
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-3">
+          <p className="text-sm font-medium text-destructive">
             Maximum grace dispenses reached for this shift ({MAX_GRACE_DISPENSES}/{MAX_GRACE_DISPENSES})
           </p>
         </div>
@@ -71,7 +71,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       <div>
         <label
           htmlFor="supervisor-name"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Supervisor Name
         </label>
@@ -83,7 +83,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           value={supervisorName}
           onChange={(e) => setSupervisorName(e.target.value)}
           disabled={isLimitReached}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-neutral-100 disabled:text-neutral-400"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-muted disabled:text-muted-foreground"
         />
       </div>
 
@@ -91,7 +91,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       <div>
         <label
           htmlFor="grace-reason"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Reason for Grace Dispensing
         </label>
@@ -104,9 +104,9 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           disabled={isLimitReached}
           rows={3}
           maxLength={500}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-neutral-100 disabled:text-neutral-400"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:bg-muted disabled:text-muted-foreground"
         />
-        <div className="mt-1 flex justify-between text-xs text-neutral-400">
+        <div className="mt-1 flex justify-between text-xs text-muted-foreground">
           <span>
             {reason.trim().length < 10
               ? `${10 - reason.trim().length} more characters needed`
@@ -117,7 +117,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       </div>
 
       {/* Grace count indicator */}
-      <div className="text-xs text-neutral-500">
+      <div className="text-xs text-muted-foreground">
         Grace dispenses this shift: {graceCount}/{MAX_GRACE_DISPENSES}
       </div>
 
