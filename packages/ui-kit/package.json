@@ -16,7 +16,21 @@
     },
     "./tokens.css": "./src/tokens.css",
     "./connected-language-selector": "./src/components/ConnectedLanguageSelector.tsx",
-    "./tailwind.preset": "./src/tailwind.preset.ts"
+    "./components/ui/badge":         "./src/components/ui/badge.tsx",
+    "./components/ui/breadcrumb":    "./src/components/ui/breadcrumb.tsx",
+    "./components/ui/button":        "./src/components/ui/button.tsx",
+    "./components/ui/dialog":        "./src/components/ui/dialog.tsx",
+    "./components/ui/dropdown-menu": "./src/components/ui/dropdown-menu.tsx",
+    "./components/ui/input":         "./src/components/ui/input.tsx",
+    "./components/ui/label":         "./src/components/ui/label.tsx",
+    "./components/ui/select":        "./src/components/ui/select.tsx",
+    "./components/ui/separator":     "./src/components/ui/separator.tsx",
+    "./components/ui/sheet":         "./src/components/ui/sheet.tsx",
+    "./components/ui/sidebar":       "./src/components/ui/sidebar.tsx",
+    "./components/ui/skeleton":      "./src/components/ui/skeleton.tsx",
+    "./components/ui/textarea":      "./src/components/ui/textarea.tsx",
+    "./components/ui/tooltip":       "./src/components/ui/tooltip.tsx",
+    "./tailwind.preset":             "./src/tailwind.preset.ts"
   },
   "scripts": {
     "build": "tsc",
