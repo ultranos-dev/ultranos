@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import { getLocale } from 'next-intl/server'
 import { getDirection } from '@ultranos/ui-kit'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
 const urbanist = localFont({
@@ -24,21 +25,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isRtl = dir === 'rtl'
 
   return (
-    <html lang={locale} dir={dir} className={urbanist.variable}>
+    <html lang={locale} dir={dir} className={urbanist.variable} suppressHydrationWarning>
       <head>
         {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+        {/* Inline theme detection: runs before hydration to avoid flash-of-wrong-theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+          }}
+        />
       </head>
-      <body className="font-sans bg-neutral-50 text-neutral-900 antialiased">
+      <body className="font-sans bg-background text-foreground antialiased">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary-700 focus:px-4 focus:py-2 focus:text-white focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none"
         >
           Skip to main content
         </a>
         <ClientErrorBoundary>
-          <main id="main-content">
+          <ThemeProvider>
             {children}
-          </main>
+          </ThemeProvider>
         </ClientErrorBoundary>
       </body>
     </html>
