@@ -58,10 +58,10 @@ export function TodayEncountersCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('todayEncounters')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">{stats.total}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{stats.total}</p>
       {stats.hasActive && (
         <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pill-text">
           <span className="inline-block h-2 w-2 rounded-full bg-pill-green animate-pulse" />
