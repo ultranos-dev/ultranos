@@ -56,7 +56,18 @@ export function NotificationPreferences({ email }: { email?: string }) {
     setError(null)
     setSuccess(false)
     try {
-      await trpc.admin.updateNotificationPreferences.mutate({ preferences: prefs })
+      // The API stores only boolean preference flags; extract them explicitly.
+      const booleanPrefs: Record<string, boolean> = {
+        kycSlaBreach: prefs.kycSlaBreach,
+        licenseExpiry60d: prefs.licenseExpiry60d,
+        licenseExpiry30d: prefs.licenseExpiry30d,
+        licenseExpiry7d: prefs.licenseExpiry7d,
+        auditChainIntegrity: prefs.auditChainIntegrity,
+        trialExpiry7d: prefs.trialExpiry7d,
+        trialExpiry3d: prefs.trialExpiry3d,
+        trialExpiry1d: prefs.trialExpiry1d,
+      }
+      await trpc.admin.updateNotificationPreferences.mutate({ preferences: booleanPrefs })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch {

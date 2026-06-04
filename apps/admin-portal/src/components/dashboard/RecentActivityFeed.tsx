@@ -6,14 +6,19 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 
 interface Activity {
-  type: string
-  description: string
+  id: string
   timestamp: string
+  actorId: string
+  action: string
+  resourceType: string
+  resourceId: string
+  outcome: string
+  description: string
 }
 
-function dotColor(type: string): string {
-  if (type.toLowerCase().includes('approv')) return 'bg-success'
-  if (type.toLowerCase().includes('suspend') || type.toLowerCase().includes('revok')) return 'bg-destructive'
+function dotColor(action: string): string {
+  if (action.toLowerCase().includes('approv')) return 'bg-success'
+  if (action.toLowerCase().includes('suspend') || action.toLowerCase().includes('revok')) return 'bg-destructive'
   return 'bg-primary'
 }
 
@@ -62,7 +67,7 @@ export function RecentActivityFeed() {
         <ul className="mt-4 space-y-3">
           {activities.map((activity, i) => (
             <li key={i} className="flex items-start gap-3">
-              <span className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${dotColor(activity.type)}`} />
+              <span className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${dotColor(activity.action)}`} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-foreground truncate">{activity.description}</p>
                 <p className="text-xs text-muted-foreground">{relativeTime(activity.timestamp)}</p>

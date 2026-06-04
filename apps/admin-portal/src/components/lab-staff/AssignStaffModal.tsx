@@ -11,14 +11,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-
-type LabRole = 'LAB_TECH' | 'SENIOR_TECH' | 'SUPERVISOR' | 'LAB_MANAGER'
+import { LabRole } from '@ultranos/shared-types'
 
 const LAB_ROLES: { value: LabRole; label: string }[] = [
-  { value: 'LAB_TECH', label: 'Lab Tech' },
-  { value: 'SENIOR_TECH', label: 'Senior Tech' },
-  { value: 'SUPERVISOR', label: 'Supervisor' },
-  { value: 'LAB_MANAGER', label: 'Lab Manager' },
+  { value: LabRole.LAB_TECH, label: 'Lab Tech' },
+  { value: LabRole.SENIOR_TECH, label: 'Senior Tech' },
+  { value: LabRole.SUPERVISOR, label: 'Supervisor' },
+  { value: LabRole.LAB_MANAGER, label: 'Lab Manager' },
 ]
 
 interface LabOption {
@@ -51,7 +50,7 @@ export default function AssignStaffModal({
 }: AssignStaffModalProps) {
   const [selectedLabId, setSelectedLabId] = useState(fixedLabId ?? '')
   const [selectedPractitionerId, setSelectedPractitionerId] = useState('')
-  const [selectedRole, setSelectedRole] = useState<LabRole>('LAB_TECH')
+  const [selectedRole, setSelectedRole] = useState<LabRole>(LabRole.LAB_TECH)
   const [practitioners, setPractitioners] = useState<PractitionerOption[]>([])
   const [loadingPractitioners, setLoadingPractitioners] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -62,7 +61,7 @@ export default function AssignStaffModal({
     if (!open) return
     setLoadingPractitioners(true)
     trpc.admin.listUsers.query({ cursor: 0, limit: 100, status: 'ALL' })
-      .then((result) => {
+      .then((result: { users: Array<{ id: string; name: string; email: string; status: string }> }) => {
         const sorted = result.users
           .filter((u: { status: string }) => u.status === 'ACTIVE' || u.status === 'PENDING_INVITE')
           .map((u: { id: string; name: string; email: string }) => ({
@@ -92,8 +91,8 @@ export default function AssignStaffModal({
         initialRole: selectedRole,
       })
       onAssigned()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to assign staff')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to assign staff')
     } finally {
       setSubmitting(false)
     }

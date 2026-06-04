@@ -45,7 +45,7 @@ export function ThresholdSettings() {
     setError(null)
     setSuccess(false)
     try {
-      await trpc.admin.updateOrgThresholds.mutate({ thresholds: data })
+      await trpc.admin.updateOrgThresholds.mutate(data)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch {

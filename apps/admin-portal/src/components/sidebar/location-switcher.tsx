@@ -49,14 +49,14 @@ export function LocationSwitcher() {
     async function fetchLocations() {
       try {
         const [labsResult] = await Promise.all([
-          trpc.admin.listLabs.query({ page: 1, pageSize: 200 }),
+          trpc.admin.listLabs.query({ cursor: 0, limit: 100 }),
         ])
 
         if (cancelled) return
 
-        const locs: Location[] = labsResult.labs.map((lab: { id: string; name: string }) => ({
+        const locs: Location[] = labsResult.labs.map((lab) => ({
           id: lab.id,
-          name: lab.name,
+          name: lab.labName,
           type: 'lab' as LocationType,
         }))
 

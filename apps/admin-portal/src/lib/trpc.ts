@@ -29,23 +29,36 @@ export const trpc = createTRPCClient<AppRouter>({
   ],
 })
 
-type AdminAuthEventType =
-  | 'ADMIN_LOGIN_SUCCESS'
-  | 'ADMIN_LOGIN_FAILURE'
+// Events accepted by the Hub API's reportAuthEvent endpoint.
+type ReportableAuthEventType = 'ADMIN_LOGIN_SUCCESS' | 'ADMIN_LOGIN_FAILURE'
+
+// Full set of admin auth events (broader than what the API currently accepts).
+export type AdminAuthEventType =
+  | ReportableAuthEventType
+  | 'ADMIN_MFA_ENROLLED'
+  | 'ADMIN_MFA_UNENROLLED'
   | 'ADMIN_PASSWORD_CHANGED'
   | 'ADMIN_SESSION_REVOKED'
+
+const REPORTABLE_EVENTS = new Set<AdminAuthEventType>([
+  'ADMIN_LOGIN_SUCCESS',
+  'ADMIN_LOGIN_FAILURE',
+])
 
 /**
  * Fire-and-forget admin audit event reporting to Hub API via tRPC client.
  * Never throws — auth flow must not be blocked by audit failures.
+ * Only LOGIN_SUCCESS and LOGIN_FAILURE are forwarded to the Hub API; other
+ * event types are no-ops until the API is extended.
  */
 export async function reportAdminAuthEvent(
   event: AdminAuthEventType,
-  opts?: { actorId?: string; actorEmail?: string },
+  opts?: { actorId?: string; actorEmail?: string; factorId?: string },
 ): Promise<void> {
+  if (!REPORTABLE_EVENTS.has(event)) return
   try {
     await trpc.admin.reportAuthEvent.mutate({
-      event,
+      event: event as ReportableAuthEventType,
       ...(opts?.actorId ? { actorId: opts.actorId } : {}),
       ...(opts?.actorEmail ? { actorEmail: opts.actorEmail } : {}),
     })
