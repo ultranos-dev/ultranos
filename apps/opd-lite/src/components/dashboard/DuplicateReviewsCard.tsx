@@ -47,12 +47,12 @@ export function DuplicateReviewsCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('pendingReviews')}
       </h3>
       <div className="mt-2 flex items-center gap-2">
         <p
-          className="text-3xl font-black text-neutral-900"
+          className="text-3xl font-black text-foreground"
           role="status"
           aria-label={t('pendingCountLabel', { count: count ?? 0 })}
         >
@@ -73,7 +73,7 @@ export function DuplicateReviewsCard() {
         </Link>
       )}
       {count === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('unavailableOffline')}
         </p>
       )}

@@ -48,13 +48,13 @@ export function ExpiringConsentsCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {/* TODO: t('consent.expiringConsents') */}
         Expiring Consents
       </h3>
       <div className="mt-2 flex items-center gap-2">
         <p
-          className="text-3xl font-black text-neutral-900"
+          className="text-3xl font-black text-foreground"
           role="status"
           aria-label={`${count ?? 0} consents expiring soon`}
         >
@@ -76,7 +76,7 @@ export function ExpiringConsentsCard() {
         </Link>
       )}
       {count === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {/* TODO: t('consent.unavailableOffline') */}
           Unavailable offline
         </p>

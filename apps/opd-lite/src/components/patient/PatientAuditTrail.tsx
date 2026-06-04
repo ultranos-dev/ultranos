@@ -157,16 +157,16 @@ export function PatientAuditTrail({
         aria-expanded={isOpen}
         aria-controls="patient-audit-trail-content"
       >
-        <span className="text-sm font-semibold text-neutral-700">
+        <span className="text-sm font-semibold text-foreground">
           {t('auditTrail')}
           {loaded && (
-            <span className="ms-2 inline-flex rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
+            <span className="ms-2 inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               {entries.length}{hasMore ? '+' : ''}
             </span>
           )}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
@@ -177,30 +177,30 @@ export function PatientAuditTrail({
       {isOpen && (
         <div id="patient-audit-trail-content" className="px-5 pb-5">
           {loading && entries.length === 0 && (
-            <p className="text-sm text-neutral-500">{t('auditLoading')}</p>
+            <p className="text-sm text-muted-foreground">{t('auditLoading')}</p>
           )}
 
           {loaded && entries.length === 0 && (
-            <p className="text-sm text-neutral-500">{t('auditEmpty')}</p>
+            <p className="text-sm text-muted-foreground">{t('auditEmpty')}</p>
           )}
 
           {entries.length > 0 && (
             <ul className="space-y-2 border-s-2 border-neutral-200 ps-4">
               {entries.map((entry) => (
-                <li key={entry.id} className="text-sm text-neutral-700">
+                <li key={entry.id} className="text-sm text-foreground">
                   <span className="font-medium">
                     {entry.actorName ?? entry.actorRole}
                   </span>
                   {entry.actorName && (
-                    <span className="text-neutral-500">
+                    <span className="text-muted-foreground">
                       {' '}({entry.actorRole})
                     </span>
                   )}
-                  <span className="text-neutral-500"> — </span>
+                  <span className="text-muted-foreground"> — </span>
                   <span>{formatEntry(entry)}</span>
-                  <span className="text-neutral-500"> — </span>
+                  <span className="text-muted-foreground"> — </span>
                   <time
-                    className="text-xs text-neutral-400"
+                    className="text-xs text-muted-foreground"
                     dateTime={entry.timestamp}
                     title={entry.timestamp}
                   >
@@ -219,7 +219,7 @@ export function PatientAuditTrail({
               type="button"
               onClick={handleLoadMore}
               disabled={loading}
-              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-neutral-400"
+              className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-muted-foreground"
             >
               {loading ? t('auditLoading') : t('auditLoadMore')}
             </button>

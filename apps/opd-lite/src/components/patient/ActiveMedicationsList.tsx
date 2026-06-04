@@ -118,10 +118,10 @@ export function ActiveMedicationsList({
   if (loading) {
     return (
       <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-700">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">
           Active Medications
         </h3>
-        <p className="text-sm text-neutral-400">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -129,17 +129,17 @@ export function ActiveMedicationsList({
   if (meds.length === 0) {
     return (
       <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-700">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">
           Active Medications
         </h3>
-        <p className="text-sm text-neutral-400">No active medications</p>
+        <p className="text-sm text-muted-foreground">No active medications</p>
       </div>
     )
   }
 
   return (
     <div className="rounded-xl bg-card-bg p-5 shadow-sm ring-[0.65px] ring-gray-400/40">
-      <h3 className="mb-3 text-sm font-semibold text-neutral-700">
+      <h3 className="mb-3 text-sm font-semibold text-foreground">
         Active Medications
       </h3>
 
@@ -148,7 +148,7 @@ export function ActiveMedicationsList({
           <li key={med.id} className="py-2.5 first:pt-0 last:pb-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-neutral-800 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {med.drugName}
                   {med.hasOverride && (
                     <span className="ms-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
@@ -156,7 +156,7 @@ export function ActiveMedicationsList({
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-xs text-neutral-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {med.dosage !== '--' && <span>{med.dosage}</span>}
                   {med.dosage !== '--' && med.frequency !== '--' && (
                     <span className="mx-1">&middot;</span>

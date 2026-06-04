@@ -111,7 +111,7 @@ export function MpiResultModal({
 
       {/* Modal panel */}
       <div
-        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-white shadow-2xl ${
+        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-background shadow-2xl ${
           isBlock ? 'border-red-400' : 'border-amber-400'
         }`}
       >
@@ -155,7 +155,7 @@ export function MpiResultModal({
                   key={candidate.id}
                   className={`rounded-lg border overflow-hidden transition-colors ${
                     isBlock ? 'border-red-200' : 'border-amber-200'
-                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-white'}`}
+                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-background'}`}
                 >
                   {/* Collapsible header — always visible */}
                   <Button
@@ -163,18 +163,18 @@ export function MpiResultModal({
                     type="button"
                     onClick={() => toggleCandidate(candidate.id)}
                     aria-expanded={isExpanded}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start hover:bg-neutral-50"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start hover:bg-muted"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Chevron */}
                       <ChevronRight
                         size={16}
-                        className={`shrink-0 text-neutral-400 transition-transform duration-200 ${
+                        className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
                           isExpanded ? 'rotate-90' : ''
                         }`}
                       />
 
-                      <span className="text-sm font-bold text-neutral-900 truncate">
+                      <span className="text-sm font-bold text-foreground truncate">
                         {name}
                       </span>
                     </div>
@@ -186,7 +186,7 @@ export function MpiResultModal({
                           ? 'bg-red-100 text-red-800'
                           : candidate.mpiScore >= 60
                             ? 'bg-amber-100 text-amber-800'
-                            : 'bg-neutral-100 text-neutral-700'
+                            : 'bg-muted text-foreground'
                       }`}
                     >
                       {t('mpiScore')}: {candidate.mpiScore}
@@ -200,32 +200,32 @@ export function MpiResultModal({
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         {candidate.nameGiven && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameGiven')}</span>
-                            <p className="font-semibold text-neutral-900">{candidate.nameGiven}</p>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiNameGiven')}</span>
+                            <p className="font-semibold text-foreground">{candidate.nameGiven}</p>
                           </div>
                         )}
                         {candidate.nameFather && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiNameFather')}</span>
-                            <p className="font-semibold text-neutral-900">{candidate.nameFather}</p>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiNameFather')}</span>
+                            <p className="font-semibold text-foreground">{candidate.nameFather}</p>
                           </div>
                         )}
                         {candidate.birthYear && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiBirthYear')}</span>
-                            <p className="font-semibold text-neutral-900">{candidate.birthYear}</p>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiBirthYear')}</span>
+                            <p className="font-semibold text-foreground">{candidate.birthYear}</p>
                           </div>
                         )}
                         {candidate.gender && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiGender')}</span>
-                            <p className="font-semibold text-neutral-900 capitalize">{candidate.gender}</p>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiGender')}</span>
+                            <p className="font-semibold text-foreground capitalize">{candidate.gender}</p>
                           </div>
                         )}
                         {candidate.districtOrigin && (
                           <div>
-                            <span className="text-xs font-medium text-neutral-500">{t('mpiDistrict')}</span>
-                            <p className="font-semibold text-neutral-900">{candidate.districtOrigin}</p>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiDistrict')}</span>
+                            <p className="font-semibold text-foreground">{candidate.districtOrigin}</p>
                           </div>
                         )}
                       </div>
@@ -233,10 +233,10 @@ export function MpiResultModal({
                       {/* Score breakdown */}
                       {Object.keys(candidate.scoreBreakdown).length > 0 && (
                         <div className="mt-3 pt-3 border-t border-neutral-100">
-                          <p className="text-xs font-semibold text-neutral-500 mb-1">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">
                             {t('mpiScoreBreakdown')}
                           </p>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-neutral-600">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                             {Object.entries(candidate.scoreBreakdown).map(
                               ([field, score]) => (
                                 <div key={field} className="flex justify-between">
@@ -268,7 +268,7 @@ export function MpiResultModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
           <Button
             variant="secondary"
             type="button"

@@ -92,7 +92,7 @@ function renderAttachment(
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <img
           src={dataUri}
@@ -107,7 +107,7 @@ function renderAttachment(
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <embed
           src={dataUri}
@@ -209,7 +209,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
 
       {/* Title + amendment badge */}
       <div className="flex flex-wrap items-start gap-2">
-        <h3 className="text-xl font-bold text-neutral-900">{loincDisplay}</h3>
+        <h3 className="text-xl font-bold text-foreground">{loincDisplay}</h3>
         {isAmended && (
           <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
             {statusLabel(report.status)}
@@ -219,37 +219,37 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       </div>
 
       {loincCode && (
-        <p className="mt-0.5 text-xs text-neutral-500">LOINC: {loincCode}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">LOINC: {loincCode}</p>
       )}
 
       {/* Metadata grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="font-medium text-neutral-500">Status</span>
-          <p className="font-semibold text-neutral-900">{statusLabel(report.status)}</p>
+          <span className="font-medium text-muted-foreground">Status</span>
+          <p className="font-semibold text-foreground">{statusLabel(report.status)}</p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Collection Date</span>
-          <p className="font-semibold text-neutral-900">{formatDateTime(report.effectiveDateTime)}</p>
+          <span className="font-medium text-muted-foreground">Collection Date</span>
+          <p className="font-semibold text-foreground">{formatDateTime(report.effectiveDateTime)}</p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Issued</span>
-          <p className="font-semibold text-neutral-900">{formatDateTime(report.issued)}</p>
+          <span className="font-medium text-muted-foreground">Issued</span>
+          <p className="font-semibold text-foreground">{formatDateTime(report.issued)}</p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Lab</span>
-          <p className="font-semibold text-neutral-900">{performers[0]?.display ?? ext?.labId ?? '—'}</p>
+          <span className="font-medium text-muted-foreground">Lab</span>
+          <p className="font-semibold text-foreground">{performers[0]?.display ?? ext?.labId ?? '—'}</p>
         </div>
         {ext?.sampleId && (
           <div>
-            <span className="font-medium text-neutral-500">Sample ID</span>
-            <p className="font-semibold text-neutral-900 font-mono text-xs">{ext.sampleId.slice(0, 8)}…</p>
+            <span className="font-medium text-muted-foreground">Sample ID</span>
+            <p className="font-semibold text-foreground font-mono text-xs">{ext.sampleId.slice(0, 8)}…</p>
           </div>
         )}
         {ext?.templateVersion && (
           <div>
-            <span className="font-medium text-neutral-500">Template</span>
-            <p className="font-semibold text-neutral-900 text-xs">{ext.templateVersion}</p>
+            <span className="font-medium text-muted-foreground">Template</span>
+            <p className="font-semibold text-foreground text-xs">{ext.templateVersion}</p>
           </div>
         )}
       </div>
@@ -257,8 +257,8 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Performers */}
       {performers.length > 1 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-neutral-500">Performers</span>
-          <ul className="mt-1 space-y-0.5 text-sm text-neutral-900">
+          <span className="text-sm font-medium text-muted-foreground">Performers</span>
+          <ul className="mt-1 space-y-0.5 text-sm text-foreground">
             {performers.map((p, i) => (
               <li key={i}>{p.display ?? p.reference}</li>
             ))}
@@ -269,8 +269,8 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       {/* Result observations (references — shown for completeness) */}
       {report.result && report.result.length > 0 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-neutral-500">Observation References</span>
-          <ul className="mt-1 space-y-0.5 text-xs text-neutral-500">
+          <span className="text-sm font-medium text-muted-foreground">Observation References</span>
+          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             {report.result.map((ref, i) => (
               <li key={i} className="font-mono">{ref.reference}</li>
             ))}
@@ -280,23 +280,23 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
 
       {/* Conclusion */}
       {report.conclusion && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
-          <h4 className="text-sm font-bold text-neutral-700">Conclusion</h4>
-          <p className="mt-1 text-sm text-neutral-900 whitespace-pre-wrap">{report.conclusion}</p>
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4">
+          <h4 className="text-sm font-bold text-foreground">Conclusion</h4>
+          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{report.conclusion}</p>
         </div>
       )}
 
       {/* Attachments */}
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-bold text-neutral-700">Attached Files</h4>
+          <h4 className="text-sm font-bold text-foreground">Attached Files</h4>
           {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i))}
         </div>
       )}
 
       {/* Empty state */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4 text-sm text-neutral-500">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4 text-sm text-muted-foreground">
           No report content or attachments available. Result data may be pending.
         </div>
       )}

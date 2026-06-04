@@ -484,7 +484,7 @@ export function PatientRegistrationForm({
 
         {/* Demographics section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-neutral-900 mb-4">
+          <legend className="text-base font-bold text-foreground mb-4">
             {t('demographicsSection')}
           </legend>
 
@@ -493,10 +493,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="national-id"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('nationalIdLabel')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -516,7 +516,7 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="gender"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('gender')}
                 <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -560,7 +560,7 @@ export function PatientRegistrationForm({
                   }}
                   className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
                 />
-                <span className="text-sm font-medium text-neutral-700">
+                <span className="text-sm font-medium text-foreground">
                   {t('birthYearOnly')}
                 </span>
               </label>
@@ -569,7 +569,7 @@ export function PatientRegistrationForm({
                 <div>
                   <label
                     htmlFor="birth-year"
-                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                    className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthYear')}
                     <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -600,7 +600,7 @@ export function PatientRegistrationForm({
                 <div>
                   <label
                     htmlFor="birth-date"
-                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                    className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthDate')}
                     <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -630,10 +630,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="phone"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('phone')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -653,10 +653,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="preferred-language"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('preferredLanguage')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -696,17 +696,17 @@ export function PatientRegistrationForm({
 
         {/* Clinical section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-neutral-900 mb-4">
+          <legend className="text-base font-bold text-foreground mb-4">
             {t('clinicalSection')}
           </legend>
 
           <div>
             <label
               htmlFor="blood-group"
-              className="mb-1 block text-sm font-semibold text-neutral-700"
+              className="mb-1 block text-sm font-semibold text-foreground"
             >
               {t('bloodGroup')}
-              <span className="ms-1 text-xs font-normal text-neutral-400">
+              <span className="ms-1 text-xs font-normal text-muted-foreground">
                 ({t('optional')})
               </span>
             </label>

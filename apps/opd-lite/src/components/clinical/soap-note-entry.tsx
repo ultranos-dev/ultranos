@@ -150,8 +150,8 @@ export function SOAPNoteEntry({
     return () => window.removeEventListener('keydown', handler)
   }, [handleAIAssist, handleConfirmSave, aiDiff.isActive, aiDiff.isLoading])
 
-  const textareaClass = `w-full rounded-xl border border-neutral-300 bg-white px-4 py-3
-    text-base text-neutral-900 placeholder:text-neutral-400
+  const textareaClass = `w-full rounded-xl border border-neutral-300 bg-background px-4 py-3
+    text-base text-foreground placeholder:text-muted-foreground
     focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
     transition-colors`
 
@@ -161,11 +161,11 @@ export function SOAPNoteEntry({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-neutral-700">
+          <h3 className="text-sm font-bold text-foreground">
             {aiDiff.isLoading ? 'AI is parsing your notes...' : 'AI Parsed SOAP — Review & Confirm'}
           </h3>
           {!aiDiff.isLoading && (
-            <span className="text-xs text-neutral-400" title={`Model: ${aiDiff.aiModelVersion}`}>
+            <span className="text-xs text-muted-foreground" title={`Model: ${aiDiff.aiModelVersion}`}>
               Model: {aiDiff.aiModelVersion}
             </span>
           )}
@@ -197,9 +197,9 @@ export function SOAPNoteEntry({
             <div className="grid grid-cols-2 gap-4">
               {/* Left: Original */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-neutral-500">Original</h4>
-                <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-3 text-sm text-neutral-700 whitespace-pre-wrap">
-                  {aiDiff.originalText || <span className="italic text-neutral-400">No original text</span>}
+                <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Original</h4>
+                <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-3 text-sm text-foreground whitespace-pre-wrap">
+                  {aiDiff.originalText || <span className="italic text-muted-foreground">No original text</span>}
                 </div>
               </div>
 
@@ -217,7 +217,7 @@ export function SOAPNoteEntry({
                           onChange={(e) => updateAIDiffField(field, e.target.value)}
                           rows={3}
                           dir="auto"
-                          className="w-full rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-neutral-900 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-200"
+                          className="w-full rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-foreground focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-200"
                         />
                       </div>
                     )
@@ -271,14 +271,14 @@ export function SOAPNoteEntry({
             AI Assist
           </Button>
         ) : (
-          <span className="inline-flex items-center gap-2 rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-semibold text-neutral-600">
+          <span className="inline-flex items-center gap-2 rounded-md bg-secondary px-3 py-1.5 text-sm font-semibold text-muted-foreground">
             <span aria-hidden="true">📋</span>
             Template Assist
           </span>
         )}
 
         {!aiConsentGranted && isOnline && (
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-muted-foreground">
             Patient has not consented to AI processing
           </span>
         )}
@@ -292,15 +292,15 @@ export function SOAPNoteEntry({
 
       {/* Offline macro suggestions */}
       {!isOnline && macroMatches.length > 0 && (
-        <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-white p-3">
-          <p className="mb-2 text-xs font-bold text-neutral-500 uppercase">Template Suggestions</p>
+        <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-background p-3">
+          <p className="mb-2 text-xs font-bold text-muted-foreground uppercase">Template Suggestions</p>
           <div className="space-y-1">
             {macroMatches.map((template) => (
               <Button
                 key={template.keyword}
                 variant="ghost"
                 onClick={() => applyMacro(template)}
-                className="w-full justify-start px-3 py-2 text-sm text-neutral-800"
+                className="w-full justify-start px-3 py-2 text-sm text-foreground"
               >
                 {template.label}
               </Button>
@@ -313,7 +313,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-subjective"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Subjective
         </label>
@@ -336,7 +336,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-objective"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Objective
         </label>
@@ -359,7 +359,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-assessment"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Assessment
         </label>
@@ -382,7 +382,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-plan"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Plan
         </label>

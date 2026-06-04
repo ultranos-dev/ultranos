@@ -231,7 +231,7 @@ export function WeekScheduleView() {
               <ChevronLeft className="h-5 w-5" />
             </DirectionalIcon>
           </Button>
-          <h2 className="text-base font-bold text-neutral-900">
+          <h2 className="text-base font-bold text-foreground">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
           <Button
@@ -301,11 +301,11 @@ export function WeekScheduleView() {
                 className={`w-full rounded-lg border p-2.5 text-start ${
                   data
                     ? 'border-blue-200 bg-blue-50 hover:bg-blue-100'
-                    : 'border-neutral-200 bg-white hover:bg-neutral-50'
+                    : 'border-neutral-200 bg-background hover:bg-muted'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tabular-nums text-neutral-700">
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
                     {time}
                   </span>
                   {data && (
@@ -316,7 +316,7 @@ export function WeekScheduleView() {
                             key={type}
                             className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
                               SERVICE_TYPE_COLORS[type] ??
-                              'bg-neutral-500'
+                              'bg-muted'
                             }`}
                           >
                             {count}
@@ -360,7 +360,7 @@ export function WeekScheduleView() {
           </DirectionalIcon>
         </Button>
 
-        <h2 className="text-lg font-bold text-neutral-900">
+        <h2 className="text-lg font-bold text-foreground">
           {formatWeekRange(weekStart, weekEnd)}
         </h2>
 
@@ -387,7 +387,7 @@ export function WeekScheduleView() {
             <span
               className={`inline-block h-3 w-3 rounded-full ${SERVICE_TYPE_COLORS[key]}`}
             />
-            <span className="text-neutral-600">{label}</span>
+            <span className="text-muted-foreground">{label}</span>
           </div>
         ))}
       </div>
@@ -398,7 +398,7 @@ export function WeekScheduleView() {
           <thead>
             <tr>
               {/* Time column header */}
-              <th className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-neutral-100 px-2 py-2 text-start text-xs font-semibold text-neutral-600">
+              <th className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-muted px-2 py-2 text-start text-xs font-semibold text-muted-foreground">
                 {t('time')}
               </th>
               {/* Day headers — flex-direction: row auto-reverses in RTL */}
@@ -410,7 +410,7 @@ export function WeekScheduleView() {
                     className={`border-b border-neutral-200 px-1 py-2 text-center text-xs font-semibold ${
                       isToday
                         ? 'bg-primary-50 text-primary-800'
-                        : 'bg-neutral-50 text-neutral-700'
+                        : 'bg-muted text-foreground'
                     }`}
                   >
                     <Button
@@ -430,7 +430,7 @@ export function WeekScheduleView() {
             {TIME_SLOTS.map((time) => (
               <tr key={time} className="group">
                 {/* Time label */}
-                <td className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-white px-2 py-1.5 text-xs font-medium tabular-nums text-neutral-600">
+                <td className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
                   {time}
                 </td>
                 {/* Cells for each day */}
@@ -453,7 +453,7 @@ export function WeekScheduleView() {
                         className={`flex h-7 w-full items-center justify-center gap-0.5 rounded ${
                           data
                             ? 'hover:bg-blue-100'
-                            : 'hover:bg-neutral-100'
+                            : 'hover:bg-muted'
                         }`}
                       >
                         {data &&
@@ -463,7 +463,7 @@ export function WeekScheduleView() {
                                 key={type}
                                 className={`inline-flex h-5 min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
                                   SERVICE_TYPE_COLORS[type] ??
-                                  'bg-neutral-500'
+                                  'bg-muted'
                                 }`}
                               >
                                 {count}

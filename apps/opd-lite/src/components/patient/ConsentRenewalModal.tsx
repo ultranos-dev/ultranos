@@ -66,12 +66,12 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div
-        className="rounded-xl bg-white p-6 max-w-md w-full shadow-xl"
+        className="rounded-xl bg-background p-6 max-w-md w-full shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="consent-renewal-title"
       >
-        <h2 id="consent-renewal-title" className="text-lg font-bold text-neutral-900 mb-4">
+        <h2 id="consent-renewal-title" className="text-lg font-bold text-foreground mb-4">
           {/* TODO: t('consent.renewTitle') */}
           Renew Patient Consent
         </h2>
@@ -79,7 +79,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Method */}
           <div>
-            <label htmlFor="consent-method" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-method" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.methodLabel') */}
               Method
             </label>
@@ -97,7 +97,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
           {/* Witness (required if verbal) */}
           {method === 'VERBAL_WITNESSED' && (
             <div>
-              <label htmlFor="consent-witness" className="block text-sm font-medium text-neutral-700 mb-1">
+              <label htmlFor="consent-witness" className="block text-sm font-medium text-foreground mb-1">
                 {/* TODO: t('consent.witnessLabel') */}
                 Witness ID
               </label>
@@ -115,7 +115,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
 
           {/* Language */}
           <div>
-            <label htmlFor="consent-language" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-language" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.languageLabel') */}
               Language
             </label>
@@ -133,7 +133,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
 
           {/* Version */}
           <div>
-            <label htmlFor="consent-version" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-version" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.versionLabel') */}
               Version
             </label>

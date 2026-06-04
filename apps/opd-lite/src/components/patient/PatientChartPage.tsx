@@ -279,7 +279,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   if (loading) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-neutral-500">Loading patient chart...</p>
+        <p className="font-semibold text-muted-foreground">Loading patient chart...</p>
       </main>
     )
   }
@@ -290,7 +290,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
       <main className="mx-auto max-w-2xl px-4 py-8">
         {needsReauth ? (
           <>
-            <p className="font-semibold text-neutral-500">
+            <p className="font-semibold text-muted-foreground">
               Session encryption key unavailable — please sign in again to access patient data.
             </p>
             <Button
@@ -306,7 +306,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
           </>
         ) : (
           <>
-            <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
+            <p className="font-semibold text-muted-foreground">Patient not found in local session.</p>
             <Button variant="ghost" onClick={() => router.push('/')} className="mt-4">
               Return to Patient Search
             </Button>
@@ -345,7 +345,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
 
       {/* Encounter history with expandable detail */}
       <section aria-label="Encounter history">
-        <h2 className="mb-3 text-lg font-bold text-neutral-900">Encounter History</h2>
+        <h2 className="mb-3 text-lg font-bold text-foreground">Encounter History</h2>
         <EncounterHistoryList patientId={patientId} />
       </section>
 

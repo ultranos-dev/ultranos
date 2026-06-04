@@ -121,7 +121,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
   if (loading) {
     return (
       <div className="border-t border-neutral-200 p-4" data-testid="encounter-detail-loading">
-        <p className="text-sm text-neutral-500">Loading details...</p>
+        <p className="text-sm text-muted-foreground">Loading details...</p>
       </div>
     )
   }
@@ -129,7 +129,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
   if (!data) {
     return (
       <div className="border-t border-neutral-200 p-4">
-        <p className="text-sm text-neutral-500">Unable to load encounter details.</p>
+        <p className="text-sm text-muted-foreground">Unable to load encounter details.</p>
       </div>
     )
   }
@@ -162,7 +162,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {/* Vital Signs */}
       {data.vitals.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Vital Signs
           </h4>
           <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -171,11 +171,11 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
               return (
                 <div
                   key={obs.id}
-                  className="rounded-md bg-neutral-50 px-3 py-2"
+                  className="rounded-md bg-muted px-3 py-2"
                   data-testid="vital-item"
                 >
-                  <span className="text-xs font-semibold text-neutral-500">{v.label}</span>
-                  <p className="text-sm font-bold text-neutral-900">{v.value}</p>
+                  <span className="text-xs font-semibold text-muted-foreground">{v.label}</span>
+                  <p className="text-sm font-bold text-foreground">{v.value}</p>
                 </div>
               )
             })}
@@ -186,12 +186,12 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {/* SOAP Notes — Story 24.1: Show all entries with AI badges */}
       {data.allSoapEntries.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             SOAP Notes
           </h4>
           <div className="mt-1 space-y-4">
             {data.allSoapEntries.map((entry) => (
-              <div key={entry.id} className="rounded-md border border-neutral-100 bg-neutral-50 p-3">
+              <div key={entry.id} className="rounded-md border border-neutral-100 bg-muted p-3">
                 {/* AI source badge */}
                 <div className="mb-2 flex items-center gap-2">
                   {entry.source === 'AI_GENERATED' && (
@@ -210,33 +210,33 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                       AI Confirmed
                     </span>
                   )}
-                  <span className="text-xs text-neutral-400">
+                  <span className="text-xs text-muted-foreground">
                     {new Date(entry.createdAt).toLocaleTimeString()}
                   </span>
                 </div>
                 <div className="space-y-1">
                   {entry.subjective && (
                     <div>
-                      <span className="text-xs font-bold text-neutral-400">S — Subjective</span>
-                      <p className="text-sm text-neutral-700" dir="auto">{entry.subjective}</p>
+                      <span className="text-xs font-bold text-muted-foreground">S — Subjective</span>
+                      <p className="text-sm text-foreground" dir="auto">{entry.subjective}</p>
                     </div>
                   )}
                   {entry.objective && (
                     <div>
-                      <span className="text-xs font-bold text-neutral-400">O — Objective</span>
-                      <p className="text-sm text-neutral-700" dir="auto">{entry.objective}</p>
+                      <span className="text-xs font-bold text-muted-foreground">O — Objective</span>
+                      <p className="text-sm text-foreground" dir="auto">{entry.objective}</p>
                     </div>
                   )}
                   {entry.assessment && (
                     <div>
-                      <span className="text-xs font-bold text-neutral-400">A — Assessment</span>
-                      <p className="text-sm text-neutral-700" dir="auto">{entry.assessment}</p>
+                      <span className="text-xs font-bold text-muted-foreground">A — Assessment</span>
+                      <p className="text-sm text-foreground" dir="auto">{entry.assessment}</p>
                     </div>
                   )}
                   {entry.plan && (
                     <div>
-                      <span className="text-xs font-bold text-neutral-400">P — Plan</span>
-                      <p className="text-sm text-neutral-700" dir="auto">{entry.plan}</p>
+                      <span className="text-xs font-bold text-muted-foreground">P — Plan</span>
+                      <p className="text-sm text-foreground" dir="auto">{entry.plan}</p>
                     </div>
                   )}
                 </div>
@@ -249,14 +249,14 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {/* Diagnoses */}
       {data.diagnoses.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Diagnoses
           </h4>
           <ul className="mt-1 space-y-1">
             {data.diagnoses.map((c) => (
               <li
                 key={c.id}
-                className="text-sm text-neutral-700"
+                className="text-sm text-foreground"
                 dir="auto"
                 data-testid="diagnosis-item"
               >
@@ -273,14 +273,14 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {/* Prescriptions */}
       {data.prescriptions.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Prescriptions
           </h4>
           <ul className="mt-1 space-y-1">
             {data.prescriptions.map((rx) => (
               <li
                 key={rx.id}
-                className="text-sm text-neutral-700"
+                className="text-sm text-foreground"
                 dir="auto"
                 data-testid="prescription-item"
               >
@@ -288,7 +288,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                   {rx.medicationCodeableConcept?.text || 'Unknown medication'}
                 </span>
                 {rx.dosageInstruction?.[0]?.text && (
-                  <span className="ms-2 text-neutral-500">
+                  <span className="ms-2 text-muted-foreground">
                     — {rx.dosageInstruction[0].text}
                   </span>
                 )}
@@ -304,7 +304,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
         data.diagnoses.length === 0 &&
         data.prescriptions.length === 0 &&
         data.allergiesAtVisit.length === 0 && (
-          <p className="text-sm text-neutral-400">No clinical data recorded for this encounter.</p>
+          <p className="text-sm text-muted-foreground">No clinical data recorded for this encounter.</p>
         )}
     </div>
   )

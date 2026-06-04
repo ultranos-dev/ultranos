@@ -74,11 +74,11 @@ export function PatientDetailsAccordion({
         aria-expanded={isOpen}
         aria-controls="patient-details-content"
       >
-        <span className="text-sm font-semibold text-neutral-700">
+        <span className="text-sm font-semibold text-foreground">
           Patient Details
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
@@ -89,17 +89,17 @@ export function PatientDetailsAccordion({
       {isOpen && (
         <div id="patient-details-content" className="px-5 pb-5">
           {/* ── Address & Geography ─────────────────────── */}
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Address &amp; Geography
           </h4>
 
-          <dl className="space-y-1 text-sm text-neutral-700">
+          <dl className="space-y-1 text-sm text-foreground">
             <div className="flex gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Origin:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Origin:</dt>
               <dd>{originStr ?? '--'}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Current:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Current:</dt>
               <dd>
                 {isSameAddress
                   ? 'Same as origin'
@@ -117,20 +117,20 @@ export function PatientDetailsAccordion({
           <hr className="my-4 border-neutral-200" />
 
           {/* ── Identity & Records ──────────────────────── */}
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-500">
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Identity &amp; Records
           </h4>
 
-          <dl className="space-y-1 text-sm text-neutral-700">
+          <dl className="space-y-1 text-sm text-foreground">
             {/* Tier */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Tier:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Tier:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.patient_tier === 'PREMIUM'
                       ? 'bg-purple-100 text-purple-800'
-                      : 'bg-neutral-100 text-neutral-600'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {ext.patient_tier}
@@ -140,22 +140,22 @@ export function PatientDetailsAccordion({
 
             {/* Registered */}
             <div className="flex gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Registered:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Registered:</dt>
               <dd>{formatDate(ext.createdAt)}</dd>
             </div>
 
             {/* Consent version */}
             <div className="flex gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Consent:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Consent:</dt>
               <dd>{ext.consentVersion ?? '--'}</dd>
             </div>
 
             {/* Identifiers */}
             {ext.identifiers && ext.identifiers.length > 0 && (
               <div>
-                <dt className="font-medium text-neutral-500 mb-1">Identifiers:</dt>
+                <dt className="font-medium text-muted-foreground mb-1">Identifiers:</dt>
                 <dd>
-                  <ul className="ms-4 list-disc space-y-0.5 text-xs text-neutral-600">
+                  <ul className="ms-4 list-disc space-y-0.5 text-xs text-muted-foreground">
                     {ext.identifiers.map((ident, idx) => (
                       <li key={idx}>
                         <span className="font-medium">{ident.displayType}</span>
@@ -163,7 +163,7 @@ export function PatientDetailsAccordion({
                         {maskHash(ident.valueHash)}
                         {/* Tazkira fields */}
                         {(ident.jild || ident.safa || ident.shumara) && (
-                          <span className="ms-1 text-neutral-400">
+                          <span className="ms-1 text-muted-foreground">
                             (Jild: {ident.jild ?? '--'} / Safa: {ident.safa ?? '--'} / Shumara: {ident.shumara ?? '--'})
                           </span>
                         )}
@@ -176,13 +176,13 @@ export function PatientDetailsAccordion({
 
             {/* Status */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Status:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Status:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.isActive
                       ? 'bg-green-100 text-green-800'
-                      : 'bg-neutral-100 text-neutral-500'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {ext.isActive ? 'Active' : 'Inactive'}
@@ -192,13 +192,13 @@ export function PatientDetailsAccordion({
 
             {/* Biometric */}
             <div className="flex items-center gap-2">
-              <dt className="font-medium text-neutral-500 shrink-0">Biometric:</dt>
+              <dt className="font-medium text-muted-foreground shrink-0">Biometric:</dt>
               <dd>
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.biometricFingerprintHash
                       ? 'bg-green-100 text-green-800'
-                      : 'bg-neutral-100 text-neutral-500'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {ext.biometricFingerprintHash ? 'Enrolled' : 'Not enrolled'}

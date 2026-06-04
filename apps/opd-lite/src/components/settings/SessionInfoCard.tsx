@@ -50,16 +50,16 @@ export function SessionInfoCard() {
 
   return (
     <Card>
-      <h2 className="mb-4 text-sm font-semibold text-neutral-900">Session Info</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">Session Info</h2>
 
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-neutral-500">Login Time</p>
-          <p className="text-sm text-neutral-900">{loginTime}</p>
+          <p className="text-xs font-medium text-muted-foreground">Login Time</p>
+          <p className="text-sm text-foreground">{loginTime}</p>
         </div>
 
         <div>
-          <p className="text-xs font-medium text-neutral-500">Session Expiry</p>
+          <p className="text-xs font-medium text-muted-foreground">Session Expiry</p>
           {remainingMs !== null ? (
             <p
               data-testid="session-countdown"
@@ -68,7 +68,7 @@ export function SessionInfoCard() {
               {formatCountdown(remainingMs)}
             </p>
           ) : (
-            <p className="text-sm text-neutral-400">Unavailable</p>
+            <p className="text-sm text-muted-foreground">Unavailable</p>
           )}
         </div>
       </div>

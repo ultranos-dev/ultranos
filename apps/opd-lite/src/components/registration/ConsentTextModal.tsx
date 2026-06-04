@@ -84,12 +84,12 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         onClick={onClose}
       />
 
-      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-white ring-[0.65px] ring-gray-400/40 shadow-2xl">
+      <div className="relative mx-4 w-full max-w-2xl rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between rounded-t-xl border-b border-neutral-200 bg-neutral-50 px-6 py-4">
+        <div className="flex items-center justify-between rounded-t-xl border-b border-neutral-200 bg-muted px-6 py-4">
           <h2
             id="consent-text-title"
-            className="text-xl font-black text-neutral-900"
+            className="text-xl font-black text-foreground"
           >
             {t('consentDocumentTitle')}
           </h2>
@@ -125,16 +125,16 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
           className="max-h-[60vh] overflow-y-auto px-6 py-5"
           dir={activeDir}
         >
-          <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             {t('consentDocumentVersion')}
           </p>
 
           {CONSENT_SECTIONS.map((section) => (
             <div key={section} className="mb-5">
-              <h3 className="text-sm font-bold text-neutral-900 mb-1">
+              <h3 className="text-sm font-bold text-foreground mb-1">
                 {t(`consentDocument.${activeTab}.${section}Title`)}
               </h3>
-              <p className="text-sm leading-relaxed text-neutral-700">
+              <p className="text-sm leading-relaxed text-foreground">
                 {t(`consentDocument.${activeTab}.${section}Body`)}
               </p>
             </div>
@@ -142,7 +142,7 @@ export function ConsentTextModal({ open, onClose }: ConsentTextModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
+        <div className="flex justify-end rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
           <Button
             variant="primary"
             type="button"

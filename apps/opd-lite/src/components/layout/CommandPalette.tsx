@@ -99,37 +99,37 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
 
       {/* Backdrop with glassmorphism blur */}
       <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
+        className="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[backdropIn_100ms_ease-out_forwards]"
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
 
       {/* Palette container */}
       <Command
-        className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white/95 ring-[0.65px] ring-gray-400/40 shadow-lg backdrop-blur-md"
+        className="relative w-full max-w-lg overflow-hidden rounded-xl bg-background/95 ring-[0.65px] ring-gray-400/40 shadow-lg backdrop-blur-md"
         label="Clinical Command Palette"
       >
         <Command.Input
           placeholder="Search clinical actions..."
-          className="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-neutral-900 outline-none placeholder:text-neutral-400"
+          className="w-full border-b border-neutral-200 bg-transparent px-4 py-3 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
           autoFocus
         />
         <Command.List className="max-h-72 overflow-y-auto p-2">
-          <Command.Empty className="px-4 py-6 text-center text-sm text-neutral-400">
+          <Command.Empty className="px-4 py-6 text-center text-sm text-muted-foreground">
             No matching actions found.
           </Command.Empty>
 
-          <Command.Group heading="Clinical Sections" className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          <Command.Group heading="Clinical Sections" className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {CLINICAL_COMMANDS.map((cmd) => (
               <Command.Item
                 key={cmd.id}
                 value={cmd.id}
                 keywords={[cmd.label]}
                 onSelect={handleSelect}
-                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
+                className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors duration-100 data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary-700"
               >
                 <span>{cmd.label}</span>
-                <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold text-neutral-500">
+                <kbd className="rounded border border-neutral-200 bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                   {cmd.shortcut}
                 </kbd>
               </Command.Item>
@@ -138,15 +138,15 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
         </Command.List>
 
         {/* Footer hint */}
-        <div className="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-neutral-400">
+        <div className="flex items-center gap-3 border-t border-neutral-200 px-4 py-2 text-xs text-muted-foreground">
           <span>
-            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
+            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">↑↓</kbd> Navigate
           </span>
           <span>
-            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold">↵</kbd> Select
+            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">↵</kbd> Select
           </span>
           <span>
-            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-semibold">Esc</kbd> Close
+            <kbd className="rounded border border-neutral-200 bg-muted px-1 py-0.5 font-semibold">Esc</kbd> Close
           </span>
         </div>
       </Command>

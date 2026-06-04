@@ -12,8 +12,8 @@ export function PreferencesCard() {
   return (
     <Card>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-neutral-900">Preferences</h2>
-        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+        <h2 className="text-sm font-semibold text-foreground">Preferences</h2>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           Coming soon
         </span>
       </div>
@@ -24,7 +24,7 @@ export function PreferencesCard() {
             key={pref.id}
             className="flex items-center justify-between"
           >
-            <span className="text-sm text-neutral-700">{pref.label}</span>
+            <span className="text-sm text-foreground">{pref.label}</span>
             <input
               type="checkbox"
               disabled
@@ -35,7 +35,7 @@ export function PreferencesCard() {
         ))}
       </div>
 
-      <p className="mt-4 text-xs text-neutral-400">
+      <p className="mt-4 text-xs text-muted-foreground">
         Managed by administrator
       </p>
     </Card>

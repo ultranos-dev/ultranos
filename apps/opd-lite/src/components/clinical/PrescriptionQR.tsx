@@ -57,12 +57,12 @@ export function PrescriptionQR({
         <h3 className="text-xl font-bold text-green-700">
           Prescription Finalized
         </h3>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           Patient can scan this code at any pharmacy to fulfill their prescription.
         </p>
         <div
           data-testid="prescription-qr-code"
-          className="rounded-xl border-2 border-neutral-200 bg-white p-4"
+          className="rounded-xl border-2 border-neutral-200 bg-background p-4"
         >
           <QRCodeSVG
             value={qrData}
@@ -71,7 +71,7 @@ export function PrescriptionQR({
             includeMargin
           />
         </div>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-muted-foreground">
           Cryptographically signed — tamper-proof
         </p>
         <Button

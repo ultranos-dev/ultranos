@@ -14,12 +14,12 @@ export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
       role="status"
       aria-live="polite"
       data-testid="autosave-indicator"
-      className="flex items-center gap-2 text-sm text-neutral-500"
+      className="flex items-center gap-2 text-sm text-muted-foreground"
     >
       {status === 'saving' && (
         <span className="flex items-center gap-2">
           <svg
-            className="h-4 w-4 animate-spin text-neutral-400"
+            className="h-4 w-4 animate-spin text-muted-foreground"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

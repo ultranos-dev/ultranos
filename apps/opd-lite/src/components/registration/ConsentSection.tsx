@@ -46,7 +46,7 @@ export function ConsentSection({
     <>
     <ConsentTextModal open={consentModalOpen} onClose={() => setConsentModalOpen(false)} />
     <Card as="fieldset">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('consentSection')}
       </legend>
 
@@ -55,7 +55,7 @@ export function ConsentSection({
         <div role="radiogroup" aria-labelledby="consent-method-label">
           <p
             id="consent-method-label"
-            className="mb-2 text-sm font-semibold text-neutral-700"
+            className="mb-2 text-sm font-semibold text-foreground"
           >
             {t('consentMethod')}
             <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -72,7 +72,7 @@ export function ConsentSection({
                 className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
                 aria-invalid={!!errors?.method}
               />
-              <span className="text-sm font-medium text-neutral-700">
+              <span className="text-sm font-medium text-foreground">
                 {t('consentWritten')}
               </span>
             </label>
@@ -87,7 +87,7 @@ export function ConsentSection({
                 className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
                 aria-invalid={!!errors?.method}
               />
-              <span className="text-sm font-medium text-neutral-700">
+              <span className="text-sm font-medium text-foreground">
                 {t('consentVerbalWitnessed')}
               </span>
             </label>
@@ -105,7 +105,7 @@ export function ConsentSection({
           <div>
             <label
               htmlFor="consent-witness"
-              className="mb-1 block text-sm font-semibold text-neutral-700"
+              className="mb-1 block text-sm font-semibold text-foreground"
             >
               {t('consentWitness')}
               <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -138,7 +138,7 @@ export function ConsentSection({
         <div>
           <label
             htmlFor="consent-language"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('consentLanguage')}
             <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>

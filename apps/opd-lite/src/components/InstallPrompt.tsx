@@ -62,7 +62,7 @@ export function InstallPrompt() {
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
-          className="bg-white text-primary-700 hover:bg-primary-50"
+          className="bg-background text-primary-700 hover:bg-primary-50"
           onClick={handleInstall}
         >
           Install

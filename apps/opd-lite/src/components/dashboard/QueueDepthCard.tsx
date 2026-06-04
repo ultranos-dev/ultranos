@@ -37,12 +37,12 @@ export function QueueDepthCard() {
 
   return (
     <Card role="status" aria-label={t('queueDepth')}>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('queueDepth')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">{depth}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{depth}</p>
       {depth > 0 && (
-        <p className="mt-2 text-sm font-semibold text-neutral-500">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('patientsWaiting')}
         </p>
       )}

@@ -179,7 +179,7 @@ export function MfaManagementCard() {
 
   return (
     <Card>
-      <h2 className="mb-4 text-sm font-semibold text-neutral-900">MFA Management</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">MFA Management</h2>
 
       {!isOnline && (
         <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
@@ -187,12 +187,12 @@ export function MfaManagementCard() {
         </p>
       )}
 
-      {loading && <p className="text-sm text-neutral-400">Loading MFA status...</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading MFA status...</p>}
 
       {!loading && isEnrolled !== null && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-medium text-neutral-500">TOTP Status</p>
+            <p className="text-xs font-medium text-muted-foreground">TOTP Status</p>
             {isEnrolled ? (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                 Enrolled
@@ -216,7 +216,7 @@ export function MfaManagementCard() {
 
           {confirming && (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground">
                 Enter your current TOTP code to confirm reconfiguration:
               </p>
               <div className="flex gap-2">
@@ -241,7 +241,7 @@ export function MfaManagementCard() {
 
           {enrolling && qrCode && (
             <div className="space-y-3">
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground">
                 Scan this QR code with your authenticator app:
               </p>
               <img src={qrCode} alt="TOTP QR Code" className="h-48 w-48" />

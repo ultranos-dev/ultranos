@@ -126,7 +126,7 @@ export function InteractionWarningModal({
         aria-hidden="true"
       />
       {/* Modal panel */}
-      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-white shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
+      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-background shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
         {/* Header */}
         <div className="rounded-t-xl border-b border-red-200 bg-red-50 px-6 py-4">
           <h2
@@ -156,11 +156,11 @@ export function InteractionWarningModal({
                     >
                       {interaction.severity}
                     </span>
-                    <span className="text-sm font-bold text-neutral-900">
+                    <span className="text-sm font-bold text-foreground">
                       {interaction.drugA} + {interaction.drugB}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-neutral-700">
+                  <p className="mt-1 text-sm text-foreground">
                     {interaction.description}
                   </p>
                 </li>
@@ -173,7 +173,7 @@ export function InteractionWarningModal({
         <div className="border-t border-neutral-200 px-6 py-4">
           <label
             htmlFor="override-justification"
-            className="mb-2 block text-sm font-bold text-neutral-700"
+            className="mb-2 block text-sm font-bold text-foreground"
           >
             Override Justification (required to proceed)
           </label>
@@ -188,7 +188,7 @@ export function InteractionWarningModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-muted px-6 py-4">
           <Button
             variant="secondary"
             type="button"

@@ -36,9 +36,9 @@ function getStatusBadgeClasses(status: string): string {
     case 'in-progress':
       return 'bg-pill-green/20 text-pill-text'
     case 'finished':
-      return 'bg-neutral-100 text-neutral-600'
+      return 'bg-muted text-muted-foreground'
     default:
-      return 'bg-neutral-100 text-neutral-500'
+      return 'bg-muted text-muted-foreground'
   }
 }
 
@@ -114,8 +114,8 @@ export function RecentEncountersList() {
   if (encounters.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
-        <p className="mt-3 text-sm font-semibold text-neutral-400">
+        <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
+        <p className="mt-3 text-sm font-semibold text-muted-foreground">
           {t('noEncountersYet')}
         </p>
       </Card>
@@ -124,19 +124,19 @@ export function RecentEncountersList() {
 
   return (
     <Card>
-      <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
+      <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
       <ul className="mt-3 divide-y divide-neutral-100" role="list" aria-label="Recent encounters">
         {encounters.map((enc) => (
           <li key={enc.id}>
             <Link
               href={`/encounter/${enc.patientId}`}
-              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 rounded-lg ps-2 pe-2 -ms-2 -me-2"
+              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-muted rounded-lg ps-2 pe-2 -ms-2 -me-2"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-neutral-900">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {enc.patientName}
                 </p>
-                <p className="text-xs font-semibold text-neutral-400">
+                <p className="text-xs font-semibold text-muted-foreground">
                   {formatDate(enc.date)}
                 </p>
               </div>

@@ -38,7 +38,7 @@ function statusBadge(status: string) {
       )
     default:
       return (
-        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-600">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">
           {status}
         </span>
       )
@@ -117,7 +117,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
   if (loading) {
     return (
-      <div className="py-4 text-center text-sm text-neutral-500">
+      <div className="py-4 text-center text-sm text-muted-foreground">
         Loading lab results...
       </div>
     )
@@ -150,7 +150,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
   if (reports.length === 0) {
     return (
-      <div className="py-4 text-center text-sm text-neutral-500">
+      <div className="py-4 text-center text-sm text-muted-foreground">
         No lab results available for this patient.
       </div>
     )
@@ -166,7 +166,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
           </p>
         </div>
       )}
-      <h3 className="text-lg font-bold text-neutral-900">
+      <h3 className="text-lg font-bold text-foreground">
         Lab Results ({reports.length})
       </h3>
       <ul className="space-y-2" aria-label="Lab results list">
@@ -183,17 +183,17 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                 variant="ghost"
                 type="button"
                 onClick={() => onSelectReport(report)}
-                className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-neutral-50 ${
+                className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-muted ${
                   urgent
                     ? 'border-red-300 bg-red-50'
-                    : 'border-neutral-200 bg-white'
+                    : 'border-neutral-200 bg-background'
                 }`}
                 aria-label={`View ${loincDisplay} from ${labName}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-neutral-900">
+                      <span className="font-semibold text-foreground">
                         {loincDisplay}
                       </span>
                       {statusBadge(report.status)}
@@ -206,13 +206,13 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex gap-3 text-xs text-neutral-500">
+                    <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
                       <span>{collectionDate}</span>
                       <span>{labName}</span>
                     </div>
                   </div>
                   <DirectionalIcon category="navigation" aria-hidden={true}>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                   </DirectionalIcon>
                 </div>
               </Button>

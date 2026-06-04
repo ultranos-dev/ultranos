@@ -294,10 +294,10 @@ export function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-background p-6 shadow-xl">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-neutral-900">
+          <h2 className="text-lg font-bold text-foreground">
             {t('bookAppointment')}
           </h2>
           <Button
@@ -320,7 +320,7 @@ export function BookingModal({
         <div className="space-y-4">
           {/* Patient search with autocomplete */}
           <div className="relative">
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               {t('patient')}
             </label>
             <input
@@ -341,7 +341,7 @@ export function BookingModal({
             )}
             {/* Dropdown results */}
             {patientResults.length > 0 && !selectedPatient && (
-              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white shadow-lg">
+              <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-background shadow-lg">
                 <ul className="divide-y divide-neutral-100" role="listbox" aria-label={t('selectPatient')}>
                   {patientResults.map((patient) => (
                     <li
@@ -352,10 +352,10 @@ export function BookingModal({
                       className="flex cursor-pointer items-center justify-between px-3 py-2 text-sm hover:bg-primary-50"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-neutral-900">
+                        <p className="truncate font-medium text-foreground">
                           {patient._ultranos?.nameLocal || patient.name?.[0]?.text || 'Unknown'}
                         </p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-xs text-muted-foreground">
                           {patient.gender ?? ''} &middot; {patient.birthDate ? `${new Date().getFullYear() - new Date(patient.birthDate).getFullYear()}y` : ''}
                         </p>
                       </div>
@@ -365,12 +365,12 @@ export function BookingModal({
               </div>
             )}
             {isSearchingPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-center text-sm text-neutral-400 shadow-lg">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
                 Searching...
               </div>
             )}
             {patientQuery.trim() && patientResults.length === 0 && !isSearchingPatient && !selectedPatient && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-center text-sm text-neutral-400 shadow-lg">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
                 {t('noResults')}
               </div>
             )}
@@ -378,7 +378,7 @@ export function BookingModal({
 
           {/* Date picker */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               {t('selectDate')}
             </label>
             <input
@@ -391,7 +391,7 @@ export function BookingModal({
 
           {/* Available time slots */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               {t('selectTime')}
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -407,7 +407,7 @@ export function BookingModal({
                     onClick={() => setSelectedTime(time)}
                     className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                       isBusy
-                        ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
                         : isSelected
                           ? 'bg-primary-600 text-white'
                           : 'bg-green-50 text-green-800 hover:bg-green-100 border border-green-200'
@@ -422,7 +422,7 @@ export function BookingModal({
 
           {/* Appointment type */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               {t('appointmentType')}
             </label>
             <div className="flex gap-4">
@@ -447,7 +447,7 @@ export function BookingModal({
 
           {/* Notes */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               {t('notes')}
             </label>
             <textarea

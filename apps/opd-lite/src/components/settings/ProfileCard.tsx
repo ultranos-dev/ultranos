@@ -27,7 +27,7 @@ export function ProfileCard() {
 
   return (
     <Card>
-      <h2 className="mb-4 text-sm font-semibold text-neutral-900">Profile</h2>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">Profile</h2>
 
       <div className="flex items-start gap-4">
         {/* Initials avatar */}
@@ -37,20 +37,20 @@ export function ProfileCard() {
 
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="text-xs font-medium text-neutral-500">Name</p>
-            <p className="text-sm text-neutral-900">{displayName}</p>
+            <p className="text-xs font-medium text-muted-foreground">Name</p>
+            <p className="text-sm text-foreground">{displayName}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Role</p>
-            <p className="text-sm text-neutral-900">{formatRole(session.role)}</p>
+            <p className="text-xs font-medium text-muted-foreground">Role</p>
+            <p className="text-sm text-foreground">{formatRole(session.role)}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">ID</p>
-            <p className="text-sm font-mono text-neutral-900">{session.practitionerId}</p>
+            <p className="text-xs font-medium text-muted-foreground">ID</p>
+            <p className="text-sm font-mono text-foreground">{session.practitionerId}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Email</p>
-            <p className="text-sm text-neutral-900">{session.email || '—'}</p>
+            <p className="text-xs font-medium text-muted-foreground">Email</p>
+            <p className="text-sm text-foreground">{session.email || '—'}</p>
           </div>
         </div>
       </div>

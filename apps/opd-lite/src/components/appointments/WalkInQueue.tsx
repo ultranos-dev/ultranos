@@ -20,7 +20,7 @@ function minutesElapsed(isoTimestamp: string): number {
 const STATUS_BADGE_COLORS: Record<string, string> = {
   booked: 'bg-blue-100 text-blue-800',
   arrived: 'bg-amber-100 text-amber-800',
-  fulfilled: 'bg-neutral-200 text-neutral-700',
+  fulfilled: 'bg-secondary text-foreground',
   cancelled: 'bg-red-100 text-red-800',
   noshow: 'bg-red-100 text-red-800',
 }
@@ -69,9 +69,9 @@ export function WalkInQueue() {
   }
 
   return (
-    <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-white p-4">
+    <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-background p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-base font-bold text-neutral-900">
+        <h3 className="text-base font-bold text-foreground">
           {t('walkInQueue')}
         </h3>
         <Button
@@ -85,7 +85,7 @@ export function WalkInQueue() {
 
       {/* Inline add form */}
       {showAddForm && (
-        <div className="mb-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-3 space-y-3">
+        <div className="mb-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-3 space-y-3">
           <input
             type="text"
             value={patientSearch}
@@ -132,7 +132,7 @@ export function WalkInQueue() {
 
       {/* Walk-in list */}
       {walkIns.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t('noWalkIns')}</p>
+        <p className="text-sm text-muted-foreground">{t('noWalkIns')}</p>
       ) : (
         <div className="space-y-2">
           {walkIns.map((walkIn) => {
@@ -159,7 +159,7 @@ export function WalkInQueue() {
                           walkIn._ultranos.queuePosition ?? 0,
                       })}
                     </span>
-                    <span className="text-sm font-semibold text-neutral-900">
+                    <span className="text-sm font-semibold text-foreground">
                       {walkIn.participant?.[0]?.actor?.display ??
                         '\u2014'}
                     </span>
@@ -174,7 +174,7 @@ export function WalkInQueue() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         STATUS_BADGE_COLORS[status] ??
-                        'bg-neutral-100 text-neutral-700'
+                        'bg-muted text-foreground'
                       }`}
                     >
                       {status === 'booked' && t('booked')}
@@ -186,7 +186,7 @@ export function WalkInQueue() {
                   </div>
                 </div>
 
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {t('waitTime', { minutes: waitMinutes })}
                 </p>
               </Button>

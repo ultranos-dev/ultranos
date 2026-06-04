@@ -70,12 +70,12 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
 
   return (
     <div
-      className="rounded-xl bg-white/70 backdrop-blur-md p-5 ring-[0.65px] ring-gray-400/40 shadow-lg"
+      className="rounded-xl bg-background/70 backdrop-blur-md p-5 ring-[0.65px] ring-gray-400/40 shadow-lg"
       role="dialog"
       aria-label={t('customizeWidgets')}
     >
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
+        <h3 className="text-sm font-black text-foreground uppercase tracking-wide">
           {t('customizeWidgets')}
         </h3>
         <Button
@@ -101,7 +101,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
                 className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
                 aria-label={widgetLabels[id]}
               />
-              <span className="flex-1 text-sm font-semibold text-neutral-700">
+              <span className="flex-1 text-sm font-semibold text-foreground">
                 {widgetLabels[id]}
               </span>
               {isVisible && (
@@ -137,7 +137,7 @@ export function DashboardCustomizePanel({ roleWidgets, onClose }: DashboardCusto
         <Button
           variant="ghost"
           onClick={handleReset}
-          className="text-sm text-neutral-500"
+          className="text-sm text-muted-foreground"
         >
           {t('resetDefaults')}
         </Button>

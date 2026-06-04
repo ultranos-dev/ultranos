@@ -90,7 +90,7 @@ function TypeIcon({ type, id }: { type: string; id: string }) {
   const category = getIconCategory(type)
   if (category === 'lab') return <Beaker data-testid={`icon-lab-${id}`} className="h-5 w-5 text-blue-600" />
   if (category === 'rx') return <Check data-testid={`icon-rx-${id}`} className="h-5 w-5 text-green-600" />
-  return <Settings data-testid={`icon-system-${id}`} className="h-5 w-5 text-neutral-500" />
+  return <Settings data-testid={`icon-system-${id}`} className="h-5 w-5 text-muted-foreground" />
 }
 
 // --- Main Component ---
@@ -146,7 +146,7 @@ export function NotificationCenter() {
       {/* Header with Mark All Read */}
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-sm text-neutral-500">
+          <span className="text-sm text-muted-foreground">
             {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
           </span>
         </div>
@@ -161,7 +161,7 @@ export function NotificationCenter() {
       </div>
 
       {/* Tab bar */}
-      <div role="tablist" className="flex gap-1 rounded-xl bg-neutral-100 p-1">
+      <div role="tablist" className="flex gap-1 rounded-xl bg-muted p-1">
         {TABS.map(tab => (
           <Button
             key={tab.key}
@@ -185,21 +185,21 @@ export function NotificationCenter() {
 
       {/* Loading state */}
       {loading && (
-        <div className="py-12 text-center text-sm text-neutral-500">
+        <div className="py-12 text-center text-sm text-muted-foreground">
           Loading notifications...
         </div>
       )}
 
       {/* Empty state */}
       {!loading && filtered.length === 0 && !error && (
-        <div className="py-12 text-center text-sm text-neutral-500">
+        <div className="py-12 text-center text-sm text-muted-foreground">
           No notifications
         </div>
       )}
 
       {/* Notification list */}
       {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40">
+        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40">
           {filtered.map(n => (
             <NotificationRow
               key={n.id}
@@ -234,7 +234,7 @@ function NotificationRow({
       onClick={() => onClick(notification)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick(notification) }}
       className={`flex items-start gap-3 px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
-        deepLink ? 'cursor-pointer hover:bg-neutral-50' : ''
+        deepLink ? 'cursor-pointer hover:bg-muted' : ''
       } ${isUnread ? 'bg-blue-50' : ''} ${isEscalation ? 'border-s-4 border-s-red-500' : ''}`}
     >
       {/* Type icon */}
@@ -245,7 +245,7 @@ function NotificationRow({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium ${isEscalation ? 'text-red-700' : 'text-neutral-900'}`}>
+          <p className={`text-sm font-medium ${isEscalation ? 'text-red-700' : 'text-foreground'}`}>
             {notificationLabel(notification.type)}
           </p>
           {isUnread && (
@@ -255,19 +255,19 @@ function NotificationRow({
 
         {/* Source info */}
         {notification.payload.testCategory && (
-          <p className="mt-0.5 text-xs text-neutral-600">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {notification.payload.testCategory}
             {notification.payload.labName && ` — ${notification.payload.labName}`}
           </p>
         )}
         {notification.payload.message && !notification.payload.testCategory && (
-          <p className="mt-0.5 text-xs text-neutral-600">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {notification.payload.message}
           </p>
         )}
 
         {/* Timestamp */}
-        <p className="mt-1 text-xs text-neutral-400">
+        <p className="mt-1 text-xs text-muted-foreground">
           {formatTimestamp(notification.createdAt)}
         </p>
       </div>

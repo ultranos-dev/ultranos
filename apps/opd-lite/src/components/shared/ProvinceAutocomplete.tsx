@@ -157,7 +157,7 @@ export function ProvinceAutocomplete({
     <div ref={containerRef} className="relative">
       <label
         htmlFor={inputId}
-        className="mb-1 block text-sm font-semibold text-neutral-700"
+        className="mb-1 block text-sm font-semibold text-foreground"
       >
         {label}
         {required && <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>}
@@ -165,8 +165,8 @@ export function ProvinceAutocomplete({
 
       <div className="relative">
         {value ? (
-          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2">
-            <span className="flex-1 text-sm text-neutral-900">
+          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2">
+            <span className="flex-1 text-sm text-foreground">
               {getDisplayName(value)}
             </span>
             <Button
@@ -219,7 +219,7 @@ export function ProvinceAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-background shadow-lg"
         >
           {filtered.map((province, index) => (
             <li
@@ -230,7 +230,7 @@ export function ProvinceAutocomplete({
               className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
                 highlightedIndex === index
                   ? 'bg-blue-50 text-blue-900'
-                  : 'text-neutral-900 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50'
+                  : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted'
               }`}
               onMouseDown={(e) => {
                 e.preventDefault()
@@ -240,10 +240,10 @@ export function ProvinceAutocomplete({
             >
               <span>{getDisplayName(province)}</span>
               {isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">{province}</span>
+                <span className="ms-2 text-xs text-muted-foreground">{province}</span>
               )}
               {!isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">
+                <span className="ms-2 text-xs text-muted-foreground">
                   {PROVINCE_NAME_LOCAL[province]}
                 </span>
               )}
@@ -253,7 +253,7 @@ export function ProvinceAutocomplete({
       )}
 
       {isOpen && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
           No matching province
         </div>
       )}

@@ -464,19 +464,19 @@ export function PatientEditModal({
       aria-modal="true"
       aria-labelledby="edit-patient-title"
     >
-      <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-white shadow-xl sm:mx-4">
+      <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-xl bg-background shadow-xl sm:mx-4">
         {/* ── Sticky header ── */}
         <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
           <h2
             id="edit-patient-title"
-            className="text-lg font-bold text-neutral-900"
+            className="text-lg font-bold text-foreground"
           >
             {t('editPatientProfile')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300"
             aria-label={t('close')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -502,7 +502,7 @@ export function PatientEditModal({
 
           {/* Demographics section */}
           <Card as="fieldset">
-            <legend className="text-base font-bold text-neutral-900 mb-4">
+            <legend className="text-base font-bold text-foreground mb-4">
               {t('demographicsSection')}
             </legend>
 
@@ -511,15 +511,15 @@ export function PatientEditModal({
               <div>
                 <label
                   htmlFor="edit-national-id"
-                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                  className="mb-1 block text-sm font-semibold text-foreground"
                 >
                   {t('nationalIdLabel')}
-                  <span className="ms-1 text-xs font-normal text-neutral-400">
+                  <span className="ms-1 text-xs font-normal text-muted-foreground">
                     ({t('optional')})
                   </span>
                 </label>
                 {hasNationalId ? (
-                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                  <p className="min-h-[44px] flex items-center rounded-lg border border-neutral-200 bg-muted px-3 py-2 text-sm text-muted-foreground">
                     {t('nationalId')} ••••••
                   </p>
                 ) : (
@@ -540,7 +540,7 @@ export function PatientEditModal({
               <div>
                 <label
                   htmlFor="edit-gender"
-                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                  className="mb-1 block text-sm font-semibold text-foreground"
                 >
                   {t('gender')}
                   <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -580,7 +580,7 @@ export function PatientEditModal({
                     }}
                     className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
                   />
-                  <span className="text-sm font-medium text-neutral-700">
+                  <span className="text-sm font-medium text-foreground">
                     {t('birthYearOnly')}
                   </span>
                 </label>
@@ -589,7 +589,7 @@ export function PatientEditModal({
                   <div>
                     <label
                       htmlFor="edit-birth-year"
-                      className="mb-1 block text-sm font-semibold text-neutral-700"
+                      className="mb-1 block text-sm font-semibold text-foreground"
                     >
                       {t('birthYear')}
                       <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -616,7 +616,7 @@ export function PatientEditModal({
                   <div>
                     <label
                       htmlFor="edit-birth-date"
-                      className="mb-1 block text-sm font-semibold text-neutral-700"
+                      className="mb-1 block text-sm font-semibold text-foreground"
                     >
                       {t('birthDate')}
                       <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -642,10 +642,10 @@ export function PatientEditModal({
               <div>
                 <label
                   htmlFor="edit-phone"
-                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                  className="mb-1 block text-sm font-semibold text-foreground"
                 >
                   {t('phone')}
-                  <span className="ms-1 text-xs font-normal text-neutral-400">
+                  <span className="ms-1 text-xs font-normal text-muted-foreground">
                     ({t('optional')})
                   </span>
                 </label>
@@ -665,10 +665,10 @@ export function PatientEditModal({
               <div>
                 <label
                   htmlFor="edit-preferred-language"
-                  className="mb-1 block text-sm font-semibold text-neutral-700"
+                  className="mb-1 block text-sm font-semibold text-foreground"
                 >
                   {t('preferredLanguage')}
-                  <span className="ms-1 text-xs font-normal text-neutral-400">
+                  <span className="ms-1 text-xs font-normal text-muted-foreground">
                     ({t('optional')})
                   </span>
                 </label>
@@ -708,17 +708,17 @@ export function PatientEditModal({
 
           {/* Blood group */}
           <Card as="fieldset">
-            <legend className="text-base font-bold text-neutral-900 mb-4">
+            <legend className="text-base font-bold text-foreground mb-4">
               {t('clinicalSection')}
             </legend>
 
             <div>
               <label
                 htmlFor="edit-blood-group"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('bloodGroup')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -729,7 +729,7 @@ export function PatientEditModal({
                 disabled={bloodGroupLocked}
                 aria-disabled={bloodGroupLocked}
                 className={`w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 ${
-                  bloodGroupLocked ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : ''
+                  bloodGroupLocked ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
                 }`}
               >
                 {BLOOD_GROUPS.map((bg) => (
@@ -739,7 +739,7 @@ export function PatientEditModal({
                 ))}
               </select>
               {bloodGroupLocked && (
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {t('bloodGroupLocked')}
                 </p>
               )}

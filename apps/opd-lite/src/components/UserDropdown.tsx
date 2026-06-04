@@ -110,18 +110,18 @@ export function UserDropdown() {
           `}</style>
           <div
             role="menu"
-            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg"
             data-testid="user-dropdown-menu"
           >
             <div className="border-b border-neutral-100 px-4 py-3">
-              <p className="text-sm font-medium text-neutral-900">{displayName}</p>
-              <p className="text-xs text-neutral-500">{session.email}</p>
+              <p className="text-sm font-medium text-foreground">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{session.email}</p>
             </div>
             <div className="py-1">
               <a
                 href="/settings"
                 role="menuitem"
-                className="block px-4 py-2 text-sm text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                className="block px-4 py-2 text-sm text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted"
                 data-testid="settings-link"
               >
                 Settings
@@ -130,7 +130,7 @@ export function UserDropdown() {
                 variant="ghost"
                 role="menuitem"
                 onClick={handleLogout}
-                className="w-full justify-start px-4 py-2 text-red-600 hover:bg-neutral-50"
+                className="w-full justify-start px-4 py-2 text-red-600 hover:bg-muted"
                 data-testid="logout-btn"
               >
                 Logout

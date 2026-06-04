@@ -93,7 +93,7 @@ export function SyncPulse() {
         {/* Badge count */}
         {totalBadge > 0 && (
           <span
-            className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-100 px-0.5 text-[10px] font-bold text-neutral-900"
+            className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-0.5 text-[10px] font-bold text-foreground"
             data-testid="sync-pulse-badge"
           >
             {totalBadge > 99 ? '99+' : totalBadge}
@@ -102,7 +102,7 @@ export function SyncPulse() {
       </span>
 
       {/* Last synced timestamp */}
-      <span className="text-xs text-neutral-400">
+      <span className="text-xs text-muted-foreground">
         {lastSyncedAt ? formatSyncTime(lastSyncedAt) : 'never synced'}
       </span>
     </Button>

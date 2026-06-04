@@ -36,7 +36,7 @@ export function NameInputSection({
 
   return (
     <Card as="fieldset">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('nameSection')}
       </legend>
 
@@ -45,7 +45,7 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-given"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameGiven')}
             <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
@@ -78,7 +78,7 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-father"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameFather')}
           </label>
@@ -108,7 +108,7 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-grandfather"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameGrandfather')}
           </label>
@@ -137,14 +137,14 @@ export function NameInputSection({
         {/* Composed nameLocal preview */}
         {nameLocalPreview && (
           <div
-            className="mt-3 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 px-4 py-3"
+            className="mt-3 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted px-4 py-3"
             aria-live="polite"
           >
-            <p className="text-xs font-semibold text-neutral-500 mb-1">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">
               {t('namePreview')}
             </p>
             <p
-              className="text-lg font-bold text-neutral-900"
+              className="text-lg font-bold text-foreground"
               dir={isRtl ? 'rtl' : 'ltr'}
             >
               {nameLocalPreview}

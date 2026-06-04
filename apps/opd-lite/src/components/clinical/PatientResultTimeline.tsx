@@ -71,7 +71,7 @@ function statusBadge(status: string) {
     case 'corrected':
       return <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
     default:
-      return <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-600">{status}</span>
+      return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">{status}</span>
   }
 }
 
@@ -130,7 +130,7 @@ function GroupCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-neutral-900 text-sm">{group.category}</span>
+            <span className="font-semibold text-foreground text-sm">{group.category}</span>
             {group.hasCritical && (
               <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">Critical</span>
             )}
@@ -139,7 +139,7 @@ function GroupCard({
             )}
             {statusBadge(group.latestResult.status)}
           </div>
-          <div className="mt-0.5 flex gap-3 text-xs text-neutral-500">
+          <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
             <span>{formatDate(group.latestResult.effectiveDateTime ?? group.latestResult.issued)}</span>
             <span>{group.results.length} result{group.results.length !== 1 ? 's' : ''}</span>
             <span>{group.latestResult.performer?.[0]?.display ?? group.latestResult._ultranos?.labId ?? ''}</span>
@@ -148,8 +148,8 @@ function GroupCard({
 
         <DirectionalIcon category="navigation" aria-hidden>
           {expanded
-            ? <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400" />
-            : <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+            ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+            : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
           }
         </DirectionalIcon>
       </button>
@@ -163,7 +163,7 @@ function GroupCard({
           {/* Trend visualization — AC #3 */}
           {group.trendData ? (
             <div>
-              <p className="mb-1 text-xs font-medium text-neutral-500 uppercase tracking-wide">Trend</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">Trend</p>
               <ResultTrendChart
                 trendData={group.trendData}
                 label={group.category}
@@ -174,7 +174,7 @@ function GroupCard({
           ) : (
             group.results.length > 1 && (
               <div>
-                <p className="mb-1 text-xs font-medium text-neutral-500 uppercase tracking-wide">History</p>
+                <p className="mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">History</p>
                 <ResultSummaryTable results={summaryRows} />
               </div>
             )
@@ -182,19 +182,19 @@ function GroupCard({
 
           {/* Individual result entries — AC #5 (link to detail) */}
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Results</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Results</p>
             {group.results.map((report) => {
               const flag = report._ultranos?.flagLevel
               return (
                 <button
                   key={report.id}
                   type="button"
-                  className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-start text-sm hover:bg-neutral-50 transition-colors ${
+                  className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-start text-sm hover:bg-muted transition-colors ${
                     flag === 'critical'
                       ? 'border-red-200 bg-red-50/50'
                       : flag === 'abnormal'
                       ? 'border-amber-200 bg-amber-50/50'
-                      : 'border-neutral-100 bg-white'
+                      : 'border-neutral-100 bg-background'
                   }`}
                   onClick={() => onSelectReport(report)}
                   data-testid={`result-entry-${report.id}`}
@@ -202,24 +202,24 @@ function GroupCard({
                   {flagDot(flag)}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-neutral-900">{flagLabel(flag)}</span>
+                      <span className="font-medium text-foreground">{flagLabel(flag)}</span>
                       {statusBadge(report.status)}
                       {(report.status === 'amended' || report.status === 'corrected') && (
                         <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">Amended</span>
                       )}
                     </div>
-                    <div className="mt-0.5 flex gap-3 text-xs text-neutral-500">
+                    <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
                       <span>{formatDate(report.effectiveDateTime ?? report.issued)}</span>
                       <span>{report.performer?.[0]?.display ?? report._ultranos?.labId ?? ''}</span>
                     </div>
                     {report.conclusion && (
-                      <p className="mt-0.5 truncate text-xs text-neutral-600">
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {report.conclusion.slice(0, 100)}
                       </p>
                     )}
                   </div>
                   <DirectionalIcon category="navigation" aria-hidden>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </DirectionalIcon>
                 </button>
               )
@@ -312,7 +312,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="py-4 text-center text-sm text-neutral-500" data-testid="timeline-loading">
+      <div className="py-4 text-center text-sm text-muted-foreground" data-testid="timeline-loading">
         Loading lab results...
       </div>
     )
@@ -342,7 +342,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Empty state ──────────────────────────────────────────────────────────
   if (groups.length === 0) {
     return (
-      <div className="py-4 text-center text-sm text-neutral-500" data-testid="timeline-empty">
+      <div className="py-4 text-center text-sm text-muted-foreground" data-testid="timeline-empty">
         No lab results available for this patient.
       </div>
     )
@@ -352,11 +352,11 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
     <div className="space-y-3" data-testid="patient-result-timeline">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-neutral-900">
+        <h3 className="text-lg font-bold text-foreground">
           Lab Results ({allReports.length}{nextCursor ? '+' : ''})
         </h3>
         {lastSyncedAt && (
-          <div className="flex items-center gap-1 text-xs text-neutral-400" data-testid="last-synced">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="last-synced">
             <WifiOff className="h-3.5 w-3.5" aria-hidden />
             <span>Synced {formatDate(lastSyncedAt)}</span>
           </div>
@@ -378,7 +378,7 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
             <button
               key={report.id}
               type="button"
-              className="flex w-full items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-start hover:bg-red-50 transition-colors"
+              className="flex w-full items-center gap-2 rounded-lg border border-red-200 bg-background px-3 py-2 text-start hover:bg-red-50 transition-colors"
               onClick={() => setSelectedReport(report)}
               data-testid={`pinned-critical-${report.id}`}
             >

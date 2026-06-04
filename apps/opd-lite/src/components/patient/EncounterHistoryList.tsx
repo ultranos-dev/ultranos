@@ -41,11 +41,11 @@ function getStatusBadge(status: string): { label: string; classes: string } {
     case 'finished':
       return { label: 'Finished', classes: 'bg-green-100 text-green-700' }
     case 'cancelled':
-      return { label: 'Cancelled', classes: 'bg-neutral-100 text-neutral-500' }
+      return { label: 'Cancelled', classes: 'bg-muted text-muted-foreground' }
     case 'in-progress':
       return { label: 'In Progress', classes: 'bg-blue-100 text-blue-700' }
     default:
-      return { label: status, classes: 'bg-neutral-100 text-neutral-500' }
+      return { label: status, classes: 'bg-muted text-muted-foreground' }
   }
 }
 
@@ -228,12 +228,12 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
   }
 
   if (loading) {
-    return <p className="text-sm font-semibold text-neutral-500">Loading encounters...</p>
+    return <p className="text-sm font-semibold text-muted-foreground">Loading encounters...</p>
   }
 
   if (summaries.length === 0) {
     return (
-      <p className="text-sm font-semibold text-neutral-400" data-testid="no-encounters">
+      <p className="text-sm font-semibold text-muted-foreground" data-testid="no-encounters">
         No encounters recorded for this patient
       </p>
     )
@@ -264,13 +264,13 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
             <Button
               variant="ghost"
               type="button"
-              className="w-full p-4 text-start hover:bg-neutral-50"
+              className="w-full p-4 text-start hover:bg-muted"
               onClick={() => handleToggleExpand(encounter.id)}
               aria-expanded={isExpanded}
               aria-label={`Encounter on ${formatEncounterDate(getEncounterTimestamp(encounter))}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-neutral-900" dir="auto">
+                <span className="text-sm font-bold text-foreground" dir="auto">
                   {formatEncounterDate(getEncounterTimestamp(encounter))}
                 </span>
                 <span
@@ -282,7 +282,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
               </div>
 
               {soapPreview && (
-                <p className="mt-2 text-sm text-neutral-600 line-clamp-2" dir="auto">
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2" dir="auto">
                   {soapPreview}
                 </p>
               )}
@@ -291,7 +291,7 @@ export function EncounterHistoryList({ patientId }: EncounterHistoryListProps) {
                 {diagnoses.map((dx, i) => (
                   <span
                     key={i}
-                    className="inline-flex rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-600"
+                    className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground"
                     dir="auto"
                   >
                     {dx}

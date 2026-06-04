@@ -35,11 +35,11 @@ export function UnresolvedConflictsCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('unresolvedConflicts')}
       </h3>
       <div className="mt-2 flex items-center gap-2">
-        <p className="text-3xl font-black text-neutral-900">{count ?? '—'}</p>
+        <p className="text-3xl font-black text-foreground">{count ?? '—'}</p>
         {count !== null && count > 0 && (
           <span className="inline-flex items-center rounded-full bg-conflict-red px-2 py-0.5 text-xs font-bold text-white">
             {count}

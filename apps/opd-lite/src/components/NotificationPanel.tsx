@@ -141,10 +141,10 @@ function NotificationDropdown({
   }, [onCountChange])
 
   return (
-    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-white/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg">
+    <div className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-gray-400/40 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
-        <h3 className="text-sm font-semibold text-neutral-900">Notifications</h3>
+        <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
         <Button
           variant="icon"
           type="button"
@@ -158,13 +158,13 @@ function NotificationDropdown({
       {/* Content */}
       <div className="max-h-96 overflow-y-auto">
         {loading && (
-          <div className="px-4 py-8 text-center text-sm text-neutral-500">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             Loading...
           </div>
         )}
 
         {!loading && notifications.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-neutral-500">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             No notifications
           </div>
         )}
@@ -197,16 +197,16 @@ function NotificationRow({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className={`text-sm font-medium ${isEscalation ? 'text-red-700' : 'text-neutral-900'}`}>
+          <p className={`text-sm font-medium ${isEscalation ? 'text-red-700' : 'text-foreground'}`}>
             {notificationLabel(notification.type)}
           </p>
           {notification.payload.testCategory && (
-            <p className="mt-0.5 text-xs text-neutral-600">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {notification.payload.testCategory}
               {notification.payload.labName && ` — ${notification.payload.labName}`}
             </p>
           )}
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             {formatTimestamp(notification.createdAt)}
           </p>
         </div>

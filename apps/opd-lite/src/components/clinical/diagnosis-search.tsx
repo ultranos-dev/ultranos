@@ -42,7 +42,7 @@ function highlightMatches(
       parts.push(text.slice(lastIndex, clampedStart))
     }
     parts.push(
-      <mark key={start} className="bg-amber-200 text-neutral-900 rounded-sm px-0.5">
+      <mark key={start} className="bg-amber-200 text-foreground rounded-sm px-0.5">
         {text.slice(clampedStart, end + 1)}
       </mark>,
     )
@@ -158,7 +158,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+      <h3 className="text-2xl font-black tracking-tight text-foreground">
         Diagnosis
       </h3>
 
@@ -207,8 +207,8 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
           }
           aria-label="Search diagnoses"
           className={
-            'w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 ' +
-            'text-base text-neutral-900 placeholder:text-neutral-400 ' +
+            'w-full rounded-xl border border-neutral-300 bg-background px-4 py-3 ' +
+            'text-base text-foreground placeholder:text-muted-foreground ' +
             'transition-colors focus:outline-none focus:ring-2 ' +
             'focus:border-primary-400 focus:ring-primary-200 ' +
             'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -224,7 +224,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
             aria-label="Search results"
             className={
               'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
-              'ring-[0.65px] ring-gray-400/40 bg-white shadow-lg'
+              'ring-[0.65px] ring-gray-400/40 bg-background shadow-lg'
             }
           >
             {results.map((result, idx) => (
@@ -242,14 +242,14 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
                   'cursor-pointer px-4 py-3 transition-colors ' +
                   (idx === activeIndex
                     ? 'bg-primary-50'
-                    : 'hover:bg-neutral-50')
+                    : 'hover:bg-muted')
                 }
               >
                 <span className="font-mono text-sm font-bold text-primary-700">
                   {highlightMatches(result.item.code, getCodeIndices(result))}
                 </span>
-                <span className="mx-2 text-neutral-300">|</span>
-                <span className="text-sm text-neutral-700">
+                <span className="mx-2 text-border">|</span>
+                <span className="text-sm text-foreground">
                   {highlightMatches(
                     result.item.display,
                     getDisplayIndices(result),

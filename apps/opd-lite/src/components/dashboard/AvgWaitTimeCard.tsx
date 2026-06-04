@@ -72,19 +72,19 @@ export function AvgWaitTimeCard() {
 
   return (
     <Card role="status" aria-label={t('avgWaitTime')}>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('avgWaitTime')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">
+      <p className="mt-2 text-3xl font-black text-foreground">
         {avgMinutes !== null ? `${avgMinutes}m` : '—'}
       </p>
       {avgMinutes !== null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-500">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('avgWaitTimeDesc')}
         </p>
       )}
       {avgMinutes === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('noDataYet')}
         </p>
       )}

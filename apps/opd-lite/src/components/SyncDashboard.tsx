@@ -137,7 +137,7 @@ const RESOURCE_ICON_MAP: Record<string, React.ComponentType<{ className?: string
 function ResourceIcon({ resourceType }: { resourceType: string }) {
   const label = safeResourceLabel(resourceType)
   const Icon = RESOURCE_ICON_MAP[label] ?? FileText
-  return <Icon className="h-5 w-5 shrink-0 text-neutral-400" />
+  return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
 }
 
 // --- Grouped items ---
@@ -310,21 +310,21 @@ export function SyncDashboard() {
       `}</style>
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm animate-[syncBackdropIn_100ms_ease-out_forwards]"
+        className="absolute inset-0 bg-background/40 backdrop-blur-sm animate-[syncBackdropIn_100ms_ease-out_forwards]"
         onClick={() => setDashboardOpen(false)}
         aria-hidden="true"
       />
 
       {/* Panel */}
       <div
-        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-white ring-[0.65px] ring-gray-400/40 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
+        className="relative mx-4 w-full max-w-lg overflow-hidden rounded-xl bg-background ring-[0.65px] ring-gray-400/40 shadow-2xl animate-[syncPanelIn_200ms_ease-out_forwards]"
         role="dialog"
         aria-label="Sync Dashboard"
       >
         {/* Header */}
         <div className="border-b border-neutral-200 px-5 py-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-neutral-900">Sync Status</h2>
+            <h2 className="text-base font-semibold text-foreground">Sync Status</h2>
             <Button
               variant="icon"
               type="button"
@@ -356,7 +356,7 @@ export function SyncDashboard() {
           {/* Sync progress bar — visible only during active sync */}
           {isDraining && syncPhase && (
             <div className="mt-3" data-testid="sync-progress">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
                     syncPhase === 'Sync complete' ? 'w-full bg-green-500' : 'bg-blue-500 animate-[syncProgress_1.5s_ease-in-out_infinite]'
@@ -364,7 +364,7 @@ export function SyncDashboard() {
                   style={syncPhase !== 'Sync complete' ? { width: '70%' } : undefined}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-neutral-500">{syncPhase}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">{syncPhase}</p>
             </div>
           )}
 
@@ -409,17 +409,17 @@ export function SyncDashboard() {
         {/* Queue items grouped by resource type (AC: 2, 3) */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
           {queueItems.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-neutral-500">
+            <div className="px-5 py-12 text-center text-sm text-muted-foreground">
               All synced — no pending items
             </div>
           ) : (
             groups.map((group) => (
               <div key={group.resourceType} className="border-b border-neutral-100 last:border-b-0">
                 {/* Group header */}
-                <div className="flex items-center gap-2 bg-neutral-50 px-5 py-2">
+                <div className="flex items-center gap-2 bg-muted px-5 py-2">
                   <ResourceIcon resourceType={group.resourceType} />
-                  <span className="text-xs font-semibold text-neutral-700">{group.label}</span>
-                  <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 text-xs font-medium text-neutral-600">
+                  <span className="text-xs font-semibold text-foreground">{group.label}</span>
+                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {group.items.length}
                   </span>
                 </div>
@@ -432,10 +432,10 @@ export function SyncDashboard() {
                     data-testid="sync-item"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-neutral-800">{safeDescription(item)}</p>
+                      <p className="text-sm text-foreground">{safeDescription(item)}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         <StatusBadge status={item.status} conflictFlag={item.conflictFlag} />
-                        <span className="text-xs text-neutral-400">{formatTimeAgo(item.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatTimeAgo(item.createdAt)}</span>
                       </div>
                       {/* Failure reason (AC: 4) */}
                       {item.status === 'failed' && (

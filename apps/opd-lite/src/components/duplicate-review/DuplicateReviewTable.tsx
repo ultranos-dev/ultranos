@@ -126,7 +126,7 @@ export function DuplicateReviewTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12" role="status">
-        <span className="text-sm text-neutral-500">{t('loading')}</span>
+        <span className="text-sm text-muted-foreground">{t('loading')}</span>
       </div>
     )
   }
@@ -141,7 +141,7 @@ export function DuplicateReviewTable() {
 
   if (rows.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-neutral-500">{t('noReviews')}</p>
+      <p className="py-12 text-center text-sm text-muted-foreground">{t('noReviews')}</p>
     )
   }
 
@@ -158,7 +158,7 @@ export function DuplicateReviewTable() {
       <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
+            <tr className="border-b border-neutral-200 bg-muted text-muted-foreground">
               <th className="px-4 py-3 text-start font-semibold">{t('colPatient')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colScore')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colDecision')}</th>
@@ -221,7 +221,7 @@ function TableRow({
 }: TableRowProps) {
   const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
     PENDING: { label: t('decisionPending'), classes: 'bg-amber-100 text-amber-800' },
-    DISMISSED: { label: t('decisionDismissed'), classes: 'bg-neutral-100 text-neutral-600' },
+    DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
     FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-blue-100 text-blue-800' },
   }
 
@@ -230,19 +230,19 @@ function TableRow({
   return (
     <>
       <tr
-        className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer"
+        className="border-b border-neutral-100 hover:bg-muted cursor-pointer"
         onClick={onToggle}
         aria-expanded={isExpanded}
         role="row"
       >
-        <td className="px-4 py-3 font-medium text-neutral-900">{row.patientLabel}</td>
-        <td className="px-4 py-3 text-neutral-700">{row.topScore}</td>
+        <td className="px-4 py-3 font-medium text-foreground">{row.patientLabel}</td>
+        <td className="px-4 py-3 text-foreground">{row.topScore}</td>
         <td className="px-4 py-3">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${badge.classes}`}>
             {badge.label}
           </span>
         </td>
-        <td className="px-4 py-3 text-neutral-500 text-xs">{row.createdAt}</td>
+        <td className="px-4 py-3 text-muted-foreground text-xs">{row.createdAt}</td>
         <td className="px-4 py-3 text-end">
           {isPending && (
             <div className="flex items-center justify-end gap-2">
@@ -277,7 +277,7 @@ function TableRow({
 
       {isExpanded && (
         <tr>
-          <td colSpan={5} className="bg-neutral-50 px-4 py-4">
+          <td colSpan={5} className="bg-muted px-4 py-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {row.candidates.map((candidate) => (
                 <CandidateComparisonCard key={candidate.id} candidate={candidate} />

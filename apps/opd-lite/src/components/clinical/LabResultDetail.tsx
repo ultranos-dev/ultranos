@@ -76,7 +76,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <img
           src={dataUri}
@@ -91,7 +91,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <embed
           src={dataUri}
@@ -197,40 +197,40 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
         &larr; Back to Results
       </Button>
 
-      <h3 className="text-xl font-bold text-neutral-900">{loincDisplay}</h3>
+      <h3 className="text-xl font-bold text-foreground">{loincDisplay}</h3>
       {loincCode && (
-        <p className="text-xs text-neutral-500">LOINC: {loincCode}</p>
+        <p className="text-xs text-muted-foreground">LOINC: {loincCode}</p>
       )}
 
       {/* Metadata grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="font-medium text-neutral-500">Status</span>
-          <p className="font-semibold text-neutral-900">{statusLabel(report.status)}</p>
+          <span className="font-medium text-muted-foreground">Status</span>
+          <p className="font-semibold text-foreground">{statusLabel(report.status)}</p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Collection Date</span>
-          <p className="font-semibold text-neutral-900">
+          <span className="font-medium text-muted-foreground">Collection Date</span>
+          <p className="font-semibold text-foreground">
             {formatDateTime(report.effectiveDateTime)}
           </p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Issued</span>
-          <p className="font-semibold text-neutral-900">
+          <span className="font-medium text-muted-foreground">Issued</span>
+          <p className="font-semibold text-foreground">
             {formatDateTime(report.issued)}
           </p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Lab</span>
-          <p className="font-semibold text-neutral-900">{labName}</p>
+          <span className="font-medium text-muted-foreground">Lab</span>
+          <p className="font-semibold text-foreground">{labName}</p>
         </div>
       </div>
 
       {/* Performers */}
       {performers.length > 1 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-neutral-500">Performers</span>
-          <ul className="mt-1 text-sm text-neutral-900">
+          <span className="text-sm font-medium text-muted-foreground">Performers</span>
+          <ul className="mt-1 text-sm text-foreground">
             {performers.map((p, i) => (
               <li key={i}>{p.display ?? p.reference}</li>
             ))}
@@ -240,9 +240,9 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
 
       {/* Conclusion */}
       {report.conclusion && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
-          <h4 className="text-sm font-bold text-neutral-700">Conclusion</h4>
-          <p className="mt-1 text-sm text-neutral-900 whitespace-pre-wrap">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4">
+          <h4 className="text-sm font-bold text-foreground">Conclusion</h4>
+          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
             {report.conclusion}
           </p>
         </div>
@@ -251,14 +251,14 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
       {/* Presented form (PDF / images) */}
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-bold text-neutral-700">Attached Files</h4>
+          <h4 className="text-sm font-bold text-foreground">Attached Files</h4>
           {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i))}
         </div>
       )}
 
       {/* No file, no conclusion — show text-based summary hint */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
-        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4 text-sm text-neutral-500">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-gray-400/40 bg-muted p-4 text-sm text-muted-foreground">
           No report content or attachments available. Result data may be pending.
         </div>
       )}

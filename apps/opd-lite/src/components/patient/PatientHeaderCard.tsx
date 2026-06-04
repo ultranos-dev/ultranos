@@ -182,12 +182,12 @@ export function PatientHeaderCard({
         {/* Patient info */}
         <div className="min-w-0 flex-1">
           {/* Primary name */}
-          <h2 className="text-xl font-bold text-neutral-900 truncate">
+          <h2 className="text-xl font-bold text-foreground truncate">
             {patient._ultranos.nameGiven || patient._ultranos.nameLocal || '--'}
           </h2>
 
           {/* Patronymic chain */}
-          <p className="mt-0.5 text-sm text-neutral-600">
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {patient._ultranos.nameFather && (
               <span>Father: {patient._ultranos.nameFather}</span>
             )}
@@ -201,13 +201,13 @@ export function PatientHeaderCard({
 
           {/* Latin transliteration */}
           {patient._ultranos.nameLatin && (
-            <p className="mt-0.5 text-xs text-neutral-400">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {patient._ultranos.nameLatin}
             </p>
           )}
 
           {/* Demographics row */}
-          <p className="mt-2 text-sm font-medium text-neutral-600">
+          <p className="mt-2 text-sm font-medium text-muted-foreground">
             {patient.gender ?? '--'}
             <span className="mx-1">&middot;</span>
             {age}
@@ -216,7 +216,7 @@ export function PatientHeaderCard({
           </p>
 
           {/* Baseline vitals row */}
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Height: {vitals.height}
             <span className="mx-1">&middot;</span>
             Weight: {vitals.weight}
@@ -228,7 +228,7 @@ export function PatientHeaderCard({
 
           {/* Last updated by */}
           {patient._ultranos.updatedByName ? (
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               {t('lastUpdatedBy', {
                 name: patient._ultranos.updatedByName,
                 role: patient._ultranos.updatedByRole ?? '',
@@ -236,7 +236,7 @@ export function PatientHeaderCard({
               })}
             </p>
           ) : patient.meta.lastUpdated ? (
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               {t('lastUpdated', {
                 time: formatRelativeTime(patient.meta.lastUpdated, locale as 'en' | 'ar' | 'prs'),
               })}

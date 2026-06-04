@@ -71,7 +71,7 @@ export function ResultTrendChart({
   if (sorted.length === 0) {
     return (
       <div
-        className="text-xs text-neutral-400 italic"
+        className="text-xs text-muted-foreground italic"
         data-testid="trend-chart-empty"
       >
         No trend data
@@ -83,7 +83,7 @@ export function ResultTrendChart({
   // (called from PatientResultTimeline for non-numeric categories)
   if (sorted.length < 2) {
     return (
-      <div className="text-xs text-neutral-500" data-testid="trend-chart-single">
+      <div className="text-xs text-muted-foreground" data-testid="trend-chart-single">
         {sorted[0] && (
           <span>
             {sorted[0].value} {sorted[0].unit} on{' '}
@@ -197,7 +197,7 @@ export function ResultTrendChart({
       {/* Tooltip for hovered point */}
       {hoveredPoint && (
         <div
-          className="absolute top-0 start-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-neutral-800 px-2 py-1 text-xs text-white shadow-lg"
+          className="absolute top-0 start-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-secondary px-2 py-1 text-xs text-white shadow-lg"
           style={{ pointerEvents: 'none' }}
           data-testid="trend-tooltip"
           role="tooltip"
@@ -229,20 +229,20 @@ export function ResultSummaryTable({
   if (results.length === 0) return null
   return (
     <table
-      className="w-full text-xs text-neutral-700"
+      className="w-full text-xs text-foreground"
       data-testid="result-summary-table"
       aria-label="Result history"
     >
       <thead>
         <tr className="border-b border-neutral-100">
-          <th className="py-1 text-start font-medium text-neutral-500">Date</th>
-          <th className="py-1 text-start font-medium text-neutral-500">Result</th>
+          <th className="py-1 text-start font-medium text-muted-foreground">Date</th>
+          <th className="py-1 text-start font-medium text-muted-foreground">Result</th>
         </tr>
       </thead>
       <tbody>
         {results.map((r, i) => (
           <tr key={i} className="border-b border-neutral-50">
-            <td className="py-1 text-neutral-500">
+            <td className="py-1 text-muted-foreground">
               {new Date(r.date).toLocaleDateString()}
             </td>
             <td
@@ -251,7 +251,7 @@ export function ResultSummaryTable({
                   ? 'text-red-700'
                   : r.flagLevel === 'abnormal'
                   ? 'text-amber-700'
-                  : 'text-neutral-900'
+                  : 'text-foreground'
               }`}
             >
               {r.summary}

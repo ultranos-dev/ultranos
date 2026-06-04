@@ -44,13 +44,13 @@ export function GeographySection({
 
   return (
     <Card as="fieldset">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('geographySection')}
       </legend>
 
       {/* Origin address (required) */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-neutral-700 mb-3">
+        <h3 className="text-sm font-bold text-foreground mb-3">
           {t('addressOrigin')}
           <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
         </h3>
@@ -87,7 +87,7 @@ export function GeographySection({
         <div className="mt-3">
           <label
             htmlFor="origin-village"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('village')}
           </label>
@@ -109,9 +109,9 @@ export function GeographySection({
 
       {/* Current address (optional) */}
       <div>
-        <h3 className="text-sm font-bold text-neutral-700 mb-3">
+        <h3 className="text-sm font-bold text-foreground mb-3">
           {t('addressCurrent')}
-          <span className="ms-1 text-xs font-normal text-neutral-400">
+          <span className="ms-1 text-xs font-normal text-muted-foreground">
             ({t('optional')})
           </span>
         </h3>
@@ -124,7 +124,7 @@ export function GeographySection({
             onChange={(e) => onSameAsOriginChange(e.target.checked)}
             className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
           />
-          <span className="text-sm font-medium text-neutral-700">
+          <span className="text-sm font-medium text-foreground">
             {t('sameAsOrigin')}
           </span>
         </label>
@@ -161,7 +161,7 @@ export function GeographySection({
             <div className="mt-3">
               <label
                 htmlFor="current-village"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('village')}
               </label>
@@ -191,7 +191,7 @@ export function GeographySection({
               onChange={(e) => onIsNomadicChange(e.target.checked)}
               className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
             />
-            <span className="text-sm font-medium text-neutral-700">
+            <span className="text-sm font-medium text-foreground">
               {t('isNomadic')}
             </span>
           </label>

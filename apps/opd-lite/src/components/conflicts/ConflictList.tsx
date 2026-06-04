@@ -94,7 +94,7 @@ export function ConflictList() {
   if (loading) {
     return (
       <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center">
-        <p className="text-sm text-neutral-500">Loading conflicts...</p>
+        <p className="text-sm text-muted-foreground">Loading conflicts...</p>
       </div>
     )
   }
@@ -112,8 +112,8 @@ export function ConflictList() {
     return (
       <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center" data-testid="no-conflicts">
         <CircleCheck className="mx-auto h-12 w-12 text-green-400" />
-        <p className="mt-3 text-sm font-semibold text-neutral-700">No unresolved conflicts</p>
-        <p className="mt-1 text-xs text-neutral-500">All Tier 1 safety-critical data is in sync.</p>
+        <p className="mt-3 text-sm font-semibold text-foreground">No unresolved conflicts</p>
+        <p className="mt-1 text-xs text-muted-foreground">All Tier 1 safety-critical data is in sync.</p>
       </div>
     )
   }
@@ -121,7 +121,7 @@ export function ConflictList() {
   return (
     <div className="space-y-3" data-testid="conflict-list">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-neutral-700">
+        <p className="text-sm font-semibold text-foreground">
           {conflicts.length} unresolved conflict{conflicts.length !== 1 ? 's' : ''}
         </p>
       </div>
@@ -137,7 +137,7 @@ export function ConflictList() {
         return (
           <div
             key={entry.id}
-            className={`rounded-xl border bg-white shadow-sm transition-colors ${
+            className={`rounded-xl border bg-background shadow-sm transition-colors ${
               overdue
                 ? 'border-red-300 bg-red-50'
                 : 'border-neutral-200'
@@ -154,10 +154,10 @@ export function ConflictList() {
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-neutral-900">
+                  <span className="text-sm font-bold text-foreground">
                     {safeResourceLabel(entry.resourceType)}
                   </span>
-                  <span className="text-xs text-neutral-400">ID {shortId}</span>
+                  <span className="text-xs text-muted-foreground">ID {shortId}</span>
                   {overdue && (
                     <span
                       className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
@@ -167,7 +167,7 @@ export function ConflictList() {
                     </span>
                   )}
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   <span>Patient: {patientShortId}</span>
                   <span>{formatConflictAge(entry.createdAt)}</span>
                   <span>{new Date(entry.createdAt).toLocaleString()}</span>
@@ -176,7 +176,7 @@ export function ConflictList() {
 
               {/* Chevron */}
               <ChevronDown
-                className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform ${
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
                   isExpanded ? 'rotate-180' : ''
                 }`}
               />
