@@ -274,7 +274,7 @@ export function PatientDirectory() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-gray-500">{t('title')}...</p>
+        <p className="text-muted-foreground">{t('title')}...</p>
       </div>
     )
   }
@@ -285,12 +285,12 @@ export function PatientDirectory() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {t('title')}
           </h1>
           {syncing && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
               {t('syncing')}
             </span>
           )}
@@ -312,14 +312,14 @@ export function PatientDirectory() {
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="min-w-[200px] flex-1 rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
           aria-label={t('searchPlaceholder')}
         />
 
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1) }}
-          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
           aria-label={t('status')}
         >
           <option value="all">{t('all')}</option>
@@ -330,7 +330,7 @@ export function PatientDirectory() {
         <select
           value={allergyFilter}
           onChange={(e) => { setAllergyFilter(e.target.value as AllergyFilter); setPage(1) }}
-          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
           aria-label={t('hasAllergies')}
         >
           <option value="all">{t('hasAllergies')}: {t('all')}</option>
@@ -341,7 +341,7 @@ export function PatientDirectory() {
         <select
           value={visitFilter}
           onChange={(e) => { setVisitFilter(e.target.value as VisitFilter); setPage(1) }}
-          className="rounded-xl border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          className="rounded-xl border border-border bg-background text-foreground px-3 py-2 text-sm"
           aria-label={t('lastVisitFilter')}
         >
           <option value="all">{t('lastVisitFilter')}: {t('all')}</option>
@@ -353,11 +353,11 @@ export function PatientDirectory() {
 
       {/* Empty states */}
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-16 dark:border-gray-600">
-          <p className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16">
+          <p className="mb-2 text-lg font-medium text-foreground">
             {t('noPatients')}
           </p>
-          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mb-6 text-sm text-muted-foreground">
             {t('noPatientsDescription')}
           </p>
           <Link
@@ -368,17 +368,17 @@ export function PatientDirectory() {
           </Link>
         </div>
       ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 py-16 dark:border-gray-600">
-          <p className="text-lg font-medium text-gray-900 dark:text-white">
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border py-16">
+          <p className="text-lg font-medium text-foreground">
             {t('noResults')}
           </p>
         </div>
       ) : (
         <>
           {/* Table */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+          <div className="overflow-x-auto rounded-2xl border border-border">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
                   {(
                     [
@@ -393,7 +393,7 @@ export function PatientDirectory() {
                   ).map(([field, label]) => (
                     <th
                       key={field}
-                      className="cursor-pointer px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      className="cursor-pointer px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground"
                       onClick={() => handleSort(field)}
                     >
                       {label}
@@ -404,39 +404,39 @@ export function PatientDirectory() {
                       )}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     {t('allergies')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+              <tbody className="divide-y divide-border bg-background">
                 {paginated.map((row) => (
                   <tr
                     key={row.id}
                     onClick={() => handleRowClick(row.id)}
-                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
                     data-testid={`patient-row-${row.id}`}
                   >
-                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       <span className="flex items-center gap-2">
                         {row.name}
                         {!row.hasNationalId && (
-                          <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                          <span className="inline-flex rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
                             {t('nidMissingBadge')}
                           </span>
                         )}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.age ?? '—'}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.gender}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400" dir="ltr">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground" dir="ltr">
                       {row.phone || '—'}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.lastVisit
                         ? new Date(row.lastVisit).toLocaleDateString()
                         : '—'}
@@ -445,14 +445,14 @@ export function PatientDirectory() {
                       <span
                         className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                           row.status === 'active'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                            ? 'bg-success/20 text-success'
+                            : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {row.status === 'active' ? t('active') : t('inactive')}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {row.lastUpdated
                         ? formatRelativeTime(row.lastUpdated, locale as 'en' | 'ar' | 'prs')
                         : '—'}
@@ -460,7 +460,7 @@ export function PatientDirectory() {
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       {row.hasAllergies && (
                         <span
-                          className="inline-block h-3 w-3 rounded-full bg-red-500"
+                          className="inline-block h-3 w-3 rounded-full bg-destructive"
                           aria-label={t('allergyFlag')}
                           role="img"
                         />
@@ -478,7 +478,7 @@ export function PatientDirectory() {
               <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                 {t('previous')}
               </Button>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-muted-foreground">
                 {t('pageOf', { current: page, total: totalPages })}
               </span>
               <Button variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
