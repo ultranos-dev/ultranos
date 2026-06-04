@@ -5,6 +5,7 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
 import { cn } from "../../lib/utils.js"
 import { Check as CheckIcon, ChevronRight as ChevronRightIcon } from "../../icons.js"
+import { DirectionalIcon } from "../DirectionalIcon.js"
 
 function DropdownMenu({
   ...props
@@ -232,7 +233,9 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="rtl:rotate-180 ms-auto" />
+      <DirectionalIcon category="navigation" className="ms-auto">
+        <ChevronRightIcon />
+      </DirectionalIcon>
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

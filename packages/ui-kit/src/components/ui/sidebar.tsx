@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "./tooltip.js"
 import { PanelLeftIcon } from "../../icons.js"
+import { DirectionalIcon } from "../DirectionalIcon.js"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -270,7 +271,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon className="rtl:rotate-180" />
+      <DirectionalIcon category="navigation"><PanelLeftIcon /></DirectionalIcon>
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
