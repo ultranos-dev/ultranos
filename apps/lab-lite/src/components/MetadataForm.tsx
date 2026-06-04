@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { LOINC_CATEGORIES } from '@/lib/loinc-categories'
 import { Button } from '@/components/ui/Button'
-import { Tooltip } from '@/components/ui/Tooltip'
+import { HelpTip } from '@/components/ui/HelpTip'
 import type { OcrSuggestion } from '@/lib/trpc'
 
 export interface MetadataFormValues {
@@ -165,7 +165,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
           <label htmlFor="test-category" className="text-sm font-medium text-neutral-700">
             {t('testCategory')}
           </label>
-          <Tooltip content={t('testCategoryHelp')} />
+          <HelpTip content={t('testCategoryHelp')} />
           {ocrLoincSuggestion && (
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getConfidenceBadgeClasses(getConfidenceLevel(ocrLoincSuggestion.confidence))}`}
@@ -210,7 +210,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
           <label htmlFor="collection-date" className="text-sm font-medium text-neutral-700">
             {t('collectionDate')}
           </label>
-          <Tooltip content={t('collectionDateHelp')} />
+          <HelpTip content={t('collectionDateHelp')} />
           {ocrDateSuggestion && (
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getConfidenceBadgeClasses(getConfidenceLevel(ocrDateSuggestion.confidence))}`}

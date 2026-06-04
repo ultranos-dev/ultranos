@@ -13,7 +13,7 @@ import {
 } from '@/lib/cultural-flags'
 import type { CulturalFlag, PatientCulturalPreferences } from '@/lib/cultural-flags'
 import { setPatientCulturalPreferences } from '@/lib/db'
-import { Tooltip } from '@/components/ui/Tooltip'
+import { HelpTip } from '@/components/ui/HelpTip'
 
 interface CulturalFlagsEditorProps {
   patientRef: string
@@ -128,7 +128,7 @@ export function CulturalFlagsEditor({
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {t('culturalFlags.title')}
         </h3>
-        <Tooltip content={t('culturalFlags.helpText')} />
+        <HelpTip content={t('culturalFlags.helpText')} />
       </div>
 
       {/* Predefined flag toggles */}
