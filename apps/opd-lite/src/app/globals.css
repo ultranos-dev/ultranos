@@ -3,7 +3,19 @@
 @tailwind utilities;
 
 @import '@ultranos/ui-kit/tokens.css';
+@import "tw-animate-css";
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
 
 @media print {
   body * {
