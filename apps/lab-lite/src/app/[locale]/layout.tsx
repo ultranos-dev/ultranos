@@ -1,18 +1,18 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
-import { AppSidebar } from '@/components/AppSidebar'
-import { InstallPrompt } from '@/components/InstallPrompt'
+import { AppShell } from '@/components/AppShell'
 import { EmergencyButton } from '@/components/safety/EmergencyButton'
+import { LockExpiryCheckerMount } from '@/components/samples/LockExpiryCheckerMount'
 
 export default async function LocaleLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages()
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <AppSidebar>
+      <LockExpiryCheckerMount />
+      <AppShell>
         {children}
-        <InstallPrompt />
-      </AppSidebar>
+      </AppShell>
       <EmergencyButton />
     </NextIntlClientProvider>
   )
