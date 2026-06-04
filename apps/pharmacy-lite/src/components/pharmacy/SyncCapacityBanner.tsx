@@ -31,7 +31,7 @@ export function SyncCapacityBanner() {
     return (
       <div
         role="alert"
-        className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+        className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
       >
         <strong>Sync queue full.</strong> Please connect to the internet to sync
         pending records before dispensing more.
@@ -43,7 +43,7 @@ export function SyncCapacityBanner() {
     return (
       <div
         role="status"
-        className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+        className="rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-warning"
       >
         Sync queue nearly full ({warning.count} entries). Connect to sync.
         <Button

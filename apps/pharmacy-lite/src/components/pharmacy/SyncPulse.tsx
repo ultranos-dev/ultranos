@@ -26,8 +26,8 @@ function getAriaLabel(color: PulseColor, pendingCount: number): string {
 }
 
 const colorClasses: Record<PulseColor, string> = {
-  green: 'bg-green-500',
-  amber: 'bg-amber-500',
+  green: 'bg-success',
+  amber: 'bg-warning',
 }
 
 const pulseClasses: Record<PulseColor, string> = {
@@ -47,7 +47,7 @@ export function SyncPulse() {
       className={`${colorClasses[color]} ${pulseClasses[color]} inline-flex items-center justify-center rounded-full h-3 w-3 relative`}
     >
       {syncStatus.isPending && syncStatus.pendingCount > 0 && (
-        <span className="absolute -top-2 -end-2 text-xs font-bold text-amber-700 bg-amber-100 rounded-full h-4 w-4 flex items-center justify-center">
+        <span className="absolute -top-2 -end-2 text-xs font-bold text-warning bg-warning/10 rounded-full h-4 w-4 flex items-center justify-center">
           {syncStatus.pendingCount}
         </span>
       )}
