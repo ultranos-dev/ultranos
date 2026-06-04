@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { registerPatientLocally, type PatientRegistrationData } from '@/lib/patient-register'
 import type { LocalPatient } from '@/lib/db'
 
@@ -54,17 +55,17 @@ export function PatientRegistrationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" data-testid="patient-registration-form">
-      <h3 className="text-lg font-semibold text-neutral-900">Register New Patient</h3>
+      <h3 className="text-lg font-semibold text-foreground">Register New Patient</h3>
 
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="reg-name" className="mb-1 block text-xs font-medium text-neutral-600">
-          Patient Name <span className="text-red-600">*</span>
+        <label htmlFor="reg-name" className="mb-1 block text-xs font-medium text-muted-foreground">
+          Patient Name <span className="text-destructive">*</span>
         </label>
         <input
           id="reg-name"
@@ -72,13 +73,13 @@ export function PatientRegistrationForm({
           required
           value={form.nameGiven}
           onChange={(e) => setForm({ ...form, nameGiven: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
           data-testid="reg-name-input"
         />
       </div>
 
       <div>
-        <label htmlFor="reg-father" className="mb-1 block text-xs font-medium text-neutral-600">
+        <label htmlFor="reg-father" className="mb-1 block text-xs font-medium text-muted-foreground">
           Father&apos;s Name
         </label>
         <input
@@ -86,20 +87,20 @@ export function PatientRegistrationForm({
           type="text"
           value={form.nameFather ?? ''}
           onChange={(e) => setForm({ ...form, nameFather: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="reg-gender" className="mb-1 block text-xs font-medium text-neutral-600">
-            Gender <span className="text-red-600">*</span>
+          <label htmlFor="reg-gender" className="mb-1 block text-xs font-medium text-muted-foreground">
+            Gender <span className="text-destructive">*</span>
           </label>
           <select
             id="reg-gender"
             value={form.gender}
             onChange={(e) => setForm({ ...form, gender: e.target.value as PatientRegistrationData['gender'] })}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
           >
             <option value="male">Male</option>
             <option value="female">Female</option>
@@ -108,7 +109,7 @@ export function PatientRegistrationForm({
           </select>
         </div>
         <div>
-          <label htmlFor="reg-birth-year" className="mb-1 block text-xs font-medium text-neutral-600">
+          <label htmlFor="reg-birth-year" className="mb-1 block text-xs font-medium text-muted-foreground">
             Birth Year
           </label>
           <input
@@ -118,13 +119,13 @@ export function PatientRegistrationForm({
             max={new Date().getFullYear()}
             value={form.birthYear ?? ''}
             onChange={(e) => setForm({ ...form, birthYear: e.target.value ? parseInt(e.target.value) : undefined })}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="reg-phone" className="mb-1 block text-xs font-medium text-neutral-600">
+        <label htmlFor="reg-phone" className="mb-1 block text-xs font-medium text-muted-foreground">
           Phone Number
         </label>
         <input
@@ -132,13 +133,13 @@ export function PatientRegistrationForm({
           type="tel"
           value={form.phone ?? ''}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
         />
       </div>
 
       {/* Allergies — CRITICAL per CLAUDE.md rule #4 */}
       <div>
-        <label className="mb-1 block text-xs font-medium text-red-700">
+        <label className="mb-1 block text-xs font-medium text-destructive">
           Known Allergies (enter each and press Add)
         </label>
         <div className="flex gap-2">
@@ -148,7 +149,7 @@ export function PatientRegistrationForm({
             onChange={(e) => setAllergyInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddAllergy() } }}
             placeholder="e.g. Penicillin"
-            className="flex-1 rounded-md border border-red-200 bg-red-50/30 px-3 py-2 text-sm focus-visible:border-red-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-300"
+            className="flex-1 rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm focus-visible:border-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive/30"
             data-testid="allergy-input"
           />
           <Button type="button" variant="outline" onClick={handleAddAllergy}>Add</Button>
@@ -156,17 +157,17 @@ export function PatientRegistrationForm({
         {allergies.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {allergies.map((a) => (
-              <span key={a} className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-800">
+              <Badge key={a} variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 font-bold gap-1">
                 {a}
                 <button
                   type="button"
                   onClick={() => setAllergies(allergies.filter((x) => x !== a))}
-                  className="text-red-600 hover:text-red-900"
+                  className="text-destructive hover:text-destructive/80"
                   aria-label={`Remove ${a}`}
                 >
                   &times;
                 </button>
-              </span>
+              </Badge>
             ))}
           </div>
         )}

@@ -28,9 +28,9 @@ function formatCountdown(remainingMs: number): string {
 }
 
 function countdownColor(remainingMs: number): string {
-  if (remainingMs > 60 * 60_000) return 'text-green-600'
-  if (remainingMs > 15 * 60_000) return 'text-yellow-600'
-  return 'text-red-600'
+  if (remainingMs > 60 * 60_000) return 'text-success'
+  if (remainingMs > 15 * 60_000) return 'text-warning'
+  return 'text-destructive'
 }
 
 const MAX_SESSION_MS = 12 * 60 * 60 * 1000 // 12 hours for pharmacist role
@@ -44,19 +44,19 @@ function ProfileCard() {
   const initials = getInitials(displayName)
 
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-6" aria-labelledby="profile-heading">
-      <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-neutral-900">Profile</h2>
+    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="profile-heading">
+      <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-foreground">Profile</h2>
       <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
           {initials}
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="text-xs font-medium text-neutral-500">Name</p>
-            <p className="text-sm text-neutral-900" data-testid="profile-name">{displayName}</p>
+            <p className="text-xs font-medium text-muted-foreground">Name</p>
+            <p className="text-sm text-foreground" data-testid="profile-name">{displayName}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Role</p>
+            <p className="text-xs font-medium text-muted-foreground">Role</p>
             <span
               className="inline-block rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
               data-testid="profile-role"
@@ -65,8 +65,8 @@ function ProfileCard() {
             </span>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Email</p>
-            <p className="text-sm text-neutral-900" data-testid="profile-email">{session.email || '\u2014'}</p>
+            <p className="text-xs font-medium text-muted-foreground">Email</p>
+            <p className="text-sm text-foreground" data-testid="profile-email">{session.email || '\u2014'}</p>
           </div>
         </div>
       </div>
@@ -80,23 +80,23 @@ function PharmacyInfoCard() {
   if (!session) return null
 
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-6" aria-labelledby="pharmacy-heading">
-      <h2 id="pharmacy-heading" className="mb-4 text-sm font-semibold text-neutral-900">Pharmacy Info</h2>
+    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="pharmacy-heading">
+      <h2 id="pharmacy-heading" className="mb-4 text-sm font-semibold text-foreground">Pharmacy Info</h2>
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-neutral-500">Pharmacy Name</p>
-          <p className="text-sm text-neutral-900" data-testid="pharmacy-name">
+          <p className="text-xs font-medium text-muted-foreground">Pharmacy Name</p>
+          <p className="text-sm text-foreground" data-testid="pharmacy-name">
             {session.pharmacyName || 'Not configured'}
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium text-neutral-500">License Reference</p>
-          <p className="text-sm text-neutral-900" data-testid="license-ref">
+          <p className="text-xs font-medium text-muted-foreground">License Reference</p>
+          <p className="text-sm text-foreground" data-testid="license-ref">
             {session.licenseRef || 'Not configured'}
           </p>
         </div>
       </div>
-      <p className="mt-3 text-xs text-neutral-400">These fields are managed by your organization administrator.</p>
+      <p className="mt-3 text-xs text-muted-foreground">These fields are managed by your organization administrator.</p>
     </section>
   )
 }
@@ -125,15 +125,15 @@ function SessionInfoCard() {
   const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : 'Unknown'
 
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-6" aria-labelledby="session-heading">
-      <h2 id="session-heading" className="mb-4 text-sm font-semibold text-neutral-900">Session Info</h2>
+    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="session-heading">
+      <h2 id="session-heading" className="mb-4 text-sm font-semibold text-foreground">Session Info</h2>
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-neutral-500">Login Time</p>
-          <p className="text-sm text-neutral-900" data-testid="login-time">{loginTime}</p>
+          <p className="text-xs font-medium text-muted-foreground">Login Time</p>
+          <p className="text-sm text-foreground" data-testid="login-time">{loginTime}</p>
         </div>
         <div>
-          <p className="text-xs font-medium text-neutral-500">Session Expiry</p>
+          <p className="text-xs font-medium text-muted-foreground">Session Expiry</p>
           {remainingMs !== null ? (
             <p
               data-testid="session-countdown"
@@ -142,7 +142,7 @@ function SessionInfoCard() {
               {formatCountdown(remainingMs)}
             </p>
           ) : (
-            <p className="text-sm text-neutral-400">Unavailable</p>
+            <p className="text-sm text-muted-foreground">Unavailable</p>
           )}
         </div>
       </div>
@@ -183,28 +183,28 @@ function MfaStatusCard() {
   }, [])
 
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white p-6" aria-labelledby="mfa-heading">
-      <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-neutral-900">MFA Status</h2>
+    <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="mfa-heading">
+      <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-foreground">MFA Status</h2>
 
-      {loading && <p className="text-sm text-neutral-400">Loading MFA status...</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading MFA status...</p>}
 
       {!loading && error && (
-        <p className="text-sm text-amber-600" data-testid="mfa-error">Unable to check MFA status</p>
+        <p className="text-sm text-warning" data-testid="mfa-error">Unable to check MFA status</p>
       )}
 
       {!loading && !error && isEnrolled !== null && (
         <div className="flex items-center gap-2">
-          <p className="text-xs font-medium text-neutral-500">TOTP Status</p>
+          <p className="text-xs font-medium text-muted-foreground">TOTP Status</p>
           {isEnrolled ? (
             <span
-              className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+              className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
               data-testid="mfa-status"
             >
               TOTP Enabled
             </span>
           ) : (
             <span
-              className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+              className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
               data-testid="mfa-status"
             >
               Not Configured

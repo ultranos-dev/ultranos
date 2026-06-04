@@ -30,8 +30,8 @@ export function EmptyState({ icon, title, description, actionLabel, actionHref, 
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-50">
         <Icon size={28} className="text-primary-600" />
       </div>
-      <h3 className="text-sm font-semibold text-neutral-800 mb-1">{title}</h3>
-      <p className="text-xs text-neutral-500 max-w-xs mb-4">{description}</p>
+      <h3 className="text-sm font-semibold text-foreground mb-1">{title}</h3>
+      <p className="text-xs text-muted-foreground max-w-xs mb-4">{description}</p>
       {actionLabel && (actionHref || onAction) && (
         actionHref ? (
           <a href={actionHref}>

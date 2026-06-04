@@ -24,7 +24,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
       >
         Previous
       </Button>
-      <span data-testid="pagination-indicator" className="text-sm text-neutral-600">
+      <span data-testid="pagination-indicator" className="text-sm text-muted-foreground">
         Page {page} of {totalPages}
       </span>
       <Button

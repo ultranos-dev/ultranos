@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
 import type { LocalPatient } from '@/lib/db'
 
 interface PatientSearchResultsProps {
@@ -18,10 +19,10 @@ export function PatientSearchResults({
   if (results.length === 0) {
     return (
       <div
-        className="mt-2 rounded-lg border border-neutral-200 bg-white p-4"
+        className="mt-2 rounded-2xl border border-border bg-card p-4"
         data-testid="patient-no-results"
       >
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           No patients found for &ldquo;{query}&rdquo;
         </p>
         <button
@@ -38,7 +39,7 @@ export function PatientSearchResults({
 
   return (
     <ul
-      className="mt-2 divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden"
+      className="mt-2 divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden"
       data-testid="patient-search-results"
       role="listbox"
     >
@@ -46,31 +47,31 @@ export function PatientSearchResults({
         <li
           key={patient.id}
           role="option"
-          className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-neutral-50 transition-colors"
+          className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-accent transition-colors"
           onClick={() => onSelect(patient)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(patient) } }}
           tabIndex={0}
           data-testid={`patient-result-${patient.id}`}
         >
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-neutral-900 truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {patient.nameGiven}
               {patient.nameFather ? ` ${patient.nameFather}` : ''}
             </p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               {patient.gender}{patient.birthYear ? ` | ${new Date().getFullYear() - patient.birthYear} y/o` : ''}
               {patient.phone ? ` | ${patient.phone}` : ''}
             </p>
           </div>
           {patient.allergies && patient.allergies.length > 0 && (
-            <span className="ms-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-800">
+            <Badge variant="outline" className="ms-2 bg-destructive/10 text-destructive border-destructive/20 font-bold">
               ALLERGIES
-            </span>
+            </Badge>
           )}
         </li>
       ))}
       {results.length < 5 && (
-        <li className="px-4 py-3 bg-neutral-50">
+        <li className="px-4 py-3 bg-muted">
           <button
             type="button"
             onClick={onRegisterNew}

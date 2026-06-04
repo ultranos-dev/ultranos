@@ -20,7 +20,7 @@ export function PatientSearchBar({ onSelectPatient, onRegisterNew }: PatientSear
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search patient by name or phone..."
-          className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+          className="w-full rounded-lg border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
           data-testid="patient-search-input"
           autoComplete="off"
         />
