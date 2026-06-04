@@ -1,6 +1,8 @@
 # Ultranos Design System
 
 > Derived from the Healix healthcare platform reference screens. Optimized for a Desktop PWA targeting urban GP doctors in clinic offices, with an Android companion app. Styled with a Wise-inspired green-forward brand palette. Polished with a design-engineering approach where every unseen detail compounds into something that feels right.
+>
+> **Implementation layer:** All visual styles are implemented via **oklch semantic tokens** (`--primary`, `--foreground`, `--card`, etc.) defined in `packages/ui-kit/src/tokens.css` and mapped through `packages/ui-kit/src/tailwind.preset.ts`. The hex values in this document are the visual specification — they map to oklch triplets in code. Components are ShadCN-based from `packages/ui-kit/src/components/ui/`. Never use hardcoded hex values in component code — use semantic Tailwind classes (`bg-primary`, `text-foreground`, `border-border`, etc.).
 
 ---
 
@@ -8,7 +10,7 @@
 
 The Ultranos interface is a clinical-grade workspace that prioritizes clarity, density, and calm. It operates on a warm off-white canvas (`#f4f5f2` to `#ffffff`) with near-black text (`#0e0f0c`) and a signature **Wise Green** (`#9fe870`) accent that signals interactivity with an optimistic, nature-inspired tone — distinct from the sterile blues of legacy healthcare software.
 
-Typography uses **Inter** as the sole typeface across all surfaces — display, body, and UI. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
+Typography uses **Manrope** as the primary typeface in admin-portal and pharmacy-lite (with **Public Sans** for headings), and **Urbanist** in opd-lite and lab-lite. All are Urbanist-family geometric sans-serifs with similar visual rhythm. The design spec below uses "Inter" as the historical reference — all proportions, weights, and sizes apply equally to Manrope/Urbanist. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
 
 The interaction palette is driven by the **Wise Green** (`#9fe870`) with **Dark Green** (`#163300`) text — the same fresh, lime-bright pairing from the original Wise system. Primary buttons, active navigation tabs, icon badges on the anatomy viewer, and chart accent points all use this green system. Hover states shift to **Pastel Green** (`#cdffad`) with a subtle `scale(1.03)` expansion; pressed/`:active` states use `scale(0.97)` compression. Every transition specifies exact properties and uses custom easing curves — never `transition: all`, never default CSS easings. This level of craft is invisible to the user individually, but in aggregate it makes the interface feel alive and intentional.
 
@@ -63,8 +65,10 @@ Cards use a **glassmorphic treatment**: 70% opacity background (`bg-card-bg/70`)
 ## 3. Typography Rules
 
 ### Font Family
-- **All surfaces**: `Inter`, fallbacks: `system-ui, -apple-system, Helvetica, Arial, sans-serif`
+- **Admin Portal + Pharmacy Lite**: `Manrope` (sans), `Public Sans` (heading), fallback: `system-ui, sans-serif`
+- **OPD Lite + Lab Lite**: `Urbanist` (variable), fallback: `system-ui, sans-serif`
 - **OpenType features**: `"calt" 1` (contextual alternates) enabled on all text
+- Configured per-app in `tailwind.config.ts` `fontFamily` extension (app-specific concern, not in shared preset)
 
 ### Hierarchy
 
@@ -378,17 +382,17 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 
 ### Buttons
 
-> **Implementation rule:** No raw `<button>` elements anywhere in the app. Every button MUST use the `Button` component (`@/components/ui/Button`). This includes close buttons, nav arrows, toggles, expand/collapse triggers, dropdown items, and icon-only buttons. The only exceptions are `Button.tsx` itself and `pill-button.tsx` (which are button wrapper components).
+> **Implementation rule:** No raw `<button>` elements anywhere in the app. Every button MUST use the ShadCN `Button` component from `@ultranos/ui-kit/components/ui/button` (or via the `@/components/ui/button` re-export in admin-portal). This includes close buttons, nav arrows, toggles, expand/collapse triggers, and icon-only buttons. The only exception is `Button.tsx` itself.
 
-**Button Component** (`@/components/ui/Button`)
-- Supports variants: `primary`, `secondary`, `danger`, `warning`, `ghost`, `outline`, `icon`
-- Accepts `fullWidth` boolean prop
-- Accepts `as` polymorphic element type (default: `button`)
-- All shared states: focus ring (`ring-2 ring-primary-300 ring-offset-2`), disabled (`opacity-50 cursor-not-allowed`), reduced motion
+**Button Component** (`@ultranos/ui-kit/components/ui/button`)
+- Implemented with CVA (class-variance-authority) variants: `default`, `outline`, `secondary`, `ghost`, `destructive`, `success`, `link`
+- Size variants: `default` (h-9), `xs`, `sm`, `lg`, `icon`, `icon-xs`, `icon-sm`, `icon-lg`
+- Always `rounded-full` (pill shape) — the base class is baked into the CVA definition
+- All shared states: focus ring (`focus-visible:ring-2 focus-visible:ring-ring/30`), disabled (`opacity-50 pointer-events-none`)
 
-**Primary Green Pill (CTA)** — `variant="primary"`
-- Background: `#9fe870` (Wise Green) → Tailwind: `bg-pill-green`
-- Text: `#163300` (Dark Green) → Tailwind: `text-pill-text`
+**Primary Green Pill (CTA)** — `variant="default"`
+- Background: `bg-primary` → oklch token (`0.527 0.154 150.069` = Wise Green in light mode)
+- Text: `text-primary-foreground` → oklch token (`0.985 0 0` = near-white)
 - Icon: `#163300`, 16px, left of label (optional)
 - Padding: 10px 20px → Tailwind: `px-5 py-2`
 - Border-radius: 9999px (pill) → Tailwind: `rounded-pill`
@@ -450,7 +454,7 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 
 ### Cards
 
-> **Implementation rule:** All card-like containers MUST use the `Card` component (`@/components/Card`). No manual card styling with inline Tailwind classes. The Card component supports an `as` prop for polymorphic rendering (e.g., `<Card as="section">`, `<Card as="fieldset">`). Extra classes can be passed via `className` and are merged with the variant defaults.
+> **Implementation rule:** All card-like containers MUST use consistent card styling. In admin-portal and spoke apps (ShadCN-based), use `bg-popover rounded-2xl border border-border shadow-card` as the standard card container. For patient-facing OPD Lite views, use the glassmorphic treatment below. Never manually style cards with raw hex colors.
 
 **Card Component** (`@/components/Card`)
 - Supports variants via `variant` prop (default: `"primary"`)
@@ -556,6 +560,35 @@ Safety-critical banner that renders FIRST in the patient view, never collapsed, 
 - Icon color: `#868685` (inactive), `#163300` on `#9fe870` fill (active)
 - Active indicator: Wise Green circular fill (36px diameter) behind the icon
 - Spacing: 44–48px center-to-center
+
+### Tab Bar Filter Pattern
+
+All status/filter tab bars across admin-portal and spoke apps use a consistent pill-container pattern:
+
+```tsx
+// Container
+<div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+  {tabs.map((tab) => (
+    <button
+      key={tab}
+      onClick={() => setFilter(tab)}
+      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+        filter === tab
+          ? 'bg-primary text-primary-foreground'   // ← active: green fill, white text
+          : 'text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      {tab}
+    </button>
+  ))}
+</div>
+```
+
+**Rules:**
+- Container: `rounded-full border border-border bg-card p-1 w-fit` — pill shape, fits content
+- Active tab: `bg-primary text-primary-foreground` — green fill, **white** text (never `text-foreground` which is dark)
+- Inactive tab: `text-muted-foreground hover:text-foreground` — no border, no background
+- Individual tab buttons are `rounded-full` (not `rounded-xl` or `rounded-lg`)
 
 ### Charts & Data Visualization
 
@@ -773,7 +806,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 ## 11. Do's and Don'ts
 
 ### Do
-- Use Inter as the only typeface — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers
+- Use Manrope (admin-portal, pharmacy-lite) or Urbanist (opd-lite, lab-lite) as the typeface — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers. Never hardcode the font name in component code — always use the `font-sans` Tailwind class.
 - Use Wise Green (`#9fe870`) with Dark Green (`#163300`) text as the primary interactive color system
 - Specify exact transition properties: `transition: transform 160ms var(--ease-out)` — never `transition: all`
 - Use custom easing curves (`--ease-out`, `--ease-in-out`, `--ease-panel`) — never default CSS easings
@@ -806,7 +839,9 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - Don't animate `padding`, `margin`, `height`, or `width` — layout properties trigger expensive reflows
 - Don't use Framer Motion shorthand props (`x`, `y`, `scale`) under load — use full `transform` strings for GPU acceleration
 - Don't mix icon styles — stick to outlined/stroke icons with consistent stroke weight
-- Don't use raw `<button>` elements — always use the `Button` component with the appropriate variant
+- Don't use raw `<button>` elements — always use the ShadCN `Button` from `@ultranos/ui-kit/components/ui/button`
+- Don't use hardcoded hex colors in component code — always use semantic Tailwind classes (`bg-primary`, `text-foreground`, `border-border`, etc.)
+- Don't omit `../../packages/ui-kit/src/**/*.{ts,tsx}` from `tailwind.config.ts` content — missing it causes broken layout in any app using ui-kit components
 - Don't use `border border-neutral-200` on cards or containers — use `ring-[0.65px] ring-gray-400/40` via the Card component
 - Don't use `rounded-md` or `rounded-lg` on cards, containers, or form inputs — use `rounded-xl`
 - Don't manually style card containers with inline Tailwind — use the `Card` component
@@ -869,7 +904,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - "Create the right detail panel: white background, 20px top-left radius, shadow -4px 0 16px rgba(0,0,0,0.08). Entry: translateX(100%) → 0, 250ms cubic-bezier(0.32,0.72,0,1). Exit: 180ms cubic-bezier(0.23,1,0.32,1). Close × top-right. Content stagger 50ms. Bottom sticky bar: green pill '+ Add record' with scale(0.97) active."
 
 ### Iteration Guide
-1. Inter only — weight 600 for headings, 400 for labels, 700 for vital numbers
+1. Manrope/Urbanist per app (configured in tailwind.config.ts fontFamily) — weight 600 for headings, 400 for labels, 700 for vital numbers
 2. Wise Green (`#9fe870`) + Dark Green (`#163300`) for all interactive elements
 3. Custom easing curves — `cubic-bezier(0.23, 1, 0.32, 1)` as the primary UI easing
 4. `scale(1.03)` hover, `scale(0.97)` active — subtle physical feedback
@@ -906,5 +941,9 @@ When reviewing Ultranos UI code, check for these issues:
 | `border border-neutral-200` on card/container | Use Card component or `ring-[0.65px] ring-gray-400/40` | Old border pattern is deprecated — cards use glassmorphic ring |
 | `rounded-md` on card, container, or input | Use `rounded-xl` | `rounded-md` is not part of the radius scale for containers |
 | `rounded-lg` on card or container | Use `rounded-xl` | `rounded-lg` is reserved for small inline elements only |
-| Manual card styling (`bg-white p-6 shadow-sm`) | Use `<Card>` component | Cards must use the Card component for consistency |
-| `bg-card-bg` without `/70` opacity | Use `bg-card-bg/70` via Card component | Cards use 70% opacity for glassmorphic translucency |
+| Manual card styling (`bg-white p-6 shadow-sm`) | Use `bg-popover rounded-2xl border border-border shadow-card` (admin/spoke) or `<Card>` (OPD Lite) | Cards must use consistent token-based styling |
+| `bg-card-bg` without `/70` opacity | Use `bg-card-bg/70` via Card component | Cards use 70% opacity for glassmorphic translucency (OPD Lite patient views) |
+| Hardcoded hex in className (`bg-[#9fe870]`) | Use `bg-primary` | All colors must go through oklch semantic tokens |
+| Active tab with `text-foreground` | Use `text-primary-foreground` | `text-foreground` is near-black; active tabs on green need white text |
+| Missing ui-kit in tailwind content array | Add `../../packages/ui-kit/src/**/*.{ts,tsx}` | Component classes live in ui-kit source — Tailwind can't see them otherwise |
+| Button import from app-local file in new apps | Import from `@ultranos/ui-kit/components/ui/button` | App-local `@/components/ui/` files are admin-portal-only re-exports |

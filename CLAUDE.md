@@ -4,11 +4,12 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 
 ## Tech Stack
 
-- **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
+- **Admin Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS v3, ShadCN UI (radix-ui), oklch semantic tokens, Manrope/Public Sans fonts (`apps/admin-portal/`)
+- **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline, Urbanist font
 - **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
 - **Patient Lite Mobile:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
-- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`)
-- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`)
+- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`), Manrope font, ShadCN via ui-kit re-exports
+- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`), Urbanist font, ShadCN via ui-kit re-exports
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
 - **Infrastructure:** Terraform, Docker, GitHub Actions CI/CD
@@ -30,7 +31,7 @@ ultranos/
 │   ├── sync-engine/       # Offline queue, HLC timestamps, conflict resolution
 │   ├── crypto/            # Encryption helpers (Web Crypto + SQLCipher wrappers)
 │   ├── drug-db/           # Drug interaction checker (online + offline subset)
-│   ├── ui-kit/            # Shared component library (RTL-ready)
+│   ├── ui-kit/            # Shared component library: 14 ShadCN components, oklch tokens, shared Tailwind preset, RTL support
 │   └── audit-logger/      # Structured audit event emitter
 ├── infra/                 # Terraform, Docker configs
 ├── docs/                  # PRD, architecture decisions, regulatory docs
@@ -94,6 +95,55 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 - Use the FHIR field names as the canonical source; add Ultranos extensions in a separate namespace
 - Types live in `packages/shared-types/src/fhir/`
 - **Meta fields:** Use FHIR R4 canonical `Meta` field names: `lastUpdated` (ISO 8601 instant), `versionId` (string). The `createdAt` field is an Ultranos extension and MUST live inside the `_ultranos` namespace, never in `meta`. Do NOT use `createdAt`/`updatedAt` in the `meta` object.
+
+### UI Component System (ShadCN)
+
+All Next.js apps use **ShadCN** components from `packages/ui-kit/src/components/ui/`. The 14 canonical components are: `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `textarea`, `tooltip`.
+
+**Import rule — always import from `@ultranos/ui-kit/components/ui/<name>`:**
+```typescript
+// ✅ Correct — from shared ui-kit
+import { Button, buttonVariants } from '@ultranos/ui-kit/components/ui/button'
+import { Badge } from '@ultranos/ui-kit/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader } from '@ultranos/ui-kit/components/ui/dialog'
+
+// ✅ Also correct — admin-portal re-exports proxy to ui-kit (zero import changes needed)
+import { Button } from '@/components/ui/button'   // admin-portal only
+
+// ❌ Wrong — never copy ShadCN source into app-local files
+```
+
+**Color tokens — oklch semantic system:**
+All apps share the oklch L C H channel variables defined in `packages/ui-kit/src/tokens.css`. Use semantic Tailwind classes, never hardcoded hex or raw oklch values in component code:
+```typescript
+// ✅ Correct — semantic tokens
+className="bg-primary text-primary-foreground hover:bg-primary/80"
+className="bg-destructive/10 text-destructive"
+className="bg-card border border-border rounded-2xl"
+
+// ❌ Wrong — hardcoded values
+className="bg-[#9fe870] text-[#163300]"
+style={{ backgroundColor: 'oklch(0.527 0.154 150.069)' }}
+```
+
+**Shared Tailwind preset — `@ultranos/ui-kit/tailwind.preset`:**
+Every Next.js app's `tailwind.config.ts` MUST use the shared preset and MUST scan the ui-kit source:
+```typescript
+import preset from '@ultranos/ui-kit/tailwind.preset'
+
+const config: Config = {
+  presets: [preset],
+  content: [
+    './src/**/*.{ts,tsx}',
+    '../../packages/ui-kit/src/**/*.{ts,tsx}',  // ← REQUIRED: classes live in ui-kit source
+  ],
+  // ...app-specific font overrides only
+}
+```
+**Omitting `../../packages/ui-kit/src/**/*.{ts,tsx}` from `content` causes missing CSS** (sidebar collapsing broken, icon sizes wrong, animations missing) because component class strings live in ui-kit, not the app's own src.
+
+**Sidebar layout — ShadCN sidebar-07:**
+All admin and spoke apps use the ShadCN sidebar-07 layout: `SidebarProvider` → `AppSidebar` + `SidebarInset`. `TooltipProvider` must wrap `SidebarProvider` because `SidebarMenuButton` uses `Tooltip` internally. See `apps/admin-portal/src/components/AuthGuard.tsx`.
 
 ### Icons
 
