@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@import 'tw-animate-css';
 @import '@ultranos/ui-kit/tokens.css';
+@import 'tw-animate-css';
 
 @layer base {
   * {
