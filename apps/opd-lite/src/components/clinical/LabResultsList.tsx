@@ -19,13 +19,13 @@ function statusBadge(status: string) {
   switch (status) {
     case 'preliminary':
       return (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+        <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">
           Preliminary
         </span>
       )
     case 'final':
       return (
-        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+        <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">
           Final
         </span>
       )
@@ -127,18 +127,18 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   if (consentResult && !consentResult.granted) {
     if (consentResult.reason === 'expired') {
       return (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-expired">
-          <p className="font-bold text-amber-800">Consent has expired — request renewal</p>
-          <p className="mt-1 text-amber-700">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-expired">
+          <p className="font-bold text-warning">Consent has expired — request renewal</p>
+          <p className="mt-1 text-warning">
             The patient&apos;s consent to view lab results has expired. Please request a renewed consent before accessing lab data.
           </p>
         </div>
       )
     }
     return (
-      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-required">
-        <p className="font-bold text-amber-800">Patient consent required to view lab results</p>
-        <p className="mt-1 text-amber-700">
+      <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-required">
+        <p className="font-bold text-warning">Patient consent required to view lab results</p>
+        <p className="mt-1 text-warning">
           The patient has not granted consent for lab data access. Please obtain consent before viewing lab results.
         </p>
       </div>
@@ -159,9 +159,9 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   return (
     <div className="space-y-2" data-testid="lab-results-list">
       {consentUnverified && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm" data-testid="consent-unverified">
-          <p className="font-bold text-amber-800">Consent status could not be verified</p>
-          <p className="mt-1 text-amber-700">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm" data-testid="consent-unverified">
+          <p className="font-bold text-warning">Consent status could not be verified</p>
+          <p className="mt-1 text-warning">
             Showing cached results. Consent will be re-checked when connectivity is restored.
           </p>
         </div>
@@ -185,7 +185,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                 onClick={() => onSelectReport(report)}
                 className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-muted ${
                   urgent
-                    ? 'border-red-300 bg-red-50'
+                    ? 'border-destructive/30 bg-destructive/10'
                     : 'border-neutral-200 bg-background'
                 }`}
                 aria-label={`View ${loincDisplay} from ${labName}`}
@@ -199,7 +199,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
                       {statusBadge(report.status)}
                       {urgent && (
                         <span
-                          className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
+                          className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
                           data-testid="urgent-indicator"
                         >
                           Urgent

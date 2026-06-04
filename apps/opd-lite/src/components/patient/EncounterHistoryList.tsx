@@ -39,7 +39,7 @@ function formatEncounterDate(hlcTimestamp: string): string {
 function getStatusBadge(status: string): { label: string; classes: string } {
   switch (status) {
     case 'finished':
-      return { label: 'Finished', classes: 'bg-green-100 text-green-700' }
+      return { label: 'Finished', classes: 'bg-success/20 text-success' }
     case 'cancelled':
       return { label: 'Cancelled', classes: 'bg-muted text-muted-foreground' }
     case 'in-progress':

@@ -152,7 +152,7 @@ describe('ResultSummaryTable — non-numeric fallback', () => {
     render(<ResultSummaryTable results={rows} />)
 
     const cell = screen.getByText('Urgent finding')
-    expect(cell).toHaveClass('text-red-700')
+    expect(cell).toHaveClass('text-destructive')
   })
 
   it('applies amber text for abnormal rows', () => {
@@ -162,7 +162,7 @@ describe('ResultSummaryTable — non-numeric fallback', () => {
     render(<ResultSummaryTable results={rows} />)
 
     const cell = screen.getByText('Slightly elevated')
-    expect(cell).toHaveClass('text-amber-700')
+    expect(cell).toHaveClass('text-warning')
   })
 
   it('returns null when results array is empty', () => {

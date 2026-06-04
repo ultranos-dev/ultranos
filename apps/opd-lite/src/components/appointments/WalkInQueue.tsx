@@ -19,10 +19,10 @@ function minutesElapsed(isoTimestamp: string): number {
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
   booked: 'bg-blue-100 text-blue-800',
-  arrived: 'bg-amber-100 text-amber-800',
+  arrived: 'bg-warning/20 text-warning',
   fulfilled: 'bg-secondary text-foreground',
-  cancelled: 'bg-red-100 text-red-800',
-  noshow: 'bg-red-100 text-red-800',
+  cancelled: 'bg-destructive/20 text-destructive',
+  noshow: 'bg-destructive/20 text-destructive',
 }
 
 export function WalkInQueue() {
@@ -113,7 +113,7 @@ export function WalkInQueue() {
                 value="urgent"
                 checked={walkInType === 'urgent'}
                 onChange={() => setWalkInType('urgent')}
-                className="text-red-600"
+                className="text-destructive"
               />
               {t('urgent')}
             </label>
@@ -167,7 +167,7 @@ export function WalkInQueue() {
 
                   <div className="flex items-center gap-2">
                     {isUrgent && (
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+                      <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive">
                         {t('urgent')}
                       </span>
                     )}

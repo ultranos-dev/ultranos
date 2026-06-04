@@ -17,9 +17,9 @@ interface CandidateComparisonCardProps {
 }
 
 function getScoreBadgeClasses(score: number): string {
-  if (score >= 90) return 'bg-red-100 text-red-800 border-red-300'
-  if (score >= 60) return 'bg-amber-100 text-amber-800 border-amber-300'
-  return 'bg-green-100 text-green-800 border-green-300'
+  if (score >= 90) return 'bg-destructive/20 text-destructive border-destructive/30'
+  if (score >= 60) return 'bg-warning/20 text-warning border-warning/30'
+  return 'bg-success/20 text-success border-success/30'
 }
 
 function getScoreLabel(score: number): 'high' | 'medium' | 'low' {

@@ -130,7 +130,7 @@ export function UserDropdown() {
                 variant="ghost"
                 role="menuitem"
                 onClick={handleLogout}
-                className="w-full justify-start px-4 py-2 text-red-600 hover:bg-muted"
+                className="w-full justify-start px-4 py-2 text-destructive hover:bg-muted"
                 data-testid="logout-btn"
               >
                 Logout

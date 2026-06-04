@@ -34,9 +34,9 @@ const STATUS_OPTIONS: { value: ClinicalStatus; label: string }[] = [
 ]
 
 const STATUS_BADGE_CLASSES: Record<ClinicalStatus, string> = {
-  active: 'bg-red-100 text-red-700',
+  active: 'bg-destructive/20 text-destructive',
   inactive: 'bg-muted text-muted-foreground',
-  resolved: 'bg-green-100 text-green-700',
+  resolved: 'bg-success/20 text-success',
 }
 
 export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
@@ -251,7 +251,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
         </div>
 
         {error && (
-          <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>
+          <p className="text-sm font-semibold text-destructive" role="alert">{error}</p>
         )}
 
         <Button

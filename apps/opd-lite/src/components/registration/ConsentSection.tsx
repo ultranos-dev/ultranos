@@ -58,7 +58,7 @@ export function ConsentSection({
             className="mb-2 text-sm font-semibold text-foreground"
           >
             {t('consentMethod')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </p>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
@@ -94,7 +94,7 @@ export function ConsentSection({
           </div>
 
           {errors?.method && (
-            <p className="mt-1 text-sm text-red-600" role="alert">
+            <p className="mt-1 text-sm text-destructive" role="alert">
               {errors.method}
             </p>
           )}
@@ -108,7 +108,7 @@ export function ConsentSection({
               className="mb-1 block text-sm font-semibold text-foreground"
             >
               {t('consentWitness')}
-              <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+              <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
             </label>
             <input
               id="consent-witness"
@@ -119,7 +119,7 @@ export function ConsentSection({
               aria-describedby={errors?.witnessedBy ? 'consent-witness-error' : undefined}
               className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors?.witnessedBy
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
                   : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
               }`}
               placeholder={t('consentWitnessPlaceholder')}
@@ -127,7 +127,7 @@ export function ConsentSection({
               onChange={(e) => onWitnessedByChange(e.target.value)}
             />
             {errors?.witnessedBy && (
-              <p id="consent-witness-error" className="mt-1 text-sm text-red-600" role="alert">
+              <p id="consent-witness-error" className="mt-1 text-sm text-destructive" role="alert">
                 {errors.witnessedBy}
               </p>
             )}
@@ -141,7 +141,7 @@ export function ConsentSection({
             className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('consentLanguage')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </label>
           <select
             id="consent-language"
@@ -150,7 +150,7 @@ export function ConsentSection({
             aria-invalid={!!errors?.language}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.language
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
           >
@@ -161,7 +161,7 @@ export function ConsentSection({
             ))}
           </select>
           {errors?.language && (
-            <p className="mt-1 text-sm text-red-600" role="alert">
+            <p className="mt-1 text-sm text-destructive" role="alert">
               {errors.language}
             </p>
           )}

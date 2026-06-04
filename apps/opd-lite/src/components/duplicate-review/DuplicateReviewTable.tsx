@@ -133,7 +133,7 @@ export function DuplicateReviewTable() {
 
   if (error && rows.length === 0) {
     return (
-      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         {error}
       </div>
     )
@@ -150,7 +150,7 @@ export function DuplicateReviewTable() {
   return (
     <div>
       {error && (
-        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div role="alert" className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -220,7 +220,7 @@ function TableRow({
   t,
 }: TableRowProps) {
   const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
-    PENDING: { label: t('decisionPending'), classes: 'bg-amber-100 text-amber-800' },
+    PENDING: { label: t('decisionPending'), classes: 'bg-warning/20 text-warning' },
     DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
     FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-blue-100 text-blue-800' },
   }

@@ -112,28 +112,28 @@ export function MpiResultModal({
       {/* Modal panel */}
       <div
         className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-background shadow-2xl ${
-          isBlock ? 'border-red-400' : 'border-amber-400'
+          isBlock ? 'border-destructive' : 'border-warning'
         }`}
       >
         {/* Header */}
         <div
           className={`rounded-t-xl border-b px-6 py-4 ${
             isBlock
-              ? 'border-red-200 bg-red-50'
-              : 'border-amber-200 bg-amber-50'
+              ? 'border-destructive/20 bg-destructive/10'
+              : 'border-warning/20 bg-warning/10'
           }`}
         >
           <h2
             id="mpi-result-title"
             className={`text-xl font-black ${
-              isBlock ? 'text-red-800' : 'text-amber-800'
+              isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockTitle') : t('mpiWarnTitle')}
           </h2>
           <p
             className={`mt-1 text-sm font-semibold ${
-              isBlock ? 'text-red-600' : 'text-amber-600'
+              isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockDescription') : t('mpiWarnDescription')}
@@ -154,8 +154,8 @@ export function MpiResultModal({
                 <li
                   key={candidate.id}
                   className={`rounded-lg border overflow-hidden transition-colors ${
-                    isBlock ? 'border-red-200' : 'border-amber-200'
-                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-background'}`}
+                    isBlock ? 'border-destructive/20' : 'border-warning/20'
+                  } ${isExpanded ? (isBlock ? 'bg-destructive/10' : 'bg-warning/10/50') : 'bg-background'}`}
                 >
                   {/* Collapsible header — always visible */}
                   <Button
@@ -183,9 +183,9 @@ export function MpiResultModal({
                     <span
                       className={`shrink-0 inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
                         candidate.mpiScore >= 80
-                          ? 'bg-red-100 text-red-800'
+                          ? 'bg-destructive/20 text-destructive'
                           : candidate.mpiScore >= 60
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-warning/20 text-warning'
                             : 'bg-muted text-foreground'
                       }`}
                     >

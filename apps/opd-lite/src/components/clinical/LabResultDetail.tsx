@@ -278,7 +278,7 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
       )}
 
       {acknowledged && (
-        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-green-700">
+        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-success">
           <Check className="h-5 w-5" />
           Result Acknowledged
         </div>

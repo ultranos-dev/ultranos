@@ -182,7 +182,7 @@ export function MfaManagementCard() {
       <h2 className="mb-4 text-sm font-semibold text-foreground">MFA Management</h2>
 
       {!isOnline && (
-        <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
+        <p className="mb-3 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
           MFA management requires an active connection. You are currently offline.
         </p>
       )}
@@ -194,11 +194,11 @@ export function MfaManagementCard() {
           <div className="flex items-center gap-2">
             <p className="text-xs font-medium text-muted-foreground">TOTP Status</p>
             {isEnrolled ? (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-medium text-success">
                 Enrolled
               </span>
             ) : (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+              <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
                 Not Enrolled
               </span>
             )}
@@ -266,7 +266,7 @@ export function MfaManagementCard() {
           )}
 
           {error && (
-            <p className="text-xs text-red-600">{error}</p>
+            <p className="text-xs text-destructive">{error}</p>
           )}
         </div>
       )}

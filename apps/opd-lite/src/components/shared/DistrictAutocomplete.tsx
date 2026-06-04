@@ -140,7 +140,7 @@ export function DistrictAutocomplete({
         className="mb-1 block text-sm font-semibold text-foreground"
       >
         {label}
-        {required && <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>}
+        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
       </label>
 
       <div className="relative">
@@ -189,7 +189,7 @@ export function DistrictAutocomplete({
               disabled
                 ? 'cursor-not-allowed border-neutral-200 bg-muted text-muted-foreground'
                 : error
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
                   : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={disabled ? '' : placeholder}
@@ -251,7 +251,7 @@ export function DistrictAutocomplete({
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

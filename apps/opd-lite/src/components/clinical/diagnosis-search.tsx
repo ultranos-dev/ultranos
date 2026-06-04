@@ -42,7 +42,7 @@ function highlightMatches(
       parts.push(text.slice(lastIndex, clampedStart))
     }
     parts.push(
-      <mark key={start} className="bg-amber-200 text-foreground rounded-sm px-0.5">
+      <mark key={start} className="bg-warning/30 text-foreground rounded-sm px-0.5">
         {text.slice(clampedStart, end + 1)}
       </mark>,
     )

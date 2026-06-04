@@ -59,7 +59,7 @@ export function DuplicateReviewsCard() {
           {count ?? '\u2014'}
         </p>
         {count !== null && count > 0 && (
-          <span className="inline-flex items-center rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">
+          <span className="inline-flex items-center rounded-full bg-warning px-2 py-0.5 text-xs font-bold text-white">
             {count}
           </span>
         )}
@@ -67,7 +67,7 @@ export function DuplicateReviewsCard() {
       {count !== null && count > 0 && (
         <Link
           href="/duplicate-review"
-          className="mt-2 inline-block min-h-[44px] text-sm font-semibold text-amber-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+          className="mt-2 inline-block min-h-[44px] text-sm font-semibold text-warning hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning"
         >
           {t('reviewNow')}
         </Link>

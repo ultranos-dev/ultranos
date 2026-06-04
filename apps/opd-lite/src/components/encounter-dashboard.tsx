@@ -784,7 +784,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
                         variant="ghost"
                         type="button"
                         onClick={() => handleRemovePrescription(rx.id)}
-                        className="!text-red-500"
+                        className="!text-destructive"
                         aria-label={`Cancel prescription for ${rx.medicationCodeableConcept.text}`}
                       >
                         Cancel

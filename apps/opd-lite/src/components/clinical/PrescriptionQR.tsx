@@ -54,7 +54,7 @@ export function PrescriptionQR({
 
     return (
       <div className="flex flex-col items-center gap-6 py-6">
-        <h3 className="text-xl font-bold text-green-700">
+        <h3 className="text-xl font-bold text-success">
           Prescription Finalized
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -89,10 +89,10 @@ export function PrescriptionQR({
     <div className="flex flex-col items-center gap-4 py-4">
       {error && (
         <div
-          className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-3"
+          className="w-full rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
           role="alert"
         >
-          <p className="text-sm font-semibold text-red-800">{error}</p>
+          <p className="text-sm font-semibold text-destructive">{error}</p>
         </div>
       )}
       <Button

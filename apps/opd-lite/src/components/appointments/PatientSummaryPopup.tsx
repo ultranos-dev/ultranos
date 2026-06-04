@@ -88,7 +88,7 @@ export function PatientSummaryPopup({
             <span
               className={`font-semibold ${
                 allergyStatus === 'present'
-                  ? 'text-red-600'
+                  ? 'text-destructive'
                   : 'text-foreground'
               }`}
             >

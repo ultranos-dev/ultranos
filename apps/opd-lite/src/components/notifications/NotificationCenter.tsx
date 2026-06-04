@@ -89,7 +89,7 @@ function getDeepLink(notification: NotificationItem): string | null {
 function TypeIcon({ type, id }: { type: string; id: string }) {
   const category = getIconCategory(type)
   if (category === 'lab') return <Beaker data-testid={`icon-lab-${id}`} className="h-5 w-5 text-blue-600" />
-  if (category === 'rx') return <Check data-testid={`icon-rx-${id}`} className="h-5 w-5 text-green-600" />
+  if (category === 'rx') return <Check data-testid={`icon-rx-${id}`} className="h-5 w-5 text-success" />
   return <Settings data-testid={`icon-system-${id}`} className="h-5 w-5 text-muted-foreground" />
 }
 
@@ -178,7 +178,7 @@ export function NotificationCenter() {
 
       {/* Error state */}
       {error && (
-        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-xl bg-warning/10 px-4 py-3 text-sm text-warning">
           Notifications unavailable offline. Please check your connection.
         </div>
       )}
@@ -245,7 +245,7 @@ function NotificationRow({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium ${isEscalation ? 'text-red-700' : 'text-foreground'}`}>
+          <p className={`text-sm font-medium ${isEscalation ? 'text-destructive' : 'text-foreground'}`}>
             {notificationLabel(notification.type)}
           </p>
           {isUnread && (

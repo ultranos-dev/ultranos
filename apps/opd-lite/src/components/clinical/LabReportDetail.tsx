@@ -62,11 +62,11 @@ function statusLabel(status: string): string {
 function flagBadge(flag?: string) {
   switch (flag) {
     case 'critical':
-      return <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">Critical</span>
+      return <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">Critical</span>
     case 'abnormal':
-      return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">Abnormal</span>
+      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Abnormal</span>
     default:
-      return <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">Normal</span>
+      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">Normal</span>
   }
 }
 
@@ -316,7 +316,7 @@ export function LabReportDetail({ report, notification: notificationProp, onBack
       )}
 
       {acknowledged && (
-        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-green-700">
+        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-success">
           <Check className="h-5 w-5" />
           Result Acknowledged
         </div>

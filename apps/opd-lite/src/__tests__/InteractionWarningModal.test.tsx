@@ -149,7 +149,7 @@ describe('InteractionWarningModal', () => {
       />,
     )
     const heading = screen.getByText(/Contraindication Detected/i)
-    expect(heading.className).toMatch(/red|danger/i)
+    expect(heading.className).toMatch(/destructive|danger/i)
   })
 
   it('has role=dialog for accessibility', () => {

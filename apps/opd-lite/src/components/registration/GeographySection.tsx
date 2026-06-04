@@ -52,7 +52,7 @@ export function GeographySection({
       <div className="mb-6">
         <h3 className="text-sm font-bold text-foreground mb-3">
           {t('addressOrigin')}
-          <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+          <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
         </h3>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

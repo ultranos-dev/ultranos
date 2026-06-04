@@ -19,14 +19,14 @@ export function MpiWarnBanner({ mpiScore, patientId }: MpiWarnBannerProps) {
   return (
     <div
       role="alert"
-      className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+      className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
     >
       {t.rich('warnBanner', {
         score: mpiScore,
         link: (chunks) => (
           <Link
             href={`/duplicate-review?patient=${patientId}`}
-            className="font-medium underline hover:text-amber-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+            className="font-medium underline hover:text-warning focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning"
           >
             {chunks}
           </Link>

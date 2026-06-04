@@ -151,7 +151,7 @@ export function ActiveMedicationsList({
                 <p className="text-sm font-medium text-foreground truncate">
                   {med.drugName}
                   {med.hasOverride && (
-                    <span className="ms-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                    <span className="ms-2 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">
                       Override
                     </span>
                   )}

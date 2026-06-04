@@ -177,8 +177,8 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
   if (!remoteData) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <p className="text-sm text-amber-800">
+      <div className="rounded-lg border border-warning/20 bg-warning/10 p-4">
+        <p className="text-sm text-warning">
           Remote version data is not available for this conflict.
           The conflict may need to be retried via sync.
         </p>
@@ -190,11 +190,11 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
     <div data-testid="conflict-diff-view">
       {/* Tier 1 safety warning */}
       {isTier1 && (
-        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3" role="alert">
-          <p className="text-xs font-bold text-amber-800">
+        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
+          <p className="text-xs font-bold text-warning">
             Safety-Critical Resource — &quot;Keep Both&quot; is recommended (append-only merge)
           </p>
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-warning">
             &quot;Prefer Local&quot; or &quot;Prefer Remote&quot; will discard one version. Use with caution.
           </p>
         </div>
@@ -255,7 +255,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
             data-testid="resolve-keep-both"
           >
             {isTier1 && (
-              <span className="text-xs font-bold text-green-600">Recommended</span>
+              <span className="text-xs font-bold text-success">Recommended</span>
             )}
             Keep Both
           </Button>
@@ -289,15 +289,15 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
       {/* Confirmation dialog for Tier 1 destructive actions */}
       {confirmAction && (
         <div
-          className="mt-3 rounded-lg border-2 border-red-300 bg-red-50 p-4"
+          className="mt-3 rounded-lg border-2 border-destructive/30 bg-destructive/10 p-4"
           role="alertdialog"
           aria-label="Confirm destructive resolution"
           data-testid="confirm-destructive-dialog"
         >
-          <p className="text-sm font-bold text-red-800">
+          <p className="text-sm font-bold text-destructive">
             Confirm: {confirmAction === 'prefer-local' ? 'Discard Remote' : 'Discard Local'} Version
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-destructive">
             You are about to permanently discard one version of a safety-critical record.
             This action cannot be undone. CLAUDE.md recommends &quot;Keep Both&quot; for Tier 1 resources.
           </p>
@@ -324,7 +324,7 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
       )}
 
       {error && (
-        <p className="mt-2 text-sm font-semibold text-red-600" role="alert">
+        <p className="mt-2 text-sm font-semibold text-destructive" role="alert">
           {error}
         </p>
       )}

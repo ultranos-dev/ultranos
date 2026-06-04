@@ -36,8 +36,8 @@ interface PatientResultTimelineProps {
 
 function flagBorderClass(flag?: string): string {
   switch (flag) {
-    case 'critical': return 'border-s-4 border-s-red-500 bg-red-50'
-    case 'abnormal': return 'border-s-4 border-s-amber-400 bg-amber-50'
+    case 'critical': return 'border-s-4 border-s-red-500 bg-destructive/10'
+    case 'abnormal': return 'border-s-4 border-s-amber-400 bg-warning/10'
     default: return 'border-s border-s-neutral-200'
   }
 }
@@ -45,11 +45,11 @@ function flagBorderClass(flag?: string): string {
 function flagDot(flag?: string) {
   switch (flag) {
     case 'critical':
-      return <AlertCircle className="h-4 w-4 shrink-0 text-red-600" aria-hidden />
+      return <AlertCircle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
     case 'abnormal':
-      return <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+      return <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden />
     default:
-      return <CircleCheck className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
+      return <CircleCheck className="h-4 w-4 shrink-0 text-success" aria-hidden />
   }
 }
 
@@ -64,9 +64,9 @@ function flagLabel(flag?: string): string {
 function statusBadge(status: string) {
   switch (status) {
     case 'preliminary':
-      return <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">Preliminary</span>
+      return <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Preliminary</span>
     case 'final':
-      return <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">Final</span>
+      return <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">Final</span>
     case 'amended':
     case 'corrected':
       return <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">{status.charAt(0).toUpperCase() + status.slice(1)}</span>
@@ -132,10 +132,10 @@ function GroupCard({
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-foreground text-sm">{group.category}</span>
             {group.hasCritical && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">Critical</span>
+              <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-bold text-destructive">Critical</span>
             )}
             {!group.hasCritical && group.hasAbnormal && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">Abnormal</span>
+              <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">Abnormal</span>
             )}
             {statusBadge(group.latestResult.status)}
           </div>
@@ -191,9 +191,9 @@ function GroupCard({
                   type="button"
                   className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-start text-sm hover:bg-muted transition-colors ${
                     flag === 'critical'
-                      ? 'border-red-200 bg-red-50/50'
+                      ? 'border-destructive/20 bg-destructive/10'
                       : flag === 'abnormal'
-                      ? 'border-amber-200 bg-amber-50/50'
+                      ? 'border-warning/20 bg-warning/10/50'
                       : 'border-neutral-100 bg-background'
                   }`}
                   onClick={() => onSelectReport(report)}
@@ -322,15 +322,15 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   if (consentDenied) {
     return (
       <div
-        className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm"
+        className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm"
         data-testid="consent-denied"
       >
-        <p className="font-bold text-amber-800">
+        <p className="font-bold text-warning">
           {consentDenied === 'expired'
             ? 'Consent has expired — request renewal'
             : 'Patient consent required to view lab results'}
         </p>
-        <p className="mt-1 text-amber-700">
+        <p className="mt-1 text-warning">
           {consentDenied === 'expired'
             ? "The patient's consent to view lab results has expired. Please request a renewed consent."
             : 'The patient has not granted consent for lab data access.'}
@@ -366,35 +366,35 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
       {/* Pinned critical results — AC #5, CLAUDE.md Rule #4 precedent */}
       {pinnedCriticals.length > 0 && (
         <div
-          className="rounded-xl border-2 border-red-400 bg-red-50 p-3 space-y-2"
+          className="rounded-xl border-2 border-destructive bg-destructive/10 p-3 space-y-2"
           data-testid="pinned-criticals"
           role="alert"
           aria-label="Recent critical lab results"
         >
-          <p className="text-sm font-bold text-red-800">
+          <p className="text-sm font-bold text-destructive">
             ⚠ Recent Critical Results (last 7 days)
           </p>
           {pinnedCriticals.map((report) => (
             <button
               key={report.id}
               type="button"
-              className="flex w-full items-center gap-2 rounded-lg border border-red-200 bg-background px-3 py-2 text-start hover:bg-red-50 transition-colors"
+              className="flex w-full items-center gap-2 rounded-lg border border-destructive/20 bg-background px-3 py-2 text-start hover:bg-destructive/10 transition-colors"
               onClick={() => setSelectedReport(report)}
               data-testid={`pinned-critical-${report.id}`}
             >
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" aria-hidden />
+              <AlertCircle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-red-900">
+                <p className="text-sm font-bold text-destructive">
                   {report.code.coding?.[0]?.display ?? report.code.coding?.[0]?.code ?? 'Unknown Test'}
                 </p>
-                <p className="text-xs text-red-700">
+                <p className="text-xs text-destructive">
                   {formatDate(report.effectiveDateTime ?? report.issued)}
                   {' · '}
                   {report.performer?.[0]?.display ?? ''}
                 </p>
               </div>
               <DirectionalIcon category="navigation" aria-hidden>
-                <ChevronRight className="h-4 w-4 shrink-0 text-red-400" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-destructive" />
               </DirectionalIcon>
             </button>
           ))}

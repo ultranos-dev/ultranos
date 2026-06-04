@@ -21,9 +21,9 @@ function formatCountdown(remainingMs: number): string {
 }
 
 function countdownColor(remainingMs: number): string {
-  if (remainingMs > 5 * 60_000) return 'text-green-600'
+  if (remainingMs > 5 * 60_000) return 'text-success'
   if (remainingMs > 2 * 60_000) return 'text-yellow-600'
-  return 'text-red-600'
+  return 'text-destructive'
 }
 
 export function SessionInfoCard() {

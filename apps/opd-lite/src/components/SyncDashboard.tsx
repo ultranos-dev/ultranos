@@ -83,7 +83,7 @@ function formatTimeAgo(iso: string): string {
 function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: boolean }) {
   if (conflictFlag) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800" data-testid="badge-conflict">
+      <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning" data-testid="badge-conflict">
         <AlertTriangle className="h-3.5 w-3.5" />
         Conflict
       </span>
@@ -110,7 +110,7 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
       )
     case 'failed':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800" data-testid="badge-failed">
+        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive" data-testid="badge-failed">
           <CircleX className="h-3.5 w-3.5" />
           Failed
         </span>
@@ -340,14 +340,14 @@ export function SyncDashboard() {
             <span className="rounded-md bg-yellow-50 px-2 py-1 font-medium text-yellow-700">
               {summary.totalPending} pending
             </span>
-            <span className="rounded-md bg-red-50 px-2 py-1 font-medium text-red-700">
+            <span className="rounded-md bg-destructive/10 px-2 py-1 font-medium text-destructive">
               {summary.totalFailed} failed
             </span>
-            <span className="rounded-md bg-amber-50 px-2 py-1 font-medium text-amber-700">
+            <span className="rounded-md bg-warning/10 px-2 py-1 font-medium text-warning">
               {summary.totalConflicts} conflicts
             </span>
             {summary.lastSyncedAt && (
-              <span className="rounded-md bg-green-50 px-2 py-1 text-green-700">
+              <span className="rounded-md bg-success/10 px-2 py-1 text-success">
                 Last sync: {formatTimeAgo(summary.lastSyncedAt)}
               </span>
             )}
@@ -359,7 +359,7 @@ export function SyncDashboard() {
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    syncPhase === 'Sync complete' ? 'w-full bg-green-500' : 'bg-blue-500 animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                    syncPhase === 'Sync complete' ? 'w-full bg-success' : 'bg-blue-500 animate-[syncProgress_1.5s_ease-in-out_infinite]'
                   }`}
                   style={syncPhase !== 'Sync complete' ? { width: '70%' } : undefined}
                 />
@@ -439,7 +439,7 @@ export function SyncDashboard() {
                       </div>
                       {/* Failure reason (AC: 4) */}
                       {item.status === 'failed' && (
-                        <p className="mt-1 text-xs text-red-600" data-testid="failure-reason">
+                        <p className="mt-1 text-xs text-destructive" data-testid="failure-reason">
                           {safeFailureReason(item)}
                         </p>
                       )}
@@ -466,14 +466,14 @@ export function SyncDashboard() {
                         return route ? (
                           <a
                             href={route}
-                            className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
+                            className="rounded-md bg-warning/10 px-2 py-1 text-xs font-medium text-warning hover:bg-warning/20"
                             data-testid="resolve-conflict-link"
                           >
                             Resolve
                           </a>
                         ) : (
                           <span
-                            className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-600"
+                            className="rounded-md bg-warning/10 px-2 py-1 text-xs text-warning"
                             data-testid="resolve-conflict-link"
                           >
                             Resolve in clinical view

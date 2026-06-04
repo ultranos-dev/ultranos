@@ -5,16 +5,16 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
   data-testid="conflict-diff-view"
 >
   <div
-    class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+    class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
     role="alert"
   >
     <p
-      class="text-xs font-bold text-amber-800"
+      class="text-xs font-bold text-warning"
     >
       Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
     </p>
     <p
-      class="text-xs text-amber-700"
+      class="text-xs text-warning"
     >
       "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
     </p>
@@ -339,7 +339,7 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       type="button"
     >
       <span
-        class="text-xs font-bold text-green-600"
+        class="text-xs font-bold text-success"
       >
         Recommended
       </span>
@@ -371,16 +371,16 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
     data-testid="conflict-diff-view"
   >
     <div
-      class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+      class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
       role="alert"
     >
       <p
-        class="text-xs font-bold text-amber-800"
+        class="text-xs font-bold text-warning"
       >
         Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
       </p>
       <p
-        class="text-xs text-amber-700"
+        class="text-xs text-warning"
       >
         "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
       </p>
@@ -705,7 +705,7 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         type="button"
       >
         <span
-          class="text-xs font-bold text-green-600"
+          class="text-xs font-bold text-success"
         >
           Recommended
         </span>

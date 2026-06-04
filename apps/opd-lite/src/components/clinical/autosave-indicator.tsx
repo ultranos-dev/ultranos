@@ -39,8 +39,8 @@ export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
       )}
       {status === 'error' && (
         <span className="flex items-center gap-2">
-          <Cloud className="h-4 w-4 text-red-500" aria-hidden="true" />
-          <span className="font-semibold text-red-600">Save failed — changes may not be persisted</span>
+          <Cloud className="h-4 w-4 text-destructive" aria-hidden="true" />
+          <span className="font-semibold text-destructive">Save failed — changes may not be persisted</span>
         </span>
       )}
     </div>

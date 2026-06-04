@@ -312,7 +312,7 @@ export function BookingModal({
 
         {/* Safety Rule 4: Allergy banner at highest prominence */}
         {hasAllergies && (
-          <div className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
             ⚠ Allergies present — review before booking
           </div>
         )}
@@ -330,12 +330,12 @@ export function BookingModal({
               placeholder={t('selectPatient')}
               className={`w-full rounded-xl border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 ${
                 selectedPatient
-                  ? 'border-green-400 bg-green-50'
+                  ? 'border-success bg-success/10'
                   : 'border-neutral-300'
               }`}
             />
             {selectedPatient && (
-              <span className="absolute end-3 top-[2.1rem] text-xs text-green-600">
+              <span className="absolute end-3 top-[2.1rem] text-xs text-success">
                 {selectedPatient.gender ?? ''} &middot; {selectedPatient.birthDate ? `${new Date().getFullYear() - new Date(selectedPatient.birthDate).getFullYear()}y` : ''}
               </span>
             )}
@@ -410,7 +410,7 @@ export function BookingModal({
                         ? 'bg-muted text-muted-foreground cursor-not-allowed'
                         : isSelected
                           ? 'bg-primary-600 text-white'
-                          : 'bg-green-50 text-green-800 hover:bg-green-100 border border-green-200'
+                          : 'bg-success/10 text-success hover:bg-success/20 border border-success/20'
                     }`}
                   >
                     {time}
@@ -460,7 +460,7 @@ export function BookingModal({
 
           {/* Error message */}
           {error && (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-medium text-destructive">
               {error}
             </div>
           )}

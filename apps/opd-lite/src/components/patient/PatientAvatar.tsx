@@ -270,7 +270,7 @@ export function PatientAvatar({
 
       {/* Error text below avatar */}
       {error && (
-        <p className="mt-1 max-w-[200px] text-center text-xs text-red-600">
+        <p className="mt-1 max-w-[200px] text-center text-xs text-destructive">
           {error}
         </p>
       )}

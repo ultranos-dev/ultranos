@@ -29,7 +29,7 @@ export function ConsentExpiryBanner({ patientId, expiryDate }: ConsentExpiryBann
     <>
       <div
         role="alert"
-        className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+        className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
       >
         <div className="flex items-center justify-between gap-3">
           <p>

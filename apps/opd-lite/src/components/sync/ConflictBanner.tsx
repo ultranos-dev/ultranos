@@ -55,24 +55,24 @@ export function ConflictBanner({ patientId }: ConflictBannerProps) {
 
   return (
     <div
-      className="mb-4 rounded-lg border-2 border-red-500 bg-red-50 p-4"
+      className="mb-4 rounded-lg border-2 border-destructive bg-destructive/10 p-4"
       role="alert"
       aria-live="assertive"
       data-testid="conflict-banner"
     >
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden="true" />
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
         <div className="flex-1">
-          <p className="text-sm font-bold text-red-800">
+          <p className="text-sm font-bold text-destructive">
             {tier1Count} unresolved safety-critical conflict{tier1Count !== 1 ? 's' : ''} — prescription generation blocked
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-destructive">
             Allergies, medications, or diagnoses have conflicting versions from another device.
             Resolve before prescribing.
           </p>
           <Link
             href="/conflicts"
-            className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-red-700 underline hover:text-red-900"
+            className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-destructive underline hover:text-destructive"
           >
             Review Conflicts
             <DirectionalIcon category="navigation" aria-hidden={true}>

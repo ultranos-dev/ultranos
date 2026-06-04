@@ -109,7 +109,7 @@ export function PatientDetailsAccordion({
           </dl>
 
           {ext.isNomadic && (
-            <span className="mt-2 inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+            <span className="mt-2 inline-block rounded-full bg-warning/20 px-2.5 py-0.5 text-xs font-semibold text-warning">
               Nomadic
             </span>
           )}
@@ -181,7 +181,7 @@ export function PatientDetailsAccordion({
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.isActive
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-success/20 text-success'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -197,7 +197,7 @@ export function PatientDetailsAccordion({
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.biometricFingerprintHash
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-success/20 text-success'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >

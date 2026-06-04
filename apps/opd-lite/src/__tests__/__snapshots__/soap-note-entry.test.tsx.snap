@@ -22,7 +22,7 @@ exports[`SOAPNoteEntry component > RTL snapshot tests > matches snapshot in LTR 
           Template Assist
         </span>
         <span
-          class="text-xs text-amber-600 font-semibold"
+          class="text-xs text-warning font-semibold"
         >
           AI unavailable offline — use template macros
         </span>
@@ -130,7 +130,7 @@ exports[`SOAPNoteEntry component > RTL snapshot tests > matches snapshot in RTL 
           Template Assist
         </span>
         <span
-          class="text-xs text-amber-600 font-semibold"
+          class="text-xs text-warning font-semibold"
         >
           AI unavailable offline — use template macros
         </span>

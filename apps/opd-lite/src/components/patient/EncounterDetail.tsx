@@ -142,14 +142,14 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
       {/* Allergy snapshot at time of visit */}
       {data.allergiesAtVisit.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-red-700">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-destructive">
             Allergies at Time of Visit
           </h4>
           <div className="mt-1 flex flex-wrap gap-1">
             {data.allergiesAtVisit.map((a) => (
               <span
                 key={a.id}
-                className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700"
+                className="inline-flex rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive"
                 dir="auto"
               >
                 {a._ultranos?.substanceFreeText || a.code?.text || 'Unknown'}
@@ -204,7 +204,7 @@ export function EncounterDetail({ encounterId, encounterDate, patientId }: Encou
                   )}
                   {entry.source === 'AI_CONFIRMED' && (
                     <span
-                      className="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700"
+                      className="inline-flex rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success"
                       title={entry.confirmedBy ? `Confirmed by: ${entry.confirmedBy}${entry.confirmedAt ? ` at ${new Date(entry.confirmedAt).toLocaleString()}` : ''}` : undefined}
                     >
                       AI Confirmed

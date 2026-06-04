@@ -179,12 +179,12 @@ export function SOAPNoteEntry({
         )}
 
         {aiDiff.error && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3" role="alert">
-            <p className="text-sm font-semibold text-amber-800">AI unavailable: {aiDiff.error}</p>
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
+            <p className="text-sm font-semibold text-warning">AI unavailable: {aiDiff.error}</p>
             <Button
               variant="ghost"
               onClick={discardAIDiff}
-              className="mt-2 text-sm text-amber-700 underline"
+              className="mt-2 text-sm text-warning underline"
             >
               Return to manual editing
             </Button>
@@ -205,19 +205,19 @@ export function SOAPNoteEntry({
 
               {/* Right: AI-parsed (editable) */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-green-700">AI Parsed (Editable)</h4>
+                <h4 className="mb-2 text-xs font-bold uppercase text-success">AI Parsed (Editable)</h4>
                 <div className="space-y-3">
                   {(['Subjective', 'Objective', 'Assessment', 'Plan'] as const).map((section) => {
                     const field = `ai${section}` as 'aiSubjective' | 'aiObjective' | 'aiAssessment' | 'aiPlan'
                     return (
                       <div key={section}>
-                        <label className="mb-1 block text-xs font-semibold text-green-800">{section}</label>
+                        <label className="mb-1 block text-xs font-semibold text-success">{section}</label>
                         <textarea
                           value={aiDiff[field]}
                           onChange={(e) => updateAIDiffField(field, e.target.value)}
                           rows={3}
                           dir="auto"
-                          className="w-full rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-foreground focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-200"
+                          className="w-full rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm text-foreground focus:border-success focus:outline-none focus:ring-2 focus:ring-success/20"
                         />
                       </div>
                     )
@@ -284,7 +284,7 @@ export function SOAPNoteEntry({
         )}
 
         {!isOnline && (
-          <span className="text-xs text-amber-600 font-semibold">
+          <span className="text-xs text-warning font-semibold">
             AI unavailable offline — use template macros
           </span>
         )}

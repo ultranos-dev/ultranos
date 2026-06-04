@@ -63,13 +63,13 @@ export function SyncPulse() {
   let ariaStatus: string
 
   if (hasErrors) {
-    pulseColor = 'bg-red-500'
+    pulseColor = 'bg-destructive'
     ariaStatus = `Sync errors: ${failedCount} failed, ${conflictCount} conflicts`
   } else if (hasPending) {
     pulseColor = 'bg-yellow-500'
     ariaStatus = `${pendingCount} items pending sync`
   } else {
-    pulseColor = 'bg-green-500'
+    pulseColor = 'bg-success'
     ariaStatus = 'All synced'
   }
 

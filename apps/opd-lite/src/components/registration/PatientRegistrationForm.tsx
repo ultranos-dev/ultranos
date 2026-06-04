@@ -519,7 +519,7 @@ export function PatientRegistrationForm({
                 className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('gender')}
-                <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+                <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
               </label>
               <select
                 id="gender"
@@ -530,7 +530,7 @@ export function PatientRegistrationForm({
                 aria-invalid={!!fieldErrors.gender}
                 className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
-                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                    ? 'border-destructive focus:border-destructive focus:ring-destructive'
                     : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
                 }`}
               >
@@ -541,7 +541,7 @@ export function PatientRegistrationForm({
                 <option value={AdministrativeGender.UNKNOWN}>{t('genderUnknown')}</option>
               </select>
               {fieldErrors.gender && (
-                <p className="mt-1 text-sm text-red-600" role="alert">
+                <p className="mt-1 text-sm text-destructive" role="alert">
                   {fieldErrors.gender}
                 </p>
               )}
@@ -572,7 +572,7 @@ export function PatientRegistrationForm({
                     className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthYear')}
-                    <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+                    <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="birth-year"
@@ -583,7 +583,7 @@ export function PatientRegistrationForm({
                     aria-invalid={!!fieldErrors.birthYear}
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthYear
-                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                        ? 'border-destructive focus:border-destructive focus:ring-destructive'
                         : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
                     }`}
                     placeholder={t('birthYearPlaceholder')}
@@ -591,7 +591,7 @@ export function PatientRegistrationForm({
                     onChange={(e) => setBirthYear(e.target.value)}
                   />
                   {fieldErrors.birthYear && (
-                    <p className="mt-1 text-sm text-red-600" role="alert">
+                    <p className="mt-1 text-sm text-destructive" role="alert">
                       {fieldErrors.birthYear}
                     </p>
                   )}
@@ -603,7 +603,7 @@ export function PatientRegistrationForm({
                     className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthDate')}
-                    <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+                    <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="birth-date"
@@ -611,14 +611,14 @@ export function PatientRegistrationForm({
                     aria-invalid={!!fieldErrors.birthDate}
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthDate
-                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                        ? 'border-destructive focus:border-destructive focus:ring-destructive'
                         : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
                     }`}
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
                   />
                   {fieldErrors.birthDate && (
-                    <p className="mt-1 text-sm text-red-600" role="alert">
+                    <p className="mt-1 text-sm text-destructive" role="alert">
                       {fieldErrors.birthDate}
                     </p>
                   )}
@@ -743,7 +743,7 @@ export function PatientRegistrationForm({
         {/* Submit error */}
         {submitError && (
           <div
-            className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
             role="alert"
           >
             {submitError}

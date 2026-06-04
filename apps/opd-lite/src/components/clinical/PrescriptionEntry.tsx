@@ -54,7 +54,7 @@ function highlightMatches(
       parts.push(text.slice(lastIndex, clampedStart))
     }
     parts.push(
-      <mark key={start} className="bg-amber-200 text-foreground rounded-sm ps-0.5 pe-0.5">
+      <mark key={start} className="bg-warning/30 text-foreground rounded-sm ps-0.5 pe-0.5">
         {text.slice(clampedStart, end + 1)}
       </mark>,
     )
@@ -384,7 +384,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
           </div>
 
           {validationError && (
-            <p className="text-sm font-semibold text-red-600" role="alert">{validationError}</p>
+            <p className="text-sm font-semibold text-destructive" role="alert">{validationError}</p>
           )}
 
           <Button

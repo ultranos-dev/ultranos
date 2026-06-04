@@ -14,19 +14,19 @@ interface InteractionWarningModalProps {
 
 const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   [DrugInteractionSeverity.CONTRAINDICATED]: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-300',
+    bg: 'bg-destructive/20',
+    text: 'text-destructive',
+    border: 'border-destructive/30',
   },
   [DrugInteractionSeverity.MAJOR]: {
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    border: 'border-red-200',
+    bg: 'bg-destructive/10',
+    text: 'text-destructive',
+    border: 'border-destructive/20',
   },
   [DrugInteractionSeverity.MODERATE]: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-800',
-    border: 'border-amber-200',
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/20',
   },
   [DrugInteractionSeverity.MINOR]: {
     bg: 'bg-yellow-50',
@@ -126,16 +126,16 @@ export function InteractionWarningModal({
         aria-hidden="true"
       />
       {/* Modal panel */}
-      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-background shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
+      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-destructive bg-background shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
         {/* Header */}
-        <div className="rounded-t-xl border-b border-red-200 bg-red-50 px-6 py-4">
+        <div className="rounded-t-xl border-b border-destructive/20 bg-destructive/10 px-6 py-4">
           <h2
             id="interaction-warning-title"
-            className="text-xl font-black text-red-800"
+            className="text-xl font-black text-destructive"
           >
             {modalTitle}
           </h2>
-          <p className="mt-1 text-sm font-semibold text-red-600">
+          <p className="mt-1 text-sm font-semibold text-destructive">
             Review the following drug interactions before proceeding.
           </p>
         </div>
@@ -179,7 +179,7 @@ export function InteractionWarningModal({
           </label>
           <textarea
             id="override-justification"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
             rows={2}
             placeholder="Enter clinical justification for overriding this warning..."
             value={justification}

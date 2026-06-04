@@ -101,9 +101,9 @@ export function ConflictList() {
 
   if (loadError) {
     return (
-      <div className="rounded-xl border border-red-300 bg-red-50 p-8 text-center" data-testid="conflict-load-error" role="alert">
-        <p className="text-sm font-semibold text-red-800">Unable to load conflict data</p>
-        <p className="mt-1 text-xs text-red-600">The conflict check could not read local data. This does not mean there are no conflicts.</p>
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center" data-testid="conflict-load-error" role="alert">
+        <p className="text-sm font-semibold text-destructive">Unable to load conflict data</p>
+        <p className="mt-1 text-xs text-destructive">The conflict check could not read local data. This does not mean there are no conflicts.</p>
       </div>
     )
   }
@@ -111,7 +111,7 @@ export function ConflictList() {
   if (conflicts.length === 0) {
     return (
       <div className="rounded-xl bg-card-bg/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-gray-400/40 text-center" data-testid="no-conflicts">
-        <CircleCheck className="mx-auto h-12 w-12 text-green-400" />
+        <CircleCheck className="mx-auto h-12 w-12 text-success" />
         <p className="mt-3 text-sm font-semibold text-foreground">No unresolved conflicts</p>
         <p className="mt-1 text-xs text-muted-foreground">All Tier 1 safety-critical data is in sync.</p>
       </div>
@@ -139,7 +139,7 @@ export function ConflictList() {
             key={entry.id}
             className={`rounded-xl border bg-background shadow-sm transition-colors ${
               overdue
-                ? 'border-red-300 bg-red-50'
+                ? 'border-destructive/30 bg-destructive/10'
                 : 'border-neutral-200'
             }`}
             data-testid="conflict-item"
@@ -160,7 +160,7 @@ export function ConflictList() {
                   <span className="text-xs text-muted-foreground">ID {shortId}</span>
                   {overdue && (
                     <span
-                      className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
+                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
                       data-testid="overdue-badge"
                     >
                       OVERDUE

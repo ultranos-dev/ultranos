@@ -345,7 +345,7 @@ describe('SyncPulse', () => {
   it('renders green pulse when all synced', () => {
     render(<SyncPulse />)
     const dot = screen.getByTestId('sync-pulse-dot')
-    expect(dot.className).toContain('bg-green-500')
+    expect(dot.className).toContain('bg-success')
   })
 
   it('renders yellow pulse when items pending', () => {
@@ -359,14 +359,14 @@ describe('SyncPulse', () => {
     useSyncStore.setState({ failedCount: 2 })
     render(<SyncPulse />)
     const dot = screen.getByTestId('sync-pulse-dot')
-    expect(dot.className).toContain('bg-red-500')
+    expect(dot.className).toContain('bg-destructive')
   })
 
   it('renders red pulse when conflicts exist', () => {
     useSyncStore.setState({ conflictCount: 1 })
     render(<SyncPulse />)
     const dot = screen.getByTestId('sync-pulse-dot')
-    expect(dot.className).toContain('bg-red-500')
+    expect(dot.className).toContain('bg-destructive')
   })
 
   it('shows badge with pending count', () => {

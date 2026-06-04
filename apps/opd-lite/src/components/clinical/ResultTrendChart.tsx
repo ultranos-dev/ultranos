@@ -248,9 +248,9 @@ export function ResultSummaryTable({
             <td
               className={`py-1 font-medium ${
                 r.flagLevel === 'critical'
-                  ? 'text-red-700'
+                  ? 'text-destructive'
                   : r.flagLevel === 'abnormal'
-                  ? 'text-amber-700'
+                  ? 'text-warning'
                   : 'text-foreground'
               }`}
             >

@@ -11,23 +11,23 @@ interface AppointmentSlotProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  free: 'bg-green-50 border-green-200 hover:bg-green-100',
+  free: 'bg-success/10 border-success/20 hover:bg-success/20',
   proposed: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
   pending: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
   booked: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
-  arrived: 'bg-amber-50 border-amber-200 hover:bg-amber-100',
+  arrived: 'bg-warning/10 border-warning/20 hover:bg-warning/20',
   fulfilled: 'bg-muted border-neutral-300',
-  cancelled: 'bg-red-50 border-red-200',
-  noshow: 'bg-red-50 border-red-200',
+  cancelled: 'bg-destructive/10 border-destructive/20',
+  noshow: 'bg-destructive/10 border-destructive/20',
   'entered-in-error': 'bg-muted border-neutral-300',
 }
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
   booked: 'bg-blue-100 text-blue-800',
-  arrived: 'bg-amber-100 text-amber-800',
+  arrived: 'bg-warning/20 text-warning',
   fulfilled: 'bg-secondary text-foreground',
-  cancelled: 'bg-red-100 text-red-800',
-  noshow: 'bg-red-100 text-red-800',
+  cancelled: 'bg-destructive/20 text-destructive',
+  noshow: 'bg-destructive/20 text-destructive',
 }
 
 const SERVICE_TYPE_BADGE_COLORS: Record<string, string> = {

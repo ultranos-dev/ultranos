@@ -83,10 +83,10 @@ function formatWeekRange(start: Date, end: Date): string {
 }
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
-  'new-consult': 'bg-green-500',
+  'new-consult': 'bg-success',
   'follow-up': 'bg-blue-500',
-  urgent: 'bg-red-500',
-  'walk-in': 'bg-amber-500',
+  urgent: 'bg-destructive',
+  'walk-in': 'bg-warning',
 }
 
 interface CellData {
