@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { TopHeader } from '@/components/TopHeader'
 import { DunningBanner } from '@/components/subscriptions/DunningBanner'
 import { SubscriptionWidget } from '@/components/dashboard/SubscriptionWidget'
@@ -31,11 +32,13 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { locationId } = useLocationFilter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [statsError, setStatsError] = useState(false)
 
   useEffect(() => {
-    trpc.admin.dashboardStats.query().then(setStats).catch(() => setStatsError(true))
+    // TODO: Pass locationId to filter by selected location once backend supports it
+    trpc.admin.dashboardStats.query().then((data) => setStats(data as DashboardStats)).catch(() => setStatsError(true))
   }, [])
 
   return (

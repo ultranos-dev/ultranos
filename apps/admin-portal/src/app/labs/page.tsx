@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,7 @@ const PAGE_SIZE = 25
 
 export default function LabsPage() {
   const router = useRouter()
+  const { locationId } = useLocationFilter()
   const [labs, setLabs] = useState<LabEntry[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
@@ -54,6 +56,7 @@ export default function LabsPage() {
     try {
       setLoading(true)
       setError(null)
+      // TODO: Pass locationId to filter by selected location once backend supports it
       const result = await trpc.admin.listLabs.query({
         status: filter,
         cursor,
@@ -61,8 +64,8 @@ export default function LabsPage() {
       })
       setLabs(result.labs)
       setTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load lab registrations')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load lab registrations')
     } finally {
       setLoading(false)
     }

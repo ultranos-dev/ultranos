@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
@@ -144,8 +145,8 @@ function ClinicalSafetySection() {
         ])
         setMetrics(metricsResult)
         setReports(reportsResult.reports)
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to load clinical safety metrics')
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load clinical safety metrics')
       } finally {
         setLoading(false)
       }
@@ -251,6 +252,7 @@ function ClinicalSafetySection() {
 
 export default function AlertsPage() {
   const router = useRouter()
+  const { locationId } = useLocationFilter()
   const [activeTab, setActiveTab] = useState<AlertTab>('anomalies')
   const [alerts, setAlerts] = useState<AlertEntry[]>([])
   const [total, setTotal] = useState(0)
@@ -263,6 +265,7 @@ export default function AlertsPage() {
     try {
       setLoading(true)
       setError(null)
+      // TODO: Pass locationId to filter by selected location once backend supports it
       const result = await trpc.admin.listAnomalyAlerts.query({
         status: filter,
         cursor,
@@ -270,8 +273,8 @@ export default function AlertsPage() {
       })
       setAlerts(result.alerts)
       setTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load anomaly alerts')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load anomaly alerts')
     } finally {
       setLoading(false)
     }

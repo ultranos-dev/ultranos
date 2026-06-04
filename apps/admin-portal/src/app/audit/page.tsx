@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
+import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { TopHeader } from '@/components/TopHeader'
 import { EventBrowser } from '@/components/audit/EventBrowser'
 import { Button } from '@/components/ui/button'
@@ -75,6 +76,7 @@ function ResultIcon({ valid }: { valid: boolean | null }) {
 const PAGE_SIZE = 30
 
 export default function AuditChainPage() {
+  const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<'integrity' | 'events'>('integrity')
   const [status, setStatus] = useState<ChainStatus | null>(null)
   const [verifications, setVerifications] = useState<Verification[]>([])
@@ -90,6 +92,7 @@ export default function AuditChainPage() {
     try {
       setLoading(true)
       setError(null)
+      // TODO: Pass locationId to filter by selected location once backend supports it
       const [statusResult, historyResult, trendResult] = await Promise.all([
         trpc.admin.getAuditChainStatus.query(),
         trpc.admin.listAuditChainVerifications.query({
@@ -108,8 +111,8 @@ export default function AuditChainPage() {
       setVerifications(historyResult.verifications)
       setTotal(historyResult.total)
       setTrendData(trendResult.verifications)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load audit chain status')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load audit chain status')
     } finally {
       setLoading(false)
     }
@@ -133,8 +136,8 @@ export default function AuditChainPage() {
       }
       // Refresh data after verification
       fetchData()
-    } catch (err: any) {
-      setFullVerifyResult(`Error: ${err?.message ?? 'Full verification failed'}`)
+    } catch (err: unknown) {
+      setFullVerifyResult(`Error: ${(err as Error)?.message ?? 'Full verification failed'}`)
     } finally {
       setFullVerifyLoading(false)
     }

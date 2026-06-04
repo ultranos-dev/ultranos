@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
+import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { TopHeader } from '@/components/TopHeader'
 import { HeatMapGrid } from '@/components/inventory/HeatMapGrid'
 import { RedistributionCard } from '@/components/inventory/RedistributionCard'
@@ -60,6 +61,7 @@ function formatDate(iso: string): string {
 const PAGE_SIZE = 25
 
 export default function InventoryPage() {
+  const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<ActiveTab>('heatmap')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -87,6 +89,7 @@ export default function InventoryPage() {
     try {
       setHeatmapLoading(true)
       setError(null)
+      // TODO: Pass locationId to filter by selected location once backend supports it
       const [overview, recs] = await Promise.all([
         trpc.admin.getInventoryOverview.query({}),
         trpc.admin.getRedistributionRecommendations.query({}),
@@ -95,8 +98,8 @@ export default function InventoryPage() {
       setReagentCategories(overview.reagentCategories)
       setCells(overview.cells as InventoryCell[])
       setRecommendations(recs.recommendations as Recommendation[])
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load inventory overview')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load inventory overview')
     } finally {
       setHeatmapLoading(false)
     }
@@ -112,8 +115,8 @@ export default function InventoryPage() {
       })
       setOrders(result.orders as PurchaseOrder[])
       setOrderTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load purchase orders')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load purchase orders')
     } finally {
       setOrdersLoading(false)
     }
@@ -122,7 +125,7 @@ export default function InventoryPage() {
   const fetchSuppliers = useCallback(async () => {
     try {
       const result = await trpc.admin.listSuppliers.query({ status: 'ACTIVE' })
-      setSuppliers(result.suppliers.map((s) => ({ id: s.id, name: s.name })))
+      setSuppliers(result.suppliers.map((s: { id: string; name: string }) => ({ id: s.id, name: s.name })))
     } catch {
       // Non-blocking
     }
@@ -147,11 +150,11 @@ export default function InventoryPage() {
       setAdvancingId(orderId)
       await trpc.admin.updateOrderStatus.mutate({
         orderId,
-        newStatus: next as any,
+        newStatus: next as 'APPROVED' | 'ORDERED' | 'SHIPPED' | 'DELIVERED',
       })
       fetchOrders()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to advance order status')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to advance order status')
     } finally {
       setAdvancingId(null)
     }
