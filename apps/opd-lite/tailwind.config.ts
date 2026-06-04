@@ -7,7 +7,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-family-sans)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-urbanist)', 'system-ui', 'sans-serif'],
       },
       fontWeight: {
         black: '900',
