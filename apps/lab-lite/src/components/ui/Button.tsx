@@ -1,61 +1,59 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import { forwardRef } from 'react'
+import type React from 'react'
+import { Button as UiButton } from '@ultranos/ui-kit/components/ui/button'
 
-type ButtonVariant =
+// Derive variant type directly from the UiButton component — no reliance on ButtonProps export
+type UiVariant = 'default' | 'secondary' | 'destructive' | 'ghost' | 'outline' | 'success' | 'link'
+
+type LabButtonVariant =
   | 'primary'
   | 'secondary'
   | 'danger'
   | 'warning'
   | 'ghost'
   | 'outline'
+  | 'brand'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant
+interface ButtonProps extends Omit<React.ComponentPropsWithRef<typeof UiButton>, 'variant'> {
+  variant?: LabButtonVariant
   fullWidth?: boolean
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-pill-green text-pill-text',
-  secondary: 'bg-neutral-200 text-neutral-700',
-  danger: 'bg-red-600 text-white',
-  warning: 'bg-amber-600 text-white',
-  ghost: 'bg-transparent text-primary-500',
-  outline: 'border border-neutral-300 bg-white text-neutral-700',
+const VARIANT_MAP: Record<LabButtonVariant, UiVariant> = {
+  primary: 'default',
+  secondary: 'secondary',
+  danger: 'destructive',
+  warning: 'outline',
+  ghost: 'ghost',
+  outline: 'outline',
+  brand: 'ghost',
+}
+
+const VARIANT_EXTRA_CLASSES: Partial<Record<LabButtonVariant, string>> = {
+  warning: 'border-amber-500 bg-amber-600 text-white hover:bg-amber-700 hover:brightness-100',
+  brand: 'bg-pill-green text-pill-text hover:bg-pill-green hover:brightness-105 hover:text-pill-text',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      fullWidth,
-      className = '',
-      children,
-      ...props
-    },
-    ref,
-  ) => {
-    const base =
-      'inline-flex items-center justify-center rounded-pill ' +
-      'px-5 py-2 text-sm font-semibold ' +
-      'transition-all duration-100 ease-out ' +
-      'hover:brightness-[1.04] active:brightness-[0.88] ' +
-      'focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 ' +
-      'disabled:opacity-50 disabled:cursor-not-allowed ' +
-      'disabled:hover:brightness-100 ' +
-      'motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100'
+  ({ variant = 'primary', fullWidth, className = '', ...props }, ref) => {
+    const uiVariant = VARIANT_MAP[variant]
+    const extraClass = VARIANT_EXTRA_CLASSES[variant] ?? ''
 
-    const classes = [
-      base,
-      variantClasses[variant],
-      fullWidth && 'w-full',
+    const computedClass = [
+      fullWidth ? 'w-full' : '',
+      extraClass,
       className,
     ]
       .filter(Boolean)
       .join(' ')
 
     return (
-      <button ref={ref} className={classes} {...props}>
-        {children}
-      </button>
+      <UiButton
+        ref={ref}
+        variant={uiVariant}
+        className={computedClass || undefined}
+        {...props}
+      />
     )
   },
 )
