@@ -182,16 +182,16 @@ export function SyncQueueDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-4">
-      <h1 className="text-lg font-semibold text-neutral-900">Sync Queue</h1>
+      <h1 className="text-lg font-semibold text-foreground">Sync Queue</h1>
 
       {totalCount === 0 && (
-        <p className="text-sm text-neutral-500">No items in the sync queue.</p>
+        <p className="text-sm text-muted-foreground">No items in the sync queue.</p>
       )}
 
       {entries.failed.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-red-700">
+            <h2 className="text-sm font-semibold text-destructive">
               Failed ({entries.failed.length})
             </h2>
             {entries.failed.length > 1 && (
@@ -222,7 +222,7 @@ export function SyncQueueDashboard() {
 
       {entries.inFlight.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-blue-700 mb-2">
+          <h2 className="text-sm font-semibold text-primary mb-2">
             In-Flight ({entries.inFlight.length})
           </h2>
           <div className="flex flex-col gap-2">
@@ -239,7 +239,7 @@ export function SyncQueueDashboard() {
 
       {entries.pending.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-amber-700 mb-2">
+          <h2 className="text-sm font-semibold text-warning mb-2">
             Pending ({entries.pending.length})
           </h2>
           <div className="flex flex-col gap-2">
@@ -252,7 +252,7 @@ export function SyncQueueDashboard() {
 
       {entries.synced.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-green-700 mb-2">
+          <h2 className="text-sm font-semibold text-success mb-2">
             Recently Synced ({entries.synced.length})
           </h2>
           <div className="flex flex-col gap-2">

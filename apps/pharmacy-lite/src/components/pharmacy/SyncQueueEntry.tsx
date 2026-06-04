@@ -57,28 +57,28 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
   return (
     <div
       data-testid={`sync-entry-${entry.id}`}
-      className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-3"
+      className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-3"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-neutral-700">
+          <span className="text-sm font-medium text-foreground">
             {entry.resourceType}
           </span>
           {entry.retryCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700">
+            <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-destructive/10 text-xs font-bold text-destructive">
               {entry.retryCount > 9 ? '9+' : entry.retryCount}
             </span>
           )}
         </div>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           {formatRelativeTime(entry.createdAt)}
         </span>
       </div>
 
-      <span className="text-xs text-neutral-500 font-mono">{patientRef}</span>
+      <span className="text-xs text-muted-foreground font-mono">{patientRef}</span>
 
       {errorMessage && (
-        <span className="text-xs text-red-600">{errorMessage}</span>
+        <span className="text-xs text-destructive">{errorMessage}</span>
       )}
 
       <div className="flex items-center gap-2 mt-1">
