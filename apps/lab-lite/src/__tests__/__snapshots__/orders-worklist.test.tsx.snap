@@ -124,7 +124,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
             >
               Ordered
                
-              149d
+              154d
             </span>
           </div>
         </div>
@@ -258,7 +258,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
             >
               Ordered
                
-              149d
+              154d
             </span>
           </div>
         </div>

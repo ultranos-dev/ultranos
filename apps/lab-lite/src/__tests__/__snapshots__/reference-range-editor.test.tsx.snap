@@ -15,7 +15,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         <h2
           class="text-base font-semibold text-neutral-900"
         >
-          Reference Ranges
+          referenceRanges
         </h2>
       </div>
       <input
@@ -724,7 +724,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         <h2
           class="text-base font-semibold text-neutral-900"
         >
-          Reference Ranges
+          referenceRanges
         </h2>
       </div>
       <input

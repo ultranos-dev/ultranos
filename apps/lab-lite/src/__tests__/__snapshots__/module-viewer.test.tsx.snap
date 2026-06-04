@@ -36,24 +36,22 @@ exports[`ModuleViewer — RTL Snapshot (Task 8) > renders correctly in LTR 1`] =
         >
           <svg
             aria-hidden="true"
+            class="lucide lucide-x"
             fill="none"
             height="18"
             stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
             width="18"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <line
-              x1="18"
-              x2="6"
-              y1="6"
-              y2="18"
+            <path
+              d="M18 6 6 18"
             />
-            <line
-              x1="6"
-              x2="18"
-              y1="6"
-              y2="18"
+            <path
+              d="m6 6 12 12"
             />
           </svg>
         </button>
@@ -138,24 +136,22 @@ exports[`ModuleViewer — RTL Snapshot (Task 8) > renders correctly in RTL 1`] =
         >
           <svg
             aria-hidden="true"
+            class="lucide lucide-x"
             fill="none"
             height="18"
             stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
             width="18"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <line
-              x1="18"
-              x2="6"
-              y1="6"
-              y2="18"
+            <path
+              d="M18 6 6 18"
             />
-            <line
-              x1="6"
-              x2="18"
-              y1="6"
-              y2="18"
+            <path
+              d="m6 6 12 12"
             />
           </svg>
         </button>
