@@ -19,6 +19,7 @@ export {
   ChevronDown,
   ChevronLeft,
   ChevronUp,
+  ChevronsUpDown,
   ArrowLeft,
   ArrowRight,
   Menu,
