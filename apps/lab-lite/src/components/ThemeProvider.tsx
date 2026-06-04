@@ -19,10 +19,15 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'light'
+    const attr = document.documentElement.getAttribute('data-theme')
+    return attr === 'dark' ? 'dark' : 'light'
+  })
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as Theme | null
+    const raw = localStorage.getItem('theme')
+    const stored: Theme | null = raw === 'dark' || raw === 'light' ? raw : null
     const resolved =
       stored ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     setTheme(resolved)
