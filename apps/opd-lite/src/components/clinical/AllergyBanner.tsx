@@ -36,7 +36,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
       <div
         className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
         role="alert"
-        aria-live="polite"
+        aria-live="assertive"
         data-testid="allergy-banner"
         data-banner-state="loading"
       >
