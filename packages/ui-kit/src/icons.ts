@@ -218,6 +218,7 @@ export {
   Mail,
   MailCheck,
   MailOpen,
+  Inbox,
 } from 'lucide-react'
 
 // ─── Media & Audio ──────────────────────────────────────────────────
