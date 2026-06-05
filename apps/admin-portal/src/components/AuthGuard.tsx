@@ -211,7 +211,7 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
         <AppSidebar />
         <SidebarInset>
           <BreadcrumbHeader />
-          <main className="flex-1">
+          <main id="main-content" className="flex flex-1 flex-col gap-4 p-4">
             {children}
           </main>
         </SidebarInset>
