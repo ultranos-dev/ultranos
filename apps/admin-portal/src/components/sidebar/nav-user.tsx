@@ -27,7 +27,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { SessionTimer } from '@/components/SessionTimer'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
