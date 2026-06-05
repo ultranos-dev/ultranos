@@ -8,7 +8,7 @@ export default function RegisterPatientPage() {
   const prefilledName = searchParams.get('nameGiven') ?? ''
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-8">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       <PatientRegistrationForm prefilledNameGiven={prefilledName} />
     </div>
   )

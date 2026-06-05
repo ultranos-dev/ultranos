@@ -10,7 +10,7 @@ export default function DataBudgetPage() {
   const t = useTranslations('dataBudget')
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       <div className="flex items-center gap-2 mb-6">
         <Link href="/settings" className="text-muted-foreground hover:text-foreground" aria-label={t('backToSettings')}>
           <DirectionalIcon category="navigation">

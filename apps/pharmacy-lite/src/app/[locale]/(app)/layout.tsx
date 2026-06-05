@@ -6,6 +6,7 @@ import {
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { SyncDashboard } from '@/components/pharmacy/SyncDashboard'
+import { InstallPrompt } from '@/components/InstallPrompt'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             Skip to content
           </a>
           <main id="main-content" className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+          <InstallPrompt />
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />
