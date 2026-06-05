@@ -9,7 +9,7 @@ import { usePatientSearch } from '@/lib/use-patient-search'
 import { SearchInput } from '@/components/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
 import Link from 'next/link'
-import { PillButton } from '@/components/pill-button'
+import { Button } from '@/components/ui/Button'
 import { TodayEncountersCard } from './TodayEncountersCard'
 import { PendingLabResultsCard } from './PendingLabResultsCard'
 import { UnresolvedConflictsCard } from './UnresolvedConflictsCard'
@@ -53,25 +53,25 @@ export function ClinicalDashboard() {
   const displayRole = formatRole(session?.role ?? '')
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-8 py-6">
       {/* Welcome message */}
       <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {t('welcome', { name: displayName })}
         </h1>
-        <p className="mt-1 text-sm font-semibold text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           {displayRole}
         </p>
       </div>
 
       {/* Primary CTAs */}
       <div className="mb-8 flex items-center gap-3">
-        <PillButton onClick={handleStartEncounter}>
+        <Button variant="primary" onClick={handleStartEncounter}>
           {t('startEncounter')}
-        </PillButton>
+        </Button>
         <Link
           href="/register-patient"
-          className="inline-flex items-center gap-2 rounded-pill bg-pill-green px-5 py-2 text-sm font-semibold text-pill-text transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           {t('registerNew')}
         </Link>
@@ -104,6 +104,6 @@ export function ClinicalDashboard() {
       <section>
         <RecentEncountersList />
       </section>
-    </main>
+    </div>
   )
 }
