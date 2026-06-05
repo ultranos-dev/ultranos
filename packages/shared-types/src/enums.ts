@@ -92,6 +92,8 @@ export enum AuditResourceType {
   DATA_BUDGET = 'DATA_BUDGET',
   REFERENCE_RANGE = 'REFERENCE_RANGE',
   PAYMENT = 'PAYMENT',
+  // Story 51.1 — Shift Handover Protocol
+  SHIFT_HANDOVER = 'SHIFT_HANDOVER',
 }
 
 export enum AuditOutcome {
