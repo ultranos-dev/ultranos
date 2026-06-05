@@ -97,21 +97,3 @@ describe('OpdHeader', () => {
   })
 })
 
-import { TopHeader } from '../components/TopHeader'
-
-describe('TopHeader', () => {
-  it('renders the title as an h1', () => {
-    render(<TopHeader title="Appointments" />)
-    expect(screen.getByRole('heading', { name: 'Appointments' })).toBeInTheDocument()
-  })
-
-  it('renders description when provided', () => {
-    render(<TopHeader title="Appointments" description="Your schedule for today" />)
-    expect(screen.getByText('Your schedule for today')).toBeInTheDocument()
-  })
-
-  it('omits description element when not provided', () => {
-    const { container } = render(<TopHeader title="Appointments" />)
-    expect(container.querySelector('p')).toBeNull()
-  })
-})

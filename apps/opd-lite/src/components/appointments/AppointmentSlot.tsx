@@ -31,10 +31,10 @@ const STATUS_BADGE_COLORS: Record<string, string> = {
 }
 
 const SERVICE_TYPE_BADGE_COLORS: Record<string, string> = {
-  'new-consult': 'bg-indigo-100 text-indigo-800',
-  'follow-up': 'bg-teal-100 text-teal-800',
-  urgent: 'bg-orange-100 text-orange-800',
-  'walk-in': 'bg-purple-100 text-purple-800',
+  'new-consult': 'bg-primary/10 text-primary',
+  'follow-up':   'bg-secondary text-foreground',
+  urgent:        'bg-warning/15 text-warning',
+  'walk-in':     'bg-muted text-muted-foreground',
 }
 
 function getStatusLabel(

@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
-import { TopHeader } from '@/components/TopHeader'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { DayScheduleView } from '@/components/appointments/DayScheduleView'
 import { WeekScheduleView } from '@/components/appointments/WeekScheduleView'
@@ -13,10 +12,9 @@ export default function AppointmentsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-6">
-      <div className="flex items-center justify-between">
-        <TopHeader title={t('title')} />
-        {/* Day / Week toggle */}
-        <div className="me-8 flex overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
+      {/* Day / Week toggle */}
+      <div className="flex justify-end px-6 pb-4">
+        <div className="flex overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
           <Button
             variant={viewMode === 'day' ? 'primary' : 'secondary'}
             onClick={() => setViewMode('day')}

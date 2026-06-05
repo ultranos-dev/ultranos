@@ -342,7 +342,7 @@ export function BookingModal({
             {/* Dropdown results */}
             {patientResults.length > 0 && !selectedPatient && (
               <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-xl border border-border bg-background shadow-lg">
-                <ul className="divide-y divide-neutral-100" role="listbox" aria-label={t('selectPatient')}>
+                <ul className="divide-y divide-border" role="listbox" aria-label={t('selectPatient')}>
                   {patientResults.map((patient) => (
                     <li
                       key={patient.id}

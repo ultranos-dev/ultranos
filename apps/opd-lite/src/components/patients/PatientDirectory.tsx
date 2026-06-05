@@ -298,7 +298,7 @@ export function PatientDirectory() {
         {showRegisterButton && (
           <Link
             href={`/${locale}/register-patient`}
-            className="inline-flex items-center justify-center rounded-pill font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 bg-pill-green text-pill-text px-5 py-2 text-sm"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           >
             {t('registerNew')}
           </Link>
@@ -362,7 +362,7 @@ export function PatientDirectory() {
           </p>
           <Link
             href={`/${locale}/register-patient`}
-            className="inline-flex items-center justify-center rounded-pill font-semibold transition-all duration-100 ease-out hover:brightness-[1.04] active:brightness-[0.88] focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 bg-pill-green text-pill-text px-5 py-2 text-sm"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           >
             {t('registerNew')}
           </Link>

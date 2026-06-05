@@ -227,10 +227,10 @@ describe('NotificationCenter', () => {
 
       await waitFor(() => {
         const unreadRow = screen.getByTestId('notification-n1')
-        expect(unreadRow).toHaveClass('bg-blue-50')
+        expect(unreadRow).toHaveClass('bg-primary/10')
 
         const readRow = screen.getByTestId('notification-n7')
-        expect(readRow).not.toHaveClass('bg-blue-50')
+        expect(readRow).not.toHaveClass('bg-primary/10')
       })
     })
 
@@ -313,7 +313,7 @@ describe('NotificationCenter', () => {
       render(<NotificationCenter />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('notification-n1')).toHaveClass('bg-blue-50')
+        expect(screen.getByTestId('notification-n1')).toHaveClass('bg-primary/10')
       })
 
       await act(async () => {
@@ -321,7 +321,7 @@ describe('NotificationCenter', () => {
       })
 
       await waitFor(() => {
-        expect(screen.getByTestId('notification-n1')).not.toHaveClass('bg-blue-50')
+        expect(screen.getByTestId('notification-n1')).not.toHaveClass('bg-primary/10')
       })
     })
   })

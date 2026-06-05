@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { TopHeader } from '@/components/TopHeader'
 
 interface ExpiringConsent {
   id: string
@@ -64,7 +63,6 @@ export default function ExpiringConsentsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-6">
-      <TopHeader title="Expiring Consents" />
       <div className="px-6 pb-6">
 
         {loading && (

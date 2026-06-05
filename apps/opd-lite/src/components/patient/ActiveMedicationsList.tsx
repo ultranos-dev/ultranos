@@ -143,7 +143,7 @@ export function ActiveMedicationsList({
         Active Medications
       </h3>
 
-      <ul className="divide-y divide-neutral-100">
+      <ul className="divide-y divide-border">
         {meds.map((med) => (
           <li key={med.id} className="py-2.5 first:pt-0 last:pb-0">
             <div className="flex items-start justify-between gap-2">

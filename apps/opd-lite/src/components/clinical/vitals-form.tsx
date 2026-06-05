@@ -23,10 +23,10 @@ function inputClasses(status?: RangeStatus): string {
     'placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2'
 
   if (status === 'panic') {
-    return `${base} border-red-500 focus:border-red-500 focus:ring-red-200`
+    return `${base} border-destructive focus:border-destructive focus:ring-destructive/20`
   }
   if (status === 'warning') {
-    return `${base} border-amber-500 focus:border-amber-500 focus:ring-amber-200`
+    return `${base} border-warning focus:border-warning focus:ring-warning/20`
   }
   return `${base} border-border focus:border-primary focus:ring-ring`
 }
@@ -103,9 +103,9 @@ export function VitalsForm({
           className={
             'rounded-lg px-4 py-3 ' +
             (rangeStatuses.bmi === 'panic'
-              ? 'border border-red-500 bg-red-50'
+              ? 'border border-destructive bg-destructive/5'
               : rangeStatuses.bmi === 'warning'
-                ? 'border border-amber-500 bg-amber-50'
+                ? 'border border-warning bg-warning/5'
                 : 'bg-muted')
           }
         >

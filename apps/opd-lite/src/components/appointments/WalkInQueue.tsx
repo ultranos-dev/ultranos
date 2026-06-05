@@ -149,11 +149,11 @@ export function WalkInQueue() {
                 variant="ghost"
                 type="button"
                 onClick={() => setSelectedAppointment(walkIn)}
-                className="w-full rounded-xl border border-purple-200 bg-purple-50 p-3 text-start hover:bg-purple-100"
+                className="w-full rounded-xl border border-border bg-muted/50 p-3 text-start hover:bg-muted"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-purple-200 text-xs font-bold text-purple-800">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
                       {t('queueNumber', {
                         number:
                           walkIn._ultranos.queuePosition ?? 0,

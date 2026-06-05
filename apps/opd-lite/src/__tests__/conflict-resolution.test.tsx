@@ -498,7 +498,7 @@ describe('ConflictDiffView', () => {
     expect(keepBothBtn.textContent).toContain('Keep Both')
 
     // Check green border styling (Tier 1 emphasis)
-    expect(keepBothBtn.className).toContain('border-green-500')
+    expect(keepBothBtn.className).toContain('bg-primary')
   })
 
   it('shows three resolution options', () => {

@@ -199,7 +199,7 @@ export function NotificationCenter() {
 
       {/* Notification list */}
       {!loading && filtered.length > 0 && (
-        <div className="divide-y divide-neutral-100 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50">
+        <div className="divide-y divide-border overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50">
           {filtered.map(n => (
             <NotificationRow
               key={n.id}

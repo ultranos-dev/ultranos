@@ -129,7 +129,7 @@ export function PatientDetailsAccordion({
                 <span
                   className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     ext.patient_tier === 'PREMIUM'
-                      ? 'bg-purple-100 text-purple-800'
+                      ? 'bg-primary/10 text-primary'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >

@@ -34,7 +34,7 @@ function formatDate(timestamp: string): string {
 function getStatusBadgeClasses(status: string): string {
   switch (status) {
     case 'in-progress':
-      return 'bg-pill-green/20 text-pill-text'
+      return 'bg-success/20 text-success'
     case 'finished':
       return 'bg-muted text-muted-foreground'
     default:
@@ -125,7 +125,7 @@ export function RecentEncountersList() {
   return (
     <Card>
       <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
-      <ul className="mt-3 divide-y divide-neutral-100" role="list" aria-label="Recent encounters">
+      <ul className="mt-3 divide-y divide-border" role="list" aria-label="Recent encounters">
         {encounters.map((enc) => (
           <li key={enc.id}>
             <Link

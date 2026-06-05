@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
 import { Button } from '@/components/ui/Button'
-import { TopHeader } from '@/components/TopHeader'
 import {
   getKycUploadUrl,
   uploadToSignedUrl,
@@ -257,7 +256,6 @@ export default function KycPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-8 py-6">
-      <TopHeader title="KYC Document Verification" description="Submit your professional documents for account verification." />
       <div className="px-6 pb-6 max-w-2xl">
 
       {/* Rejection banner */}
