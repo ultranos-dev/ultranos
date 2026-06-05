@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export default function CreateLabPage() {
   const router = useRouter()
+  const t = useTranslations('labs')
+  const tCommon = useTranslations('common')
   const [labName, setLabName] = useState('')
   const [licenseRef, setLicenseRef] = useState('')
   const [accreditationRef, setAccreditationRef] = useState('')
@@ -28,16 +31,16 @@ export default function CreateLabPage() {
       })
       router.push('/labs')
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to create lab')
+      setError((err as Error)?.message ?? t('createError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-8 py-6">
+    <div className="mx-auto max-w-2xl">
         <Button variant="outline" onClick={() => router.push('/labs')}>
-          &larr; Back to Labs
+          {t('backToLabs')}
         </Button>
 
         <div className="mt-6 rounded-2xl border border-border bg-popover p-6">
@@ -47,15 +50,15 @@ export default function CreateLabPage() {
                 htmlFor="lab-name"
                 className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                Lab Name <span className="text-destructive">*</span>
+                {t('labName')} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="lab-name"
-                aria-label="Lab Name"
+                aria-label={t('labName')}
                 type="text"
                 value={labName}
                 onChange={(e) => setLabName(e.target.value)}
-                placeholder="e.g. Central Diagnostics Lab"
+                placeholder={t('labNamePlaceholder')}
               />
             </div>
 
@@ -64,15 +67,15 @@ export default function CreateLabPage() {
                 htmlFor="license-ref"
                 className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                License Reference <span className="text-destructive">*</span>
+                {t('licenseRef')} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="license-ref"
-                aria-label="License Reference"
+                aria-label={t('licenseRef')}
                 type="text"
                 value={licenseRef}
                 onChange={(e) => setLicenseRef(e.target.value)}
-                placeholder="e.g. LIC-2026-001"
+                placeholder={t('licenseRefPlaceholder')}
               />
             </div>
 
@@ -81,12 +84,12 @@ export default function CreateLabPage() {
                 htmlFor="accreditation-ref"
                 className="block text-sm font-medium text-muted-foreground mb-1"
               >
-                Accreditation Reference{' '}
+                {t('accreditationRef')}{' '}
                 <span className="text-muted-foreground text-xs font-normal">(optional)</span>
               </label>
               <Input
                 id="accreditation-ref"
-                aria-label="Accreditation Reference"
+                aria-label={t('accreditationRef')}
                 type="text"
                 value={accreditationRef}
                 onChange={(e) => setAccreditationRef(e.target.value)}
@@ -103,10 +106,10 @@ export default function CreateLabPage() {
 
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" onClick={() => router.push('/labs')}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={!canSubmit}>
-              {submitting ? 'Creating…' : 'Create Lab'}
+              {submitting ? t('creating') : t('createPageTitle')}
             </Button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { AddModuleDialog } from '@/components/subscriptions/AddModuleDialog'
 import { RemoveModuleDialog } from '@/components/subscriptions/RemoveModuleDialog'
@@ -55,6 +56,7 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 export default function SubscriptionsPage() {
+  const t = useTranslations('subscriptions')
   const [org, setOrg] = useState<OrgInfo | null>(null)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [totalCost, setTotalCost] = useState(0)
@@ -72,7 +74,7 @@ export default function SubscriptionsPage() {
       setSubscriptions(result.subscriptions)
       setTotalCost(result.totalMonthlyCostUsd)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load subscription data')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -83,7 +85,7 @@ export default function SubscriptionsPage() {
   }, [fetchData])
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading subscription data...</div>
+    return <div className="text-muted-foreground">{t('loadingModules')}</div>
   }
 
   if (error) {
@@ -93,7 +95,7 @@ export default function SubscriptionsPage() {
   const activeSubscriptions = subscriptions.filter((s) => s.status === 'ACTIVE' || s.status === 'TRIAL')
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Org Identity Card */}
         {org && (
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
@@ -108,32 +110,32 @@ export default function SubscriptionsPage() {
         )}
 
         {/* Subscribed Modules Table */}
-        <div className="mt-6">
+        <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Modules</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('modulesHeading')}</h2>
             <div className="flex items-center gap-3">
               <ExportButton exportFn={() => trpc.subscription.exportSubscriptions.query()} filters={{}} />
               <Button onClick={() => setShowAddDialog(true)}>
-                Add Module
+                {t('addModule')}
               </Button>
             </div>
           </div>
 
           {subscriptions.length === 0 ? (
             <div className="rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
-              <p className="text-muted-foreground">No modules subscribed. Add your first module to get started.</p>
+              <p className="text-muted-foreground">{t('noModules')}</p>
             </div>
           ) : (
             <div className="rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Module</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Start Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Renewal / Expiry</th>
-                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Cost / mo</th>
-                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colModule')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStartDate')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colRenewal')}</th>
+                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colCostPerMonth')}</th>
+                    <th className="px-4 py-3 text-end font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
@@ -154,7 +156,7 @@ export default function SubscriptionsPage() {
                             onClick={() => setRemoveTarget(sub)}
                             className="text-destructive hover:text-destructive"
                           >
-                            Remove
+                            {t('removeModule')}
                           </Button>
                         )}
                       </td>
@@ -164,7 +166,7 @@ export default function SubscriptionsPage() {
                 {/* Total monthly cost footer */}
                 <tfoot className="border-t border-border bg-popover">
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 font-medium text-end text-foreground">Total Monthly Cost</td>
+                    <td colSpan={4} className="px-4 py-3 font-medium text-end text-foreground">{t('totalMonthlyCost')}</td>
                     <td className="px-4 py-3 text-end font-semibold text-foreground">${totalCost.toFixed(2)}</td>
                     <td />
                   </tr>
@@ -190,12 +192,12 @@ export default function SubscriptionsPage() {
           onModuleRemoved={fetchData}
         />
 
-        <div className="mt-6 flex gap-6">
+        <div className="flex gap-4">
           <a href="/subscriptions/billing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Manage Billing →
+            {t('manageBilling')}
           </a>
           <a href="/subscriptions/invoices" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            View Invoices →
+            {t('viewInvoices')}
           </a>
         </div>
       </div>

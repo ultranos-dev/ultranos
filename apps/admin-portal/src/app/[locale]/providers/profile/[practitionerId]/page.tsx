@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -175,6 +176,7 @@ function truncateId(id: string): string {
 
 export default function ProviderProfilePage() {
   const params = useParams()
+  const t = useTranslations('providers')
   const practitionerId = params.practitionerId as string
 
   const [profile, setProfile] = useState<ProviderProfile | null>(null)
@@ -188,7 +190,7 @@ export default function ProviderProfilePage() {
       const result = await trpc.admin.getProviderProfile.query({ practitionerId })
       setProfile(result as unknown as ProviderProfile)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load provider profile')
+      setError((err as Error)?.message ?? t('profileNotFound'))
     } finally {
       setLoading(false)
     }
@@ -199,13 +201,13 @@ export default function ProviderProfilePage() {
   }, [fetchProfile])
 
   if (loading) {
-    return <div className="text-muted-foreground p-8">Loading provider profile...</div>
+    return <div className="text-muted-foreground p-8">{t('profileLoading')}</div>
   }
 
   if (error && !profile) {
     return (
       <div className="flex flex-col gap-4">
-        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Providers</Link>
+        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('profileBack')}</Link>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -218,7 +220,7 @@ export default function ProviderProfilePage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Providers</Link>
+        <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('profileBack')}</Link>
 
         {error && (
           <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
@@ -227,7 +229,7 @@ export default function ProviderProfilePage() {
         {/* Section A: Identity Card */}
         <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            <span className="wavy-divider">Provider Identity</span>
+            <span className="wavy-divider">{t('profileIdentity')}</span>
           </h2>
 
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -243,7 +245,7 @@ export default function ProviderProfilePage() {
 
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <div className="text-sm text-muted-foreground">
-                License Expiry: <span className="font-medium text-foreground">{formatDate(practitioner.licenseExpiry)}</span>
+                {t('profileLicenseExpiry')}: <span className="font-medium text-foreground">{formatDate(practitioner.licenseExpiry)}</span>
               </div>
               <LicenseUrgencyBadge daysRemaining={practitioner.daysRemaining} />
             </div>
@@ -253,7 +255,7 @@ export default function ProviderProfilePage() {
         {/* Section B: KYC History */}
         <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            <span className="wavy-divider">KYC History</span>
+            <span className="wavy-divider">{t('profileKycHistory')}</span>
           </h2>
 
           {kycSubmissions.length === 0 ? (
@@ -296,7 +298,7 @@ export default function ProviderProfilePage() {
         {/* Section C: License Timeline */}
         <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            <span className="wavy-divider">License Timeline</span>
+            <span className="wavy-divider">{t('profileLicenseTimeline')}</span>
           </h2>
 
           <div className="mt-4 flex flex-col gap-3">
@@ -307,7 +309,7 @@ export default function ProviderProfilePage() {
 
             {practitioner.daysRemaining <= 0 && (
               <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                This provider&apos;s license has expired. They should not be permitted to prescribe until the license is renewed and verified.
+                {t('profileLicenseExpiredWarning')}
               </div>
             )}
           </div>
@@ -316,7 +318,7 @@ export default function ProviderProfilePage() {
         {/* Section D: Prescribing Alert History */}
         <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-            <span className="wavy-divider">Prescribing Alert History</span>
+            <span className="wavy-divider">{t('profileAlertHistory')}</span>
           </h2>
 
           {/* Alert summary line */}

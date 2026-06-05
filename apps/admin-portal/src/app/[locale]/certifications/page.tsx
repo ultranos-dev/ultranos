@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { PathwayCreateModal } from '@/components/certifications/PathwayCreateModal'
 import { ExpiryWarningWidget } from '@/components/certifications/ExpiryWarningWidget'
@@ -41,6 +42,7 @@ const STATUS_FILTERS: StatusFilter[] = ['ALL', 'ACTIVE', 'ARCHIVED']
 const PAGE_SIZE = 25
 
 export default function CertificationsPage() {
+  const t = useTranslations('certifications')
   const [pathways, setPathways] = useState<PathwayEntry[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
@@ -61,7 +63,7 @@ export default function CertificationsPage() {
       setPathways(result.pathways)
       setTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load certification pathways')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -82,7 +84,7 @@ export default function CertificationsPage() {
       await trpc.admin.archiveCertificationPathway.mutate({ id })
       fetchPathways()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to archive pathway')
+      setError((err as Error)?.message ?? t('errorLoad'))
     }
   }
 
@@ -95,7 +97,7 @@ export default function CertificationsPage() {
         <ExpiryWarningWidget />
 
         {/* Filter tabs + Create button */}
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center justify-between">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
@@ -112,30 +114,30 @@ export default function CertificationsPage() {
             ))}
           </div>
           <Button onClick={() => setShowCreateModal(true)}>
-            Create Pathway
+            {t('createPathway')}
           </Button>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading certification pathways...</div>
+          <div className="text-muted-foreground">{t('loadingPathways')}</div>
         ) : pathways.length === 0 ? (
-          <EmptyState className="mt-6" title={`No certification pathways found${filter !== 'ALL' ? ` with status ${filter}` : ''}.`} />
+          <EmptyState title={t('noPathways')} />
         ) : (
           <>
             {/* Pathway table (AC #1) */}
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Description</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Milestones</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDescription')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMilestones')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
@@ -153,7 +155,7 @@ export default function CertificationsPage() {
                             onClick={() => handleArchive(pathway.id)}
                             className="text-muted-foreground hover:text-destructive"
                           >
-                            Archive
+                            {t('archive')}
                           </Button>
                         )}
                       </td>

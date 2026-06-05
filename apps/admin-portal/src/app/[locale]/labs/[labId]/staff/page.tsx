@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { LabRole as SharedLabRole } from '@ultranos/shared-types'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
@@ -76,16 +77,17 @@ function RoleChangeModal({
   submitting: boolean
   open: boolean
 }) {
+  const t = useTranslations('labs')
+  const tCommon = useTranslations('common')
   const isDemotingManager = currentRole === 'LAB_MANAGER' && newRole !== 'LAB_MANAGER'
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Change Staff Role</DialogTitle>
+          <DialogTitle>{t('staffChangeRoleTitle')}</DialogTitle>
           <DialogDescription>
-            Change <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span> from{' '}
-            <RoleBadge role={currentRole} /> to <RoleBadge role={newRole} />?
+            {t('staffChangeRoleDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -97,10 +99,10 @@ function RoleChangeModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={onConfirm} disabled={submitting}>
-            {submitting ? 'Updating...' : 'Confirm'}
+            {submitting ? 'Updating...' : tCommon('confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -122,20 +124,21 @@ function RemoveStaffModal({
   submitting: boolean
   open: boolean
 }) {
+  const t = useTranslations('labs')
+  const tCommon = useTranslations('common')
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Remove Staff Member</DialogTitle>
+          <DialogTitle>{t('staffRemoveTitle')}</DialogTitle>
           <DialogDescription>
-            Are you sure you want to remove{' '}
-            <span className="font-medium text-foreground">{truncate(email, 30) || 'this staff member'}</span>{' '}
-            from this lab? This cannot be undone.
+            {t('staffRemoveDesc')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -143,7 +146,7 @@ function RemoveStaffModal({
             disabled={submitting}
             aria-label="Confirm Remove"
           >
-            {submitting ? 'Removing…' : 'Confirm Remove'}
+            {submitting ? 'Removing…' : tCommon('confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -154,6 +157,7 @@ function RemoveStaffModal({
 export default function LabStaffPage() {
   const params = useParams()
   const router = useRouter()
+  const t = useTranslations('labs')
   const labId = params.labId as string
 
   const [staff, setStaff] = useState<StaffMember[]>([])
@@ -183,7 +187,7 @@ export default function LabStaffPage() {
       const result = await trpc.admin.listLabStaff.query({ labId })
       setStaff(result as StaffMember[])
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load staff list')
+      setError((err as Error)?.message ?? t('staffActionError'))
     } finally {
       setLoading(false)
     }
@@ -214,11 +218,11 @@ export default function LabStaffPage() {
         newRole: pendingChange.newRole as SharedLabRole,
       })
       setPendingChange(null)
-      setSuccessMessage(`Role updated successfully`)
+      setSuccessMessage(t('staffActionSuccess'))
       await fetchStaff()
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err: unknown) {
-      const msg = (err as Error)?.message ?? 'Failed to update role'
+      const msg = (err as Error)?.message ?? t('staffActionError')
       if (msg.includes('Cannot demote the last Lab Manager')) {
         setError('Cannot demote the last Lab Manager')
       } else {
@@ -240,11 +244,11 @@ export default function LabStaffPage() {
         practitionerId: pendingRemove.practitionerId,
       })
       setPendingRemove(null)
-      setSuccessMessage('Staff member removed successfully')
+      setSuccessMessage(t('staffActionSuccess'))
       await fetchStaff()
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to remove staff member')
+      setError((err as Error)?.message ?? t('staffActionError'))
       setPendingRemove(null)
     } finally {
       setSubmittingRemove(false)
@@ -252,57 +256,57 @@ export default function LabStaffPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => router.push(`/labs/${labId}`)}
           >
-            &larr; Back to Lab Detail
+            {t('staffBackToLab')}
           </Button>
           <Button
             onClick={() => setShowAssignModal(true)}
-            aria-label="Add Staff"
+            aria-label={t('staffAddStaff')}
           >
-            Add Staff
+            {t('staffAddStaff')}
           </Button>
         </div>
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">
             {successMessage}
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Staff table */}
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-border shadow-card">
+        <div className="overflow-x-auto rounded-2xl border border-border shadow-card">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-card">
-                <th className="px-4 py-3 text-start font-medium">Practitioner ID</th>
-                <th className="px-4 py-3 text-start font-medium">Email</th>
-                <th className="px-4 py-3 text-start font-medium">Role</th>
-                <th className="px-4 py-3 text-start font-medium">Assigned</th>
-                <th className="px-4 py-3 text-start font-medium">Actions</th>
+                <th className="px-4 py-3 text-start font-medium">{t('staffColName')}</th>
+                <th className="px-4 py-3 text-start font-medium">{t('staffColEmail')}</th>
+                <th className="px-4 py-3 text-start font-medium">{t('staffColRole')}</th>
+                <th className="px-4 py-3 text-start font-medium">{t('staffColStatus')}</th>
+                <th className="px-4 py-3 text-start font-medium">{t('staffColActions')}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    Loading staff...
+                    {t('staffNoStaff')}
                   </td>
                 </tr>
               ) : staff.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    No staff assigned to this lab
+                    {t('staffNoStaff')}
                   </td>
                 </tr>
               ) : (
@@ -335,10 +339,10 @@ export default function LabStaffPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setPendingRemove({ practitionerId: member.practitionerId, email: member.email })}
-                        aria-label="Remove"
+                        aria-label={t('staffRemove')}
                         className="text-destructive border-destructive hover:bg-destructive/10"
                       >
-                        Remove
+                        {t('staffRemove')}
                       </Button>
                     </td>
                   </tr>
@@ -377,7 +381,7 @@ export default function LabStaffPage() {
           onOpenChange={setShowAssignModal}
           onAssigned={async () => {
             setShowAssignModal(false)
-            setSuccessMessage('Staff member assigned successfully')
+            setSuccessMessage(t('staffActionSuccess'))
             await fetchStaff()
             setTimeout(() => setSuccessMessage(null), 5000)
           }}

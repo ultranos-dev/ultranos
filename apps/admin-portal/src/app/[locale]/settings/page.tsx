@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
@@ -54,26 +55,36 @@ const IANA_TIMEZONES = [
   'Asia/Tehran',
 ]
 
-const NAV_ITEMS = [
-  { id: 'my-account', label: 'My Account' },
-  { id: 'organization', label: 'Organization' },
-  { id: 'notifications', label: 'Notifications' },
-  { id: 'thresholds', label: 'Thresholds' },
-  { id: 'modules', label: 'Modules' },
-  { id: 'alert-config', label: 'Alert Config' },
+const NAV_ITEM_IDS = [
+  'my-account',
+  'organization',
+  'notifications',
+  'thresholds',
+  'modules',
+  'alert-config',
 ] as const
 
 /* ─── Page Component ─── */
 
 export default function SettingsPage() {
+  const t = useTranslations('settings')
   const supabase = getSupabaseBrowserClient()
+
+  const NAV_ITEMS = [
+    { id: 'my-account', label: t('navMyAccount') },
+    { id: 'organization', label: t('navOrganization') },
+    { id: 'notifications', label: t('navNotifications') },
+    { id: 'thresholds', label: t('navThresholds') },
+    { id: 'modules', label: t('navModules') },
+    { id: 'alert-config', label: t('navAlertConfig') },
+  ]
 
   /* Active section tracking via IntersectionObserver */
   const [activeSection, setActiveSection] = useState<string>('my-account')
   const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
-    const sectionIds = NAV_ITEMS.map((item) => item.id)
+    const sectionIds = NAV_ITEM_IDS
     // Track which sections are currently intersecting
     const visibleSections = new Set<string>()
 
@@ -174,10 +185,10 @@ export default function SettingsPage() {
     setProfileSuccess(null)
     try {
       await trpc.admin.updateAdminProfile.mutate({ name: profileName })
-      setProfileSuccess('Profile updated.')
+      setProfileSuccess(t('profileSaved'))
       setTimeout(() => setProfileSuccess(null), 3000)
     } catch {
-      setProfileError('Failed to update profile.')
+      setProfileError(t('profileError'))
     } finally {
       setProfileSaving(false)
     }
@@ -219,7 +230,7 @@ export default function SettingsPage() {
       }
 
       reportAdminAuthEvent('ADMIN_PASSWORD_CHANGED')
-      setPasswordSuccess('Password changed successfully.')
+      setPasswordSuccess(t('changePasswordSuccess'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
@@ -383,10 +394,10 @@ export default function SettingsPage() {
 
       await trpc.admin.updateOrganization.mutate(changes)
       setOrg({ ...org, ...orgDraft })
-      setOrgSuccess('Organization updated.')
+      setOrgSuccess(t('orgSaved'))
       setTimeout(() => setOrgSuccess(null), 3000)
     } catch {
-      setOrgError('Failed to update organization.')
+      setOrgError(t('orgError'))
     } finally {
       setOrgSaving(false)
     }
@@ -398,8 +409,7 @@ export default function SettingsPage() {
     <>
       {/* Section Navigation (sticky top) */}
       <div className="sticky top-0 z-10 bg-card border-b border-border">
-        <div className="mx-auto max-w-7xl px-8">
-          <nav className="flex gap-1 py-3" aria-label="Settings sections">
+        <nav className="flex gap-1 py-3" aria-label="Settings sections">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.id}
@@ -413,23 +423,22 @@ export default function SettingsPage() {
                 {item.label}
               </a>
             ))}
-          </nav>
-        </div>
+        </nav>
       </div>
 
-      <div className="mx-auto max-w-7xl px-8 py-6 space-y-8">
+      <div className="flex flex-col gap-4">
 
         {/* ═══ Section 1: My Account ═══ */}
         <section id="my-account" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">My Account</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('navMyAccount')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-0">
 
             {/* a. Profile */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Profile</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('profileTitle')}</h3>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Full Name</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('profileFullName')}</span>
                   <Input
                     type="text"
                     value={profileName}
@@ -438,15 +447,15 @@ export default function SettingsPage() {
                   />
                 </label>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">Email</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('profileEmail')}</span>
                   <p className="mt-1 text-sm text-foreground">{profile?.email ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">Role</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('profileRole')}</span>
                   <p className="mt-1 text-sm text-foreground">{profile?.role ?? '...'}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">Created</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('profileCreated')}</span>
                   <p className="mt-1 text-sm text-foreground">
                     {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '...'}
                   </p>
@@ -463,7 +472,7 @@ export default function SettingsPage() {
                 onClick={handleSaveProfile}
                 disabled={profileSaving || profileName === (profile?.name ?? '')}
               >
-                {profileSaving ? 'Saving...' : 'Save Profile'}
+                {profileSaving ? t('profileSaving') : t('profileSave')}
               </Button>
             </div>
 
@@ -471,10 +480,10 @@ export default function SettingsPage() {
 
             {/* b. Change Password */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Change Password</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('changePasswordTitle')}</h3>
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Current Password</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordCurrent')}</span>
                   <Input
                     type="password"
                     value={currentPassword}
@@ -483,7 +492,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">New Password (min 12 characters)</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordNew')}</span>
                   <Input
                     type="password"
                     value={newPassword}
@@ -492,7 +501,7 @@ export default function SettingsPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Confirm New Password</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('changePasswordConfirm')}</span>
                   <Input
                     type="password"
                     value={confirmPassword}
@@ -512,7 +521,7 @@ export default function SettingsPage() {
                 onClick={handleChangePassword}
                 disabled={passwordSaving || !currentPassword || !newPassword || !confirmPassword}
               >
-                {passwordSaving ? 'Changing...' : 'Change Password'}
+                {passwordSaving ? t('profileSaving') : t('changePasswordSave')}
               </Button>
             </div>
 
@@ -520,7 +529,7 @@ export default function SettingsPage() {
 
             {/* c. Security Keys (FIDO2) — preserved from original */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Security Keys (FIDO2)</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('securityKeysTitle')}</h3>
               <p className="text-muted-foreground text-sm">
                 Register a hardware security key (e.g., YubiKey) to add an extra layer of protection to your account.
                 Once enrolled, you will be prompted for your key on every sign-in.
@@ -569,7 +578,7 @@ export default function SettingsPage() {
                             onClick={() => handleUnenroll(factor.id)}
                             className="text-destructive hover:text-destructive"
                           >
-                            Remove
+                            {t('securityKeyRemove')}
                           </Button>
                         </div>
                       ))}
@@ -578,7 +587,7 @@ export default function SettingsPage() {
 
                   {verifiedFactors.length === 0 && (
                     <div className="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning">
-                      No security key enrolled. We recommend adding one for stronger account protection.
+                      {t('securityKeysNoKeys')}
                     </div>
                   )}
 
@@ -587,7 +596,7 @@ export default function SettingsPage() {
                     onClick={handleEnroll}
                     disabled={enrolling}
                   >
-                    {enrolling ? 'Waiting for key...' : 'Register New Security Key'}
+                    {enrolling ? t('profileSaving') : t('securityKeysAdd')}
                   </Button>
                 </>
               )}
@@ -597,7 +606,7 @@ export default function SettingsPage() {
 
             {/* d. Active Sessions */}
             <div className="space-y-4 py-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Active Sessions</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('sessionsTitle')}</h3>
               <p className="text-muted-foreground text-sm">
                 Sign out of all other browser sessions. Your current session will remain active.
               </p>
@@ -611,7 +620,7 @@ export default function SettingsPage() {
                 onClick={handleSignOutOtherSessions}
                 disabled={sessionsLoading}
               >
-                {sessionsLoading ? 'Signing out...' : 'Sign Out All Other Sessions'}
+                {sessionsLoading ? t('profileSaving') : t('sessionsRevoke')}
               </Button>
             </div>
           </div>
@@ -619,12 +628,12 @@ export default function SettingsPage() {
 
         {/* ═══ Section 2: Organization ═══ */}
         <section id="organization" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Organization</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('orgTitle')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-4">
             {orgDraft ? (
               <>
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Organization Name</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('orgName')}</span>
                   <Input
                     type="text"
                     value={orgDraft.name}
@@ -634,7 +643,7 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Country</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('orgCountry')}</span>
                   <select
                     value={orgDraft.countryCode}
                     onChange={(e) => setOrgDraft({ ...orgDraft, countryCode: e.target.value })}
@@ -648,7 +657,7 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Billing Email</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('orgBillingEmail')}</span>
                   <Input
                     type="email"
                     value={orgDraft.billingEmail}
@@ -658,7 +667,7 @@ export default function SettingsPage() {
                 </label>
 
                 <label className="block">
-                  <span className="text-xs font-medium text-muted-foreground">Timezone</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('orgTimezone')}</span>
                   <select
                     value={orgDraft.timezone}
                     onChange={(e) => setOrgDraft({ ...orgDraft, timezone: e.target.value })}
@@ -672,7 +681,7 @@ export default function SettingsPage() {
                 </label>
 
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground">Org ID</span>
+                  <span className="text-xs font-medium text-muted-foreground">{t('orgId')}</span>
                   <p className="mt-1 text-sm font-mono text-foreground">{org?.id ?? '...'}</p>
                 </div>
 
@@ -688,18 +697,18 @@ export default function SettingsPage() {
                   onClick={handleSaveOrg}
                   disabled={orgSaving || !orgDirty}
                 >
-                  {orgSaving ? 'Saving...' : 'Save Changes'}
+                  {orgSaving ? t('orgSaving') : t('orgSave')}
                 </Button>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading organization...</p>
+              <p className="text-sm text-muted-foreground">{t('errorLoad')}</p>
             )}
           </div>
         </section>
 
         {/* ═══ Section 3: Notifications ═══ */}
         <section id="notifications" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Notifications</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('notificationsTitle')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             <NotificationPreferences email={profile?.email} />
           </div>
@@ -707,7 +716,7 @@ export default function SettingsPage() {
 
         {/* ═══ Section 4: Thresholds ═══ */}
         <section id="thresholds" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Thresholds</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('thresholdsTitle')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             <ThresholdSettings />
           </div>
@@ -715,7 +724,7 @@ export default function SettingsPage() {
 
         {/* ═══ Section 5: Modules ═══ */}
         <section id="modules" className="scroll-mt-24">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Modules</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('modulesTitle')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             {subscribedModules.length === 0 ? (
               <p className="text-sm text-muted-foreground">No modules configured. Subscribe to a module to see its settings.</p>
@@ -731,7 +740,7 @@ export default function SettingsPage() {
 
         {/* ═══ Section 6: Alert Config ═══ */}
         <section id="alert-config" className="scroll-mt-24 mb-12">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Alert Config</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('alertConfigTitle')}</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-8">
             <SurveillanceConfigForm />
             <div className="border-t border-border pt-6">

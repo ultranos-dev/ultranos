@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function SuppliersPage() {
+  const t = useTranslations('inventory')
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +57,7 @@ export default function SuppliersPage() {
       const result = await trpc.admin.listSuppliers.query({})
       setSuppliers(result.suppliers as Supplier[])
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load suppliers')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -112,7 +114,7 @@ export default function SuppliersPage() {
       setShowModal(false)
       fetchSuppliers()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to save supplier')
+      setError((err as Error)?.message ?? t('supplierError'))
     } finally {
       setSubmitting(false)
     }
@@ -127,7 +129,7 @@ export default function SuppliersPage() {
       await trpc.admin.updateSupplier.mutate({ id: supplier.id, status: newStatus })
       fetchSuppliers()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to update supplier status')
+      setError((err as Error)?.message ?? t('supplierError'))
     }
   }
 
@@ -135,7 +137,7 @@ export default function SuppliersPage() {
     <div className="flex flex-col gap-4">
         <div className="flex items-center justify-end">
           <Button onClick={openCreate}>
-            Add Supplier
+            {t('addSupplier')}
           </Button>
         </div>
 
@@ -146,18 +148,18 @@ export default function SuppliersPage() {
         {loading ? (
           <div className="mt-6 text-muted-foreground">Loading suppliers...</div>
         ) : suppliers.length === 0 ? (
-          <EmptyState className="mt-6" title="No suppliers registered yet." />
+          <EmptyState className="mt-6" title={t('noSuppliers')} />
         ) : (
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-card">
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Name</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Email</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Phone</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Lead Time (days)</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colSupplierName')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colEmail')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colPhone')}</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colLeadTime')}</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colStatus')}</th>
+                  <th className="px-4 py-3 text-center font-medium text-xs uppercase tracking-wide text-muted-foreground">{t('colActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">
@@ -179,7 +181,7 @@ export default function SuppliersPage() {
                           onClick={() => handleToggleStatus(supplier)}
                           className={supplier.status === 'ACTIVE' ? 'hover:bg-destructive/10 hover:text-destructive' : 'hover:bg-success/10 hover:text-success'}
                         >
-                          {supplier.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                          {supplier.status === 'ACTIVE' ? t('deactivate') : t('activate')}
                         </Button>
                       </div>
                     </td>
@@ -195,7 +197,7 @@ export default function SuppliersPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingSupplier ? 'Edit Supplier' : 'Add Supplier'}
+                {editingSupplier ? t('editSupplier') : t('addSupplier')}
               </DialogTitle>
               <DialogDescription className="sr-only">
                 {editingSupplier ? 'Edit supplier details.' : 'Add a new supplier.'}
@@ -205,7 +207,7 @@ export default function SuppliersPage() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="sup-name" className="block text-sm font-medium text-foreground">
-                  Name <span className="text-destructive">*</span>
+                  {t('supplierName')} <span className="text-destructive">*</span>
                 </label>
                 <Input
                   id="sup-name"
@@ -216,7 +218,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div>
-                <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">Email</label>
+                <label htmlFor="sup-email" className="block text-sm font-medium text-foreground">{t('supplierEmail')}</label>
                 <Input
                   id="sup-email"
                   type="email"
@@ -226,7 +228,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div>
-                <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">Phone</label>
+                <label htmlFor="sup-phone" className="block text-sm font-medium text-foreground">{t('supplierPhone')}</label>
                 <Input
                   id="sup-phone"
                   type="tel"
@@ -236,7 +238,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div>
-                <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">Lead Time (days)</label>
+                <label htmlFor="sup-lead" className="block text-sm font-medium text-foreground">{t('supplierLeadTime')}</label>
                 <Input
                   id="sup-lead"
                   type="number"
@@ -253,7 +255,7 @@ export default function SuppliersPage() {
                 Cancel
               </Button>
               <Button onClick={handleSubmit} disabled={!formName.trim() || submitting}>
-                {submitting ? 'Saving...' : editingSupplier ? 'Save Changes' : 'Add Supplier'}
+                {submitting ? 'Saving...' : editingSupplier ? t('saveChanges') : t('addSupplier')}
               </Button>
             </DialogFooter>
           </DialogContent>

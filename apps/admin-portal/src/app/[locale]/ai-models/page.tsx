@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import type { AIModelType } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/button'
@@ -66,6 +67,7 @@ function ModelTypeBadge({ type }: { type: string }) {
 }
 
 export default function AIModelsPage() {
+  const t = useTranslations('aiModels')
   const [models, setModels] = useState<ModelEntry[]>([])
   const [stats, setStats] = useState<{ modelStats: ModelStats[]; totalStaleDeviceEvents: number; drugDbStalenessIncidents: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -85,7 +87,7 @@ export default function AIModelsPage() {
       setModels(manifestResult.models)
       setStats(statsResult)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      setError(err instanceof Error ? err.message : t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -96,10 +98,10 @@ export default function AIModelsPage() {
   }, [fetchData])
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6 space-y-6">
+    <div className="flex flex-col gap-4">
         <div className="flex items-start justify-end">
           <Button onClick={() => setShowPublishForm(!showPublishForm)}>
-            {showPublishForm ? 'Cancel' : 'Publish New Version'}
+            {showPublishForm ? t('cancelPublish') : t('publishNewVersion')}
           </Button>
         </div>
 
@@ -113,17 +115,17 @@ export default function AIModelsPage() {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-              <p className="text-sm font-medium text-muted-foreground">Registered Models</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('statsRegisteredModels')}</p>
               <p className="text-2xl font-bold text-foreground mt-1">{models.length}</p>
             </div>
             <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-              <p className="text-sm font-medium text-muted-foreground">Stale Device Events (30d)</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('statsStaleDeviceEvents')}</p>
               <p className={`text-2xl font-bold mt-1 ${stats.totalStaleDeviceEvents > 0 ? 'text-warning' : 'text-success'}`}>
                 {stats.totalStaleDeviceEvents}
               </p>
             </div>
             <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-              <p className="text-sm font-medium text-muted-foreground">Drug DB Staleness Incidents</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('statsDrugDbStaleness')}</p>
               <p className={`text-2xl font-bold mt-1 ${stats.drugDbStalenessIncidents > 0 ? 'text-destructive' : 'text-success'}`}>
                 {stats.drugDbStalenessIncidents}
               </p>
@@ -143,27 +145,27 @@ export default function AIModelsPage() {
 
         {/* Model Registry Table */}
         <div>
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Model Manifest</h2>
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('manifestTitle')}</h2>
           <div className="rounded-2xl border border-border overflow-hidden">
             <table className="min-w-full">
               <thead className="bg-card">
                 <tr>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Model</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Type</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Version</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Size</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Released</th>
-                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Delta From</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colModel')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colType')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colVersion')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colSize')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colReleased')}</th>
+                  <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colDeltaFrom')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading...</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('loading')}</td>
                   </tr>
                 ) : models.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">No models registered yet.</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">{t('noModels')}</td>
                   </tr>
                 ) : (
                   models.map((model) => (
@@ -185,17 +187,17 @@ export default function AIModelsPage() {
         {/* Update Stats Table */}
         {stats && stats.modelStats.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Update Statistics (Last 30 Days)</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('updateStatsTitle')}</h2>
             <div className="rounded-2xl border border-border overflow-hidden">
               <table className="min-w-full">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Model</th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Success Rate</th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Started</th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Completed</th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Failed</th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">Stale</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colModel')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colSuccessRate')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colStarted')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colCompleted')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colFailed')}</th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('colStale')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
@@ -225,6 +227,7 @@ export default function AIModelsPage() {
 }
 
 function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
+  const t = useTranslations('aiModels')
   const [formData, setFormData] = useState({
     modelId: '',
     modelType: 'SOAP_MACRO_TEMPLATES' as (typeof MODEL_TYPES)[number],
@@ -254,7 +257,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
       })
       onSuccess()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to publish')
+      setFormError(err instanceof Error ? err.message : t('publishError'))
     } finally {
       setSubmitting(false)
     }
@@ -262,7 +265,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl bg-popover border border-border p-6 space-y-4 shadow-card">
-      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Publish New Model Version</h2>
+      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('publishFormTitle')}</h2>
 
       {formError && (
         <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{formError}</div>
@@ -270,17 +273,17 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Model ID</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishModelId')}</label>
           <Input
             type="text"
             required
             value={formData.modelId}
             onChange={(e) => setFormData((p) => ({ ...p, modelId: e.target.value }))}
-            placeholder="e.g., soap-macros"
+            placeholder={t('publishModelIdPlaceholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Model Type</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishModelType')}</label>
           <select
             value={formData.modelType}
             onChange={(e) => setFormData((p) => ({ ...p, modelType: e.target.value as (typeof MODEL_TYPES)[number] }))}
@@ -292,17 +295,17 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Version</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishVersion')}</label>
           <Input
             type="text"
             required
             value={formData.version}
             onChange={(e) => setFormData((p) => ({ ...p, version: e.target.value }))}
-            placeholder="e.g., 2.1.0"
+            placeholder={t('publishVersionPlaceholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">File Size (bytes)</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishFileSize')}</label>
           <Input
             type="number"
             required
@@ -312,7 +315,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Download URL</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishDownloadUrl')}</label>
           <Input
             type="url"
             required
@@ -321,7 +324,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">SHA-256 Checksum</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishChecksum')}</label>
           <Input
             type="text"
             required
@@ -329,23 +332,23 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
             value={formData.checksum}
             onChange={(e) => setFormData((p) => ({ ...p, checksum: e.target.value }))}
             className="font-mono"
-            placeholder="64-character hex string"
+            placeholder={t('publishChecksumPlaceholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">Delta From Version (optional)</label>
+          <label className="block text-sm font-medium text-muted-foreground mb-1">{t('publishDeltaFrom')}</label>
           <Input
             type="text"
             value={formData.deltaFromVersion}
             onChange={(e) => setFormData((p) => ({ ...p, deltaFromVersion: e.target.value }))}
-            placeholder="e.g., 2.0.0"
+            placeholder={t('publishDeltaFromPlaceholder')}
           />
         </div>
       </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={submitting}>
-          {submitting ? 'Publishing...' : 'Publish'}
+          {submitting ? t('publishing') : t('publishButton')}
         </Button>
       </div>
     </form>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
 import { ExportButton } from '@/components/ExportButton'
@@ -35,6 +36,7 @@ function getUrgencyBadge(daysRemaining: number | null): {
 }
 
 export default function LicenseExpiryPage() {
+  const t = useTranslations('providers')
   const mounted = useRef(true)
   const [providers, setProviders] = useState<ExpiringProvider[]>([])
   const [total, setTotal] = useState(0)
@@ -65,7 +67,7 @@ export default function LicenseExpiryPage() {
       setTotal(result.total)
     } catch {
       if (!mounted.current) return
-      setError('Failed to load expiring providers')
+      setError(t('expiryErrorLoad'))
     } finally {
       if (mounted.current) setLoading(false)
     }
@@ -79,13 +81,13 @@ export default function LicenseExpiryPage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
             <input
               type="text"
-              placeholder="Search by name or email..."
+              placeholder={t('expirySearchPlaceholder')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCursor(0) }}
               className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
@@ -96,13 +98,13 @@ export default function LicenseExpiryPage() {
               <button
                 key={w}
                 onClick={() => { setExpiryWindow(w); setCursor(0) }}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                   expiryWindow === w
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {w === 'all' ? 'All' : `≤ ${w.replace('d', '')} days`}
+                {w === 'all' ? t('expiryFilterAll') : w === '7d' ? t('expiryFilter7d') : w === '30d' ? t('expiryFilter30d') : t('expiryFilter60d')}
               </button>
             ))}
           </div>
@@ -118,26 +120,26 @@ export default function LicenseExpiryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-card">
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Provider Name</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">License Number</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Issuing Body</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Expiry Date</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Days Remaining</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">KYC Status</th>
-                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Action</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColProvider')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColLicense')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColIssuingBody')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColExpiryDate')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColDaysRemaining')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColKycStatus')}</th>
+                <th className="text-start px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('expiryColAction')}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    Loading...
+                    {t('expiryLoadingProviders')}
                   </td>
                 </tr>
               ) : providers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    No providers found for the selected filter
+                    {t('expiryNoProviders')}
                   </td>
                 </tr>
               ) : (
@@ -181,7 +183,7 @@ export default function LicenseExpiryPage() {
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); setRenewTarget(p) }}
                         >
-                          Renew
+                          {t('expiryRenew')}
                         </Button>
                       </td>
                     </tr>

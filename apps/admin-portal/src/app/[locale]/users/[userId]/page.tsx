@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -45,8 +46,8 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function formatDateTime(iso: string | null): string {
-  if (!iso) return 'Never'
+function formatDateTime(iso: string | null, never: string): string {
+  if (!iso) return never
   return new Date(iso).toLocaleString('en-GB', {
     year: 'numeric',
     month: 'short',
@@ -57,6 +58,7 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function UserDetailPage() {
+  const t = useTranslations('users')
   const params = useParams()
   const _router = useRouter()
   const userId = params.userId as string
@@ -84,7 +86,7 @@ export default function UserDetailPage() {
       setUser(result)
       setEditName(result.name)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load user')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setLoading(false)
     }
@@ -104,9 +106,9 @@ export default function UserDetailPage() {
       setError(null)
       await trpc.admin.updateUser.mutate({ userId, name: editName.trim() })
       setUser({ ...user, name: editName.trim() })
-      setSaveMessage('Changes saved.')
+      setSaveMessage(t('detailActionSuccess'))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to save changes')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setSaving(false)
     }
@@ -122,9 +124,9 @@ export default function UserDetailPage() {
       setUser({ ...user, status: 'SUSPENDED', suspensionReason: suspendReason.trim(), suspendedAt: new Date().toISOString() })
       setShowSuspendForm(false)
       setSuspendReason('')
-      setActionMessage('User suspended.')
+      setActionMessage(t('detailActionSuccess'))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to suspend user')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setActionLoading(false)
     }
@@ -138,9 +140,9 @@ export default function UserDetailPage() {
       setError(null)
       await trpc.admin.reactivateUser.mutate({ userId })
       setUser({ ...user, status: 'ACTIVE', suspensionReason: null, suspendedAt: null })
-      setActionMessage('User reactivated.')
+      setActionMessage(t('detailActionSuccess'))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to reactivate user')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setActionLoading(false)
     }
@@ -153,9 +155,9 @@ export default function UserDetailPage() {
       setActionMessage(null)
       setError(null)
       await trpc.admin.resendInvitation.mutate({ userId })
-      setActionMessage('Invitation resent.')
+      setActionMessage(t('detailActionSuccess'))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to resend invitation')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setActionLoading(false)
     }
@@ -168,32 +170,32 @@ export default function UserDetailPage() {
       setActionMessage(null)
       setError(null)
       await trpc.admin.resetUserPassword.mutate({ userId })
-      setActionMessage('Password reset email sent.')
+      setActionMessage(t('detailActionSuccess'))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to reset password')
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setActionLoading(false)
     }
   }
 
   if (loading) {
-    return <div className="text-muted-foreground p-8">Loading user details...</div>
+    return <div className="text-muted-foreground p-8">{t('detailLoading')}</div>
   }
 
   if (error && !user) {
     return (
-      <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Users</Link>
+      <div className="flex flex-col gap-4">
+        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToUsers')}</Link>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
   }
 
-  if (!user) return null
+  if (!user) return <div className="text-muted-foreground p-8">{t('detailNotFound')}</div>
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Users</Link>
+    <div className="flex flex-col gap-4">
+        <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToUsers')}</Link>
 
         {/* Messages */}
         {error && (
@@ -210,13 +212,13 @@ export default function UserDetailPage() {
           {/* Section A: Profile */}
           <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              <span className="wavy-divider">Profile</span>
+              <span className="wavy-divider">{t('detailProfile')}</span>
             </h2>
 
             <div className="mt-4 space-y-4">
               {/* Name — editable */}
               <div>
-                <label htmlFor="user-name" className="block text-sm font-medium text-muted-foreground">Name</label>
+                <label htmlFor="user-name" className="block text-sm font-medium text-muted-foreground">{t('detailName')}</label>
                 <Input
                   id="user-name"
                   type="text"
@@ -228,13 +230,13 @@ export default function UserDetailPage() {
 
               {/* Email — read-only */}
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Email</dt>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailEmail')}</dt>
                 <dd className="mt-1 text-sm text-foreground">{user.email}</dd>
               </div>
 
               {/* Role */}
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Role</dt>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailRole')}</dt>
                 <dd className="mt-1 text-sm text-foreground">
                   {user.role}
                   {user.moduleName && <span className="text-muted-foreground"> ({user.moduleName})</span>}
@@ -243,27 +245,27 @@ export default function UserDetailPage() {
 
               {/* Status */}
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Status</dt>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailStatus')}</dt>
                 <dd className="mt-1"><StatusBadge status={user.status} /></dd>
               </div>
 
               {/* Suspension reason alert */}
               {user.status === 'SUSPENDED' && user.suspensionReason && (
                 <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                  <strong>Suspension Reason:</strong> {user.suspensionReason}
+                  <strong>{t('detailSuspensionReason')}:</strong> {user.suspensionReason}
                 </div>
               )}
 
               {/* Last Login */}
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Last Login</dt>
-                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.lastLoginAt)}</dd>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailLastLogin')}</dt>
+                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.lastLoginAt, t('detailNever'))}</dd>
               </div>
 
               {/* Created */}
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Created</dt>
-                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.createdAt)}</dd>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailCreatedAt')}</dt>
+                <dd className="mt-1 text-sm text-foreground">{formatDateTime(user.createdAt, t('detailNever'))}</dd>
               </div>
 
               {/* Save button */}
@@ -271,7 +273,7 @@ export default function UserDetailPage() {
                 onClick={handleSave}
                 disabled={!isDirty || saving}
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? t('detailLoading') : t('detailSave')}
               </Button>
             </div>
           </div>
@@ -279,7 +281,7 @@ export default function UserDetailPage() {
           {/* Section B: Actions */}
           <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              <span className="wavy-divider">Actions</span>
+              <span className="wavy-divider">{t('detailActions')}</span>
             </h2>
 
             <div className="mt-4 space-y-4">
@@ -289,14 +291,14 @@ export default function UserDetailPage() {
                   {showSuspendForm ? (
                     <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 space-y-3">
                       <label htmlFor="suspend-reason" className="block text-sm font-medium text-destructive">
-                        Suspension Reason (required)
+                        {t('detailSuspensionReasonLabel')}
                       </label>
                       <Textarea
                         id="suspend-reason"
                         value={suspendReason}
                         onChange={(e) => setSuspendReason(e.target.value)}
                         rows={3}
-                        placeholder="Enter reason for suspension..."
+                        placeholder={t('detailSuspendPlaceholder')}
                       />
                       <div className="flex gap-2">
                         <Button
@@ -304,13 +306,13 @@ export default function UserDetailPage() {
                           onClick={handleSuspend}
                           disabled={!suspendReason.trim() || actionLoading}
                         >
-                          {actionLoading ? 'Suspending...' : 'Confirm Suspend'}
+                          {actionLoading ? t('detailLoading') : t('detailSuspend')}
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => { setShowSuspendForm(false); setSuspendReason('') }}
                         >
-                          Cancel
+                          {t('detailCancel')}
                         </Button>
                       </div>
                     </div>
@@ -319,7 +321,7 @@ export default function UserDetailPage() {
                       variant="destructive"
                       onClick={() => setShowSuspendForm(true)}
                     >
-                      Suspend User
+                      {t('detailSuspend')}
                     </Button>
                   )}
                 </div>
@@ -332,7 +334,7 @@ export default function UserDetailPage() {
                   onClick={handleReactivate}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Reactivating...' : 'Reactivate User'}
+                  {actionLoading ? t('detailLoading') : t('detailReactivate')}
                 </Button>
               )}
 
@@ -343,7 +345,7 @@ export default function UserDetailPage() {
                   onClick={handleResendInvitation}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Sending...' : 'Resend Invitation'}
+                  {actionLoading ? t('detailLoading') : t('detailResendInvitation')}
                 </Button>
               )}
 
@@ -354,7 +356,7 @@ export default function UserDetailPage() {
                   onClick={handleResetPassword}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? 'Sending...' : 'Reset Password'}
+                  {actionLoading ? t('detailLoading') : t('detailResetPassword')}
                 </Button>
               )}
             </div>

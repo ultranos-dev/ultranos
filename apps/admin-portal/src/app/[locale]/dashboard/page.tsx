@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { DunningBanner } from '@/components/subscriptions/DunningBanner'
@@ -31,6 +32,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const t = useTranslations('dashboard')
   const { locationId } = useLocationFilter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [statsError, setStatsError] = useState(false)
@@ -41,17 +43,17 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <DunningBanner />
 
         {statsError && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-            Failed to load dashboard stats. Data shown may be stale.
+            {t('errorLoadFailed')}
           </div>
         )}
 
         {/* Row 1: 4 stat cards */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Pending KYC Reviews */}
           <div
             onClick={() => router.push('/providers')}
@@ -61,13 +63,13 @@ export default function DashboardPage() {
                 : 'border-primary/20'
             }`}
           >
-            <p className="text-sm font-medium text-muted-foreground">Pending KYC Reviews</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('pendingKyc')}</p>
             <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
               {stats?.pendingKycReviews ?? '\u2014'}
             </p>
             {stats && (
               <p className={`mt-1 text-sm font-medium ${stats.slaBreachedKycCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {stats.slaBreachedKycCount} breaching SLA
+                {t('breachingSla', { count: stats.slaBreachedKycCount })}
               </p>
             )}
           </div>
@@ -77,13 +79,13 @@ export default function DashboardPage() {
             onClick={() => router.push('/labs')}
             className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
           >
-            <p className="text-sm font-medium text-muted-foreground">Pending Lab Approvals</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('pendingLabApprovals')}</p>
             <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
               {stats?.pendingLabApprovals ?? '\u2014'}
             </p>
             {stats && (
               <p className={`mt-1 text-sm font-medium ${stats.oldestPendingLabDays > 7 ? 'text-warning' : 'text-muted-foreground'}`}>
-                oldest: {stats.oldestPendingLabDays}d ago
+                {t('oldestDaysAgo', { days: stats.oldestPendingLabDays })}
               </p>
             )}
           </div>
@@ -97,13 +99,13 @@ export default function DashboardPage() {
                 : 'border-border'
             }`}
           >
-            <p className="text-sm font-medium text-muted-foreground">Active Alerts</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('activeAlerts')}</p>
             <p className={`mt-2 text-xl font-semibold tracking-tight ${stats && stats.activeAlerts > 0 ? 'text-destructive' : 'text-foreground'}`}>
               {stats?.activeAlerts ?? '\u2014'}
             </p>
             {stats && (
               <p className={`mt-1 text-sm font-medium ${stats.highSeverityAlertCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {stats.highSeverityAlertCount} HIGH severity
+                {t('highSeverityCount', { count: stats.highSeverityAlertCount })}
               </p>
             )}
           </div>
@@ -113,20 +115,20 @@ export default function DashboardPage() {
             onClick={() => router.push('/audit')}
             className="rounded-2xl bg-popover border border-border p-6 cursor-pointer hover:scale-[1.02] transition-transform duration-200 shadow-card"
           >
-            <p className="text-sm font-medium text-muted-foreground">Recent Audit Events</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('recentAuditEvents')}</p>
             <p className="mt-2 text-xl font-semibold tracking-tight text-foreground">
               {stats?.recentAuditEvents ?? '\u2014'}
             </p>
             {stats && (
               <p className={`mt-1 text-sm font-medium ${stats.auditChainHealthy ? 'text-success' : 'text-destructive'}`}>
-                {stats.auditChainHealthy ? 'Healthy' : 'Broken'}
+                {stats.auditChainHealthy ? t('chainStatusHealthy') : t('chainStatusBroken')}
               </p>
             )}
           </div>
         </div>
 
         {/* Row 2: Subscription + User Summary */}
-        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <SubscriptionWidget />
           </div>
@@ -136,9 +138,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Row 3: Recent Activity */}
-        <div className="mt-6">
-          <RecentActivityFeed />
-        </div>
+        <RecentActivityFeed />
       </div>
   )
 }

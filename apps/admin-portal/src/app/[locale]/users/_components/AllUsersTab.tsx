@@ -127,7 +127,7 @@ export default function AllUsersTab() {
   const hasSuspendedUsers = users.some((u) => u.status === 'SUSPENDED')
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
       {/* Top bar: filters + CTA */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">

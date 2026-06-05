@@ -3,24 +3,26 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import AllUsersTab from './_components/AllUsersTab'
 import LabAssignmentsTab from './_components/LabAssignmentsTab'
 
 type TabId = 'all-users' | 'lab-assignments'
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'all-users', label: 'All Users' },
-  { id: 'lab-assignments', label: 'Lab Assignments' },
-]
-
 function UsersContent() {
+  const t = useTranslations('users')
   const searchParams = useSearchParams()
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'all-users', label: t('tabAllUsers') },
+    { id: 'lab-assignments', label: t('tabLabAssignments') },
+  ]
   const rawTab = searchParams.get('tab')
   const activeTab: TabId = rawTab === 'lab-assignments' ? 'lab-assignments' : 'all-users'
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-8 pt-6">
+      <div>
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {TABS.map((tab) => (
             <Link

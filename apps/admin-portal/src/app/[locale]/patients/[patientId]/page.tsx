@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { ConsentTimeline } from '@/components/patients/ConsentTimeline'
@@ -55,6 +56,7 @@ function DetailRow({ label, value }: { label: string; value: string | React.Reac
 }
 
 export default function PatientDetailPage() {
+  const t = useTranslations('patients')
   const params = useParams()
   const patientId = params.patientId as string
 
@@ -69,7 +71,7 @@ export default function PatientDetailPage() {
       const result = await trpc.patientAdmin.getById.query({ patientId })
       setPatient(result.patient as unknown as PatientDetail)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load patient')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -84,13 +86,13 @@ export default function PatientDetailPage() {
   }
 
   if (loading) {
-    return <div className="text-muted-foreground p-8">Loading patient details...</div>
+    return <div className="text-muted-foreground p-8">{t('detailLoading')}</div>
   }
 
   if (error && !patient) {
     return (
-      <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+      <div className="flex flex-col gap-4">
+        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -99,57 +101,57 @@ export default function PatientDetailPage() {
   if (!patient) return null
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
+    <div className="flex flex-col gap-4">
+        <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t('detailBackToPatients')}</Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Demographics card */}
           <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              <span className="wavy-divider">Demographics</span>
+              <span className="wavy-divider">{t('detailDemographics')}</span>
             </h2>
             <div className="mt-4 space-y-4">
-              <DetailRow label="Name Given" value={patient.name_given ?? '-'} />
-              <DetailRow label="Name Father" value={patient.name_father ?? '-'} />
-              <DetailRow label="Name Grandfather" value={patient.name_grandfather ?? '-'} />
-              <DetailRow label="Gender" value={patient.gender ?? '-'} />
-              <DetailRow label="Birth Year" value={patient.birth_year != null ? String(patient.birth_year) : '-'} />
-              <DetailRow label="District Origin" value={patient.address_district_origin ?? '-'} />
-              <DetailRow label="Province Origin" value={patient.address_province_origin ?? '-'} />
+              <DetailRow label={t('detailNameGiven')} value={patient.name_given ?? '-'} />
+              <DetailRow label={t('detailNameFather')} value={patient.name_father ?? '-'} />
+              <DetailRow label={t('detailNameGrandfather')} value={patient.name_grandfather ?? '-'} />
+              <DetailRow label={t('detailGender')} value={patient.gender ?? '-'} />
+              <DetailRow label={t('detailBirthYear')} value={patient.birth_year != null ? String(patient.birth_year) : '-'} />
+              <DetailRow label={t('detailDistrictOrigin')} value={patient.address_district_origin ?? '-'} />
+              <DetailRow label={t('detailProvinceOrigin')} value={patient.address_province_origin ?? '-'} />
             </div>
           </div>
 
           {/* MPI & Status card */}
           <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-              <span className="wavy-divider">MPI &amp; Status</span>
+              <span className="wavy-divider">{t('detailMpiStatus')}</span>
             </h2>
             <div className="mt-4 space-y-4">
               <DetailRow
-                label="MPI Score"
+                label={t('detailMpiScore')}
                 value={patient.mpi_score != null ? String(patient.mpi_score) : '-'}
               />
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">MPI Warn</dt>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailMpiWarn')}</dt>
                 <dd className="mt-1"><MpiWarnBadge warn={patient.mpi_warn} /></dd>
               </div>
-              <DetailRow label="Patient Tier" value={patient.patient_tier ?? '-'} />
+              <DetailRow label={t('detailPatientTier')} value={patient.patient_tier ?? '-'} />
               <div>
-                <dt className="text-sm font-medium text-muted-foreground">Status</dt>
+                <dt className="text-sm font-medium text-muted-foreground">{t('detailStatus')}</dt>
                 <dd className="mt-1"><StatusBadge active={patient.is_active} /></dd>
               </div>
-              <DetailRow label="Created At" value={formatDateTime(patient.created_at)} />
+              <DetailRow label={t('detailCreatedAt')} value={formatDateTime(patient.created_at)} />
             </div>
 
             {/* Actions */}
             <div className="mt-6 pt-4 border-t border-border">
               <Button asChild>
                 <Link href={`/patients/merge?survivor=${patient.id}`}>
-                  Merge with Another Patient
+                  {t('detailMergeLink')}
                 </Link>
               </Button>
             </div>
@@ -157,9 +159,7 @@ export default function PatientDetailPage() {
         </div>
 
         {/* Consent Timeline section */}
-        <div className="mt-6">
-          <ConsentTimeline patientId={patient.id} />
-        </div>
+        <ConsentTimeline patientId={patient.id} />
       </div>
   )
 }

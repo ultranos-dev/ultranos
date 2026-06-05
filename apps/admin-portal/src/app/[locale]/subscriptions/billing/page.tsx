@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { PaymentMethodCard } from '@/components/subscriptions/PaymentMethodCard'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ interface PaymentMethod {
 }
 
 export default function BillingPage() {
+  const t = useTranslations('subscriptions')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +37,7 @@ export default function BillingPage() {
       const result = await trpc.subscription.getPaymentMethod.query()
       setPaymentMethod(result.paymentMethod ?? null)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load payment method')
+      setError((err as Error)?.message ?? t('billingErrorLoad'))
     } finally {
       setLoading(false)
     }
@@ -63,42 +65,40 @@ export default function BillingPage() {
       setPaymentMethod(null)
       setShowRemoveModal(false)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to remove payment method')
+      setError((err as Error)?.message ?? t('billingRemoveError'))
     } finally {
       setRemoving(false)
     }
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <Link
           href="/subscriptions"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          &larr; Back to Subscriptions
+          {t('billingBack')}
         </Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading billing details...</div>
+          <div className="text-muted-foreground">{t('billingLoading')}</div>
         ) : paymentMethod ? (
-          <div className="mt-6">
-            <PaymentMethodCard
-              method={paymentMethod}
-              onUpdate={handleAddOrUpdate}
-              onRemove={() => setShowRemoveModal(true)}
-            />
-          </div>
+          <PaymentMethodCard
+            method={paymentMethod}
+            onUpdate={handleAddOrUpdate}
+            onRemove={() => setShowRemoveModal(true)}
+          />
         ) : (
-          <div className="mt-6 rounded-3xl border border-warning/20 bg-warning/10 p-6">
+          <div className="rounded-3xl border border-warning/20 bg-warning/10 p-6">
             <p className="text-sm font-medium text-warning">
-              No payment method on file. Add one to continue your subscription after the trial period.
+              {t('billingNoPaymentMethod')}
             </p>
             <Button onClick={handleAddOrUpdate} className="mt-4">
-              Add Payment Method
+              {t('billingAddPaymentMethod')}
             </Button>
           </div>
         )}
@@ -107,9 +107,9 @@ export default function BillingPage() {
         <Dialog open={showRemoveModal} onOpenChange={setShowRemoveModal}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Remove Payment Method?</DialogTitle>
+              <DialogTitle>{t('billingRemoveTitle')}</DialogTitle>
               <DialogDescription>
-                Your subscription will be suspended if no payment method is on file at your next billing date.
+                {t('billingRemoveDesc')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -117,7 +117,7 @@ export default function BillingPage() {
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleRemove} disabled={removing}>
-                {removing ? 'Removing...' : 'Remove'}
+                {removing ? t('billingLoading') : t('billingRemoveCard')}
               </Button>
             </DialogFooter>
           </DialogContent>

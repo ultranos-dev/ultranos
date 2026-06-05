@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { LabNetworkCard } from '@/components/network/LabNetworkCard'
 import { OutbreakActivationModal } from '@/components/network/OutbreakActivationModal'
@@ -38,6 +39,7 @@ interface Outbreak {
 const STATUS_FILTERS: StatusFilter[] = ['ALL', 'ACTIVE', 'PENDING', 'SUSPENDED']
 
 export default function NetworkPage() {
+  const t = useTranslations('network')
   const [labs, setLabs] = useState<LabSummary[]>([])
   const [outbreaks, setOutbreaks] = useState<Outbreak[]>([])
   const [filter, setFilter] = useState<StatusFilter>('ALL')
@@ -57,7 +59,7 @@ export default function NetworkPage() {
       setLabs(networkResult.labs)
       setOutbreaks(outbreakResult.outbreaks)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load network data')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -76,15 +78,15 @@ export default function NetworkPage() {
         {/* Action buttons */}
         <div className="flex items-center gap-3 flex-wrap">
           <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
-            Activate Outbreak Mode
+            {t('activateOutbreakMode')}
           </Button>
           <Button size="lg" onClick={() => setShowChwModal(true)}>
-            Enroll CHW
+            {t('enrollChw')}
           </Button>
         </div>
 
         {/* Filter tabs */}
-        <div className="mt-4 flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
@@ -95,24 +97,24 @@ export default function NetworkPage() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+              {s === 'ALL' ? t('filterAll') : s === 'ACTIVE' ? t('filterActive') : s === 'PENDING' ? t('filterPending') : t('filterSuspended')}
             </button>
           ))}
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading network data...</div>
+          <div className="text-muted-foreground">{t('loadingNodes')}</div>
         ) : (
           <>
             {/* Lab grid */}
             {filteredLabs.length === 0 ? (
-              <EmptyState className="mt-6" title={`No labs found${filter !== 'ALL' ? ` with status ${filter}` : ''}.`} />
+              <EmptyState title={t('noNodes')} />
             ) : (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredLabs.map((lab) => (
                   <LabNetworkCard key={lab.labId} lab={lab} />
                 ))}
@@ -120,7 +122,7 @@ export default function NetworkPage() {
             )}
 
             {/* Outbreak Dashboard */}
-            <div className="mt-8 border-t border-border pt-6">
+            <div className="border-t border-border pt-6">
               <OutbreakDashboard
                 outbreaks={outbreaks}
                 onResolve={() => {}}

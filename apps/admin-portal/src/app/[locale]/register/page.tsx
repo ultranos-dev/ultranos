@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, setAccessToken } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -28,6 +29,7 @@ type Step = 1 | 2 | 3
  * - Redirect to dashboard with welcome toast
  */
 export default function RegisterPage() {
+  const t = useTranslations('register')
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,7 +65,7 @@ export default function RegisterPage() {
       })
 
       if (!registrationResult.success) {
-        setError('Registration failed — please try again or contact support')
+        setError(t('errorGeneric'))
         setLoading(false)
         return
       }
@@ -76,7 +78,7 @@ export default function RegisterPage() {
       })
 
       if (signInError || !signInData.session) {
-        setError('Account created but auto-login failed. Please sign in manually.')
+        setError(t('errorGeneric'))
         setLoading(false)
         setTimeout(() => {
           window.location.href = '/login'
@@ -102,7 +104,7 @@ export default function RegisterPage() {
 
       if (!selectRes.ok) {
         const errBody = await selectRes.json().catch(() => null)
-        const msg = errBody?.error?.json?.message ?? 'Failed to select modules'
+        const msg = errBody?.error?.json?.message ?? t('errorGeneric')
         throw new Error(msg)
       }
 
@@ -117,28 +119,29 @@ export default function RegisterPage() {
         role: 'ADMIN',
         sessionId: payload.session_id ?? '',
         email: signInData.session.user?.email ?? '',
+        name: signInData.session.user?.user_metadata?.full_name ?? signInData.session.user?.user_metadata?.name ?? '',
       })
 
       // Redirect to dashboard with welcome parameter
       window.location.href = '/dashboard?welcome=true'
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : 'Registration failed — please try again or contact support'
+        err instanceof Error ? err.message : t('errorGeneric')
       setError(message)
       setLoading(false)
     }
   }
 
-  const stepLabels = ['Organization', 'Admin Account', 'Modules']
+  const stepLabels = [t('stepOrganization'), t('stepAdminAccount'), t('stepModules')]
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl bg-popover p-6 shadow-xl">
         <h1 className="mb-2 text-center text-xl font-bold text-foreground">
-          Register Your Organization
+          {t('pageTitle')}
         </h1>
         <p className="mb-6 text-center text-sm text-muted-foreground">
-          Get started with a 30-day free trial
+          {t('subtitle')}
         </p>
 
         {/* Progress indicator */}
@@ -206,9 +209,9 @@ export default function RegisterPage() {
 
         {/* Sign-in link */}
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Already have an account?{' '}
+          {t('alreadyHaveAccount')}{' '}
           <a href="/login" className="font-medium text-foreground hover:text-primary transition-colors duration-200">
-            Sign in
+            {t('signIn')}
           </a>
         </p>
       </div>

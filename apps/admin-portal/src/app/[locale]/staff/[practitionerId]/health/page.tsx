@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 
@@ -40,19 +41,6 @@ const INITIAL_FORM: FormState = {
   exposureHistory: [],
 }
 
-const STATUS_OPTIONS: { value: VaccinationStatus; label: string }[] = [
-  { value: 'NOT_STARTED', label: 'Not Started' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'COMPLETE', label: 'Complete' },
-]
-
-const TB_RESULT_OPTIONS: { value: TbResult; label: string }[] = [
-  { value: '', label: 'Select...' },
-  { value: 'NEGATIVE', label: 'Negative' },
-  { value: 'POSITIVE', label: 'Positive' },
-  { value: 'INDETERMINATE', label: 'Indeterminate' },
-]
-
 function ScreeningBanner({ reminders }: { reminders: { tbScreening: { status: string; message: string } } }) {
   const { status, message } = reminders.tbScreening
   if (status === 'UP_TO_DATE') return null
@@ -71,9 +59,23 @@ function ScreeningBanner({ reminders }: { reminders: { tbScreening: { status: st
 }
 
 export default function EmployeeHealthPage() {
+  const t = useTranslations('staff')
   const params = useParams()
   const router = useRouter()
   const practitionerId = params.practitionerId as string
+
+  const STATUS_OPTIONS: { value: VaccinationStatus; label: string }[] = [
+    { value: 'NOT_STARTED', label: t('healthStatusNotStarted') },
+    { value: 'IN_PROGRESS', label: t('healthStatusInProgress') },
+    { value: 'COMPLETE', label: t('healthStatusComplete') },
+  ]
+
+  const TB_RESULT_OPTIONS: { value: TbResult; label: string }[] = [
+    { value: '', label: t('healthTbResultSelect') },
+    { value: 'NEGATIVE', label: t('healthTbResultNegative') },
+    { value: 'POSITIVE', label: t('healthTbResultPositive') },
+    { value: 'INDETERMINATE', label: t('healthTbResultIndeterminate') },
+  ]
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [loading, setLoading] = useState(true)
@@ -101,7 +103,7 @@ export default function EmployeeHealthPage() {
         setReminders(record.reminders)
       }
     } catch {
-      setToast({ type: 'error', message: 'Failed to load health record' })
+      setToast({ type: 'error', message: t('healthLoadError') })
     } finally {
       setLoading(false)
     }
@@ -133,10 +135,10 @@ export default function EmployeeHealthPage() {
         tbScreeningResult: (form.tbScreeningResult || null) as 'NEGATIVE' | 'POSITIVE' | 'INDETERMINATE' | null,
         exposureHistory: form.exposureHistory,
       })
-      setToast({ type: 'success', message: 'Health record saved successfully' })
+      setToast({ type: 'success', message: t('healthSaveSuccess') })
       await loadRecord()
     } catch {
-      setToast({ type: 'error', message: 'Failed to save health record' })
+      setToast({ type: 'error', message: t('healthSaveError') })
     } finally {
       setSaving(false)
     }
@@ -167,28 +169,25 @@ export default function EmployeeHealthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="mx-auto max-w-3xl px-6 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 w-48 rounded bg-card" />
-            <div className="h-40 rounded bg-card" />
-            <div className="h-40 rounded bg-card" />
-          </div>
-        </main>
+      <div className="mx-auto max-w-3xl">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-48 rounded bg-card" />
+          <div className="h-40 rounded bg-card" />
+          <div className="h-40 rounded bg-card" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-3xl px-6 py-8">
+    <div className="mx-auto max-w-3xl">
         {/* Back link */}
         <Button
           variant="link"
           onClick={() => router.push('/users?tab=lab-assignments')}
           className="mb-4 px-0"
         >
-          &larr; Back to Lab Assignments
+          {t('healthBack')}
         </Button>
 
         {/* Toast */}
@@ -210,10 +209,10 @@ export default function EmployeeHealthPage() {
 
         {/* Hepatitis B */}
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-text">Hepatitis B</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text">{t('healthHepB')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthStatus')}</span>
               <select
                 value={form.hepBStatus}
                 onChange={(e) => setForm({ ...form, hepBStatus: e.target.value as VaccinationStatus })}
@@ -225,7 +224,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Titer Date</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthTiterDate')}</span>
               <input
                 type="date"
                 value={form.hepBTiterDate}
@@ -238,10 +237,10 @@ export default function EmployeeHealthPage() {
 
         {/* Tetanus */}
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-text">Tetanus</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text">{t('healthTetanus')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthStatus')}</span>
               <select
                 value={form.tetanusStatus}
                 onChange={(e) => setForm({ ...form, tetanusStatus: e.target.value as VaccinationStatus })}
@@ -253,7 +252,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Vaccination Date</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthVaccinationDate')}</span>
               <input
                 type="date"
                 value={form.tetanusDate}
@@ -266,10 +265,10 @@ export default function EmployeeHealthPage() {
 
         {/* COVID-19 */}
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-text">COVID-19</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text">{t('healthCovid')}</h2>
           <div className="grid grid-cols-3 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Status</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthStatus')}</span>
               <select
                 value={form.covidStatus}
                 onChange={(e) => setForm({ ...form, covidStatus: e.target.value as VaccinationStatus })}
@@ -281,7 +280,7 @@ export default function EmployeeHealthPage() {
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Doses</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthDoses')}</span>
               <input
                 type="number"
                 min={0}
@@ -291,7 +290,7 @@ export default function EmployeeHealthPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Last Dose Date</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthLastDoseDate')}</span>
               <input
                 type="date"
                 value={form.covidLastDoseDate}
@@ -304,10 +303,10 @@ export default function EmployeeHealthPage() {
 
         {/* TB Screening */}
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-text">TB Screening</h2>
+          <h2 className="mb-4 text-lg font-semibold text-text">{t('healthTbScreening')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Screening Date</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthScreeningDate')}</span>
               <input
                 type="date"
                 value={form.tbScreeningDate}
@@ -316,7 +315,7 @@ export default function EmployeeHealthPage() {
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-muted-foreground">Result</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('healthResult')}</span>
               <select
                 value={form.tbScreeningResult}
                 onChange={(e) => setForm({ ...form, tbScreeningResult: e.target.value as TbResult })}
@@ -333,24 +332,24 @@ export default function EmployeeHealthPage() {
         {/* Exposure History */}
         <section className="mb-8 rounded-lg border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-text">Exposure History</h2>
+            <h2 className="text-lg font-semibold text-text">{t('healthExposureHistory')}</h2>
             <Button
               type="button"
               size="sm"
               onClick={addExposureEntry}
             >
-              + Add Entry
+              {t('healthAddEntry')}
             </Button>
           </div>
 
           {form.exposureHistory.length === 0 && (
-            <p className="text-sm text-muted-foreground">No exposure history entries.</p>
+            <p className="text-sm text-muted-foreground">{t('healthNoExposure')}</p>
           )}
 
           {form.exposureHistory.map((entry, i) => (
             <div key={i} className="mb-3 grid grid-cols-4 gap-3 items-end">
               <label className="block">
-                <span className="text-sm font-medium text-muted-foreground">Date</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('healthExposureDate')}</span>
                 <input
                   type="date"
                   value={entry.date}
@@ -359,22 +358,22 @@ export default function EmployeeHealthPage() {
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-muted-foreground">Type</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('healthExposureType')}</span>
                 <input
                   type="text"
                   value={entry.type}
                   onChange={(e) => updateExposureEntry(i, 'type', e.target.value)}
-                  placeholder="e.g. Needlestick"
+                  placeholder={t('healthExposureTypePlaceholder')}
                   className="mt-1 block w-full rounded border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-muted-foreground">Outcome</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('healthExposureOutcome')}</span>
                 <input
                   type="text"
                   value={entry.outcome}
                   onChange={(e) => updateExposureEntry(i, 'outcome', e.target.value)}
-                  placeholder="e.g. No seroconversion"
+                  placeholder={t('healthExposureOutcomePlaceholder')}
                   className="mt-1 block w-full rounded border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
@@ -384,7 +383,7 @@ export default function EmployeeHealthPage() {
                 size="sm"
                 onClick={() => removeExposureEntry(i)}
               >
-                Remove
+                {t('healthRemoveEntry')}
               </Button>
             </div>
           ))}
@@ -396,10 +395,9 @@ export default function EmployeeHealthPage() {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? 'Saving...' : 'Save Health Record'}
+            {saving ? t('healthSaving') : t('healthSave')}
           </Button>
         </div>
-      </main>
-    </div>
+      </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
@@ -58,6 +59,7 @@ function formatType(type: string): string {
 }
 
 export default function PractitionerCertificationsPage() {
+  const t = useTranslations('staff')
   const params = useParams()
   const practitionerId = params.practitionerId as string
 
@@ -98,7 +100,7 @@ export default function PractitionerCertificationsPage() {
       // Auto-expand all pathways on load
       setExpandedPathways(new Set(result.pathways.map((p: { pathwayId: string }) => p.pathwayId)))
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load certification progress')
+      setError((err as Error)?.message ?? t('certErrorLoad'))
     } finally {
       setLoading(false)
     }
@@ -129,7 +131,7 @@ export default function PractitionerCertificationsPage() {
       setAssigningPathwayId('')
       fetchProgress()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to assign pathway')
+      setError((err as Error)?.message ?? t('certAssignError'))
     } finally {
       setAssigning(false)
     }
@@ -141,7 +143,7 @@ export default function PractitionerCertificationsPage() {
       setAvailablePathways(result.pathways.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
       setShowAssignModal(true)
     } catch {
-      setError('Failed to load available pathways')
+      setError(t('certErrorLoad'))
     }
   }
 
@@ -150,7 +152,7 @@ export default function PractitionerCertificationsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex justify-end mb-4">
           <Button onClick={openAssignModal}>
-            Assign Pathway
+            {t('certAssignPathway')}
           </Button>
         </div>
 
@@ -159,9 +161,9 @@ export default function PractitionerCertificationsPage() {
         )}
 
         {loading ? (
-          <div className="text-muted-foreground">Loading certification progress...</div>
+          <div className="text-muted-foreground">{t('certLoading')}</div>
         ) : pathways.length === 0 ? (
-          <EmptyState title="No certification pathways assigned to this practitioner." />
+          <EmptyState title={t('certNone')} />
         ) : (
           <div className="space-y-4">
             {pathways.map((pathway) => (
@@ -198,7 +200,7 @@ export default function PractitionerCertificationsPage() {
                       onClick={() => handleIssueCredential(pathway.pathwayId)}
                       disabled={issuingPathway === pathway.pathwayId}
                     >
-                      {issuingPathway === pathway.pathwayId ? 'Issuing...' : 'Issue Credential'}
+                      {issuingPathway === pathway.pathwayId ? t('certLoading') : t('certIssueCredential')}
                     </Button>
                   </div>
                 )}
@@ -229,7 +231,7 @@ export default function PractitionerCertificationsPage() {
                               size="sm"
                               onClick={() => setReviewMilestone(milestone)}
                             >
-                              Review
+                              {t('certReview')}
                             </Button>
                           )}
                         </div>
@@ -260,14 +262,14 @@ export default function PractitionerCertificationsPage() {
       <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign Certification Pathway</DialogTitle>
+            <DialogTitle>{t('certAssignTitle')}</DialogTitle>
           </DialogHeader>
           <select
             value={assigningPathwayId}
             onChange={(e) => setAssigningPathwayId(e.target.value)}
             className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Select a pathway...</option>
+            <option value="">{t('certAssignSelectPathway')}</option>
             {availablePathways.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -283,7 +285,7 @@ export default function PractitionerCertificationsPage() {
               onClick={handleAssign}
               disabled={!assigningPathwayId || assigning}
             >
-              {assigning ? 'Assigning...' : 'Assign'}
+              {assigning ? t('certLoading') : t('certAssignPathway')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
@@ -36,6 +37,7 @@ function StatusBadge({ active }: { active: boolean }) {
 const PAGE_SIZE = 20
 
 export default function PatientsPage() {
+  const t = useTranslations('patients')
   const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
   const [page, setPage] = useState(1)
@@ -72,7 +74,7 @@ export default function PatientsPage() {
         setPatients(fetched)
       }
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to search patients')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -102,14 +104,14 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Top bar: search + filters */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search input */}
             <input
               type="text"
-              placeholder="Search by name..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-72 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -124,7 +126,7 @@ export default function PatientsPage() {
                 onChange={handleMpiWarnToggle}
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
               />
-              MPI Warnings Only
+              {t('mpiWarningsOnly')}
             </label>
 
             {/* Include Inactive checkbox */}
@@ -135,31 +137,31 @@ export default function PatientsPage() {
                 onChange={handleIncludeInactiveToggle}
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
               />
-              Include Inactive
+              {t('includeInactive')}
             </label>
           </div>
 
           <Button asChild>
-            <Link href="/patients/merge">Merge Patients</Link>
+            <Link href="/patients/merge">{t('mergePatients')}</Link>
           </Button>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {!search.trim() && !loading ? (
-          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">Search for patients</p>
+          <div className="rounded-3xl border border-border bg-card p-12 text-center">
+            <p className="text-lg font-medium text-foreground">{t('searchPrompt')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Enter a name to begin searching patient records.
             </p>
           </div>
         ) : loading ? (
-          <div className="mt-6 text-muted-foreground">Searching patients...</div>
+          <div className="text-muted-foreground">{t('loadingPatients')}</div>
         ) : patients.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">No patients found</p>
+          <div className="rounded-3xl border border-border bg-card p-12 text-center">
+            <p className="text-lg font-medium text-foreground">{t('noPatients')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Try a different search term or adjust filters.
             </p>
@@ -167,18 +169,18 @@ export default function PatientsPage() {
         ) : (
           <>
             {/* Patients table */}
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Gender</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Birth Year</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">District</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MPI Score</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">MPI Warn</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Tier</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colGender')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colBirthYear')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDistrict')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMpiScore')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMpiWarn')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colTier')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

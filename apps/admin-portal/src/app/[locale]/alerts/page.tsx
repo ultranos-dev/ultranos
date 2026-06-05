@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
@@ -166,12 +167,12 @@ function ClinicalSafetySection() {
     }
   }
 
-  if (loading) return <div className="mt-6 text-muted-foreground">Loading clinical safety metrics...</div>
-  if (error) return <div className="mt-6 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+  if (loading) return <div className="text-muted-foreground">Loading clinical safety metrics...</div>
+  if (error) return <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
   if (!metrics) return null
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="space-y-4">
       {/* Current metrics cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard
@@ -252,6 +253,7 @@ function ClinicalSafetySection() {
 
 export default function AlertsPage() {
   const router = useRouter()
+  const t = useTranslations('alerts')
   const { locationId } = useLocationFilter()
   const [activeTab, setActiveTab] = useState<AlertTab>('anomalies')
   const [alerts, setAlerts] = useState<AlertEntry[]>([])
@@ -274,7 +276,7 @@ export default function AlertsPage() {
       setAlerts(result.alerts)
       setTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load anomaly alerts')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -304,7 +306,7 @@ export default function AlertsPage() {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Prescribing Anomalies
+            {t('tabPrescribing')}
           </button>
           <button
             onClick={() => setActiveTab('clinical-safety')}
@@ -314,7 +316,7 @@ export default function AlertsPage() {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Clinical Safety
+            {t('tabClinical')}
           </button>
         </div>
 
@@ -323,7 +325,7 @@ export default function AlertsPage() {
         ) : (
         <>
         {/* Filter tabs + Export — AC #11 */}
-        <div className="mt-6 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
@@ -335,7 +337,7 @@ export default function AlertsPage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+                {s === 'ALL' ? t('filterAll') : s === 'UNREVIEWED' ? t('filterUnreviewed') : s === 'ESCALATED' ? t('filterEscalated') : s === 'DISMISSED' ? t('filterDismissed') : s.charAt(0) + s.slice(1).toLowerCase()}
               </button>
             ))}
           </div>
@@ -343,26 +345,26 @@ export default function AlertsPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading anomaly alerts...</div>
+          <div className="text-muted-foreground">{t('loadingAlerts')}</div>
         ) : alerts.length === 0 ? (
-          <EmptyState className="mt-6" title={`No anomaly alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
+          <EmptyState title={t('noAlerts')} />
         ) : (
           <>
             {/* Alert queue table — AC #1, #2 */}
-            <div className="mt-4 rounded-2xl border border-border overflow-hidden">
+            <div className="rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Provider Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Anomaly Type</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Threshold Breached</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date Range</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Severity</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colProviderName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colAnomalyType')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colThreshold')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDateRange')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colSeverity')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

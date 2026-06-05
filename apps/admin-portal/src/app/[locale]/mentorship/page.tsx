@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -110,16 +111,17 @@ function formatDuration(days: number): string {
 // ================================================================
 
 function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading: boolean }) {
+  const t = useTranslations('mentorship')
   const placeholder = '\u2014'
 
   const cards = [
     {
-      label: 'Paired Techs',
+      label: t('statsPairedTechs'),
       value: stats?.totalPaired ?? placeholder,
       className: 'bg-primary/10 border-primary/20',
     },
     {
-      label: 'Unmatched Techs',
+      label: t('statsUnmatchedTechs'),
       value: stats?.unmatchedTechs ?? placeholder,
       className:
         stats && stats.unmatchedTechs > 0
@@ -127,12 +129,12 @@ function StatsCards({ stats, loading }: { stats: MentorshipStats | null; loading
           : 'bg-popover border-border',
     },
     {
-      label: 'Avg Duration',
+      label: t('statsAvgDuration'),
       value: stats ? formatDuration(stats.avgPairingDurationDays) : placeholder,
       className: 'bg-popover border-border',
     },
     {
-      label: 'Check-in Rate',
+      label: t('statsCheckInRate'),
       value: stats ? `${stats.checkinCompletionRate}%` : placeholder,
       className:
         stats && stats.checkinCompletionRate >= 80
@@ -175,6 +177,8 @@ function CreatePairingModal({
   onClose: () => void
   onCreated: () => void
 }) {
+  const t = useTranslations('mentorship')
+  const tCommon = useTranslations('common')
   const [mentors, setMentors] = useState<EligibleMentor[]>([])
   const [mentees, setMentees] = useState<{ practitionerId: string; name: string }[]>([])
   const [selectedMentor, setSelectedMentor] = useState('')
@@ -231,7 +235,7 @@ function CreatePairingModal({
       onCreated()
       onClose()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to create pairing')
+      setError((err as Error)?.message ?? t('createError'))
     } finally {
       setSubmitting(false)
     }
@@ -241,7 +245,7 @@ function CreatePairingModal({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create Mentorship Pairing</DialogTitle>
+          <DialogTitle>{t('createTitle')}</DialogTitle>
           <DialogDescription className="sr-only">Create a new mentorship pairing between a mentor and mentee.</DialogDescription>
         </DialogHeader>
 
@@ -249,7 +253,7 @@ function CreatePairingModal({
           {/* Mentor selector */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Mentor (Supervisor / Lab Manager)
+              {t('mentor')}
             </label>
             <select
               value={selectedMentor}
@@ -268,7 +272,7 @@ function CreatePairingModal({
 
           {/* Mentee selector */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Mentee</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('mentee')}</label>
             <select
               value={selectedMentee}
               onChange={(e) => setSelectedMentee(e.target.value)}
@@ -288,7 +292,7 @@ function CreatePairingModal({
 
           {/* Goals */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Goals</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('notes')}</label>
             <textarea
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
@@ -301,7 +305,7 @@ function CreatePairingModal({
 
           {/* Start date */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Start Date</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('startDate')}</label>
             <Input
               type="date"
               value={startDate}
@@ -314,13 +318,13 @@ function CreatePairingModal({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button
               type="submit"
               disabled={submitting || !selectedMentor || !selectedMentee}
             >
-              {submitting ? 'Creating...' : 'Create Pairing'}
+              {submitting ? 'Creating...' : t('createPairing')}
             </Button>
           </DialogFooter>
         </form>
@@ -344,6 +348,8 @@ function DissolveModal({
   onClose: () => void
   onDissolved: () => void
 }) {
+  const t = useTranslations('mentorship')
+  const tCommon = useTranslations('common')
   const [reason, setReason] = useState<'COMPLETED' | 'REASSIGNED' | 'INACTIVE' | 'OTHER'>('COMPLETED')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -370,7 +376,7 @@ function DissolveModal({
       onDissolved()
       onClose()
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to dissolve pairing')
+      setError((err as Error)?.message ?? t('dissolveError'))
     } finally {
       setSubmitting(false)
     }
@@ -380,15 +386,15 @@ function DissolveModal({
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Dissolve Pairing</DialogTitle>
+          <DialogTitle>{t('dissolveTitle')}</DialogTitle>
           <DialogDescription>
-            This will end the mentorship pairing. This action cannot be undone.
+            {t('dissolveDesc')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Reason</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('dissolveReason')}</label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value as typeof reason)}
@@ -403,7 +409,7 @@ function DissolveModal({
 
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Notes (optional)
+              {t('notes')}
             </label>
             <textarea
               value={notes}
@@ -420,7 +426,7 @@ function DissolveModal({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             type="button"
@@ -428,7 +434,7 @@ function DissolveModal({
             onClick={handleDissolve}
             disabled={submitting}
           >
-            {submitting ? 'Dissolving...' : 'Dissolve Pairing'}
+            {submitting ? 'Dissolving...' : t('dissolve')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -520,6 +526,7 @@ const STATUS_TABS: StatusFilter[] = ['ALL', 'ACTIVE', 'DISSOLVED']
 const PAGE_SIZE = 20
 
 export default function MentorshipPage() {
+  const t = useTranslations('mentorship')
   const [pairings, setPairings] = useState<MentorshipPairing[]>([])
   const [stats, setStats] = useState<MentorshipStats | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
@@ -549,7 +556,7 @@ export default function MentorshipPage() {
       }
       setNextCursor(result.nextCursor)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load pairings')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -586,62 +593,62 @@ export default function MentorshipPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-8 py-6">
+      <div className="flex flex-col gap-4">
         {/* Stats cards */}
         <StatsCards stats={stats} loading={statsLoading} />
 
         {/* Top bar: filter tabs + CTA */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-1">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleFilterChange(tab)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                   statusFilter === tab
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {tab === 'ALL' ? 'All' : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                {tab === 'ALL' ? t('filterAll') : tab === 'ACTIVE' ? t('filterActive') : t('filterDissolved')}
               </button>
             ))}
           </div>
 
           <Button onClick={() => setShowCreateModal(true)}>
-            Create Pairing
+            {t('createPairing')}
           </Button>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Pairings table */}
         {loading && pairings.length === 0 ? (
-          <div className="mt-6 text-muted-foreground">Loading pairings...</div>
+          <div className="text-muted-foreground">{t('loadingPairings')}</div>
         ) : pairings.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="text-lg font-medium text-foreground">No mentorship pairings yet</p>
+          <div className="rounded-3xl border border-border bg-card p-12 text-center">
+            <p className="text-lg font-medium text-foreground">{t('noPairings')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Create a pairing to connect experienced techs with junior staff.
             </p>
             <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
-              Create Pairing
+              {t('createPairing')}
             </Button>
           </div>
         ) : (
           <>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Mentor</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Mentee</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Start Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMentor')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colMentee')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLab')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStartDate')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
@@ -672,7 +679,7 @@ export default function MentorshipPage() {
                                 setDissolvePairingId(p.id)
                               }}
                             >
-                              Dissolve
+                              {t('dissolve')}
                             </Button>
                           )}
                         </td>

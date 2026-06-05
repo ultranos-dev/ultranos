@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { HeatMapGrid } from '@/components/inventory/HeatMapGrid'
@@ -61,6 +62,7 @@ function formatDate(iso: string): string {
 const PAGE_SIZE = 25
 
 export default function InventoryPage() {
+  const t = useTranslations('inventory')
   const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<ActiveTab>('heatmap')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -99,7 +101,7 @@ export default function InventoryPage() {
       setCells(overview.cells as InventoryCell[])
       setRecommendations(recs.recommendations as Recommendation[])
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load inventory overview')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setHeatmapLoading(false)
     }
@@ -116,7 +118,7 @@ export default function InventoryPage() {
       setOrders(result.orders as PurchaseOrder[])
       setOrderTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load purchase orders')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setOrdersLoading(false)
     }
@@ -174,7 +176,7 @@ export default function InventoryPage() {
                 tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Heat Map
+              {t('tabHeatMap')}
             </button>
             <button
               onClick={() => setTab('orders')}
@@ -182,21 +184,21 @@ export default function InventoryPage() {
                 tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Purchase Orders
+              {t('tabPurchaseOrders')}
             </button>
           </div>
           <Button onClick={() => setShowCreateModal(true)}>
-            Create Purchase Order
+            {t('createPurchaseOrder')}
           </Button>
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Heat Map Tab */}
         {tab === 'heatmap' && (
-          <div className="mt-6 space-y-6">
+          <div className="space-y-4">
             {heatmapLoading ? (
               <div className="text-muted-foreground">Loading inventory overview...</div>
             ) : (
@@ -206,7 +208,7 @@ export default function InventoryPage() {
                 {/* Redistribution Recommendations */}
                 {recommendations.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">Redistribution Recommendations</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{t('redistributionTitle')}</h2>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {recommendations.map((rec, idx) => (
                         <RedistributionCard key={idx} recommendation={rec} />
@@ -221,11 +223,11 @@ export default function InventoryPage() {
 
         {/* Purchase Orders Tab */}
         {tab === 'orders' && (
-          <div className="mt-6">
+          <div>
             {ordersLoading ? (
               <div className="text-muted-foreground">Loading purchase orders...</div>
             ) : orders.length === 0 ? (
-              <EmptyState title="No purchase orders yet." />
+              <EmptyState title={t('noPurchaseOrders')} />
             ) : (
               <>
                 <div className="overflow-hidden rounded-2xl border border-border">

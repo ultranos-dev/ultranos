@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { ExportButton } from '@/components/ExportButton'
@@ -74,15 +75,17 @@ function formatDate(iso: string): string {
 }
 
 const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PENDING', 'SLA_BREACHED']
-const FILTER_LABELS: Record<StatusFilter, string> = {
-  ALL: 'All',
-  PENDING: 'Pending',
-  SLA_BREACHED: 'SLA Breached',
-}
 const PAGE_SIZE = 25
 
 export default function KycQueuePage() {
+  const t = useTranslations('providers')
   const router = useRouter()
+
+  function getFilterLabel(filter: StatusFilter): string {
+    if (filter === 'ALL') return t('filterAll')
+    if (filter === 'PENDING') return t('filterPending')
+    return t('filterSlaBreached')
+  }
   const [submissions, setSubmissions] = useState<KycQueueEntry[]>([])
   const [total, setTotal] = useState(0)
   const [cursor, setCursor] = useState(0)
@@ -104,7 +107,7 @@ export default function KycQueuePage() {
       setSubmissions(result.submissions)
       setTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load KYC submissions')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -142,13 +145,13 @@ export default function KycQueuePage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {FILTER_LABELS[s]}
+                {getFilterLabel(s)}
               </button>
             ))}
           </div>
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
@@ -157,26 +160,26 @@ export default function KycQueuePage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading KYC submissions...</div>
+          <div className="text-muted-foreground">{t('loadingProviders')}</div>
         ) : submissions.length === 0 ? (
-          <EmptyState className="mt-6" title={`No pending KYC submissions${filter !== 'ALL' ? ` matching filter "${FILTER_LABELS[filter]}"` : ''}.`} />
+          <EmptyState title={t('noProviders')} />
         ) : (
           <>
             {/* KYC queue table — AC #1, #2, #7 */}
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Provider Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Submitted Date</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colProviderName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colSubmittedAt')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">License Doc</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Registry Status</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">SLA Countdown</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">KYC Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDaysPending')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -83,6 +84,8 @@ function ConfirmationDialog({
   submitting: boolean
   open: boolean
 }) {
+  const t = useTranslations('labs')
+  const tCommon = useTranslations('common')
   const [reason, setReason] = useState('')
 
   const variantMap: Record<LabAction, 'success' | 'destructive' | 'default'> = {
@@ -93,19 +96,19 @@ function ConfirmationDialog({
 
   const config: Record<LabAction, { title: string; description: string; buttonLabel: string }> = {
     APPROVE: {
-      title: 'Approve Lab',
-      description: `Approve "${labName}" for active operation? The lab technician will be notified and can begin uploading results.`,
-      buttonLabel: 'Approve',
+      title: t('detailConfirmApproveTitle'),
+      description: t('detailConfirmApproveDesc'),
+      buttonLabel: t('detailApprove'),
     },
     SUSPEND: {
-      title: 'Suspend Lab',
-      description: `Suspend "${labName}"? This will immediately block the lab from uploading results. The technician will be notified.`,
-      buttonLabel: 'Suspend',
+      title: t('detailConfirmSuspendTitle'),
+      description: t('detailConfirmSuspendDesc'),
+      buttonLabel: t('detailSuspend'),
     },
     REACTIVATE: {
-      title: 'Reactivate Lab',
-      description: `Reactivate "${labName}"? This will restore upload access. The technician will be notified.`,
-      buttonLabel: 'Reactivate',
+      title: t('detailConfirmReactivateTitle'),
+      description: t('detailConfirmReactivateDesc'),
+      buttonLabel: t('detailReactivate'),
     },
   }
 
@@ -136,7 +139,7 @@ function ConfirmationDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             variant={variantMap[action]}
@@ -154,6 +157,7 @@ function ConfirmationDialog({
 export default function LabDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const t = useTranslations('labs')
   const labId = params.labId as string
 
   const [lab, setLab] = useState<LabDetail | null>(null)
@@ -170,7 +174,7 @@ export default function LabDetailPage() {
       const result = await trpc.admin.getLabDetail.query({ labId })
       setLab(result)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load lab details')
+      setError((err as Error)?.message ?? t('detailNotFound'))
     } finally {
       setLoading(false)
     }
@@ -191,25 +195,25 @@ export default function LabDetailPage() {
         ...(reason ? { reason } : {}),
       })
       setPendingAction(null)
-      setSuccessMessage(`Lab ${pendingAction.toLowerCase()}d successfully. Status: ${result.newStatus}`)
+      setSuccessMessage(t('detailActionSuccess'))
       // Refresh detail view — AC #5
       await fetchDetail()
       setTimeout(() => setSuccessMessage(null), 5000)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} lab`)
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading lab details...</div>
+    return <div className="text-muted-foreground">{t('detailNotFound')}</div>
   }
 
   if (error && !lab) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/labs')}>&larr; Back to Labs</Button>
+        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -218,38 +222,38 @@ export default function LabDetailPage() {
   if (!lab) return null
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-        <Button variant="ghost" onClick={() => router.push('/labs')}>&larr; Back to Labs</Button>
+    <div className="flex flex-col gap-4">
+        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
 
         {/* Header */}
-        <div className="mt-4 flex items-center justify-end">
+        <div className="flex items-center justify-end">
           <StatusBadge status={lab.status} />
         </div>
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Action buttons — AC #3, status-dependent + Story 55.1 AC #6: Staff link */}
-        <div className="mt-6 flex gap-3">
+        <div className="flex gap-3">
           <Button
             variant="outline"
             onClick={() => router.push(`/labs/${labId}/staff`)}
           >
-            View Staff
+            {t('detailViewStaff')}
           </Button>
           {lab.status === 'PENDING' && (
             <Button
               variant="success"
               onClick={() => setPendingAction('APPROVE')}
             >
-              Approve
+              {t('detailApprove')}
             </Button>
           )}
           {lab.status === 'ACTIVE' && (
@@ -257,23 +261,23 @@ export default function LabDetailPage() {
               variant="destructive"
               onClick={() => setPendingAction('SUSPEND')}
             >
-              Suspend
+              {t('detailSuspend')}
             </Button>
           )}
           {lab.status === 'SUSPENDED' && (
             <Button
               onClick={() => setPendingAction('REACTIVATE')}
             >
-              Reactivate
+              {t('detailReactivate')}
             </Button>
           )}
         </div>
 
         {/* Lab details grid — AC #9 */}
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Registration Documents */}
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Registration Details</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailRegistrationInfo')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">License Reference</dt>
@@ -292,7 +296,7 @@ export default function LabDetailPage() {
 
           {/* Technician Credentials */}
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Technician</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailTechnician')}</h2>
             {lab.technician ? (
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -319,8 +323,8 @@ export default function LabDetailPage() {
         </div>
 
         {/* Status Transition History — AC #9 */}
-        <div className="mt-6 rounded-2xl bg-popover p-6 border border-border shadow-card">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Status History</h2>
+        <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailStatusHistory')}</h2>
           {lab.statusHistory.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">No status transitions recorded.</p>
           ) : (

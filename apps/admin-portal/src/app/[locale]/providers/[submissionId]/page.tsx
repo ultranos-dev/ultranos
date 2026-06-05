@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -111,6 +112,7 @@ function ConfirmationDialog({
   submitting: boolean
 }) {
   const [reason, setReason] = useState('')
+  const t = useTranslations('providers')
 
   const actionVariantMap: Record<KycAction, 'success' | 'destructive' | 'outline'> = {
     APPROVE: 'success',
@@ -122,25 +124,25 @@ function ConfirmationDialog({
     title: string; description: string; buttonLabel: string; reasonRequired: boolean; reasonLabel: string
   }> = {
     APPROVE: {
-      title: 'Approve Provider',
-      description: `Approve "${providerName}"? The provider will be notified and can begin using the platform.`,
-      buttonLabel: 'Approve',
+      title: t('detailConfirmApproveTitle'),
+      description: `${t('detailConfirmApproveDesc')} "${providerName}"`,
+      buttonLabel: t('detailApprove'),
       reasonRequired: false,
-      reasonLabel: 'Notes (optional)',
+      reasonLabel: t('detailReason'),
     },
     REJECT: {
-      title: 'Reject Provider',
-      description: `Reject "${providerName}"? The provider will be notified with the rejection reason.`,
-      buttonLabel: 'Reject',
+      title: t('detailConfirmRejectTitle'),
+      description: `${t('detailConfirmRejectDesc')} "${providerName}"`,
+      buttonLabel: t('detailReject'),
       reasonRequired: true,
-      reasonLabel: 'Rejection reason (required)',
+      reasonLabel: t('detailReason'),
     },
     REQUEST_MORE_INFO: {
-      title: 'Request More Information',
-      description: `Request additional information from "${providerName}"? The provider will be notified.`,
-      buttonLabel: 'Request Info',
+      title: t('detailConfirmRequestTitle'),
+      description: `${t('detailConfirmRequestDesc')} "${providerName}"`,
+      buttonLabel: t('detailRequestInfo'),
       reasonRequired: false,
-      reasonLabel: 'Message to provider (optional)',
+      reasonLabel: t('detailReason'),
     },
   }
 
@@ -193,6 +195,7 @@ function ConfirmationDialog({
 export default function KycSubmissionDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const t = useTranslations('providers')
   const submissionId = params.submissionId as string
 
   const [detail, setDetail] = useState<SubmissionDetail | null>(null)
@@ -210,7 +213,7 @@ export default function KycSubmissionDetailPage() {
       const result = await trpc.admin.getKycSubmission.query({ submissionId })
       setDetail(result)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load submission details')
+      setError((err as Error)?.message ?? t('detailLoading'))
     } finally {
       setLoading(false)
     }
@@ -234,24 +237,24 @@ export default function KycSubmissionDetailPage() {
         ...(reason ? { reason } : {}),
       })
       setPendingAction(null)
-      setSuccessMessage(`Provider ${pendingAction === 'APPROVE' ? 'approved' : pendingAction === 'REJECT' ? 'rejected' : 'info requested'} successfully.`)
+      setSuccessMessage(t('detailActionSuccess'))
       // Redirect back to queue after short delay — AC #5
       redirectTimerRef.current = setTimeout(() => router.push('/providers'), 2000)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} submission`)
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading submission details...</div>
+    return <div className="text-muted-foreground">{t('detailLoading')}</div>
   }
 
   if (error && !detail) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/providers')}>&larr; Back to KYC Queue</Button>
+        <Button variant="ghost" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -262,8 +265,8 @@ export default function KycSubmissionDetailPage() {
   const isPending = detail.submission.status === 'PENDING'
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-        <Button variant="ghost" onClick={() => router.push('/providers')}>&larr; Back to KYC Queue</Button>
+    <div className="flex flex-col gap-4">
+        <Button variant="ghost" onClick={() => router.push('/providers')}>{t('detailBackToQueue')}</Button>
 
         {/* Header */}
         <div className="mt-4 flex items-center justify-between">
@@ -292,19 +295,19 @@ export default function KycSubmissionDetailPage() {
               variant="success"
               onClick={() => setPendingAction('APPROVE')}
             >
-              Approve
+              {t('detailApprove')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => setPendingAction('REJECT')}
             >
-              Reject
+              {t('detailReject')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setPendingAction('REQUEST_MORE_INFO')}
             >
-              Request More Info
+              {t('detailRequestInfo')}
             </Button>
           </div>
         )}
@@ -313,7 +316,7 @@ export default function KycSubmissionDetailPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Left panel: Document viewer */}
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Submitted Documents</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailDocuments')}</h2>
             {detail.documentUrls.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No documents available.</p>
             ) : (
@@ -346,7 +349,7 @@ export default function KycSubmissionDetailPage() {
 
           {/* Right panel: OCR-extracted fields — AC #3 */}
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">OCR-Extracted Fields</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailOcrFields')}</h2>
             {detail.ocrFields.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No OCR data available.</p>
             ) : (
@@ -378,7 +381,7 @@ export default function KycSubmissionDetailPage() {
 
         {/* Submission metadata */}
         <div className="mt-6 rounded-2xl bg-popover p-6 border border-border shadow-card">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Submission Details</h2>
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailSubmissionInfo')}</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Registry Number</dt>

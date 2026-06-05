@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
@@ -43,6 +44,7 @@ const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PENDING', 'ACTIVE', 'SUSPENDED']
 const PAGE_SIZE = 25
 
 export default function LabsPage() {
+  const t = useTranslations('labs')
   const router = useRouter()
   const { locationId } = useLocationFilter()
   const [labs, setLabs] = useState<LabEntry[]>([])
@@ -65,7 +67,7 @@ export default function LabsPage() {
       setLabs(result.labs)
       setTotal(result.total)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load lab registrations')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -98,13 +100,13 @@ export default function LabsPage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+                {s === 'ALL' ? t('filterAll') : s === 'PENDING' ? t('filterPending') : s === 'ACTIVE' ? t('filterActive') : t('filterSuspended')}
               </button>
             ))}
           </div>
           <div className="flex items-center gap-3">
             <Button onClick={() => router.push('/labs/create')}>
-              Create Lab
+              {t('createLab')}
             </Button>
             <ExportButton exportFn={() => trpc.admin.exportLabs.query()} filters={{}} />
           </div>
@@ -115,9 +117,9 @@ export default function LabsPage() {
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading lab registrations...</div>
+          <div className="mt-6 text-muted-foreground">{t('loadingLabs')}</div>
         ) : labs.length === 0 ? (
-          <EmptyState className="mt-6" title={`No lab registrations found${filter !== 'ALL' ? ` with status ${filter}` : ''}.`} />
+          <EmptyState className="mt-6" title={t('noLabs')} />
         ) : (
           <>
             {/* Lab queue table — AC #1, #2 */}
@@ -125,12 +127,12 @@ export default function LabsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Lab Name</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">License Ref</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLabName')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colLicenseRef')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Accreditation</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Technician</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Registered</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colCreatedAt')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">

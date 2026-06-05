@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { EscalationModal } from '@/components/alerts/EscalationModal'
 import { EscalationSection } from '@/components/alerts/EscalationSection'
@@ -114,24 +115,25 @@ function ReviewDialog({
   submitting: boolean
 }) {
   const [reason, setReason] = useState('')
+  const t = useTranslations('alerts')
 
   const config: Record<ReviewAction, { title: string; description: string; buttonLabel: string; buttonVariant: 'secondary' | 'destructive' }> = {
     DISMISS: {
-      title: 'Dismiss Alert',
-      description: 'Dismiss this anomaly alert? The alert will be marked as reviewed and closed.',
-      buttonLabel: 'Dismiss',
+      title: t('detailConfirmDismissTitle'),
+      description: t('detailConfirmDismissDesc'),
+      buttonLabel: t('detailDismiss'),
       buttonVariant: 'secondary',
     },
     ESCALATE: {
-      title: 'Escalate Alert',
-      description: 'Escalate this alert for further investigation? The alert will be flagged for senior review.',
-      buttonLabel: 'Escalate',
+      title: t('detailConfirmEscalateTitle'),
+      description: t('detailConfirmEscalateDesc'),
+      buttonLabel: t('detailEscalate'),
       buttonVariant: 'secondary',
     },
     SUSPEND_PROVIDER: {
-      title: 'Suspend Provider',
-      description: 'This will immediately terminate the provider\'s active sessions and block clinical access.',
-      buttonLabel: 'Suspend Provider',
+      title: t('detailConfirmSuspendTitle'),
+      description: t('detailConfirmSuspendDesc'),
+      buttonLabel: t('detailSuspendProvider'),
       buttonVariant: 'destructive',
     },
   }
@@ -187,6 +189,7 @@ function ReviewDialog({
 export default function AlertDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const t = useTranslations('alerts')
   const alertId = params.alertId as string
 
   const [alert, setAlert] = useState<AlertDetail | null>(null)
@@ -225,25 +228,25 @@ export default function AlertDetailPage() {
         reason,
       })
       setPendingAction(null)
-      setSuccessMessage(`Alert ${pendingAction === 'DISMISS' ? 'dismissed' : pendingAction === 'ESCALATE' ? 'escalated' : 'reviewed and provider suspended'} successfully.`)
+      setSuccessMessage(t('detailActionSuccess'))
       setTimeout(() => {
         router.push('/alerts')
       }, 1500)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} alert`)
+      setError((err as Error)?.message ?? t('detailActionError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading alert details...</div>
+    return <div className="text-muted-foreground">{t('detailLoading')}</div>
   }
 
   if (error && !alert) {
     return (
       <div>
-        <Button variant="ghost" onClick={() => router.push('/alerts')}>&larr; Back to Alerts</Button>
+        <Button variant="ghost" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
     )
@@ -256,52 +259,52 @@ export default function AlertDetailPage() {
   const maxTimelineCount = Math.max(...alert.timeline.map((t) => t.count), 1)
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-        <Button variant="ghost" onClick={() => router.push('/alerts')}>&larr; Back to Alerts</Button>
+    <div className="flex flex-col gap-4">
+        <Button variant="ghost" onClick={() => router.push('/alerts')}>{t('detailBackToAlerts')}</Button>
 
         {/* Header badges */}
-        <div className="mt-4 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <SeverityBadge severity={alert.severity} />
           <StatusBadge status={alert.status} />
         </div>
 
         {/* Provider link */}
-        <div className="mt-2">
+        <div>
           <Link href={`/providers/profile/${alert.practitionerId}`} className="text-sm font-medium text-primary hover:underline">
-            View provider profile
+            {t('detailViewProfile')}
           </Link>
         </div>
 
         {/* Success toast */}
         {successMessage && (
-          <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Action buttons — AC #5 */}
         {isUnreviewed && (
-          <div className="mt-6 flex gap-3">
+          <div className="flex gap-3">
             <Button variant="secondary" onClick={() => setPendingAction('DISMISS')}>
-              Dismiss
+              {t('detailDismiss')}
             </Button>
             <Button variant="secondary" onClick={() => setShowEscalationModal(true)}>
-              Escalate
+              {t('detailEscalate')}
             </Button>
             <Button variant="destructive" onClick={() => setPendingAction('SUSPEND_PROVIDER')}>
-              Suspend Provider
+              {t('detailSuspendProvider')}
             </Button>
           </div>
         )}
 
         {/* Detail grid — AC #9 */}
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Prescribing Summary */}
           <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Prescribing Summary</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailPrescribingSummary')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Total Prescriptions</dt>
@@ -320,7 +323,7 @@ export default function AlertDetailPage() {
 
           {/* Flagged Pattern Details */}
           <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Flagged Pattern</h2>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailFlaggedPattern')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Anomaly Type</dt>
@@ -352,8 +355,7 @@ export default function AlertDetailPage() {
 
         {/* Escalation section */}
         {showEscalationSection && (
-          <div className="mt-6">
-            <EscalationSection
+          <EscalationSection
               alertId={alert.id}
               status={alert.status}
               assigneeName={alert.assigneeName}
@@ -367,13 +369,12 @@ export default function AlertDetailPage() {
               onResolve={fetchDetail}
               onReassign={fetchDetail}
             />
-          </div>
         )}
 
         {/* Timeline visualization — AC #9: dates and counts, no patient identifiers */}
         {alert.timeline.length > 0 && (
-          <div className="mt-6 rounded-2xl border border-border bg-popover p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Prescription Timeline</h2>
+          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailPrescriptionTimeline')}</h2>
             <div className="mt-4 space-y-2">
               {alert.timeline.map((entry) => (
                 <div key={entry.date} className="flex items-center gap-3">
@@ -393,8 +394,8 @@ export default function AlertDetailPage() {
 
         {/* Review history (if already reviewed) */}
         {alert.reviewAction && (
-          <div className="mt-6 rounded-2xl border border-border bg-popover p-6 shadow-card">
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Review History</h2>
+          <div className="rounded-2xl border border-border bg-popover p-6 shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailReviewHistory')}</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Action Taken</dt>

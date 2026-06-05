@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
@@ -60,6 +61,7 @@ function formatName(p: Patient): string {
 }
 
 export default function MergeWizardPage() {
+  const t = useTranslations('patients')
   const _router = useRouter()
   const searchParams = useSearchParams()
   const survivorIdParam = searchParams.get('survivor')
@@ -96,7 +98,7 @@ export default function MergeWizardPage() {
         const result = await trpc.patientAdmin.getById.query({ patientId: survivorIdParam! })
         setSurvivor(result.patient as unknown as Patient)
       } catch (err: unknown) {
-        setError((err as Error)?.message ?? 'Failed to load survivor patient')
+        setError((err as Error)?.message ?? t('errorLoad'))
       } finally {
         setLoadingSurvivor(false)
       }
@@ -162,7 +164,7 @@ export default function MergeWizardPage() {
       })
       setMergeResult(result)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Merge failed')
+      setError((err as Error)?.message ?? t('mergeError'))
     } finally {
       setMerging(false)
     }
@@ -176,7 +178,7 @@ export default function MergeWizardPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
             </div>
-            <p className="mt-4 text-lg font-semibold text-foreground">Patients merged successfully</p>
+            <p className="mt-4 text-lg font-semibold text-foreground">{t('mergeSuccess')}</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Merge audit ID: {mergeResult.mergeAuditId}
             </p>
@@ -201,11 +203,11 @@ export default function MergeWizardPage() {
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {/* Step indicator */}
-        <div className="mt-6 flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <span
@@ -224,7 +226,7 @@ export default function MergeWizardPage() {
                 )}
               </span>
               <span className={`text-sm ${s === step ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-                {s === 1 ? 'Select Patients' : s === 2 ? 'Resolve Fields' : 'Preview & Confirm'}
+                {s === 1 ? t('mergeStep1') : s === 2 ? t('mergeStep2') : t('mergeStep3')}
               </span>
               {s < 3 && <span className="mx-2 h-px w-8 bg-border" />}
             </div>
@@ -233,10 +235,10 @@ export default function MergeWizardPage() {
 
         {/* ── Step 1: Select Patients ───────────────────────────── */}
         {step === 1 && (
-          <div className="mt-6 space-y-6">
+          <div className="space-y-4">
             {/* Survivor */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Survivor Patient</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('mergeSurvivorPatient')}</h3>
               {loadingSurvivor ? (
                 <div className="text-sm text-muted-foreground">Loading survivor...</div>
               ) : survivor ? (
@@ -252,10 +254,10 @@ export default function MergeWizardPage() {
             {/* Duplicate search */}
             {survivor && (
               <div>
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">Find Duplicate</h3>
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3">{t('mergeFindDuplicate')}</h3>
                 <Input
                   type="text"
-                  placeholder="Search by name to find duplicate..."
+                  placeholder={t('mergeSearchPlaceholder')}
                   value={duplicateSearch}
                   onChange={(e) => setDuplicateSearch(e.target.value)}
                   className="w-full max-w-md"
@@ -303,7 +305,7 @@ export default function MergeWizardPage() {
             {survivor && duplicate && (
               <div className="flex gap-3">
                 <Button onClick={proceedToStep2}>
-                  Continue to Field Resolution
+                  {t('mergeContinueToFields')}
                 </Button>
               </div>
             )}
@@ -312,7 +314,7 @@ export default function MergeWizardPage() {
 
         {/* ── Step 2: Field Resolution ──────────────────────────── */}
         {step === 2 && survivor && duplicate && (
-          <div className="mt-6 space-y-6">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               For each field, choose whether to keep the survivor&apos;s value or use the duplicate&apos;s value.
               Fields with different values are highlighted.
@@ -331,7 +333,7 @@ export default function MergeWizardPage() {
                 Back
               </Button>
               <Button onClick={() => setStep(3)} disabled={!allResolved}>
-                Continue to Preview
+                {t('mergeContinueToPreview')}
               </Button>
             </div>
           </div>
@@ -339,7 +341,7 @@ export default function MergeWizardPage() {
 
         {/* ── Step 3: Preview & Confirm ─────────────────────────── */}
         {step === 3 && survivor && duplicate && (
-          <div className="mt-6 space-y-6">
+          <div className="space-y-4">
             <MergePreview
               survivorName={formatName(survivor)}
               duplicateName={formatName(duplicate)}
@@ -356,7 +358,7 @@ export default function MergeWizardPage() {
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
-                placeholder='Type "MERGE" to confirm'
+                placeholder={t('mergeTypeToConfirm')}
                 className="mt-3 w-full max-w-xs"
                 aria-label="Type MERGE to confirm"
               />
@@ -371,7 +373,7 @@ export default function MergeWizardPage() {
                 onClick={handleMerge}
                 disabled={confirmText !== 'MERGE' || merging}
               >
-                {merging ? 'Merging...' : 'Confirm Merge'}
+                {merging ? '…' : t('mergeConfirmButton')}
               </Button>
             </div>
           </div>

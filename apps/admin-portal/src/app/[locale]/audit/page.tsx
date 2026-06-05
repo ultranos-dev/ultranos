@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { EventBrowser } from '@/components/audit/EventBrowser'
@@ -75,6 +76,7 @@ function ResultIcon({ valid }: { valid: boolean | null }) {
 const PAGE_SIZE = 30
 
 export default function AuditChainPage() {
+  const t = useTranslations('audit')
   const { locationId } = useLocationFilter()
   const [tab, setTab] = useState<'integrity' | 'events'>('integrity')
   const [status, setStatus] = useState<ChainStatus | null>(null)
@@ -111,7 +113,7 @@ export default function AuditChainPage() {
       setTotal(historyResult.total)
       setTrendData(trendResult.verifications)
     } catch (err: unknown) {
-      setError((err as Error)?.message ?? 'Failed to load audit chain status')
+      setError((err as Error)?.message ?? t('errorLoad'))
     } finally {
       setLoading(false)
     }
@@ -127,16 +129,16 @@ export default function AuditChainPage() {
     try {
       const result = await trpc.admin.triggerFullChainVerification.mutate()
       if (result.valid === true) {
-        setFullVerifyResult(`Full verification passed. ${result.checkedCount} entries checked in ${result.jobDurationMs}ms.`)
+        setFullVerifyResult(t('verificationComplete'))
       } else if (result.valid === false) {
-        setFullVerifyResult(`Chain broken at event ${result.brokenAtEventId}. ${result.checkedCount} entries checked.`)
+        setFullVerifyResult(t('verificationFailed'))
       } else {
-        setFullVerifyResult(`Verification failed: ${result.errorReason}`)
+        setFullVerifyResult(t('verificationFailed'))
       }
       // Refresh data after verification
       fetchData()
     } catch (err: unknown) {
-      setFullVerifyResult(`Error: ${(err as Error)?.message ?? 'Full verification failed'}`)
+      setFullVerifyResult((err as Error)?.message ?? t('verificationFailed'))
     } finally {
       setFullVerifyLoading(false)
     }
@@ -149,24 +151,24 @@ export default function AuditChainPage() {
   const trendDays = buildTrend(trendData)
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Tab bar */}
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
             onClick={() => setTab('integrity')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               tab === 'integrity' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Chain Integrity
+            {t('tabChainIntegrity')}
           </button>
           <button
             onClick={() => setTab('events')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               tab === 'events' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Event Browser
+            {t('tabEventBrowser')}
           </button>
         </div>
 
@@ -174,24 +176,24 @@ export default function AuditChainPage() {
 
         {tab === 'integrity' && (<>
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading audit chain status...</div>
+          <div className="text-muted-foreground">{t('verificationRunning')}</div>
         ) : (
           <>
             {/* Status cards (AC #8) */}
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-muted-foreground">Chain Status</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('chainStatus')}</p>
                 <div className="mt-2">
                   <ChainStatusBadge valid={status?.chainHealthy ?? null} />
                 </div>
               </div>
 
               <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-muted-foreground">Last Verified</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('lastVerified')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastVerifiedAt ? timeAgo(status.lastVerifiedAt) : 'Never'}
                 </p>
@@ -201,14 +203,14 @@ export default function AuditChainPage() {
               </div>
 
               <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-muted-foreground">Entries Verified</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('entriesVerified')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.lastCheckedCount?.toLocaleString() ?? '0'}
                 </p>
               </div>
 
               <div className="rounded-2xl bg-popover p-4 border border-border shadow-card">
-                <p className="text-sm font-medium text-muted-foreground">Consecutive Successes</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('consecutiveSuccesses')}</p>
                 <p className="mt-1 text-lg font-semibold">
                   {status?.consecutiveSuccesses ?? 0}
                 </p>
@@ -217,8 +219,8 @@ export default function AuditChainPage() {
 
             {/* 30-day health trend (AC #8) */}
             {trendDays.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-sm font-medium text-muted-foreground">30-Day Health Trend</h2>
+              <div>
+                <h2 className="text-sm font-medium text-muted-foreground">{t('healthTrend30d')}</h2>
                 <div className="mt-2 flex items-end gap-0.5">
                   {trendDays.map((day) => (
                     <div
@@ -243,12 +245,12 @@ export default function AuditChainPage() {
             )}
 
             {/* Full verification button (AC #9) */}
-            <div className="mt-6 flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <Button
                 onClick={handleFullVerification}
                 disabled={fullVerifyLoading}
               >
-                {fullVerifyLoading ? 'Verifying...' : 'Run Full Verification'}
+                {fullVerifyLoading ? t('verificationRunning') : t('runFullVerification')}
               </Button>
               {fullVerifyResult && (
                 <p className="text-sm text-muted-foreground">{fullVerifyResult}</p>
@@ -256,14 +258,14 @@ export default function AuditChainPage() {
             </div>
 
             {/* Verification history table (AC #6) */}
-            <div className="mt-6 rounded-2xl border border-border overflow-hidden">
+            <div className="rounded-2xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Result</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Entries Checked</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Duration</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colVerifiedAt')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colStatus')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colEntriesChecked')}</th>
+                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('colDuration')}</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Triggered By</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Broken Event ID</th>
@@ -273,7 +275,7 @@ export default function AuditChainPage() {
                   {verifications.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                        No verification history found in the last 30 days.
+                        {t('noHistory')}
                       </td>
                     </tr>
                   ) : (
