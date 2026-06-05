@@ -175,6 +175,7 @@ export {
   List,
   Bookmark,
   LogOut,
+  Wrench,
 } from 'lucide-react'
 
 // ─── Admin & Platform ────────────────────────────────────────────────
@@ -248,6 +249,8 @@ export {
   Medal,
   Gem,
   Zap,
+  Target,
+  Handshake,
 } from 'lucide-react'
 
 // ─── Geometric Shapes (Queue Tokens) ────────────────────────────────

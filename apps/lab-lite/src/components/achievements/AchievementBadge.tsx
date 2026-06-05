@@ -4,11 +4,18 @@
  * AchievementBadge.tsx — Story 51.7: Gamified Team Quality Engagement
  *
  * Reusable badge component for individual and team achievements.
- * Uses CSS-based icons (Unicode symbols) — no external icon library
- * to minimize bundle size (per Dev Notes).
  * RTL-safe layout using logical CSS properties.
  */
 
+import type { ReactNode } from 'react'
+import {
+  Trophy,
+  CircleCheck,
+  Zap,
+  Target,
+  Handshake,
+  Star,
+} from '@ultranos/ui-kit/icons'
 import { AchievementType, type Achievement, type TeamAchievement } from '@/lib/db'
 
 // ---------------------------------------------------------------------------
@@ -16,49 +23,49 @@ import { AchievementType, type Achievement, type TeamAchievement } from '@/lib/d
 // ---------------------------------------------------------------------------
 
 interface AchievementConfig {
-  icon: string
+  icon: ReactNode
   colorClass: string
   nameKey: string
 }
 
 const ACHIEVEMENT_CONFIG: Record<AchievementType, AchievementConfig> = {
   [AchievementType.QC_CHAMPION]: {
-    icon: '🏆',
+    icon: <Trophy size={20} aria-hidden="true" />,
     colorClass: 'bg-yellow-50 border-yellow-200 text-yellow-800',
     nameKey: 'QC Champion',
   },
   [AchievementType.ZERO_REJECTION_WEEK]: {
-    icon: '✨',
+    icon: <CircleCheck size={20} aria-hidden="true" />,
     colorClass: 'bg-green-50 border-green-200 text-green-800',
     nameKey: 'Zero Rejection Week',
   },
   [AchievementType.SPEED_STAR]: {
-    icon: '⚡',
+    icon: <Zap size={20} aria-hidden="true" />,
     colorClass: 'bg-blue-50 border-blue-200 text-blue-800',
     nameKey: 'Speed Star',
   },
   [AchievementType.CONSISTENCY_AWARD]: {
-    icon: '🎯',
+    icon: <Target size={20} aria-hidden="true" />,
     colorClass: 'bg-purple-50 border-purple-200 text-purple-800',
     nameKey: 'Consistency Award',
   },
   [AchievementType.MENTORSHIP_BADGE]: {
-    icon: '🤝',
+    icon: <Handshake size={20} aria-hidden="true" />,
     colorClass: 'bg-orange-50 border-orange-200 text-orange-800',
     nameKey: 'Mentorship Badge',
   },
   [AchievementType.TEAM_MILESTONE_1K]: {
-    icon: '🌟',
+    icon: <Star size={20} aria-hidden="true" />,
     colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
     nameKey: 'Team Milestone: 1,000 Tests',
   },
   [AchievementType.TEAM_MILESTONE_5K]: {
-    icon: '🌟',
+    icon: <Star size={20} aria-hidden="true" />,
     colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
     nameKey: 'Team Milestone: 5,000 Tests',
   },
   [AchievementType.TEAM_MILESTONE_10K]: {
-    icon: '🌟',
+    icon: <Star size={20} aria-hidden="true" />,
     colorClass: 'bg-indigo-50 border-indigo-200 text-indigo-800',
     nameKey: 'Team Milestone: 10,000 Tests',
   },
@@ -98,7 +105,7 @@ export function AchievementBadge({
       data-type={achievement.type}
     >
       {/* Icon */}
-      <span className="shrink-0 text-2xl" aria-hidden="true" role="img">
+      <span className="shrink-0 mt-0.5">
         {config.icon}
       </span>
 
@@ -139,7 +146,7 @@ export function TeamAchievementBadge({ achievement }: TeamBadgeProps) {
       data-testid="team-achievement-badge"
       data-type={achievement.type}
     >
-      <span className="shrink-0 text-2xl" aria-hidden="true" role="img">
+      <span className="shrink-0 mt-0.5">
         {config.icon}
       </span>
       <div className="min-w-0 flex-1">

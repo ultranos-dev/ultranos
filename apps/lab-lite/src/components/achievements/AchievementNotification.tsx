@@ -5,10 +5,10 @@
  *
  * Non-intrusive toast/banner shown when achievement evaluations produce new awards.
  * Auto-dismisses after 8 seconds. Uses collaborative, celebratory language.
- * Follows the same pattern as LearningNotification (Story 46.2).
  */
 
 import { useEffect, useState } from 'react'
+import { Trophy, X } from '@ultranos/ui-kit/icons'
 import type { SchedulerRunResult } from '@/lib/achievement-scheduler'
 
 interface AchievementNotificationProps {
@@ -63,7 +63,7 @@ export function AchievementNotification({ result, onDismiss }: AchievementNotifi
       data-testid="achievement-notification"
       className="fixed bottom-4 start-4 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4 shadow-lg"
     >
-      <span className="shrink-0 text-2xl" aria-hidden="true">🏆</span>
+      <Trophy size={20} className="shrink-0 mt-0.5 text-yellow-700" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-sm text-yellow-900">
           {totalNew === 1 ? 'New Achievement!' : `${totalNew} New Achievements!`}
@@ -73,10 +73,10 @@ export function AchievementNotification({ result, onDismiss }: AchievementNotifi
       <button
         type="button"
         onClick={() => { setVisible(false); onDismiss() }}
-        className="shrink-0 text-yellow-600 hover:text-yellow-800 text-lg leading-none"
+        className="shrink-0 text-yellow-600 hover:text-yellow-800"
         aria-label="Dismiss notification"
       >
-        ×
+        <X size={16} aria-hidden="true" />
       </button>
     </div>
   )

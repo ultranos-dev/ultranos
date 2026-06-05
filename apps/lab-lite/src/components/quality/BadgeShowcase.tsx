@@ -8,20 +8,32 @@
  * Designed to be a read-only, motivational display — no interactive elements.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { ChevronRight } from '@ultranos/ui-kit/icons'
+import {
+  ChevronRight,
+  Flame, Star, Shield, ShieldCheck, Trophy, Award, Medal, Gem, BookOpen, LineChart, CircleCheck,
+} from '@ultranos/ui-kit/icons'
 import type { EarnedBadge } from '@/lib/quality-streak-types'
 import { getEarnedBadges, seedBadgeCatalogue } from '@/lib/badge-evaluator'
 import { BADGE_BY_ID } from '@/lib/badge-definitions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 // Icon map (same as QualityDashboard — inline to avoid coupling)
-const ICON_MAP: Record<string, string> = {
-  Flame: '🔥', Star: '⭐', Trophy: '🏆', Shield: '🛡️', ShieldCheck: '🛡️',
-  BookOpen: '📖', GraduationCap: '🎓', Award: '🏅', Medal: '🥇',
-  LineChart: '📈', CheckCircle: '✅', Gem: '💎', Certificate: '📜',
+const ICON_MAP: Record<string, ReactNode> = {
+  Flame:       <Flame size={20} aria-hidden="true" />,
+  Star:        <Star size={20} aria-hidden="true" />,
+  Trophy:      <Trophy size={20} aria-hidden="true" />,
+  Shield:      <Shield size={20} aria-hidden="true" />,
+  ShieldCheck: <ShieldCheck size={20} aria-hidden="true" />,
+  BookOpen:    <BookOpen size={20} aria-hidden="true" />,
+  Award:       <Award size={20} aria-hidden="true" />,
+  Medal:       <Medal size={20} aria-hidden="true" />,
+  LineChart:   <LineChart size={20} aria-hidden="true" />,
+  CheckCircle: <CircleCheck size={20} aria-hidden="true" />,
+  Gem:         <Gem size={20} aria-hidden="true" />,
+  Certificate: <Award size={20} aria-hidden="true" />,
 }
 
 export function BadgeShowcase() {
@@ -71,8 +83,8 @@ export function BadgeShowcase() {
                 className="flex flex-col items-center gap-1 w-14 text-center"
                 title={badge.description}
               >
-                <span className="text-2xl" role="img" aria-label={badge.name}>
-                  {ICON_MAP[badge.icon] ?? '⭐'}
+                <span className="flex items-center justify-center text-muted-foreground" aria-label={badge.name}>
+                  {ICON_MAP[badge.icon] ?? <Star size={20} aria-hidden="true" />}
                 </span>
                 <span className="text-xs text-muted-foreground leading-tight line-clamp-2">
                   {badge.name}

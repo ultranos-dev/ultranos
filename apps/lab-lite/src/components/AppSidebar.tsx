@@ -32,6 +32,7 @@ import {
   TrendingUp,
   Award,
   Wrench,
+  Trophy,
 } from '@ultranos/ui-kit/icons'
 import {
   Sidebar,
@@ -171,7 +172,7 @@ export function AppSidebar() {
     { label: t('equipment'), href: '/equipment', icon: <Wrench size={20} />, active: pathname.startsWith('/equipment'), group: 'clinical' },
     { label: t('shiftHandover'), href: '/shift-handover', icon: <RefreshCw size={20} />, active: pathname.startsWith('/shift-handover'), badge: handoverBadge, group: 'clinical' },
     { label: t('qualityDashboard'), href: '/quality', icon: <TrendingUp size={20} />, active: pathname.startsWith('/quality'), group: 'clinical' },
-    { label: t('teamAchievements'), href: '/achievements', icon: <span aria-hidden="true" className="text-base leading-none">🏆</span>, active: pathname.startsWith('/achievements'), group: 'clinical' },
+    { label: t('teamAchievements'), href: '/achievements', icon: <Trophy size={20} />, active: pathname.startsWith('/achievements'), group: 'clinical' },
     { label: t('certification'), href: '/certification', icon: <Award size={20} />, active: pathname.startsWith('/certification'), group: 'clinical' },
     { label: t('mentorship'), href: '/mentorship', icon: <UserCheck size={20} />, active: pathname.startsWith('/mentorship'), group: 'clinical' as const },
     // Finance
@@ -209,7 +210,7 @@ export function AppSidebar() {
     .join('')
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-2">
         <span className="text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
           Lab Lite

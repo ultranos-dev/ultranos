@@ -8,6 +8,7 @@
  * RTL-safe: progress bar uses logical width, text uses dir-aware alignment.
  */
 
+import { Flame, CircleCheck } from '@ultranos/ui-kit/icons'
 import type { Streak } from '@/lib/achievement-service'
 
 interface StreakProgressProps {
@@ -30,8 +31,8 @@ export function StreakProgress({ streak }: StreakProgressProps) {
     >
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className="text-2xl" aria-hidden="true" role="img">
-          {currentDays >= 7 ? '🔥' : '✅'}
+        <span className="shrink-0 text-green-700" aria-hidden="true">
+          {currentDays >= 7 ? <Flame size={20} /> : <CircleCheck size={20} />}
         </span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-green-800">

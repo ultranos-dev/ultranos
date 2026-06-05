@@ -18,7 +18,11 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Flame, Star, Shield, TrendingUp, TrendingDown, Minus } from '@ultranos/ui-kit/icons'
+import {
+  Flame, Star, Shield, ShieldCheck, TrendingUp, TrendingDown, Minus,
+  Trophy, Award, Medal, Gem, BookOpen, LineChart, CircleCheck,
+} from '@ultranos/ui-kit/icons'
+import type { ReactNode } from 'react'
 import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
 import { calculateQCStreak, calculateRejectionStreak, buildResetMessage } from '@/lib/streak-calculator'
 import { calculateMonthlyMetrics, getMetricsForPeriod, currentPeriod } from '@/lib/quality-metrics-calculator'
@@ -113,14 +117,27 @@ function MetricCard({ metric }: { metric: QualityMetric }) {
 
 // ---------------------------------------------------------------------------
 
+const BADGE_ICON_MAP: Record<string, ReactNode> = {
+  Flame:       <Flame size={22} aria-hidden="true" />,
+  Star:        <Star size={22} aria-hidden="true" />,
+  Trophy:      <Trophy size={22} aria-hidden="true" />,
+  Shield:      <Shield size={22} aria-hidden="true" />,
+  ShieldCheck: <ShieldCheck size={22} aria-hidden="true" />,
+  BookOpen:    <BookOpen size={22} aria-hidden="true" />,
+  Award:       <Award size={22} aria-hidden="true" />,
+  Medal:       <Medal size={22} aria-hidden="true" />,
+  LineChart:   <LineChart size={22} aria-hidden="true" />,
+  CheckCircle: <CircleCheck size={22} aria-hidden="true" />,
+  Gem:         <Gem size={22} aria-hidden="true" />,
+  Certificate: <Award size={22} aria-hidden="true" />,
+}
+
 function BadgeIcon({ icon }: { icon: string }) {
-  // Map icon names to emojis for safe offline rendering (no heavy icon library load)
-  const iconMap: Record<string, string> = {
-    Flame: '🔥', Star: '⭐', Trophy: '🏆', Shield: '🛡️', ShieldCheck: '🛡️',
-    BookOpen: '📖', GraduationCap: '🎓', Award: '🏅', Medal: '🥇',
-    LineChart: '📈', CheckCircle: '✅', Gem: '💎', Certificate: '📜',
-  }
-  return <span className="text-2xl" role="img" aria-hidden>{iconMap[icon] ?? '⭐'}</span>
+  return (
+    <span className="flex items-center justify-center text-current">
+      {BADGE_ICON_MAP[icon] ?? <Star size={22} aria-hidden="true" />}
+    </span>
+  )
 }
 
 interface BadgeTileProps {
