@@ -14,12 +14,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
       >
         <div>
           <h2
-            class="text-lg font-semibold text-neutral-800"
+            class="text-lg font-semibold text-foreground"
           >
             Fulfillment Checklist
           </h2>
           <p
-            class="text-sm text-neutral-500"
+            class="text-sm text-muted-foreground"
           >
             Prescribed by 
             Dr. Ahmad
@@ -52,7 +52,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
       </div>
       <div
         aria-live="polite"
-        class="rounded-xl bg-neutral-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+        class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
         data-banner-state="nka"
         data-testid="allergy-banner"
         role="alert"
@@ -62,7 +62,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-circle-check text-neutral-400 shrink-0"
+            class="lucide lucide-circle-check text-muted-foreground shrink-0"
             fill="none"
             height="20"
             stroke="currentColor"
@@ -83,7 +83,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             />
           </svg>
           <span
-            class="text-sm font-semibold text-neutral-600"
+            class="text-sm font-semibold text-muted-foreground"
           >
             No Known Allergies (NKA)
           </span>
@@ -94,7 +94,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
         role="list"
       >
         <li
-          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+          class="rounded-2xl border p-4 transition-colors border-primary-300 bg-primary-50/50"
         >
           <div
             class="flex items-start gap-3"
@@ -102,7 +102,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             <input
               aria-label="Fulfill Amoxicillin"
               checked=""
-              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-001"
               type="checkbox"
             />
@@ -110,12 +110,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
               class="min-w-0 flex-1"
             >
               <p
-                class="font-medium text-neutral-800"
+                class="font-medium text-foreground"
               >
                 Amoxicillin 500mg Capsule
               </p>
               <p
-                class="text-sm text-neutral-600"
+                class="text-sm text-muted-foreground"
               >
                 1
                  
@@ -135,13 +135,13 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
               >
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="brand-rx-001"
                   >
                     Brand Name
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="brand-input-rx-001"
                     id="brand-rx-001"
                     placeholder="e.g. Amoxil"
@@ -151,18 +151,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 </div>
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="batch-rx-001"
                   >
                     Batch / Lot No. 
                     <span
-                      class="text-neutral-400"
+                      class="text-muted-foreground"
                     >
                       (Optional)
                     </span>
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="batch-input-rx-001"
                     id="batch-rx-001"
                     placeholder="e.g. LOT-2026-04A"
@@ -175,7 +175,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
           </div>
         </li>
         <li
-          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+          class="rounded-2xl border p-4 transition-colors border-primary-300 bg-primary-50/50"
         >
           <div
             class="flex items-start gap-3"
@@ -183,7 +183,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
             <input
               aria-label="Fulfill Ibuprofen"
               checked=""
-              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-002"
               type="checkbox"
             />
@@ -191,12 +191,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
               class="min-w-0 flex-1"
             >
               <p
-                class="font-medium text-neutral-800"
+                class="font-medium text-foreground"
               >
                 Ibuprofen 400mg Tablet
               </p>
               <p
-                class="text-sm text-neutral-600"
+                class="text-sm text-muted-foreground"
               >
                 1
                  
@@ -216,13 +216,13 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
               >
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="brand-rx-002"
                   >
                     Brand Name
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="brand-input-rx-002"
                     id="brand-rx-002"
                     placeholder="e.g. Amoxil"
@@ -232,18 +232,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
                 </div>
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="batch-rx-002"
                   >
                     Batch / Lot No. 
                     <span
-                      class="text-neutral-400"
+                      class="text-muted-foreground"
                     >
                       (Optional)
                     </span>
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="batch-input-rx-002"
                     id="batch-rx-002"
                     placeholder="e.g. LOT-2026-04A"
@@ -285,12 +285,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
       >
         <div>
           <h2
-            class="text-lg font-semibold text-neutral-800"
+            class="text-lg font-semibold text-foreground"
           >
             Fulfillment Checklist
           </h2>
           <p
-            class="text-sm text-neutral-500"
+            class="text-sm text-muted-foreground"
           >
             Prescribed by 
             Dr. Ahmad
@@ -323,7 +323,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
       </div>
       <div
         aria-live="polite"
-        class="rounded-xl bg-neutral-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+        class="rounded-xl bg-muted/70 backdrop-blur-md p-5 shadow-card ring-[0.65px] ring-border"
         data-banner-state="nka"
         data-testid="allergy-banner"
         role="alert"
@@ -333,7 +333,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-circle-check text-neutral-400 shrink-0"
+            class="lucide lucide-circle-check text-muted-foreground shrink-0"
             fill="none"
             height="20"
             stroke="currentColor"
@@ -354,7 +354,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             />
           </svg>
           <span
-            class="text-sm font-semibold text-neutral-600"
+            class="text-sm font-semibold text-muted-foreground"
           >
             No Known Allergies (NKA)
           </span>
@@ -365,7 +365,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
         role="list"
       >
         <li
-          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+          class="rounded-2xl border p-4 transition-colors border-primary-300 bg-primary-50/50"
         >
           <div
             class="flex items-start gap-3"
@@ -373,7 +373,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             <input
               aria-label="Fulfill Amoxicillin"
               checked=""
-              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-001"
               type="checkbox"
             />
@@ -381,12 +381,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
               class="min-w-0 flex-1"
             >
               <p
-                class="font-medium text-neutral-800"
+                class="font-medium text-foreground"
               >
                 Amoxicillin 500mg Capsule
               </p>
               <p
-                class="text-sm text-neutral-600"
+                class="text-sm text-muted-foreground"
               >
                 1
                  
@@ -406,13 +406,13 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
               >
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="brand-rx-001"
                   >
                     Brand Name
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="brand-input-rx-001"
                     id="brand-rx-001"
                     placeholder="e.g. Amoxil"
@@ -422,18 +422,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 </div>
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="batch-rx-001"
                   >
                     Batch / Lot No. 
                     <span
-                      class="text-neutral-400"
+                      class="text-muted-foreground"
                     >
                       (Optional)
                     </span>
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="batch-input-rx-001"
                     id="batch-rx-001"
                     placeholder="e.g. LOT-2026-04A"
@@ -446,7 +446,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
           </div>
         </li>
         <li
-          class="rounded-lg border p-4 transition-colors border-primary-300 bg-primary-50/50"
+          class="rounded-2xl border p-4 transition-colors border-primary-300 bg-primary-50/50"
         >
           <div
             class="flex items-start gap-3"
@@ -454,7 +454,7 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
             <input
               aria-label="Fulfill Ibuprofen"
               checked=""
-              class="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              class="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="fulfill-checkbox-rx-002"
               type="checkbox"
             />
@@ -462,12 +462,12 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
               class="min-w-0 flex-1"
             >
               <p
-                class="font-medium text-neutral-800"
+                class="font-medium text-foreground"
               >
                 Ibuprofen 400mg Tablet
               </p>
               <p
-                class="text-sm text-neutral-600"
+                class="text-sm text-muted-foreground"
               >
                 1
                  
@@ -487,13 +487,13 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
               >
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="brand-rx-002"
                   >
                     Brand Name
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="brand-input-rx-002"
                     id="brand-rx-002"
                     placeholder="e.g. Amoxil"
@@ -503,18 +503,18 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
                 </div>
                 <div>
                   <label
-                    class="mb-1 block text-xs font-medium text-neutral-600"
+                    class="mb-1 block text-xs font-medium text-muted-foreground"
                     for="batch-rx-002"
                   >
                     Batch / Lot No. 
                     <span
-                      class="text-neutral-400"
+                      class="text-muted-foreground"
                     >
                       (Optional)
                     </span>
                   </label>
                   <input
-                    class="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     data-testid="batch-input-rx-002"
                     id="batch-rx-002"
                     placeholder="e.g. LOT-2026-04A"

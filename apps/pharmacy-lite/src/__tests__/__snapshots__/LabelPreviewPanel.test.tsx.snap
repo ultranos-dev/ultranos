@@ -13,7 +13,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
         class="flex items-center gap-3"
       >
         <h3
-          class="text-lg font-semibold text-neutral-800"
+          class="text-lg font-semibold text-foreground"
         >
           Label Preview
         </h3>
@@ -22,7 +22,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
         class="flex items-center gap-3"
       >
         <select
-          class="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="rounded-md border border-border px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           data-testid="language-selector"
         >
           <option
@@ -57,24 +57,24 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
       class="space-y-4"
     >
       <div
-        class="print-label rounded-lg border-2 border-neutral-300 p-4"
+        class="print-label rounded-2xl border-2 border-border p-4"
         data-testid="medication-label"
         dir="rtl"
       >
         <h3
-          class="text-xl font-bold text-neutral-900"
+          class="text-xl font-bold text-foreground"
           data-testid="label-med-name"
         >
           Amoxicillin 500mg Capsule
         </h3>
         <p
-          class="text-base text-neutral-600"
+          class="text-base text-muted-foreground"
           data-testid="label-brand-name"
         >
           Amoxil
         </p>
         <p
-          class="mt-2 text-lg font-semibold text-neutral-800"
+          class="mt-2 text-lg font-semibold text-foreground"
           data-testid="label-dosage"
         >
           1
@@ -135,7 +135,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               صباح
             </span>
@@ -169,7 +169,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               ظهر
             </span>
@@ -197,21 +197,21 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Arabic 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               مساء
             </span>
           </div>
         </div>
         <p
-          class="mt-3 text-base text-neutral-700"
+          class="mt-3 text-base text-foreground"
           data-testid="label-duration"
         >
           7
            days
         </p>
         <p
-          class="mt-1 text-xs text-neutral-400"
+          class="mt-1 text-xs text-muted-foreground"
           data-testid="label-batch"
         >
           Lot: 
@@ -236,7 +236,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
         class="flex items-center gap-3"
       >
         <h3
-          class="text-lg font-semibold text-neutral-800"
+          class="text-lg font-semibold text-foreground"
         >
           Label Preview
         </h3>
@@ -245,7 +245,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
         class="flex items-center gap-3"
       >
         <select
-          class="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="rounded-md border border-border px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           data-testid="language-selector"
         >
           <option
@@ -280,24 +280,24 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
       class="space-y-4"
     >
       <div
-        class="print-label rounded-lg border-2 border-neutral-300 p-4"
+        class="print-label rounded-2xl border-2 border-border p-4"
         data-testid="medication-label"
         dir="rtl"
       >
         <h3
-          class="text-xl font-bold text-neutral-900"
+          class="text-xl font-bold text-foreground"
           data-testid="label-med-name"
         >
           Amoxicillin 500mg Capsule
         </h3>
         <p
-          class="text-base text-neutral-600"
+          class="text-base text-muted-foreground"
           data-testid="label-brand-name"
         >
           Amoxil
         </p>
         <p
-          class="mt-2 text-lg font-semibold text-neutral-800"
+          class="mt-2 text-lg font-semibold text-foreground"
           data-testid="label-dosage"
         >
           1
@@ -358,7 +358,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               صبح
             </span>
@@ -392,7 +392,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               ظهر
             </span>
@@ -420,21 +420,21 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in Dari 1`] = `
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               شب
             </span>
           </div>
         </div>
         <p
-          class="mt-3 text-base text-neutral-700"
+          class="mt-3 text-base text-foreground"
           data-testid="label-duration"
         >
           7
            days
         </p>
         <p
-          class="mt-1 text-xs text-neutral-400"
+          class="mt-1 text-xs text-muted-foreground"
           data-testid="label-batch"
         >
           Lot: 
@@ -459,7 +459,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
         class="flex items-center gap-3"
       >
         <h3
-          class="text-lg font-semibold text-neutral-800"
+          class="text-lg font-semibold text-foreground"
         >
           Label Preview
         </h3>
@@ -468,7 +468,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
         class="flex items-center gap-3"
       >
         <select
-          class="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="rounded-md border border-border px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           data-testid="language-selector"
         >
           <option
@@ -503,24 +503,24 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
       class="space-y-4"
     >
       <div
-        class="print-label rounded-lg border-2 border-neutral-300 p-4"
+        class="print-label rounded-2xl border-2 border-border p-4"
         data-testid="medication-label"
         dir="ltr"
       >
         <h3
-          class="text-xl font-bold text-neutral-900"
+          class="text-xl font-bold text-foreground"
           data-testid="label-med-name"
         >
           Amoxicillin 500mg Capsule
         </h3>
         <p
-          class="text-base text-neutral-600"
+          class="text-base text-muted-foreground"
           data-testid="label-brand-name"
         >
           Amoxil
         </p>
         <p
-          class="mt-2 text-lg font-semibold text-neutral-800"
+          class="mt-2 text-lg font-semibold text-foreground"
           data-testid="label-dosage"
         >
           1
@@ -581,7 +581,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               Morning
             </span>
@@ -615,7 +615,7 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               Noon
             </span>
@@ -643,21 +643,21 @@ exports[`LabelPreviewPanel > Snapshot tests > matches snapshot in English 1`] = 
               />
             </svg>
             <span
-              class="text-xs font-medium text-neutral-600"
+              class="text-xs font-medium text-muted-foreground"
             >
               Night
             </span>
           </div>
         </div>
         <p
-          class="mt-3 text-base text-neutral-700"
+          class="mt-3 text-base text-foreground"
           data-testid="label-duration"
         >
           7
            days
         </p>
         <p
-          class="mt-1 text-xs text-neutral-400"
+          class="mt-1 text-xs text-muted-foreground"
           data-testid="label-batch"
         >
           Lot: 
