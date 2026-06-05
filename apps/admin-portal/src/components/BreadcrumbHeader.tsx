@@ -15,6 +15,7 @@ import { buildBreadcrumbs } from '@/lib/route-map'
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { useLocationStore, ALL_LOCATIONS } from '@/stores/location-store'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
 export function BreadcrumbHeader() {
   const pathname = usePathname()
@@ -42,11 +43,14 @@ export function BreadcrumbHeader() {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
-      {isFiltered && (
-        <Badge variant="outline" className="ml-auto text-xs">
-          {selected.name}
-        </Badge>
-      )}
+      <div className="ms-auto flex items-center gap-2">
+        {isFiltered && (
+          <Badge variant="outline" className="text-xs">
+            {selected.name}
+          </Badge>
+        )}
+        <LanguageSelectorClient />
+      </div>
     </header>
   )
 }

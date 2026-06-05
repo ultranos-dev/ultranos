@@ -65,8 +65,8 @@ export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {
         billing: 'Billing',
         invoices: 'Invoices',
       }
-      if (subPageLabels[segments[i]]) {
-        crumbs.push({ label: subPageLabels[segments[i]], href: pathname })
+      const seg = segments[i]; if (seg && subPageLabels[seg]) {
+        crumbs.push({ label: subPageLabels[seg] as string, href: pathname })
       } else {
         crumbs.push({ label: 'Detail', href: pathname })
       }
