@@ -866,6 +866,8 @@
     "viewDashboard": "مشاهده داشبورد داده",
     "sidebarLabel": "داده",
     "sidebarUsed": "{used} مگابایت",
-    "backToSettings": "بازگشت به تنظیمات"
+    "backToSettings": "بازگشت به تنظیمات",
+    "save": "ذخیره",
+    "saved": "ذخیره شد"
   }
 }

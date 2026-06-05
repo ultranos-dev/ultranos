@@ -866,6 +866,8 @@
     "viewDashboard": "د ډاټا ډشبورډ وګورئ",
     "sidebarLabel": "ډاټا",
     "sidebarUsed": "{used} MB",
-    "backToSettings": "بیرته ترتیباتو ته"
+    "backToSettings": "بیرته ترتیباتو ته",
+    "save": "خوندي کړئ",
+    "saved": "خوندي شو"
   }
 }

@@ -866,6 +866,8 @@
     "viewDashboard": "View Data Dashboard",
     "sidebarLabel": "Data",
     "sidebarUsed": "{used} MB",
-    "backToSettings": "Back to Settings"
+    "backToSettings": "Back to Settings",
+    "save": "Save",
+    "saved": "Saved"
   }
 }

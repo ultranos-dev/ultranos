@@ -866,6 +866,8 @@
     "viewDashboard": "عرض لوحة البيانات",
     "sidebarLabel": "البيانات",
     "sidebarUsed": "{used} ميغابايت",
-    "backToSettings": "العودة إلى الإعدادات"
+    "backToSettings": "العودة إلى الإعدادات",
+    "save": "حفظ",
+    "saved": "تم الحفظ"
   }
 }
