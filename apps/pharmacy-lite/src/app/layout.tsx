@@ -49,7 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${manrope.variable} ${publicSans.variable}`}
     >
       <head>
-        {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+        <link rel="stylesheet" href="/fonts-arabic.css" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans bg-background text-foreground antialiased">

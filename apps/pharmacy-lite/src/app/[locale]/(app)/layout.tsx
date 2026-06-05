@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             Skip to content
           </a>
-          <main id="main-content">{children}</main>
+          <main id="main-content" className="flex flex-1 flex-col gap-4 p-4">{children}</main>
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />

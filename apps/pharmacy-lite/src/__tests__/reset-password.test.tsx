@@ -33,6 +33,11 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }))
 
+vi.mock('@ultranos/ui-kit/icons', () => ({
+  Pill: () => null,
+  KeyRound: () => null,
+}))
+
 vi.mock('@ultranos/ui-kit', () => ({
   PasswordStrengthBar: ({ label }: { label: string }) => <div data-testid="strength-bar">{label}</div>,
   getPasswordStrength: (p: string) => (p.length >= 8 ? 2 : 0) as 0 | 1 | 2 | 3 | 4,

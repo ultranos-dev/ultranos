@@ -55,12 +55,14 @@ export default function ForgotPasswordPage() {
   async function handleResend() {
     setLoading(true)
     try {
-      await supabase.auth.resetPasswordForEmail(email, {
+      const { error: resendError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       })
-      reportAdminAuthEvent('ADMIN_PASSWORD_RESET_REQUESTED')
-      setResendCooldown(true)
-      setTimeout(() => setResendCooldown(false), 60_000)
+      if (!resendError) {
+        reportAdminAuthEvent('ADMIN_PASSWORD_RESET_REQUESTED')
+        setResendCooldown(true)
+        setTimeout(() => setResendCooldown(false), 60_000)
+      }
     } catch {
       // best-effort
     } finally {
