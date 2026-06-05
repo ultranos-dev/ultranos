@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
 import type { LabRole } from '@ultranos/shared-types'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -14,12 +13,9 @@ import { HandoverAcknowledgment } from '@/components/shift/HandoverAcknowledgmen
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [pendingHandover, setPendingHandover] = useState<HandoverReport | null>(null)
-  const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
   const session = useAuthSessionStore((s) => s.session)
 
   useEffect(() => {
-    if (isLoginPage) return
 
     let cancelled = false
 
@@ -70,6 +66,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             role: 'LAB_TECH',
             sessionId,
             email: user.email ?? '',
+            name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
             labRole,
           })
         }
@@ -97,7 +94,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isLoginPage])
+  }, [])
 
   useEntitlementCheck('LAB_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -112,7 +109,6 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }
 
-  if (isLoginPage) return <>{children}</>
   if (!ready) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">

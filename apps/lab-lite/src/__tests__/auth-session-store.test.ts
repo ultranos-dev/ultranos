@@ -19,6 +19,7 @@ describe('useAuthSessionStore', () => {
       role: 'LAB_TECH',
       sessionId: 'sess-abc',
       email: 'tech@lab.example',
+      name: '',
       labRole: null,
     })
 
@@ -30,6 +31,7 @@ describe('useAuthSessionStore', () => {
       role: 'LAB_TECH',
       sessionId: 'sess-abc',
       email: 'tech@lab.example',
+      name: '',
       labRole: null,
     })
   })
@@ -41,6 +43,7 @@ describe('useAuthSessionStore', () => {
       role: 'LAB_TECH',
       sessionId: 'sess-abc',
       email: 'tech@lab.example',
+      name: '',
       labRole: null,
     })
 
@@ -57,6 +60,7 @@ describe('useAuthSessionStore', () => {
       role: 'LAB_TECH',
       sessionId: 'sess-abc',
       email: 'tech@lab.example',
+      name: '',
       labRole: 'SUPERVISOR' as any,
     })
 
@@ -70,6 +74,7 @@ describe('useAuthSessionStore', () => {
       role: 'LAB_TECH',
       sessionId: 'sess-abc',
       email: 'tech@lab.example',
+      name: '',
       labRole: 'LAB_MANAGER' as any,
     })
 

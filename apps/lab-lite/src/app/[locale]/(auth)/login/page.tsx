@@ -45,7 +45,7 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        reportAuthEvent('LOGIN_FAILURE', { actorEmail: email })
+        reportAuthEvent('LOGIN_FAILURE')
         setError('Invalid email or password')
         setLoading(false)
         return

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -14,25 +13,20 @@ import type { SchedulerRunResult } from '@/lib/achievement-scheduler'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import type { LabRole } from '@ultranos/shared-types'
 
-/** Paths that bypass the authenticated shell (no sidebar). */
-const PUBLIC_SUFFIXES = ['/login', '/offline']
-
 export function AppShell({ children }: { children: ReactNode }) {
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const session = useAuthSessionStore((s) => s.session)
-  const pathname = usePathname()
   const [pendingAchievements, setPendingAchievements] = useState<SchedulerRunResult | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   useAchievementScheduler((result) => setPendingAchievements(result))
 
-  const isPublic = PUBLIC_SUFFIXES.some((suffix) => pathname?.endsWith(suffix))
-  const showShell = isAuthenticated && !!session && !isPublic
+  const showShell = isAuthenticated && !!session
 
   // Restore auth state from Supabase localStorage on page load/refresh.
   // After a hard navigation (window.location.href), Zustand resets to isAuthenticated=false
   // but Supabase still has the session in localStorage. This effect re-hydrates the store.
   useEffect(() => {
-    if (isPublic || isAuthenticated) {
+    if (isAuthenticated) {
       setAuthChecked(true)
       return
     }
@@ -70,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           role: 'LAB_TECH',
           sessionId,
           email: user.email ?? '',
+          name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
           labRole,
         })
         // setSession sets isAuthenticated→true; effect re-runs with isAuthenticated=true,
@@ -84,9 +79,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     restoreSession()
     return () => { cancelled = true }
-  }, [isAuthenticated, isPublic])
+  }, [isAuthenticated])
 
-  if (!isPublic && !authChecked) {
+  if (!authChecked) {
     return (
       <div className="flex flex-col gap-4 p-4" aria-busy="true" aria-label="Loading">
         {[1, 2, 3].map((i) => (
@@ -97,10 +92,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
       </div>
     )
-  }
-
-  if (!showShell) {
-    return <main id="main-content">{children}</main>
   }
 
   return (
