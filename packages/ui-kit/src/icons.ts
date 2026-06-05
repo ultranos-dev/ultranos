@@ -215,6 +215,9 @@ export {
   MessageCircle,
   Languages,
   QrCode,
+  Mail,
+  MailCheck,
+  MailOpen,
 } from 'lucide-react'
 
 // ─── Media & Audio ──────────────────────────────────────────────────
