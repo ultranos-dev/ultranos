@@ -35,11 +35,11 @@ import { SessionTimer } from '@/components/SessionTimer'
 
 type SupportedLocale = 'en' | 'ar' | 'prs' | 'ps'
 
-const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
-  { code: 'en', nativeLabel: 'English' },
-  { code: 'ar', nativeLabel: 'العربية' },
-  { code: 'prs', nativeLabel: 'دری' },
-  { code: 'ps', nativeLabel: 'پښتو' },
+const LANGUAGES: { code: SupportedLocale; nativeLabel: string; langAttr: string }[] = [
+  { code: 'en', nativeLabel: 'English', langAttr: 'en' },
+  { code: 'ar', nativeLabel: 'العربية', langAttr: 'ar' },
+  { code: 'prs', nativeLabel: 'دری', langAttr: 'fa-AF' },
+  { code: 'ps', nativeLabel: 'پښتو', langAttr: 'ps' },
 ]
 
 const ARABIC_FONT_STYLE = { fontFamily: 'var(--font-family-sans-ar)' } as const
@@ -124,7 +124,7 @@ export function NavUser() {
                 className={locale === lang.code ? 'font-medium text-primary' : undefined}
               >
                 <span
-                  lang={lang.code}
+                  lang={lang.langAttr}
                   style={getDirection(lang.code) === 'rtl' ? ARABIC_FONT_STYLE : undefined}
                 >
                   {lang.nativeLabel}

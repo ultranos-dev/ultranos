@@ -87,9 +87,11 @@ describe('NavUser language selector', () => {
     expect(mockRefresh).toHaveBeenCalledOnce()
   })
 
-  it('applies lang attribute to RTL language spans', () => {
+  it('applies lang attributes to all language spans', () => {
     const { container } = render(<NavUser />)
-    const arSpan = container.querySelector('span[lang="ar"]')
-    expect(arSpan).not.toBeNull()
+    expect(container.querySelector('span[lang="en"]')).not.toBeNull()
+    expect(container.querySelector('span[lang="ar"]')).not.toBeNull()
+    expect(container.querySelector('span[lang="fa-AF"]')).not.toBeNull()
+    expect(container.querySelector('span[lang="ps"]')).not.toBeNull()
   })
 })
