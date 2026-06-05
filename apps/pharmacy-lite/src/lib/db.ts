@@ -11,6 +11,8 @@ import type { Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer } from '
 import { POS_STORES } from './pos-db'
 import type { Supplier, PurchaseOrder, StockCount } from './procurement/types'
 import type { StockTransfer } from './transfers/types'
+import type { DataUsageCategory } from '@ultranos/sync-engine'
+export type { DataUsageCategory }  // re-export for consumers
 
 export interface DispenseAuditEntry {
   id: string
@@ -91,6 +93,23 @@ export interface LocalPatient {
   source: 'registered' | 'qr-verified' | 'hub-synced'
 }
 
+// Data Budget types — Story 48.x / Data Connectivity
+export interface DataBudgetConfig {
+  id: 'config'
+  planSizeMB: number
+  billingCycleDay: number
+  lowDataMode: boolean
+  currentCycleStart: string
+}
+
+export interface DataUsageRecord {
+  date: string
+  category: DataUsageCategory
+  bytesOut: number
+  bytesIn: number
+  requestCount: number
+}
+
 class PharmacyLiteDatabase extends Dexie {
   practitionerKeys!: EntityTable<PractitionerKeyEntry, 'publicKey'>
   revokedKeys!: EntityTable<RevokedKeyEntry, 'publicKey'>
@@ -114,6 +133,8 @@ class PharmacyLiteDatabase extends Dexie {
   purchaseOrders!: EntityTable<PurchaseOrder, 'id'>
   stockCounts!: EntityTable<StockCount, 'id'>
   stockTransfers!: EntityTable<StockTransfer, 'id'>
+  dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
+  dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
 
   constructor() {
     super('pharmacy-lite')
@@ -172,6 +193,13 @@ class PharmacyLiteDatabase extends Dexie {
     this.version(10).stores({
       stockTransfers: 'id, fromLocationId, toLocationId, status, requestedAt',
     })
+
+    // v11: Data Budget tables — track network usage per billing cycle (Story 48.x)
+    // No PHI — contains only byte counts, dates, and category labels.
+    this.version(11).stores({
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+    })
   }
 }
 
@@ -216,3 +244,107 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
 export const db = new PharmacyLiteDatabase()
 
 applyEncryptionMiddleware(db, PHI_TABLE_CONFIGS)
+
+// ---------------------------------------------------------------------------
+// Data Budget helpers (v11) — Story 48.x
+// No PHI — network usage metrics only.
+// ---------------------------------------------------------------------------
+
+/** Parse YYYY-MM-DD string as local midnight (avoids UTC offset issues in MENA timezones). */
+function parseDateLocal(dateStr: string): Date {
+  const parts = dateStr.split('-').map(Number)
+  const year = parts[0] ?? new Date().getFullYear()
+  const month = parts[1] ?? 1
+  const day = parts[2] ?? 1
+  return new Date(year, month - 1, day)
+}
+
+/** Format a Date as YYYY-MM-DD using local time. */
+function formatLocalDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const DATA_BUDGET_CONFIG_ID = 'config' as const
+
+const DEFAULT_DATA_BUDGET_CONFIG: DataBudgetConfig = {
+  id: DATA_BUDGET_CONFIG_ID,
+  planSizeMB: 500,
+  billingCycleDay: 1,
+  lowDataMode: false,
+  currentCycleStart: (() => {
+    const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    return formatLocalDate(d)
+  })(),
+}
+
+/** Return the current data budget configuration (returns default if none stored). */
+export async function getDataBudgetConfig(): Promise<DataBudgetConfig> {
+  const stored = await db.dataBudgetConfig.get(DATA_BUDGET_CONFIG_ID)
+  return stored ?? { ...DEFAULT_DATA_BUDGET_CONFIG }
+}
+
+/** Update data budget configuration fields (upserts). */
+export async function updateDataBudgetConfig(
+  updates: Partial<Omit<DataBudgetConfig, 'id'>>,
+): Promise<void> {
+  const current = await getDataBudgetConfig()
+  await db.dataBudgetConfig.put({ ...current, ...updates, id: DATA_BUDGET_CONFIG_ID })
+}
+
+/** Record a network usage entry. */
+export async function recordDataUsage(record: DataUsageRecord): Promise<void> {
+  await db.dataUsage.add(record)
+}
+
+/** Return all usage records within a date range (inclusive). */
+export async function getUsageByDay(startDate: string, endDate: string): Promise<DataUsageRecord[]> {
+  return db.dataUsage
+    .where('date')
+    .between(startDate, endDate, true, true)
+    .toArray()
+}
+
+/** Return all usage records for the current billing cycle. */
+export async function getUsageForCycle(): Promise<DataUsageRecord[]> {
+  const config = await getDataBudgetConfig()
+  const today = formatLocalDate(new Date())
+  return db.dataUsage
+    .where('date')
+    .between(config.currentCycleStart, today, true, true)
+    .toArray()
+}
+
+/**
+ * Check if billing cycle has expired and roll it over if so.
+ * Returns true if a rollover happened.
+ * Uses local-time date parsing to avoid UTC offset issues in MENA timezones.
+ */
+export async function checkAndRolloverCycle(): Promise<boolean> {
+  return db.transaction('rw', db.dataBudgetConfig, async () => {
+    const stored = await db.dataBudgetConfig.get(DATA_BUDGET_CONFIG_ID)
+    const config = stored ?? { ...DEFAULT_DATA_BUDGET_CONFIG }
+    const today = new Date()
+    const cycleStart = parseDateLocal(config.currentCycleStart)
+    const nextCycleDate = new Date(
+      cycleStart.getFullYear(),
+      cycleStart.getMonth() + 1,
+      Math.min(config.billingCycleDay, 28),
+    )
+    if (today >= nextCycleDate) {
+      const newCycleStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        Math.min(config.billingCycleDay, 28),
+      )
+      if (newCycleStart > today) {
+        newCycleStart.setMonth(newCycleStart.getMonth() - 1)
+      }
+      await db.dataBudgetConfig.put({
+        ...config,
+        currentCycleStart: formatLocalDate(newCycleStart),
+      })
+      return true
+    }
+    return false
+  })
+}
