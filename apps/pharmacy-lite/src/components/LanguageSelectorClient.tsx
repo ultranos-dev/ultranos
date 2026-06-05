@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Globe } from '@ultranos/ui-kit/icons'
 import { getDirection } from '@ultranos/ui-kit'
@@ -28,6 +28,7 @@ const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
 export function LanguageSelectorClient() {
   const locale = useLocale() as SupportedLocale
   const router = useRouter()
+  const t = useTranslations('languageSelector')
 
   const setLocale = useCallback(
     (newLocale: SupportedLocale) => {
@@ -44,7 +45,7 @@ export function LanguageSelectorClient() {
       <DropdownMenuTrigger asChild>
         <button
           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label="Select language"
+          aria-label={t('ariaLabel')}
         >
           <Globe size={16} />
           <span
@@ -57,7 +58,7 @@ export function LanguageSelectorClient() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" sideOffset={4}>
-        <DropdownMenuLabel>Language</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {LANGUAGES.map((lang) => (
           <DropdownMenuItem

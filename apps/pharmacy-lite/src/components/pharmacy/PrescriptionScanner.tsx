@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   checkPrescriptionStatus,
@@ -55,6 +56,7 @@ function parsePrescriptionIds(qrData: string): string[] {
 export function PrescriptionScanner({
   onDispensed,
 }: PrescriptionScannerProps) {
+  const t = useTranslations('scanner')
   const [scanState, setScanState] = useState<ScanState>({ phase: 'idle' })
   const [manualInput, setManualInput] = useState('')
   const scannerRef = useRef<HTMLDivElement>(null)
@@ -298,7 +300,7 @@ export function PrescriptionScanner({
               type="text"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder="Prescription ID"
+              placeholder={t('prescriptionIdPlaceholder')}
               className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
               data-testid="manual-prescription-input"
               onKeyDown={(e) => {

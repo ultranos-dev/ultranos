@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Check, X } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -36,6 +37,8 @@ const EMPTY_FIELDS: FormFields = {
 }
 
 export default function PaperRxPage() {
+  const tErrors = useTranslations('errors')
+  const tPrescription = useTranslations('prescription')
   const [phase, setPhase] = useState<Phase>('capture')
   const [fields, setFields] = useState<FormFields>(EMPTY_FIELDS)
   const [confidenceScores, setConfidenceScores] = useState<Record<string, number>>({})
@@ -501,13 +504,13 @@ export default function PaperRxPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <X className="h-6 w-6 text-destructive" />
           </div>
-          <p className="text-lg font-medium text-destructive">Submission Failed</p>
+          <p className="text-lg font-medium text-destructive">{tErrors('submissionFailed')}</p>
           <p className="text-sm text-destructive">{errorMessage}</p>
           <Button
             variant="outline"
             onClick={() => setPhase('review')}
           >
-            Try Again
+            {tPrescription('tryAgain')}
           </Button>
         </div>
       )}

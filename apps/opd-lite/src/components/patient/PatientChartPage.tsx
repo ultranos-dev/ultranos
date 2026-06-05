@@ -294,7 +294,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
         {needsReauth ? (
           <>
             <p className="font-semibold text-muted-foreground">
-              Session encryption key unavailable — please sign in again to access patient data.
+              {tPatient('reauthRequired')}
             </p>
             <Button
               variant="primary"
@@ -304,7 +304,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
               }}
               className="mt-4"
             >
-              Sign In
+              {tPatient('signIn')}
             </Button>
           </>
         ) : (
@@ -347,15 +347,15 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
       <ActiveMedicationsList patientId={patientId} />
 
       {/* Encounter history with expandable detail */}
-      <section aria-label="Encounter history">
-        <h2 className="mb-3 text-lg font-bold text-foreground">Encounter History</h2>
+      <section aria-label={tPatient('encounterHistory')}>
+        <h2 className="mb-3 text-lg font-bold text-foreground">{tPatient('encounterHistory')}</h2>
         <EncounterHistoryList patientId={patientId} />
       </section>
 
       {/* Lab results */}
       <section
         className="rounded-xl bg-card p-5 shadow-sm ring-[0.65px] ring-border/50"
-        aria-label="Lab results"
+        aria-label={tPatient('labResultsSection')}
       >
         {selectedLabReport ? (
           <LabResultDetail

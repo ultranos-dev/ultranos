@@ -668,9 +668,9 @@ export function PatientRegistrationForm({
                 }
                 className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
               >
-                <option value="en">English</option>
-                <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
-                <option value="prs">{isRtl ? '\u062F\u0631\u06CC' : 'Dari'}</option>
+                <option value="en">{t('languageEnglish')}</option>
+                <option value="ar">{t('languageArabic')}</option>
+                <option value="prs">{t('languageDari')}</option>
               </select>
             </div>
           </div>

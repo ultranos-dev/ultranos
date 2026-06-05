@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { X, Send, ExternalLink } from '@ultranos/ui-kit/icons'
 import { getLabsForTest } from '@/lib/reference-lab-config'
 import { initiateSendOut } from '@/lib/sendout-service'
@@ -24,6 +25,7 @@ export function SendOutModal({
   onClose,
   onSuccess,
 }: SendOutModalProps) {
+  const t = useTranslations('sendout')
   const session = useAuthSessionStore((s) => s.session)
   const [labs, setLabs] = useState<ReferenceLab[]>([])
   const [selectedLabId, setSelectedLabId] = useState('')
@@ -53,7 +55,7 @@ export function SendOutModal({
       const sendOut = await initiateSendOut(input, session.userId)
       onSuccess(sendOut.id)
     } catch {
-      setError('Failed to create send-out. Please try again.')
+      setError(t('sendOutError'))
     } finally {
       setLoading(false)
     }
@@ -70,13 +72,13 @@ export function SendOutModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 id="sendout-modal-title" className="text-base font-semibold text-foreground">
-            Send to Reference Lab
+            {t('sendOutModalTitle')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
-            aria-label="Close"
+            aria-label={t('sendOutCloseAriaLabel')}
           >
             <X size={20} />
           </button>
@@ -86,7 +88,7 @@ export function SendOutModal({
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {/* Test info (read-only) */}
           <div className="rounded-md bg-muted/30 p-3 text-sm">
-            <p className="text-muted-foreground">Test Requested</p>
+            <p className="text-muted-foreground">{t('sendOutTestRequestedLabel')}</p>
             <p className="font-medium text-foreground">{loincDisplay}</p>
             <p className="text-xs text-muted-foreground">{loincCode} · {sampleType}</p>
           </div>
@@ -94,11 +96,11 @@ export function SendOutModal({
           {/* Reference Lab selector */}
           <div>
             <label htmlFor="reflab-select" className="block text-sm font-medium text-foreground mb-1">
-              Reference Lab <span aria-hidden="true" className="text-red-500">*</span>
+              {t('sendOutReferenceLabLabel')} <span aria-hidden="true" className="text-red-500">*</span>
             </label>
             {labs.length === 0 ? (
               <p className="text-sm text-amber-600">
-                No reference labs configured for this test. Contact your lab manager.
+                {t('sendOutNoLabsConfigured')}
               </p>
             ) : (
               <select
@@ -108,10 +110,10 @@ export function SendOutModal({
                 required
                 className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="">Select a reference lab…</option>
+                <option value="">{t('sendOutSelectLabPlaceholder')}</option>
                 {labs.map((lab) => (
                   <option key={lab.id} value={lab.id}>
-                    {lab.name} — Avg TAT: {lab.averageTATDays[loincCode] ?? '?'} days
+                    {lab.name} — {t('sendOutAvgTat', { tat: lab.averageTATDays[loincCode] ?? '?' })}
                   </option>
                 ))}
               </select>
@@ -121,18 +123,18 @@ export function SendOutModal({
           {/* Clinical context */}
           <div>
             <label htmlFor="clinical-context" className="block text-sm font-medium text-foreground mb-1">
-              Clinical Context
+              {t('sendOutClinicalContextLabel')}
             </label>
             <textarea
               id="clinical-context"
               value={clinicalContext}
               onChange={(e) => setClinicalContext(e.target.value)}
               rows={3}
-              placeholder='e.g., suspected TB, follow-up after treatment'
+              placeholder={t('sendOutClinicalContextPlaceholder')}
               className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Keep brief. No diagnosis codes or full medical history.
+              {t('sendOutClinicalContextHint')}
             </p>
           </div>
 
@@ -143,18 +145,18 @@ export function SendOutModal({
               onClick={() => setShowPreview((p) => !p)}
               className="text-sm text-blue-600 underline"
             >
-              {showPreview ? 'Hide' : 'Preview'} referral form
+              {showPreview ? t('sendOutPreviewHide') : t('sendOutPreviewShow')}
             </button>
           )}
 
           {showPreview && selectedLab && (
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm space-y-1">
-              <p className="font-medium text-blue-900">Referral Form Preview</p>
-              <p><span className="text-blue-700">Patient:</span> [first name + age only]</p>
-              <p><span className="text-blue-700">Sample type:</span> {sampleType}</p>
-              <p><span className="text-blue-700">Test:</span> {loincDisplay} ({loincCode})</p>
-              <p><span className="text-blue-700">Context:</span> {clinicalContext || '—'}</p>
-              <p><span className="text-blue-700">Reference Lab:</span> {selectedLab.name} (Accred. #{selectedLab.accreditationNumber})</p>
+              <p className="font-medium text-blue-900">{t('sendOutPreviewTitle')}</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewPatient')}</span> {t('sendOutPreviewPatientValue')}</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewSampleType')}</span> {sampleType}</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewTest')}</span> {loincDisplay} ({loincCode})</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewContext')}</span> {clinicalContext || '—'}</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewLab')}</span> {selectedLab.name} ({t('sendOutPreviewAccredNumber', { number: selectedLab.accreditationNumber })})</p>
             </div>
           )}
 
@@ -169,7 +171,7 @@ export function SendOutModal({
               onClick={onClose}
               className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"
             >
-              Cancel
+              {t('sendOutCancelButton')}
             </button>
             <button
               type="submit"
@@ -177,7 +179,7 @@ export function SendOutModal({
               className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               <Send size={16} />
-              {loading ? 'Sending…' : 'Confirm Send-Out'}
+              {loading ? t('sendOutSendingButton') : t('sendOutConfirmButton')}
             </button>
           </div>
         </form>

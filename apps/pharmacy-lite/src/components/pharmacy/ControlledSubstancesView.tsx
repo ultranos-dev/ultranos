@@ -66,6 +66,7 @@ function statusLabel(
 
 export function ControlledSubstancesView() {
   const t = useTranslations('controlled')
+  const tBalances = useTranslations('controlledBalances')
 
   const [dispenses, setDispenses] = useState<LocalMedicationDispense[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -181,14 +182,14 @@ export function ControlledSubstancesView() {
       {/* Running Balances */}
       {balances.length > 0 && (
         <div className="mt-4 mb-6">
-          <h2 className="text-sm font-semibold text-foreground mb-2">Controlled Substance Balances</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-2">{tBalances('title')}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {balances.map((item) => (
               <div key={item.catalogItemId} className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
                 <p className="text-xs font-bold text-destructive">C{item.schedule}</p>
                 <p className="text-sm font-medium text-foreground">{item.catalogItemName}</p>
                 <p className="text-lg font-bold tabular-nums text-foreground">{item.totalOnHand}</p>
-                <p className="text-[10px] text-muted-foreground">{item.batchCount} batch{item.batchCount !== 1 ? 'es' : ''}</p>
+                <p className="text-[10px] text-muted-foreground">{tBalances('batchCount', { count: item.batchCount })}</p>
               </div>
             ))}
           </div>

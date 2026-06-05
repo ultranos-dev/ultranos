@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { registerPatientLocally, type PatientRegistrationData } from '@/lib/patient-register'
@@ -17,6 +18,7 @@ export function PatientRegistrationForm({
   onRegistered,
   onCancel,
 }: PatientRegistrationFormProps) {
+  const t = useTranslations('patientRegQuick')
   const [form, setForm] = useState<PatientRegistrationData>({
     nameGiven: prefillName ?? '',
     gender: 'unknown',
@@ -47,7 +49,7 @@ export function PatientRegistrationForm({
       })
       onRegistered(patient)
     } catch {
-      setError('Failed to register patient. Please try again.')
+      setError(t('failedToRegister'))
     } finally {
       setSaving(false)
     }
@@ -55,7 +57,7 @@ export function PatientRegistrationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" data-testid="patient-registration-form">
-      <h3 className="text-lg font-semibold text-foreground">Register New Patient</h3>
+      <h3 className="text-lg font-semibold text-foreground">{t('title')}</h3>
 
       {error && (
         <div role="alert" className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-2 text-sm text-destructive">
@@ -65,7 +67,7 @@ export function PatientRegistrationForm({
 
       <div>
         <label htmlFor="reg-name" className="mb-1 block text-xs font-medium text-muted-foreground">
-          Patient Name <span className="text-destructive">*</span>
+          {t('patientName')} <span className="text-destructive">*</span>
         </label>
         <input
           id="reg-name"
@@ -80,7 +82,7 @@ export function PatientRegistrationForm({
 
       <div>
         <label htmlFor="reg-father" className="mb-1 block text-xs font-medium text-muted-foreground">
-          Father&apos;s Name
+          {t('fatherName')}
         </label>
         <input
           id="reg-father"
@@ -94,7 +96,7 @@ export function PatientRegistrationForm({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor="reg-gender" className="mb-1 block text-xs font-medium text-muted-foreground">
-            Gender <span className="text-destructive">*</span>
+            {t('gender')} <span className="text-destructive">*</span>
           </label>
           <select
             id="reg-gender"
@@ -102,15 +104,15 @@ export function PatientRegistrationForm({
             onChange={(e) => setForm({ ...form, gender: e.target.value as PatientRegistrationData['gender'] })}
             className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
           >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-            <option value="unknown">Unknown</option>
+            <option value="male">{t('genderMale')}</option>
+            <option value="female">{t('genderFemale')}</option>
+            <option value="other">{t('genderOther')}</option>
+            <option value="unknown">{t('genderUnknown')}</option>
           </select>
         </div>
         <div>
           <label htmlFor="reg-birth-year" className="mb-1 block text-xs font-medium text-muted-foreground">
-            Birth Year
+            {t('birthYear')}
           </label>
           <input
             id="reg-birth-year"
@@ -126,7 +128,7 @@ export function PatientRegistrationForm({
 
       <div>
         <label htmlFor="reg-phone" className="mb-1 block text-xs font-medium text-muted-foreground">
-          Phone Number
+          {t('phoneNumber')}
         </label>
         <input
           id="reg-phone"
@@ -140,7 +142,7 @@ export function PatientRegistrationForm({
       {/* Allergies — CRITICAL per CLAUDE.md rule #4 */}
       <div>
         <label className="mb-1 block text-xs font-medium text-destructive">
-          Known Allergies (enter each and press Add)
+          {t('knownAllergies')}
         </label>
         <div className="flex gap-2">
           <input
@@ -148,11 +150,11 @@ export function PatientRegistrationForm({
             value={allergyInput}
             onChange={(e) => setAllergyInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddAllergy() } }}
-            placeholder="e.g. Penicillin"
+            placeholder={t('allergyPlaceholder')}
             className="flex-1 rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm focus-visible:border-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive/30"
             data-testid="allergy-input"
           />
-          <Button type="button" variant="outline" onClick={handleAddAllergy}>Add</Button>
+          <Button type="button" variant="outline" onClick={handleAddAllergy}>{t('addAllergy')}</Button>
         </div>
         {allergies.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
@@ -163,7 +165,7 @@ export function PatientRegistrationForm({
                   type="button"
                   onClick={() => setAllergies(allergies.filter((x) => x !== a))}
                   className="text-destructive hover:text-destructive/80"
-                  aria-label={`Remove ${a}`}
+                  aria-label={t('removeAllergyAriaLabel', { allergy: a })}
                 >
                   &times;
                 </button>
@@ -175,10 +177,10 @@ export function PatientRegistrationForm({
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" variant="default" className="w-full" disabled={!form.nameGiven.trim() || saving}>
-          {saving ? 'Registering...' : 'Register Patient'}
+          {saving ? t('registering') : t('registerPatient')}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
       </div>
     </form>

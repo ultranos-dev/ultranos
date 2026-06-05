@@ -287,6 +287,31 @@
     "update": "تازه کول",
     "later": "وروسته"
   },
+  "syncDashboard": {
+    "title": "د همغږۍ حالت",
+    "ariaLabel": "د همغږۍ ډشبورډ",
+    "closeAriaLabel": "د همغږۍ ډشبورډ تړل",
+    "pending": "معلق",
+    "failed": "ناکام",
+    "lastSync": "وروستۍ همغږي: {time}",
+    "syncingLabel": "همغږي کیږي",
+    "syncNow": "اوس همغږي کړئ",
+    "syncing": "همغږي کیږي...",
+    "retryAllFailed": "ټولو ناکامو بیا هڅه وکړئ",
+    "allSynced": "ټول همغږي شوي — هیڅ معلق توکي نشته",
+    "retry": "بیا هڅه",
+    "confirm": "تایید",
+    "cancel": "لغوه",
+    "discard": "لرې کول",
+    "pushingPhase": "معلق ورکول هب ته لیږل کیږي...",
+    "syncComplete": "همغږي بشپړه شوه",
+    "syncFailedRetry": "همغږي ناکامه شوه — بیا هڅه به وشي",
+    "noNetworkConnection": "د شبکې اتصال نشته",
+    "statusPending": "معلق",
+    "statusFailed": "ناکام",
+    "statusSynced": "همغږي شوی",
+    "statusSyncing": "همغږي کیږي"
+  },
   "sync": {
     "syncQueue": "د همغږۍ لیست",
     "noItems": "د همغږۍ لیست کې هیڅ توکي نشته.",
@@ -831,6 +856,58 @@
     "clearDistrict": "ولسوالي پاکول",
     "noMatchingProvince": "هیڅ سم ولایت ونه موندل شو",
     "noMatchingDistrict": "هیڅ سم ولسوالي ونه موندل شوه"
+  },
+  "languageSelector": {
+    "ariaLabel": "ژبه غوره کړئ",
+    "label": "ژبه"
+  },
+  "interactionCheck": {
+    "checking": "د درملو تداخلات کتل کیږي...",
+    "clear": "هیڅ پیژندل شوی د درملو تداخل ونه موندل شو.",
+    "warningTitle": "د درملو تداخل خبرداری",
+    "contraindicationTitle": "منع شوی تداخل وموندل شو",
+    "contraindicationBlocked": "ورکول بند دي. د بدیلونو لپاره د تجویزکوونکي ډاکټر سره اړیکه ونیسئ.",
+    "unavailableTitle": "د تداخل کتنه شتون نلري",
+    "unavailableCaution": "د احتیاط سره پرمخ لاړ شئ. د ورکولو دمخه د درملو تداخلات لاسي تایید کړئ."
+  },
+  "sessionExpiry": {
+    "expiringIn": "سیشن د {minutes} {minutes, plural, =1 {دقیقې} other {دقیقو}} وروسته پای ته رسیږي.",
+    "saveAndReauth": "خپل کار وساتئ او د دوام لپاره بیا تایید وکړئ."
+  },
+  "patientRegQuick": {
+    "title": "نوی ناروغ ثبت کړئ",
+    "patientName": "د ناروغ نوم",
+    "fatherName": "د پلار نوم",
+    "gender": "جنسیت",
+    "birthYear": "د زیږیدو کال",
+    "phoneNumber": "د ټلیفون نمبر",
+    "knownAllergies": "پیژندل شوي حساسیتونه (هر یو دننه کړئ او اضافه فشار کړئ)",
+    "allergyPlaceholder": "لکه پنسیلین",
+    "addAllergy": "اضافه کول",
+    "removeAllergyAriaLabel": "{allergy} لرې کول",
+    "registerPatient": "ناروغ ثبت کول",
+    "registering": "ثبتیږي...",
+    "cancel": "لغوه",
+    "failedToRegister": "د ناروغ ثبت ناکام شو. بیا هڅه وکړئ.",
+    "genderMale": "نارینه",
+    "genderFemale": "ښځینه",
+    "genderOther": "نور",
+    "genderUnknown": "ناپېژندل شوی"
+  },
+  "consumptionChart": {
+    "loading": "د مصرف معلومات بارول...",
+    "noData": "د ورکولو هیڅ معلومات نشته.",
+    "topDispensed": "ډیر ورکړل شوي (30 ورځې)"
+  },
+  "controlledBalances": {
+    "title": "د کنترول شویو موادو بیلانسونه",
+    "batchCount": "{count} {count, plural, =1 {لوټ} other {لوټونه}}"
+  },
+  "login": {
+    "appName": "دواخانه",
+    "poweredBy": "د Ultranos لخوا",
+    "signIn": "ننوتل",
+    "secureHealthcare": "د روغتیا ساتنې خوندي پلیټفارم"
   },
   "dataBudget": {
     "usageTitle": "د ډاټا کارونه",

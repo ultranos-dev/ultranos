@@ -41,6 +41,8 @@
     "searchPlaceholder": "Search by name or National ID...",
     "searchAria": "Patient search",
     "notFound": "Patient not found in local session.",
+    "reauthRequired": "Session encryption key unavailable — please sign in again to access patient data.",
+    "signIn": "Sign In",
     "loading": "Searching...",
     "select": "Select",
     "searchResults": "Patient search results",
@@ -104,7 +106,9 @@
     "unknownMedication": "Unknown medication",
     "noClinicalData": "No clinical data recorded for this encounter.",
     "unspecified": "Unspecified",
-    "confirmedByTooltip": "Confirmed by: {name}{time, select, other { at {time}}}"
+    "confirmedByTooltip": "Confirmed by: {name}{time, select, other { at {time}}}",
+    "patientInfo": "Patient information",
+    "statusAria": "Encounter status"
   },
   "soap": {
     "clinicalNotes": "Clinical Notes",
@@ -192,7 +196,8 @@
     "errorInteractionUnavailable": "⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.",
     "errorDatabaseStale": "⚠ Interaction check unavailable — drug database outdated",
     "errorSaveFailed": "Failed to save prescription",
-    "errorCancelFailed": "Failed to cancel prescription"
+    "errorCancelFailed": "Failed to cancel prescription",
+    "prescriptionBlocked": "Prescription creation blocked — resolve safety-critical conflicts first"
   },
   "interactionModal": {
     "contraindicationDetected": "Contraindication Detected",

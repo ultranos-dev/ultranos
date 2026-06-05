@@ -41,6 +41,8 @@
     "searchPlaceholder": "ابحث بالاسم أو الرقم الوطني...",
     "searchAria": "بحث المرضى",
     "notFound": "لم يُعثر على المريض في الجلسة المحلية.",
+    "reauthRequired": "مفتاح تشفير الجلسة غير متاح — يرجى تسجيل الدخول مرة أخرى للوصول إلى بيانات المريض.",
+    "signIn": "تسجيل الدخول",
     "loading": "جاري البحث...",
     "select": "اختيار",
     "searchResults": "نتائج بحث المرضى",
@@ -104,7 +106,9 @@
     "unknownMedication": "دواء غير معروف",
     "noClinicalData": "لا توجد بيانات سريرية مسجّلة لهذه الزيارة.",
     "unspecified": "غير محدد",
-    "confirmedByTooltip": "أكّده: {name}{time, select, other { في {time}}}"
+    "confirmedByTooltip": "أكّده: {name}{time, select, other { في {time}}}",
+    "patientInfo": "معلومات المريض",
+    "statusAria": "حالة الزيارة"
   },
   "soap": {
     "clinicalNotes": "الملاحظات السريرية",
@@ -192,7 +196,8 @@
     "errorInteractionUnavailable": "⚠ فحص التفاعلات الدوائية غير متاح — تحقق من الوصفات يدويًا قبل الصرف.",
     "errorDatabaseStale": "⚠ فحص التفاعلات غير متاح — قاعدة بيانات الأدوية قديمة",
     "errorSaveFailed": "فشل حفظ الوصفة",
-    "errorCancelFailed": "فشل إلغاء الوصفة"
+    "errorCancelFailed": "فشل إلغاء الوصفة",
+    "prescriptionBlocked": "إنشاء الوصفة محظور — يرجى حلّ التعارضات الحرجة للسلامة أولاً"
   },
   "interactionModal": {
     "contraindicationDetected": "تم اكتشاف موانع استعمال",

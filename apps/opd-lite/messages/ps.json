@@ -41,6 +41,8 @@
     "searchPlaceholder": "د نوم یا تذکرې شمیرې په واسطه لټون...",
     "searchAria": "د ناروغ لټون",
     "notFound": "ناروغ په محلي ناسته کې ونه موندل شو.",
+    "reauthRequired": "د ناستې رمزګذاري کلیڅه شتون نلري — د ناروغ معلوماتو ته د لاسرسي لپاره بیا ننوتل کړئ.",
+    "signIn": "ننوتل",
     "loading": "لټون کیږي...",
     "select": "وټاکئ",
     "searchResults": "د ناروغ لټون پایلې",
@@ -104,7 +106,9 @@
     "unknownMedication": "نامعلوم درمل",
     "noClinicalData": "د دې لیدنې لپاره هیڅ کلینیکي معلومات ثبت شوي نه دي.",
     "unspecified": "مشخص نه دی",
-    "confirmedByTooltip": "تایید شوی د: {name} لخوا{time, select, other { په {time}}}"
+    "confirmedByTooltip": "تایید شوی د: {name} لخوا{time, select, other { په {time}}}",
+    "patientInfo": "د ناروغ معلومات",
+    "statusAria": "د لیدنې حالت"
   },
   "soap": {
     "clinicalNotes": "کلینیکي یادښتونه",
@@ -192,7 +196,8 @@
     "errorInteractionUnavailable": "⚠ د درملو تعامل ازموینه شتون نلري — مخکې له تحویلولو نسخې لاسي تایید کړئ.",
     "errorDatabaseStale": "⚠ د تعامل ازموینه شتون نلري — د درملو ډیټابیس زوړ دی",
     "errorSaveFailed": "نسخه ساتل ناکام شو",
-    "errorCancelFailed": "نسخه لغوه کول ناکام شو"
+    "errorCancelFailed": "نسخه لغوه کول ناکام شو",
+    "prescriptionBlocked": "د نسخه جوړول بند شوي دي — لومړی د خوندیتوب حیاتي تعارضونه حل کړئ"
   },
   "interactionModal": {
     "contraindicationDetected": "د کارولو منع موندل شوه",

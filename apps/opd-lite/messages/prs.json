@@ -41,6 +41,8 @@
     "searchPlaceholder": "جستجو با نام یا شماره تذکره...",
     "searchAria": "جستجوی مریض",
     "notFound": "مریض در جلسه محلی یافت نشد.",
+    "reauthRequired": "کلید رمزگذاری جلسه در دسترس نیست — لطفاً دوباره وارد شوید تا به معلومات بیمار دسترسی پیدا کنید.",
+    "signIn": "ورود",
     "loading": "در حال جستجو...",
     "select": "انتخاب",
     "searchResults": "نتایج جستجوی مریض",
@@ -104,7 +106,9 @@
     "unknownMedication": "دوای نامعلوم",
     "noClinicalData": "هیچ معلومات کلینیکی برای این ویزیت ثبت نشده.",
     "unspecified": "مشخص نشده",
-    "confirmedByTooltip": "تأیید شده توسط: {name}{time, select, other { در {time}}}"
+    "confirmedByTooltip": "تأیید شده توسط: {name}{time, select, other { در {time}}}",
+    "patientInfo": "معلومات بیمار",
+    "statusAria": "وضعیت ویزیت"
   },
   "soap": {
     "clinicalNotes": "یادداشت‌های کلینیکی",
@@ -192,7 +196,8 @@
     "errorInteractionUnavailable": "⚠ بررسی تداخل دوایی در دسترس نیست — قبل از تحویل نسخه‌ها را دستی تایید کنید.",
     "errorDatabaseStale": "⚠ بررسی تداخل در دسترس نیست — دیتابیس ادویه قدیمی است",
     "errorSaveFailed": "ذخیره نسخه ناکام شد",
-    "errorCancelFailed": "لغو نسخه ناکام شد"
+    "errorCancelFailed": "لغو نسخه ناکام شد",
+    "prescriptionBlocked": "ایجاد نسخه مسدود شده است — ابتدا تعارضات حیاتی ایمنی را حل کنید"
   },
   "interactionModal": {
     "contraindicationDetected": "موانع استفاده کشف شد",

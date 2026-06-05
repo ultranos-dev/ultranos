@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { isOutbreakModeActive, isOutbreakAuthorized } from '@/lib/outbreak-service'
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export function OutbreakModeBanner({ onDeactivate }: Props) {
+  const t = useTranslations('outbreak')
   const session = useAuthSessionStore((s) => s.session)
   const [activeOutbreak, setActiveOutbreak] = useState<OutbreakModeConfig | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -95,10 +97,10 @@ export function OutbreakModeBanner({ onDeactivate }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flex: 1, flexWrap: 'wrap' }}>
         <AlertTriangle size={20} aria-hidden="true" strokeWidth={2.5} />
         <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>
-          OUTBREAK MODE ACTIVE: {activeOutbreak.targetPathogen.display.toUpperCase()}
+          {t('bannerActive', { pathogen: activeOutbreak.targetPathogen.display.toUpperCase() })}
         </span>
         <span style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-          — Activated by {activeOutbreak.activatedBy} on {activatedDate}
+          {t('bannerActivatedBy', { officer: activeOutbreak.activatedBy, date: activatedDate })}
         </span>
       </div>
 
@@ -107,7 +109,7 @@ export function OutbreakModeBanner({ onDeactivate }: Props) {
         <button
           type="button"
           onClick={onDeactivate}
-          aria-label="Deactivate Outbreak Mode"
+          aria-label={t('bannerDeactivateAriaLabel')}
           style={{
             backgroundColor: 'rgba(255,255,255,0.2)',
             color: '#fff',
@@ -122,7 +124,7 @@ export function OutbreakModeBanner({ onDeactivate }: Props) {
           }}
           className="hover:bg-card/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
-          Deactivate
+          {t('bannerDeactivateButton')}
         </button>
       )}
     </div>

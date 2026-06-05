@@ -35,23 +35,25 @@ function stockoutColor(projectedStockoutDate: string | null): string {
   return '#16a34a'                       // green
 }
 
-function stockoutLabel(projectedStockoutDate: string | null): string {
-  if (!projectedStockoutDate) return '> 30 days'
-  const daysUntil = Math.floor(
+function daysUntilStockout(projectedStockoutDate: string | null): number | null {
+  if (!projectedStockoutDate) return null
+  return Math.floor(
     (new Date(projectedStockoutDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   )
-  return `${daysUntil} days (${projectedStockoutDate})`
 }
 
 // ---------------------------------------------------------------------------
-// Trend indicator
+// Trend indicator — receives translated labels as props (sub-component can't
+// call hooks without being inside a component tree that has the provider, but
+// since TrendIcon IS a component it can call hooks directly)
 // ---------------------------------------------------------------------------
 
 function TrendIcon({ today, yesterday }: { today: number; yesterday?: number }) {
+  const t = useTranslations('outbreak')
   if (yesterday === undefined) return <Minus size={16} color="#9ca3af" aria-hidden="true" />
-  if (today > yesterday) return <TrendingUp size={16} color="#dc2626" aria-label="Increasing" />
-  if (today < yesterday) return <TrendingDown size={16} color="#16a34a" aria-label="Decreasing" />
-  return <Minus size={16} color="#9ca3af" aria-label="Unchanged" />
+  if (today > yesterday) return <TrendingUp size={16} color="#dc2626" aria-label={t('sitrepTrendIncreasing')} />
+  if (today < yesterday) return <TrendingDown size={16} color="#16a34a" aria-label={t('sitrepTrendDecreasing')} />
+  return <Minus size={16} color="#9ca3af" aria-label={t('sitrepTrendUnchanged')} />
 }
 
 // ---------------------------------------------------------------------------
@@ -63,6 +65,7 @@ interface Props {
 }
 
 export function SitrepView({ outbreakConfig }: Props) {
+  const t = useTranslations('outbreak')
   const session = useAuthSessionStore((s) => s.session)
   const [sitreps, setSitreps] = useState<DailySitrep[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,11 +78,11 @@ export function SitrepView({ outbreakConfig }: Props) {
       const all = await getSitrepsByOutbreak(outbreakConfig.id)
       setSitreps(all)
     } catch {
-      setError('Failed to load situation reports.')
+      setError(t('sitrepLoadError'))
     } finally {
       setLoading(false)
     }
-  }, [outbreakConfig.id])
+  }, [outbreakConfig.id, t])
 
   useEffect(() => {
     loadSitreps()
@@ -97,7 +100,7 @@ export function SitrepView({ outbreakConfig }: Props) {
       })
       await loadSitreps()
     } catch {
-      setError('Failed to generate situation report.')
+      setError(t('sitrepGenerateError'))
     } finally {
       setGenerating(false)
     }
@@ -114,14 +117,14 @@ export function SitrepView({ outbreakConfig }: Props) {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setError('Failed to export PDF.')
+      setError(t('sitrepExportError'))
     } finally {
       setExporting(null)
     }
   }
 
   if (loading) {
-    return <div style={{ padding: '2rem', color: '#6b7280' }}>Loading situation reports…</div>
+    return <div style={{ padding: '2rem', color: '#6b7280' }}>{t('sitrepLoading')}</div>
   }
 
   return (
@@ -130,7 +133,7 @@ export function SitrepView({ outbreakConfig }: Props) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlockEnd: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-            Daily Situation Reports
+            {t('sitrepTitle')}
           </h2>
           <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>
             {outbreakConfig.targetPathogen.display}
@@ -149,7 +152,7 @@ export function SitrepView({ outbreakConfig }: Props) {
           }}
         >
           <RefreshCw size={16} aria-hidden="true" />
-          {generating ? 'Generating…' : 'Generate Now'}
+          {generating ? t('sitrepGeneratingButton') : t('sitrepGenerateButton')}
         </button>
       </div>
 
@@ -167,13 +170,13 @@ export function SitrepView({ outbreakConfig }: Props) {
         }}>
           {/* Total tests */}
           <MetricCard
-            label="Total Tests Today"
+            label={t('sitrepMetricTotalTests')}
             value={latestSitrep.totalTestsPerformed}
             trend={<TrendIcon today={latestSitrep.totalTestsPerformed} yesterday={previousSitrep?.totalTestsPerformed} />}
           />
           {/* Positive count */}
           <MetricCard
-            label="Positive Count"
+            label={t('sitrepMetricPositiveCount')}
             value={latestSitrep.positiveCount}
             valueColor="#dc2626"
             trend={<TrendIcon today={latestSitrep.positiveCount} yesterday={previousSitrep?.positiveCount} />}
@@ -181,14 +184,14 @@ export function SitrepView({ outbreakConfig }: Props) {
           />
           {/* Positivity rate */}
           <MetricCard
-            label="Positivity Rate"
-            value={`${latestSitrep.positivityRate}%`}
+            label={t('sitrepMetricPositivityRate')}
+            value={t('sitrepMetricPositivityValue', { rate: latestSitrep.positivityRate })}
             trend={<TrendIcon today={latestSitrep.positivityRate} yesterday={previousSitrep?.positivityRate} />}
           />
           {/* Reagent burn rate */}
           <MetricCard
-            label="Reagent Burn Rate"
-            value={`${latestSitrep.reagentBurnRate} units/day`}
+            label={t('sitrepMetricReagentBurnRate')}
+            value={t('sitrepMetricReagentBurnValue', { rate: latestSitrep.reagentBurnRate })}
           />
           {/* Stockout date */}
           <div style={{
@@ -196,13 +199,17 @@ export function SitrepView({ outbreakConfig }: Props) {
             padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem',
           }}>
             <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Projected Stockout
+              {t('sitrepMetricProjectedStockout')}
             </span>
             <span style={{
               fontSize: '1rem', fontWeight: 700,
               color: stockoutColor(latestSitrep.projectedStockoutDate),
             }}>
-              {stockoutLabel(latestSitrep.projectedStockoutDate)}
+              {(() => {
+                const days = daysUntilStockout(latestSitrep.projectedStockoutDate)
+                if (days === null) return t('sitrepStockoutOver30')
+                return t('sitrepStockoutDays', { days, date: latestSitrep.projectedStockoutDate! })
+              })()}
             </span>
           </div>
         </div>
@@ -211,12 +218,12 @@ export function SitrepView({ outbreakConfig }: Props) {
       {/* Historical sitrep list */}
       {sitreps.length === 0 ? (
         <p style={{ color: '#6b7280' }}>
-          No situation reports yet. Click &quot;Generate Now&quot; to create the first one.
+          {t('sitrepNoReports')}
         </p>
       ) : (
         <div>
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBlockEnd: '0.75rem' }}>
-            Historical Reports
+            {t('sitrepHistoricalTitle')}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[...sitreps].reverse().map((sitrep) => (
@@ -230,14 +237,18 @@ export function SitrepView({ outbreakConfig }: Props) {
                 <div>
                   <span style={{ fontWeight: 600 }}>{sitrep.reportDate}</span>
                   <span style={{ color: '#6b7280', marginInlineStart: '1rem', fontSize: '0.875rem' }}>
-                    {sitrep.totalTestsPerformed} tests · {sitrep.positiveCount} pos ({sitrep.positivityRate}%)
+                    {t('sitrepRowSummary', {
+                      tests: sitrep.totalTestsPerformed,
+                      positive: sitrep.positiveCount,
+                      rate: sitrep.positivityRate,
+                    })}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleExportPDF(sitrep)}
                   disabled={exporting === sitrep.id}
-                  aria-label={`Export PDF for ${sitrep.reportDate}`}
+                  aria-label={t('sitrepExportPdfAriaLabel', { date: sitrep.reportDate })}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.375rem',
                     padding: '0.375rem 0.75rem', borderRadius: '4px',
@@ -247,7 +258,7 @@ export function SitrepView({ outbreakConfig }: Props) {
                   }}
                 >
                   <Download size={14} aria-hidden="true" />
-                  {exporting === sitrep.id ? 'Exporting…' : 'Export PDF'}
+                  {exporting === sitrep.id ? t('sitrepExportingButton') : t('sitrepExportPdfButton')}
                 </button>
               </div>
             ))}

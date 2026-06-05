@@ -13,6 +13,7 @@
  */
 
 import { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { OutbreakModeConfig } from '@/types/outbreak'
 
@@ -34,13 +35,8 @@ interface Props {
   onClose: () => void
 }
 
-const RESULT_BUTTONS: Array<{ value: SimplifiedResultValue; label: string; color: string; bg: string }> = [
-  { value: 'positive', label: 'POSITIVE', color: '#fff', bg: '#dc2626' },
-  { value: 'negative', label: 'NEGATIVE', color: '#fff', bg: '#16a34a' },
-  { value: 'indeterminate', label: 'INDETERMINATE', color: '#fff', bg: '#d97706' },
-]
-
 export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Props) {
+  const t = useTranslations('outbreak')
   const session = useAuthSessionStore((s) => s.session)
   const [sampleId, setSampleId] = useState('')
   const [result, setResult] = useState<SimplifiedResultValue | null>(null)
@@ -51,17 +47,23 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
 
   const targetTestCode = outbreakConfig.targetTestCodes[0] ?? ''
 
+  const RESULT_BUTTONS: Array<{ value: SimplifiedResultValue; label: string; color: string; bg: string }> = [
+    { value: 'positive', label: t('fastEntryResultPositive'), color: '#fff', bg: '#dc2626' },
+    { value: 'negative', label: t('fastEntryResultNegative'), color: '#fff', bg: '#16a34a' },
+    { value: 'indeterminate', label: t('fastEntryResultIndeterminate'), color: '#fff', bg: '#d97706' },
+  ]
+
   async function handleSubmit() {
     if (!sampleId.trim()) {
-      setError('Sample ID is required.')
+      setError(t('fastEntryErrorSampleId'))
       return
     }
     if (!result) {
-      setError('Please select a result.')
+      setError(t('fastEntryErrorResult'))
       return
     }
     if (!session) {
-      setError('Session expired. Please re-authenticate.')
+      setError(t('fastEntryErrorSession'))
       return
     }
 
@@ -83,7 +85,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
       setResult(null)
       sampleInputRef.current?.focus()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Submission failed.')
+      setError(err instanceof Error ? err.message : t('fastEntrySubmissionFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -105,7 +107,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBlockEnd: '1rem' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>
-            Fast Result Entry
+            {t('fastEntryTitle')}
           </h3>
           <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>
             {outbreakConfig.targetPathogen.display} — {targetTestCode}
@@ -114,7 +116,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close simplified entry"
+          aria-label={t('fastEntryCloseAriaLabel')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: '#6b7280' }}
         >
           ×
@@ -130,14 +132,14 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
             color: '#166534', fontSize: '0.875rem', marginBlockEnd: '1rem',
           }}
         >
-          ✓ Submitted: <strong>{lastSubmitted}</strong>
+          {t('fastEntrySubmitted', { sampleId: lastSubmitted })}
         </div>
       )}
 
       {/* Sample ID — large input, supports barcode scan */}
       <div style={{ marginBlockEnd: '1.25rem' }}>
         <label htmlFor="sample-id-input" style={{ display: 'block', fontWeight: 600, marginBlockEnd: '0.375rem' }}>
-          Sample ID
+          {t('fastEntrySampleIdLabel')}
         </label>
         <input
           id="sample-id-input"
@@ -146,7 +148,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
           value={sampleId}
           onChange={(e) => setSampleId(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && result && handleSubmit()}
-          placeholder="Scan barcode or type…"
+          placeholder={t('fastEntrySampleIdPlaceholder')}
           autoFocus
           style={{
             width: '100%',
@@ -161,7 +163,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
 
       {/* Result buttons — large touch targets */}
       <div style={{ marginBlockEnd: '1.25rem' }}>
-        <p style={{ fontWeight: 600, marginBlockEnd: '0.5rem' }}>Result</p>
+        <p style={{ fontWeight: 600, marginBlockEnd: '0.5rem' }}>{t('fastEntryResultLabel')}</p>
         <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap' }}>
           {RESULT_BUTTONS.map(({ value, label, color, bg }) => (
             <button
@@ -195,8 +197,8 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
         backgroundColor: '#f9fafb', borderRadius: '6px', padding: '0.75rem',
         marginBlockEnd: '1.25rem', fontSize: '0.875rem', color: '#6b7280',
       }}>
-        <div>Timestamp: <strong>{new Date().toLocaleTimeString()}</strong> (auto)</div>
-        <div>Tech ID: <strong>{session?.practitionerId ?? '—'}</strong> (session)</div>
+        <div>{t('fastEntryTimestampLabel')} <strong>{new Date().toLocaleTimeString()}</strong> {t('fastEntryTimestampAuto')}</div>
+        <div>{t('fastEntryTechIdLabel')} <strong>{session?.practitionerId ?? '—'}</strong> {t('fastEntryTechIdSession')}</div>
       </div>
 
       {error && (
@@ -221,7 +223,7 @@ export function SimplifiedResultEntry({ outbreakConfig, onSubmit, onClose }: Pro
           cursor: submitting || !sampleId.trim() || !result ? 'not-allowed' : 'pointer',
         }}
       >
-        {submitting ? 'Submitting…' : 'Submit Result'}
+        {submitting ? t('fastEntrySubmittingButton') : t('fastEntrySubmitButton')}
       </button>
     </div>
   )

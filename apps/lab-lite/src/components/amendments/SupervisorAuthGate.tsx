@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -46,6 +47,7 @@ export function SupervisorAuthGate({
   onCancel,
   currentUserLabRole,
 }: SupervisorAuthGateProps) {
+  const t = useTranslations('supervisorAuth')
   const session = useAuthSessionStore.getState().session
   const isSupervisor = currentUserLabRole
     ? SUPERVISOR_ROLES.includes(currentUserLabRole)
@@ -62,12 +64,12 @@ export function SupervisorAuthGate({
     setError(null)
 
     if (!supervisorId.trim()) {
-      setError('Supervisor practitioner ID is required')
+      setError(t('errorIdRequired'))
       return
     }
 
     if (isSupervisor && !acknowledged) {
-      setError('You must acknowledge the reason for self-authorization')
+      setError(t('errorMustAcknowledge'))
       return
     }
 
@@ -89,7 +91,7 @@ export function SupervisorAuthGate({
       const labRole = SUPERVISOR_ROLES[0]! // will be validated server-side; default to SUPERVISOR for local gate
       onAuthorized({ supervisorId: supervisorId.trim(), labRole })
     } catch (err) {
-      setError('Authorization failed. Please try again.')
+      setError(t('authFailed'))
     } finally {
       setLoading(false)
     }
@@ -107,13 +109,11 @@ export function SupervisorAuthGate({
           id="supervisor-auth-title"
           className="text-lg font-semibold text-gray-900 mb-4"
         >
-          Supervisor Authorization Required
+          {t('title')}
         </h2>
 
         <p className="text-sm text-gray-600 mb-6">
-          {isSupervisor
-            ? 'As a supervisor, you may authorize this amendment. Please acknowledge the reason before proceeding.'
-            : 'This amendment requires supervisor authorization. Ask your supervisor to enter their practitioner ID.'}
+          {isSupervisor ? t('bodySelf') : t('bodyCross')}
         </p>
 
         <div className="space-y-4">
@@ -123,14 +123,14 @@ export function SupervisorAuthGate({
                 htmlFor="supervisor-id-input"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Supervisor Practitioner ID
+                {t('supervisorIdLabel')}
               </label>
               <input
                 id="supervisor-id-input"
                 type="text"
                 value={supervisorId}
                 onChange={(e) => setSupervisorId(e.target.value)}
-                placeholder="Enter supervisor ID"
+                placeholder={t('supervisorIdPlaceholder')}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoComplete="off"
                 data-testid="supervisor-id-input"
@@ -149,8 +149,7 @@ export function SupervisorAuthGate({
                 data-testid="self-auth-acknowledge"
               />
               <label htmlFor="self-auth-acknowledge" className="text-sm text-gray-700">
-                I acknowledge that I am self-authorizing this amendment and confirm the reason
-                entered is accurate and complete.
+                {t('selfAcknowledgeLabel')}
               </label>
             </div>
           )}
@@ -170,7 +169,7 @@ export function SupervisorAuthGate({
             className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
             data-testid="auth-cancel-btn"
           >
-            Cancel
+            {t('cancelButton')}
           </button>
           <button
             type="button"
@@ -179,7 +178,7 @@ export function SupervisorAuthGate({
             className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             data-testid="auth-authorize-btn"
           >
-            {loading ? 'Authorizing…' : 'Authorize Amendment'}
+            {loading ? t('authorizingButton') : t('authorizeButton')}
           </button>
         </div>
       </div>

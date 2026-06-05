@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getTopDispensedItems, type ConsumptionItem } from '@/lib/reports/consumption-report'
 
 export function ConsumptionChart() {
+  const t = useTranslations('consumptionChart')
   const [items, setItems] = useState<ConsumptionItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -16,7 +18,7 @@ export function ConsumptionChart() {
   if (loading) {
     return (
       <div className="rounded-lg border border-border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Loading consumption data...</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     )
   }
@@ -25,9 +27,9 @@ export function ConsumptionChart() {
     return (
       <div className="rounded-lg border border-border bg-card p-4">
         <h3 className="mb-2 text-sm font-medium text-foreground">
-          Top Dispensed (30 days)
+          {t('topDispensed')}
         </h3>
-        <p className="text-sm text-muted-foreground">No dispensing data available.</p>
+        <p className="text-sm text-muted-foreground">{t('noData')}</p>
       </div>
     )
   }
@@ -37,7 +39,7 @@ export function ConsumptionChart() {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <h3 className="mb-4 text-sm font-medium text-foreground">
-        Top Dispensed (30 days)
+        {t('topDispensed')}
       </h3>
       <div className="space-y-2">
         {items.map((item) => {

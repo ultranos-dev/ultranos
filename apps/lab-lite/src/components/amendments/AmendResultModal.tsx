@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { AmendmentReasonCode } from '@ultranos/shared-types'
 import type { LabResultForAuthorization } from '@/types/authorization'
 import { initiateAmendment, authorizeAmendment, commitAmendment } from '@/lib/amendment-service'
@@ -32,14 +33,7 @@ export interface AmendResultModalProps {
 
 type Step = 1 | 2 | 3 | 4
 
-const REASON_CODE_LABELS: Record<AmendmentReasonCode, string> = {
-  [AmendmentReasonCode.CLERICAL_ERROR]: 'Clerical Error',
-  [AmendmentReasonCode.INSTRUMENT_MALFUNCTION]: 'Instrument Malfunction',
-  [AmendmentReasonCode.WRONG_PATIENT]: 'Wrong Patient',
-  [AmendmentReasonCode.QC_FAILURE_POST_RELEASE]: 'QC Failure Discovered Post-Release',
-  [AmendmentReasonCode.TRANSCRIPTION_ERROR]: 'Transcription Error',
-  [AmendmentReasonCode.OTHER]: 'Other (requires detailed explanation)',
-}
+// REASON_CODE_LABELS moved into component to use translations
 
 /**
  * AmendResultModal — full amendment workflow wizard.
@@ -50,7 +44,18 @@ const REASON_CODE_LABELS: Record<AmendmentReasonCode, string> = {
  * (AC #1, AC #2, task 4.6)
  */
 export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultModalProps) {
+  const t = useTranslations('amendModal')
+  const tAmend = useTranslations('amendments')
   const session = useAuthSessionStore.getState().session
+
+  const REASON_CODE_LABELS: Record<AmendmentReasonCode, string> = {
+    [AmendmentReasonCode.CLERICAL_ERROR]: tAmend('reasonCode.CLERICAL_ERROR'),
+    [AmendmentReasonCode.INSTRUMENT_MALFUNCTION]: tAmend('reasonCode.INSTRUMENT_MALFUNCTION'),
+    [AmendmentReasonCode.WRONG_PATIENT]: tAmend('reasonCode.WRONG_PATIENT'),
+    [AmendmentReasonCode.QC_FAILURE_POST_RELEASE]: tAmend('reasonCode.QC_FAILURE_POST_RELEASE'),
+    [AmendmentReasonCode.TRANSCRIPTION_ERROR]: tAmend('reasonCode.TRANSCRIPTION_ERROR'),
+    [AmendmentReasonCode.OTHER]: tAmend('reasonCode.OTHER'),
+  }
 
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
@@ -86,7 +91,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
       setAmendmentId(res.amendmentId)
       setStep(2)
     } catch (err) {
-      setError('Failed to initiate amendment. Please try again.')
+      setError(t('initiateError'))
     } finally {
       setLoading(false)
     }
@@ -122,7 +127,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
       onSuccess(amendmentId)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Amendment commit failed'
-      setError(msg.includes('supervisor') ? msg : 'Failed to commit amendment. Please try again.')
+      setError(msg.includes('supervisor') ? msg : t('commitError'))
     } finally {
       setLoading(false)
     }
@@ -145,7 +150,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 id="amend-modal-title" className="text-lg font-semibold text-gray-900">
-              Amend Result — Step {step} of 4
+              {t('title', { step })}
             </h2>
             <div className="mt-2 flex gap-2" aria-hidden="true">
               {([1, 2, 3, 4] as Step[]).map((s) => (
@@ -163,20 +168,20 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {step === 1 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Review the original result. Enter corrected values in the editable fields below.
+                  {t('step1Review')}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Original Values (read-only)</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">{t('step1OriginalTitle')}</h3>
                     <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-sm text-gray-700 min-h-[80px]">
-                      <p className="text-xs text-gray-500 mb-1">Conclusion:</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('step1ConclusionLabel')}</p>
                       <p>{result.conclusion ?? '—'}</p>
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Corrected Values</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">{t('step1CorrectedTitle')}</h3>
                     <div className="space-y-2">
-                      <label className="block text-xs text-gray-500">Conclusion:</label>
+                      <label className="block text-xs text-gray-500">{t('step1ConclusionLabel')}</label>
                       <textarea
                         value={correctedConclusion}
                         onChange={(e) => setCorrectedConclusion(e.target.value)}
@@ -194,11 +199,11 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {step === 2 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Select a reason code and provide a detailed explanation for the amendment.
+                  {t('step2Review')}
                 </p>
                 <div>
                   <label htmlFor="reason-code-select" className="block text-sm font-medium text-gray-700 mb-1">
-                    Reason Code <span className="text-red-600" aria-hidden="true">*</span>
+                    {t('step2ReasonCodeLabel')} <span className="text-red-600" aria-hidden="true">*</span>
                   </label>
                   <select
                     id="reason-code-select"
@@ -207,7 +212,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     data-testid="reason-code-select"
                   >
-                    <option value="">Select a reason…</option>
+                    <option value="">{t('step2ReasonCodePlaceholder')}</option>
                     {Object.entries(REASON_CODE_LABELS).map(([code, label]) => (
                       <option key={code} value={code}>{label}</option>
                     ))}
@@ -216,27 +221,25 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
 
                 {reasonCode === AmendmentReasonCode.WRONG_PATIENT && (
                   <div className="bg-orange-50 border border-orange-200 rounded-md p-3 text-sm text-orange-800" role="alert">
-                    <strong>Warning:</strong> "Wrong Patient" will mark the original report as{' '}
-                    <code>entered-in-error</code> per FHIR semantics. Ensure the correct patient is
-                    identified before proceeding.
+                    {t('step2WrongPatientWarning')}
                   </div>
                 )}
 
                 <div>
                   <label htmlFor="reason-text-input" className="block text-sm font-medium text-gray-700 mb-1">
-                    Detailed Explanation <span className="text-red-600" aria-hidden="true">*</span>
+                    {t('step2ExplanationLabel')} <span className="text-red-600" aria-hidden="true">*</span>
                   </label>
                   <textarea
                     id="reason-text-input"
                     value={reasonText}
                     onChange={(e) => setReasonText(e.target.value)}
                     rows={4}
-                    placeholder="Provide a detailed explanation (minimum 10 characters)…"
+                    placeholder={t('step2ExplanationPlaceholder')}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     data-testid="reason-text-input"
                   />
                   <p className={`text-xs mt-1 ${reasonText.trim().length < 10 ? 'text-red-500' : 'text-green-600'}`}>
-                    {reasonText.trim().length}/10 characters minimum
+                    {t('step2CharCount', { count: reasonText.trim().length })}
                   </p>
                 </div>
               </div>
@@ -247,15 +250,15 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
               <div className="space-y-4 text-center py-8">
                 {supervisorAuth ? (
                   <div className="text-green-600">
-                    <p className="text-lg font-medium">✓ Supervisor Authorized</p>
+                    <p className="text-lg font-medium">{t('step3AuthorizedTitle')}</p>
                     <p className="text-sm text-gray-600 mt-1">
-                      Authorized by: {supervisorAuth.supervisorId}
+                      {t('step3AuthorizedBy', { supervisorId: supervisorAuth.supervisorId })}
                     </p>
                   </div>
                 ) : (
                   <>
                     <p className="text-sm text-gray-600">
-                      Supervisor authorization is required before the amendment can be committed.
+                      {t('step3AuthRequired')}
                     </p>
                     <button
                       type="button"
@@ -263,7 +266,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                       className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
                       data-testid="open-supervisor-gate-btn"
                     >
-                      Authorize with Supervisor
+                      {t('step3AuthorizeButton')}
                     </button>
                   </>
                 )}
@@ -274,39 +277,38 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
             {step === 4 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Review all changes before committing. This action cannot be undone without creating
-                  another amendment.
+                  {t('step4Review')}
                 </p>
 
                 <div className="border border-gray-200 rounded-md overflow-hidden">
                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-700">Amendment Summary</h3>
+                    <h3 className="text-sm font-medium text-gray-700">{t('step4SummaryTitle')}</h3>
                   </div>
                   <div className="p-4 space-y-3 text-sm">
                     <div className="flex gap-2">
-                      <span className="font-medium w-32 shrink-0">Reason Code:</span>
+                      <span className="font-medium w-32 shrink-0">{t('step4ReasonCodeLabel')}</span>
                       <span>{reasonCode ? REASON_CODE_LABELS[reasonCode as AmendmentReasonCode] : '—'}</span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="font-medium w-32 shrink-0">Explanation:</span>
+                      <span className="font-medium w-32 shrink-0">{t('step4ExplanationLabel')}</span>
                       <span className="text-gray-700">{reasonText}</span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="font-medium w-32 shrink-0">Authorized by:</span>
+                      <span className="font-medium w-32 shrink-0">{t('step4AuthorizedByLabel')}</span>
                       <span>{supervisorAuth?.supervisorId ?? '—'}</span>
                     </div>
                     <hr className="border-gray-200" />
                     <div>
-                      <p className="font-medium mb-1">Conclusion:</p>
+                      <p className="font-medium mb-1">{t('step4ConclusionLabel')}</p>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Original:</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('step4OriginalLabel')}</p>
                           <p className="bg-red-50 border border-red-200 rounded px-2 py-1 line-through text-red-700">
                             {result.conclusion ?? '—'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Corrected:</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('step4CorrectedLabel')}</p>
                           <p className="bg-green-50 border border-green-200 rounded px-2 py-1 text-green-800">
                             {correctedConclusion || '—'}
                           </p>
@@ -334,7 +336,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
               className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
               data-testid="modal-back-btn"
             >
-              {step === 1 ? 'Cancel' : 'Back'}
+              {step === 1 ? t('cancelButton') : t('backButton')}
             </button>
 
             {step < 4 && (
@@ -352,7 +354,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                 data-testid="modal-next-btn"
               >
-                {loading ? 'Processing…' : step === 3 ? 'Authorize' : 'Next'}
+                {loading ? t('processingButton') : step === 3 ? t('authorizeButton') : t('nextButton')}
               </button>
             )}
 
@@ -364,7 +366,7 @@ export function AmendResultModal({ result, onSuccess, onCancel }: AmendResultMod
                 className="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                 data-testid="amend-commit-btn"
               >
-                {loading ? 'Committing…' : 'Commit Amendment'}
+                {loading ? t('committingButton') : t('commitButton')}
               </button>
             )}
           </div>

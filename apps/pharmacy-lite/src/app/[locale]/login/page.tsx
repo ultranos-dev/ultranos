@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
@@ -18,6 +19,7 @@ type AuthStep = 'credentials' | 'mfa'
  * 3. Populate auth session store, then redirect to /
  */
 export default function LoginPage() {
+  const t = useTranslations('login')
   const [step, setStep] = useState<AuthStep>('credentials')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -113,6 +115,7 @@ export default function LoginPage() {
       role,
       sessionId,
       email: userEmail,
+      name: sessionData.session?.user?.user_metadata?.full_name ?? sessionData.session?.user?.user_metadata?.name ?? '',
     })
 
     const params = new URLSearchParams(window.location.search)
@@ -164,12 +167,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Pharmacy Lite</h1>
-        <p className="text-sm text-muted-foreground mt-1">Powered by Ultranos</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('appName')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('poweredBy')}</p>
       </div>
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-6 text-center text-lg font-semibold text-foreground">
-          Sign In
+          {t('signIn')}
         </h2>
 
         {error && (
@@ -266,7 +269,7 @@ export default function LoginPage() {
           </form>
         )}
       </div>
-      <p className="mt-6 text-xs text-muted-foreground">Secure healthcare platform</p>
+      <p className="mt-6 text-xs text-muted-foreground">{t('secureHealthcare')}</p>
     </div>
   )
 }

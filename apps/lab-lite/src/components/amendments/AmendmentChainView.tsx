@@ -21,14 +21,7 @@ interface AmendmentChainViewProps {
   originalReportId: string
 }
 
-const REASON_CODE_LABELS: Record<AmendmentReasonCode, string> = {
-  [AmendmentReasonCode.CLERICAL_ERROR]: 'Clerical Error',
-  [AmendmentReasonCode.INSTRUMENT_MALFUNCTION]: 'Instrument Malfunction',
-  [AmendmentReasonCode.WRONG_PATIENT]: 'Wrong Patient',
-  [AmendmentReasonCode.QC_FAILURE_POST_RELEASE]: 'QC Failure Post-Release',
-  [AmendmentReasonCode.TRANSCRIPTION_ERROR]: 'Transcription Error',
-  [AmendmentReasonCode.OTHER]: 'Other',
-}
+// REASON_CODE_LABELS moved into component to use translations
 
 function formatTimestamp(iso: string): string {
   try {
@@ -53,6 +46,16 @@ function formatTimestamp(iso: string): string {
 export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps) {
   const tCommon = useTranslations('common')
   const t = useTranslations('amendments')
+
+  // reasonCodeShort uses the short display labels for the chain view
+  const REASON_CODE_LABELS: Record<AmendmentReasonCode, string> = {
+    [AmendmentReasonCode.CLERICAL_ERROR]: t('reasonCodeShort.CLERICAL_ERROR'),
+    [AmendmentReasonCode.INSTRUMENT_MALFUNCTION]: t('reasonCodeShort.INSTRUMENT_MALFUNCTION'),
+    [AmendmentReasonCode.WRONG_PATIENT]: t('reasonCodeShort.WRONG_PATIENT'),
+    [AmendmentReasonCode.QC_FAILURE_POST_RELEASE]: t('reasonCodeShort.QC_FAILURE_POST_RELEASE'),
+    [AmendmentReasonCode.TRANSCRIPTION_ERROR]: t('reasonCodeShort.TRANSCRIPTION_ERROR'),
+    [AmendmentReasonCode.OTHER]: t('reasonCodeShort.OTHER'),
+  }
   const [chain, setChain] = useState<AmendmentRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -68,7 +71,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
         }
       } catch {
         if (!cancelled) {
-          setError('Failed to load amendment chain')
+          setError(t('loadError'))
         }
       } finally {
         if (!cancelled) {
@@ -100,7 +103,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
   if (chain.length === 0) {
     return (
       <div className="py-4 text-sm text-gray-500" data-testid="chain-empty">
-        No amendments on record for this result.
+        {t('noAmendments')}
       </div>
     )
   }
@@ -108,7 +111,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
   return (
     <div className="space-y-3" data-testid="amendment-chain">
       <h3 className="text-sm font-medium text-gray-700">
-        Amendment History ({chain.length} {chain.length === 1 ? 'amendment' : 'amendments'})
+        {t('historyTitle', { count: chain.length })}
       </h3>
 
       <ol className="relative border-s border-gray-200 ms-4 space-y-4">
@@ -121,7 +124,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
               {/* Version header */}
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-gray-900">
-                  Amendment v{index + 1}
+                  {t('versionLabel', { version: index + 1 })}
                 </span>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -130,14 +133,14 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
                       : 'bg-yellow-100 text-yellow-800'
                   }`}
                 >
-                  {amendment.status === 'COMMITTED' ? 'Committed' : 'Pending Authorization'}
+                  {amendment.status === 'COMMITTED' ? t('committed') : t('pendingAuthorization')}
                 </span>
               </div>
 
               {/* Reason */}
               <div className="space-y-1 text-gray-700">
                 <div className="flex gap-2">
-                  <span className="font-medium w-28 shrink-0">Reason:</span>
+                  <span className="font-medium w-28 shrink-0">{t('reason')}</span>
                   <span>
                     {amendment.reasonCode
                       ? REASON_CODE_LABELS[amendment.reasonCode] ?? amendment.reasonCode
@@ -147,38 +150,38 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
 
                 {amendment.reasonText && (
                   <div className="flex gap-2">
-                    <span className="font-medium w-28 shrink-0">Explanation:</span>
+                    <span className="font-medium w-28 shrink-0">{t('explanation')}</span>
                     <span className="text-gray-600">{amendment.reasonText}</span>
                   </div>
                 )}
 
                 <div className="flex gap-2">
-                  <span className="font-medium w-28 shrink-0">Initiated by:</span>
+                  <span className="font-medium w-28 shrink-0">{t('initiatedBy')}</span>
                   <span className="font-mono text-xs text-gray-500">{amendment.initiatedBy}</span>
                 </div>
 
                 {amendment.authorizedBy && (
                   <div className="flex gap-2">
-                    <span className="font-medium w-28 shrink-0">Authorized by:</span>
+                    <span className="font-medium w-28 shrink-0">{t('authorizedBy')}</span>
                     <span className="font-mono text-xs text-gray-500">{amendment.authorizedBy}</span>
                   </div>
                 )}
 
                 <div className="flex gap-2">
-                  <span className="font-medium w-28 shrink-0">Initiated:</span>
+                  <span className="font-medium w-28 shrink-0">{t('initiated')}</span>
                   <span className="text-gray-500">{formatTimestamp(amendment.initiatedAt)}</span>
                 </div>
 
                 {amendment.authorizedAt && (
                   <div className="flex gap-2">
-                    <span className="font-medium w-28 shrink-0">Authorized:</span>
+                    <span className="font-medium w-28 shrink-0">{t('authorized')}</span>
                     <span className="text-gray-500">{formatTimestamp(amendment.authorizedAt)}</span>
                   </div>
                 )}
 
                 {/* Diff summary */}
                 <div className="mt-2 pt-2 border-t border-gray-200">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Diff summary (value types changed):</p>
+                  <p className="text-xs font-medium text-gray-600 mb-1">{t('diffSummaryTitle')}</p>
                   <div className="font-mono text-xs text-gray-500">
                     {Object.keys(amendment.originalValues).length > 0 || Object.keys(amendment.amendedValues).length > 0
                       ? Object.keys({ ...amendment.originalValues, ...amendment.amendedValues }).map((key) => (

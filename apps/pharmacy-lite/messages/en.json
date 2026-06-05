@@ -288,6 +288,31 @@
     "update": "Update",
     "later": "Later"
   },
+  "syncDashboard": {
+    "title": "Sync Status",
+    "ariaLabel": "Sync Dashboard",
+    "closeAriaLabel": "Close sync dashboard",
+    "pending": "pending",
+    "failed": "failed",
+    "lastSync": "Last sync: {time}",
+    "syncingLabel": "Syncing",
+    "syncNow": "Sync Now",
+    "syncing": "Syncing...",
+    "retryAllFailed": "Retry All Failed",
+    "allSynced": "All synced — no pending items",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "discard": "Discard",
+    "pushingPhase": "Pushing pending dispensations to Hub...",
+    "syncComplete": "Sync complete",
+    "syncFailedRetry": "Sync failed — will retry",
+    "noNetworkConnection": "No network connection",
+    "statusPending": "Pending",
+    "statusFailed": "Failed",
+    "statusSynced": "Synced",
+    "statusSyncing": "Syncing"
+  },
   "sync": {
     "syncQueue": "Sync Queue",
     "noItems": "No items in the sync queue.",
@@ -832,6 +857,58 @@
     "clearDistrict": "Clear district",
     "noMatchingProvince": "No matching province",
     "noMatchingDistrict": "No matching district"
+  },
+  "languageSelector": {
+    "ariaLabel": "Select language",
+    "label": "Language"
+  },
+  "interactionCheck": {
+    "checking": "Checking drug interactions...",
+    "clear": "No known drug interactions detected.",
+    "warningTitle": "Drug Interaction Warning",
+    "contraindicationTitle": "CONTRAINDICATION DETECTED",
+    "contraindicationBlocked": "Dispensing is blocked. Contact prescribing physician for alternatives.",
+    "unavailableTitle": "Interaction check unavailable",
+    "unavailableCaution": "Proceed with caution. Manually verify drug interactions before dispensing."
+  },
+  "sessionExpiry": {
+    "expiringIn": "Session expiring in {minutes} {minutes, plural, =1 {minute} other {minutes}}.",
+    "saveAndReauth": "Save your work and re-authenticate to continue."
+  },
+  "patientRegQuick": {
+    "title": "Register New Patient",
+    "patientName": "Patient Name",
+    "fatherName": "Father's Name",
+    "gender": "Gender",
+    "birthYear": "Birth Year",
+    "phoneNumber": "Phone Number",
+    "knownAllergies": "Known Allergies (enter each and press Add)",
+    "allergyPlaceholder": "e.g. Penicillin",
+    "addAllergy": "Add",
+    "removeAllergyAriaLabel": "Remove {allergy}",
+    "registerPatient": "Register Patient",
+    "registering": "Registering...",
+    "cancel": "Cancel",
+    "failedToRegister": "Failed to register patient. Please try again.",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "genderUnknown": "Unknown"
+  },
+  "consumptionChart": {
+    "loading": "Loading consumption data...",
+    "noData": "No dispensing data available.",
+    "topDispensed": "Top Dispensed (30 days)"
+  },
+  "controlledBalances": {
+    "title": "Controlled Substance Balances",
+    "batchCount": "{count} {count, plural, =1 {batch} other {batches}}"
+  },
+  "login": {
+    "appName": "Pharmacy Lite",
+    "poweredBy": "Powered by Ultranos",
+    "signIn": "Sign In",
+    "secureHealthcare": "Secure healthcare platform"
   },
   "dataBudget": {
     "usageTitle": "Data Usage",

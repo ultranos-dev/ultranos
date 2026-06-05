@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Plus, Edit, X, CheckCircle } from '@ultranos/ui-kit/icons'
 import { getActiveReferenceLabs, addReferenceLab, updateReferenceLab, deactivateReferenceLab } from '@/lib/reference-lab-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -30,6 +31,7 @@ const EMPTY_FORM: LabFormState = {
 }
 
 export function ReferenceLabConfigPanel() {
+  const t = useTranslations('sendout')
   const session = useAuthSessionStore((s) => s.session)
   const [labs, setLabs] = useState<ReferenceLab[]>([])
   const [editingId, setEditingId] = useState<string | 'new' | null>(null)
@@ -98,7 +100,7 @@ export function ReferenceLabConfigPanel() {
       setForm(EMPTY_FORM)
       await loadLabs()
     } catch {
-      setError('Failed to save reference lab.')
+      setError(t('refLabSaveError'))
     } finally {
       setLoading(false)
     }
@@ -106,19 +108,19 @@ export function ReferenceLabConfigPanel() {
 
   async function handleDeactivate(id: string) {
     if (!session?.userId || !canEdit) return
-    if (!confirm('Deactivate this reference lab? It will no longer appear in the send-out selector.')) return
+    if (!confirm(t('refLabDeactivateConfirm'))) return
     try {
       await deactivateReferenceLab(id, session.userId)
       await loadLabs()
     } catch {
-      setError('Failed to deactivate reference lab.')
+      setError(t('refLabDeactivateError'))
     }
   }
 
   if (!canEdit) {
     return (
       <div role="alert" className="rounded-md bg-muted/30 border border-border px-4 py-3 text-sm text-muted-foreground">
-        Only Lab Managers and Supervisors can configure reference labs.
+        {t('refLabOnlyManagersNote')}
       </div>
     )
   }
@@ -126,14 +128,14 @@ export function ReferenceLabConfigPanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Reference Laboratories</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t('refLabPanelTitle')}</h3>
         {canEdit && editingId === null && (
           <button
             type="button"
             onClick={() => { setEditingId('new'); setForm(EMPTY_FORM) }}
             className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
           >
-            <Plus size={14} /> Add Lab
+            <Plus size={14} /> {t('refLabAddButton')}
           </button>
         )}
       </div>
@@ -144,16 +146,16 @@ export function ReferenceLabConfigPanel() {
       {editingId !== null && (
         <form onSubmit={handleSave} className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
           <p className="text-sm font-medium text-blue-900">
-            {editingId === 'new' ? 'Add Reference Lab' : 'Edit Reference Lab'}
+            {editingId === 'new' ? t('refLabFormAddTitle') : t('refLabFormEditTitle')}
           </p>
           {[
-            { id: 'lab-name', label: 'Name', key: 'name', required: true, placeholder: 'e.g., Kabul Central Reference Lab' },
-            { id: 'lab-accred', label: 'Accreditation #', key: 'accreditationNumber', required: true, placeholder: 'e.g., AFG-LAB-001' },
-            { id: 'lab-address', label: 'Address', key: 'address', required: true, placeholder: '' },
-            { id: 'lab-phone', label: 'Phone', key: 'contactPhone', required: false, placeholder: '' },
-            { id: 'lab-email', label: 'Email', key: 'contactEmail', required: false, placeholder: '' },
-            { id: 'lab-tests', label: 'Supported LOINC codes (comma-separated)', key: 'supportedTests', required: false, placeholder: '2085-9, 4548-4, 10524-7' },
-            { id: 'lab-tat', label: 'Average TAT days (LOINC:days, comma-separated)', key: 'averageTATDays', required: false, placeholder: '2085-9:5, 4548-4:3' },
+            { id: 'lab-name', label: t('refLabFieldName'), key: 'name', required: true, placeholder: t('refLabFieldNamePlaceholder') },
+            { id: 'lab-accred', label: t('refLabFieldAccreditation'), key: 'accreditationNumber', required: true, placeholder: t('refLabFieldAccredPlaceholder') },
+            { id: 'lab-address', label: t('refLabFieldAddress'), key: 'address', required: true, placeholder: '' },
+            { id: 'lab-phone', label: t('refLabFieldPhone'), key: 'contactPhone', required: false, placeholder: '' },
+            { id: 'lab-email', label: t('refLabFieldEmail'), key: 'contactEmail', required: false, placeholder: '' },
+            { id: 'lab-tests', label: t('refLabFieldSupportedTests'), key: 'supportedTests', required: false, placeholder: t('refLabFieldTestsPlaceholder') },
+            { id: 'lab-tat', label: t('refLabFieldTAT'), key: 'averageTATDays', required: false, placeholder: t('refLabFieldTatPlaceholder') },
           ].map(({ id, label, key, required, placeholder }) => (
             <div key={id}>
               <label htmlFor={id} className="block text-xs font-medium text-foreground mb-0.5">
@@ -176,14 +178,14 @@ export function ReferenceLabConfigPanel() {
               onClick={() => { setEditingId(null); setForm(EMPTY_FORM) }}
               className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30"
             >
-              Cancel
+              {t('refLabFormCancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Saving…' : 'Save'}
+              {loading ? t('refLabFormSaving') : t('refLabFormSave')}
             </button>
           </div>
         </form>
@@ -191,16 +193,16 @@ export function ReferenceLabConfigPanel() {
 
       {/* Labs list */}
       {labs.length === 0 && editingId === null ? (
-        <p className="text-sm text-muted-foreground">No reference labs configured yet.</p>
+        <p className="text-sm text-muted-foreground">{t('refLabNoLabs')}</p>
       ) : (
         <ul className="space-y-2">
           {labs.map((lab) => (
             <li key={lab.id} className="flex items-start justify-between rounded-lg border border-border bg-card px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-foreground">{lab.name}</p>
-                <p className="text-xs text-muted-foreground">Accred. #{lab.accreditationNumber} · {lab.address}</p>
+                <p className="text-xs text-muted-foreground">{t('refLabAccredAddress', { number: lab.accreditationNumber, address: lab.address })}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Supports: {lab.supportedTests.length} test{lab.supportedTests.length !== 1 ? 's' : ''}
+                  {t('refLabSupports', { count: lab.supportedTests.length })}
                 </p>
               </div>
               {canEdit && (
@@ -208,7 +210,7 @@ export function ReferenceLabConfigPanel() {
                   <button
                     type="button"
                     onClick={() => startEdit(lab)}
-                    aria-label={`Edit ${lab.name}`}
+                    aria-label={t('refLabEditAriaLabel', { name: lab.name })}
                     className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-blue-600"
                   >
                     <Edit size={16} />
@@ -216,7 +218,7 @@ export function ReferenceLabConfigPanel() {
                   <button
                     type="button"
                     onClick={() => handleDeactivate(lab.id)}
-                    aria-label={`Deactivate ${lab.name}`}
+                    aria-label={t('refLabDeactivateAriaLabel', { name: lab.name })}
                     className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-red-600"
                   >
                     <X size={16} />

@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
 export function SwUpdateNotification() {
+  const t = useTranslations('pwa')
   const [showUpdate, setShowUpdate] = useState(false)
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function SwUpdateNotification() {
 
   return (
     <div className="fixed bottom-4 end-4 z-50 rounded-lg border border-primary-200 bg-background p-4 shadow-lg">
-      <p className="text-sm font-medium text-foreground">A new version is available</p>
+      <p className="text-sm font-medium text-foreground">{t('newVersionAvailable')}</p>
       <div className="mt-2 flex gap-2">
         <Button
           variant="default"
@@ -40,13 +42,13 @@ export function SwUpdateNotification() {
             })
           }}
         >
-          Update
+          {t('update')}
         </Button>
         <Button
           variant="outline"
           onClick={() => setShowUpdate(false)}
         >
-          Later
+          {t('later')}
         </Button>
       </div>
     </div>

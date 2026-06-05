@@ -10,13 +10,15 @@
  * No PHI — sample ID is opaque.
  */
 
+import { useTranslations } from 'next-intl'
 import { Target } from '@ultranos/ui-kit/icons'
 
 export function OutbreakPriorityBadge() {
+  const t = useTranslations('outbreak')
   return (
     <span
       data-testid="outbreak-priority-badge"
-      aria-label="Outbreak Priority"
+      aria-label={t('priorityBadgeAriaLabel')}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -34,7 +36,7 @@ export function OutbreakPriorityBadge() {
       }}
     >
       <Target size={12} aria-hidden="true" strokeWidth={2.5} />
-      OUTBREAK PRIORITY
+      {t('priorityBadgeText')}
     </span>
   )
 }

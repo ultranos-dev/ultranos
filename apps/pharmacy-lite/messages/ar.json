@@ -287,6 +287,31 @@
     "update": "تحديث",
     "later": "لاحقًا"
   },
+  "syncDashboard": {
+    "title": "حالة المزامنة",
+    "ariaLabel": "لوحة المزامنة",
+    "closeAriaLabel": "إغلاق لوحة المزامنة",
+    "pending": "معلّقة",
+    "failed": "فاشلة",
+    "lastSync": "آخر مزامنة: {time}",
+    "syncingLabel": "جاري المزامنة",
+    "syncNow": "مزامنة الآن",
+    "syncing": "جاري المزامنة...",
+    "retryAllFailed": "إعادة محاولة الكل",
+    "allSynced": "تمّت المزامنة — لا توجد عناصر معلّقة",
+    "retry": "إعادة المحاولة",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "discard": "حذف",
+    "pushingPhase": "جاري رفع الصرف المعلّق إلى المركز...",
+    "syncComplete": "اكتملت المزامنة",
+    "syncFailedRetry": "فشلت المزامنة — ستتم إعادة المحاولة",
+    "noNetworkConnection": "لا يوجد اتصال بالشبكة",
+    "statusPending": "معلّقة",
+    "statusFailed": "فاشلة",
+    "statusSynced": "تمّت المزامنة",
+    "statusSyncing": "جاري المزامنة"
+  },
   "sync": {
     "syncQueue": "قائمة انتظار المزامنة",
     "noItems": "لا توجد عناصر في قائمة انتظار المزامنة.",
@@ -831,6 +856,58 @@
     "clearDistrict": "مسح المنطقة",
     "noMatchingProvince": "لا توجد محافظة مطابقة",
     "noMatchingDistrict": "لا توجد منطقة مطابقة"
+  },
+  "languageSelector": {
+    "ariaLabel": "اختر اللغة",
+    "label": "اللغة"
+  },
+  "interactionCheck": {
+    "checking": "جاري فحص تفاعلات الأدوية...",
+    "clear": "لم يُكتشف أي تفاعل دوائي معروف.",
+    "warningTitle": "تحذير من تفاعل دوائي",
+    "contraindicationTitle": "تعارض دوائي مكتشف",
+    "contraindicationBlocked": "الصرف محظور. تواصل مع الطبيب الموصّف للبدائل.",
+    "unavailableTitle": "فحص التفاعلات غير متاح",
+    "unavailableCaution": "تابع بحذر. تحقق يدويًا من تفاعلات الأدوية قبل الصرف."
+  },
+  "sessionExpiry": {
+    "expiringIn": "ستنتهي الجلسة خلال {minutes} {minutes, plural, =1 {دقيقة} other {دقائق}}.",
+    "saveAndReauth": "احفظ عملك وأعد المصادقة للمتابعة."
+  },
+  "patientRegQuick": {
+    "title": "تسجيل مريض جديد",
+    "patientName": "اسم المريض",
+    "fatherName": "اسم الأب",
+    "gender": "الجنس",
+    "birthYear": "سنة الميلاد",
+    "phoneNumber": "رقم الهاتف",
+    "knownAllergies": "الحساسيات المعروفة (أدخل كل منها واضغط إضافة)",
+    "allergyPlaceholder": "مثال: البنسلين",
+    "addAllergy": "إضافة",
+    "removeAllergyAriaLabel": "إزالة {allergy}",
+    "registerPatient": "تسجيل المريض",
+    "registering": "جاري التسجيل...",
+    "cancel": "إلغاء",
+    "failedToRegister": "فشل تسجيل المريض. يرجى المحاولة مرة أخرى.",
+    "genderMale": "ذكر",
+    "genderFemale": "أنثى",
+    "genderOther": "آخر",
+    "genderUnknown": "غير معروف"
+  },
+  "consumptionChart": {
+    "loading": "جاري تحميل بيانات الاستهلاك...",
+    "noData": "لا تتوفر بيانات صرف.",
+    "topDispensed": "الأكثر صرفًا (30 يومًا)"
+  },
+  "controlledBalances": {
+    "title": "أرصدة المواد الخاضعة للرقابة",
+    "batchCount": "{count} {count, plural, =1 {دفعة} other {دفعات}}"
+  },
+  "login": {
+    "appName": "صيدلية",
+    "poweredBy": "مدعوم من ألترانوس",
+    "signIn": "تسجيل الدخول",
+    "secureHealthcare": "منصة رعاية صحية آمنة"
   },
   "dataBudget": {
     "usageTitle": "استخدام البيانات",

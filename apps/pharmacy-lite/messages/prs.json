@@ -287,6 +287,31 @@
     "update": "به‌روزرسانی",
     "later": "بعداً"
   },
+  "syncDashboard": {
+    "title": "وضعیت همگام‌سازی",
+    "ariaLabel": "داشبورد همگام‌سازی",
+    "closeAriaLabel": "بستن داشبورد همگام‌سازی",
+    "pending": "در انتظار",
+    "failed": "ناکام",
+    "lastSync": "آخرین همگام‌سازی: {time}",
+    "syncingLabel": "در حال همگام‌سازی",
+    "syncNow": "همگام‌سازی الان",
+    "syncing": "در حال همگام‌سازی...",
+    "retryAllFailed": "تلاش مجدد همه ناکام‌ها",
+    "allSynced": "همه همگام شده — موردی در انتظار نیست",
+    "retry": "تلاش مجدد",
+    "confirm": "تأیید",
+    "cancel": "لغو",
+    "discard": "حذف",
+    "pushingPhase": "در حال ارسال تحویل‌های در انتظار به هاب...",
+    "syncComplete": "همگام‌سازی کامل شد",
+    "syncFailedRetry": "همگام‌سازی ناکام شد — دوباره تلاش خواهد شد",
+    "noNetworkConnection": "اتصال شبکه وجود ندارد",
+    "statusPending": "در انتظار",
+    "statusFailed": "ناکام",
+    "statusSynced": "همگام شده",
+    "statusSyncing": "در حال همگام‌سازی"
+  },
   "sync": {
     "syncQueue": "صف همگام‌سازی",
     "noItems": "موردی در صف همگام‌سازی نیست.",
@@ -831,6 +856,58 @@
     "clearDistrict": "پاک کردن ولسوالی",
     "noMatchingProvince": "هیچ ولایت مطابقی یافت نشد",
     "noMatchingDistrict": "هیچ ولسوالی مطابقی یافت نشد"
+  },
+  "languageSelector": {
+    "ariaLabel": "انتخاب زبان",
+    "label": "زبان"
+  },
+  "interactionCheck": {
+    "checking": "در حال بررسی تداخلات دوایی...",
+    "clear": "هیچ تداخل دوایی شناخته‌شده‌ای یافت نشد.",
+    "warningTitle": "هشدار تداخل دوایی",
+    "contraindicationTitle": "منع مصرف شناسایی شد",
+    "contraindicationBlocked": "تحویل مسدود است. با داکتر تجویزکننده برای جایگزین‌ها تماس بگیرید.",
+    "unavailableTitle": "بررسی تداخل در دسترس نیست",
+    "unavailableCaution": "با احتیاط ادامه دهید. قبل از تحویل، تداخلات دوایی را به صورت دستی تأیید کنید."
+  },
+  "sessionExpiry": {
+    "expiringIn": "جلسه در {minutes} {minutes, plural, =1 {دقیقه} other {دقیقه}} منقضی می‌شود.",
+    "saveAndReauth": "کار خود را ذخیره کنید و برای ادامه دوباره احراز هویت کنید."
+  },
+  "patientRegQuick": {
+    "title": "ثبت مریض جدید",
+    "patientName": "نام مریض",
+    "fatherName": "نام پدر",
+    "gender": "جنسیت",
+    "birthYear": "سال تولد",
+    "phoneNumber": "شماره تلفون",
+    "knownAllergies": "حساسیت‌های شناخته شده (هر مورد را وارد کرده و اضافه را فشار دهید)",
+    "allergyPlaceholder": "مثلاً پنی‌سیلین",
+    "addAllergy": "اضافه کردن",
+    "removeAllergyAriaLabel": "حذف {allergy}",
+    "registerPatient": "ثبت مریض",
+    "registering": "در حال ثبت...",
+    "cancel": "لغو",
+    "failedToRegister": "ثبت مریض ناکام شد. لطفاً دوباره تلاش کنید.",
+    "genderMale": "مرد",
+    "genderFemale": "زن",
+    "genderOther": "دیگر",
+    "genderUnknown": "نامعلوم"
+  },
+  "consumptionChart": {
+    "loading": "در حال بارگذاری داده‌های مصرف...",
+    "noData": "داده‌ای برای تحویل وجود ندارد.",
+    "topDispensed": "بیشترین تحویل (۳۰ روز)"
+  },
+  "controlledBalances": {
+    "title": "موجودی مواد کنترول شده",
+    "batchCount": "{count} {count, plural, =1 {دسته} other {دسته}}"
+  },
+  "login": {
+    "appName": "دواخانه",
+    "poweredBy": "ارائه شده توسط Ultranos",
+    "signIn": "ورود",
+    "secureHealthcare": "پلتفرم مراقبت‌های صحی امن"
   },
   "dataBudget": {
     "usageTitle": "مصرف داده",

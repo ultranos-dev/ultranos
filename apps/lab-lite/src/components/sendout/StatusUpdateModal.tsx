@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { X, ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { updateSendOutStatus } from '@/lib/sendout-service'
@@ -14,18 +15,21 @@ interface StatusUpdateModalProps {
   onSuccess: () => void
 }
 
-const STATUS_LABELS: Record<SendOutStatus, string> = {
-  sent: 'Sent',
-  received: 'Received by Lab',
-  processing: 'Processing',
-  'results-available': 'Results Available',
-  cancelled: 'Cancelled',
-}
+// STATUS_LABELS moved into component to use translations — see below
 
 const PIPELINE_STEPS: SendOutStatus[] = ['sent', 'received', 'processing', 'results-available']
 
 export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateModalProps) {
+  const t = useTranslations('sendout')
   const session = useAuthSessionStore((s) => s.session)
+
+  const STATUS_LABELS: Record<SendOutStatus, string> = {
+    sent: t('statusLabelSent'),
+    received: t('statusLabelReceived'),
+    processing: t('statusLabelProcessing'),
+    'results-available': t('statusLabelResultsAvailable'),
+    cancelled: t('statusLabelCancelled'),
+  }
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +47,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
       await updateSendOutStatus(sendOut.id, nextStatus, 'manual', session.userId, notes || undefined)
       onSuccess()
     } catch {
-      setError('Failed to update status. Please try again.')
+      setError(t('statusUpdateError'))
     } finally {
       setLoading(false)
     }
@@ -57,7 +61,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
       await updateSendOutStatus(sendOut.id, 'cancelled', 'manual', session.userId, notes || undefined)
       onSuccess()
     } catch {
-      setError('Failed to cancel send-out.')
+      setError(t('statusCancelError'))
     } finally {
       setLoading(false)
     }
@@ -75,9 +79,9 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
       <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 id="status-modal-title" className="text-base font-semibold text-foreground">
-            Update Status
+            {t('statusModalTitle')}
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-muted-foreground hover:bg-muted">
+          <button type="button" onClick={onClose} aria-label={t('statusCloseAriaLabel')} className="rounded p-1 text-muted-foreground hover:bg-muted">
             <X size={20} />
           </button>
         </div>
@@ -85,7 +89,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
         <div className="px-5 py-4 space-y-5">
           {/* Pipeline visualizer */}
           <div>
-            <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide font-medium">Status Pipeline</p>
+            <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide font-medium">{t('statusPipelineLabel')}</p>
             <ol className="flex items-center gap-1" role="list">
               {PIPELINE_STEPS.map((step, i) => {
                 const isDone = i < currentStepIndex
@@ -117,14 +121,14 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
           {/* Notes field */}
           <div>
             <label htmlFor="status-notes" className="block text-sm font-medium text-foreground mb-1">
-              Notes <span className="text-muted-foreground font-normal">(optional)</span>
+              {t('statusNotesLabel')} <span className="text-muted-foreground font-normal">{t('statusNotesOptional')}</span>
             </label>
             <textarea
               id="status-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder='e.g., Called reference lab, they confirmed receipt yesterday'
+              placeholder={t('statusNotesPlaceholder')}
               className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -139,11 +143,11 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
               disabled={loading || sendOut.status === 'cancelled'}
               className="text-sm text-red-600 underline disabled:opacity-40"
             >
-              Cancel Send-Out
+              {t('statusCancelSendOut')}
             </button>
             <div className="flex gap-3">
               <button type="button" onClick={onClose} className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30">
-                Close
+                {t('statusCloseButton')}
               </button>
               {nextStatus && (
                 <button
@@ -152,7 +156,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
                   disabled={loading}
                   className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {loading ? 'Updating…' : `Mark as ${STATUS_LABELS[nextStatus]}`}
+                  {loading ? t('statusUpdatingButton') : t('statusMarkAsButton', { status: STATUS_LABELS[nextStatus] })}
                 </button>
               )}
             </div>

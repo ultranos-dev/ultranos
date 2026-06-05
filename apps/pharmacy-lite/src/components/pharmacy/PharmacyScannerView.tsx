@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   verifyPrescriptionQr,
@@ -26,6 +27,7 @@ interface PharmacyScannerViewProps {
 export function PharmacyScannerView({
   onNavigateToReview,
 }: PharmacyScannerViewProps) {
+  const t = useTranslations('prescription')
   const [phase, setPhase] = useState<ViewPhase>({ step: 'idle' })
   const [pasteInput, setPasteInput] = useState('')
   const scannerRef = useRef<HTMLDivElement>(null)
@@ -187,7 +189,7 @@ export function PharmacyScannerView({
               type="text"
               value={pasteInput}
               onChange={(e) => setPasteInput(e.target.value)}
-              placeholder="Paste QR payload"
+              placeholder={t('pasteQrPlaceholder')}
               className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
               data-testid="qr-paste-input"
               onKeyDown={(e) => {
