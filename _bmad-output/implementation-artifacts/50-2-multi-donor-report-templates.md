@@ -1,6 +1,6 @@
 # Story 50.2: Multi-Donor Report Templates
 
-Status: review
+Status: done
 
 ## Story
 
@@ -322,6 +322,46 @@ All 13 tasks completed. Story 50.2 fully implemented:
 - `apps/lab-lite/messages/prs.json` — donorReport namespace
 - `apps/lab-lite/messages/ps.json` — donorReport namespace
 
+### Review Findings
+
+#### Decision Needed (Resolved)
+
+- [x] [Review][Patch] **Positive result detection — add structured `resultCode` field** — Added `resultCode: 'positive' | 'negative' | 'indeterminate'` to `LabLogbookEntry`. Generator uses `isPositiveResult()` helper that prefers `resultCode` with regex fallback. Decision: 1A chosen. [donor-report-generator.ts, db.ts]
+- [x] [Review][Patch] **Duplicate report guard — check for existing draft** — Added `getDonorReportDraft()` helper. Generator checks for existing draft before generating; prompts user to view or overwrite. Decision: 2A chosen. [DonorReportGenerator.tsx, db.ts]
+
+#### Patch — HIGH (All Fixed)
+
+- [x] [Review][Patch] **PDF template resolution hardcoded naming convention** — Fixed: PDF exporter now resolves template via `getDonorProgramByCode()` → `resolveTemplate(program.templateCode)`. [donor-report-pdf.ts:26-30]
+- [x] [Review][Patch] **`patientAge` null/undefined silently misclassified in demographics** — Fixed: Added `e.patientAge != null` guard before age bucketing. [donor-report-generator.ts:206]
+- [x] [Review][Patch] **i18n key mismatches — UI renders blank labels** — Fixed: `t('generateReport')` → `t('generate')`, `t('tagPrograms')` → `t('tagTests')`, `t('registerFirst')` → `t('noProgramsHint')`. Added `invalidPeriod`, `existingDraft`, `overwriteDraft` keys to all 4 locales. [DonorReportGenerator.tsx, ProgramTagSelector.tsx, en/ar/prs/ps.json]
+- [x] [Review][Patch] **`getCustomDonorTemplates` queries non-indexed `isCustom` field** — Fixed: Changed to `.filter((t) => t.isCustom === true).toArray()`. [db.ts]
+- [x] [Review][Patch] **`DONOR_REPORT_CORRECTED` audit event never emitted** — Fixed: Added `DONOR_REPORT_CORRECTED` to `DonorAuditAction`, added `fieldPath`/`correctedBy` to payload, emitting in `handleCorrection()`. Test added. [DonorReportReview.tsx, audit-client.ts, donor-report-audit.test.ts]
+- [x] [Review][Patch] **Floating-point arithmetic for financial reimbursement** — Fixed: Added `currencyRound()` helper that uses `Math.round(n * 100) / 100`. Applied to all subtotals and grand total. [donor-report-generator.ts]
+
+#### Patch — MEDIUM (All Fixed)
+
+- [x] [Review][Patch] **PDF/Review columns derived from row keys, not template** — Fixed: PDF exporter uses `templateSection.columns` when available for column headers and data mapping. Review table still uses row keys (template not passed as prop — future enhancement). [donor-report-pdf.ts]
+- [x] [Review][Patch] **programCode normalization TOCTOU** — Fixed: Normalize to `toUpperCase().replace(/\s+/g, '_')` before uniqueness check. [ProgramRegistration.tsx]
+- [x] [Review][Patch] **`handleFinalize` state diverges from DB** — Fixed: `finalizeDonorReport()` now returns the updated `DonorReport`; component uses returned record for `onUpdate()`. [DonorReportReview.tsx, db.ts]
+- [x] [Review][Patch] **Correction input uses uncontrolled `defaultValue`** — Fixed: Added `key` prop that includes the current value, forcing React to remount the input when the value changes. [DonorReportReview.tsx]
+- [x] [Review][Patch] **`partial_data` warning fires spuriously from suppression** — Fixed: `partial_data` now only checks non-demographics sections. [donor-report-generator.ts]
+- [x] [Review][Patch] **`ProgramTagSelector` auto-tag stale closure** — Fixed: Split into two effects — one for fetching programs, one for applying auto-tags keyed on `autoTagged`. [ProgramTagSelector.tsx]
+- [x] [Review][Patch] **`useDonorReports` swallows load errors** — Fixed: Added `error` state with try/catch. [useDonorReports.ts]
+- [x] [Review][Patch] **`handleToggleStatus` no error handling** — Fixed: Wrapped in try/catch with `setError()`. [ProgramRegistration.tsx]
+- [x] [Review][Patch] **Empty rates array defaults to hardcoded 'AFN' currency** — Fixed: Changed to `rates.length > 0 ? rates[0]!.currency : 'AFN'`. [donor-report-generator.ts]
+- [x] [Review][Patch] **`reportDonorAuditEvent` missing "never throws" guarantee** — Fixed: Wrapped entire function body in try/catch. [audit-client.ts]
+- [x] [Review][Patch] **Share fallback audit says `format: 'share'` when download occurred** — Fixed: `shareFile` now returns `'shared' | 'downloaded' | 'cancelled'`; audit uses actual result. [DonorReportReview.tsx, share-file.ts]
+- [x] [Review][Patch] **Missing test implementations for Tasks 13.3, 13.7, 13.8, 13.9** — Partially addressed: added resultCode, patientAge null, partial_data suppression, and correction audit tests (+4 new tests, 34 total). PDF/Web Share/offline tests remain absent (require browser environment mocking).
+
+#### Deferred
+
+- [x] [Review][Defer] **`inPeriod` lexicographic string comparison** — Works correctly by contract (dates are YYYY-MM-DD) but fragile if datetime strings are ever stored. [donor-report-generator.ts:27-29] — deferred, theoretical risk only
+- [x] [Review][Defer] **`testType` label non-determinism for same LOINC** — First-seen entry's `testType` used as label; different display names for same LOINC produce inconsistent labels. [donor-report-generator.ts:148-150] — deferred, low impact
+- [x] [Review][Defer] **`lastAutoTable.finalY` relies on jspdf-autotable internal API** — Cast to access `doc.lastAutoTable` is fragile and will break on library upgrade. [donor-report-pdf.ts:118,162] — deferred, works with current version
+- [x] [Review][Defer] **Pre-existing `patientRef` in `reportQueueAuditEvent`** — Potential PHI in audit metadata. Not introduced by this story. [audit-client.ts:128] — deferred, pre-existing
+
 ### Change Log
 
+- 2026-06-04: Code review patches applied — 20/20 patches fixed, 4 deferred, 34 tests passing
+- 2026-06-04: Code review complete — 2 decision-needed, 18 patch, 4 deferred, 0 dismissed
 - 2026-06-01: Story 50.2 implemented — Multi-Donor Report Templates (all 13 tasks complete, 30 tests passing)

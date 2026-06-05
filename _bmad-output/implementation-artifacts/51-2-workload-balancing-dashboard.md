@@ -1,6 +1,6 @@
 # Story 51.2: Workload Balancing Dashboard
 
-Status: ready-for-dev
+Status: review-complete
 
 ## Story
 
@@ -253,6 +253,46 @@ In a multi-tech lab, uneven workload distribution leads to bottlenecks, burnout,
 - **Offline-First Rule:** The entire dashboard works from Dexie data. No network required.
 - **RTL Rule:** Card grid must reflow correctly in RTL. Drag direction must work in both LTR and RTL.
 - **Data Minimization Rule #7:** Sample details on the dashboard show sample ID and urgency only — no patient demographics.
+
+### Review Findings
+
+#### Decision Needed
+
+- [x] [Review][Decision] **Permission API mismatch** — Spec says use `useLabPermission(LabPermission.VIEW_STAFF)` for view and `useLabPermission(LabPermission.MANAGE_STAFF_ROLES)` for reassignment. Code uses `useRequireLabRole('SUPERVISOR')` and `session.labRole === LabRole.LAB_MANAGER`. Both hooks exist in `useLabPermission.ts`. Which approach should this story follow? [WorkloadDashboard.tsx]
+- [x] [Review][Decision] **Audit logger mismatch** — Spec says use `@ultranos/audit-logger`. Code uses local `reportWorkloadAuditEvent` from `audit-client.ts`. The local helper is used by 31 other services. Should this story use the shared package or follow the established local pattern? [UnavailabilityToggle.tsx, WorkloadDashboard.tsx]
+- [x] [Review][Decision] **Self-service unavailability inaccessible to techs** — AC 3/AC 5 say any tech can mark themselves unavailable, but the dashboard is gated to SUPERVISOR+. Spec says "Self-service toggle in sidebar or profile for individual techs." Where should this toggle live for LAB_TECH users? [UnavailabilityToggle.tsx]
+
+#### Patch
+
+- [x] [Review][Patch] **CRITICAL: `reportWorkloadAuditEvent` does not exist** — Both `WorkloadDashboard.tsx` and `UnavailabilityToggle.tsx` import `reportWorkloadAuditEvent` from `@/lib/audit-client`, but this function is not defined or exported from that module. Build will fail. Tests mask this with `vi.mock`. [WorkloadDashboard.tsx:13, UnavailabilityToggle.tsx:6, audit-client.ts]
+- [x] [Review][Patch] **CRITICAL: Missing Dexie schema + helper functions** — `workload-service.ts` imports `putWorkloadSnapshot`, `getWorkloadSnapshotsByDateRange`, `getOpenAvailabilityForTech`, `addTechAvailability`, `closeAvailabilityRecord`, types `TechWorkloadSnapshot`/`TechAvailability` from `./db`, but none exist in `db.ts`. Build will fail. [workload-service.ts, db.ts]
+- [x] [Review][Patch] **CRITICAL: Missing sample lock release on reassignment** — AC 2 requires lock release from source tech. `reassignSample()` JSDoc promises it but implementation omits it. `sample-lock-service.ts` has a `releaseLock()` function that should be called. [workload-service.ts:~310]
+- [x] [Review][Patch] **HIGH: `getCurrentWorkloads` loads ALL samples into memory** — `db.samples.toArray()` fetches every historical sample. Should filter by active pipeline statuses before loading. On low-resource devices with 30s polling, this causes increasing memory pressure. [workload-service.ts:~88]
+- [x] [Review][Patch] **HIGH: Mixed `Date.now()` vs HLC timestamps** — `reassignSample` uses HLC for custody event but `new Date().toISOString()` for sync payload and `reassignedAt`. `markTechUnavailable` uses wall-clock throughout. Sync engine relies on HLC for ordering. [workload-service.ts: multiple]
+- [x] [Review][Patch] **HIGH: Concurrent reassignment race — no fromTechId guard** — Two managers can reassign the same sample simultaneously. `db.samples.where('id').equals(sampleId).modify()` doesn't verify the sample is still assigned to `fromTechId`. [workload-service.ts:~310]
+- [x] [Review][Patch] **MEDIUM: N+1 TAT override query** — `computeAvgTat()` calls `db.tat_overrides.toArray()` per-tech inside a loop. Should hoist to a single read before the loop. [workload-service.ts:~164]
+- [x] [Review][Patch] **MEDIUM: Peak hours UTC/local timezone mismatch** — `getUTCHours()` in service vs `formatHour()` treating hours as local time. Afghanistan (UTC+4:30) peak at local 8 AM shows as "3:00 AM". Use local hours consistently. [workload-service.ts:~264, WorkloadPatterns.tsx:~73]
+- [x] [Review][Patch] **MEDIUM: `formatHour` hardcodes English AM/PM** — Not locale-aware. Arabic/Dari users see English time format. Use `Intl.DateTimeFormat` with current locale. [WorkloadPatterns.tsx:~73-77]
+- [x] [Review][Patch] **MEDIUM: `SampleList` collapsed preview is dead code** — `visible = expanded ? sampleIds : sampleIds.slice(0, 3)` but list only renders when `expanded === true`. The 3-item preview branch never executes. [TechWorkloadCard.tsx:~148]
+- [x] [Review][Patch] **MEDIUM: Self-service toggle stale state** — `setSelectedStatus('BREAK')` then immediate `handleMarkUnavailable()` reads previous `selectedStatus` (React batching). Pass 'BREAK' directly as parameter. [UnavailabilityToggle.tsx:~98-103]
+- [x] [Review][Patch] **MEDIUM: No error feedback on failed reassignment** — `handleSampleReassign` swallows all errors silently. Manager gets no feedback when drag-reassign fails. [WorkloadDashboard.tsx:~152-160]
+- [x] [Review][Patch] **MEDIUM: `MetricPill` hides value from screen readers** — `aria-hidden="true"` on the numeric count means assistive tech users can't hear workload numbers. [TechWorkloadCard.tsx:~64]
+- [x] [Review][Patch] **MEDIUM: Audit event format doesn't match spec** — Spec says `{ action: 'UPDATE', resourceType: 'SAMPLE_ASSIGNMENT', detail: {...} }`. Code uses `{ action: 'SAMPLE_REASSIGNED', sampleId, ... }` (flat structure, wrong action). [WorkloadDashboard.tsx, workload-service.ts]
+- [x] [Review][Patch] **LOW: `aria-dropeffect` is deprecated in ARIA 1.1** — Remove or replace with modern ARIA patterns. [TechWorkloadCard.tsx:~105]
+- [x] [Review][Patch] **MEDIUM: Drag-leave flicker on child boundaries** — `handleDragLeave` unconditionally sets `isDragOver=false`. When dragging over child elements (metric pills, spans), the browser fires dragleave/dragenter pairs causing the drop-target ring to flicker. Fix with `e.relatedTarget` check or drag counter. [TechWorkloadCard.tsx:~106-108]
+- [x] [Review][Patch] **MEDIUM: `inFlightRef` stuck after unmount blocks first fetch on remount** — If `getCurrentWorkloads` is in-flight when the dashboard unmounts, cleanup sets `cancelledRef=true` but `inFlightRef` stays `true` (resolved in the `finally` block after unmount). On remount, `fetchWorkloads` returns early due to `inFlightRef.current === true` until the next 30s tick. [WorkloadDashboard.tsx:~117-145]
+- [x] [Review][Patch] **MEDIUM: No `isSelf` guard on unavailability toggle** — `UnavailabilityToggle` renders for every tech card visible to SUPERVISOR+. A SUPERVISOR can mark any tech unavailable via the self-service button, but AC 3/AC 5 say only a tech can mark themselves or a manager can mark anyone. Need `isSelf` check to restrict self-service path. [WorkloadDashboard.tsx:~201, UnavailabilityToggle.tsx]
+- [x] [Review][Patch] **MEDIUM: `reason` state variable never populated** — `UnavailabilityToggle` has `const [reason, setReason] = useState('')` but no input field calls `setReason`. Managers can't provide custom reasons. Always falls back to translated status label. [UnavailabilityToggle.tsx:~33]
+- [x] [Review][Patch] **LOW: No server-side auth guard on workload page** — `page.tsx` renders `WorkloadDashboard` directly with no route-level auth. Client-side `useRequireLabRole` fires after render, causing a flash for unauthorized users. [workload/page.tsx]
+- [x] [Review][Patch] **LOW: Tab buttons lack ARIA tab semantics** — Missing `role="tab"`, `aria-selected`, `role="tablist"`. [WorkloadDashboard.tsx:~211-225]
+
+#### Deferred
+
+- [x] [Review][Defer] **Missing i18n keys for 51.2 in locale files** — `en.json` has a `workload` namespace from Story 48.1 but not the 51.2-specific keys (dashboard, pending, inProgress, etc.). Needs keys in all 5 locales. [messages/{en,ar,prs,ps,fa}.json] — deferred, incomplete deliverable
+- [x] [Review][Defer] **Missing AppSidebar navigation item** — No "Workload" link added to sidebar. Users can't navigate to the dashboard. [AppSidebar.tsx] — deferred, incomplete deliverable
+- [x] [Review][Defer] **Touch/tablet DnD fallback** — HTML5 DnD doesn't work on mobile touch. Spec suggests fallback "Reassign" button. [TechWorkloadCard.tsx] — deferred, spec acknowledges as future
+- [x] [Review][Defer] **Tech name lookup from staff registry** — `techLabelFor()` shows truncated ID. Production should look up from Story 42.1 staff registry. [WorkloadDashboard.tsx:~290] — deferred, spec acknowledges
+- [x] [Review][Defer] **Sample urgency not displayed** — Data Minimization Rule says "sample ID and urgency only" but only ID is shown. [TechWorkloadCard.tsx] — deferred, minor data gap
 
 ### References
 

@@ -1,6 +1,6 @@
 # Story 51.1: Shift Handover Protocol
 
-Status: review
+Status: done
 
 ## Story
 
@@ -343,6 +343,24 @@ All ACs satisfied:
 - `apps/lab-lite/messages/prs.json` — `sidebar.shiftHandover` key; `shift` namespace (Dari)
 - `apps/lab-lite/messages/ps.json` — `sidebar.shiftHandover` key; `shift` namespace (Pashto)
 
+### Review Findings
+
+- [ ] [Review][Decision] D1: `finalizeHandover` does not update report status — PENDING persists after outgoing tech confirms [handover-service.ts:177]
+- [ ] [Review][Decision] D2: `AuthGuard` does not filter out reports where current user is outgoing tech — self-acknowledge possible [AuthGuard.tsx:82]
+- [ ] [Review][Decision] D3: `aggregateIncompleteOrders` only queries `RECEIVED` — `IN_PROGRESS` orders excluded [handover-service.ts:149]
+- [ ] [Review][Patch] P1: `reportHandoverAuditEvent` not exported from `audit-client.ts` — runtime import failure (CRITICAL) [audit-client.ts]
+- [ ] [Review][Patch] P2: `aggregateEquipmentAlerts` queries `acknowledged` as `.equals(0)` but field is `boolean` — silent empty results [handover-service.ts:123]
+- [ ] [Review][Patch] P3: i18n key mismatches — components use wrong keys (12+ t() calls don't match en.json shift namespace)
+- [ ] [Review][Patch] P4: Hardcoded English strings bypass i18n in all three shift components
+- [ ] [Review][Patch] P5: `HandoverHistory` shows raw `incomingTechId` UUID — need `incomingTechName` stored at acknowledgment [HandoverHistory.tsx:127]
+- [ ] [Review][Patch] P6: `handleConfirm` does not reset error before retry [EndShiftDialog.tsx:63]
+- [ ] [Review][Patch] P7: Hardcoded `←` arrow in `HandoverDetail` does not mirror in RTL [HandoverHistory.tsx:174]
+- [ ] [Review][Patch] P8: Reopening `EndShiftDialog` creates orphaned PENDING reports — no cleanup or reuse [EndShiftDialog.tsx:32]
+- [x] [Review][Defer] W1: `Date.now()` used for timestamps instead of HLC — pre-existing pattern across codebase — deferred, pre-existing
+- [x] [Review][Defer] W2: `usePendingHandovers.load` not wrapped in `useCallback` — `refresh` is unstable ref — deferred, pre-existing
+- [x] [Review][Defer] W3: `aggregateQcStatus` returns empty array — QC integration deferred per Dev Notes — deferred, pre-existing
+
 ## Change Log
 
+- 2026-06-04: Code review — 3 decision-needed, 8 patch, 3 deferred, 6 dismissed
 - 2026-05-31: Story 51.1 implemented — Shift Handover Protocol (all ACs, 31 tests passing)

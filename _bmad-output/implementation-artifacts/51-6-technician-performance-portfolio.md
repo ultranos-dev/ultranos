@@ -1,6 +1,6 @@
 # Story 51.6: Technician Performance Portfolio
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -317,3 +317,21 @@ Lab technicians in MENA/Central Asia rarely have objective, data-backed evidence
 - Story 51.7 (Gamified Quality): `_bmad-output/implementation-artifacts/51-7-gamified-team-quality-engagement.md`
 - Story 46.1 (SOP Library): `_bmad-output/implementation-artifacts/46-1-sop-library-offline-acknowledgment.md`
 - Dexie schema: `apps/lab-lite/src/lib/db.ts`
+
+### Review Findings
+
+> Code review run: 2026-06-05. Review mode: full (spec provided).
+> 1 decision-needed · 7 patch · 1 defer · 0 dismissed
+
+- [ ] [Review][Decision] Self-export audit: should exporting your OWN portfolio emit an audit event? — Task 6 says export always emits; spec note says "self-view does NOT emit audit events". Export is more significant than view but still your own data. [`PortfolioDashboard.tsx`]
+
+- [ ] [Review][Patch] CRITICAL: portfolio-service.ts exports wrong API — dashboard, tests, and MetricCard/TATBreakdown import `calculatePortfolioMetrics`, `FullPortfolioMetrics`, `DateRange`, `TrendDirection`, `TATByCategory`, `getTestsPerShift`, `getAverageTAT`, `getQCPassRate`, `getRejectionRate`, `getTrainingModules`, `getMentorshipSessions` — none exist. Only `buildPortfolioMetrics`/`PortfolioMetrics` exported. TypeScript compile failure. [`apps/lab-lite/src/lib/portfolio-service.ts`]
+- [ ] [Review][Patch] CRITICAL: portfolio-export.ts exports wrong API — dashboard and tests import `exportPortfolio`, `getExportFilename`; actual exports are `generatePortfolioHtml`, `downloadPortfolioHtml`. All export tests fail, export button broken. [`apps/lab-lite/src/lib/portfolio-export.ts`]
+- [ ] [Review][Patch] CRITICAL (PHI/CLAUDE.md): Export filename uses tech name not tech ID — `portfolio-${techName}-...html` violates "export filenames must use tech ID, not name" rule. [`apps/lab-lite/src/lib/portfolio-export.ts:143`]
+- [ ] [Review][Patch] CRITICAL (AC 6): portfolio-service.ts has no DateRange parameter — `buildPortfolioMetrics(techId)` fetches ALL historical data with no date filtering. AC 6 requires date-range-scoped calculations. [`apps/lab-lite/src/lib/portfolio-service.ts:27`]
+- [ ] [Review][Patch] AC 2/5: Export document title is "Performance Portfolio" not "Professional Development Portfolio" — both `<title>` and `<h1>` use wrong framing. [`apps/lab-lite/src/lib/portfolio-export.ts:82,97`]
+- [ ] [Review][Patch] AC 5: Export HTML missing 3 required items: (1) date range display, (2) Supervisor Comments section, (3) `@media print` CSS. All 3 have corresponding test assertions that will fail. [`apps/lab-lite/src/lib/portfolio-export.ts:78-131`]
+- [ ] [Review][Patch] Spec violation: AppSidebar.tsx missing "My Portfolio" nav item — spec requires adding portfolio nav for all roles; diff adds other items but not portfolio. Route `/portfolio` unreachable from sidebar. [`apps/lab-lite/src/components/AppSidebar.tsx`]
+- [ ] [Review][Patch] Bug: `totalQcRuns` always returns 0 — comment says "populated above if available" but the QC calculation block never sets it. [`apps/lab-lite/src/lib/portfolio-service.ts:95`]
+
+- [x] [Review][Defer] StaffPortfolioList shows only truncated opaque IDs (e.g. `a3f92b1c…`) instead of tech names — supervisors can't identify techs. Requires a data model decision on where offline-available staff names are stored (practitioner_keys or similar). [`apps/lab-lite/src/components/portfolio/StaffPortfolioList.tsx:588`] — deferred, requires data model decision outside story scope

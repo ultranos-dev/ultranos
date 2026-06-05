@@ -863,3 +863,47 @@
 - **D-49.4-W1: Encryption key displayed in DOM as plaintext.** One-time AES key stored in React state and rendered as `<code>` — extractable via DevTools if device seized with browser open. MVP-accepted (no QR library installed). Future hardening: add QR code generation or secure key ceremony. [SecurityAlertFlow.tsx]
 - **D-49.4-W2: `getOrCreateDeviceId` in localStorage survives device wipe.** Device wipe clears IndexedDB + SW caches but not `localStorage`. Device ID (`lab-lite-device-id`) persists and could correlate device to audit trail entries. Non-PHI but undesirable in extreme threat scenarios. [backup-generator.ts:152]
 - **D-49.4-W3: Unrelated `lab-network.ts` (Story 54.1) included in 49.4 commit.** Process issue — should have been in a separate commit. Not actionable in this review. [types/lab-network.ts]
+
+## Deferred from: code review of 50-3-automated-disease-surveillance-alerts (2026-06-04)
+
+- **D-50.3-W1: `SURVEILLANCE_ALERT_TRANSMITTED` audit event never emitted.** Requires Hub transmission callback to confirm receipt — Hub-side responsibility, not Lab-Lite. Implement when Hub API surveillance endpoint is built. [surveillance-scheduler.ts]
+- **D-50.3-W2: Alert `message` field is hardcoded English — not i18n-keyed.** `buildAlertMessage` generates English strings stored in Dexie and transmitted to Hub. Spec requires i18n keys. Deferred because Hub API surveillance endpoint doesn't exist yet — message format isn't locked. English is lingua franca for WHO IHR reporting. Revisit when Hub endpoint is designed: store structured payload + render via `t()` in UI. [surveillance-scheduler.ts:99-118]
+
+## Deferred from: code review of 50-1-auto-compiled-hmis-report (2026-06-04)
+
+- **D-50.1-W1: `syncStatus` field never transitions from `'pending'` to `'synced'` after Hub sync.** The `finalizeHmisReport` enqueues to `syncQueue` but the report's own `syncStatus` field is never updated on successful sync. Likely handled generically by sync engine drain worker, but no explicit mechanism exists for `hmisReports` table. [db.ts]
+
+## Deferred from: code review of 50-2-multi-donor-report-templates (2026-06-04)
+
+- **D-50.2-W1: `inPeriod` lexicographic string comparison.** Works correctly by contract (dates are YYYY-MM-DD) but fragile if datetime strings with timezone offsets are ever stored in `LabLogbookEntry.date`. [donor-report-generator.ts:27-29]
+- **D-50.2-W2: `testType` label non-determinism for same LOINC code.** First-seen entry's `testType` used as label for all entries with that LOINC; different display names for the same LOINC produce inconsistent labels depending on insertion order. [donor-report-generator.ts:148-150]
+- **D-50.2-W3: `lastAutoTable.finalY` relies on jspdf-autotable internal API.** Unsafe cast `(doc as unknown as { lastAutoTable: ... })` is fragile and will break on library upgrade. [donor-report-pdf.ts:118,162]
+- **D-50.2-W4: Pre-existing `patientRef` in `reportQueueAuditEvent`.** Potential PHI in audit metadata if callers pass patient name instead of opaque reference. Not introduced by Story 50.2. [audit-client.ts:128]
+
+## Deferred from: code review of 51-2-workload-balancing-dashboard (2026-06-04)
+
+- **D-51.2-W1: Missing i18n keys for Story 51.2 in locale files.** The `workload` namespace in `en.json` covers Story 48.1 keys only. Story 51.2 keys (dashboard, pending, inProgress, completedToday, etc.) need to be added to all 5 locale files (en, ar, prs, ps, fa). [messages/*.json]
+- **D-51.2-W2: Missing AppSidebar navigation item.** No "Workload" link added to sidebar for SUPERVISOR+ users. Dashboard is unreachable via navigation. [AppSidebar.tsx]
+- **D-51.2-W3: Touch/tablet DnD fallback not implemented.** HTML5 Drag and Drop doesn't work on mobile touch browsers. Spec suggests a "Reassign" button with tech selector dropdown as fallback. [TechWorkloadCard.tsx]
+- **D-51.2-W4: Tech name lookup from staff registry.** `techLabelFor()` shows truncated UUID. Production should resolve practitioner names from Story 42.1 staff registry. [WorkloadDashboard.tsx]
+- **D-51.2-W5: Sample urgency not displayed alongside sample ID.** Data Minimization Rule #7 says "sample ID and urgency only" but only the sample ID (last 8 chars) is shown. [TechWorkloadCard.tsx]
+
+## Deferred from: code review of 51-1-shift-handover-protocol (2026-06-04)
+
+- **D-51.1-W1: Wall-clock `Date.now()` used for timestamps instead of HLC.** Handover service uses `new Date().toISOString()` for `createdAt`, sync events, and shift session timestamps. Pre-existing pattern across the codebase — HLC is used in sync engine but not in local Dexie writes. [handover-service.ts]
+- **D-51.1-W2: `usePendingHandovers.load` not wrapped in `useCallback`.** The `refresh` return value is a new function reference every render. Any caller using it as a useEffect/useCallback dependency will loop. Low impact currently but fragile. [usePendingHandovers.ts]
+- **D-51.1-W3: `aggregateQcStatus` returns empty array.** QC integration intentionally deferred per Dev Notes — QC results table integration to be added when QC results story is implemented. [handover-service.ts]
+
+## Deferred from: code review of 51-4-equipment-booking-scheduling (2026-06-04)
+
+- **D-51.4-W1: `nextBatch` captured outside Dexie transaction via JS closure.** Works correctly in current Dexie version via closure semantics, but is a latent footgun if the post-transaction block is extended with additional DB calls that rely on the transaction zone. [equipment-service.ts:~2322]
+- **D-51.4-W2: `completeBatch` falls back to `queuedAt` when `startedAt` is null for actual run time calculation.** Can only occur if a RUNNING batch has no `startedAt` (requires external data corruption or a bug in `startBatch`). If triggered, inflates the rolling average run time significantly. [equipment-service.ts:~2316]
+
+## Deferred from: code review of 51-3-sample-collision-prevention (2026-06-04)
+
+- **D-51.3-W1: Audit event for `acquireLock` emitted outside Dexie transaction.** Pre-existing codebase pattern — audit logging is fire-and-forget. If the transaction succeeds but the audit emit throws (or the tab closes), the lock write is unaudited. Systemic architectural issue; not introduced by this story. [sample-lock-service.ts]
+- **D-51.3-W2: `autoReleaseLock` `durationHours` label is misleading.** Reflects wall-clock time held (lockedAt → now), not the configured timeout window. In practice they're the same, but for long-expired locks found late by the checker, the reported duration can exceed the configured timeout. Cosmetic naming issue. [sample-lock-service.ts]
+
+## Deferred from: code review of 51-6-technician-performance-portfolio (2026-06-05)
+
+- **D-51.6-W1: StaffPortfolioList shows truncated opaque IDs instead of tech names.** `displayName: id.slice(0, 8) + '…'` — supervisors can't identify who they're selecting. Requires deciding where offline-available staff display names are stored (practitioner_keys table, a separate staff registry, or derived from session data). Data model decision outside this story's scope. [StaffPortfolioList.tsx:588]

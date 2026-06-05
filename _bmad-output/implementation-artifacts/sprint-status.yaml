@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-06-03T18:30:00.000000'
+last_updated: '2026-06-04T16:30:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -590,7 +590,7 @@ development_status:
   43-4-patient-id-verification-logging: review
   43-6-analyzer-drift-detection: review
   43-7-pre-release-critical-value-checklist: review
-  43-8-localized-reference-ranges: in-progress
+  43-8-localized-reference-ranges: done
 
   # ============================================================
   # EPIC 55: Admin Portal People & Facility Management (2026-05-30)
@@ -624,6 +624,7 @@ development_status:
   # ============================================================
   epic-49: in-progress
   49-2-sms-critical-result-fallback: done
+  49-3-bluetooth-p2p-sync: done
   49-4-conflict-zone-security-protocols: done
 
   # ============================================================
@@ -674,16 +675,19 @@ development_status:
   # Daily activity log auto-generation and WhatsApp sharing
   # ============================================================
   epic-50: in-progress
-  50-1-auto-compiled-hmis-report: review
-  50-2-multi-donor-report-templates: review
-  50-3-automated-disease-surveillance-alerts: review
-  50-4-daily-activity-log-whatsapp: review
+  50-1-auto-compiled-hmis-report: done
+  50-2-multi-donor-report-templates: done
+  50-3-automated-disease-surveillance-alerts: done
+  50-4-daily-activity-log-whatsapp: done
   # ============================================================
   # EPIC 51: Shift & Workload Management (2026-05-31)
   # Shift handover protocol and workload tooling
   # ============================================================
   epic-51: in-progress
-  51-1-shift-handover-protocol: review
+  51-1-shift-handover-protocol: done
+  51-2-workload-balancing-dashboard: done
+  51-3-sample-collision-prevention: done
+  51-4-equipment-booking-scheduling: in-progress
   51-7-gamified-team-quality-engagement: review
 
   # ============================================================

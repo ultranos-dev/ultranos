@@ -1,6 +1,6 @@
 # Story 50.3: Automated Disease Surveillance Alerts
 
-Status: review
+Status: done
 
 ## Story
 
@@ -112,6 +112,25 @@ so that outbreaks are detected early from lab data — the earliest epidemiologi
   - [x] 12.10 Configuration — modified thresholds are used in subsequent detection runs
   - [x] 12.11 Notification — tech receives in-app notification when alert is generated
   - [x] 12.12 Audit events — all event types emitted with correct shapes (no PHI)
+
+### Review Findings
+
+- [x] [Review][Defer] Alert `message` field is hardcoded English — not i18n-keyed. Deferred: Hub API endpoint doesn't exist yet, message format isn't locked. English is WHO IHR lingua franca. Revisit when Hub endpoint is designed.
+- [x] [Review][Patch] CRITICAL: `getActiveReportableDiseases` queries `isActive` as `equals(1)` but field is typed/stored as `boolean` — entire surveillance engine returns zero diseases [db.ts:2954] — FIXED
+- [x] [Review][Patch] HIGH: `isoWeekKey` produces wrong ISO week at year boundaries (Dec/Jan dates assigned to wrong year-week) — corrupts baseline calculation [surveillance-engine.ts:46-55] — FIXED
+- [x] [Review][Patch] HIGH: `buildAlertMessage` hardcodes `48` hours for cluster window regardless of `clusterWindowHours` config [surveillance-scheduler.ts:117] — FIXED
+- [x] [Review][Patch] HIGH: No mutex on concurrent `runSurveillanceCheck` — scheduler interval + `triggerClusterCheckAfterAuthorization` can race and generate duplicate alerts [surveillance-scheduler.ts:306-358] — FIXED
+- [x] [Review][Patch] HIGH: `isDailySpikeCheckDue` compares UTC dates (`toISOString().slice(0,10)`) against local hour (`getHours()`) — daily check fires late or twice in UTC+4:30 timezone [surveillance-scheduler.ts:267-282] — FIXED
+- [x] [Review][Patch] MED: Spike period and baseline window share boundary day via inclusive `.between()` — off-by-one double-counts entries [surveillance-engine.ts:184-185 vs 106-107] — FIXED
+- [x] [Review][Patch] MED: `emitSurveillanceAlert` iterates live `alertListeners` array — `splice` during emit skips listeners. Fix: iterate snapshot `[...alertListeners]` [surveillance-scheduler.ts:51-55] — FIXED
+- [x] [Review][Patch] MED: `parseDate` returns year-1900 Date on empty/malformed input (`Number("") === 0`, `??` doesn't trigger). Fix: validate parts are > 0 [surveillance-engine.ts:22-28] — FIXED
+- [x] [Review][Patch] MED: `SurveillanceConfig` writes to Dexie on every keystroke — scheduler can read mid-input threshold. Fix: debounce or commit on blur [SurveillanceConfig.tsx:51-62] — FIXED
+- [x] [Review][Patch] MED: `page.tsx` passes `searchParams` synchronously — Next.js 15 requires `await`. Fix: make component `async`, await searchParams [surveillance/page.tsx:4-9] — FIXED
+- [x] [Review][Patch] MED: Auto-dismiss timer resets on every `toasts` state change — rapid alerts can prevent any toast from ever dismissing. Fix: per-toast timers [SurveillanceAlertToast.tsx:47-53] — FIXED
+- [x] [Review][Patch] MED: `SURVEILLANCE_CONFIG_UPDATED` audit event never emitted from `handleToggle`/`handleFieldChange` in settings UI [SurveillanceConfig.tsx:43-62] — FIXED
+- [x] [Review][Patch] MED: `SURVEILLANCE_CHECK_COMPLETED` audit only emitted for spike checks in `runDailySpikeCheck` — missing from `runClusterCheck` [surveillance-scheduler.ts:306-316] — FIXED
+- [x] [Review][Patch] LOW: `getAlertsByDateRange` has dead `.reverse()` call before `.sortBy()` — Dexie ignores it [db.ts:2912] — FIXED
+- [x] [Review][Defer] `SURVEILLANCE_ALERT_TRANSMITTED` audit event requires Hub transmission callback — out of scope for this story (Hub-side responsibility) — deferred, pre-existing
 
 ## Dev Agent Record
 

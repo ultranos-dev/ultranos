@@ -261,7 +261,7 @@ Lab managers currently piece together operational readiness from multiple screen
 
 **QC dimension requires QC data from Story 43.2 (QC Result Temporal Binding).** If that story is not yet implemented, the QC dimension should show "No QC data available" with a Grey/neutral indicator rather than Green (which would falsely imply QC is passing).
 
-**Wall display mode is a CSS-only transformation.** No separate route or component tree — the same RAG board component switches between normal and wall display modes via a CSS class toggle. This keeps the implementation simple and avoids data duplication.
+**Wall display mode is implemented as a separate component (`RAGBoardWallDisplay.tsx`).** When the toggle is activated, `RAGBoard` conditionally renders `RAGBoardWallDisplay` in place of the normal board (no separate route). The wall display component receives the current `boardState` as a prop and is read-only (no drill-down). This avoids CSS class toggling complexity and keeps the two layouts independently maintainable. The cursor auto-hides after 5 s of inactivity and is restored on exit. ESC exits wall display mode.
 
 **The overall lab status is the worst RAG across all four dimensions.** If any dimension is Red, the overall status is Red. This is intentionally conservative — a single critical issue should be immediately visible.
 
@@ -308,6 +308,37 @@ Lab managers currently piece together operational readiness from multiple screen
 - **Offline-First Rule:** Entire board works from Dexie. No network required.
 - **RTL Rule:** 2x2 grid must reflow correctly in RTL. Drill-down lists must use logical CSS properties.
 - **Data Minimization Rule #7:** No patient data appears anywhere on the RAG board.
+
+### Review Findings
+
+#### Decision-Needed
+
+- [x] [Review][Decision] D1: Drill-down components created but not wired into RAGBoard — AC 6 requires drill-down content in this story, but RAGDrillDownPanel only renders summary text with comment "future story". Four drill-down components exist as files but are never imported.
+- [x] [Review][Decision] D2: Wall display as separate component vs spec's CSS-only toggle — Dev Notes say "CSS-only transformation, no separate component tree" but implementation creates RAGBoardWallDisplay.tsx that replaces the board entirely.
+- [x] [Review][Decision] D3: Equipment RAG ignores maintenance dates and critical/non-critical distinction — AC 3 requires Amber for "maintenance due within 7 days" and Red only for "critical instrument OOS". Implementation treats all OOS as Red with no maintenance date logic.
+- [x] [Review][Decision] D4: Supply RAG uses numeric thresholds instead of spec's time-based thresholds — AC 4 defines Green >2wk, Amber <1wk, Red=zero. Implementation uses per-item reorderThreshold/criticalThreshold numbers.
+- [x] [Review][Decision] D5: Personnel RAG logic deviates from scheduled/absent tracking — AC 2 specifies Green=all present, Amber=1 absent, Red=below minimum. Implementation uses Green=present>min, Amber=present==min, Red=present<min with no scheduled/absent concept.
+
+#### Patch
+
+- [x] [Review][Patch] P1: Missing db.ts changes — supply_inventory table, instruments helpers, getMinimumStaffing, SupplyItem type [db.ts]
+- [x] [Review][Patch] P2: Missing i18n keys in all 5 locale files — ~50+ keys referenced in components but none defined [messages/*.json]
+- [x] [Review][Patch] P3: Missing AppSidebar readiness nav item gated to SUPERVISOR+ [AppSidebar.tsx]
+- [x] [Review][Patch] P4: Hardcoded English summary strings in rag-service.ts — should return i18n template keys [rag-service.ts]
+- [x] [Review][Patch] P5: Wall display cursor mutation leaks globally on crash — needs safer cleanup guard [RAGBoardWallDisplay.tsx]
+- [x] [Review][Patch] P6: No negative number validation for stock/threshold/usage form fields [SupplyManagement.tsx]
+- [x] [Review][Patch] P7: QC z-score when targetSd=0 silently passes — should warn, not mask failures [rag-service.ts]
+- [x] [Review][Patch] P8: Drill-down panel lacks focus trap — WCAG violation with aria-modal [RAGBoard.tsx]
+- [x] [Review][Patch] P9: DeleteConfirmDialog lacks focus trap + escape key handler [SupplyManagement.tsx]
+- [x] [Review][Patch] P10: Auto-refresh overwrites board state while drill-down panel is open [RAGBoard.tsx]
+- [x] [Review][Patch] P11: No try/catch in SupplyManagement async handlers — unhandled promise rejections [SupplyManagement.tsx]
+- [x] [Review][Patch] P12: Pencil icon wrapped in DirectionalIcon category="navigation" — should not mirror [SupplyManagement.tsx]
+- [x] [Review][Patch] P13: Wrench icon wrapped in DirectionalIcon category="medical" — semantically wrong [EquipmentDrillDown.tsx]
+- [x] [Review][Patch] P14: Tailwind class conflict — bg-white always wins over conditional bg-red-50/40 [EquipmentDrillDown.tsx]
+- [x] [Review][Patch] P15: Wall display cards render as interactive buttons with no-op onClick [RAGBoardWallDisplay.tsx]
+- [x] [Review][Patch] P16: Interval fires even when initialBoardState provided — confused intent [RAGBoard.tsx]
+- [x] [Review][Patch] P17: ReadinessPage server component renders client component without Suspense [page.tsx]
+- [x] [Review][Patch] P18: session.practitionerId has no fallback in formToItem [SupplyManagement.tsx]
 
 ### References
 

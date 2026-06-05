@@ -1,6 +1,6 @@
 # Story 50.1: Auto-Compiled HMIS Monthly Report
 
-Status: review
+Status: done
 
 ## Story
 
@@ -345,6 +345,46 @@ Implemented Story 50.1 via TDD (red-green-refactor):
 - `apps/lab-lite/messages/ar.json` — Added Arabic translations
 - `apps/lab-lite/messages/ps.json` — Added Pashto translations
 
+### Review Findings
+
+#### Resolved Decisions
+- [x] [Review][Patch] D1→P26: Make ALL numeric fields editable across all sections (B-F) with EditableField + applyCorrection support [HmisReportReview.tsx]
+- [x] [Review][Patch] D2→P27: DHIS2 org unit — prompt dialog before export instead of hardcoded placeholder [HmisReportReview.tsx]
+- [x] [Review][Patch] D3→P28: Query previous month's finalized report in aggregator to populate `previousMonthRate` [hmis-aggregator.ts, db.ts]
+- [x] [Review][Patch] D4→P29: Localize PDF section titles and table headers using i18n keys; pass locale to export function [hmis-pdf.ts, en.json, ar.json, prs.json, ps.json]
+
+#### Patch (Code Issues)
+- [x] [Review][Patch] P1: CRITICAL — `handleCorrect` captures `newValue` as `originalValue` on first correction; revert-to-auto-computed is broken [HmisReportReview.tsx:100]
+- [x] [Review][Patch] P2: `applyCorrection` only handles `testCategorySummary` and `positivityRates` paths; corrections to demographics/reagent/quality silently dropped [HmisReportReview.tsx:519-544]
+- [x] [Review][Patch] P3: `classifyAgeGroup` mishandles negative ages (→ bucket 0-4) and NaN (→ bucket 65+); no guard for invalid `patientAge` [hmis-aggregator.ts]
+- [x] [Review][Patch] P4: `isPositiveResult` crashes with TypeError if `resultSummary` is null/undefined [hmis-aggregator.ts]
+- [x] [Review][Patch] P5: `calculatePositivityRate` does not clamp values > 100% when positive > total [hmis-aggregator.ts]
+- [x] [Review][Patch] P6: `CURRENT_YEAR`/`CURRENT_MONTH` are module-level constants — stale across month/year boundaries [HmisReportGenerator.tsx:17-18]
+- [x] [Review][Patch] P7: `formatReportingPeriod` returns `"undefined YYYY"` for out-of-range month values [hmis-template.ts:111]
+- [x] [Review][Patch] P8: Audit event emitted before `saveHmisReport` — audit records a correction that may fail to persist [HmisReportReview.tsx]
+- [x] [Review][Patch] P9: `finalizeHmisReport` sync enqueue is outside Dexie transaction — crash between finalize and enqueue loses sync event [db.ts]
+- [x] [Review][Patch] P10: DHIS2 CSV export does not escape commas/quotes in values — malformed CSV if orgUnit or dataElement contain special chars [hmis-dhis2-export.ts]
+- [x] [Review][Patch] P11: Hardcoded `actorRole: UserRole.LAB_TECH` in all HMIS audit events — should derive from session [audit-client.ts]
+- [x] [Review][Patch] P12: `handleCorrect` has stale closure over `localReport` — rapid corrections can drop earlier corrections from array [HmisReportReview.tsx]
+- [x] [Review][Patch] P13: Finalization confirmation dialog has no focus trap or Escape key handler — WCAG violation [HmisReportReview.tsx]
+- [x] [Review][Patch] P14: Month name dropdown hardcodes `en-US` locale instead of using active locale [HmisReportGenerator.tsx:138]
+- [x] [Review][Patch] P15: DHIS2 data element mapping uses display label as key instead of LOINC code — breaks if labels change or are localized [hmis-dhis2-export.ts:73]
+- [x] [Review][Patch] P16: No double-click guard on Generate button — race condition can create duplicate reports [HmisReportGenerator.tsx]
+- [x] [Review][Patch] P17: PDF page break logic only checks after Sections C and E — long Section B overflows page [hmis-pdf.ts]
+- [x] [Review][Patch] P18: `HmisReportLanding` links to `/reports/daily` which does not exist (404) [HmisReportLanding.tsx:22]
+- [x] [Review][Patch] P19: ~15 hardcoded English strings in review UI not wired to i18n (table headers, button labels, placeholder text) [HmisReportReview.tsx]
+- [x] [Review][Patch] P20: PDF Section A renders raw UUID for `generatedBy` instead of practitioner name [hmis-pdf.ts:79]
+- [x] [Review][Patch] P21: DHIS2 export omits demographic data (Section D) entirely [hmis-dhis2-export.ts]
+- [x] [Review][Patch] P22: Missing test — PDF export (Task 13.5: "generates valid PDF blob") [hmis-report.test.ts]
+- [x] [Review][Patch] P23: Missing test — RTL locale detection (Task 13.10: "isRtl() helper tested") [hmis-report.test.ts]
+- [x] [Review][Patch] P24: Missing test — audit event shapes (Task 13.9: "all 4 event types with correct shapes") [hmis-report.test.ts]
+- [x] [Review][Patch] P25: Missing test — offline operation assertion (Task 13.8: "aggregation and export work without network") [hmis-report.test.ts]
+
+#### Deferred
+- [x] [Review][Defer] W1: `syncStatus` field never updated from `'pending'` to `'synced'` after Hub sync — likely handled by sync engine generically [db.ts] — deferred, pre-existing sync engine concern
+
 ## Change Log
 
+- 2026-06-04: P27 fixed — DHIS2 org unit prompt dialog added, all 29 patches complete, story marked done
+- 2026-06-04: Code review patches applied — 28/29 patches fixed, 1 remaining (P27: org unit settings), 1 deferred, 5 dismissed
 - 2026-05-31: Story 50.1 implemented — HMIS monthly report feature (auto-aggregation, review/correction UI, PDF export, DHIS2 export, hub sync, audit events, i18n for 4 locales, 25 tests)

@@ -1,6 +1,6 @@
 # Story 51.4: Equipment Booking & Scheduling
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -254,6 +254,41 @@ Resource-constrained labs often have a single shared instrument for a test categ
   - Test add instrument form
   - Test status toggle
   - Test LAB_MANAGER-only access
+
+### Review Findings
+
+**Triage summary:** 2 decision-needed · 18 patch · 2 deferred · 2 dismissed
+
+#### Decision-Needed
+
+- [x] [Review][Decision] D1: "Returned to tech's pending work" not implemented — resolved as Option B: when a manager cancels a batch, create an `InstrumentNotification` of type `BATCH_CANCELLED` for the owning tech; no new pending-work queue concept needed.
+- [x] [Review][Decision] D2: Required file changes absent from diff — confirmed present in prior commit on this branch (`db.ts`, `AppSidebar.tsx`, i18n files); all verified present.
+
+#### Patch
+
+- [x] [Review][Patch] P1: `cancelBatch` discards `_reason` — fixed: reason stored in `cancelReason` field on the batch record and emitted in audit event.
+- [x] [Review][Patch] P2: `startBatch` has no guard for existing RUNNING batch — fixed: throws if another batch is already RUNNING on the same instrument.
+- [x] [Review][Patch] P3: `handleToggleStatus` fires `setInstrumentStatus` even when window.prompt is cancelled — fixed: replaced with `OutOfServiceModal`; status change only commits on explicit confirm.
+- [x] [Review][Patch] P4: Cancelling a RUNNING batch leaves the queue with no position-1 batch — fixed: `cancelBatch` now resequences all active batches (QUEUED + RUNNING), not just QUEUED.
+- [x] [Review][Patch] P5: `reorderQueue` allows partial or cross-instrument IDs — fixed: validates all IDs belong to the instrument and that all active batches are included before resequencing.
+- [x] [Review][Patch] P6: NaN propagates from `runTimeOverride` string — fixed: explicit `isNaN` guard in `QueueBatchDialog` before passing to service; service also guards with `> 0 && !isNaN`.
+- [x] [Review][Patch] P7: `insertAtPosition` never passed to `queueBatch` — fixed: service `queueBatch` now accepts and implements `insertAtPosition`; shifts existing batches down.
+- [x] [Review][Patch] P8: `window.prompt` used for cancel/OOS reasons — fixed: replaced with `CancelBatchModal` in `InstrumentQueueView` and `OutOfServiceModal` in `InstrumentRegistryPanel`.
+- [x] [Review][Patch] P9: Back button uses hard-coded `←` — fixed: replaced with `<DirectionalIcon category="navigation"><ChevronLeft /></DirectionalIcon>`.
+- [x] [Review][Patch] P10: Next-in-line notifications not integrated with NotificationBell — fixed: `NotificationBell` polls `getActiveInstrumentNotifications` and includes count in badge total.
+- [x] [Review][Patch] P11: `completeBatch` loads unbounded history — fixed: bounded query using compound index `[instrumentId+completedAt]` with `.between()` then `.slice(0, 10)`.
+- [x] [Review][Patch] P12: `emitEquipmentAuditEvent` called without `await` — fixed: all audit calls are now awaited.
+- [x] [Review][Patch] P13: `useEffect([selectedInstrumentId])` re-fetches all instruments on selection change — fixed: dep array is `[]`; uses functional state updater to set first instrument without re-triggering.
+- [x] [Review][Patch] P14: `queueBatch` position assignment is not in a transaction — fixed: position assignment wrapped in Dexie transaction.
+- [x] [Review][Patch] P15: `avgRunTimeMinutes = 0` not validated — fixed: `registerInstrument` throws if `avgRunTimeMinutes < 1`; `computeQueueTimes` guards against zero/NaN with fallback to instrument avg.
+- [x] [Review][Patch] P16: Test mock `between()` ignores bounds — fixed: mock now filters by compound key first element (instrumentId) and adds `.reverse().sortBy()` chain support.
+- [x] [Review][Patch] P17: First-in-queue batch shows timestamp instead of "Now" — fixed: `BatchCard` renders `t('now')` when `isCurrent && status === 'QUEUED'`.
+- [x] [Review][Patch] P18: `QueueBatchDialog` wait estimate overstates for RUNNING batch — fixed: deducts elapsed time from RUNNING batch using `estimatedCompletionTime - Date.now()`.
+
+#### Deferred
+
+- [x] [Review][Defer] W1: `nextBatch` captured outside Dexie transaction via closure — works today via JS closure semantics, but is a latent footgun if extended with post-transaction DB calls [`equipment-service.ts:2322`] — deferred, works correctly in current Dexie version
+- [x] [Review][Defer] W2: `completeBatch` uses `queuedAt` as fallback when `startedAt` is null — can only occur if `startBatch` was bypassed; inflates rolling average if triggered [`equipment-service.ts:2316`] — deferred, only reachable via data corruption
 
 ## Dev Notes
 

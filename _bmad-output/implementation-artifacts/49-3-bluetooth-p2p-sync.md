@@ -1,6 +1,6 @@
 # Story 49.3: Bluetooth Peer-to-Peer Sync with OPD-Lite
 
-Status: review
+Status: done
 
 ## Story
 
@@ -43,9 +43,9 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Transport Layer Abstraction** (AC: 1, 7)
-  - [ ] Create `apps/lab-lite/src/lib/p2p/transport.ts`.
-  - [ ] Define transport interface:
+- [x] **Task 1: Transport Layer Abstraction** (AC: 1, 7)
+  - [x] Create `apps/lab-lite/src/lib/p2p/transport.ts`.
+  - [x] Define transport interface:
     ```typescript
     interface P2PTransport {
       startDiscovery(): Promise<DiscoveredDevice[]>
@@ -71,30 +71,30 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
       signalStrength?: number
     }
     ```
-  - [ ] Implement `LocalNetworkTransport` (primary) in `apps/lab-lite/src/lib/p2p/local-network-transport.ts`:
+  - [x] Implement `LocalNetworkTransport` (primary) in `apps/lab-lite/src/lib/p2p/local-network-transport.ts`:
     - Uses `BroadcastChannel` API for same-device testing and development.
     - Uses WebRTC data channels with mDNS/manual IP for local network discovery.
     - Devices on the same WiFi network can discover each other via a lightweight UDP broadcast (via a thin WebSocket relay running on one of the devices — see Dev Notes).
-  - [ ] Implement `BleTransport` (secondary) in `apps/lab-lite/src/lib/p2p/ble-transport.ts`:
+  - [x] Implement `BleTransport` (secondary) in `apps/lab-lite/src/lib/p2p/ble-transport.ts`:
     - Uses Web Bluetooth API for BLE central role (scanning/connecting).
     - Limited to cases where OPD-Lite runs as a native app or uses a BLE peripheral wrapper.
     - Feature-detect: `navigator.bluetooth?.getAvailability()`.
 
-- [ ] **Task 2: Secure Channel Handshake** (AC: 5, 10, 11)
-  - [ ] Create `apps/lab-lite/src/lib/p2p/handshake.ts`.
-  - [ ] Implement ECDH key exchange for session key derivation:
+- [x] **Task 2: Secure Channel Handshake** (AC: 5, 10, 11)
+  - [x] Create `apps/lab-lite/src/lib/p2p/handshake.ts`.
+  - [x] Implement ECDH key exchange for session key derivation:
     - Both devices generate ephemeral ECDH key pairs (P-256) using Web Crypto API.
     - Exchange public keys over the raw P2P connection.
     - Derive shared secret via `crypto.subtle.deriveBits()`.
     - Derive AES-256-GCM session key from shared secret via HKDF.
-  - [ ] First-time pairing verification:
+  - [x] First-time pairing verification:
     - Compute a 6-digit visual confirmation code from the shared secret (SHA-256 hash, first 6 decimal digits).
     - Both devices display the code; user confirms they match.
     - On confirmation, save device to trusted list in Dexie.
-  - [ ] Trusted device reconnection:
+  - [x] Trusted device reconnection:
     - Check `trustedDevices` Dexie table for the remote device ID.
     - If trusted, skip visual confirmation (ECDH still happens for forward secrecy).
-  - [ ] Add `trustedDevices` table to Dexie schema (version increment):
+  - [x] Add `trustedDevices` table to Dexie schema (version increment):
     ```typescript
     interface TrustedDevice {
       deviceId: string
@@ -105,21 +105,21 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
     }
     ```
 
-- [ ] **Task 3: FHIR DiagnosticReport Bundle Signing** (AC: 3, 4)
-  - [ ] Create `apps/lab-lite/src/lib/p2p/bundle-signer.ts`.
-  - [ ] Export `signDiagnosticReportBundle(report, privateKey)`:
+- [x] **Task 3: FHIR DiagnosticReport Bundle Signing** (AC: 3, 4)
+  - [x] Create `apps/lab-lite/src/lib/p2p/bundle-signer.ts`.
+  - [x] Export `signDiagnosticReportBundle(report, privateKey)`:
     - Serializes the FHIR DiagnosticReport to canonical JSON (sorted keys, no whitespace).
     - Signs with Ed25519 using the technician's private key (from practitioner key infrastructure).
     - Returns `{ bundle: string; signature: string; signerPractitionerId: string; signedAt: string }`.
-  - [ ] Export `verifyDiagnosticReportBundle(signedBundle, publicKey)`:
+  - [x] Export `verifyDiagnosticReportBundle(signedBundle, publicKey)`:
     - Verifies the Ed25519 signature against the provided public key.
     - Returns `{ valid: boolean; practitionerId: string; signedAt: string }`.
-  - [ ] The signing/verification uses the same key infrastructure as Story 7.4 (Practitioner Key Lifecycle Management).
-  - [ ] Keys are retrieved from the `practitioner_keys` Dexie table on the receiving side.
+  - [x] The signing/verification uses the same key infrastructure as Story 7.4 (Practitioner Key Lifecycle Management).
+  - [x] Keys are retrieved from the `practitioner_keys` Dexie table on the receiving side.
 
-- [ ] **Task 4: P2P Transfer Protocol** (AC: 3, 8, 9)
-  - [ ] Create `apps/lab-lite/src/lib/p2p/transfer-protocol.ts`.
-  - [ ] Define the transfer message protocol:
+- [x] **Task 4: P2P Transfer Protocol** (AC: 3, 8, 9)
+  - [x] Create `apps/lab-lite/src/lib/p2p/transfer-protocol.ts`.
+  - [x] Define the transfer message protocol:
     ```typescript
     type P2PMessage =
       | { type: 'HANDSHAKE_INIT'; publicKey: string; deviceInfo: DeviceInfo }
@@ -133,35 +133,35 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
       | { type: 'TRANSFER_VERIFY_OK' }
       | { type: 'TRANSFER_VERIFY_FAIL'; reason: string }
     ```
-  - [ ] Chunked transfer: split the encrypted bundle into 16KB chunks for BLE compatibility (BLE MTU is typically 20-512 bytes; chunks are reassembled on the receiver).
-  - [ ] Progress tracking: emit progress events as chunks are sent/received.
-  - [ ] Failure handling: if connection drops mid-transfer, discard partial data, notify user, and allow retry.
+  - [x] Chunked transfer: split the encrypted bundle into 16KB chunks for BLE compatibility (BLE MTU is typically 20-512 bytes; chunks are reassembled on the receiver).
+  - [x] Progress tracking: emit progress events as chunks are sent/received.
+  - [x] Failure handling: if connection drops mid-transfer, discard partial data, notify user, and allow retry.
 
-- [ ] **Task 5: Sender UI (Lab-Lite)** (AC: 2, 8)
-  - [ ] Create `apps/lab-lite/src/components/p2p/P2PSendDialog.tsx`.
-  - [ ] Trigger: "Send to Doctor" button on released result detail view.
-  - [ ] Flow:
+- [x] **Task 5: Sender UI (Lab-Lite)** (AC: 2, 8)
+  - [x] Create `apps/lab-lite/src/components/p2p/P2PSendDialog.tsx`.
+  - [x] Trigger: "Send to Doctor" button on released result detail view.
+  - [x] Flow:
     1. Dialog opens, starts device discovery. Shows spinner: "Searching for nearby devices..."
     2. Discovered devices appear as a list with device name, type (BLE/WiFi), and signal indicator.
     3. Tech selects a device. If first-time pairing, both screens show the 6-digit code.
     4. Transfer begins. Progress bar shows chunk progress.
     5. On success: green checkmark, "Result sent to Dr. [Name]".
     6. On failure: red X with retry button.
-  - [ ] RTL support via logical CSS properties.
-  - [ ] i18n: add keys to all locale files (en, ar, prs, ps).
+  - [x] RTL support via logical CSS properties.
+  - [x] i18n: add keys to all locale files (en, ar, prs, ps).
 
-- [ ] **Task 6: Receiver Handler (OPD-Lite Side)** (AC: 4, 6)
-  - [ ] Document the OPD-Lite receiver interface that must be implemented in the OPD-Lite app:
+- [x] **Task 6: Receiver Handler (OPD-Lite Side)** (AC: 4, 6)
+  - [x] Document the OPD-Lite receiver interface that must be implemented in the OPD-Lite app:
     - OPD-Lite needs a `P2PReceiveService` that listens for incoming connections.
     - On incoming transfer offer: display a notification "Lab result incoming from [Lab Name]".
     - Verify the Ed25519 signature against cached practitioner keys.
     - On successful verification: import the DiagnosticReport into the patient's encounter.
     - Emit `P2P_RESULT_RECEIVED` audit event.
-  - [ ] Create `packages/shared-types/src/p2p/` with shared type definitions used by both apps.
-  - [ ] The Lab-Lite side of this story focuses on the SENDER implementation. The OPD-Lite receiver is a separate implementation task but the protocol and types are defined here.
+  - [x] Create `packages/shared-types/src/p2p/` with shared type definitions used by both apps.
+  - [x] The Lab-Lite side of this story focuses on the SENDER implementation. The OPD-Lite receiver is a separate implementation task but the protocol and types are defined here.
 
-- [ ] **Task 7: Dual Audit Trail** (AC: 6)
-  - [ ] Add `reportP2PAuditEvent()` to `audit-client.ts`:
+- [x] **Task 7: Dual Audit Trail** (AC: 6)
+  - [x] Add `reportP2PAuditEvent()` to `audit-client.ts`:
     ```typescript
     interface P2PAuditPayload {
       action: 'P2P_DISCOVERY_STARTED' | 'P2P_DEVICE_PAIRED' | 'P2P_RESULT_SENT' | 'P2P_TRANSFER_FAILED'
@@ -173,11 +173,11 @@ This is a zero-cloud-dependency feature. No Hub, no internet, no relay server. T
       // NEVER include patient data in audit metadata
     }
     ```
-  - [ ] Emit on: discovery start, pairing confirmation, successful send, failed send.
-  - [ ] The OPD-Lite side emits its own audit events (`P2P_RESULT_RECEIVED`, `P2P_VERIFY_SUCCESS`, `P2P_VERIFY_FAILED`).
+  - [x] Emit on: discovery start, pairing confirmation, successful send, failed send.
+  - [x] The OPD-Lite side emits its own audit events (`P2P_RESULT_RECEIVED`, `P2P_VERIFY_SUCCESS`, `P2P_VERIFY_FAILED`).
 
-- [ ] **Task 8: Tests** (AC: 12)
-  - [ ] Create `apps/lab-lite/src/__tests__/p2p-sync.test.ts`:
+- [x] **Task 8: Tests** (AC: 12)
+  - [x] Create `apps/lab-lite/src/__tests__/p2p-sync.test.ts`:
     - Test: bundle signing produces valid Ed25519 signature.
     - Test: bundle verification succeeds with correct key, fails with wrong key.
     - Test: ECDH key exchange produces identical shared secrets on both sides.
