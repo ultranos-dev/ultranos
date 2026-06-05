@@ -103,6 +103,7 @@ export default function LoginPage() {
         sessionData.session?.user?.user_metadata?.full_name ??
         sessionData.session?.user?.user_metadata?.name ??
         '',
+      kycStatus: payload.kyc_status ?? payload.app_metadata?.kyc_status,
     })
 
     if (!encryptionKeyStore.isReady()) {
