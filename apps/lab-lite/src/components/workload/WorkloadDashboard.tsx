@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { LabPermission } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useLabPermission } from '@/hooks/useLabPermission'
@@ -149,7 +150,7 @@ export function WorkloadDashboard() {
         <h1 className="text-lg font-semibold text-foreground">{t('dashboard')}</h1>
         <div
           role="tablist"
-          className="flex gap-1 rounded-lg border border-border bg-muted/30 p-0.5"
+          className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit"
         >
           <TabButton
             id="tab-dashboard"
@@ -190,7 +191,11 @@ export function WorkloadDashboard() {
           {loading ? (
             <WorkloadSkeleton />
           ) : workloads.length === 0 ? (
-            <EmptyState t={t} />
+            <EmptyState
+              title={t('noAssignments')}
+              description={t('noAssignmentsHint')}
+              size="sm"
+            />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {workloads.map((w) => (
@@ -258,9 +263,9 @@ function TabButton({
       aria-controls={panelId}
       aria-selected={active}
       onClick={onClick}
-      className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+      className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
         active
-          ? 'bg-card text-foreground shadow-sm'
+          ? 'bg-primary text-primary-foreground'
           : 'text-muted-foreground hover:text-foreground'
       }`}
     >
@@ -269,14 +274,6 @@ function TabButton({
   )
 }
 
-function EmptyState({ t }: { t: ReturnType<typeof useTranslations<'workload'>> }) {
-  return (
-    <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-6 text-center">
-      <p className="text-sm font-medium text-muted-foreground">{t('noAssignments')}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{t('noAssignmentsHint')}</p>
-    </div>
-  )
-}
 
 function LoadLevelLegend({ t }: { t: ReturnType<typeof useTranslations<'workload'>> }) {
   return (

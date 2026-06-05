@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Award, ChevronRight, CircleCheck, Clock, AlertCircle } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { getDb } from '@/lib/db'
@@ -89,11 +90,11 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
 
   if (pathways.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 gap-3 text-center">
-        <Award size={48} className="text-gray-300 dark:text-gray-600" />
-        <p className="text-gray-500 dark:text-gray-400">{t('noCertificationPaths')}</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500">{t('noCertificationPathsHint')}</p>
-      </div>
+      <EmptyState
+        icon={Award}
+        title={t('noCertificationPaths')}
+        description={t('noCertificationPathsHint')}
+      />
     )
   }
 

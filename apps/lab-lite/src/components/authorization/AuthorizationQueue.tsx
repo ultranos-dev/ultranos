@@ -10,6 +10,7 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { CircleCheck } from '@ultranos/ui-kit/icons'
 import { useRouter } from 'next/navigation'
 import { getDb } from '@/lib/db'
@@ -51,15 +52,6 @@ function FlagBadge({ flag }: { flag: AbnormalityFlag }) {
   )
 }
 
-function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-      <CircleCheck size={56} className="mb-4 text-green-400" aria-hidden="true" />
-      <p className="text-lg font-medium">{t('emptyTitle')}</p>
-      <p className="mt-1 text-sm">{t('emptySubtitle')}</p>
-    </div>
-  )
-}
 
 interface AuthorizationQueueProps {
   /** Override pending results (for testing / SSR). */
@@ -218,7 +210,11 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
       {/* Table / Card list */}
       {sorted.length === 0 ? (
-        <EmptyState t={t} />
+        <EmptyState
+          icon={CircleCheck}
+          title={t('emptyTitle')}
+          description={t('emptySubtitle')}
+        />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
           <table className="w-full text-sm" role="table" aria-label={t('queueTitle')}>

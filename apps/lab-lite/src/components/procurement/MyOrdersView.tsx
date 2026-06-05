@@ -17,6 +17,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Clock, CheckCircle, XCircle, Package } from '@ultranos/ui-kit/icons'
 import { getDb } from '@/lib/db'
 import { formatAfn } from '@/lib/procurement/cost-tracker'
@@ -226,20 +227,20 @@ export function MyOrdersView() {
   return (
     <div className="flex flex-col gap-4">
       {/* Tabs */}
-      <div className="flex border-b" role="tablist">
+      <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit" role="tablist">
         {(['active', 'history'] as const).map((t2) => (
           <button
             key={t2}
             role="tab"
             aria-selected={tab === t2}
             onClick={() => setTab(t2)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === t2 ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              tab === t2 ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t(`orders.tabs.${t2}`)}
             {t2 === 'active' && requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length > 0 && (
-              <span className="ms-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+              <span className="ms-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
                 {requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length}
               </span>
             )}
@@ -265,10 +266,10 @@ export function MyOrdersView() {
       {loading ? (
         <p className="text-sm text-gray-500 py-4 text-center">{t('orders.loading')}</p>
       ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-12 text-gray-400">
-          <Package size={40} />
-          <p className="text-sm">{t(`orders.empty.${tab}`)}</p>
-        </div>
+        <EmptyState
+          icon={Package}
+          title={t(`orders.empty.${tab}`)}
+        />
       ) : (
         <ul className="flex flex-col gap-2">
           {sorted.map((req) => (
