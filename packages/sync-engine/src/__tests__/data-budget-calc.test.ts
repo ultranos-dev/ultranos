@@ -6,6 +6,7 @@ import {
   getCycleEndDate,
   isCycleBoundaryCrossed,
 } from '../data-budget-calc.js'
+import { categorizeUrl } from '../data-meter.js'
 
 describe('getThresholdLevel', () => {
   it('returns normal below 75%', () => {
@@ -53,5 +54,28 @@ describe('isCycleBoundaryCrossed', () => {
   })
   it('returns true when next cycle has started', () => {
     expect(isCycleBoundaryCrossed('2026-05-01', 1, new Date('2026-06-05'))).toBe(true)
+  })
+})
+
+describe('categorizeUrl', () => {
+  it('classifies audit endpoints as audit', () => {
+    expect(categorizeUrl('https://hub/api/audit.sync')).toBe('audit')
+    expect(categorizeUrl('https://hub/api/audit')).toBe('audit')
+  })
+  it('classifies upload/uploadResult as upload', () => {
+    expect(categorizeUrl('https://hub/api/upload')).toBe('upload')
+    expect(categorizeUrl('https://hub/api/uploadResult')).toBe('upload')
+  })
+  it('classifies sync.push endpoints as upload', () => {
+    expect(categorizeUrl('https://hub/api/trpc/sync.push')).toBe('upload')
+  })
+  it('classifies recordDispense endpoints as upload', () => {
+    expect(categorizeUrl('https://hub/medication.recordDispense')).toBe('upload')
+  })
+  it('classifies notification endpoints as notification', () => {
+    expect(categorizeUrl('https://hub/api/notification')).toBe('notification')
+  })
+  it('falls back to other for unknown endpoints', () => {
+    expect(categorizeUrl('https://hub/api/patients')).toBe('other')
   })
 })

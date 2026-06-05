@@ -66,7 +66,14 @@ export function estimateResponseSize(
 /** Categorize a URL into a data usage category. */
 export function categorizeUrl(url: string): DataUsageCategory {
   if (url.includes('audit.sync') || url.includes('audit')) return 'audit'
-  if (url.includes('upload') || url.includes('uploadResult')) return 'upload'
+  if (
+    url.includes('upload') ||
+    url.includes('uploadResult') ||
+    url.includes('sync.push') ||
+    url.includes('sync/push') ||
+    url.includes('recordDispense') ||
+    url.includes('trpc/sync')
+  ) return 'upload'
   if (url.includes('notification')) return 'notification'
   return 'other'
 }

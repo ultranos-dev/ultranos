@@ -9,7 +9,7 @@ describe('createMeterFetch wiring (opd-lite)', () => {
     await metered('https://hub.example.com/api/trpc/sync.push', { method: 'POST', body: '{}' })
     expect(recorder).toHaveBeenCalledTimes(1)
     const call = recorder.mock.calls[0]![0]
-    expect(call).toMatchObject({ category: 'other', requestCount: 1 })
+    expect(call).toMatchObject({ category: 'upload', requestCount: 1 })
   })
 
   it('still calls recorder even when fetch throws', async () => {
