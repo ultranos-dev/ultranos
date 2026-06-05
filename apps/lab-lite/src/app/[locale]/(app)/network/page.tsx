@@ -71,7 +71,7 @@ export default function NetworkDashboardPage() {
   if (!hasAccess) return <AccessDenied t={t} />
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('networkDashboard')}</h1>

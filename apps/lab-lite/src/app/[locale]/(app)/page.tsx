@@ -40,7 +40,7 @@ export default function LabHomePage() {
   const { alerts, refresh: refreshAlerts } = useDriftAlerts()
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <UploadSuccessBanner />
       {/* Story 43.6: Show drift alert banner when active QC alerts exist */}
       <DriftAlertBanner alerts={alerts} onAcknowledged={refreshAlerts} />

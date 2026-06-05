@@ -71,7 +71,7 @@ export default function SendOutsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground">Send-Outs</h1>
 
       {/* Overdue alert banner */}

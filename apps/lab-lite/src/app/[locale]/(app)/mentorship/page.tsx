@@ -20,8 +20,8 @@ export default function MentorshipPage() {
 
   return (
     <AuthGuard>
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">{t('pageTitle')}</h1>
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold">{t('pageTitle')}</h1>
         {session ? (
           <MentorshipDashboard currentUserId={session.userId} />
         ) : (

@@ -11,8 +11,7 @@
  */
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { BarChart3, Users } from '@ultranos/ui-kit/icons'
+import { Users } from '@ultranos/ui-kit/icons'
 import { AuthGuard } from '@/components/AuthGuard'
 import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard'
 import { StaffPortfolioList } from '@/components/portfolio/StaffPortfolioList'
@@ -20,7 +19,6 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LabRole } from '@ultranos/shared-types'
 
 export default function PortfolioPage() {
-  const t = useTranslations('portfolio')
   const session = useAuthSessionStore((s) => s.session)
 
   const [selectedTechId, setSelectedTechId] = useState<string | null>(null)
@@ -41,26 +39,6 @@ export default function PortfolioPage() {
 
   return (
     <AuthGuard>
-      {/* Page header */}
-      <div className="border-b border-border bg-background">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-3">
-          <BarChart3 size={24} className="text-primary" aria-hidden />
-          <h1 className="text-lg font-semibold text-foreground">{t('title')}</h1>
-          {selectedTechId && (
-            <>
-              <span className="text-muted-foreground">/</span>
-              <button
-                onClick={handleBackToSelf}
-                className="text-sm text-primary hover:underline"
-                aria-label="Back to my portfolio"
-              >
-                {t('backToMyPortfolio') || 'Back to my portfolio'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       <div className="flex">
         {/* Sidebar: staff list for supervisors */}
         {isSupervisor && !selectedTechId && (

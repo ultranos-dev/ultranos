@@ -19,7 +19,7 @@ function HistoryContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <h1 className="text-xl font-bold text-foreground">Upload History</h1>
         <div className="rounded-lg border border-border bg-card p-6">
           <p className="text-sm text-muted-foreground">Loading upload history...</p>
@@ -29,7 +29,7 @@ function HistoryContent() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-foreground">Upload History</h1>
 
       {error && (

@@ -14,7 +14,7 @@ export default function CompetencyPage() {
 
   return (
     <AuthGuard>
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-3xl mx-auto flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <GraduationCap size={28} className="text-blue-600 dark:text-blue-400" />
           <div>
