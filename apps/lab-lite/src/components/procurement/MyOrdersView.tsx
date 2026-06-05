@@ -227,20 +227,20 @@ export function MyOrdersView() {
   return (
     <div className="flex flex-col gap-4">
       {/* Tabs */}
-      <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit" role="tablist">
+      <div className="flex border-b" role="tablist">
         {(['active', 'history'] as const).map((t2) => (
           <button
             key={t2}
             role="tab"
             aria-selected={tab === t2}
             onClick={() => setTab(t2)}
-            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
-              tab === t2 ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === t2 ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             {t(`orders.tabs.${t2}`)}
             {t2 === 'active' && requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length > 0 && (
-              <span className="ms-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+              <span className="ms-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
                 {requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length}
               </span>
             )}

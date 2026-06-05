@@ -150,7 +150,7 @@ export function WorkloadDashboard() {
         <h1 className="text-lg font-semibold text-foreground">{t('dashboard')}</h1>
         <div
           role="tablist"
-          className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit"
+          className="flex gap-1 rounded-lg border border-border bg-muted/30 p-0.5"
         >
           <TabButton
             id="tab-dashboard"
@@ -263,9 +263,9 @@ function TabButton({
       aria-controls={panelId}
       aria-selected={active}
       onClick={onClick}
-      className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+      className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
         active
-          ? 'bg-primary text-primary-foreground'
+          ? 'bg-card text-foreground shadow-sm'
           : 'text-muted-foreground hover:text-foreground'
       }`}
     >
