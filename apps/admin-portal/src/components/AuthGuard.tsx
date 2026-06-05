@@ -19,7 +19,7 @@ const TRIAL_BYPASS_PATHS = ['/subscriptions', '/subscriptions/billing']
 /** Admin session max age: 4 hours per NFR9. */
 const SESSION_MAX_AGE_S = 4 * 60 * 60
 
-const PUBLIC_PATHS = ['/', '/login', '/register']
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password']
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GuardState>('loading')
@@ -77,6 +77,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             role,
             sessionId: payload.session_id ?? '',
             email: data.session.user?.email ?? '',
+            name: data.session.user?.user_metadata?.full_name ?? data.session.user?.user_metadata?.name ?? '',
           })
         }
 

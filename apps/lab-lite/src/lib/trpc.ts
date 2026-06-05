@@ -17,6 +17,8 @@ type AuthEventType =
   | 'LOGIN_FAILURE'
   | 'MFA_VERIFY_SUCCESS'
   | 'MFA_VERIFY_FAILURE'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'PASSWORD_RESET_COMPLETED'
 
 /**
  * Fire-and-forget audit event reporting to Hub API.

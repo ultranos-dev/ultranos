@@ -30,7 +30,11 @@ export const trpc = createTRPCClient<AppRouter>({
 })
 
 // Events accepted by the Hub API's reportAuthEvent endpoint.
-type ReportableAuthEventType = 'ADMIN_LOGIN_SUCCESS' | 'ADMIN_LOGIN_FAILURE'
+type ReportableAuthEventType =
+  | 'ADMIN_LOGIN_SUCCESS'
+  | 'ADMIN_LOGIN_FAILURE'
+  | 'ADMIN_PASSWORD_RESET_REQUESTED'
+  | 'ADMIN_PASSWORD_RESET_COMPLETED'
 
 // Full set of admin auth events (broader than what the API currently accepts).
 export type AdminAuthEventType =
@@ -43,6 +47,8 @@ export type AdminAuthEventType =
 const REPORTABLE_EVENTS = new Set<AdminAuthEventType>([
   'ADMIN_LOGIN_SUCCESS',
   'ADMIN_LOGIN_FAILURE',
+  'ADMIN_PASSWORD_RESET_REQUESTED',
+  'ADMIN_PASSWORD_RESET_COMPLETED',
 ])
 
 /**
