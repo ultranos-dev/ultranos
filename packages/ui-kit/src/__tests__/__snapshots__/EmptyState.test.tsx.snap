@@ -8,7 +8,7 @@ exports[`EmptyState > snapshot — RTL md 1`] = `
     class="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
   >
     <div
-      class="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground"
+      class="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground"
     >
       <svg
         aria-hidden="true"
@@ -42,7 +42,7 @@ exports[`EmptyState > snapshot — RTL md 1`] = `
       حاول تعديل بحثك.
     </p>
     <button
-      class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 mt-1"
+      class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3"
       data-size="sm"
       data-slot="button"
       data-variant="outline"
@@ -61,11 +61,11 @@ exports[`EmptyState > snapshot — RTL sm 1`] = `
     class="flex items-center gap-2.5 p-4"
   >
     <div
-      class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+      class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
     >
       <svg
         aria-hidden="true"
-        class="lucide lucide-inbox size-[13px]"
+        class="lucide lucide-inbox size-3"
         fill="none"
         height="24"
         stroke="currentColor"
@@ -99,7 +99,7 @@ exports[`EmptyState > snapshot — RTL sm 1`] = `
       </p>
     </div>
     <button
-      class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3 ms-auto shrink-0"
+      class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3 shrink-0"
       data-size="xs"
       data-slot="button"
       data-variant="outline"
@@ -115,7 +115,7 @@ exports[`EmptyState > snapshot — md size, all props 1`] = `
   class="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
 >
   <div
-    class="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground"
+    class="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground"
   >
     <svg
       aria-hidden="true"
@@ -157,7 +157,7 @@ exports[`EmptyState > snapshot — md size, all props 1`] = `
     Try adjusting your search or filters.
   </p>
   <button
-    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 mt-1"
+    class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3"
     data-size="sm"
     data-slot="button"
     data-variant="outline"
@@ -172,11 +172,11 @@ exports[`EmptyState > snapshot — sm size with all props 1`] = `
   class="flex items-center gap-2.5 p-4"
 >
   <div
-    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+    class="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
   >
     <svg
       aria-hidden="true"
-      class="lucide lucide-users size-[13px]"
+      class="lucide lucide-users size-3"
       fill="none"
       height="24"
       stroke="currentColor"
@@ -218,7 +218,7 @@ exports[`EmptyState > snapshot — sm size with all props 1`] = `
     </p>
   </div>
   <button
-    class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3 ms-auto shrink-0"
+    class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-6 gap-1 px-2.5 text-xs [&_svg:not([class*='size-'])]:size-3 shrink-0"
     data-size="xs"
     data-slot="button"
     data-variant="outline"

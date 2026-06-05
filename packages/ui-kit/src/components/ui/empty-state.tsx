@@ -33,8 +33,8 @@ export function EmptyState({
         className={cn('flex items-center gap-2.5 p-4', className)}
         {...props}
       >
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Icon aria-hidden="true" className="size-[13px]" />
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Icon aria-hidden="true" className="size-3" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-foreground">{title}</p>
@@ -47,7 +47,7 @@ export function EmptyState({
             variant="outline"
             size="xs"
             onClick={action.onClick}
-            className="ms-auto shrink-0"
+            className="shrink-0"
           >
             {action.label}
           </Button>
@@ -64,7 +64,7 @@ export function EmptyState({
       )}
       {...props}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
         <Icon aria-hidden="true" className="size-5" />
       </div>
       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -76,7 +76,6 @@ export function EmptyState({
           variant="outline"
           size="sm"
           onClick={action.onClick}
-          className="mt-1"
         >
           {action.label}
         </Button>
