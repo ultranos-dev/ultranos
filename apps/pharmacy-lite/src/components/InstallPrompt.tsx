@@ -56,7 +56,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-4 start-4 z-50 rounded-lg border border-primary-200 bg-background p-4 shadow-lg">
-      <p className="text-sm font-medium text-neutral-900">
+      <p className="text-sm font-medium text-foreground">
         Install Pharmacy Lite for quick access
       </p>
       <div className="mt-2 flex gap-2">

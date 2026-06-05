@@ -138,7 +138,7 @@ export function DistrictAutocomplete({
     <div ref={containerRef} className="relative">
       <label
         htmlFor={inputId}
-        className="mb-1 block text-sm font-semibold text-neutral-700"
+        className="mb-1 block text-sm font-semibold text-foreground"
       >
         {label}
         {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
@@ -147,11 +147,11 @@ export function DistrictAutocomplete({
       <div className="relative">
         {value && selectedDistrict ? (
           <div
-            className={`flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2 ${
+            className={`flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 ${
               disabled ? 'opacity-50' : ''
             }`}
           >
-            <span className="flex-1 text-sm text-neutral-900">
+            <span className="flex-1 text-sm text-foreground">
               {getDisplayName(selectedDistrict)}
             </span>
             {!disabled && (
@@ -189,10 +189,10 @@ export function DistrictAutocomplete({
             disabled={disabled}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               disabled
-                ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
+                ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
                 : error
                   ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                  : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                  : 'border-border focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={disabled ? '' : placeholder}
             value={query}
@@ -224,7 +224,7 @@ export function DistrictAutocomplete({
               className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
                 highlightedIndex === index
                   ? 'bg-blue-50 text-blue-900'
-                  : 'text-neutral-900 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50'
+                  : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-accent'
               }`}
               onMouseDown={(e) => {
                 e.preventDefault()
@@ -234,10 +234,10 @@ export function DistrictAutocomplete({
             >
               <span>{getDisplayName(district)}</span>
               {isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">{district.name}</span>
+                <span className="ms-2 text-xs text-muted-foreground">{district.name}</span>
               )}
               {!isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">
+                <span className="ms-2 text-xs text-muted-foreground">
                   {district.nameLocal}
                 </span>
               )}
@@ -247,7 +247,7 @@ export function DistrictAutocomplete({
       )}
 
       {isOpen && !disabled && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
           No matching district
         </div>
       )}

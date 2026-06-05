@@ -484,7 +484,7 @@ export function PatientRegistrationForm({
 
         {/* Demographics section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-neutral-900 mb-4">
+          <legend className="text-base font-bold text-foreground mb-4">
             {t('demographicsSection')}
           </legend>
 
@@ -493,10 +493,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="national-id"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('nationalIdLabel')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -505,7 +505,7 @@ export function PatientRegistrationForm({
                 type="text"
                 inputMode="text"
                 maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
                 placeholder={t('nationalIdPlaceholder')}
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
@@ -516,7 +516,7 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="gender"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('gender')}
                 <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
@@ -531,7 +531,7 @@ export function PatientRegistrationForm({
                 className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
                     ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                    : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                    : 'border-border focus:border-blue-400 focus:ring-blue-400'
                 }`}
               >
                 <option value="">{t('genderPlaceholder')}</option>
@@ -558,9 +558,9 @@ export function PatientRegistrationForm({
                     if (e.target.checked) setBirthDate('')
                     else setBirthYear('')
                   }}
-                  className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                  className="h-5 w-5 border-border text-blue-600 focus:ring-blue-400"
                 />
-                <span className="text-sm font-medium text-neutral-700">
+                <span className="text-sm font-medium text-foreground">
                   {t('birthYearOnly')}
                 </span>
               </label>
@@ -569,7 +569,7 @@ export function PatientRegistrationForm({
                 <div>
                   <label
                     htmlFor="birth-year"
-                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                    className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthYear')}
                     <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
@@ -584,7 +584,7 @@ export function PatientRegistrationForm({
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthYear
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                        : 'border-border focus:border-blue-400 focus:ring-blue-400'
                     }`}
                     placeholder={t('birthYearPlaceholder')}
                     value={birthYear}
@@ -600,7 +600,7 @@ export function PatientRegistrationForm({
                 <div>
                   <label
                     htmlFor="birth-date"
-                    className="mb-1 block text-sm font-semibold text-neutral-700"
+                    className="mb-1 block text-sm font-semibold text-foreground"
                   >
                     {t('birthDate')}
                     <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
@@ -612,7 +612,7 @@ export function PatientRegistrationForm({
                     className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                       fieldErrors.birthDate
                         ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                        : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                        : 'border-border focus:border-blue-400 focus:ring-blue-400'
                     }`}
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
@@ -630,10 +630,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="phone"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('phone')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -642,7 +642,7 @@ export function PatientRegistrationForm({
                 type="tel"
                 dir="ltr"
                 inputMode="tel"
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
                 placeholder={t('phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -653,10 +653,10 @@ export function PatientRegistrationForm({
             <div>
               <label
                 htmlFor="preferred-language"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('preferredLanguage')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -666,7 +666,7 @@ export function PatientRegistrationForm({
                 onChange={(e) =>
                   setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
                 }
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
               >
                 <option value="en">English</option>
                 <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
@@ -696,17 +696,17 @@ export function PatientRegistrationForm({
 
         {/* Clinical section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-neutral-900 mb-4">
+          <legend className="text-base font-bold text-foreground mb-4">
             {t('clinicalSection')}
           </legend>
 
           <div>
             <label
               htmlFor="blood-group"
-              className="mb-1 block text-sm font-semibold text-neutral-700"
+              className="mb-1 block text-sm font-semibold text-foreground"
             >
               {t('bloodGroup')}
-              <span className="ms-1 text-xs font-normal text-neutral-400">
+              <span className="ms-1 text-xs font-normal text-muted-foreground">
                 ({t('optional')})
               </span>
             </label>
@@ -714,7 +714,7 @@ export function PatientRegistrationForm({
               id="blood-group"
               value={bloodGroup}
               onChange={(e) => setBloodGroup(e.target.value)}
-              className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
             >
               {BLOOD_GROUPS.map((bg) => (
                 <option key={bg} value={bg}>
