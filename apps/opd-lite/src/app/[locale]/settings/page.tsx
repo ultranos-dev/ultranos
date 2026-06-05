@@ -45,7 +45,7 @@ export default function SettingsPage() {
             <span className="text-sm font-semibold text-foreground">{t('settingsTitle')}</span>
             {isLoaded && (
               <div className="flex items-center gap-2">
-                <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                <div className="w-24 h-1.5 rounded-full bg-border overflow-hidden">
                   <div className={`h-full rounded-full ${barColor}`} style={{ width: `${usedPct}%` }} />
                 </div>
                 <span className={`text-xs ${textColor}`}>
