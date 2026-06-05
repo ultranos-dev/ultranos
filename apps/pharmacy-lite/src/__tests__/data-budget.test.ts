@@ -44,7 +44,7 @@ describe('Data Budget — Dexie Schema & Helpers (pharmacy-lite)', () => {
     await recordDataUsage({ date: '2026-06-05', category: 'audit', bytesOut: 512, bytesIn: 128, requestCount: 1 })
     const results = await getUsageByDay('2026-06-01', '2026-06-30')
     expect(results).toHaveLength(1)
-    expect(results[0]!.category).toBe('audit')
+    expect(results[0]?.category).toBe('audit')
   })
 
   it('getUsageByDay filters by date range', async () => {
@@ -53,7 +53,7 @@ describe('Data Budget — Dexie Schema & Helpers (pharmacy-lite)', () => {
     await recordDataUsage({ date: '2026-06-20', category: 'upload', bytesOut: 3000, bytesIn: 300, requestCount: 1 })
     const results = await getUsageByDay('2026-06-05', '2026-06-15')
     expect(results).toHaveLength(1)
-    expect(results[0]!.date).toBe('2026-06-10')
+    expect(results[0]?.date).toBe('2026-06-10')
   })
 
   it('getUsageForCycle returns records since cycle start and excludes earlier records', async () => {
@@ -62,7 +62,7 @@ describe('Data Budget — Dexie Schema & Helpers (pharmacy-lite)', () => {
     await recordDataUsage({ date: '2026-06-05', category: 'upload', bytesOut: 200, bytesIn: 100, requestCount: 1 })
     const results = await getUsageForCycle()
     expect(results).toHaveLength(1)
-    expect(results[0]!.date).toBe('2026-06-05')
+    expect(results[0]?.date).toBe('2026-06-05')
   })
 
   it('getUsageForCycle returns empty array when no records exist', async () => {

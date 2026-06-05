@@ -94,12 +94,13 @@ export interface LocalPatient {
 }
 
 // Data Budget types — Story 48.x / Data Connectivity
+// ---------------------------------------------------------------------------
 export interface DataBudgetConfig {
   id: 'config'
   planSizeMB: number
-  billingCycleDay: number
+  billingCycleDay: number   // 1-28: day of month cycle resets
   lowDataMode: boolean
-  currentCycleStart: string
+  currentCycleStart: string // ISO 8601 date of current cycle start
 }
 
 export interface DataUsageRecord {
@@ -253,10 +254,7 @@ applyEncryptionMiddleware(db, PHI_TABLE_CONFIGS)
 /** Parse YYYY-MM-DD string as local midnight (avoids UTC offset issues in MENA timezones). */
 function parseDateLocal(dateStr: string): Date {
   const parts = dateStr.split('-').map(Number)
-  const year = parts[0] ?? new Date().getFullYear()
-  const month = parts[1] ?? 1
-  const day = parts[2] ?? 1
-  return new Date(year, month - 1, day)
+  return new Date(parts[0]!, parts[1]! - 1, parts[2]!)
 }
 
 /** Format a Date as YYYY-MM-DD using local time. */
