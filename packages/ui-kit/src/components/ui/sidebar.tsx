@@ -507,17 +507,19 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot.Root : "button"
   const { isMobile, state } = useSidebar()
 
+  const button = (
+    <Comp
+      data-slot="sidebar-menu-button"
+      data-sidebar="menu-button"
+      data-size={size}
+      data-active={isActive}
+      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+      {...props}
+    />
+  )
+
   if (!tooltip) {
-    return (
-      <Comp
-        data-slot="sidebar-menu-button"
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      />
-    )
+    return button
   }
 
   if (typeof tooltip === "string") {
@@ -526,46 +528,13 @@ function SidebarMenuButton({
     }
   }
 
-  // Only render Tooltip wrapper when sidebar is in collapsed/icon mode AND not on mobile
   if (state !== "collapsed" || isMobile) {
-    return (
-      <Comp
-        data-slot="sidebar-menu-button"
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      />
-    )
-  }
-
-  // For tooltip rendering, we only support standard button, not asChild
-  // This ensures Radix tooltip works properly
-  if (asChild) {
-    return (
-      <Comp
-        data-slot="sidebar-menu-button"
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      />
-    )
+    return button
   }
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          data-sidebar="menu-button"
-          data-size={size}
-          data-active={isActive}
-          className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-          {...props}
-        />
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent
         side="right"
         align="center"

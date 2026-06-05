@@ -73,13 +73,21 @@ function renderButtonWithTooltip(collapsed: boolean) {
 describe('SidebarMenuButton tooltip visibility', () => {
   it('does NOT render TooltipTrigger when sidebar is expanded', () => {
     const { baseElement } = renderButtonWithTooltip(false)
-    // Radix TooltipTrigger sets data-slot="tooltip-trigger"
-    expect(baseElement.querySelector('[data-slot="tooltip-trigger"]')).toBeNull()
+    // When expanded the button is rendered directly (no Tooltip wrapper).
+    // Radix Tooltip.Trigger (via asChild) adds data-state to the button; its
+    // absence confirms no Tooltip is mounted.
+    const btn = baseElement.querySelector('[data-slot="sidebar-menu-button"]')
+    expect(btn).not.toBeNull()
+    expect(btn?.hasAttribute('data-state')).toBe(false)
   })
 
   it('renders TooltipTrigger when sidebar is collapsed', () => {
     const { baseElement } = renderButtonWithTooltip(true)
-    expect(baseElement.querySelector('[data-slot="tooltip-trigger"]')).not.toBeNull()
+    // When collapsed the button is rendered inside <Tooltip><TooltipTrigger asChild>.
+    // Radix Tooltip.Trigger (asChild) merges data-state onto the button element.
+    const btn = baseElement.querySelector('[data-slot="sidebar-menu-button"]')
+    expect(btn).not.toBeNull()
+    expect(btn?.hasAttribute('data-state')).toBe(true)
   })
 
   it('tooltip content is NOT mounted when expanded', () => {
