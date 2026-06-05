@@ -68,6 +68,8 @@ export type { DirectionalIconProps, IconCategory } from './components/Directiona
 export { PasswordStrengthBar, getPasswordStrength } from './components/PasswordStrengthBar.js'
 export type { PasswordStrengthBarProps } from './components/PasswordStrengthBar.js'
 
+export { formatUserRole } from './format-role.js'
+
 export { EmptyState } from './components/ui/empty-state.js'
 export type { EmptyStateProps } from './components/ui/empty-state.js'
 
