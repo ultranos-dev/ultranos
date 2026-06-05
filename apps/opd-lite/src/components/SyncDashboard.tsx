@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { auditPhiAccess, AuditAction } from '@/lib/audit'
 import type { AuditResourceType } from '@/lib/audit'
@@ -409,9 +410,7 @@ export function SyncDashboard() {
         {/* Queue items grouped by resource type (AC: 2, 3) */}
         <div className="max-h-[60vh] overflow-y-auto" data-testid="sync-item-list">
           {queueItems.length === 0 ? (
-            <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-              All synced — no pending items
-            </div>
+            <EmptyState title="All synced — no pending items" size="sm" />
           ) : (
             groups.map((group) => (
               <div key={group.resourceType} className="border-b border-border last:border-b-0">

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
 /* ------------------------------------------------------------------ */
@@ -50,10 +51,11 @@ async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {
   const url = `${getHubApiUrl()}/duplicateReview.list?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`
   const res = await fetch(url, { method: 'GET', headers })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-  const body = (await res.json()) as {
-    result: { data: { json: DuplicateReviewRow[] } }
-  }
-  return body.result.data.json
+  const body = (await res.json()) as unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = (body as any)?.result?.data?.json
+  if (!Array.isArray(rows)) throw new Error('Unexpected response shape from Hub API')
+  return rows as DuplicateReviewRow[]
 }
 
 async function submitDecision(
@@ -140,9 +142,7 @@ export function DuplicateReviewTable() {
   }
 
   if (rows.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-muted-foreground">{t('noReviews')}</p>
-    )
+    return <EmptyState title={t('noReviews')} />
   }
 
   /* ---- Table ---- */

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { PillButton } from './pill-button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 interface PatientResultListProps {
   results: FhirPatient[]
@@ -58,11 +59,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
 
   if (results.length === 0) {
     if (!query) return null
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        {t('noResults')}
-      </div>
-    )
+    return <EmptyState title={t('noResults')} size="sm" />
   }
 
   return (

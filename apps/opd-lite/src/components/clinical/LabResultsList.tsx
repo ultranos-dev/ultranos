@@ -6,6 +6,7 @@ import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/Button'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
 
 interface LabResultsListProps {
@@ -149,11 +150,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   const consentUnverified = consentResult?.granted && consentResult.unverified
 
   if (reports.length === 0) {
-    return (
-      <div className="py-4 text-center text-sm text-muted-foreground">
-        No lab results available for this patient.
-      </div>
-    )
+    return <EmptyState title="No lab results available for this patient." size="sm" />
   }
 
   return (

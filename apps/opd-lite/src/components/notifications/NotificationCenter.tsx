@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Beaker, Check, Settings } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import { useNotificationPoll } from '@/lib/use-notification-poll'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import type { NotificationItem } from '@/lib/notification-api'
 import { db } from '@/lib/db'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
@@ -161,18 +162,21 @@ export function NotificationCenter() {
       </div>
 
       {/* Tab bar */}
-      <div role="tablist" className="flex gap-1 rounded-xl bg-muted p-1">
+      <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
         {TABS.map(tab => (
-          <Button
+          <button
             key={tab.key}
-            variant={activeTab === tab.key ? 'primary' : 'ghost'}
             role="tab"
             aria-selected={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className="flex-1"
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === tab.key
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
             {tab.label}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -192,9 +196,7 @@ export function NotificationCenter() {
 
       {/* Empty state */}
       {!loading && filtered.length === 0 && !error && (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          No notifications
-        </div>
+        <EmptyState title="No notifications" size="sm" />
       )}
 
       {/* Notification list */}

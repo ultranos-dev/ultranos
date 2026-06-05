@@ -20,6 +20,7 @@ import { getPatientReports } from '@/lib/lab-results/report-aggregator'
 import { groupReportsByLoinc, type GroupedResults } from '@/lib/lab-results/result-grouper'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkLabsConsent } from '@/lib/consent-check'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { ResultTrendChart, ResultSummaryTable } from '@/components/clinical/ResultTrendChart'
 import { LabReportDetail } from '@/components/clinical/LabReportDetail'
 import { ChevronDown, ChevronRight, AlertCircle, AlertTriangle, CircleCheck, WifiOff } from '@ultranos/ui-kit/icons'
@@ -342,9 +343,11 @@ export function PatientResultTimeline({ patientId }: PatientResultTimelineProps)
   // ── Empty state ──────────────────────────────────────────────────────────
   if (groups.length === 0) {
     return (
-      <div className="py-4 text-center text-sm text-muted-foreground" data-testid="timeline-empty">
-        No lab results available for this patient.
-      </div>
+      <EmptyState
+        data-testid="timeline-empty"
+        title="No lab results available for this patient."
+        size="sm"
+      />
     )
   }
 

@@ -9,6 +9,7 @@ import {
   acknowledgeNotification,
   type NotificationItem,
 } from '@/lib/notification-api'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 const POLL_INTERVAL_MS = 30_000 // 30s polling for <60s SLA (AC: 3)
 
@@ -164,9 +165,7 @@ function NotificationDropdown({
         )}
 
         {!loading && notifications.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No notifications
-          </div>
+          <EmptyState title="No notifications" size="sm" />
         )}
 
         {!loading && notifications.map(n => (
