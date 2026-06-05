@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
 import { TopHeader } from '@/components/TopHeader'
@@ -68,6 +68,39 @@ const NAV_ITEMS = [
 
 export default function SettingsPage() {
   const supabase = getSupabaseBrowserClient()
+
+  /* Active section tracking via IntersectionObserver */
+  const [activeSection, setActiveSection] = useState<string>('my-account')
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
+  useEffect(() => {
+    const sectionIds = NAV_ITEMS.map((item) => item.id)
+    // Track which sections are currently intersecting
+    const visibleSections = new Set<string>()
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            visibleSections.add(entry.target.id)
+          } else {
+            visibleSections.delete(entry.target.id)
+          }
+        })
+        // Activate the topmost visible section
+        const topmost = sectionIds.find((id) => visibleSections.has(id))
+        if (topmost) setActiveSection(topmost)
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
+    )
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id)
+      if (el) observerRef.current?.observe(el)
+    })
+
+    return () => observerRef.current?.disconnect()
+  }, [])
 
   /* Profile state */
   const [profile, setProfile] = useState<AdminProfile | null>(null)
@@ -369,12 +402,16 @@ export default function SettingsPage() {
       {/* Section Navigation (sticky top) */}
       <div className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="mx-auto max-w-7xl px-8">
-          <nav className="flex gap-2 py-3" aria-label="Settings sections">
+          <nav className="flex gap-1 py-3" aria-label="Settings sections">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground hover:bg-popover hover:text-foreground transition-colors"
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  activeSection === item.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 {item.label}
               </a>
