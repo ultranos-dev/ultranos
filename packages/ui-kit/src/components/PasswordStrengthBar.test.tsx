@@ -57,10 +57,10 @@ describe('PasswordStrengthBar', () => {
     expect(filled).toHaveLength(1)
   })
 
-  it('fills correct number of segments for strength=2 (bg-amber-500)', () => {
+  it('fills correct number of segments for strength=2 (bg-warning)', () => {
     const { container } = render(<PasswordStrengthBar strength={2} label="Fair" />)
     const segs = container.querySelectorAll('[data-testid="strength-segment"]')
-    const filled = Array.from(segs).filter((el) => el.className.includes('bg-amber-500'))
+    const filled = Array.from(segs).filter((el) => el.className.includes('bg-warning'))
     expect(filled).toHaveLength(2)
   })
 

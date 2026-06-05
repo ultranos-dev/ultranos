@@ -21,14 +21,17 @@ export interface PasswordStrengthBarProps {
 
 const SEGMENT_COLOR: Record<number, string> = {
   1: 'bg-destructive',
-  2: 'bg-amber-500',
+  2: 'bg-warning',
   3: 'bg-blue-500',
   4: 'bg-primary',
 }
 
 export function PasswordStrengthBar({ strength, label }: PasswordStrengthBarProps) {
   return (
-    <div className={`flex items-center gap-2 ${strength === 0 ? 'invisible' : ''}`}>
+    <div
+      className={`flex items-center gap-2 ${strength === 0 ? 'invisible' : ''}`}
+      aria-hidden={strength === 0 ? true : undefined}
+    >
       <div className="flex flex-1 gap-1" data-testid="strength-segments">
         {([1, 2, 3, 4] as const).map((seg) => (
           <div
