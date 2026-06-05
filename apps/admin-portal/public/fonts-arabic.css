@@ -1,0 +1,6 @@
+/*
+ * Arabic font loading for admin-portal (online-only — uses Google Fonts CDN).
+ * Loaded conditionally only for RTL locales (ar, prs, ps).
+ * unicode-range ensures the font is only downloaded when Arabic characters are present.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&display=swap');

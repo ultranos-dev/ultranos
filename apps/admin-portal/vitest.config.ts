@@ -14,6 +14,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'),
       '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      '@ultranos/ui-kit': path.resolve(__dirname, '../../packages/ui-kit/src/index.ts'),
     },
   },
 })
