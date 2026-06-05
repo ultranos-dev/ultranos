@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -170,8 +169,8 @@ export default function LabDetailPage() {
       setError(null)
       const result = await trpc.admin.getLabDetail.query({ labId })
       setLab(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load lab details')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load lab details')
     } finally {
       setLoading(false)
     }
@@ -196,8 +195,8 @@ export default function LabDetailPage() {
       // Refresh detail view — AC #5
       await fetchDetail()
       setTimeout(() => setSuccessMessage(null), 5000)
-    } catch (err: any) {
-      setError(err?.message ?? `Failed to ${pendingAction.toLowerCase()} lab`)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} lab`)
     } finally {
       setSubmitting(false)
     }
@@ -219,9 +218,7 @@ export default function LabDetailPage() {
   if (!lab) return null
 
   return (
-    <>
-      <TopHeader title={lab.labName} description={`Registered ${formatDate(lab.registeredAt)}`} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Button variant="ghost" onClick={() => router.push('/labs')}>&larr; Back to Labs</Button>
 
         {/* Header */}
@@ -360,6 +357,5 @@ export default function LabDetailPage() {
           />
         )}
       </div>
-    </>
   )
 }

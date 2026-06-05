@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 
 type VaccinationStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE'
@@ -169,7 +168,6 @@ export default function EmployeeHealthPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <TopHeader title="Employee Health Record" />
         <main className="mx-auto max-w-3xl px-6 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 w-48 rounded bg-card" />
@@ -183,7 +181,6 @@ export default function EmployeeHealthPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopHeader title="Employee Health Record" />
       <main className="mx-auto max-w-3xl px-6 py-8">
         {/* Back link */}
         <Button

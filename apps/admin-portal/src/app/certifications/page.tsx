@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { PathwayCreateModal } from '@/components/certifications/PathwayCreateModal'
 import { ExpiryWarningWidget } from '@/components/certifications/ExpiryWarningWidget'
 import { Button } from '@/components/ui/button'
@@ -33,7 +32,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function formatDate(iso: string): string {
+function _formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
@@ -60,8 +59,8 @@ export default function CertificationsPage() {
       })
       setPathways(result.pathways)
       setTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load certification pathways')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load certification pathways')
     } finally {
       setLoading(false)
     }
@@ -81,8 +80,8 @@ export default function CertificationsPage() {
     try {
       await trpc.admin.archiveCertificationPathway.mutate({ id })
       fetchPathways()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to archive pathway')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to archive pathway')
     }
   }
 
@@ -90,22 +89,20 @@ export default function CertificationsPage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <>
-      <TopHeader title="Certifications" description="Manage certification pathways and credential records." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Expiry Warning Widget (AC #6) */}
         <ExpiryWarningWidget />
 
         {/* Filter tabs + Create button */}
         <div className="flex items-center justify-between mt-6">
-          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-primary text-foreground'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -206,6 +203,5 @@ export default function CertificationsPage() {
           fetchPathways()
         }}
       />
-    </>
   )
 }

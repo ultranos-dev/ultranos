@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -103,8 +102,8 @@ export default function KycQueuePage() {
       })
       setSubmissions(result.submissions)
       setTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load KYC submissions')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load KYC submissions')
     } finally {
       setLoading(false)
     }
@@ -128,19 +127,17 @@ export default function KycQueuePage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <>
-      <TopHeader title="KYC Verification Queue" description="Review pending provider KYC submissions." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Filter tabs + Search + Export — AC #11 */}
         <div className="flex items-center gap-3">
-          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-primary text-foreground'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -255,6 +252,5 @@ export default function KycQueuePage() {
           </>
         )}
       </div>
-    </>
   )
 }

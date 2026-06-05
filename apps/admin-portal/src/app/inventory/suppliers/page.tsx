@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -54,8 +53,8 @@ export default function SuppliersPage() {
       setError(null)
       const result = await trpc.admin.listSuppliers.query({})
       setSuppliers(result.suppliers as Supplier[])
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load suppliers')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load suppliers')
     } finally {
       setLoading(false)
     }
@@ -111,8 +110,8 @@ export default function SuppliersPage() {
 
       setShowModal(false)
       fetchSuppliers()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to save supplier')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to save supplier')
     } finally {
       setSubmitting(false)
     }
@@ -126,15 +125,13 @@ export default function SuppliersPage() {
       setError(null)
       await trpc.admin.updateSupplier.mutate({ id: supplier.id, status: newStatus })
       fetchSuppliers()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to update supplier status')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to update supplier status')
     }
   }
 
   return (
-    <>
-      <TopHeader title="Suppliers" description="Manage reagent suppliers and their contact details." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-end">
           <Button onClick={openCreate}>
             Add Supplier
@@ -263,6 +260,5 @@ export default function SuppliersPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </>
   )
 }

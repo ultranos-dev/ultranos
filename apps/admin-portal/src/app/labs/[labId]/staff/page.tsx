@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import type { LabRole as SharedLabRole } from '@ultranos/shared-types'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
@@ -182,8 +182,8 @@ export default function LabStaffPage() {
       setError(null)
       const result = await trpc.admin.listLabStaff.query({ labId })
       setStaff(result as StaffMember[])
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load staff list')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load staff list')
     } finally {
       setLoading(false)
     }
@@ -211,14 +211,14 @@ export default function LabStaffPage() {
       await trpc.admin.updateLabStaffRole.mutate({
         labId,
         targetPractitionerId: pendingChange.practitionerId,
-        newRole: pendingChange.newRole,
+        newRole: pendingChange.newRole as SharedLabRole,
       })
       setPendingChange(null)
       setSuccessMessage(`Role updated successfully`)
       await fetchStaff()
       setTimeout(() => setSuccessMessage(null), 5000)
-    } catch (err: any) {
-      const msg = err?.message ?? 'Failed to update role'
+    } catch (err: unknown) {
+      const msg = (err as Error)?.message ?? 'Failed to update role'
       if (msg.includes('Cannot demote the last Lab Manager')) {
         setError('Cannot demote the last Lab Manager')
       } else {
@@ -243,8 +243,8 @@ export default function LabStaffPage() {
       setSuccessMessage('Staff member removed successfully')
       await fetchStaff()
       setTimeout(() => setSuccessMessage(null), 5000)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to remove staff member')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to remove staff member')
       setPendingRemove(null)
     } finally {
       setSubmittingRemove(false)
@@ -252,9 +252,7 @@ export default function LabStaffPage() {
   }
 
   return (
-    <>
-      <TopHeader title="Lab Staff" description="Manage staff roles for this lab" />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
@@ -385,6 +383,5 @@ export default function LabStaffPage() {
           }}
         />
       </div>
-    </>
   )
 }

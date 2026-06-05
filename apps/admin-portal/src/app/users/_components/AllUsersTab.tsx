@@ -16,10 +16,10 @@ interface User {
   name: string
   email: string
   role: string
-  moduleCode: string | null
-  moduleName: string | null
+  moduleCode?: string | null
+  moduleName?: string | null
   status: string
-  mfaEnrolled: boolean
+  mfaEnrolled?: boolean
   lastLoginAt: string | null
   createdAt: string
 }
@@ -89,16 +89,16 @@ export default function AllUsersTab() {
       setLoading(true)
       setError(null)
       const result = await trpc.admin.listUsers.query({
-        page,
-        pageSize: PAGE_SIZE,
-        ...(roleFilter !== 'ALL' && { roleFilter }),
-        ...(statusFilter !== 'ALL' && { statusFilter }),
+        cursor: (page - 1) * PAGE_SIZE,
+        limit: PAGE_SIZE,
+        ...(roleFilter !== 'ALL' && { role: roleFilter }),
+        ...(statusFilter !== 'ALL' && { status: statusFilter as 'ACTIVE' | 'SUSPENDED' | 'PENDING_INVITE' }),
         ...(search.trim() && { search: search.trim() }),
       })
       setUsers(result.users)
-      setTotalCount(result.totalCount)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load users')
+      setTotalCount(result.total)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load users')
     } finally {
       setLoading(false)
     }
@@ -244,7 +244,7 @@ export default function AllUsersTab() {
                       )}
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={user.status} /></td>
-                    <td className="px-4 py-3"><MfaBadge enrolled={user.mfaEnrolled} /></td>
+                    <td className="px-4 py-3"><MfaBadge enrolled={user.mfaEnrolled ?? false} /></td>
                     <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(user.lastLoginAt)}</td>
                   </tr>
                 ))}

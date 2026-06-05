@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
-import { TopHeader } from '@/components/TopHeader'
 import { HeatMapGrid } from '@/components/inventory/HeatMapGrid'
 import { RedistributionCard } from '@/components/inventory/RedistributionCard'
 import { CreatePurchaseOrderModal } from '@/components/inventory/CreatePurchaseOrderModal'
@@ -164,16 +163,14 @@ export default function InventoryPage() {
   const currentPage = Math.floor(orderCursor / PAGE_SIZE) + 1
 
   return (
-    <>
-      <TopHeader title="Inventory Overview" description="Network-wide stock levels and procurement." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Tab toggle + Create PO button */}
         <div className="flex items-center justify-between">
-          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             <button
               onClick={() => setTab('heatmap')}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'heatmap' ? 'bg-primary text-foreground' : 'text-muted-foreground hover:text-foreground'
+                tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Heat Map
@@ -181,7 +178,7 @@ export default function InventoryPage() {
             <button
               onClick={() => setTab('orders')}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === 'orders' ? 'bg-primary text-foreground' : 'text-muted-foreground hover:text-foreground'
+                tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Purchase Orders
@@ -340,6 +337,5 @@ export default function InventoryPage() {
           onOpenChange={(open) => { if (!open) setViewingOrder(null) }}
         />
       </div>
-    </>
   )
 }

@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -200,7 +199,7 @@ function CreatePairingModal({
     // Using listAllLabStaff with no filters, limited set
     trpc.admin.listAllLabStaff
       .query({ limit: 50 })
-      .then((result) => {
+      .then((result: { items: Array<{ practitionerId: string; email?: string }> }) => {
         setMentees(
           result.items.map((s) => ({
             practitionerId: s.practitionerId,
@@ -231,8 +230,8 @@ function CreatePairingModal({
       })
       onCreated()
       onClose()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to create pairing')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to create pairing')
     } finally {
       setSubmitting(false)
     }
@@ -370,8 +369,8 @@ function DissolveModal({
       })
       onDissolved()
       onClose()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to dissolve pairing')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to dissolve pairing')
     } finally {
       setSubmitting(false)
     }
@@ -549,8 +548,8 @@ export default function MentorshipPage() {
         setPairings(result.items)
       }
       setNextCursor(result.nextCursor)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load pairings')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load pairings')
     } finally {
       setLoading(false)
     }
@@ -587,14 +586,13 @@ export default function MentorshipPage() {
 
   return (
     <>
-      <TopHeader title="Mentorship" description="Manage mentorship pairings across the lab network." />
       <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Stats cards */}
         <StatsCards stats={stats} loading={statsLoading} />
 
         {/* Top bar: filter tabs + CTA */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 rounded-full border border-border bg-card p-0.5">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab}

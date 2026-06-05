@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { PaymentMethodCard } from '@/components/subscriptions/PaymentMethodCard'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,9 +33,9 @@ export default function BillingPage() {
       setLoading(true)
       setError(null)
       const result = await trpc.subscription.getPaymentMethod.query()
-      setPaymentMethod(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load payment method')
+      setPaymentMethod(result.paymentMethod ?? null)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load payment method')
     } finally {
       setLoading(false)
     }
@@ -49,14 +48,10 @@ export default function BillingPage() {
   async function handleAddOrUpdate() {
     try {
       setError(null)
-      const result = await trpc.subscription.createPaymentSetup.mutate()
-      if (result?.redirectUrl) {
-        window.location.href = result.redirectUrl
-      } else {
-        setError('Inline payment form is pending. Please try again later.')
-      }
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to initiate payment setup')
+      await trpc.subscription.createPaymentSetup.mutate()
+      setError('Inline payment form is pending. Please try again later.')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to initiate payment setup')
     }
   }
 
@@ -67,17 +62,15 @@ export default function BillingPage() {
       await trpc.subscription.removePaymentMethod.mutate()
       setPaymentMethod(null)
       setShowRemoveModal(false)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to remove payment method')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to remove payment method')
     } finally {
       setRemoving(false)
     }
   }
 
   return (
-    <>
-      <TopHeader title="Billing" />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -130,6 +123,5 @@ export default function BillingPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </>
   )
 }

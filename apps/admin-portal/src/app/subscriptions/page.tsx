@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { AddModuleDialog } from '@/components/subscriptions/AddModuleDialog'
 import { RemoveModuleDialog } from '@/components/subscriptions/RemoveModuleDialog'
-import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -72,8 +71,8 @@ export default function SubscriptionsPage() {
       setOrg(result.organization)
       setSubscriptions(result.subscriptions)
       setTotalCost(result.totalMonthlyCostUsd)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load subscription data')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load subscription data')
     } finally {
       setLoading(false)
     }
@@ -94,9 +93,7 @@ export default function SubscriptionsPage() {
   const activeSubscriptions = subscriptions.filter((s) => s.status === 'ACTIVE' || s.status === 'TRIAL')
 
   return (
-    <>
-      <TopHeader title="Subscriptions" />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Org Identity Card */}
         {org && (
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
@@ -202,6 +199,5 @@ export default function SubscriptionsPage() {
           </a>
         </div>
       </div>
-    </>
   )
 }

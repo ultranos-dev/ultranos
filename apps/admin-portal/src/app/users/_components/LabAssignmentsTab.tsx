@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import type { LabRole } from '@ultranos/shared-types'
 import { ExportButton } from '@/components/ExportButton'
 import { TriangleAlert } from '@ultranos/ui-kit/icons'
 import AssignStaffModal from '@/components/lab-staff/AssignStaffModal'
@@ -50,7 +51,7 @@ function truncateEmail(email: string): string {
   if (!email) return ''
   const [local, domain] = email.split('@')
   if (!domain) return email
-  return `${local.charAt(0)}***@${domain}`
+  return `${local!.charAt(0)}***@${domain}`
 }
 
 function formatRelativeTime(iso: string | null): string {
@@ -106,7 +107,7 @@ export default function LabAssignmentsTab() {
       .catch(() => setLabsError(true))
 
     trpc.admin.getManagerlessLabs.query()
-      .then((labs) => setManagerlessCount(labs.length))
+      .then((labs: { length: number }) => setManagerlessCount(labs.length))
       .catch(() => {})
   }, [])
 
@@ -116,7 +117,7 @@ export default function LabAssignmentsTab() {
       setError(null)
       setNextCursor(null)
       const result = await trpc.admin.listAllLabStaff.query({
-        ...(roleFilter !== 'ALL' && { roleFilter }),
+        ...(roleFilter !== 'ALL' && { roleFilter: roleFilter as LabRole }),
         ...(labFilter && { labFilter }),
         activityFilter,
         cursor: cursors[pageIndex],
@@ -217,7 +218,7 @@ export default function LabAssignmentsTab() {
           <ExportButton
             exportFn={() =>
               trpc.admin.exportLabStaffCsv.mutate({
-                ...(roleFilter !== 'ALL' && { roleFilter }),
+                ...(roleFilter !== 'ALL' && { roleFilter: roleFilter as LabRole }),
                 ...(labFilter && { labFilter }),
                 activityFilter,
               })
@@ -322,7 +323,7 @@ export default function LabAssignmentsTab() {
           resetPagination()
           await fetchStaff()
           trpc.admin.getManagerlessLabs.query()
-            .then((labs) => setManagerlessCount(labs.length))
+            .then((labs: { length: number }) => setManagerlessCount(labs.length))
             .catch(() => {})
         }}
       />

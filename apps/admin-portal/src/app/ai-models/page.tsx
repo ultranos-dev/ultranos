@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
+import type { AIModelType } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -96,9 +96,7 @@ export default function AIModelsPage() {
   }, [fetchData])
 
   return (
-    <>
-      <TopHeader title="AI Models" description="Manage offline model bundles distributed to spoke devices." />
-      <div className="mx-auto max-w-7xl px-8 py-6 space-y-6">
+    <div className="mx-auto max-w-7xl px-8 py-6 space-y-6">
         <div className="flex items-start justify-end">
           <Button onClick={() => setShowPublishForm(!showPublishForm)}>
             {showPublishForm ? 'Cancel' : 'Publish New Version'}
@@ -223,7 +221,6 @@ export default function AIModelsPage() {
           </div>
         )}
       </div>
-    </>
   )
 }
 
@@ -248,7 +245,7 @@ function PublishModelForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       await trpc.ai.publishModelVersion.mutate({
         modelId: formData.modelId,
-        modelType: formData.modelType,
+        modelType: formData.modelType as AIModelType,
         version: formData.version,
         downloadUrl: formData.downloadUrl,
         fileSize: parseInt(formData.fileSize, 10),

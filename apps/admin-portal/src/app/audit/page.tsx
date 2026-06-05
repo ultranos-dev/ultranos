@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
-import { TopHeader } from '@/components/TopHeader'
 import { EventBrowser } from '@/components/audit/EventBrowser'
 import { Button } from '@/components/ui/button'
 
@@ -150,15 +149,13 @@ export default function AuditChainPage() {
   const trendDays = buildTrend(trendData)
 
   return (
-    <>
-      <TopHeader title="Audit Log Integrity" description="Monitor audit log hash chain integrity and verification history." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Tab bar */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
             onClick={() => setTab('integrity')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'integrity' ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-card'
+              tab === 'integrity' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Chain Integrity
@@ -166,7 +163,7 @@ export default function AuditChainPage() {
           <button
             onClick={() => setTab('events')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              tab === 'events' ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground hover:bg-card'
+              tab === 'events' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             Event Browser
@@ -329,7 +326,6 @@ export default function AuditChainPage() {
         )}
         </>)}
       </div>
-    </>
   )
 }
 

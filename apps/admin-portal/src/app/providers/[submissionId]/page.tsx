@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -210,8 +209,8 @@ export default function KycSubmissionDetailPage() {
       setError(null)
       const result = await trpc.admin.getKycSubmission.query({ submissionId })
       setDetail(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load submission details')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load submission details')
     } finally {
       setLoading(false)
     }
@@ -238,8 +237,8 @@ export default function KycSubmissionDetailPage() {
       setSuccessMessage(`Provider ${pendingAction === 'APPROVE' ? 'approved' : pendingAction === 'REJECT' ? 'rejected' : 'info requested'} successfully.`)
       // Redirect back to queue after short delay — AC #5
       redirectTimerRef.current = setTimeout(() => router.push('/providers'), 2000)
-    } catch (err: any) {
-      setError(err?.message ?? `Failed to ${pendingAction.toLowerCase()} submission`)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} submission`)
     } finally {
       setSubmitting(false)
     }
@@ -263,9 +262,7 @@ export default function KycSubmissionDetailPage() {
   const isPending = detail.submission.status === 'PENDING'
 
   return (
-    <>
-      <TopHeader title={detail.providerName} description={`Submitted ${formatDateTime(detail.submission.submittedAt)}`} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Button variant="ghost" onClick={() => router.push('/providers')}>&larr; Back to KYC Queue</Button>
 
         {/* Header */}
@@ -437,6 +434,5 @@ export default function KycSubmissionDetailPage() {
           />
         )}
       </div>
-    </>
   )
 }

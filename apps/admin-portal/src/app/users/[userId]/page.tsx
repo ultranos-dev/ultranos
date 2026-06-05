@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -17,8 +16,8 @@ interface UserDetail {
   familyName: string
   email: string
   role: string
-  moduleCode: string | null
-  moduleName: string | null
+  moduleCode?: string | null
+  moduleName?: string | null
   status: string
   suspensionReason: string | null
   suspendedAt: string | null
@@ -59,7 +58,7 @@ function formatDateTime(iso: string | null): string {
 
 export default function UserDetailPage() {
   const params = useParams()
-  const router = useRouter()
+  const _router = useRouter()
   const userId = params.userId as string
 
   const [user, setUser] = useState<UserDetail | null>(null)
@@ -84,8 +83,8 @@ export default function UserDetailPage() {
       const result = await trpc.admin.getUser.query({ userId })
       setUser(result)
       setEditName(result.name)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load user')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load user')
     } finally {
       setLoading(false)
     }
@@ -106,8 +105,8 @@ export default function UserDetailPage() {
       await trpc.admin.updateUser.mutate({ userId, name: editName.trim() })
       setUser({ ...user, name: editName.trim() })
       setSaveMessage('Changes saved.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to save changes')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to save changes')
     } finally {
       setSaving(false)
     }
@@ -124,8 +123,8 @@ export default function UserDetailPage() {
       setShowSuspendForm(false)
       setSuspendReason('')
       setActionMessage('User suspended.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to suspend user')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to suspend user')
     } finally {
       setActionLoading(false)
     }
@@ -140,8 +139,8 @@ export default function UserDetailPage() {
       await trpc.admin.reactivateUser.mutate({ userId })
       setUser({ ...user, status: 'ACTIVE', suspensionReason: null, suspendedAt: null })
       setActionMessage('User reactivated.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to reactivate user')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to reactivate user')
     } finally {
       setActionLoading(false)
     }
@@ -155,8 +154,8 @@ export default function UserDetailPage() {
       setError(null)
       await trpc.admin.resendInvitation.mutate({ userId })
       setActionMessage('Invitation resent.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to resend invitation')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to resend invitation')
     } finally {
       setActionLoading(false)
     }
@@ -170,8 +169,8 @@ export default function UserDetailPage() {
       setError(null)
       await trpc.admin.resetUserPassword.mutate({ userId })
       setActionMessage('Password reset email sent.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to reset password')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to reset password')
     } finally {
       setActionLoading(false)
     }
@@ -193,9 +192,7 @@ export default function UserDetailPage() {
   if (!user) return null
 
   return (
-    <>
-      <TopHeader title={user.name} description={user.email} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link href="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Users</Link>
 
         {/* Messages */}
@@ -364,6 +361,5 @@ export default function UserDetailPage() {
           </div>
         </div>
       </div>
-    </>
   )
 }

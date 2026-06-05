@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -64,7 +63,7 @@ export default function PatientsPage() {
         limit: PAGE_SIZE + 1,
         offset,
       })
-      const fetched = result.patients as Patient[]
+      const fetched = result.patients as unknown as Patient[]
       if (fetched.length > PAGE_SIZE) {
         setHasMore(true)
         setPatients(fetched.slice(0, PAGE_SIZE))
@@ -72,8 +71,8 @@ export default function PatientsPage() {
         setHasMore(false)
         setPatients(fetched)
       }
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to search patients')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to search patients')
     } finally {
       setLoading(false)
     }
@@ -103,9 +102,7 @@ export default function PatientsPage() {
   }
 
   return (
-    <>
-      <TopHeader title="Patients" description="Search and manage patient records." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Top bar: search + filters */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -239,6 +236,5 @@ export default function PatientsPage() {
           </>
         )}
       </div>
-    </>
   )
 }

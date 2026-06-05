@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { PatientComparisonTable } from '@/components/patients/PatientComparisonTable'
 import { MergePreview } from '@/components/patients/MergePreview'
 import { Check } from '@ultranos/ui-kit/icons'
@@ -60,7 +59,7 @@ function formatName(p: Patient): string {
 }
 
 export default function MergeWizardPage() {
-  const router = useRouter()
+  const _router = useRouter()
   const searchParams = useSearchParams()
   const survivorIdParam = searchParams.get('survivor')
 
@@ -94,9 +93,9 @@ export default function MergeWizardPage() {
         setLoadingSurvivor(true)
         setError(null)
         const result = await trpc.patientAdmin.getById.query({ patientId: survivorIdParam! })
-        setSurvivor(result.patient as Patient)
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to load survivor patient')
+        setSurvivor(result.patient as unknown as Patient)
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load survivor patient')
       } finally {
         setLoadingSurvivor(false)
       }
@@ -117,7 +116,7 @@ export default function MergeWizardPage() {
         includeInactive: false,
         limit: 10,
       })
-      const patients = result.patients as Patient[]
+      const patients = result.patients as unknown as Patient[]
       // Exclude survivor from results
       setDuplicateResults(patients.filter((p) => p.id !== survivor?.id))
     } catch {
@@ -161,8 +160,8 @@ export default function MergeWizardPage() {
         fieldResolutions: resolutions,
       })
       setMergeResult(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Merge failed')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Merge failed')
     } finally {
       setMerging(false)
     }
@@ -171,9 +170,7 @@ export default function MergeWizardPage() {
   // Success state
   if (mergeResult?.success && survivor) {
     return (
-      <>
-        <TopHeader title="Merge Complete" description="The patients have been merged successfully." />
-        <div className="mx-auto max-w-7xl px-8 py-6">
+      <div className="mx-auto max-w-7xl px-8 py-6">
           <div className="rounded-3xl bg-card p-8 border border-border text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
@@ -195,14 +192,11 @@ export default function MergeWizardPage() {
             </div>
           </div>
         </div>
-      </>
     )
   }
 
   return (
-    <>
-      <TopHeader title="Merge Patients" description="Combine duplicate patient records into one." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
@@ -383,6 +377,5 @@ export default function MergeWizardPage() {
           </div>
         )}
       </div>
-    </>
   )
 }

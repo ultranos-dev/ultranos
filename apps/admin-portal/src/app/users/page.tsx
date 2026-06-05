@@ -3,7 +3,6 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { TopHeader } from '@/components/TopHeader'
 import AllUsersTab from './_components/AllUsersTab'
 import LabAssignmentsTab from './_components/LabAssignmentsTab'
 
@@ -47,11 +46,8 @@ function UsersContent() {
 
 export default function UsersPage() {
   return (
-    <>
-      <TopHeader title="Users" description="Manage staff accounts and lab assignments." />
-      <Suspense>
-        <UsersContent />
-      </Suspense>
-    </>
+    <Suspense>
+      <UsersContent />
+    </Suspense>
   )
 }

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { trpc, reportAdminAuthEvent } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
@@ -397,8 +396,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <TopHeader title="Settings" description="Manage your account, organization, and notification preferences." />
-
       {/* Section Navigation (sticky top) */}
       <div className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="mx-auto max-w-7xl px-8">

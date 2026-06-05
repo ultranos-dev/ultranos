@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { ConsentTimeline } from '@/components/patients/ConsentTimeline'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -68,9 +67,9 @@ export default function PatientDetailPage() {
       setLoading(true)
       setError(null)
       const result = await trpc.patientAdmin.getById.query({ patientId })
-      setPatient(result.patient as PatientDetail)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load patient')
+      setPatient(result.patient as unknown as PatientDetail)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load patient')
     } finally {
       setLoading(false)
     }
@@ -100,9 +99,7 @@ export default function PatientDetailPage() {
   if (!patient) return null
 
   return (
-    <>
-      <TopHeader title={formatName(patient)} description={`Patient ID: ${patient.id}`} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
@@ -164,6 +161,5 @@ export default function PatientDetailPage() {
           <ConsentTimeline patientId={patient.id} />
         </div>
       </div>
-    </>
   )
 }

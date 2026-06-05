@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { RenewLicenseModal } from '@/components/providers/RenewLicenseModal'
-import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -80,9 +79,7 @@ export default function LicenseExpiryPage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <>
-      <TopHeader title="License Expiry" description="Providers approaching license expiry, sorted by urgency" />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
@@ -94,15 +91,15 @@ export default function LicenseExpiryPage() {
               className="rounded-xl border border-border px-4 py-2 text-sm max-w-xs"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {(['all', '60d', '30d', '7d'] as const).map((w) => (
               <button
                 key={w}
                 onClick={() => { setExpiryWindow(w); setCursor(0) }}
-                className={`px-4 py-1.5 text-sm rounded-full border transition-colors duration-200 ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   expiryWindow === w
-                    ? 'bg-primary text-foreground border-primary'
-                    : 'bg-popover text-foreground border-border hover:bg-card hover:scale-[1.02]'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {w === 'all' ? 'All' : `≤ ${w.replace('d', '')} days`}
@@ -232,6 +229,5 @@ export default function LicenseExpiryPage() {
           }}
         />
       </div>
-    </>
   )
 }

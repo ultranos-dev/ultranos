@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
 
       // Find a verified WebAuthn/FIDO2 factor
       const webauthnFactor = factors.all?.find(
-        (f) => f.factor_type === 'webauthn' && f.status === 'verified',
+        (f: { factor_type: string; status: string }) => f.factor_type === 'webauthn' && f.status === 'verified',
       )
 
       if (!webauthnFactor) {

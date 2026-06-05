@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
-import { TopHeader } from '@/components/TopHeader'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -84,19 +83,17 @@ export default function LabsPage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <>
-      <TopHeader title="Lab Registrations" description="Review and manage lab registration approvals." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Filter tabs + Export — AC #7 */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-1 rounded-full bg-card p-1 w-fit">
+          <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             {STATUS_FILTERS.map((s) => (
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
-                    ? 'bg-primary text-foreground'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -186,6 +183,5 @@ export default function LabsPage() {
           </>
         )}
       </div>
-    </>
   )
 }

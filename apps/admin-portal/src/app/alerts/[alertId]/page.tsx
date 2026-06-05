@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { EscalationModal } from '@/components/alerts/EscalationModal'
 import { EscalationSection } from '@/components/alerts/EscalationSection'
 import { Button } from '@/components/ui/button'
@@ -204,8 +203,8 @@ export default function AlertDetailPage() {
       setError(null)
       const result = await trpc.admin.getAnomalyDetail.query({ alertId })
       setAlert(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load alert details')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load alert details')
     } finally {
       setLoading(false)
     }
@@ -230,8 +229,8 @@ export default function AlertDetailPage() {
       setTimeout(() => {
         router.push('/alerts')
       }, 1500)
-    } catch (err: any) {
-      setError(err?.message ?? `Failed to ${pendingAction.toLowerCase()} alert`)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? `Failed to ${pendingAction.toLowerCase()} alert`)
     } finally {
       setSubmitting(false)
     }
@@ -257,9 +256,7 @@ export default function AlertDetailPage() {
   const maxTimelineCount = Math.max(...alert.timeline.map((t) => t.count), 1)
 
   return (
-    <>
-      <TopHeader title={alert.practitionerName} description={`${ANOMALY_TYPE_LABELS[alert.anomalyType] ?? alert.anomalyType} — Detected ${formatDate(alert.createdAt)}`} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Button variant="ghost" onClick={() => router.push('/alerts')}>&larr; Back to Alerts</Button>
 
         {/* Header badges */}
@@ -441,6 +438,5 @@ export default function AlertDetailPage() {
           }}
         />
       </div>
-    </>
   )
 }

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
 import { useLocationFilter } from '@/hooks/useLocationFilter'
-import { TopHeader } from '@/components/TopHeader'
 import { DunningBanner } from '@/components/subscriptions/DunningBanner'
 import { SubscriptionWidget } from '@/components/dashboard/SubscriptionWidget'
 import { UserSummaryWidget } from '@/components/dashboard/UserSummaryWidget'
@@ -42,9 +41,7 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <>
-      <TopHeader title="Dashboard" description="Overview of pending actions and system health." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <DunningBanner />
 
         {statsError && (
@@ -143,6 +140,5 @@ export default function DashboardPage() {
           <RecentActivityFeed />
         </div>
       </div>
-    </>
   )
 }

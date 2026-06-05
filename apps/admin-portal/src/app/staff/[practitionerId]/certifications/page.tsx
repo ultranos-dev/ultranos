@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { MilestoneReviewModal } from '@/components/certifications/MilestoneReviewModal'
 import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
@@ -80,8 +79,8 @@ export default function PractitionerCertificationsPage() {
         pathwayId,
       })
       fetchProgress()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to issue credential')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to issue credential')
     } finally {
       setIssuingPathway(null)
     }
@@ -96,9 +95,9 @@ export default function PractitionerCertificationsPage() {
       })
       setPathways(result.pathways)
       // Auto-expand all pathways on load
-      setExpandedPathways(new Set(result.pathways.map((p) => p.pathwayId)))
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load certification progress')
+      setExpandedPathways(new Set(result.pathways.map((p: { pathwayId: string }) => p.pathwayId)))
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load certification progress')
     } finally {
       setLoading(false)
     }
@@ -128,8 +127,8 @@ export default function PractitionerCertificationsPage() {
       setShowAssignModal(false)
       setAssigningPathwayId('')
       fetchProgress()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to assign pathway')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to assign pathway')
     } finally {
       setAssigning(false)
     }
@@ -138,7 +137,7 @@ export default function PractitionerCertificationsPage() {
   async function openAssignModal() {
     try {
       const result = await trpc.admin.listCertificationPathways.query({ status: 'ACTIVE', limit: 50 })
-      setAvailablePathways(result.pathways.map((p) => ({ id: p.id, name: p.name })))
+      setAvailablePathways(result.pathways.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
       setShowAssignModal(true)
     } catch {
       setError('Failed to load available pathways')
@@ -147,7 +146,6 @@ export default function PractitionerCertificationsPage() {
 
   return (
     <>
-      <TopHeader title="Certification Progress" description={`Practitioner: ${practitionerId}`} />
       <div className="mx-auto max-w-7xl px-8 py-6">
         <div className="flex justify-end mb-4">
           <Button onClick={openAssignModal}>

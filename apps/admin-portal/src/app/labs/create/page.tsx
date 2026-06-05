@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -28,17 +27,15 @@ export default function CreateLabPage() {
         ...(accreditationRef.trim() && { accreditationRef: accreditationRef.trim() }),
       })
       router.push('/labs')
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to create lab')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to create lab')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <>
-      <TopHeader title="Create Lab" description="Register a new lab for your organisation." />
-      <div className="mx-auto max-w-2xl px-8 py-6">
+    <div className="mx-auto max-w-2xl px-8 py-6">
         <Button variant="outline" onClick={() => router.push('/labs')}>
           &larr; Back to Labs
         </Button>
@@ -114,6 +111,5 @@ export default function CreateLabPage() {
           </div>
         </div>
       </div>
-    </>
   )
 }

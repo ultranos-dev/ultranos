@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Badge } from '@/components/ui/badge'
 
 interface Practitioner {
@@ -158,7 +157,7 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-function formatDateTime(iso: string | null): string {
+function _formatDateTime(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleString('en-GB', {
     year: 'numeric',
@@ -186,9 +185,9 @@ export default function ProviderProfilePage() {
       setLoading(true)
       setError(null)
       const result = await trpc.admin.getProviderProfile.query({ practitionerId })
-      setProfile(result)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load provider profile')
+      setProfile(result as unknown as ProviderProfile)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load provider profile')
     } finally {
       setLoading(false)
     }
@@ -217,9 +216,7 @@ export default function ProviderProfilePage() {
   const hasUnresolvedAlertWarning = (alertSummary.escalated + alertSummary.unreviewed) >= 3
 
   return (
-    <>
-      <TopHeader title={practitioner.name} description={practitioner.email} />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Providers</Link>
 
         {error && (
@@ -376,6 +373,5 @@ export default function ProviderProfilePage() {
           )}
         </div>
       </div>
-    </>
   )
 }

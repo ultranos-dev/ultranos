@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { trpc } from '@/lib/trpc'
-import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES } from '@ultranos/shared-types'
+// ROLE_MODULE_MAP and MODULE_DISPLAY_NAMES reserved for future role-based module config
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -44,8 +44,8 @@ export default function CreateUserPage() {
         const result = await trpc.subscription.getAvailableRoles.query()
         setAvailableRoles(result.availableRoles)
         setUnavailableRoles(result.unavailableRoles)
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to load available roles')
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load available roles')
       } finally {
         setLoading(false)
       }
@@ -87,8 +87,8 @@ export default function CreateUserPage() {
       const result = await trpc.admin.createUser.mutate({ name, email, role: selectedRole, password })
       setCreatedUser(result)
       setSubmitSuccess(true)
-    } catch (err: any) {
-      setSubmitError(err?.message ?? 'Failed to validate role')
+    } catch (err: unknown) {
+      setSubmitError((err as Error)?.message ?? 'Failed to validate role')
     } finally {
       setSubmitting(false)
     }

@@ -3,33 +3,33 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-type InvoiceStatus = 'PAID' | 'PENDING' | 'FAILED' | 'REFUNDED'
-type StatusFilter = 'ALL' | InvoiceStatus
+type ApiInvoiceStatus = 'PAID' | 'OPEN' | 'VOID' | 'UNCOLLECTIBLE'
+type StatusFilter = 'ALL' | ApiInvoiceStatus
 
 interface Invoice {
-  id: string
-  date: string
-  description: string
-  amountUsd: number
-  status: InvoiceStatus
-  downloadUrl: string
+  invoiceId: string
+  amount: number
+  currency: string
+  status: string
+  pdfUrl: string | null
+  createdAt: string
 }
 
-function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
-  const variantMap: Record<InvoiceStatus, 'success' | 'warning' | 'destructive' | 'secondary'> = {
+function InvoiceStatusBadge({ status }: { status: string }) {
+  const upper = status.toUpperCase()
+  const variantMap: Record<string, 'success' | 'warning' | 'destructive' | 'secondary'> = {
     PAID: 'success',
-    PENDING: 'warning',
-    FAILED: 'destructive',
-    REFUNDED: 'secondary',
+    OPEN: 'warning',
+    VOID: 'secondary',
+    UNCOLLECTIBLE: 'destructive',
   }
 
   return (
-    <Badge variant={variantMap[status] ?? 'secondary'}>
-      {status}
+    <Badge variant={variantMap[upper] ?? 'secondary'}>
+      {upper}
     </Badge>
   )
 }
@@ -38,13 +38,17 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PAID', 'PENDING', 'FAILED', 'REFUNDED']
+function formatAmount(amount: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(amount / 100)
+}
+
+const STATUS_FILTERS: StatusFilter[] = ['ALL', 'PAID', 'OPEN', 'VOID', 'UNCOLLECTIBLE']
 const STATUS_LABELS: Record<StatusFilter, string> = {
   ALL: 'All Statuses',
   PAID: 'Paid',
-  PENDING: 'Pending',
-  FAILED: 'Failed',
-  REFUNDED: 'Refunded',
+  OPEN: 'Open',
+  VOID: 'Void',
+  UNCOLLECTIBLE: 'Uncollectible',
 }
 const PAGE_SIZE = 20
 
@@ -61,14 +65,14 @@ export default function InvoicesPage() {
       setLoading(true)
       setError(null)
       const result = await trpc.subscription.listInvoices.query({
-        page,
-        pageSize: PAGE_SIZE,
-        ...(statusFilter !== 'ALL' && { statusFilter }),
+        cursor: (page - 1) * PAGE_SIZE,
+        limit: PAGE_SIZE,
+        status: statusFilter,
       })
       setInvoices(result.invoices)
       setTotalCount(result.totalCount)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load invoices')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load invoices')
     } finally {
       setLoading(false)
     }
@@ -86,9 +90,7 @@ export default function InvoicesPage() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
   return (
-    <>
-      <TopHeader title="Invoice History" />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         <Link
           href="/subscriptions"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -133,7 +135,6 @@ export default function InvoicesPage() {
                 <thead className="bg-card">
                   <tr>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
-                    <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Description</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                     <th className="px-4 py-3 text-start font-medium text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
@@ -141,20 +142,23 @@ export default function InvoicesPage() {
                 </thead>
                 <tbody className="divide-y divide-border bg-popover">
                   {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="transition-colors hover:bg-primary/5">
-                      <td className="px-4 py-3 text-foreground">{formatDate(invoice.date)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{invoice.description}</td>
-                      <td className="px-4 py-3 text-foreground font-medium">${invoice.amountUsd.toFixed(2)}</td>
+                    <tr key={invoice.invoiceId} className="transition-colors hover:bg-primary/5">
+                      <td className="px-4 py-3 text-foreground">{formatDate(invoice.createdAt)}</td>
+                      <td className="px-4 py-3 text-foreground font-medium">{formatAmount(invoice.amount, invoice.currency)}</td>
                       <td className="px-4 py-3"><InvoiceStatusBadge status={invoice.status} /></td>
                       <td className="px-4 py-3">
-                        <a
-                          href={invoice.downloadUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary hover:underline"
-                        >
-                          Download PDF
-                        </a>
+                        {invoice.pdfUrl ? (
+                          <a
+                            href={invoice.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-primary hover:underline"
+                          >
+                            Download PDF
+                          </a>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">N/A</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -192,6 +196,5 @@ export default function InvoicesPage() {
           </>
         )}
       </div>
-    </>
   )
 }

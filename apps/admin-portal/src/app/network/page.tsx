@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { trpc } from '@/lib/trpc'
-import { TopHeader } from '@/components/TopHeader'
 import { LabNetworkCard } from '@/components/network/LabNetworkCard'
 import { OutbreakActivationModal } from '@/components/network/OutbreakActivationModal'
 import { OutbreakDashboard } from '@/components/network/OutbreakDashboard'
@@ -56,8 +55,8 @@ export default function NetworkPage() {
       ])
       setLabs(networkResult.labs)
       setOutbreaks(outbreakResult.outbreaks)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load network data')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load network data')
     } finally {
       setLoading(false)
     }
@@ -72,9 +71,7 @@ export default function NetworkPage() {
     : labs.filter((l) => l.status === filter)
 
   return (
-    <>
-      <TopHeader title="Lab Network" description="Manage multi-branch lab operations and outbreak response." />
-      <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="mx-auto max-w-7xl px-8 py-6">
         {/* Action buttons */}
         <div className="flex items-center gap-3 flex-wrap">
           <Button variant="destructive" size="lg" onClick={() => setShowOutbreakModal(true)}>
@@ -86,14 +83,14 @@ export default function NetworkPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="mt-4 flex gap-1 rounded-full bg-card p-1 w-fit">
+        <div className="mt-4 flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === s
-                  ? 'bg-primary text-foreground'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -154,6 +151,5 @@ export default function NetworkPage() {
           onSuccess={fetchData}
         />
       </div>
-    </>
   )
 }
