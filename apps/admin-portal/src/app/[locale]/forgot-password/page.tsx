@@ -58,6 +58,7 @@ export default function ForgotPasswordPage() {
       await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       })
+      reportAdminAuthEvent('ADMIN_PASSWORD_RESET_REQUESTED')
       setResendCooldown(true)
       setTimeout(() => setResendCooldown(false), 60_000)
     } catch {

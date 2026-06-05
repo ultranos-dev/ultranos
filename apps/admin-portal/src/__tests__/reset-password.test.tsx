@@ -7,6 +7,7 @@ const mockUpdateUser = vi.fn()
 const mockSignOut = vi.fn()
 const mockReportAdminAuthEvent = vi.fn()
 const mockRouterPush = vi.fn()
+const mockClearSession = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
@@ -42,7 +43,7 @@ vi.mock('@/components/LanguageSelectorClient', () => ({
 }))
 
 vi.mock('@/stores/auth-session-store', () => ({
-  useAuthSessionStore: { getState: () => ({ clearSession: vi.fn() }) },
+  useAuthSessionStore: { getState: () => ({ clearSession: mockClearSession }) },
 }))
 
 import ResetPasswordPage from '../app/[locale]/reset-password/page'

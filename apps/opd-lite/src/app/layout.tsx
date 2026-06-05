@@ -57,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
           }}
         />
-        {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+        <link rel="stylesheet" href="/fonts-arabic.css" />
       </head>
       <body className="font-sans bg-background text-foreground antialiased">
         <ThemeProvider>
