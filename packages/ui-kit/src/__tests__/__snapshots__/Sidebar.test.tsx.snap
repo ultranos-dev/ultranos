@@ -8,7 +8,7 @@ exports[`Sidebar > snapshot: expanded sidebar LTR 1`] = `
     <nav
       aria-label="Main navigation"
       role="navigation"
-      style="width: 240px; min-width: 240px; background-color: rgb(21, 26, 30); color: rgb(255, 255, 255); display: flex; flex-direction: column; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: width 250ms ease, min-width 250ms ease; overflow: hidden; position: sticky; inset-block-start: 0; height: 100vh; z-index: 100;"
+      style="width: 240px; min-width: 240px; background-color: rgb(21, 26, 30); color: rgb(255, 255, 255); display: flex; flex-direction: column; font-family: var(--font-family-sans); transition: width 250ms ease, min-width 250ms ease; overflow: hidden; position: sticky; inset-block-start: 0; height: 100vh; z-index: 100;"
     >
       <div
         style="display: flex; align-items: center; justify-content: space-between; padding-inline: 0.75rem; padding-block: 1rem; border-block-end: 1px solid hsl(210, 12%, 25%);"
@@ -228,7 +228,7 @@ exports[`Sidebar > snapshot: expanded sidebar RTL 1`] = `
       <nav
         aria-label="Main navigation"
         role="navigation"
-        style="width: 240px; min-width: 240px; background-color: rgb(21, 26, 30); color: rgb(255, 255, 255); display: flex; flex-direction: column; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; transition: width 250ms ease, min-width 250ms ease; overflow: hidden; position: sticky; inset-block-start: 0; height: 100vh; z-index: 100;"
+        style="width: 240px; min-width: 240px; background-color: rgb(21, 26, 30); color: rgb(255, 255, 255); display: flex; flex-direction: column; font-family: var(--font-family-sans); transition: width 250ms ease, min-width 250ms ease; overflow: hidden; position: sticky; inset-block-start: 0; height: 100vh; z-index: 100;"
       >
         <div
           style="display: flex; align-items: center; justify-content: space-between; padding-inline: 0.75rem; padding-block: 1rem; border-block-end: 1px solid hsl(210, 12%, 25%);"

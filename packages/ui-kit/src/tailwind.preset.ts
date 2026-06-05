@@ -4,6 +4,12 @@ const preset: Partial<Config> = {
   darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
+      fontFamily: {
+        // CSS vars allow RTL override in tokens.css to take effect:
+        // [dir="rtl"] { --font-sans: 'Noto Sans Arabic', ... }
+        sans:    ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         background: { DEFAULT: 'oklch(var(--background) / <alpha-value>)' },
         foreground: { DEFAULT: 'oklch(var(--foreground) / <alpha-value>)' },

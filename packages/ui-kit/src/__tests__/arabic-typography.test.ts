@@ -147,4 +147,21 @@ describe('tokens.css RTL overrides', () => {
     expect(css).toContain('[dir="rtl"]')
     expect(css).toContain('--font-family-sans: var(--font-family-sans-ar)')
   })
+
+  it('overrides Tailwind-facing --font-sans in RTL context', () => {
+    // --font-sans is consumed by font-sans utility via tailwind.preset.ts
+    expect(css).toContain('--font-sans: var(--font-family-sans-ar)')
+  })
+
+  it('overrides Tailwind-facing --font-heading in RTL context', () => {
+    expect(css).toContain('--font-heading: var(--font-family-sans-ar)')
+  })
+
+  it('defines --font-sans for LTR using --font-manrope', () => {
+    expect(css).toContain('--font-sans: var(--font-manrope)')
+  })
+
+  it('defines --font-heading for LTR using --font-public-sans', () => {
+    expect(css).toContain('--font-heading: var(--font-public-sans)')
+  })
 })

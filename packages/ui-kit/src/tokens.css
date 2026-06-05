@@ -8,8 +8,12 @@
 
 :root {
   /* ── Typography ── */
-  --font-family-sans: 'Urbanist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* --font-manrope / --font-public-sans are injected by Next.js localFont() or next/font/google */
+  --font-family-sans: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  /* Tailwind-facing variables consumed by tailwind.preset.ts font-sans / font-heading */
+  --font-sans: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Font sizes — modular scale (1.25 ratio) */
   --font-size-xs: 0.75rem;    /* 12px */
@@ -129,6 +133,9 @@
 /* ── RTL overrides ── */
 [dir="rtl"] {
   --font-family-sans: var(--font-family-sans-ar);
+  /* Switch Tailwind font-sans / font-heading to Noto Sans Arabic in RTL */
+  --font-sans: var(--font-family-sans-ar);
+  --font-heading: var(--font-family-sans-ar);
   --text-size-multiplier: 1.15;
   --line-height-body: 1.8;
   --directional-icon-transform: scaleX(-1);
@@ -168,7 +175,7 @@
   --sidebar-accent:             0.97 0 0;
   --sidebar-accent-foreground:  0.205 0 0;
   --sidebar-border:             0.922 0 0;
-  --sidebar-ring:               0.527 0.154 150.069;
+  --sidebar-ring:               0.7 0 0;
 
   /* Chart palette — teal-green scale */
   --chart-1: 0.871 0.15 154.449;
@@ -213,7 +220,7 @@
   --sidebar-accent:             0.274 0.006 286.033;
   --sidebar-accent-foreground:  0.985 0 0;
   --sidebar-border:             0.274 0.006 286.033;
-  --sidebar-ring:               0.448 0.119 151.328;
+  --sidebar-ring:               0.5 0 0;
 
   /* Chart palette — same hues */
   --chart-1: 0.871 0.15 154.449;
