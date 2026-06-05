@@ -143,18 +143,18 @@ describe('tokens.css RTL overrides', () => {
   })
 
   it('overrides --font-family-sans in RTL context', () => {
-    // [dir="rtl"] should switch the sans font to Arabic
+    // [dir="rtl"] should switch the sans font to Noto Kufi Arabic
     expect(css).toContain('[dir="rtl"]')
-    expect(css).toContain('--font-family-sans: var(--font-family-sans-ar)')
+    expect(css).toContain('--font-family-sans: var(--font-family-serif-ar)')
   })
 
   it('overrides Tailwind-facing --font-sans in RTL context', () => {
     // --font-sans is consumed by font-sans utility via tailwind.preset.ts
-    expect(css).toContain('--font-sans: var(--font-family-sans-ar)')
+    expect(css).toContain('--font-sans: var(--font-family-serif-ar)')
   })
 
   it('overrides Tailwind-facing --font-heading in RTL context', () => {
-    expect(css).toContain('--font-heading: var(--font-family-sans-ar)')
+    expect(css).toContain('--font-heading: var(--font-family-serif-ar)')
   })
 
   it('defines --font-sans for LTR using --font-manrope', () => {

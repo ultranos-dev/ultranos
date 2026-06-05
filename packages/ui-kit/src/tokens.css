@@ -132,10 +132,10 @@
 
 /* ── RTL overrides ── */
 [dir="rtl"] {
-  --font-family-sans: var(--font-family-sans-ar);
-  /* Switch Tailwind font-sans / font-heading to Noto Sans Arabic in RTL */
-  --font-sans: var(--font-family-sans-ar);
-  --font-heading: var(--font-family-sans-ar);
+  --font-family-sans: var(--font-family-serif-ar);
+  /* Switch Tailwind font-sans / font-heading to Noto Kufi Arabic in RTL */
+  --font-sans: var(--font-family-serif-ar);
+  --font-heading: var(--font-family-serif-ar);
   --text-size-multiplier: 1.15;
   --line-height-body: 1.8;
   --directional-icon-transform: scaleX(-1);
