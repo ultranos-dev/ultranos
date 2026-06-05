@@ -172,6 +172,19 @@ describe('ResetPasswordPage (admin-portal)', () => {
     })
   })
 
+  it('PasswordStrengthBar reflects correct strength label as user types', async () => {
+    mockExchangeCodeForSession.mockResolvedValue({
+      data: { session: { user: { id: 'admin-1' } } },
+      error: null,
+    })
+    render(<ResetPasswordPage />)
+    await waitFor(() => screen.getByText('resetPasswordTitle'))
+
+    await userEvent.type(screen.getByLabelText('newPassword'), 'Abcdefgh')
+
+    expect(screen.getByTestId('strength-bar')).toHaveTextContent('passwordStrengthFair')
+  })
+
   it('shows inline error when updateUser fails', async () => {
     mockExchangeCodeForSession.mockResolvedValue({
       data: { session: { user: { id: 'admin-1' } } },
