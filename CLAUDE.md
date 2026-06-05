@@ -98,7 +98,16 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 
 ### UI Component System (ShadCN)
 
-All Next.js apps use **ShadCN** components from `packages/ui-kit/src/components/ui/`. The 14 canonical components are: `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `textarea`, `tooltip`.
+All Next.js apps use **ShadCN** components from `packages/ui-kit/src/components/ui/`. The 15 canonical components are: `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `empty-state`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `textarea`, `tooltip`.
+
+**⛔ Source-level changes only — no app-level duplication:**
+All changes to shared UI components (ShadCN components, tokens, language selector, sidebar layout, etc.) **MUST be made in `packages/ui-kit/src/`**, not duplicated or overridden at the app level. App-level overrides are only permitted when there is an explicit app-specific requirement that cannot be generalized. After any change to `packages/ui-kit/src/`, you MUST rebuild the package before apps can pick up the change:
+```bash
+pnpm --filter @ultranos/ui-kit build
+# Then clear app .next caches if needed
+rm -rf apps/<app-name>/.next
+```
+The compiled output lives in `packages/ui-kit/dist/`. Apps resolve imports through `dist/`, not source `.tsx` files — a source edit without a rebuild will have no effect. App-level `src/components/ui/` files are **thin re-export proxies only** — never put component logic or styling in them.
 
 **Import rule — always import from `@ultranos/ui-kit/components/ui/<name>`:**
 ```typescript
@@ -147,6 +156,57 @@ const config: Config = {
 
 **Sidebar layout — ShadCN sidebar-07:**
 All admin and spoke apps use the ShadCN sidebar-07 layout: `SidebarProvider` → `AppSidebar` + `SidebarInset`. `TooltipProvider` must wrap `SidebarProvider` because `SidebarMenuButton` uses `Tooltip` internally. See `apps/admin-portal/src/components/AuthGuard.tsx`.
+
+**EmptyState component — `@ultranos/ui-kit/components/ui/empty-state`:**
+Use `EmptyState` for all empty list, no-results, and zero-data states. Never build ad-hoc empty state markup inline.
+```typescript
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileSearch } from '@ultranos/ui-kit/icons'
+
+// Default (md) — vertical centered, use inside card bodies and full-page content areas
+<EmptyState
+  icon={FileSearch}
+  title="No results found"
+  description="Try adjusting your filters."
+  action={{ label: 'Clear filters', onClick: handleClear }}
+/>
+
+// Compact (sm) — horizontal inline, use inside table rows and tight UI sections
+<EmptyState size="sm" icon={FileSearch} title="No results" />
+```
+Props: `title` (required), `description`, `icon` (defaults to `Inbox`), `action` (`{ label, onClick }`), `size` (`'md'` | `'sm'`, default `'md'`), plus any `div` HTML attribute.
+
+### Content Area Layout
+
+**Shell structure (identical across all 4 apps):**
+```
+BreadcrumbHeader / PageHeader  →  h-14, sticky, border-b
+<main id="main-content"        →  flex flex-1 flex-col gap-4 p-4
+  <page root div>              →  flex flex-col gap-4  (or mx-auto max-w-* flex flex-col gap-4)
+    section / card / grid      →  no mt-*, no mb-* on direct children — gap-4 handles spacing
+```
+
+**Governing rules — apply to every page file AND delegate component:**
+
+| Rule | Standard |
+|------|----------|
+| Header height | `h-14` on all `BreadcrumbHeader` / `PageHeader` |
+| Shell `<main>` | `flex flex-1 flex-col gap-4 p-4` + `id="main-content"` — never change |
+| Page root div | `flex flex-col gap-4` — no `mt-*`, no extra `px-*`/`py-*`/`p-*` |
+| `max-w-*` constraints | On the page root div: `mx-auto max-w-3xl flex flex-col gap-4` |
+| Inner gap values | `gap-4` only (never `gap-5`, `gap-6`, `gap-8`) |
+| Vertical stacking | `space-y-4` (never `space-y-6`) |
+| Direct child margins | No `mb-6`, `mb-8`, `mt-4`, `mt-6` on direct children of the root — flex `gap-4` handles spacing |
+| Custom page headers | Not allowed — `BreadcrumbHeader` / `PageHeader` is the only header per page |
+| Nested `<main>` tags | Never — the shell already provides `<main>` |
+
+**Delegate component rule:** Many page.tsx files render a single component with no wrapper (`return <Dashboard />`). The rendered component is effectively the page root and must follow the same layout rules as a page file. If the component has `mb-8` on its section children or wraps in a padded div, those are violations.
+
+**What NOT to add on top of the shell's `p-4`:**
+- ❌ `px-6 pb-6` wrapper divs inside the page
+- ❌ `p-6` or `p-4` on the component root (creates double-padding)
+- ❌ `mt-6`/`mt-4` on section divs
+- ❌ `mb-8`/`mb-6` on flex-column children
 
 ### Icons
 

@@ -3,6 +3,8 @@
 > Derived from the Healix healthcare platform reference screens. Optimized for a Desktop PWA targeting urban GP doctors in clinic offices, with an Android companion app. Styled with a Wise-inspired green-forward brand palette. Polished with a design-engineering approach where every unseen detail compounds into something that feels right.
 >
 > **Implementation layer:** All visual styles are implemented via **oklch semantic tokens** (`--primary`, `--foreground`, `--card`, etc.) defined in `packages/ui-kit/src/tokens.css` and mapped through `packages/ui-kit/src/tailwind.preset.ts`. The hex values in this document are the visual specification — they map to oklch triplets in code. Components are ShadCN-based from `packages/ui-kit/src/components/ui/`. Never use hardcoded hex values in component code — use semantic Tailwind classes (`bg-primary`, `text-foreground`, `border-border`, etc.).
+>
+> **Source-level changes only:** All changes to shared design system elements (component styling, token values, typography, layout patterns) MUST be made in `packages/ui-kit/src/`. Never override or duplicate shared component styles at the app level. App-level `src/components/ui/` files are thin re-export proxies — do not add styling or logic to them. After editing `packages/ui-kit/src/`, run `pnpm --filter @ultranos/ui-kit build` to rebuild the compiled dist before changes take effect in apps.
 
 ---
 
@@ -177,11 +179,41 @@ The Patients dashboard uses a **three-panel layout** with a fixed top navigation
   8. **Trend chart**: Oxygen level section with current value, this-month/previous comparisons, and a line chart
   9. **Bottom action bar**: "+ Add record" primary green pill button (`#9fe870` fill, `#163300` text) + download + share icon buttons
 
+### App Shell & Content Area (All 4 Spoke Apps)
+
+All four Next.js spoke apps (admin-portal, opd-lite, pharmacy-lite, lab-lite) use the ShadCN sidebar-07 layout. The shell structure is fixed — never alter these classNames:
+
+```
+BreadcrumbHeader / PageHeader   →  h-14, sticky top-0, border-b border-border, bg-background/95 backdrop-blur
+<main id="main-content"         →  flex flex-1 flex-col gap-4 p-4
+```
+
+The shell's `p-4` (16px) provides the outer padding for all page content. Pages must not add extra padding on top of it.
+
+**Page root div pattern:**
+```tsx
+// Standard page — no width constraint
+<div className="flex flex-col gap-4">
+  ...sections...
+</div>
+
+// Constrained page (forms, settings, single-column flows)
+<div className="mx-auto max-w-3xl flex flex-col gap-4">
+  ...sections...
+</div>
+```
+
+**Section spacing:** Never use `mt-*`, `mb-*`, `px-6`, `pb-6`, or `p-6` on the page root or its direct children. The parent `flex flex-col gap-4` (16px) handles all vertical spacing between sections. Card internal padding (`p-5`, `p-6`) is only for content inside cards — never on the section wrapper itself.
+
+**Gap values:** `gap-4` is the only permitted gap on page-level flex columns and inner grids. Never use `gap-5`, `gap-6`, or `gap-8` at the page layout level. Use `space-y-4` (never `space-y-6`) if flex isn't available.
+
+**Delegate component rule:** When a page.tsx renders a single component with no wrapper (`return <Dashboard />`), that component is the effective page root and must follow the same rules — `flex flex-col gap-4` root, no `mb-8`/`mb-6` on section children.
+
 ### Spacing System
 - **Base unit**: 8px
-- **Common spacings**: 4px (tight), 8px (compact), 12px (default inner), 16px (standard), 20px (section gap), 24px (panel padding), 32px (large section gap)
-- **Card internal padding**: 16–20px
-- **Panel padding**: 16–24px
+- **Common spacings**: 4px (tight), 8px (compact), 12px (default inner), 16px (standard — page gap), 20px (card internal), 24px (panel padding)
+- **Card internal padding**: `p-5` (20px) — standard across all spoke apps
+- **Page gap**: `gap-4` (16px) — between all page-level sections
 
 ### Android App — Companion Surface
 
@@ -496,6 +528,59 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Close button: × icon, top-right, 32px hit target
 - Scrollable content area with bottom action bar pinned
 - Content items stagger in at 50ms intervals after panel lands
+
+### Empty State
+
+> **Implementation rule:** Use `EmptyState` from `@ultranos/ui-kit/components/ui/empty-state` for all zero-data, no-results, and empty list states. Never build ad-hoc empty state markup inline.
+
+**`EmptyState` component** (`@ultranos/ui-kit/components/ui/empty-state`)
+
+Two sizes:
+
+**`size="md"` — Vertical centered (default)**
+Used inside card bodies, full-page content areas, and table placeholders:
+- Layout: `flex flex-col items-center justify-center gap-2 px-4 py-8 text-center`
+- Icon container: `size-11` rounded-full, `bg-muted text-muted-foreground`
+- Icon: `size-5` (20px), `aria-hidden`
+- Title: `text-sm font-semibold text-foreground`
+- Description: `text-xs text-muted-foreground`, `max-w-xs`
+- Action button: `variant="outline" size="sm"` — optional
+
+**`size="sm"` — Horizontal compact**
+Used inside table rows, narrow panels, and tight UI sections:
+- Layout: `flex items-center gap-2.5 p-4`
+- Icon container: `size-7` rounded-full, `bg-muted text-muted-foreground`
+- Icon: `size-3` (12px), `aria-hidden`
+- Title: `text-xs font-semibold text-foreground`
+- Description: `text-xs text-muted-foreground` — optional
+- Action button: `variant="outline" size="xs"` — optional, `shrink-0`
+
+**Props:**
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `title` | `string` | required | Primary message |
+| `description` | `string` | — | Supporting text |
+| `icon` | `LucideIcon` | `Inbox` | Any Lucide icon from `@ultranos/ui-kit/icons` |
+| `action` | `{ label: string; onClick: () => void }` | — | Single CTA button |
+| `size` | `'md' \| 'sm'` | `'md'` | Layout mode |
+
+**Usage pattern:**
+```tsx
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileSearch, ClipboardList } from '@ultranos/ui-kit/icons'
+
+// Card body empty state
+<EmptyState
+  icon={FileSearch}
+  title="No patients found"
+  description="Try adjusting your search or filters."
+  action={{ label: 'Clear filters', onClick: clearFilters }}
+/>
+
+// Table row inline
+<tr><td colSpan={5}><EmptyState size="sm" icon={ClipboardList} title="No records" /></td></tr>
+```
 
 ### Allergy Banner
 
@@ -948,3 +1033,13 @@ When reviewing Ultranos UI code, check for these issues:
 | Active tab with `text-foreground` | Use `text-primary-foreground` | `text-foreground` is near-black; active tabs on green need white text |
 | Missing ui-kit in tailwind content array | Add `../../packages/ui-kit/src/**/*.{ts,tsx}` | Component classes live in ui-kit source — Tailwind can't see them otherwise |
 | Button import from app-local file in new apps | Import from `@ultranos/ui-kit/components/ui/button` | App-local `@/components/ui/` files are admin-portal-only re-exports |
+| Ad-hoc empty state markup | Use `EmptyState` component from `@ultranos/ui-kit/components/ui/empty-state` | Never build inline empty state divs |
+| Header height `h-12` | Change to `h-14` on `BreadcrumbHeader` / `PageHeader` | All 4 apps must have identical header height |
+| Page section with `mt-6` / `mt-4` | Remove — parent `flex flex-col gap-4` handles spacing | Adding margin on top of flex gap creates double-spacing |
+| `mb-8` / `mb-6` on flex-column children | Remove — the flex `gap-4` on the parent already spaces children | `gap-4` + `mb-8` creates 48px between sections (way too much) |
+| `px-6 pb-6` wrapper inside page content | Remove the wrapper div, render children directly | Shell `<main>` provides `p-4`; inner wrappers create double-padding |
+| `gap-5`, `gap-6`, `gap-8` on page root | Change to `gap-4` | Only `gap-4` is permitted at the page layout level |
+| `space-y-6` on page-level container | Change to `space-y-4` | Consistent vertical rhythm |
+| Custom `border-b` header bar inside page | Remove entirely | `BreadcrumbHeader` / `PageHeader` is the only header per page |
+| Nested `<main>` tag in page content | Change to `<div>` | Shell already provides `<main id="main-content">` |
+| `p-6` or `p-4` on component root that is a page delegate | Remove — double-padding on top of shell's `p-4` | Delegate components follow the same rules as page.tsx files |
