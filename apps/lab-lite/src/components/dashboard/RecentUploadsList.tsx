@@ -17,7 +17,7 @@ const statusStyles: Record<RecentUploadItem['status'], string> = {
   pending: 'bg-amber-50 text-amber-700',
   uploading: 'bg-amber-50 text-amber-700',
   failed: 'bg-red-50 text-red-700',
-  expired: 'bg-neutral-100 text-neutral-400',
+  expired: 'bg-muted text-muted-foreground',
 }
 
 function formatTimestamp(iso: string, locale: string): string {
@@ -102,13 +102,13 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
           return (
             <li
               key={item.id}
-              className="py-2.5 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 motion-safe:transition-colors motion-safe:duration-150"
+              className="py-2.5 [@media(hover:hover)and(pointer:fine)]:hover:bg-muted/40 motion-safe:transition-colors motion-safe:duration-150"
             >
               {wasCancelled ? (
-                <p className="text-sm text-neutral-400 italic">{t('uploadCancelled')}</p>
+                <p className="text-sm text-muted-foreground italic">{t('uploadCancelled')}</p>
               ) : isConfirming ? (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-sm font-medium text-neutral-700">{t('cancelConfirm')}</p>
+                  <p className="text-sm font-medium text-foreground">{t('cancelConfirm')}</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -120,7 +120,7 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
                     <button
                       type="button"
                       onClick={() => setConfirmingId(null)}
-                      className="rounded-md bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 motion-safe:transition-colors"
+                      className="rounded-md bg-muted px-3 py-1 text-xs font-medium text-foreground hover:bg-muted/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border motion-safe:transition-colors"
                     >
                       {t('cancelDismiss')}
                     </button>
@@ -145,7 +145,7 @@ export function RecentUploadsList({ items, onItemCancelled }: RecentUploadsListP
                         type="button"
                         onClick={() => setConfirmingId(item.id)}
                         aria-label={`${t('cancelUpload')} ${item.loincDisplay}`}
-                        className="rounded px-2 py-0.5 text-xs font-medium text-neutral-400 hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500 motion-safe:transition-colors"
+                        className="rounded px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-red-500 motion-safe:transition-colors"
                       >
                         {t('cancelUpload')}
                       </button>

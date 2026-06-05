@@ -50,17 +50,17 @@ function MonitoringRow({ flag, onRowClick }: MonitoringRowProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-neutral-900">
+          <p className="truncate text-sm font-medium text-foreground">
             {flag.patientFirstName}
             {', '}
-            <span className="font-normal text-neutral-600">
+            <span className="font-normal text-muted-foreground">
               {t('monitoringYrOld', { age: flag.patientAge })}
             </span>
           </p>
-          <p className="mt-0.5 truncate text-xs text-neutral-600">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {flag.medicationDisplay} — {flag.testDisplay}
           </p>
-          <p className="mt-0.5 text-xs text-neutral-500">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {t('monitoringDueSoon')}: {flag.dueDate}
           </p>
         </div>
@@ -117,14 +117,14 @@ export function MonitoringDueCard({ onFlagSelected }: MonitoringDueCardProps) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4" aria-busy="true" aria-label="Loading monitoring flags">
+      <div className="rounded-lg border border-border bg-card p-4" aria-busy="true" aria-label="Loading monitoring flags">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-4 animate-pulse rounded bg-neutral-200" />
-          <div className="h-3.5 w-32 animate-pulse rounded bg-neutral-200" />
+          <div className="h-4 w-4 animate-pulse rounded bg-muted" />
+          <div className="h-3.5 w-32 animate-pulse rounded bg-muted" />
         </div>
         <div className="mt-3 space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-md bg-neutral-100" />
+            <div key={i} className="h-14 animate-pulse rounded-md bg-muted/60" />
           ))}
         </div>
       </div>
@@ -133,14 +133,14 @@ export function MonitoringDueCard({ onFlagSelected }: MonitoringDueCardProps) {
 
   if (totalCount === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+      <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center gap-2">
-          <FlaskConical size={16} className="text-neutral-400" aria-hidden="true" />
-          <h2 className="text-sm font-medium text-neutral-500">{t('monitoringDue')}</h2>
+          <FlaskConical size={16} className="text-muted-foreground" aria-hidden="true" />
+          <h2 className="text-sm font-medium text-muted-foreground">{t('monitoringDue')}</h2>
         </div>
-        <div className="mt-3 rounded-md bg-neutral-50 px-3 py-4 text-center">
-          <p className="text-sm font-medium text-neutral-600">{t('monitoringNoneTitle')}</p>
-          <p className="mt-1 text-xs text-neutral-400">{t('monitoringNoneDesc')}</p>
+        <div className="mt-3 rounded-md bg-muted/30 px-3 py-4 text-center">
+          <p className="text-sm font-medium text-muted-foreground">{t('monitoringNoneTitle')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('monitoringNoneDesc')}</p>
         </div>
       </div>
     )
@@ -155,7 +155,7 @@ export function MonitoringDueCard({ onFlagSelected }: MonitoringDueCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FlaskConical size={16} className={overdueCount > 0 ? 'text-red-500' : 'text-amber-500'} aria-hidden="true" />
-          <h2 className="text-sm font-medium text-neutral-700">{t('monitoringDue')}</h2>
+          <h2 className="text-sm font-medium text-foreground">{t('monitoringDue')}</h2>
         </div>
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${

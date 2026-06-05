@@ -275,7 +275,7 @@ export function ReadinessBriefingCard() {
 
         <Button
           variant="ghost"
-          className="shrink-0 !p-1.5 text-neutral-500"
+          className="shrink-0 !p-1.5 text-muted-foreground"
           onClick={handleRefresh}
           disabled={isLoading}
           aria-label={t('readiness.refresh')}

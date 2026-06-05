@@ -40,7 +40,7 @@ export function QueueStatusCard({ counts }: QueueStatusCardProps) {
         <CountBadge label={t('pending')} count={counts.pending} colorClass="bg-amber-50 text-amber-700" ariaLabel={`${counts.pending} ${t('pending')}`} />
         <CountBadge label={t('uploading')} count={counts.uploading} colorClass="bg-amber-50 text-amber-700" ariaLabel={`${counts.uploading} ${t('uploading')}`} />
         <CountBadge label={t('failed')} count={counts.failed} colorClass="bg-red-50 text-red-700" ariaLabel={`${counts.failed} ${t('failed')}`} ringClass={hasFailures ? 'ring-1 ring-red-200' : undefined} />
-        <CountBadge label={t('expired')} count={counts.expired} colorClass="bg-neutral-100 text-neutral-400" ariaLabel={`${counts.expired} ${t('expired')}`} />
+        <CountBadge label={t('expired')} count={counts.expired} colorClass="bg-muted text-muted-foreground" ariaLabel={`${counts.expired} ${t('expired')}`} />
       </div>
       {hasFailures && (
         <Link href="/queue" className="mt-2 block text-sm font-medium text-red-600 hover:text-red-700">
