@@ -100,7 +100,7 @@ describe('ForgotPasswordPage (admin-portal)', () => {
     fireEvent.submit(screen.getByRole('form'))
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Rate limit exceeded')
+      expect(screen.getByRole('alert')).toHaveTextContent('resetRequestFailed')
     })
   })
 

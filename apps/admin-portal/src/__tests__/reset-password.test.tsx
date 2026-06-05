@@ -200,7 +200,7 @@ describe('ResetPasswordPage (admin-portal)', () => {
     fireEvent.submit(screen.getByRole('form'))
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Password too weak')
+      expect(screen.getByRole('alert')).toHaveTextContent('passwordUpdateFailed')
     })
   })
 })

@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       })
 
       if (resetError) {
-        setError(resetError.message)
+        setError(t('resetRequestFailed'))
         return
       }
 

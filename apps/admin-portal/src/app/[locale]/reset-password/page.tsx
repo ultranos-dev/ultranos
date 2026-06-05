@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -29,6 +29,7 @@ export default function ResetPasswordPage() {
   const [actorId, setActorId] = useState<string | undefined>()
 
   const supabase = getSupabaseBrowserClient()
+  const exchangedRef = useRef(false)
   const strength = getPasswordStrength(newPassword)
   const strengthLabels = [
     '',
@@ -39,6 +40,9 @@ export default function ResetPasswordPage() {
   ]
 
   useEffect(() => {
+    if (exchangedRef.current) return
+    exchangedRef.current = true
+
     const code = searchParams.get('code')
     if (!code) {
       setState('invalid')
@@ -53,7 +57,7 @@ export default function ResetPasswordPage() {
       setActorId(data.session.user.id)
       setState('form')
     })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, supabase])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -66,7 +70,7 @@ export default function ResetPasswordPage() {
       const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
 
       if (updateErr) {
-        setError(updateErr.message)
+        setError(t('passwordUpdateFailed'))
         return
       }
 
