@@ -30,6 +30,7 @@
     "./components/ui/skeleton":      "./src/components/ui/skeleton.tsx",
     "./components/ui/textarea":      "./src/components/ui/textarea.tsx",
     "./components/ui/tooltip":       "./src/components/ui/tooltip.tsx",
+    "./components/ui/empty-state":   "./src/components/ui/empty-state.tsx",
     "./tailwind.preset":             "./src/tailwind.preset.ts"
   },
   "scripts": {
