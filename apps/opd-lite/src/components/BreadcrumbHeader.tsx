@@ -13,6 +13,9 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { buildBreadcrumbs } from '@/lib/route-map'
+import { SyncPulse } from '@/components/SyncPulse'
+import { DataBudgetIndicator } from '@/components/DataBudgetIndicator'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
 export function BreadcrumbHeader() {
   const pathname = usePathname()
@@ -38,6 +41,11 @@ export function BreadcrumbHeader() {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+      <div className="ms-auto flex items-center gap-2">
+        <DataBudgetIndicator />
+        <SyncPulse />
+        <LanguageSelectorClient />
+      </div>
     </header>
   )
 }

@@ -1,3 +1,7 @@
+'use client'
+
+import * as React from 'react'
+import { usePathname } from 'next/navigation'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -8,42 +12,40 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
+import { buildBreadcrumbs } from '@/lib/route-map'
+import { SyncPulse } from '@/components/pharmacy/SyncPulse'
+import { DataBudgetIndicator } from '@/components/DataBudgetIndicator'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
-interface BreadcrumbCrumb {
-  label: string
-  href?: string
-}
+export function BreadcrumbHeader() {
+  const pathname = usePathname()
+  const crumbs = buildBreadcrumbs(pathname ?? '/')
 
-interface BreadcrumbHeaderProps {
-  crumbs: BreadcrumbCrumb[]
-}
-
-export function BreadcrumbHeader({ crumbs }: BreadcrumbHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
       <SidebarTrigger className="-ms-1" />
       <Separator orientation="vertical" className="me-2 h-4" />
       <Breadcrumb>
         <BreadcrumbList>
-          {crumbs.map((crumb, index) => {
-            const isLast = index === crumbs.length - 1
-            return (
-              <BreadcrumbItem key={crumb.label}>
-                {isLast ? (
+          {crumbs.map((crumb, i) => (
+            <React.Fragment key={crumb.href}>
+              {i > 0 && <BreadcrumbSeparator />}
+              <BreadcrumbItem>
+                {i === crumbs.length - 1 ? (
                   <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                 ) : (
-                  <>
-                    <BreadcrumbLink href={crumb.href ?? '#'}>
-                      {crumb.label}
-                    </BreadcrumbLink>
-                    <BreadcrumbSeparator />
-                  </>
+                  <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
                 )}
               </BreadcrumbItem>
-            )
-          })}
+            </React.Fragment>
+          ))}
         </BreadcrumbList>
       </Breadcrumb>
+      <div className="ms-auto flex items-center gap-2">
+        <DataBudgetIndicator />
+        <SyncPulse />
+        <LanguageSelectorClient />
+      </div>
     </header>
   )
 }
