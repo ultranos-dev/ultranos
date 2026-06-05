@@ -30,6 +30,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import Link from 'next/link'
+import { formatUserRole } from '@ultranos/ui-kit'
 
 function getInitials(name: string): string {
   return name
@@ -45,13 +46,10 @@ export function NavUser() {
   const { theme, toggleTheme } = useTheme()
   const session = useAuthSessionStore((s) => s.session)
 
-  const displayName =
-    (session as { name?: string } | null)?.name ??
-    session?.email?.split('@')[0] ??
-    'Pharmacist'
   const email = session?.email ?? ''
-  const role = session?.role ?? 'pharmacist'
-  const initials = getInitials(displayName)
+  const name = session?.name || email.split('@')[0] || 'Pharmacist'
+  const role = session?.role ?? ''
+  const initials = getInitials(name)
 
   const handleSignOut = useCallback(async () => {
     encryptionKeyStore.wipe()
@@ -79,10 +77,8 @@ export function NavUser() {
                 {initials}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{displayName}</span>
-                <span className="truncate text-xs text-muted-foreground capitalize">
-                  {role}
-                </span>
+                <span className="truncate font-semibold">{name}</span>
+                <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -99,10 +95,8 @@ export function NavUser() {
                   {initials}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{displayName}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {email}
-                  </span>
+                  <span className="truncate font-semibold">{name}</span>
+                  <span className="truncate text-xs text-muted-foreground">{email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -121,7 +115,6 @@ export function NavUser() {
                 Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={handleSignOut}
