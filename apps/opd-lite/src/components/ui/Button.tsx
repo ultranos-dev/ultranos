@@ -15,33 +15,28 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-pill-green text-pill-text',
-  secondary: 'bg-secondary text-secondary-foreground',
-  danger: 'bg-destructive text-white',
-  warning: 'bg-warning/20 text-foreground border border-warning/50',
-  ghost: 'bg-transparent text-primary',
-  outline: 'border border-border bg-background text-foreground',
-  icon: 'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
+  primary:   'bg-primary text-primary-foreground hover:bg-primary/90',
+  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+  danger:    'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+  warning:   'bg-warning/20 text-foreground border border-warning/50 hover:bg-warning/30',
+  ghost:     'bg-transparent text-primary hover:bg-muted',
+  outline:   'border border-border bg-background text-foreground hover:bg-muted',
+  icon:      'bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
 }
 
 const baseText =
-  'inline-flex items-center justify-center rounded-pill ' +
-  'px-5 py-2 text-sm font-semibold ' +
-  'transition-all duration-100 ease-out ' +
-  'hover:brightness-[1.04] active:brightness-[0.88] ' +
+  'inline-flex items-center justify-center rounded-md ' +
+  'px-4 py-2 text-sm font-medium ' +
+  'transition-colors ' +
   'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
-  'disabled:opacity-50 disabled:cursor-not-allowed ' +
-  'disabled:hover:brightness-100 ' +
-  'motion-reduce:hover:brightness-100 motion-reduce:active:brightness-100'
+  'disabled:opacity-50 disabled:cursor-not-allowed'
 
 const baseIcon =
   'inline-flex items-center justify-center rounded-full ' +
   'p-2 ' +
-  'transition-all duration-100 ease-out ' +
-  'active:brightness-[0.88] ' +
+  'transition-colors ' +
   'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ' +
-  'disabled:opacity-50 disabled:cursor-not-allowed ' +
-  'motion-reduce:active:brightness-100'
+  'disabled:opacity-50 disabled:cursor-not-allowed'
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
