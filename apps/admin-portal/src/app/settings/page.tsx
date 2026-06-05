@@ -7,6 +7,8 @@ import { TopHeader } from '@/components/TopHeader'
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences'
 import { ThresholdSettings } from '@/components/settings/ThresholdSettings'
 import { ModuleSettingsCard } from '@/components/settings/ModuleSettingsCard'
+import { SurveillanceConfigForm } from '@/components/alerts/SurveillanceConfigForm'
+import { SurveillanceAlertHistory } from '@/components/alerts/SurveillanceAlertHistory'
 import { KeyRound } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,7 +33,7 @@ interface AdminProfile {
 interface OrgData {
   id: string
   name: string
-  country: string
+  countryCode: string
   billingEmail: string
   timezone: string
 }
@@ -59,6 +61,7 @@ const NAV_ITEMS = [
   { id: 'notifications', label: 'Notifications' },
   { id: 'thresholds', label: 'Thresholds' },
   { id: 'modules', label: 'Modules' },
+  { id: 'alert-config', label: 'Alert Config' },
 ] as const
 
 /* ─── Page Component ─── */
@@ -114,7 +117,7 @@ export default function SettingsPage() {
   async function loadSubscribedModules() {
     try {
       const data = await trpc.subscription.getOrgSubscriptions.query()
-      const subs = (data as any)?.subscriptions ?? []
+      const subs = (data as { subscriptions?: { moduleCode: string; moduleName: string }[] })?.subscriptions ?? []
       setSubscribedModules(subs as { moduleCode: string; moduleName: string }[])
     } catch {
       // Non-blocking
@@ -125,7 +128,7 @@ export default function SettingsPage() {
 
   async function loadProfile() {
     try {
-      const data = await trpc.admin.getAdminProfile.query()
+      const data = await trpc.admin.getProfile.query()
       setProfile(data as AdminProfile)
       setProfileName((data as AdminProfile).name ?? '')
     } catch {
@@ -207,7 +210,7 @@ export default function SettingsPage() {
         return
       }
       setFactors(
-        (data.all ?? []).filter((f) => f.factor_type === 'webauthn') as Factor[],
+        (data.all ?? []).filter((f: Factor) => f.factor_type === 'webauthn') as Factor[],
       )
     } catch {
       setFidoError('Failed to load MFA factors')
@@ -320,7 +323,7 @@ export default function SettingsPage() {
       const data = await trpc.admin.getOrganization.query()
       const orgData = data as OrgData
       setOrg(orgData)
-      setOrgDraft({ name: orgData.name, country: orgData.country, billingEmail: orgData.billingEmail, timezone: orgData.timezone })
+      setOrgDraft({ name: orgData.name, countryCode: orgData.countryCode, billingEmail: orgData.billingEmail, timezone: orgData.timezone })
     } catch {
       // Non-blocking
     }
@@ -329,7 +332,7 @@ export default function SettingsPage() {
   const orgDirty =
     org && orgDraft
       ? org.name !== orgDraft.name ||
-        org.country !== orgDraft.country ||
+        org.countryCode !== orgDraft.countryCode ||
         org.billingEmail !== orgDraft.billingEmail ||
         org.timezone !== orgDraft.timezone
       : false
@@ -342,7 +345,7 @@ export default function SettingsPage() {
     try {
       const changes: Record<string, string> = {}
       if (orgDraft.name !== org.name) changes.name = orgDraft.name
-      if (orgDraft.country !== org.country) changes.country = orgDraft.country
+      if (orgDraft.countryCode !== org.countryCode) changes.countryCode = orgDraft.countryCode
       if (orgDraft.billingEmail !== org.billingEmail) changes.billingEmail = orgDraft.billingEmail
       if (orgDraft.timezone !== org.timezone) changes.timezone = orgDraft.timezone
 
@@ -599,8 +602,8 @@ export default function SettingsPage() {
                 <label className="block">
                   <span className="text-xs font-medium text-muted-foreground">Country</span>
                   <select
-                    value={orgDraft.country}
-                    onChange={(e) => setOrgDraft({ ...orgDraft, country: e.target.value })}
+                    value={orgDraft.countryCode}
+                    onChange={(e) => setOrgDraft({ ...orgDraft, countryCode: e.target.value })}
                     className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Select a country</option>
@@ -677,7 +680,7 @@ export default function SettingsPage() {
         </section>
 
         {/* ═══ Section 5: Modules ═══ */}
-        <section id="modules" className="scroll-mt-24 mb-12">
+        <section id="modules" className="scroll-mt-24">
           <h2 className="text-lg font-semibold text-foreground mb-4">Modules</h2>
           <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border">
             {subscribedModules.length === 0 ? (
@@ -689,6 +692,17 @@ export default function SettingsPage() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* ═══ Section 6: Alert Config ═══ */}
+        <section id="alert-config" className="scroll-mt-24 mb-12">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Alert Config</h2>
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-8">
+            <SurveillanceConfigForm />
+            <div className="border-t border-border pt-6">
+              <SurveillanceAlertHistory />
+            </div>
           </div>
         </section>
       </div>

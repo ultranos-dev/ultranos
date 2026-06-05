@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from '@ultranos/ui-kit/icons'
 import {
   Home,
   User,
@@ -11,7 +11,6 @@ import {
   Users,
   Receipt,
   Globe,
-  SlidersHorizontal,
   FileCheck,
   Cpu,
   CreditCard,
@@ -47,7 +46,6 @@ export const navGroups: NavGroup[] = [
       { title: 'Patients', url: '/patients', icon: User },
       { title: 'Merge Tool', url: '/patients/merge' },
       { title: 'Alerts', url: '/alerts', icon: Bell },
-      { title: 'Alert Config', url: '/alerts/configuration', icon: SlidersHorizontal },
     ],
   },
   {
