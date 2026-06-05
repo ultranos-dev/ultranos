@@ -8,8 +8,8 @@ describe('Arabic font family tokens', () => {
     expect(typography.fontFamily['sans-ar']).toContain('Noto Sans Arabic')
   })
 
-  it('defines serif-ar font stack with Noto Naskh Arabic', () => {
-    expect(typography.fontFamily['serif-ar']).toContain('Noto Naskh Arabic')
+  it('defines serif-ar font stack with Noto Kufi Arabic', () => {
+    expect(typography.fontFamily['serif-ar']).toContain('Noto Kufi Arabic')
   })
 
   it('sans-ar has proper fallback chain: Arabic → system Arabic → sans-serif', () => {
@@ -55,9 +55,9 @@ describe('Arabic font files', () => {
     expect(arabicFontFiles).toContain('NotoSansArabic-Bold.woff2')
   })
 
-  it('includes Noto Naskh Arabic in 2 weights (400, 700)', () => {
-    expect(arabicFontFiles).toContain('NotoNaskhArabic-Regular.woff2')
-    expect(arabicFontFiles).toContain('NotoNaskhArabic-Bold.woff2')
+  it('includes Noto Kufi Arabic in 2 weights (400, 700)', () => {
+    expect(arabicFontFiles).toContain('NotoKufiArabic-Regular.woff2')
+    expect(arabicFontFiles).toContain('NotoKufiArabic-Bold.woff2')
   })
 
   it('all font files use WOFF2 format', () => {
@@ -82,8 +82,8 @@ describe('fonts-arabic.css declarations', () => {
     expect(css).toContain("font-family: 'Noto Sans Arabic'")
   })
 
-  it('declares Noto Naskh Arabic @font-face rules', () => {
-    expect(css).toContain("font-family: 'Noto Naskh Arabic'")
+  it('declares Noto Kufi Arabic @font-face rules', () => {
+    expect(css).toContain("font-family: 'Noto Kufi Arabic'")
   })
 
   it('uses font-display: swap for all declarations', () => {

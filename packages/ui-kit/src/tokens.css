@@ -120,7 +120,7 @@
 
   /* ── Arabic font family stacks ── */
   --font-family-sans-ar: 'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif;
-  --font-family-serif-ar: 'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif;
+  --font-family-serif-ar: 'Noto Kufi Arabic', 'Traditional Arabic', 'Simplified Arabic', serif;
 
   /* ── RTL Typography defaults (LTR values) ── */
   --text-size-multiplier: 1;
