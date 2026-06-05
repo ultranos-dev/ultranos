@@ -183,7 +183,7 @@ export function SyncQueueDashboard() {
   const isRetrying = retryingIds.size > 0 || retryAllInProgress
 
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold text-foreground">{t('syncQueue')}</h1>
 
       {totalCount === 0 && (

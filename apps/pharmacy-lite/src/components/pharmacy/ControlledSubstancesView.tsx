@@ -140,13 +140,13 @@ export function ControlledSubstancesView() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
       {/* Date range filter */}
-      <div className="mt-4 flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         <div>
           <label
             htmlFor="cs-date-from"
@@ -181,7 +181,7 @@ export function ControlledSubstancesView() {
 
       {/* Running Balances */}
       {balances.length > 0 && (
-        <div className="mt-4 mb-6">
+        <div>
           <h2 className="text-sm font-semibold text-foreground mb-2">{tBalances('title')}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {balances.map((item) => (
@@ -198,21 +198,21 @@ export function ControlledSubstancesView() {
 
       {/* Loading */}
       {loading && (
-        <div className="mt-6 py-12 text-center text-sm text-muted-foreground">
+        <div className="py-12 text-center text-sm text-muted-foreground">
           {t('loading')}
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="mt-6 py-12 text-center text-sm text-destructive">
+        <div className="py-12 text-center text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !error && dispenses.length === 0 && (
-        <div className="mt-6 rounded-lg border border-border px-4 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border px-4 py-12 text-center text-sm text-muted-foreground">
           {t('noRecords')}
         </div>
       )}

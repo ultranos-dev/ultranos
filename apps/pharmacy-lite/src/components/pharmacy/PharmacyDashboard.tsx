@@ -148,14 +148,14 @@ export function PharmacyDashboard() {
   }, [refreshStats])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       {/* Multi-entry action hub */}
-      <section className="mb-8">
+      <section>
         <DashboardActionHub />
       </section>
 
       {/* Summary cards grid */}
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DispensingSummaryCard
           dispensedToday={stats.dispensedToday}
           pendingSync={stats.pendingSync}
@@ -166,7 +166,7 @@ export function PharmacyDashboard() {
       </section>
 
       {/* Operational row */}
-      <section className="mb-8">
+      <section>
         <DrawerStatusCard />
       </section>
 
