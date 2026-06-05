@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
 } from '@ultranos/ui-kit/icons'
+import { formatUserRole } from '@ultranos/ui-kit'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,11 +32,17 @@ import { SessionTimer } from '@/components/SessionTimer'
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
-  const email = useAuthSessionStore((s) => s.session?.email ?? '')
+  const session = useAuthSessionStore((s) => s.session)
 
-  const initials = email
-    ? (email.split('@')[0] ?? '').slice(0, 2).toUpperCase()
-    : 'AD'
+  const email = session?.email ?? ''
+  const name = session?.name || email.split('@')[0] || 'Admin'
+  const role = session?.role ?? ''
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (w[0] ?? '').toUpperCase())
+    .slice(0, 2)
+    .join('')
 
   async function handleSignOut() {
     useAuthSessionStore.getState().clearSession()
@@ -57,8 +64,8 @@ export function NavUser() {
                 {initials}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{email}</span>
-                <SessionTimer />
+                <span className="truncate font-semibold">{name}</span>
+                <span className="truncate text-xs text-muted-foreground">{formatUserRole(role)}</span>
               </div>
               <ChevronsUpDown className="ms-auto size-4" />
             </SidebarMenuButton>
@@ -75,8 +82,8 @@ export function NavUser() {
                   {initials}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{email}</span>
-                  <span className="truncate text-xs text-muted-foreground">Administrator</span>
+                  <span className="truncate font-semibold">{name}</span>
+                  <span className="truncate text-xs text-muted-foreground">{email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -85,14 +92,12 @@ export function NavUser() {
               {theme === 'light' ? <Moon className="me-2 size-4" /> : <Sun className="me-2 size-4" />}
               {theme === 'light' ? 'Dark mode' : 'Light mode'}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/settings">
                 <Settings className="me-2 size-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={handleSignOut}
