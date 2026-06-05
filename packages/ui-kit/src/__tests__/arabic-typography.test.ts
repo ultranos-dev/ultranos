@@ -18,10 +18,10 @@ describe('Arabic font family tokens', () => {
     expect(stack).toContain('sans-serif')
   })
 
-  it('serif-ar has proper fallback chain: Arabic → system Arabic → serif', () => {
+  it('serif-ar has proper fallback chain: Kufi → Latin (Manrope) → sans-serif', () => {
     const stack = typography.fontFamily['serif-ar']
-    expect(stack).toContain('Traditional Arabic')
-    expect(stack).toContain('serif')
+    expect(stack).toContain('var(--font-manrope)')
+    expect(stack).toContain('sans-serif')
   })
 })
 

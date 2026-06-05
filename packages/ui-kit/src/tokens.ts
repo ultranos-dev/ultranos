@@ -8,7 +8,7 @@ export const typography = {
     sans: "var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif",
     mono: "'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace",
     'sans-ar': "'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif",
-    'serif-ar': "'Noto Kufi Arabic', 'Traditional Arabic', 'Simplified Arabic', serif",
+    'serif-ar': "'Noto Kufi Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif",
   },
   fontSize: {
     xs: '0.75rem',
