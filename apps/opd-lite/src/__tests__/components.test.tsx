@@ -29,7 +29,7 @@ describe('PillButton', () => {
     render(<PillButton onClick={onClick}>Select</PillButton>)
     const button = screen.getByRole('button', { name: 'Select' })
     expect(button).toBeDefined()
-    expect(button.className).toContain('rounded-md')
+    expect(button.className).toContain('rounded-pill')
     expect(button.className).toContain('bg-primary')
   })
 
