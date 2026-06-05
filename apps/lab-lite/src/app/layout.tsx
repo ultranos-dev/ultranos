@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} dir={dir} className={`${manrope.variable} ${publicSans.variable}`} suppressHydrationWarning>
       <head>
-        {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+        <link rel="stylesheet" href="/fonts-arabic.css" />
         {/* Inline theme detection: runs before hydration to avoid flash-of-wrong-theme */}
         <script
           dangerouslySetInnerHTML={{

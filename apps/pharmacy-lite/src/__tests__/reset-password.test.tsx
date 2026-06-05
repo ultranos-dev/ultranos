@@ -150,6 +150,7 @@ describe('ResetPasswordPage (pharmacy-lite)', () => {
 
     await waitFor(() => {
       expect(mockUpdateUser).toHaveBeenCalledWith({ password: 'Abcdefg1!' })
+      expect(mockClearSession).toHaveBeenCalled()
       expect(mockSignOut).toHaveBeenCalled()
       expect(mockRouterPush).toHaveBeenCalledWith('/login?reset=success')
     })

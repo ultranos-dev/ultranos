@@ -149,7 +149,7 @@ export default function ConsentPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-xl font-semibold">{t('title')}</h1>
       <StepIndicatorBar currentStep={step} />
 
