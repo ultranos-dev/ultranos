@@ -13,6 +13,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/expiring-consents': 'Expiring Consents',
   '/register-patient': 'Register Patient',
   '/settings': 'Settings',
+  '/settings/data-budget': 'Data Usage',
   '/kyc': 'KYC',
 }
 
