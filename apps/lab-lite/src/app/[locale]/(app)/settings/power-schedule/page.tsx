@@ -23,7 +23,7 @@ export default function PowerSchedulePage() {
         {t('nav.powerScheduling')}
       </h1>
 
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         <PowerScheduleForm />
         <TestTimeConfigPanel />
       </div>
