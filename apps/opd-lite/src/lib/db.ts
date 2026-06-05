@@ -1,6 +1,8 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, AIModelType } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
+import type { DataUsageCategory } from '@ultranos/sync-engine'
+export type { DataUsageCategory }  // re-export for consumers
 import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
@@ -118,8 +120,6 @@ export interface VocabInteractionEntry {
 
 // Data Budget types — Story 48.x / Data Connectivity
 // ---------------------------------------------------------------------------
-
-export type DataUsageCategory = 'upload' | 'audit' | 'notification' | 'other'
 
 export interface DataBudgetConfig {
   id: 'config'
@@ -704,11 +704,10 @@ const DEFAULT_DATA_BUDGET_CONFIG: DataBudgetConfig = {
   planSizeMB: 500,
   billingCycleDay: 1,
   lowDataMode: false,
-  currentCycleStart: new Date(
-    new Date().getFullYear(),
-    new Date().getMonth(),
-    1,
-  ).toISOString().slice(0, 10),
+  currentCycleStart: (() => {
+    const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })(),
 }
 
 export async function getDataBudgetConfig(): Promise<DataBudgetConfig> {
@@ -736,7 +735,8 @@ export async function getUsageByDay(startDate: string, endDate: string): Promise
 
 export async function getUsageForCycle(): Promise<DataUsageRecord[]> {
   const config = await getDataBudgetConfig()
-  const today = new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   return db.dataUsage
     .where('date')
     .between(config.currentCycleStart, today, true, true)

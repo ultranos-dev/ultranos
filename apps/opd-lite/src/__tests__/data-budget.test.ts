@@ -67,6 +67,24 @@ describe('Data Budget — Dexie Schema & Helpers (opd-lite)', () => {
     expect(rolled).toBe(true)
     const config = await getDataBudgetConfig()
     expect(config.currentCycleStart).not.toBe('2026-04-01')
+    // Should have rolled to the first of the current month
+    const today = new Date()
+    const expectedStart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+    expect(config.currentCycleStart).toBe(expectedStart)
+  })
+
+  it('getUsageForCycle returns records since cycle start and excludes earlier records', async () => {
+    await updateDataBudgetConfig({ currentCycleStart: '2026-06-01' })
+    await recordDataUsage({ date: '2026-05-20', category: 'other', bytesOut: 100, bytesIn: 50, requestCount: 1 })
+    await recordDataUsage({ date: '2026-06-05', category: 'upload', bytesOut: 200, bytesIn: 100, requestCount: 1 })
+    const results = await getUsageForCycle()
+    expect(results).toHaveLength(1)
+    expect(results[0]?.date).toBe('2026-06-05')
+  })
+
+  it('getUsageForCycle returns empty array when no records exist', async () => {
+    const results = await getUsageForCycle()
+    expect(results).toHaveLength(0)
   })
 
   it('checkAndRolloverCycle does not roll over within current cycle', async () => {
