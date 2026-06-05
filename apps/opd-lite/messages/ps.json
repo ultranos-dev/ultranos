@@ -838,5 +838,34 @@
     "schedulingConflict": "د مهال ویش تضاد موندل شو — مهرباني وکړئ بیاکتنه وکړئ",
     "doubleBookWarning": "د دې وخت لپاره دوه ځلي خوندي کول موندل شوي",
     "noResults": "هیڅ ناروغ ونه موندل شو"
+  },
+  "dataBudget": {
+    "usageTitle": "د ډاټا کارونه",
+    "usageAriaLabel": "{used} له {total} MB کارول شوي",
+    "used": "کارول شوی",
+    "remaining": "پاتې",
+    "projectionTitle": "وړاندوینه",
+    "projectionExhaustion": "د اوسني کچې سره، ډاټا به د {date} نیټې پورې ختمیږي.",
+    "projectionNoData": "د وړاندوینې لپاره کافي ډاټا نشته.",
+    "dailyUsageTitle": "ورځنۍ کارونه (۱۴ ورځې)",
+    "categoryTitle": "د کټګورۍ له مخې کارونه",
+    "categoryHeader": "کټګوري",
+    "category": {
+      "upload": "آپلوډونه",
+      "audit": "د آډیټ همغږي",
+      "notification": "خبرتیاوې",
+      "other": "نور"
+    },
+    "warningBanner": "د ډاټا کارونه لوړه ده. د کم ډاټا حالت فعالول وګورئ.",
+    "criticalBanner": "ډاټا خورا کمه ده. د اتصال ساتلو لپاره د کم ډاټا حالت فعال کړئ.",
+    "settingsTitle": "ډاټا او اتصال",
+    "planSize": "د ډاټا پلان اندازه (MB)",
+    "billingCycleDay": "د بلینګ سایکل د پیل ورځ",
+    "lowDataMode": "د کم ډاټا حالت",
+    "lowDataModeDesc": "همغږي یو ځای کوي او د ډاټا ساتلو لپاره پولینګ کموي.",
+    "viewDashboard": "د ډاټا ډشبورډ وګورئ",
+    "sidebarLabel": "ډاټا",
+    "sidebarUsed": "{used} MB",
+    "backToSettings": "بیرته ترتیباتو ته"
   }
 }

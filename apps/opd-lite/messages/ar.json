@@ -838,5 +838,34 @@
     "schedulingConflict": "تم اكتشاف تعارض في الجدولة — يرجى المراجعة",
     "doubleBookWarning": "تم اكتشاف حجز مزدوج لهذه الفترة الزمنية",
     "noResults": "لا يوجد مرضى"
+  },
+  "dataBudget": {
+    "usageTitle": "استخدام البيانات",
+    "usageAriaLabel": "تم استخدام {used} من {total} ميغابايت",
+    "used": "مستخدم",
+    "remaining": "متبقي",
+    "projectionTitle": "التوقعات",
+    "projectionExhaustion": "بالمعدل الحالي، ستنفد البيانات في {date}.",
+    "projectionNoData": "لا توجد بيانات كافية للتوقع.",
+    "dailyUsageTitle": "الاستخدام اليومي (14 يوماً)",
+    "categoryTitle": "الاستخدام حسب الفئة",
+    "categoryHeader": "الفئة",
+    "category": {
+      "upload": "التحميلات",
+      "audit": "مزامنة التدقيق",
+      "notification": "الإشعارات",
+      "other": "أخرى"
+    },
+    "warningBanner": "استخدام البيانات مرتفع. فكّر في تفعيل وضع البيانات المنخفضة.",
+    "criticalBanner": "البيانات منخفضة جداً. فعّل وضع البيانات المنخفضة للحفاظ على الاتصال.",
+    "settingsTitle": "البيانات والاتصال",
+    "planSize": "حجم خطة البيانات (ميغابايت)",
+    "billingCycleDay": "يوم بدء دورة الفوترة",
+    "lowDataMode": "وضع البيانات المنخفضة",
+    "lowDataModeDesc": "يجمع المزامنات ويقلل الاستطلاع للحفاظ على البيانات.",
+    "viewDashboard": "عرض لوحة البيانات",
+    "sidebarLabel": "البيانات",
+    "sidebarUsed": "{used} ميغابايت",
+    "backToSettings": "العودة إلى الإعدادات"
   }
 }
