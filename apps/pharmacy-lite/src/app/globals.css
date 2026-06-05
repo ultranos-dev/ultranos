@@ -1,10 +1,9 @@
+@import '@ultranos/ui-kit/tokens.css';
+@import "tw-animate-css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import '@ultranos/ui-kit/tokens.css';
-
-@import "tw-animate-css";
 
 /* ── Font overrides: Manrope replaces Urbanist as body font ── */
 :root {
