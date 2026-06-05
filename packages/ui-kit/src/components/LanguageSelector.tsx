@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react'
 import { colors, typography, shadows, borderRadius } from '../tokens.js'
+import { getDirection } from '../direction.js'
 import type { SupportedLocale } from '../direction.js'
+
+/** Returns the font-family string appropriate for a locale's native label. */
+function nativeLabelFont(locale: SupportedLocale): string {
+  return getDirection(locale) === 'rtl'
+    ? typography.fontFamily['sans-ar']
+    : 'inherit'
+}
 
 export interface LanguageSelectorProps {
   currentLocale: SupportedLocale
@@ -166,7 +174,11 @@ export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = fa
         }}
       >
         <GlobeIcon />
-        {!collapsed && <span>{LANGUAGES.find((l) => l.code === currentLocale)?.nativeLabel}</span>}
+        {!collapsed && (
+          <span lang={currentLocale} style={{ fontFamily: nativeLabelFont(currentLocale) }}>
+            {LANGUAGES.find((l) => l.code === currentLocale)?.nativeLabel}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -199,6 +211,7 @@ export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = fa
               role="option"
               aria-selected={lang.code === currentLocale}
               tabIndex={-1}
+              lang={lang.code}
               onClick={() => selectLocale(lang.code)}
               style={{
                 display: 'flex',
@@ -209,6 +222,7 @@ export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = fa
                 paddingBlockStart: '0.5rem',
                 paddingBlockEnd: '0.5rem',
                 fontSize: typography.fontSize.sm,
+                fontFamily: nativeLabelFont(lang.code),
                 fontWeight:
                   lang.code === currentLocale
                     ? typography.fontWeight.semibold
