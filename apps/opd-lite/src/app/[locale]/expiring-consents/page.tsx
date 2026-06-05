@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { TopHeader } from '@/components/TopHeader'
 
 interface ExpiringConsent {
   id: string
@@ -62,79 +63,77 @@ export default function ExpiringConsentsPage() {
   }
 
   return (
-    <main id="main-content" className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">
-        {/* TODO: t('consent.expiringConsentsTitle') */}
-        Expiring Consents
-      </h1>
+    <div className="mx-auto max-w-7xl px-8 py-6">
+      <TopHeader title="Expiring Consents" />
+      <div className="px-6 pb-6">
 
-      {loading && (
-        <p className="text-sm text-neutral-500">Loading...</p>
-      )}
+        {loading && (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        )}
 
-      {!loading && consents.length === 0 && (
-        <p className="text-sm text-neutral-500">
-          {/* TODO: t('consent.noExpiringConsents') */}
-          No consents expiring within 90 days.
-        </p>
-      )}
+        {!loading && consents.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No consents expiring within 90 days.
+          </p>
+        )}
 
-      {!loading && consents.length > 0 && (
-        <>
-          <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-gray-400/40">
-            <table className="w-full text-sm">
-              <thead className="bg-neutral-50 text-neutral-600">
-                <tr>
-                  <th className="px-4 py-3 text-start font-semibold">Patient ID</th>
-                  <th className="px-4 py-3 text-start font-semibold">Expiry Date</th>
-                  <th className="px-4 py-3 text-start font-semibold">Days Until Expiry</th>
-                  <th className="px-4 py-3 text-start font-semibold">Version</th>
-                  <th className="px-4 py-3 text-start font-semibold">Grantor Role</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {consents.map((c) => {
-                  const days = daysUntilExpiry(c.provision_end)
-                  return (
-                    <tr key={c.id} className="hover:bg-neutral-50">
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {extractPatientId(c.patient_ref)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {new Date(c.provision_end).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={
-                            days <= 30
-                              ? 'font-semibold text-red-600'
-                              : days <= 60
-                              ? 'font-semibold text-amber-600'
-                              : 'text-neutral-700'
-                          }
-                        >
-                          {days}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{c.consent_version}</td>
-                      <td className="px-4 py-3">{c.grantor_role}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+        {!loading && consents.length > 0 && (
+          <>
+            <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
+              <table className="w-full text-sm">
+                <thead className="bg-muted text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-start font-semibold">Patient ID</th>
+                    <th className="px-4 py-3 text-start font-semibold">Expiry Date</th>
+                    <th className="px-4 py-3 text-start font-semibold">Days Until Expiry</th>
+                    <th className="px-4 py-3 text-start font-semibold">Version</th>
+                    <th className="px-4 py-3 text-start font-semibold">Grantor Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {consents.map((c) => {
+                    const days = daysUntilExpiry(c.provision_end)
+                    return (
+                      <tr key={c.id} className="hover:bg-muted/50">
+                        <td className="px-4 py-3 font-mono text-xs">
+                          {extractPatientId(c.patient_ref)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {new Date(c.provision_end).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={
+                              days <= 30
+                                ? 'font-semibold text-destructive'
+                                : days <= 60
+                                  ? 'font-semibold text-warning'
+                                  : 'text-foreground'
+                            }
+                          >
+                            {days}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{c.consent_version}</td>
+                        <td className="px-4 py-3">{c.grantor_role}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-          <div className="mt-4 flex items-center gap-4">
-            <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-              Previous
-            </Button>
-            <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
-              Next
-            </Button>
-          </div>
-        </>
-      )}
-    </main>
+            <div className="mt-4 flex items-center gap-4">
+              <Button variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
+                Previous
+              </Button>
+              <Button variant="outline" disabled={consents.length < limit} onClick={() => setOffset(offset + limit)}>
+                Next
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { extractKycFields, fileToBase64, type OcrResult } from '@/lib/ocr'
 import { Button } from '@/components/ui/Button'
+import { TopHeader } from '@/components/TopHeader'
 import {
   getKycUploadUrl,
   uploadToSignedUrl,
@@ -241,7 +242,7 @@ export default function KycPage() {
   if (!session || loading) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <div className="text-neutral-500" role="status" aria-label="Loading">
+        <div className="text-muted-foreground" role="status" aria-label="Loading">
           Loading...
         </div>
       </main>
@@ -255,13 +256,9 @@ export default function KycPage() {
   const isRequestMoreInfo = kycStatusData?.kycStatus === 'REQUEST_MORE_INFO'
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold text-neutral-900">
-        KYC Document Verification
-      </h1>
-      <p className="mb-6 text-neutral-600">
-        Submit your professional documents for account verification.
-      </p>
+    <div className="mx-auto max-w-7xl px-8 py-6">
+      <TopHeader title="KYC Document Verification" description="Submit your professional documents for account verification." />
+      <div className="px-6 pb-6 max-w-2xl">
 
       {/* Rejection banner */}
       {isRejected && rejectionReason && step !== 'submitted' && (
@@ -296,10 +293,10 @@ export default function KycPage() {
               key={s}
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                 step === s
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : (['upload', 'review', 'confirm'] as const).indexOf(step) > i
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-neutral-100 text-neutral-400'
+                    ? 'bg-success/20 text-success'
+                    : 'bg-muted text-muted-foreground'
               }`}
             >
               {i + 1}
@@ -334,10 +331,10 @@ export default function KycPage() {
       {/* Step 2: Review Extracted Fields */}
       {step === 'review' && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold text-neutral-800">
+          <h2 className="text-lg font-semibold text-foreground">
             Review Extracted Information
           </h2>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-muted-foreground">
             Please verify the information extracted from your documents.
           </p>
 
@@ -350,11 +347,11 @@ export default function KycPage() {
 
             return (
               <div key={fieldName}>
-                <label className="mb-1 block text-sm font-medium text-neutral-700">
+                <label className="mb-1 block text-sm font-medium text-foreground">
                   {formatFieldName(fieldName)}
                   {isLowConfidence && (
                     <span
-                      className="ms-2 rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800"
+                      className="ms-2 rounded bg-warning/20 px-2 py-0.5 text-xs text-warning"
                       data-testid={`low-confidence-${fieldName}`}
                     >
                       Please verify
@@ -367,10 +364,10 @@ export default function KycPage() {
                   onChange={(e) =>
                     setReviewFields((prev) => ({ ...prev, [fieldName]: e.target.value }))
                   }
-                  className={`w-full rounded-lg border px-3 py-2 text-neutral-900 ${
+                  className={`w-full rounded-lg border px-3 py-2 text-foreground ${
                     isLowConfidence
-                      ? 'border-yellow-400 bg-yellow-50'
-                      : 'border-neutral-300 bg-white'
+                      ? 'border-warning/50 bg-warning/10'
+                      : 'border-border bg-background'
                   }`}
                 />
               </div>
@@ -378,7 +375,7 @@ export default function KycPage() {
           })}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               Professional Registry Number
             </label>
             <input
@@ -386,7 +383,7 @@ export default function KycPage() {
               value={registryNumber}
               onChange={(e) => setRegistryNumber(e.target.value)}
               placeholder="e.g., REG-2026-00123"
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
             />
           </div>
 
@@ -404,26 +401,26 @@ export default function KycPage() {
       {/* Step 3: Confirm and Submit */}
       {step === 'confirm' && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold text-neutral-800">
+          <h2 className="text-lg font-semibold text-foreground">
             Confirm Submission
           </h2>
 
-          <div className="rounded-xl ring-[0.65px] ring-gray-400/40 bg-neutral-50 p-4">
-            <h3 className="mb-3 text-sm font-medium text-neutral-600">Summary</h3>
+          <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
+            <h3 className="mb-3 text-sm font-medium text-muted-foreground">Summary</h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(reviewFields).map(([key, value]) => (
                 <div key={key} className="flex justify-between">
-                  <dt className="text-neutral-500">{formatFieldName(key)}</dt>
-                  <dd className="font-medium text-neutral-900">{value || '—'}</dd>
+                  <dt className="text-muted-foreground">{formatFieldName(key)}</dt>
+                  <dd className="font-medium text-foreground">{value || '—'}</dd>
                 </div>
               ))}
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Registry Number</dt>
-                <dd className="font-medium text-neutral-900">{registryNumber}</dd>
+                <dt className="text-muted-foreground">Registry Number</dt>
+                <dd className="font-medium text-foreground">{registryNumber}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-neutral-500">Documents</dt>
-                <dd className="font-medium text-neutral-900">
+                <dt className="text-muted-foreground">Documents</dt>
+                <dd className="font-medium text-foreground">
                   {[licenseDoc.uploaded && 'Medical License', nationalIdDoc.uploaded && 'National ID']
                     .filter(Boolean)
                     .join(', ')}
@@ -432,14 +429,14 @@ export default function KycPage() {
             </dl>
           </div>
 
-          <label className="flex items-start gap-3 rounded-xl ring-[0.65px] ring-gray-400/40 p-4">
+          <label className="flex items-start gap-3 rounded-xl ring-[0.65px] ring-border/50 p-4">
             <input
               type="checkbox"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-neutral-300"
+              className="mt-0.5 h-4 w-4 rounded border-border"
             />
-            <span className="text-sm text-neutral-700">
+            <span className="text-sm text-foreground">
               I confirm this information is accurate and the documents are genuine.
             </span>
           </label>
@@ -476,7 +473,8 @@ export default function KycPage() {
           </p>
         </div>
       )}
-    </main>
+      </div>
+    </div>
   )
 }
 
@@ -494,17 +492,17 @@ function DocumentUploadZone({
 }) {
   return (
     <div
-      className="rounded-lg border-2 border-dashed border-neutral-300 p-6 text-center transition-colors hover:border-blue-400"
+      className="rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50"
       data-testid={`upload-zone-${docType}`}
     >
-      <p className="mb-2 text-sm font-medium text-neutral-700">{label}</p>
+      <p className="mb-2 text-sm font-medium text-foreground">{label}</p>
 
       {state.uploading && (
-        <p className="text-sm text-blue-600" role="status">Uploading...</p>
+        <p className="text-sm text-primary" role="status">Uploading...</p>
       )}
 
       {state.ocrLoading && (
-        <p className="text-sm text-blue-600" role="status">Extracting fields...</p>
+        <p className="text-sm text-primary" role="status">Extracting fields...</p>
       )}
 
       {state.uploaded && !state.ocrLoading && (
@@ -519,10 +517,10 @@ function DocumentUploadZone({
 
       {!state.uploading && !state.uploaded && !state.ocrLoading && (
         <>
-          <p className="mb-3 text-xs text-neutral-500">
+          <p className="mb-3 text-xs text-muted-foreground">
             JPEG, PNG, or PDF — max 10MB
           </p>
-          <label className="cursor-pointer rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+          <label className="cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
             Select File
             <input
               type="file"
