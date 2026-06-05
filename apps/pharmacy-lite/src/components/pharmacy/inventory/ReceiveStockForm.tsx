@@ -76,11 +76,11 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
     <div className="space-y-4" data-testid="receive-stock-form">
       <CatalogSearchInput onSelect={handleAddItem} />
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>
+        <div role="alert" className="rounded-md bg-destructive/5 border border-destructive/20 px-4 py-2 text-sm text-destructive">{error}</div>
       )}
       {items.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-8 text-center">
-          <p className="text-sm text-neutral-500">Search or scan a product above to start receiving stock.</p>
+        <div className="rounded-lg border border-border bg-muted p-8 text-center">
+          <p className="text-sm text-muted-foreground">Search or scan a product above to start receiving stock.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -92,8 +92,8 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
       {items.length > 0 && (
         <>
           <div>
-            <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-neutral-600">Notes (optional)</label>
-            <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Delivery ref #1234" className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
+            <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-muted-foreground">Notes (optional)</label>
+            <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Delivery ref #1234" className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
           </div>
           <Button variant="default" className="w-full" type="button" disabled={!isValid || saving} onClick={handleSubmit} data-testid="confirm-receipt-btn">
             {saving ? 'Processing...' : `Confirm Receipt (${items.length} item${items.length !== 1 ? 's' : ''})`}

@@ -42,25 +42,25 @@ export function CatalogSearchInput({ onSelect, placeholder }: CatalogSearchInput
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder ?? 'Search by name or scan barcode...'}
-        className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+        className="w-full rounded-lg border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
         data-testid="catalog-search-input"
       />
       {isOpen && (
-        <ul className="absolute z-10 mt-1 w-full divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white shadow-md overflow-hidden max-h-60 overflow-y-auto">
+        <ul className="absolute z-10 mt-1 w-full divide-y divide-border rounded-lg border border-border bg-card shadow-card overflow-hidden max-h-60 overflow-y-auto">
           {results.map((item) => (
             <li
               key={item.id}
-              className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-neutral-50 text-sm"
+              className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-accent text-sm"
               onClick={() => handleSelect(item)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSelect(item) }}
               tabIndex={0}
             >
               <div>
-                <span className="font-medium text-neutral-900">{item.name}</span>
-                <span className="text-neutral-500 ms-2">{item.strength} {item.form}</span>
+                <span className="font-medium text-foreground">{item.name}</span>
+                <span className="text-muted-foreground ms-2">{item.strength} {item.form}</span>
               </div>
               {item.barcode && (
-                <span className="text-xs text-neutral-400 font-mono">{item.barcode}</span>
+                <span className="text-xs text-muted-foreground font-mono">{item.barcode}</span>
               )}
             </li>
           ))}

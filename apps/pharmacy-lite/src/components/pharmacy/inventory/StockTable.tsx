@@ -99,58 +99,58 @@ export function StockTable({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by product name or batch number..."
-          className="w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="w-full rounded-lg border border-border px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-50">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Product
               </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Batch
               </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Qty
               </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Expiry
               </th>
-              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Status
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-border">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-neutral-400">
+                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                   No stock batches found.
                 </td>
               </tr>
             ) : (
               filtered.map((r) => (
-                <tr key={r.batch.id} className="hover:bg-neutral-50">
+                <tr key={r.batch.id} className="hover:bg-accent">
                   <td className="px-4 py-3">
-                    <span className="font-medium text-neutral-900">
+                    <span className="font-medium text-foreground">
                       {r.catalogItem?.name ?? 'Unknown'}
                     </span>
                     {r.catalogItem?.controlledSchedule && (
-                      <span className="ms-2 inline-flex items-center rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700">
+                      <span className="ms-2 inline-flex items-center rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
                         C{r.catalogItem.controlledSchedule}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">{r.batch.batchNumber}</td>
-                  <td className="px-4 py-3 text-neutral-600">{r.batch.quantityOnHand}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.batch.batchNumber}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.batch.quantityOnHand}</td>
                   <td
                     className={`px-4 py-3 ${
                       isNearExpiry(r.batch.expiryDate) && r.batch.status === 'active'
-                        ? 'font-medium text-amber-600'
-                        : 'text-neutral-600'
+                        ? 'font-medium text-warning'
+                        : 'text-muted-foreground'
                     }`}
                   >
                     {r.batch.expiryDate}
@@ -170,9 +170,9 @@ export function StockTable({
 
 function StatusBadge({ status }: { status: StockBatchStatus }) {
   const classes: Record<StockBatchStatus, string> = {
-    active: 'bg-green-100 text-green-700',
-    quarantined: 'bg-red-100 text-red-700',
-    depleted: 'bg-neutral-100 text-neutral-500',
+    active: 'bg-success/10 text-success',
+    quarantined: 'bg-destructive/10 text-destructive',
+    depleted: 'bg-muted text-muted-foreground',
   }
 
   return (

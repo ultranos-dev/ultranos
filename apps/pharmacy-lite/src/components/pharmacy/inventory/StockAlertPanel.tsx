@@ -26,10 +26,10 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterLowStock}
-          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-start transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3 text-start transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
         >
-          <span className="block text-2xl font-bold text-amber-700">{alerts.lowStockCount}</span>
-          <span className="text-sm text-amber-600">Low Stock</span>
+          <span className="block text-2xl font-bold text-warning">{alerts.lowStockCount}</span>
+          <span className="text-sm text-warning">Low Stock</span>
         </button>
       )}
 
@@ -37,12 +37,12 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterNearExpiry}
-          className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-start transition-colors hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3 text-start transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
         >
-          <span className="block text-2xl font-bold text-orange-700">
+          <span className="block text-2xl font-bold text-warning">
             {alerts.nearExpiryCount}
           </span>
-          <span className="text-sm text-orange-600">Near Expiry</span>
+          <span className="text-sm text-warning">Near Expiry</span>
         </button>
       )}
 
@@ -50,12 +50,12 @@ export function StockAlertPanel({
         <button
           type="button"
           onClick={onFilterQuarantined}
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-start transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+          className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-start transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
         >
-          <span className="block text-2xl font-bold text-red-700">
+          <span className="block text-2xl font-bold text-destructive">
             {alerts.quarantinedCount}
           </span>
-          <span className="text-sm text-red-600">Quarantined</span>
+          <span className="text-sm text-destructive">Quarantined</span>
         </button>
       )}
     </div>

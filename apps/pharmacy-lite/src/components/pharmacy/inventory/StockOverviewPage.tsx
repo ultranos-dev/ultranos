@@ -24,7 +24,7 @@ export function StockOverviewPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">Stock Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">Stock Overview</h1>
         <Link href="/inventory/receive">
           <Button variant="default">Receive Stock</Button>
         </Link>
@@ -40,12 +40,12 @@ export function StockOverviewPage() {
       {/* Active filter pill */}
       {activeFilter !== 'all' && (
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium text-neutral-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
             {filterLabels[activeFilter]}
             <button
               type="button"
               onClick={() => setActiveFilter('all')}
-              className="ms-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-200 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="ms-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label="Clear filter"
             >
               ×
