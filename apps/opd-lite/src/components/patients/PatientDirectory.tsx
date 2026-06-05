@@ -282,8 +282,8 @@ export function PatientDirectory() {
   const showRegisterButton = sorted.length < 3
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-foreground">
             {t('title')}
@@ -306,9 +306,10 @@ export function PatientDirectory() {
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-4 flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3">
         <input
           type="text"
+          dir="auto"
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

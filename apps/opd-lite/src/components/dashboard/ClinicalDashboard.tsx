@@ -53,9 +53,9 @@ export function ClinicalDashboard() {
   const displayRole = formatRole(session?.role ?? '')
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
       {/* Welcome message */}
-      <div className="mb-8">
+      <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {t('welcome', { name: displayName })}
         </h1>
@@ -65,7 +65,7 @@ export function ClinicalDashboard() {
       </div>
 
       {/* Primary CTAs */}
-      <div className="mb-8 flex items-center gap-3">
+      <div className="flex items-center gap-3">
         <Button variant="primary" onClick={handleStartEncounter}>
           {t('startEncounter')}
         </Button>
@@ -78,7 +78,7 @@ export function ClinicalDashboard() {
       </div>
 
       {/* Inline patient search */}
-      <section className="mb-8" ref={searchRef}>
+      <section ref={searchRef}>
         <SearchInput value={query} onChange={handleQueryChange} />
         {(results.length > 0 || isSearching || query.length > 0) && (
           <div className="mt-2">
@@ -93,7 +93,7 @@ export function ClinicalDashboard() {
       </section>
 
       {/* Summary cards grid */}
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <TodayEncountersCard />
         <PendingLabResultsCard />
         <UnresolvedConflictsCard />
