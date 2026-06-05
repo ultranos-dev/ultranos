@@ -8,7 +8,7 @@ import type { SupportedLocale } from '../direction.js'
 /** Returns the font-family string appropriate for a locale's native label. */
 function nativeLabelFont(locale: SupportedLocale): string {
   return getDirection(locale) === 'rtl'
-    ? typography.fontFamily['sans-ar']
+    ? typography.fontFamily['serif-ar']
     : 'inherit'
 }
 
@@ -203,6 +203,29 @@ export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = fa
             zIndex: 200,
           }}
         >
+          <div
+            style={{
+              paddingInlineStart: '0.75rem',
+              paddingInlineEnd: '0.75rem',
+              paddingBlockStart: '0.5rem',
+              paddingBlockEnd: '0.25rem',
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.neutral[400],
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Language
+          </div>
+          <div
+            style={{
+              marginInline: '-0.25rem',
+              marginBlock: '0.25rem',
+              height: '1px',
+              backgroundColor: colors.neutral[700],
+            }}
+          />
           {LANGUAGES.map((lang, index) => (
             <div
               key={lang.code}

@@ -16,7 +16,7 @@ import {
 
 type SupportedLocale = 'en' | 'ar' | 'prs' | 'ps'
 
-const ARABIC_FONT_STYLE = { fontFamily: 'var(--font-family-sans-ar)' } as const
+const ARABIC_FONT_STYLE = { fontFamily: 'var(--font-family-serif-ar)' } as const
 
 const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
   { code: 'en', nativeLabel: 'English' },
