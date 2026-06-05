@@ -65,6 +65,9 @@ export type { SupportedLocale, Direction } from './direction.js'
 export { DirectionalIcon, DIRECTIONAL_ICON_CSS } from './components/DirectionalIcon.js'
 export type { DirectionalIconProps, IconCategory } from './components/DirectionalIcon.js'
 
+export { PasswordStrengthBar, getPasswordStrength } from './components/PasswordStrengthBar.js'
+export type { PasswordStrengthBarProps } from './components/PasswordStrengthBar.js'
+
 export {
   formatNumber,
   formatInteger,
