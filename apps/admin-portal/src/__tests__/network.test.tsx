@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-// ── Mock supabase (required by TopHeader) ───────────────────
+// ── Mock supabase ────────────────────────────────────────────
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
     auth: {
@@ -12,7 +13,7 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// ── Mock auth session store (required by TopHeader) ─────────
+// ── Mock auth session store ──────────────────────────────────
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
@@ -122,14 +123,6 @@ describe('Story 55.7: Network Page', () => {
       expect(screen.getByText('ACTIVE')).toBeDefined()
       expect(screen.getByText('PENDING')).toBeDefined()
       expect(screen.getByText('SUSPENDED')).toBeDefined()
-    })
-
-    it('renders TopHeader with correct title', async () => {
-      render(<NetworkPage />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Lab Network')).toBeDefined()
-      })
     })
 
     it('displays pending samples and staff count metrics', async () => {

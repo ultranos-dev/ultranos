@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
@@ -15,7 +16,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// Mock supabase (required by TopHeader)
+// Mock supabase
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
     auth: {
@@ -25,7 +26,7 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// Mock auth session store (required by TopHeader)
+// Mock auth session store
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
@@ -92,12 +93,10 @@ describe('Provider Profile Page', () => {
     render(<ProviderProfilePage />)
 
     await waitFor(() => {
-      // Name appears in TopHeader and identity card
       const nameElements = screen.getAllByText('Dr. Fatima Al-Rashid')
       expect(nameElements.length).toBeGreaterThanOrEqual(1)
     })
 
-    // Email appears in TopHeader and in the identity card
     const emailElements = screen.getAllByText('fatima@clinic.com')
     expect(emailElements.length).toBeGreaterThanOrEqual(1)
 

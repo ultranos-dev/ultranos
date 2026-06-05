@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-// ── Mock supabase (required by TopHeader) ───────────────────
+// ── Mock supabase ────────────────────────────────────────────
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
     auth: {
@@ -12,7 +13,7 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// ── Mock auth session store (required by TopHeader) ─────────
+// ── Mock auth session store ──────────────────────────────────
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
@@ -166,7 +167,6 @@ describe('Inventory Page — Header', () => {
     render(<InventoryPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Inventory Overview')).toBeInTheDocument()
       expect(screen.getByText('Create Purchase Order')).toBeInTheDocument()
     })
   })
