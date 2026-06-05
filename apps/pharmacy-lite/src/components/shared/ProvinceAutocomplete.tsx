@@ -160,12 +160,12 @@ export function ProvinceAutocomplete({
         className="mb-1 block text-sm font-semibold text-neutral-700"
       >
         {label}
-        {required && <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>}
+        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
       </label>
 
       <div className="relative">
         {value ? (
-          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2">
+          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2">
             <span className="flex-1 text-sm text-neutral-900">
               {getDisplayName(value)}
             </span>
@@ -200,7 +200,7 @@ export function ProvinceAutocomplete({
             autoComplete="off"
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               error
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={placeholder}
@@ -220,7 +220,7 @@ export function ProvinceAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-background shadow-lg"
         >
           {filtered.map((province, index) => (
             <li
@@ -254,13 +254,13 @@ export function ProvinceAutocomplete({
       )}
 
       {isOpen && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-neutral-500 shadow-lg">
           No matching province
         </div>
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

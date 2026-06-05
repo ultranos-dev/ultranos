@@ -141,13 +141,13 @@ export function DistrictAutocomplete({
         className="mb-1 block text-sm font-semibold text-neutral-700"
       >
         {label}
-        {required && <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>}
+        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
       </label>
 
       <div className="relative">
         {value && selectedDistrict ? (
           <div
-            className={`flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2 ${
+            className={`flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-background px-3 py-2 ${
               disabled ? 'opacity-50' : ''
             }`}
           >
@@ -191,7 +191,7 @@ export function DistrictAutocomplete({
               disabled
                 ? 'cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-400'
                 : error
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
                   : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={disabled ? '' : placeholder}
@@ -213,7 +213,7 @@ export function DistrictAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-background shadow-lg"
         >
           {filtered.map((district, index) => (
             <li
@@ -247,13 +247,13 @@ export function DistrictAutocomplete({
       )}
 
       {isOpen && !disabled && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-neutral-500 shadow-lg">
           No matching district
         </div>
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

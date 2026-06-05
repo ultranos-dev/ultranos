@@ -167,7 +167,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-neutral-900">Pharmacy Lite</h1>
         <p className="text-sm text-neutral-500 mt-1">Powered by Ultranos</p>
       </div>
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-background p-6 shadow-sm">
         <h2 className="mb-6 text-center text-lg font-semibold text-neutral-800">
           Sign In
         </h2>
@@ -175,7 +175,7 @@ export default function LoginPage() {
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           >
             {error}
           </div>

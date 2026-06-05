@@ -29,19 +29,64 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
           class="flex gap-2"
         >
           <button
-            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
             data-testid="select-all-btn"
+            data-variant="secondary"
             type="button"
           >
             Select All
           </button>
           <button
-            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
             data-testid="deselect-all-btn"
+            data-variant="secondary"
             type="button"
           >
             Deselect All
           </button>
+        </div>
+      </div>
+      <div
+        aria-live="polite"
+        class="rounded-xl bg-neutral-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+        data-banner-state="nka"
+        data-testid="allergy-banner"
+        role="alert"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-check text-neutral-400 shrink-0"
+            fill="none"
+            height="20"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="m9 12 2 2 4-4"
+            />
+          </svg>
+          <span
+            class="text-sm font-semibold text-neutral-600"
+          >
+            No Known Allergies (NKA)
+          </span>
         </div>
       </div>
       <ul
@@ -212,8 +257,11 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in LTR mod
         </li>
       </ul>
       <button
-        class="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 w-full"
+        data-size="default"
+        data-slot="button"
         data-testid="confirm-dispensing-btn"
+        data-variant="default"
         type="button"
       >
         Confirm Dispensing
@@ -252,19 +300,64 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
           class="flex gap-2"
         >
           <button
-            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
             data-testid="select-all-btn"
+            data-variant="secondary"
             type="button"
           >
             Select All
           </button>
           <button
-            class="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
             data-testid="deselect-all-btn"
+            data-variant="secondary"
             type="button"
           >
             Deselect All
           </button>
+        </div>
+      </div>
+      <div
+        aria-live="polite"
+        class="rounded-xl bg-neutral-50/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40"
+        data-banner-state="nka"
+        data-testid="allergy-banner"
+        role="alert"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-circle-check text-neutral-400 shrink-0"
+            fill="none"
+            height="20"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+            />
+            <path
+              d="m9 12 2 2 4-4"
+            />
+          </svg>
+          <span
+            class="text-sm font-semibold text-neutral-600"
+          >
+            No Known Allergies (NKA)
+          </span>
         </div>
       </div>
       <ul
@@ -435,8 +528,11 @@ exports[`FulfillmentChecklist > RTL snapshot tests > matches snapshot in RTL mod
         </li>
       </ul>
       <button
-        class="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4 w-full"
+        data-size="default"
+        data-slot="button"
         data-testid="confirm-dispensing-btn"
+        data-variant="default"
         type="button"
       >
         Confirm Dispensing

@@ -112,7 +112,7 @@ export function MpiResultModal({
 
       {/* Modal panel */}
       <div
-        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-white shadow-2xl ${
+        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-background shadow-2xl ${
           isBlock ? 'border-red-400' : 'border-amber-400'
         }`}
       >
@@ -156,7 +156,7 @@ export function MpiResultModal({
                   key={candidate.id}
                   className={`rounded-lg border overflow-hidden transition-colors ${
                     isBlock ? 'border-red-200' : 'border-amber-200'
-                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-white'}`}
+                  } ${isExpanded ? (isBlock ? 'bg-red-50/50' : 'bg-amber-50/50') : 'bg-background'}`}
                 >
                   {/* Collapsible header — always visible */}
                   <Button

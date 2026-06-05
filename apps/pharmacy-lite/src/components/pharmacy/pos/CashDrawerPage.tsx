@@ -182,7 +182,7 @@ export function CashDrawerPage() {
               placeholder="0.00"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="default" className="w-full" disabled={submitting}>
             {submitting ? 'Opening...' : 'Open Drawer'}
           </Button>

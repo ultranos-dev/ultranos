@@ -48,7 +48,7 @@ export function NameInputSection({
             className="mb-1 block text-sm font-semibold text-neutral-700"
           >
             {t('nameGiven')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </label>
           <input
             id="name-given"
@@ -60,7 +60,7 @@ export function NameInputSection({
             aria-describedby={errors?.nameGiven ? 'name-given-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGiven
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={t('nameGivenPlaceholder')}
@@ -68,7 +68,7 @@ export function NameInputSection({
             onChange={(e) => onNameGivenChange(e.target.value)}
           />
           {errors?.nameGiven && (
-            <p id="name-given-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-given-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGiven}
             </p>
           )}
@@ -90,7 +90,7 @@ export function NameInputSection({
             aria-describedby={errors?.nameFather ? 'name-father-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameFather
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={t('nameFatherPlaceholder')}
@@ -98,7 +98,7 @@ export function NameInputSection({
             onChange={(e) => onNameFatherChange(e.target.value)}
           />
           {errors?.nameFather && (
-            <p id="name-father-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-father-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameFather}
             </p>
           )}
@@ -120,7 +120,7 @@ export function NameInputSection({
             aria-describedby={errors?.nameGrandfather ? 'name-grandfather-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGrandfather
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
                 : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
             }`}
             placeholder={t('nameGrandfatherPlaceholder')}
@@ -128,7 +128,7 @@ export function NameInputSection({
             onChange={(e) => onNameGrandfatherChange(e.target.value)}
           />
           {errors?.nameGrandfather && (
-            <p id="name-grandfather-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-grandfather-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGrandfather}
             </p>
           )}

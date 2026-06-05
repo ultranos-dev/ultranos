@@ -287,16 +287,16 @@ export default function PaperRxPage() {
 
       {/* AC #9: Non-dismissible Manual Verification Required banner */}
       <div
-        className="rounded-lg border border-red-300 bg-red-50 px-4 py-3"
+        className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
         role="alert"
         aria-live="polite"
       >
         <div className="flex items-center gap-2">
-          <span className="text-red-600 font-semibold text-sm">
+          <span className="text-destructive font-semibold text-sm">
             Manual Verification Required
           </span>
         </div>
-        <p className="text-red-700 text-xs mt-1">
+        <p className="text-destructive/80 text-xs mt-1">
           Paper prescriptions cannot be digitally verified. The pharmacist takes
           full responsibility for verifying authenticity.
         </p>
@@ -380,7 +380,7 @@ export default function PaperRxPage() {
           )}
 
           {errorMessage && (
-            <p className="text-sm text-red-600">{errorMessage}</p>
+            <p className="text-sm text-destructive">{errorMessage}</p>
           )}
         </div>
       )}
@@ -452,7 +452,7 @@ export default function PaperRxPage() {
             ))}
 
             {errorMessage && (
-              <p className="text-sm text-red-600">{errorMessage}</p>
+              <p className="text-sm text-destructive">{errorMessage}</p>
             )}
 
             <Button
@@ -501,11 +501,11 @@ export default function PaperRxPage() {
       {/* Phase: Error */}
       {phase === 'error' && (
         <div className="space-y-4 text-center py-8">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <X className="h-6 w-6 text-red-600" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <X className="h-6 w-6 text-destructive" />
           </div>
-          <p className="text-lg font-medium text-red-900">Submission Failed</p>
-          <p className="text-sm text-red-600">{errorMessage}</p>
+          <p className="text-lg font-medium text-destructive">Submission Failed</p>
+          <p className="text-sm text-destructive">{errorMessage}</p>
           <Button
             variant="outline"
             onClick={() => setPhase('review')}
