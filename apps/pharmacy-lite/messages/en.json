@@ -61,7 +61,9 @@
     "passwordStrengthGood": "Good",
     "passwordStrengthStrong": "Strong",
     "resetRequestFailed": "Failed to send reset link. Please try again.",
-    "passwordUpdateFailed": "Failed to update password. Please try again."
+    "passwordUpdateFailed": "Failed to update password. Please try again.",
+    "mfaTitle": "Two-factor authentication",
+    "signInSubtitle": "Enter your credentials to access Pharmacy Lite"
   },
   "fulfillment": {
     "title": "Fulfillment Checklist",
@@ -272,8 +274,7 @@
     "shiftSummaryButton": "Shift Summary",
     "recordsCountSingular": "{count} record found",
     "recordsCountPlural": "{count} records found",
-    "noRecordsFound": "No dispensing records found",
-    "loading": "Loading..."
+    "noRecordsFound": "No dispensing records found"
   },
   "common": {
     "online": "Online",

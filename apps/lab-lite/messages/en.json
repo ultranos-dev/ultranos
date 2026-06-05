@@ -76,7 +76,9 @@
     "passwordStrengthGood": "Good",
     "passwordStrengthStrong": "Strong",
     "resetRequestFailed": "Failed to send reset link. Please try again.",
-    "passwordUpdateFailed": "Failed to update password. Please try again."
+    "passwordUpdateFailed": "Failed to update password. Please try again.",
+    "mfaTitle": "Two-factor authentication",
+    "signInSubtitle": "Enter your credentials to access the lab portal"
   },
   "upload": {
     "title": "Upload Lab Result",

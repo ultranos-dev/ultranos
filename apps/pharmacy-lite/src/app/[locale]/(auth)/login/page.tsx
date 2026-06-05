@@ -48,7 +48,7 @@ export default function LoginPage() {
 
       if (signInError) {
         reportAuthEvent('LOGIN_FAILURE', { actorEmail: email })
-        setError('Invalid email or password')
+        setError(tAuth('invalidCredentials'))
         setLoading(false)
         return
       }
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
       if (factorsError) {
         await supabase.auth.signOut()
-        setError('Failed to retrieve MFA factors')
+        setError(tAuth('mfaFactorsError'))
         setLoading(false)
         return
       }
@@ -68,7 +68,7 @@ export default function LoginPage() {
       const totpFactor = factors.totp?.[0]
       if (!totpFactor) {
         await supabase.auth.signOut()
-        setError('TOTP MFA is required for pharmacy staff')
+        setError(tAuth('mfaRequired'))
         setLoading(false)
         return
       }
@@ -78,7 +78,7 @@ export default function LoginPage() {
 
       if (challengeError) {
         await supabase.auth.signOut()
-        setError('Failed to initiate MFA challenge')
+        setError(tAuth('mfaChallengeError'))
         setLoading(false)
         return
       }
@@ -87,7 +87,7 @@ export default function LoginPage() {
       setChallengeId(challenge.id)
       setStep('mfa')
     } catch {
-      setError('An unexpected error occurred')
+      setError(tAuth('unexpectedError'))
     } finally {
       setLoading(false)
     }
@@ -97,7 +97,7 @@ export default function LoginPage() {
     const { data: sessionData } = await supabase.auth.getSession()
     const jwt = sessionData.session?.access_token
     if (!jwt) {
-      setError('Failed to retrieve session')
+      setError(tAuth('sessionRetrievalError'))
       setLoading(false)
       return
     }
@@ -142,7 +142,7 @@ export default function LoginPage() {
 
       if (verifyError) {
         reportAuthEvent('MFA_VERIFY_FAILURE')
-        setError('Invalid TOTP code — please try again')
+        setError(tAuth('invalidTotp'))
         setTotpCode('')
         setLoading(false)
         return
@@ -152,7 +152,7 @@ export default function LoginPage() {
       await populateSessionAndRedirect()
     } catch {
       await supabase.auth.signOut()
-      setError('An unexpected error occurred during MFA verification')
+      setError(tAuth('unexpectedMfaError'))
     } finally {
       setLoading(false)
     }
@@ -209,12 +209,10 @@ export default function LoginPage() {
             )}
             <div>
               <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-                {step === 'credentials' ? t('signIn') : 'Two-factor authentication'}
+                {step === 'credentials' ? t('signIn') : tAuth('mfaTitle')}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                {step === 'credentials'
-                  ? 'Enter your credentials to access Pharmacy Lite'
-                  : 'Enter the 6-digit code from your authenticator app'}
+                {step === 'credentials' ? tAuth('signInSubtitle') : tAuth('totpPrompt')}
               </p>
             </div>
 
@@ -230,7 +228,7 @@ export default function LoginPage() {
             {step === 'credentials' && (
               <form onSubmit={handleCredentialSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{tAuth('email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -242,7 +240,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{tAuth('password')}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -265,7 +263,7 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Signing in\u2026' : 'Sign in'}
+                  {loading ? tAuth('signingIn') : tAuth('signIn')}
                 </Button>
               </form>
             )}
@@ -273,7 +271,7 @@ export default function LoginPage() {
             {step === 'mfa' && (
               <form onSubmit={handleMfaSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="totp">TOTP Code</Label>
+                  <Label htmlFor="totp">{tAuth('totpCode')}</Label>
                   <Input
                     id="totp"
                     type="text"
@@ -294,7 +292,7 @@ export default function LoginPage() {
                   className="w-full"
                   disabled={loading || totpCode.length !== 6}
                 >
-                  {loading ? 'Verifying\u2026' : 'Verify'}
+                  {loading ? tAuth('verifying') : tAuth('verify')}
                 </Button>
                 <Button
                   type="button"
@@ -302,7 +300,7 @@ export default function LoginPage() {
                   onClick={handleBackToSignIn}
                   className="w-full"
                 >
-                  Back to sign in
+                  {tAuth('backToSignIn')}
                 </Button>
               </form>
             )}

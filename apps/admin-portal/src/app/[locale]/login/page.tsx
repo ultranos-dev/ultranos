@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
 
       if (signInError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorEmail: email })
-        setError('Invalid email or password')
+        setError(t('errorInvalidCredentials'))
         setLoading(false)
         return
       }
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
       if (factorsError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: data.user?.id })
         await supabase.auth.signOut()
-        setError('Failed to retrieve MFA factors')
+        setError(t('errorMfaFactors'))
         setLoading(false)
         return
       }
@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
       if (!webauthnFactor) {
         const session = data.session
         if (!session) {
-          setError('Failed to retrieve session')
+          setError(t('errorRetrieveSession'))
           setLoading(false)
           return
         }
@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
         if (role !== 'ADMIN') {
           reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: payload.sub })
           await supabase.auth.signOut()
-          setError('Access denied — admin role required')
+          setError(t('errorAccessDenied'))
           setLoading(false)
           return
         }
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
       if (challengeError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: data.user?.id })
         await supabase.auth.signOut()
-        setError('Failed to initiate FIDO2 challenge')
+        setError(t('errorFidoChallenge'))
         setLoading(false)
         return
       }
@@ -121,7 +121,7 @@ export default function AdminLoginPage() {
       setChallengeId(challenge.id)
       setStep('mfa')
     } catch {
-      setError('An unexpected error occurred')
+      setError(t('errorUnexpected'))
     } finally {
       setLoading(false)
     }
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
 
     try {
       if (typeof window !== 'undefined' && !window.PublicKeyCredential) {
-        setError('WebAuthn is not supported in this browser. Use a browser with FIDO2 support.')
+        setError(t('errorWebAuthnUnsupported'))
         setLoading(false)
         return
       }
@@ -146,7 +146,7 @@ export default function AdminLoginPage() {
 
       if (verifyError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE')
-        setError('FIDO2 verification failed — please try again')
+        setError(t('errorFidoFailed'))
         setLoading(false)
         return
       }
@@ -154,7 +154,7 @@ export default function AdminLoginPage() {
       const { data: sessionData } = await supabase.auth.getSession()
       const jwt = sessionData.session?.access_token
       if (!jwt) {
-        setError('Failed to retrieve session after MFA verification')
+        setError(t('errorSessionMfa'))
         setLoading(false)
         return
       }
@@ -166,7 +166,7 @@ export default function AdminLoginPage() {
       if (role !== 'ADMIN') {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: payload.sub })
         await supabase.auth.signOut()
-        setError('Access denied — admin role required')
+        setError(t('errorAccessDenied'))
         setLoading(false)
         return
       }
@@ -190,7 +190,7 @@ export default function AdminLoginPage() {
       window.location.href =
         returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
     } catch {
-      setError('An unexpected error occurred during FIDO2 verification')
+      setError(t('errorUnexpectedMfa'))
     } finally {
       setLoading(false)
     }
@@ -250,12 +250,10 @@ export default function AdminLoginPage() {
             )}
             <div>
               <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-                {step === 'credentials' ? 'Sign in' : 'Verify identity'}
+                {step === 'credentials' ? t('signIn') : t('verifyIdentity')}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                {step === 'credentials'
-                  ? 'Enter your admin credentials to continue'
-                  : 'Tap your FIDO2 security key when prompted by your browser'}
+                {step === 'credentials' ? t('signInSubtitle') : t('fidoSubtitle')}
               </p>
             </div>
 
@@ -271,7 +269,7 @@ export default function AdminLoginPage() {
             {step === 'credentials' && (
               <form onSubmit={handleCredentialSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -283,7 +281,7 @@ export default function AdminLoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('password')}</Label>
                   <Input
                     id="password"
                     type="password"
@@ -306,7 +304,7 @@ export default function AdminLoginPage() {
                   </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Signing in\u2026' : 'Sign in'}
+                  {loading ? t('signingIn') : t('signIn')}
                 </Button>
               </form>
             )}
@@ -317,10 +315,10 @@ export default function AdminLoginPage() {
                   <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">
-                      Hardware Security Key Required
+                      {t('fidoTitle')}
                     </p>
                     <p className="mt-0.5 text-muted-foreground">
-                      Please tap your FIDO2 security key when your browser prompts you.
+                      {t('fidoBody')}
                     </p>
                   </div>
                 </div>
@@ -330,7 +328,7 @@ export default function AdminLoginPage() {
                   disabled={loading}
                   className="w-full"
                 >
-                  {loading ? 'Verifying\u2026' : 'Verify Security Key'}
+                  {loading ? t('verifying') : t('verifySecurityKey')}
                 </Button>
                 <Button
                   type="button"
@@ -338,18 +336,18 @@ export default function AdminLoginPage() {
                   onClick={handleBackToSignIn}
                   className="w-full"
                 >
-                  Back to sign in
+                  {t('backToSignIn')}
                 </Button>
               </div>
             )}
 
             <p className="text-center text-xs text-muted-foreground">
-              New to Ultranos?{' '}
+              {t('newToUltranos')}{' '}
               <a
                 href="/register"
                 className="font-medium text-foreground transition-colors hover:text-primary"
               >
-                Register your organization
+                {t('registerOrg')}
               </a>
             </p>
           </div>
