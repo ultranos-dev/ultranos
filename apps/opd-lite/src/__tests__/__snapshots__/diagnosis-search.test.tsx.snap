@@ -20,14 +20,14 @@ exports[`DiagnosisSearch > RTL support > matches LTR snapshot 1`] = `
       >
         <button
           aria-checked="true"
-          class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90"
           role="radio"
         >
           Primary
         </button>
         <button
           aria-checked="false"
-          class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80"
           role="radio"
         >
           Secondary
@@ -72,14 +72,14 @@ exports[`DiagnosisSearch > RTL support > matches RTL snapshot 1`] = `
       >
         <button
           aria-checked="true"
-          class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90"
           role="radio"
         >
           Primary
         </button>
         <button
           aria-checked="false"
-          class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80"
           role="radio"
         >
           Secondary

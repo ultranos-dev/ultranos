@@ -81,7 +81,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
       data-testid="result-cards"
     >
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -179,7 +179,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in LTR mode 1`] = 
         </div>
       </div>
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -306,7 +306,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
       data-testid="result-cards"
     >
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -404,7 +404,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ar lo
         </div>
       </div>
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -531,7 +531,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
       data-testid="result-cards"
     >
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -629,7 +629,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (prs l
         </div>
       </div>
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -756,7 +756,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
       data-testid="result-cards"
     >
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"
@@ -854,7 +854,7 @@ exports[`PatientResultSummary — LTR/RTL snapshots > renders in RTL mode (ps lo
         </div>
       </div>
       <div
-        class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+        class="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
       >
         <div
           class="flex items-start gap-3"

@@ -12,7 +12,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
         class="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800"
       >
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-card text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
           type="button"
         >
           All
@@ -37,7 +37,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
         </button>
       </div>
       <select
-        class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+        class="rounded-md border border-gray-300 bg-card px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
       >
         <option
           value="ALL"
@@ -70,7 +70,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
       class="flex flex-col gap-3"
     >
       <div
-        class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+        class="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
       >
         <div
           class="flex items-start justify-between gap-3"
@@ -124,7 +124,7 @@ exports[`OrdersWorklist RTL snapshot > renders in LTR 1`] = `
             >
               Ordered
                
-              154d
+              155d
             </span>
           </div>
         </div>
@@ -146,7 +146,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
         class="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800"
       >
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors bg-card text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
           type="button"
         >
           All
@@ -171,7 +171,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
         </button>
       </div>
       <select
-        class="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+        class="rounded-md border border-gray-300 bg-card px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
       >
         <option
           value="ALL"
@@ -204,7 +204,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
       class="flex flex-col gap-3"
     >
       <div
-        class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+        class="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
       >
         <div
           class="flex items-start justify-between gap-3"
@@ -258,7 +258,7 @@ exports[`OrdersWorklist RTL snapshot > renders in RTL 1`] = `
             >
               Ordered
                
-              154d
+              155d
             </span>
           </div>
         </div>

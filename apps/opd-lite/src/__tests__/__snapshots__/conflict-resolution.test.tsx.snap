@@ -334,7 +334,7 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
     class="mt-4 flex flex-wrap gap-2"
   >
     <button
-      class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
       data-testid="resolve-keep-both"
       type="button"
     >
@@ -346,14 +346,14 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       Keep Both
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
       data-testid="resolve-prefer-local"
       type="button"
     >
       Prefer Local
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
       data-testid="resolve-prefer-remote"
       type="button"
     >
@@ -700,7 +700,7 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
       class="mt-4 flex flex-wrap gap-2"
     >
       <button
-        class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
         data-testid="resolve-keep-both"
         type="button"
       >
@@ -712,14 +712,14 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         Keep Both
       </button>
       <button
-        class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
         data-testid="resolve-prefer-local"
         type="button"
       >
         Prefer Local
       </button>
       <button
-        class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
         data-testid="resolve-prefer-remote"
         type="button"
       >

@@ -51,7 +51,7 @@ exports[`TokenBadge RTL snapshots > renders in RTL 1`] = `
 exports[`TokenCard RTL snapshots > renders in LTR 1`] = `
 <div>
   <div
-    class="token-card flex flex-col items-center justify-center border-2 border-neutral-300 rounded-lg p-6 bg-white"
+    class="token-card flex flex-col items-center justify-center border-2 border-border rounded-lg p-6 bg-card"
     data-testid="token-card"
     style="width: 3in; height: 2in;"
   >
@@ -75,12 +75,12 @@ exports[`TokenCard RTL snapshots > renders in LTR 1`] = `
       </svg>
     </span>
     <p
-      class="mt-3 text-lg font-bold text-neutral-900"
+      class="mt-3 text-lg font-bold text-foreground"
     >
       Blue Star
     </p>
     <p
-      class="mt-1 text-sm text-neutral-500"
+      class="mt-1 text-sm text-muted-foreground"
     >
       #
       1
@@ -92,7 +92,7 @@ exports[`TokenCard RTL snapshots > renders in LTR 1`] = `
 exports[`TokenCard RTL snapshots > renders in RTL 1`] = `
 <div>
   <div
-    class="token-card flex flex-col items-center justify-center border-2 border-neutral-300 rounded-lg p-6 bg-white"
+    class="token-card flex flex-col items-center justify-center border-2 border-border rounded-lg p-6 bg-card"
     data-testid="token-card"
     style="width: 3in; height: 2in;"
   >
@@ -116,12 +116,12 @@ exports[`TokenCard RTL snapshots > renders in RTL 1`] = `
       </svg>
     </span>
     <p
-      class="mt-3 text-lg font-bold text-neutral-900"
+      class="mt-3 text-lg font-bold text-foreground"
     >
       Blue Star
     </p>
     <p
-      class="mt-1 text-sm text-neutral-500"
+      class="mt-1 text-sm text-muted-foreground"
     >
       #
       1

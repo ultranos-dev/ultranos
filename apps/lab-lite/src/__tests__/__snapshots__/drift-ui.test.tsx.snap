@@ -18,14 +18,28 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
         class="mt-0.5 shrink-0 text-red-500"
       >
         <svg
-          class="h-5 w-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          aria-hidden="true"
+          class="lucide lucide-circle-x"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
           <path
-            clip-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-            fill-rule="evenodd"
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
           />
         </svg>
       </div>
@@ -84,14 +98,28 @@ exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctl
         class="mt-0.5 shrink-0 text-red-500"
       >
         <svg
-          class="h-5 w-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          aria-hidden="true"
+          class="lucide lucide-circle-x"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
         >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
           <path
-            clip-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-            fill-rule="evenodd"
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
           />
         </svg>
       </div>
@@ -138,14 +166,14 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
     class="space-y-6"
   >
     <div
-      class="overflow-x-auto rounded-lg border border-neutral-200 bg-white"
+      class="overflow-x-auto rounded-lg border border-border bg-card"
     >
       <table
         aria-label="QC Run History"
         class="w-full text-sm"
       >
         <thead
-          class="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500"
+          class="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground"
         >
           <tr>
             <th
@@ -193,38 +221,38 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
           </tr>
         </thead>
         <tbody
-          class="divide-y divide-neutral-100"
+          class="divide-y divide-border/50"
         >
           <tr
             class=""
           >
             <td
-              class="px-3 py-2.5 text-neutral-900"
+              class="px-3 py-2.5 text-foreground"
             >
-              6/4/2026
+              6/5/2026
             </td>
             <td
-              class="px-3 py-2.5 text-neutral-600"
+              class="px-3 py-2.5 text-muted-foreground"
             >
               LEVEL_2
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-700"
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
             >
               100.00
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-700"
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
             >
               5.00
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums font-medium text-neutral-900"
+              class="px-3 py-2.5 text-end tabular-nums font-medium text-foreground"
             >
               100.50
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-600"
+              class="px-3 py-2.5 text-end tabular-nums text-muted-foreground"
             >
               +
               0.10
@@ -253,14 +281,14 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
     class="space-y-6"
   >
     <div
-      class="overflow-x-auto rounded-lg border border-neutral-200 bg-white"
+      class="overflow-x-auto rounded-lg border border-border bg-card"
     >
       <table
         aria-label="QC Run History"
         class="w-full text-sm"
       >
         <thead
-          class="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500"
+          class="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground"
         >
           <tr>
             <th
@@ -308,38 +336,38 @@ exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders corre
           </tr>
         </thead>
         <tbody
-          class="divide-y divide-neutral-100"
+          class="divide-y divide-border/50"
         >
           <tr
             class=""
           >
             <td
-              class="px-3 py-2.5 text-neutral-900"
+              class="px-3 py-2.5 text-foreground"
             >
-              6/4/2026
+              6/5/2026
             </td>
             <td
-              class="px-3 py-2.5 text-neutral-600"
+              class="px-3 py-2.5 text-muted-foreground"
             >
               LEVEL_2
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-700"
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
             >
               100.00
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-700"
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
             >
               5.00
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums font-medium text-neutral-900"
+              class="px-3 py-2.5 text-end tabular-nums font-medium text-foreground"
             >
               100.50
             </td>
             <td
-              class="px-3 py-2.5 text-end tabular-nums text-neutral-600"
+              class="px-3 py-2.5 text-end tabular-nums text-muted-foreground"
             >
               +
               0.10

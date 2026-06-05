@@ -11,7 +11,7 @@ exports[`AppShell > snapshot: RTL render with all props 1`] = `
       <nav
         aria-label="Main navigation"
         role="navigation"
-        style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; position: relative; z-index: 100;"
+        style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif; position: relative; z-index: 100;"
       >
         <span
           style="font-weight: 700; color: rgb(26, 102, 71); font-size: 1.25rem; white-space: nowrap;"
@@ -117,7 +117,7 @@ exports[`AppShell > snapshot: RTL render with user=null 1`] = `
       <nav
         aria-label="Main navigation"
         role="navigation"
-        style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; position: relative; z-index: 100;"
+        style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif; position: relative; z-index: 100;"
       >
         <span
           style="font-weight: 700; color: rgb(26, 102, 71); font-size: 1.25rem; white-space: nowrap;"
@@ -206,7 +206,7 @@ exports[`AppShell > snapshot: default render with all props 1`] = `
     <nav
       aria-label="Main navigation"
       role="navigation"
-      style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; position: relative; z-index: 100;"
+      style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif; position: relative; z-index: 100;"
     >
       <span
         style="font-weight: 700; color: rgb(26, 102, 71); font-size: 1.25rem; white-space: nowrap;"
@@ -308,7 +308,7 @@ exports[`AppShell > snapshot: render with user=null (unauthenticated state) 1`] 
     <nav
       aria-label="Main navigation"
       role="navigation"
-      style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: "Urbanist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; position: relative; z-index: 100;"
+      style="height: 56px; background-color: rgb(255, 255, 255); border-block-end: 1px solid hsl(210, 12%, 87%); display: flex; align-items: center; padding-inline-start: 1rem; padding-inline-end: 1rem; font-family: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif; position: relative; z-index: 100;"
     >
       <span
         style="font-weight: 700; color: rgb(26, 102, 71); font-size: 1.25rem; white-space: nowrap;"

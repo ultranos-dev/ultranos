@@ -22,7 +22,7 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
             data-testid="flask-icon"
           />
           <h2
-            class="text-sm font-medium text-neutral-700"
+            class="text-sm font-medium text-foreground"
           >
             Monitoring Due
           </h2>
@@ -49,25 +49,25 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
               class="min-w-0 flex-1"
             >
               <p
-                class="truncate text-sm font-medium text-neutral-900"
+                class="truncate text-sm font-medium text-foreground"
               >
                 Ahmad
                 , 
                 <span
-                  class="font-normal text-neutral-600"
+                  class="font-normal text-muted-foreground"
                 >
                   45 yr
                 </span>
               </p>
               <p
-                class="mt-0.5 truncate text-xs text-neutral-600"
+                class="mt-0.5 truncate text-xs text-muted-foreground"
               >
                 Warfarin
                  — 
                 INR (Prothrombin Time)
               </p>
               <p
-                class="mt-0.5 text-xs text-neutral-500"
+                class="mt-0.5 text-xs text-muted-foreground"
               >
                 Due soon
                 : 
@@ -80,7 +80,7 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
               <span
                 class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200"
               >
-                34d overdue
+                35d overdue
               </span>
             </div>
           </div>
@@ -97,25 +97,25 @@ exports[`MonitoringDueCard > RTL snapshot: MonitoringDueCard renders correctly i
               class="min-w-0 flex-1"
             >
               <p
-                class="truncate text-sm font-medium text-neutral-900"
+                class="truncate text-sm font-medium text-foreground"
               >
                 Layla
                 , 
                 <span
-                  class="font-normal text-neutral-600"
+                  class="font-normal text-muted-foreground"
                 >
                   32 yr
                 </span>
               </p>
               <p
-                class="mt-0.5 truncate text-xs text-neutral-600"
+                class="mt-0.5 truncate text-xs text-muted-foreground"
               >
                 Warfarin
                  — 
                 INR (Prothrombin Time)
               </p>
               <p
-                class="mt-0.5 text-xs text-neutral-500"
+                class="mt-0.5 text-xs text-muted-foreground"
               >
                 Due soon
                 : 

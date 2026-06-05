@@ -13,39 +13,39 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         class="flex items-center justify-between gap-2"
       >
         <h2
-          class="text-base font-semibold text-neutral-900"
+          class="text-base font-semibold text-foreground"
         >
           referenceRanges
         </h2>
       </div>
       <input
         aria-label="Search analytes"
-        class="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm placeholder:text-neutral-400"
+        class="w-full rounded border border-border px-3 py-1.5 text-sm placeholder:text-muted-foreground"
         placeholder="Search analyte name or LOINC code..."
         type="search"
         value=""
       />
       <div
-        class="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white"
+        class="divide-y divide-border/50 rounded-lg border border-border bg-card"
       >
         <div
           data-testid="analyte-row-1742-6"
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 ALT (SGPT)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1742-6
               </span>
@@ -55,7 +55,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -78,19 +78,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 AST (SGOT)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1920-8
               </span>
@@ -100,7 +100,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -123,19 +123,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Creatinine
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2160-0
               </span>
@@ -145,7 +145,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -168,19 +168,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Glucose (Fasting)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1558-6
               </span>
@@ -190,7 +190,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -213,19 +213,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 HbA1c
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 4548-4
               </span>
@@ -235,7 +235,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -258,19 +258,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Hematocrit
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 4544-3
               </span>
@@ -280,7 +280,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -303,19 +303,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Hemoglobin
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 718-7
               </span>
@@ -325,7 +325,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -348,19 +348,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Platelets
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 777-3
               </span>
@@ -370,7 +370,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -393,19 +393,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Potassium
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2823-3
               </span>
@@ -415,7 +415,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -438,19 +438,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Sodium
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2951-2
               </span>
@@ -460,7 +460,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -483,19 +483,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Total Bilirubin
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1975-2
               </span>
@@ -505,7 +505,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -528,19 +528,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 TSH
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 3016-3
               </span>
@@ -550,7 +550,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -573,19 +573,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Urine pH
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 5767-9
               </span>
@@ -595,7 +595,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -618,19 +618,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Urine Specific Gravity
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2965-2
               </span>
@@ -640,7 +640,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -663,19 +663,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 White Blood Cells
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 6690-2
               </span>
@@ -685,7 +685,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -722,39 +722,39 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         class="flex items-center justify-between gap-2"
       >
         <h2
-          class="text-base font-semibold text-neutral-900"
+          class="text-base font-semibold text-foreground"
         >
           referenceRanges
         </h2>
       </div>
       <input
         aria-label="Search analytes"
-        class="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm placeholder:text-neutral-400"
+        class="w-full rounded border border-border px-3 py-1.5 text-sm placeholder:text-muted-foreground"
         placeholder="Search analyte name or LOINC code..."
         type="search"
         value=""
       />
       <div
-        class="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white"
+        class="divide-y divide-border/50 rounded-lg border border-border bg-card"
       >
         <div
           data-testid="analyte-row-1742-6"
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 ALT (SGPT)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1742-6
               </span>
@@ -764,7 +764,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -787,19 +787,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 AST (SGOT)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1920-8
               </span>
@@ -809,7 +809,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -832,19 +832,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Creatinine
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2160-0
               </span>
@@ -854,7 +854,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -877,19 +877,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Glucose (Fasting)
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1558-6
               </span>
@@ -899,7 +899,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -922,19 +922,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 HbA1c
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 4548-4
               </span>
@@ -944,7 +944,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -967,19 +967,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Hematocrit
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 4544-3
               </span>
@@ -989,7 +989,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1012,19 +1012,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Hemoglobin
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 718-7
               </span>
@@ -1034,7 +1034,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1057,19 +1057,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Platelets
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 777-3
               </span>
@@ -1079,7 +1079,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1102,19 +1102,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Potassium
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2823-3
               </span>
@@ -1124,7 +1124,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1147,19 +1147,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Sodium
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2951-2
               </span>
@@ -1169,7 +1169,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1192,19 +1192,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Total Bilirubin
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 1975-2
               </span>
@@ -1214,7 +1214,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1237,19 +1237,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 TSH
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 3016-3
               </span>
@@ -1259,7 +1259,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1282,19 +1282,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Urine pH
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 5767-9
               </span>
@@ -1304,7 +1304,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1327,19 +1327,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 Urine Specific Gravity
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 2965-2
               </span>
@@ -1349,7 +1349,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
@@ -1372,19 +1372,19 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
         >
           <button
             aria-expanded="false"
-            class="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
             type="button"
           >
             <div
               class="flex items-center gap-2 text-start"
             >
               <span
-                class="text-sm font-medium text-neutral-900"
+                class="text-sm font-medium text-foreground"
               >
                 White Blood Cells
               </span>
               <span
-                class="text-xs text-neutral-400 font-mono"
+                class="text-xs text-muted-foreground font-mono"
               >
                 6690-2
               </span>
@@ -1394,7 +1394,7 @@ exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`]
             >
               <svg
                 aria-hidden="true"
-                class="lucide lucide-chevron-down text-neutral-400 transition-transform"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
                 fill="none"
                 height="16"
                 stroke="currentColor"
