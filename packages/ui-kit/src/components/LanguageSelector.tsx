@@ -235,6 +235,7 @@ export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = fa
               aria-selected={lang.code === currentLocale}
               tabIndex={-1}
               lang={lang.code}
+              dir={getDirection(lang.code)}
               onClick={() => selectLocale(lang.code)}
               style={{
                 display: 'flex',

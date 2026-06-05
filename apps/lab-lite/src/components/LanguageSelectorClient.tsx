@@ -62,6 +62,7 @@ export function LanguageSelectorClient() {
         {LANGUAGES.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
+            dir={getDirection(lang.code)}
             onSelect={() => setLocale(lang.code)}
             className={locale === lang.code ? 'font-medium text-primary' : undefined}
           >

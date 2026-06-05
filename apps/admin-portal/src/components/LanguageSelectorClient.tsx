@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Globe } from '@ultranos/ui-kit/icons'
 import { getDirection } from '@ultranos/ui-kit'
@@ -16,8 +16,6 @@ import {
 
 type SupportedLocale = 'en' | 'ar' | 'prs' | 'ps'
 
-const ARABIC_FONT_STYLE = { fontFamily: 'var(--font-family-serif-ar)' } as const
-
 const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
   { code: 'en', nativeLabel: 'English' },
   { code: 'ar', nativeLabel: 'العربية' },
@@ -28,7 +26,6 @@ const LANGUAGES: { code: SupportedLocale; nativeLabel: string }[] = [
 export function LanguageSelectorClient() {
   const locale = useLocale() as SupportedLocale
   const router = useRouter()
-  const t = useTranslations('languageSelector')
 
   const setLocale = useCallback(
     (newLocale: SupportedLocale) => {
@@ -45,20 +42,14 @@ export function LanguageSelectorClient() {
       <DropdownMenuTrigger asChild>
         <button
           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label={t('ariaLabel')}
+          aria-label="Select language"
         >
           <Globe size={16} />
-          <span
-            className="hidden sm:inline"
-            lang={locale}
-            style={getDirection(locale) === 'rtl' ? ARABIC_FONT_STYLE : undefined}
-          >
-            {current?.nativeLabel ?? locale}
-          </span>
+          <span className="hidden sm:inline">{current?.nativeLabel ?? locale}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" sideOffset={4}>
-        <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
+        <DropdownMenuLabel>Language</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {LANGUAGES.map((lang) => (
           <DropdownMenuItem
@@ -67,12 +58,7 @@ export function LanguageSelectorClient() {
             onSelect={() => setLocale(lang.code)}
             className={locale === lang.code ? 'font-medium text-primary' : undefined}
           >
-            <span
-              lang={lang.code}
-              style={getDirection(lang.code) === 'rtl' ? ARABIC_FONT_STYLE : undefined}
-            >
-              {lang.nativeLabel}
-            </span>
+            {lang.nativeLabel}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
