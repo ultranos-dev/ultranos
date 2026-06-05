@@ -100,7 +100,7 @@ export function NavLab({ groups }: NavLabProps) {
                     >
                       <SidebarMenuItem>
                         <Collapsible.Trigger asChild>
-                          <SidebarMenuButton tooltip={item.title} isActive={isActive}>
+                          <SidebarMenuButton tooltip={item.title} isActive={pathname === item.url}>
                             <Icon />
                             <span>{item.title}</span>
                             <DirectionalIcon category="navigation">

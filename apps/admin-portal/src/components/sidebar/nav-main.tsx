@@ -82,7 +82,7 @@ export function NavMain({ groups }: NavMainProps) {
                     >
                       <SidebarMenuItem>
                         <Collapsible.Trigger asChild>
-                          <SidebarMenuButton tooltip={item.title} isActive={isActive}>
+                          <SidebarMenuButton tooltip={item.title} isActive={pathname === item.url}>
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
                             <DirectionalIcon category="navigation">
