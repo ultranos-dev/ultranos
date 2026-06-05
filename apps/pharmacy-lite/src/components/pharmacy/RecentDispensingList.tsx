@@ -1,7 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { EmptyState } from './EmptyState'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Bookmark } from '@ultranos/ui-kit/icons'
 import { Badge } from '@/components/ui/badge'
 
 export interface RecentDispenseItem {
@@ -35,6 +37,7 @@ const syncBadgeClasses: Record<RecentDispenseItem['syncStatus'], string> = {
 }
 
 export function RecentDispensingList({ items }: RecentDispensingListProps) {
+  const router = useRouter()
   const t = useTranslations('dispensing')
   const tCommon = useTranslations('common')
 
@@ -51,11 +54,11 @@ export function RecentDispensingList({ items }: RecentDispensingListProps) {
       </h3>
       {items.length === 0 ? (
         <EmptyState
-          icon="dispensing"
+          icon={Bookmark}
           title={t('noActivityToday')}
           description={t('noActivityDescription')}
-          actionLabel={t('startScanning')}
-          actionHref="/scan"
+          action={{ label: t('startScanning'), onClick: () => router.push('/scan') }}
+          size="sm"
         />
       ) : (
         <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
 import { AllergyBanner } from './AllergyBanner'
 import { usePatientStore } from '@/stores/patient-store'
@@ -32,9 +33,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
 
   if (phase === 'empty' || items.length === 0) {
     return (
-      <div data-testid="fulfillment-empty-state" className="rounded-2xl border border-border p-8 text-center">
-        <p className="text-muted-foreground">{t('emptyState')}</p>
-      </div>
+      <EmptyState data-testid="fulfillment-empty-state" title={t('emptyState')} />
     )
   }
 
