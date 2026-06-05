@@ -91,12 +91,12 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
       aria-labelledby="result-import-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h2 id="result-import-title" className="text-base font-semibold text-neutral-900">
+      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 id="result-import-title" className="text-base font-semibold text-foreground">
             Import Result
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-400 hover:bg-neutral-100">
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-muted-foreground hover:bg-muted">
             <X size={20} />
           </button>
         </div>
@@ -109,7 +109,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
           </div>
 
           {/* Mode selector */}
-          <div className="flex rounded-md border border-neutral-200 overflow-hidden" role="group" aria-label="Import mode">
+          <div className="flex rounded-md border border-border overflow-hidden" role="group" aria-label="Import mode">
             {(['manual', 'file'] as ImportMode[]).map((m) => (
               <button
                 key={m}
@@ -118,7 +118,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                 className={`flex-1 py-2 text-sm font-medium transition-colors ${
                   mode === m
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-neutral-600 hover:bg-neutral-50'
+                    : 'bg-card text-muted-foreground hover:bg-muted/30'
                 }`}
               >
                 {m === 'manual' ? 'Manual Entry' : 'File Import'}
@@ -130,7 +130,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
           {mode === 'manual' && (
             <div className="space-y-3">
               <div>
-                <label htmlFor="result-value" className="block text-sm font-medium text-neutral-700 mb-1">
+                <label htmlFor="result-value" className="block text-sm font-medium text-foreground mb-1">
                   Result Value <span aria-hidden="true" className="text-red-500">*</span>
                 </label>
                 <input
@@ -139,28 +139,28 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                   value={manualValue}
                   onChange={(e) => setManualValue(e.target.value)}
                   required
-                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="e.g., 5.2"
                 />
               </div>
               <div>
-                <label htmlFor="result-unit" className="block text-sm font-medium text-neutral-700 mb-1">Unit</label>
+                <label htmlFor="result-unit" className="block text-sm font-medium text-foreground mb-1">Unit</label>
                 <input
                   id="result-unit"
                   type="text"
                   value={manualUnit}
                   onChange={(e) => setManualUnit(e.target.value)}
-                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="e.g., mmol/L"
                 />
               </div>
               <div>
-                <label htmlFor="result-flag" className="block text-sm font-medium text-neutral-700 mb-1">Interpretation</label>
+                <label htmlFor="result-flag" className="block text-sm font-medium text-foreground mb-1">Interpretation</label>
                 <select
                   id="result-flag"
                   value={manualFlag}
                   onChange={(e) => setManualFlag(e.target.value as typeof manualFlag)}
-                  className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="normal">Normal</option>
                   <option value="high">High</option>
@@ -174,15 +174,15 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
           {/* File import */}
           {mode === 'file' && (
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Upload result file (CSV or JSON)
               </label>
               <label
                 htmlFor="result-file-input"
-                className="flex cursor-pointer flex-col items-center rounded-md border-2 border-dashed border-neutral-300 px-4 py-6 text-center hover:border-blue-400"
+                className="flex cursor-pointer flex-col items-center rounded-md border-2 border-dashed border-border px-4 py-6 text-center hover:border-blue-400"
               >
-                <Upload size={24} className="mb-2 text-neutral-400" />
-                <span className="text-sm text-neutral-600">
+                <Upload size={24} className="mb-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
                   {fileName || 'Click to select a .csv or .json file'}
                 </span>
                 <input
@@ -194,11 +194,11 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
                 />
               </label>
               {fileContent && (
-                <div className="mt-2 rounded-md bg-neutral-50 border border-neutral-200 p-3">
-                  <p className="text-xs font-medium text-neutral-600 mb-1 flex items-center gap-1">
+                <div className="mt-2 rounded-md bg-muted/30 border border-border p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                     <FileText size={12} /> Preview
                   </p>
-                  <pre className="text-xs text-neutral-700 overflow-auto max-h-24">
+                  <pre className="text-xs text-foreground overflow-auto max-h-24">
                     {JSON.stringify(fileContent, null, 2)}
                   </pre>
                 </div>
@@ -210,7 +210,7 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+            <button type="button" onClick={onClose} className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30">
               Cancel
             </button>
             <button

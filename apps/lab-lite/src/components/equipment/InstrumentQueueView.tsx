@@ -27,12 +27,72 @@ import { BatchCard } from './BatchCard'
 import { QueueBatchDialog } from './QueueBatchDialog'
 import { Button } from '@/components/ui/Button'
 
+// ---------------------------------------------------------------------------
+// P8: Inline cancel-reason modal — replaces window.prompt
+// ---------------------------------------------------------------------------
+function CancelBatchModal({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+}) {
+  const t = useTranslations('equipment')
+  const [reason, setReason] = useState('')
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('cancelBatch') ?? 'Cancel Batch'}
+    >
+      <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-900">
+          {t('cancelBatch') ?? 'Cancel Batch'}
+        </h2>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            {t('cancelReasonPrompt') ?? 'Reason for cancelling:'}
+          </label>
+          <input
+            type="text"
+            className="form-input w-full"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            autoFocus
+            data-testid="cancel-reason-input"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onCancel}>
+            {t('cancel') ?? 'Cancel'}
+          </Button>
+          <Button
+            onClick={() => onConfirm(reason)}
+            className="bg-red-600 hover:bg-red-700 text-white"
+            data-testid="confirm-cancel-btn"
+          >
+            {t('cancelBatch') ?? 'Confirm Cancel'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function InstrumentQueueView() {
   const t = useTranslations('equipment')
   const session = useAuthSessionStore((s) => s.session)
   const isManager = session?.labRole === LabRole.LAB_MANAGER
   const techId = session?.practitionerId ?? ''
-  const techName = session?.email?.split('@')[0] ?? 'Technician'
+  // Derive display name from displayName field if available, fall back to email prefix
+  const rawName = session?.email ?? ''
+  const techName = rawName.includes('@') ? rawName.split('@')[0] : rawName || 'Technician'
 
   const [instruments, setInstruments] = useState<Instrument[]>([])
   const [selectedInstrumentId, setSelectedInstrumentId] = useState<string>('')
@@ -41,20 +101,22 @@ export function InstrumentQueueView() {
   const [showQueueDialog, setShowQueueDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<InstrumentNotification[]>([])
+  // P8: cancel modal state
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null)
 
   // Countdown timer for current running batch
   const [now, setNow] = useState(() => new Date())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load instruments on mount
+  // P13: load instruments once on mount — no selectedInstrumentId in deps
   useEffect(() => {
     void getInstruments().then((all) => {
       setInstruments(all)
-      if (all.length > 0 && !selectedInstrumentId) {
-        setSelectedInstrumentId(all[0].id)
+      if (all.length > 0) {
+        setSelectedInstrumentId((prev) => prev || all[0].id)
       }
     })
-  }, [selectedInstrumentId])
+  }, [])
 
   // Reload queue when instrument selection changes
   const reloadQueue = useCallback(async () => {
@@ -78,13 +140,15 @@ export function InstrumentQueueView() {
     return () => clearInterval(interval)
   }, [reloadQueue])
 
-  // Real-time countdown: tick every second when there's a RUNNING batch
+  // Real-time countdown: tick every second when there's a RUNNING batch.
+  // Clear old interval at top of effect to prevent double-interval on rapid queue changes.
   useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
     const hasRunning = queue.some((b) => b.status === 'RUNNING')
     if (hasRunning) {
       timerRef.current = setInterval(() => setNow(new Date()), 1_000)
     } else {
-      if (timerRef.current) clearInterval(timerRef.current)
+      timerRef.current = null
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
@@ -121,9 +185,15 @@ export function InstrumentQueueView() {
     }
   }
 
-  async function handleCancel(batchId: string) {
-    const reason = window.prompt(t('cancelReasonPrompt') ?? 'Reason for cancelling:')
-    if (reason === null) return
+  // P8: show modal instead of window.prompt
+  function handleCancelRequest(batchId: string) {
+    setCancelTarget(batchId)
+  }
+
+  async function handleCancelConfirm(reason: string) {
+    if (!cancelTarget) return
+    const batchId = cancelTarget
+    setCancelTarget(null)
     setError(null)
     try {
       await cancelBatch(batchId, reason)
@@ -131,6 +201,10 @@ export function InstrumentQueueView() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to cancel batch')
     }
+  }
+
+  function handleCancelModalClose() {
+    setCancelTarget(null)
   }
 
   // Manager: move a batch up one position
@@ -185,6 +259,14 @@ export function InstrumentQueueView() {
 
   return (
     <div className="space-y-4" data-testid="instrument-queue-view">
+      {/* P8: cancel reason modal */}
+      {cancelTarget && (
+        <CancelBatchModal
+          onConfirm={handleCancelConfirm}
+          onCancel={handleCancelModalClose}
+        />
+      )}
+
       {/* Instrument selector */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-0">
@@ -238,7 +320,7 @@ export function InstrumentQueueView() {
         </div>
       )}
 
-      {/* Next-in-line notifications for this tech */}
+      {/* Next-in-line notifications for this tech — P10: these also surface in NotificationBell */}
       {notifications.length > 0 && (
         <div className="space-y-2" data-testid="instrument-notifications">
           {notifications.map((notif) => (
@@ -249,7 +331,9 @@ export function InstrumentQueueView() {
             >
               <span className="text-amber-800">
                 🔔{' '}
-                {t('nextInLine', { instrument: notif.instrumentName })}
+                {notif.type === 'BATCH_CANCELLED'
+                  ? t('batchCancelledNotif', { instrument: notif.instrumentName }) ?? `Your batch for ${notif.instrumentName} was removed from the queue.`
+                  : t('nextInLine', { instrument: notif.instrumentName })}
               </span>
               <button
                 onClick={() => {
@@ -326,7 +410,7 @@ export function InstrumentQueueView() {
               isLast={idx === queue.length - 1}
               onStartRun={handleStartRun}
               onCompleteRun={handleCompleteRun}
-              onCancel={handleCancel}
+              onCancel={handleCancelRequest}
               onMoveUp={handleMoveUp}
               onMoveDown={handleMoveDown}
             />

@@ -12,7 +12,7 @@ function loadLevelBorderClass(level: TechWorkload['loadLevel']): string {
   switch (level) {
     case 'RED':    return 'border-red-400 bg-red-50/30'
     case 'AMBER':  return 'border-amber-400 bg-amber-50/20'
-    case 'GREEN':  return 'border-green-300 bg-white'
+    case 'GREEN':  return 'border-green-300 bg-card'
   }
 }
 
@@ -38,9 +38,9 @@ function loadLevelLabel(level: TechWorkload['loadLevel'], t: ReturnType<typeof u
 
 function MetricPill({ label, value, colorClass }: { label: string; value: number; colorClass: string }) {
   return (
-    <div className={`rounded px-2 py-1 text-center ${colorClass}`}>
-      <p className="text-lg font-bold leading-tight" aria-hidden="true">{value}</p>
-      <p className="text-xs font-medium leading-tight">{label}</p>
+    <div className={`rounded px-2 py-1 text-center ${colorClass}`} aria-label={`${label}: ${value}`}>
+      <p className="text-lg font-bold leading-tight">{value}</p>
+      <p className="text-xs font-medium leading-tight" aria-hidden="true">{label}</p>
     </div>
   )
 }
@@ -49,14 +49,14 @@ function EtaDisplay({ eta, t }: { eta: Date | null; t: ReturnType<typeof useTran
   if (!eta) return null
   const now = Date.now()
   const diffMs = eta.getTime() - now
-  if (diffMs <= 0) return <span className="text-xs text-neutral-500">{t('etaOverdue')}</span>
+  if (diffMs <= 0) return <span className="text-xs text-muted-foreground">{t('etaOverdue')}</span>
   const diffMin = Math.round(diffMs / 60_000)
   const hours = Math.floor(diffMin / 60)
   const mins = diffMin % 60
   const display = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
   return (
-    <span className="text-xs text-neutral-500">
-      {t('estimatedCompletion')}: <span className="font-medium text-neutral-700">{display}</span>
+    <span className="text-xs text-muted-foreground">
+      {t('estimatedCompletion')}: <span className="font-medium text-foreground">{display}</span>
     </span>
   )
 }
@@ -103,7 +103,9 @@ export function TechWorkloadCard({
     setIsDragOver(true)
   }
 
-  function handleDragLeave() {
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // Ignore drag-leave events fired when pointer moves over a child element
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
     setIsDragOver(false)
   }
 
@@ -138,7 +140,6 @@ export function TechWorkloadCard({
       onDrop={handleDrop}
       role={dragEnabled ? 'region' : undefined}
       aria-label={`${techLabel} ${t('workloadCard')}`}
-      aria-dropeffect={dragEnabled ? 'move' : undefined}
     >
       {/* Unavailable overlay */}
       {workload.isUnavailable && (
@@ -154,8 +155,8 @@ export function TechWorkloadCard({
       {/* Header */}
       <div className={`flex items-start justify-between ${workload.isUnavailable ? 'mt-6' : ''}`}>
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-neutral-800">{techLabel}</h3>
-          <span className="inline-block rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-600">
+          <h3 className="truncate text-sm font-semibold text-foreground">{techLabel}</h3>
+          <span className="inline-block rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
             {roleBadge}
           </span>
         </div>
@@ -192,7 +193,7 @@ export function TechWorkloadCard({
 
       {/* Unavailability toggle (injected by parent) */}
       {unavailabilityToggle && (
-        <div className="mt-3 border-t border-neutral-100 pt-2">
+        <div className="mt-3 border-t border-border/50 pt-2">
           {unavailabilityToggle}
         </div>
       )}
@@ -225,30 +226,32 @@ function SampleList({
   dragEnabled: boolean
   t: ReturnType<typeof useTranslations<'workload'>>
 }) {
+  const PREVIEW_COUNT = 3
   const [expanded, setExpanded] = useState(false)
-  const visible = expanded ? sampleIds : sampleIds.slice(0, 3)
+  const hasMore = sampleIds.length > PREVIEW_COUNT
+  const visible = expanded ? sampleIds : sampleIds.slice(0, PREVIEW_COUNT)
 
   return (
-    <div className="mt-3 border-t border-neutral-100 pt-2">
-      <button
-        type="button"
-        className="mb-1 text-xs text-neutral-400 hover:text-neutral-600"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        {expanded ? t('hideSamples') : t('showSamples', { count: sampleIds.length })}
-      </button>
-      {expanded && (
-        <ul className="max-h-32 space-y-1 overflow-y-auto">
-          {visible.map((sampleId) => (
-            <SampleItem
-              key={sampleId}
-              sampleId={sampleId}
-              techId={techId}
-              dragEnabled={dragEnabled}
-            />
-          ))}
-        </ul>
+    <div className="mt-3 border-t border-border/50 pt-2">
+      <ul className="max-h-32 space-y-1 overflow-y-auto">
+        {visible.map((sampleId) => (
+          <SampleItem
+            key={sampleId}
+            sampleId={sampleId}
+            techId={techId}
+            dragEnabled={dragEnabled}
+          />
+        ))}
+      </ul>
+      {hasMore && (
+        <button
+          type="button"
+          className="mt-1 text-xs text-muted-foreground hover:text-muted-foreground"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          {expanded ? t('hideSamples') : t('showSamples', { count: sampleIds.length - PREVIEW_COUNT })}
+        </button>
       )}
     </div>
   )
@@ -273,8 +276,8 @@ function SampleItem({
 
   return (
     <li
-      className={`flex items-center gap-2 rounded px-2 py-1 text-xs text-neutral-600 ${
-        dragEnabled ? 'cursor-grab bg-neutral-50 hover:bg-neutral-100 active:cursor-grabbing' : 'bg-neutral-50'
+      className={`flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground ${
+        dragEnabled ? 'cursor-grab bg-muted/30 hover:bg-muted active:cursor-grabbing' : 'bg-muted/30'
       }`}
       draggable={dragEnabled}
       onDragStart={dragEnabled ? handleDragStart : undefined}

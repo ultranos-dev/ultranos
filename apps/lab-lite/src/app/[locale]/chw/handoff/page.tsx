@@ -20,7 +20,7 @@ export default function CHWHandoffPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <CourierHandoffScreen onDone={() => router.replace(`/${locale}/chw`)} />
     </div>
   )

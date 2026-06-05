@@ -98,7 +98,7 @@ function ResultCard({ result, locale }: ResultCardProps) {
   const hasApprovedAudio = script !== null && isScriptApproved(script)
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className="rounded-xl border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* Header row: icon + test name + color indicator */}
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex-shrink-0">

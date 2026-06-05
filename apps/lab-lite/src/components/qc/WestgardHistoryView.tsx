@@ -73,8 +73,8 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
 
   if (runs.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
-        <p className="text-sm text-neutral-500">{t('history.empty')}</p>
+      <div className="rounded-lg border border-border bg-card p-6 text-center">
+        <p className="text-sm text-muted-foreground">{t('history.empty')}</p>
       </div>
     )
   }
@@ -110,12 +110,12 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
       )}
 
       {/* QC Runs Table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table
           className="w-full text-sm"
           aria-label={t('history.tableLabel')}
         >
-          <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+          <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th scope="col" className="px-3 py-2.5 text-start">{t('history.col.date')}</th>
               <th scope="col" className="px-3 py-2.5 text-start">{t('history.col.controlLevel')}</th>
@@ -126,7 +126,7 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
               <th scope="col" className="px-3 py-2.5 text-start">{t('col.status')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-border/50">
             {rows.map(({ run, deviationSd, status, ruleViolated }) => (
               <tr
                 key={run.id}
@@ -138,20 +138,20 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                       : ''
                 }
               >
-                <td className="px-3 py-2.5 text-neutral-900">
+                <td className="px-3 py-2.5 text-foreground">
                   {new Date(run.runDate).toLocaleDateString()}
                 </td>
-                <td className="px-3 py-2.5 text-neutral-600">{run.controlLevel}</td>
-                <td className="px-3 py-2.5 text-end tabular-nums text-neutral-700">
+                <td className="px-3 py-2.5 text-muted-foreground">{run.controlLevel}</td>
+                <td className="px-3 py-2.5 text-end tabular-nums text-foreground">
                   {run.targetMean.toFixed(2)}
                 </td>
-                <td className="px-3 py-2.5 text-end tabular-nums text-neutral-700">
+                <td className="px-3 py-2.5 text-end tabular-nums text-foreground">
                   {run.targetSd.toFixed(2)}
                 </td>
-                <td className="px-3 py-2.5 text-end tabular-nums font-medium text-neutral-900">
+                <td className="px-3 py-2.5 text-end tabular-nums font-medium text-foreground">
                   {run.observedValue.toFixed(2)}
                 </td>
-                <td className="px-3 py-2.5 text-end tabular-nums text-neutral-600">
+                <td className="px-3 py-2.5 text-end tabular-nums text-muted-foreground">
                   {deviationSd >= 0 ? '+' : ''}{deviationSd.toFixed(2)} SD
                 </td>
                 <td className="px-3 py-2.5">
@@ -168,7 +168,7 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
         <section aria-labelledby="drift-alert-history-heading">
           <h3
             id="drift-alert-history-heading"
-            className="mb-3 text-sm font-semibold text-neutral-700"
+            className="mb-3 text-sm font-semibold text-foreground"
           >
             {t('alertHistoryTitle')}
           </h3>
@@ -182,7 +182,7 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                     key={alert.id}
                     className={`rounded-lg border p-3 ${
                       isAcknowledged
-                        ? 'border-neutral-200 bg-neutral-50'
+                        ? 'border-border bg-muted/30'
                         : alert.severity === 'REJECT'
                           ? 'border-red-200 bg-red-50'
                           : 'border-amber-200 bg-amber-50'
@@ -195,7 +195,7 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                           <span
                             className={`rounded px-1.5 py-0.5 text-xs font-bold ${
                               isAcknowledged
-                                ? 'bg-neutral-200 text-neutral-600'
+                                ? 'bg-muted text-muted-foreground'
                                 : alert.severity === 'REJECT'
                                   ? 'bg-red-100 text-red-700'
                                   : 'bg-amber-100 text-amber-700'
@@ -203,16 +203,16 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
                           >
                             {isAcknowledged ? t('statusResolved') : alert.severity}
                           </span>
-                          <span className="text-xs font-mono text-neutral-500">
+                          <span className="text-xs font-mono text-muted-foreground">
                             {alert.ruleViolated}
                           </span>
-                          <span className="text-xs text-neutral-400">
+                          <span className="text-xs text-muted-foreground">
                             {new Date(alert.detectedAt).toLocaleString()}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-neutral-700">{alert.message}</p>
+                        <p className="mt-1 text-sm text-foreground">{alert.message}</p>
                         {isAcknowledged && (
-                          <p className="mt-0.5 text-xs text-neutral-500">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {alert.resolution} &mdash; {alert.acknowledgedBy} &mdash;{' '}
                             {new Date(alert.acknowledgedAt!).toLocaleString()}
                             {alert.resolutionNotes && ` — "${alert.resolutionNotes}"`}

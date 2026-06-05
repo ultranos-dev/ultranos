@@ -78,20 +78,20 @@ function KnowledgeCardItem({
     <article
       aria-label={t(card.title)}
       className={[
-        'rounded-md border bg-white dark:bg-neutral-900',
+        'rounded-md border bg-card dark:bg-card',
         isCritical
-          ? 'border-s-4 border-s-red-500 border-neutral-200 dark:border-neutral-700'
-          : 'border-neutral-200 dark:border-neutral-700',
+          ? 'border-s-4 border-s-red-500 border-border dark:border-border'
+          : 'border-border dark:border-border',
       ].join(' ')}
     >
       {/* Card header */}
       <div className="flex items-start justify-between gap-2 p-3">
         <div className="flex min-w-0 flex-col gap-1">
           <SeverityBadge severity={card.severity} />
-          <h3 className="text-sm font-semibold leading-snug text-neutral-900 dark:text-neutral-100">
+          <h3 className="text-sm font-semibold leading-snug text-foreground dark:text-foreground">
             {t(card.title)}
           </h3>
-          <p className="text-xs text-neutral-600 dark:text-neutral-400">
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">
             {t(card.condition)}
           </p>
         </div>
@@ -100,7 +100,7 @@ function KnowledgeCardItem({
           type="button"
           onClick={() => onPin(card.id)}
           aria-label={t('knowledgeCards.pinCard', { title: t(card.title) })}
-          className="shrink-0 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
         >
           {/* Pin icon (simple SVG) */}
           <svg
@@ -122,15 +122,15 @@ function KnowledgeCardItem({
       </div>
 
       {/* Recommended actions */}
-      <div className="border-t border-neutral-100 px-3 py-2 dark:border-neutral-800">
-        <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-500">
+      <div className="border-t border-border/50 px-3 py-2 dark:border-border">
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
           {t('knowledgeCards.recommendedActions')}
         </p>
         <ol className="list-decimal space-y-1 ps-4">
           {card.actions.map((actionKey, idx) => (
             <li
               key={idx}
-              className="text-xs font-medium leading-snug text-neutral-800 dark:text-neutral-200"
+              className="text-xs font-medium leading-snug text-foreground dark:text-foreground"
             >
               {t(actionKey)}
             </li>
@@ -139,12 +139,12 @@ function KnowledgeCardItem({
       </div>
 
       {/* Collapsible clinical context */}
-      <div className="border-t border-neutral-100 dark:border-neutral-800">
+      <div className="border-t border-border/50 dark:border-border">
         <button
           type="button"
           onClick={toggleContext}
           aria-expanded={contextOpen}
-          className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-neutral-500 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-neutral-800 dark:text-neutral-500"
+          className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:text-muted-foreground"
         >
           <span>{t('knowledgeCards.clinicalContext')}</span>
           <ChevronDown
@@ -154,16 +154,16 @@ function KnowledgeCardItem({
           />
         </button>
         {contextOpen && (
-          <p className="px-3 pb-3 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
+          <p className="px-3 pb-3 text-xs leading-relaxed text-muted-foreground dark:text-muted-foreground">
             {t(card.clinicalContext)}
           </p>
         )}
       </div>
 
       {/* Author attribution */}
-      <div className="flex items-center gap-2 border-t border-neutral-100 px-3 py-2 dark:border-neutral-800">
-        <User size={12} aria-hidden="true" className="shrink-0 text-neutral-400" />
-        <span className="truncate text-xs text-neutral-500 dark:text-neutral-500">
+      <div className="flex items-center gap-2 border-t border-border/50 px-3 py-2 dark:border-border">
+        <User size={12} aria-hidden="true" className="shrink-0 text-muted-foreground" />
+        <span className="truncate text-xs text-muted-foreground dark:text-muted-foreground">
           {card.author.name}, {card.author.credentials}
           {' · '}
           {t('knowledgeCards.version', { version: card.version })}
@@ -198,7 +198,7 @@ export function KnowledgeCardPanel({
         'flex w-80 shrink-0 flex-col rounded-lg border shadow-md',
         hasCritical
           ? 'border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-950/30'
-          : 'border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/60',
+          : 'border-border bg-muted/30 dark:border-border dark:bg-card/60',
         collapsed ? 'max-h-12 overflow-hidden' : '',
       ].join(' ')}
     >
@@ -208,7 +208,7 @@ export function KnowledgeCardPanel({
           'flex items-center justify-between px-3 py-2.5',
           hasCritical
             ? 'border-b border-red-200 dark:border-red-800'
-            : 'border-b border-neutral-200 dark:border-neutral-700',
+            : 'border-b border-border dark:border-border',
         ].join(' ')}
       >
         <div className="flex items-center gap-2">
@@ -218,10 +218,10 @@ export function KnowledgeCardPanel({
               className="size-2 animate-pulse rounded-full bg-red-500"
             />
           )}
-          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-300">
+          <span className="text-xs font-semibold uppercase tracking-wide text-foreground dark:text-muted-foreground">
             {t('panelTitle')}
           </span>
-          <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 text-xs font-bold tabular-nums text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300">
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-bold tabular-nums text-foreground dark:bg-muted dark:text-muted-foreground">
             {cards.length}
           </span>
         </div>
@@ -232,7 +232,7 @@ export function KnowledgeCardPanel({
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? t('expand') : t('collapse')}
             aria-expanded={!collapsed}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
           >
             <ChevronDown
               size={14}
@@ -245,7 +245,7 @@ export function KnowledgeCardPanel({
             type="button"
             onClick={onDismiss}
             aria-label={t('dismiss')}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 dark:hover:bg-card dark:hover:text-muted-foreground"
           >
             <X size={14} aria-hidden="true" />
           </button>

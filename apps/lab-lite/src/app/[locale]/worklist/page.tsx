@@ -27,12 +27,12 @@ export default function WorklistPage() {
       {/* Page header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900">{t('title')}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">{t('subtitle')}</p>
+          <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
 
         {/* Auto / Manual toggle */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-200 bg-neutral-50 p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
           {(['auto', 'manual'] as WorklistMode[]).map((m) => (
             <button
               key={m}
@@ -40,8 +40,8 @@ export default function WorklistPage() {
               onClick={() => setMode(m)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500
                 ${mode === m
-                  ? 'bg-white text-neutral-900 shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-700'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                 }`}
               aria-pressed={mode === m}
               aria-label={t(`mode.${m}`)}
@@ -65,8 +65,8 @@ export default function WorklistPage() {
       {/* Stats bar */}
       {!loading && !error && samples.length > 0 && (
         <div className="flex flex-wrap gap-4 text-sm">
-          <span className="text-neutral-600">
-            <strong className="text-neutral-900">{samples.length}</strong> {t('samplesInQueue')}
+          <span className="text-muted-foreground">
+            <strong className="text-foreground">{samples.length}</strong> {t('samplesInQueue')}
           </span>
           {samples.filter((s) => s.urgency === 'stat').length > 0 && (
             <span className="font-medium text-red-600">

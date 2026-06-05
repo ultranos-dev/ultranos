@@ -55,16 +55,16 @@ export function RecordHandoffModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       data-testid="record-handoff-modal"
     >
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h2 id="handoff-modal-title" className="text-lg font-semibold text-neutral-900">
+      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 id="handoff-modal-title" className="text-lg font-semibold text-foreground">
             {t('handoff.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('modal.close')}
-            className="rounded p-1 text-neutral-400 hover:text-neutral-600"
+            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
           >
             <X size={20} aria-hidden="true" />
           </button>
@@ -73,17 +73,17 @@ export function RecordHandoffModal({
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* From (read-only — current user) */}
           <div className="space-y-1">
-            <label className="text-sm font-medium text-neutral-700">
+            <label className="text-sm font-medium text-foreground">
               {t('handoff.from')}
             </label>
-            <p className="text-sm text-neutral-500 font-mono bg-neutral-50 rounded-lg px-3 py-2">
+            <p className="text-sm text-muted-foreground font-mono bg-muted/30 rounded-lg px-3 py-2">
               {currentActorId}
             </p>
           </div>
 
           {/* To */}
           <div className="space-y-1">
-            <label htmlFor="handoff-to" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="handoff-to" className="text-sm font-medium text-foreground">
               {t('handoff.to')}
             </label>
             <input
@@ -92,14 +92,14 @@ export function RecordHandoffModal({
               value={toActorId}
               onChange={(e) => setToActorId(e.target.value)}
               placeholder={t('handoff.toPlaceholder')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               data-testid="handoff-to-input"
             />
           </div>
 
           {/* Notes */}
           <div className="space-y-1">
-            <label htmlFor="handoff-notes" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="handoff-notes" className="text-sm font-medium text-foreground">
               {t('form.notes')}
             </label>
             <textarea
@@ -108,7 +108,7 @@ export function RecordHandoffModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('handoff.notesPlaceholder')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               data-testid="handoff-notes-input"
             />
           </div>
@@ -124,7 +124,7 @@ export function RecordHandoffModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 disabled:opacity-50"
             >
               {t('form.cancel')}
             </button>

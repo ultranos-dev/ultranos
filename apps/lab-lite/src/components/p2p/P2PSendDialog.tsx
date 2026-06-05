@@ -347,17 +347,17 @@ export function P2PSendDialog({
       aria-label={t('dialogTitle')}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-neutral-900">
+      <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl dark:bg-card">
         {/* Close button */}
         <button
           onClick={onClose}
           aria-label={t('close')}
-          className="absolute end-4 top-4 rounded-full p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="absolute end-4 top-4 rounded-full p-1 text-muted-foreground hover:bg-muted dark:hover:bg-card"
         >
           <X size={18} />
         </button>
 
-        <h2 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">
           {t('dialogTitle')}
         </h2>
 
@@ -365,7 +365,7 @@ export function P2PSendDialog({
         {phase === 'discovering' && (
           <div className="flex flex-col items-center gap-3 py-8">
             <Loader2 size={32} className="animate-spin text-blue-600" />
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('searching')}</p>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('searching')}</p>
           </div>
         )}
 
@@ -374,8 +374,8 @@ export function P2PSendDialog({
           <div className="flex flex-col gap-2">
             {devices.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-8">
-                <WifiOff size={32} className="text-neutral-400" />
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('noDevicesFound')}</p>
+                <WifiOff size={32} className="text-muted-foreground" />
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('noDevicesFound')}</p>
                 <button
                   onClick={() => void startDiscovery()}
                   className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -385,19 +385,19 @@ export function P2PSendDialog({
               </div>
             ) : (
               <>
-                <p className="mb-2 text-sm text-neutral-600 dark:text-neutral-400">{t('selectDevice')}</p>
-                <ul role="list" className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                <p className="mb-2 text-sm text-muted-foreground dark:text-muted-foreground">{t('selectDevice')}</p>
+                <ul role="list" className="divide-y divide-border/50 dark:divide-border">
                   {devices.map((device) => (
                     <li key={device.id}>
                       <button
                         onClick={() => void handleDeviceSelect(device)}
-                        className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-start hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                        className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-start hover:bg-muted/30 dark:hover:bg-card"
                       >
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          <span className="text-sm font-medium text-foreground dark:text-foreground">
                             {device.name}
                           </span>
-                          <span className="text-xs text-neutral-500">
+                          <span className="text-xs text-muted-foreground">
                             {device.type === 'ble'
                               ? t('deviceTypeBle')
                               : device.type === 'wifi-direct'
@@ -406,7 +406,7 @@ export function P2PSendDialog({
                           </span>
                         </div>
                         <DirectionalIcon category="navigation">
-                          <ChevronRight size={16} className="text-neutral-400" />
+                          <ChevronRight size={16} className="text-muted-foreground" />
                         </DirectionalIcon>
                       </button>
                     </li>
@@ -420,7 +420,7 @@ export function P2PSendDialog({
         {/* PHASE: pairing */}
         {phase === 'pairing' && (
           <div className="flex flex-col items-center gap-4 py-4">
-            <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-center text-sm text-muted-foreground dark:text-muted-foreground">
               {t('pairingInstruction')}
             </p>
             <div
@@ -432,7 +432,7 @@ export function P2PSendDialog({
             <div className="flex w-full gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300"
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 dark:border-border dark:text-muted-foreground"
               >
                 {t('pairingCancel')}
               </button>
@@ -451,7 +451,7 @@ export function P2PSendDialog({
           <div className="flex flex-col gap-4 py-4">
             <div className="flex items-center gap-2">
               <Loader2 size={18} className="animate-spin text-blue-600" />
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('transferring')}</p>
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground">{t('transferring')}</p>
             </div>
             {progress.total > 0 && (
               <>
@@ -460,14 +460,14 @@ export function P2PSendDialog({
                   aria-valuenow={progress.sent}
                   aria-valuemin={0}
                   aria-valuemax={progress.total}
-                  className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700"
+                  className="h-2 w-full overflow-hidden rounded-full bg-muted dark:bg-muted"
                 >
                   <div
                     className="h-full bg-blue-600 transition-all duration-150"
                     style={{ width: `${Math.round((progress.sent / progress.total) * 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted-foreground">
                   {t('transferProgress', { sent: progress.sent, total: progress.total })}
                 </p>
               </>
@@ -479,10 +479,10 @@ export function P2PSendDialog({
         {phase === 'success' && (
           <div className="flex flex-col items-center gap-4 py-4">
             <CheckCircle size={48} className="text-green-600" />
-            <p className="text-center text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <p className="text-center text-sm font-medium text-foreground dark:text-foreground">
               {t('successTitle')}
             </p>
-            <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-center text-sm text-muted-foreground dark:text-muted-foreground">
               {t('successMessage', { doctorName: selectedDevice?.name ?? '' })}
             </p>
             <button
@@ -498,16 +498,16 @@ export function P2PSendDialog({
         {phase === 'failure' && (
           <div className="flex flex-col items-center gap-4 py-4">
             <WifiOff size={48} className="text-red-500" />
-            <p className="text-center text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <p className="text-center text-sm font-medium text-foreground dark:text-foreground">
               {t('failureTitle')}
             </p>
-            <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-center text-sm text-muted-foreground dark:text-muted-foreground">
               {errorMsg || t('failureMessage')}
             </p>
             <div className="flex w-full gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300"
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 dark:border-border dark:text-muted-foreground"
               >
                 {t('close')}
               </button>

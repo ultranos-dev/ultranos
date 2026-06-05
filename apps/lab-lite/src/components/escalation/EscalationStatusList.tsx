@@ -43,7 +43,7 @@ function chainBorderClass(status: EscalationChain['status']): string {
     case 'active':       return 'border-red-400 bg-red-50'
     case 'acknowledged': return 'border-green-400 bg-green-50'
     case 'expired':      return 'border-gray-300 bg-gray-50'
-    default:             return 'border-gray-200 bg-white'
+    default:             return 'border-gray-200 bg-card'
   }
 }
 
@@ -158,7 +158,7 @@ function ChainCard({ chain, canAcknowledge, userId, onAcknowledged, t }: ChainCa
 
       {/* Step timeline */}
       {expanded && (
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded border border-gray-200 bg-card">
           <table className="w-full text-xs">
             <thead className="bg-gray-50">
               <tr>

@@ -63,6 +63,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
   async function handleConfirm() {
     if (!report) return
     setIsSubmitting(true)
+    setError(null)
     try {
       await finalizeHandover(report.id, notes)
       onConfirmed()
@@ -82,11 +83,11 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
       aria-labelledby="end-shift-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="mx-4 w-full max-w-lg rounded-lg border border-neutral-200 bg-white shadow-xl">
+      <div className="mx-4 w-full max-w-lg rounded-lg border border-border bg-card shadow-xl">
         {/* Header */}
-        <div className="border-b border-neutral-200 px-6 py-4">
-          <h2 id="end-shift-title" className="text-lg font-semibold text-neutral-900">
-            {step === 'preview' ? t('previewHandover') : t('confirmEndShift')}
+        <div className="border-b border-border px-6 py-4">
+          <h2 id="end-shift-title" className="text-lg font-semibold text-foreground">
+            {step === 'preview' ? t('endShiftDialogTitle') : t('endShiftConfirm')}
           </h2>
         </div>
 
@@ -95,7 +96,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-              <span className="ms-3 text-sm text-neutral-600">{t('generatingReport')}</span>
+              <span className="ms-3 text-sm text-muted-foreground">{t('generatingReport')}</span>
             </div>
           )}
 
@@ -109,21 +110,21 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
             <div className="space-y-4">
               {/* Pending Samples */}
               <section aria-labelledby="section-samples">
-                <h3 id="section-samples" className="mb-2 text-sm font-medium text-neutral-700">
-                  {t('pendingSamples')}
+                <h3 id="section-samples" className="mb-2 text-sm font-medium text-foreground">
+                  {t('pendingSamplesLabel')}
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-md bg-red-50 p-3 text-center">
                     <p className="text-2xl font-bold text-red-700">
                       {report.pendingSamples.stat}
                     </p>
-                    <p className="text-xs text-red-600">STAT</p>
+                    <p className="text-xs text-red-600">{t('statLabel')}</p>
                   </div>
                   <div className="rounded-md bg-amber-50 p-3 text-center">
                     <p className="text-2xl font-bold text-amber-700">
                       {report.pendingSamples.routine}
                     </p>
-                    <p className="text-xs text-amber-600">Routine</p>
+                    <p className="text-xs text-amber-600">{t('routineLabel')}</p>
                   </div>
                 </div>
               </section>
@@ -131,8 +132,8 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
               {/* Equipment Alerts */}
               {report.equipmentAlerts.length > 0 && (
                 <section aria-labelledby="section-equipment">
-                  <h3 id="section-equipment" className="mb-2 text-sm font-medium text-neutral-700">
-                    {t('equipmentAlerts')}
+                  <h3 id="section-equipment" className="mb-2 text-sm font-medium text-foreground">
+                    {t('equipmentAlertsLabel')}
                   </h3>
                   <ul className="space-y-2">
                     {report.equipmentAlerts.map((alert) => (
@@ -151,20 +152,20 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
               {/* QC Status */}
               {report.qcStatus.length > 0 && (
                 <section aria-labelledby="section-qc">
-                  <h3 id="section-qc" className="mb-2 text-sm font-medium text-neutral-700">
-                    {t('qcStatus')}
+                  <h3 id="section-qc" className="mb-2 text-sm font-medium text-foreground">
+                    {t('qcStatusLabel')}
                   </h3>
                   <ul className="space-y-1">
                     {report.qcStatus.map((qc) => (
                       <li key={qc.analyte} className="flex items-center justify-between text-sm">
-                        <span className="text-neutral-700">{qc.analyte}</span>
+                        <span className="text-foreground">{qc.analyte}</span>
                         <span
                           className={
                             qc.status === 'PASS'
                               ? 'rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700'
                               : qc.status === 'FAIL'
                                 ? 'rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'
-                                : 'rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600'
+                                : 'rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground'
                           }
                         >
                           {qc.status}
@@ -177,28 +178,28 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
 
               {/* Incomplete Orders */}
               <section aria-labelledby="section-orders">
-                <h3 id="section-orders" className="mb-2 text-sm font-medium text-neutral-700">
-                  {t('incompleteOrders')}
+                <h3 id="section-orders" className="mb-2 text-sm font-medium text-foreground">
+                  {t('incompleteOrdersLabel')}
                 </h3>
-                <p className="text-sm text-neutral-600">
+                <p className="text-sm text-muted-foreground">
                   {report.incompleteOrders.length === 0
-                    ? 'None'
-                    : `${report.incompleteOrders.length} order(s) awaiting processing`}
+                    ? t('noneLabel')
+                    : t('ordersAwaiting', { count: report.incompleteOrders.length })}
                 </p>
               </section>
 
               {/* Notes */}
               <section aria-labelledby="section-notes">
-                <h3 id="section-notes" className="mb-2 text-sm font-medium text-neutral-700">
-                  {t('notes')}
+                <h3 id="section-notes" className="mb-2 text-sm font-medium text-foreground">
+                  {t('notesLabel')}
                 </h3>
                 <textarea
-                  aria-label={t('notes')}
+                  aria-label={t('notesLabel')}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  placeholder="Add any context for the incoming shift..."
-                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder={t('notesPlaceholder')}
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </section>
             </div>
@@ -206,14 +207,14 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-neutral-200 px-6 py-4">
+        <div className="flex justify-end gap-3 border-t border-border px-6 py-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+            className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 disabled:opacity-50"
           >
-            Cancel
+            {t('endShiftCancel')}
           </button>
 
           {!isLoading && !error && report && step === 'preview' && (
@@ -222,7 +223,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
               onClick={() => setStep('confirm')}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
-              Review & Confirm
+              {t('reviewAndConfirm')}
             </button>
           )}
 
@@ -233,7 +234,7 @@ export function EndShiftDialog({ isOpen, onClose, onConfirmed }: EndShiftDialogP
               disabled={isSubmitting}
               className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Ending shift…' : t('endShift')}
+              {isSubmitting ? t('submittingHandover') : t('endShiftButton')}
             </button>
           )}
         </div>

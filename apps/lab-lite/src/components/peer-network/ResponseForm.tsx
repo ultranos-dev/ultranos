@@ -9,7 +9,7 @@ import type { PeerResponse, PostPhoto } from '@/lib/peer-network-types'
 import { processPhoto, isValidPhotoType } from '@/lib/peer-network-photos'
 
 const TEXTAREA_CLASS =
-  'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm min-h-[80px] resize-y ' +
+  'w-full rounded-lg border border-border px-4 py-2.5 text-sm min-h-[80px] resize-y ' +
   'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
 
 interface ResponseFormProps {
@@ -104,7 +104,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
   }, [body, photos, postId, authorId, isMentor, t, onResponseCreated])
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-neutral-200 p-3">
+    <form onSubmit={handleSubmit} className="rounded-lg border border-border p-3">
       {errors.length > 0 && (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-2" role="alert">
           <ul className="list-inside list-disc text-sm text-red-700">
@@ -170,7 +170,7 @@ export function ResponseForm({ postId, onResponseCreated, onCancel }: ResponseFo
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
+            className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
           >
             {t('cancel')}
           </button>

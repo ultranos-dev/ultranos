@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useLocale } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -12,8 +12,13 @@ import { reportDailyLogAuditEvent } from '@/lib/audit-client'
 import { DailyLogHistory } from './DailyLogHistory'
 import type { DailyActivityLog } from '@/lib/daily-log-types'
 
+/** Returns the local date as YYYY-MM-DD (not UTC). */
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function generateUUID(): string {
@@ -36,11 +41,20 @@ export function DailyLogGenerator() {
   const [hasLimitedData, setHasLimitedData] = useState(false)
 
   const previewRef = useRef<HTMLImageElement>(null)
+  const previewUrlRef = useRef<string | null>(null)
+
+  // Revoke blob URL on unmount to prevent memory leak (P4)
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+    }
+  }, [])
 
   const clearPreview = useCallback(() => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+    previewUrlRef.current = null
     setPreviewUrl(null)
-  }, [previewUrl])
+  }, [])
 
   const handleGenerate = useCallback(async () => {
     clearPreview()
@@ -71,8 +85,12 @@ export function DailyLogGenerator() {
         status: 'generated',
       }
 
-      // Render image
-      const imageBlob = await renderDailyLogImage(log, { locale })
+      // Render image with configurable watermark
+      const imageBlob = await renderDailyLogImage(log, {
+        locale,
+        logoBlob: settings.logoBlob,
+        watermarkText: settings.watermarkText || undefined,
+      })
       log.imageBlob = imageBlob
 
       // Save to Dexie
@@ -83,6 +101,7 @@ export function DailyLogGenerator() {
 
       // Build preview URL
       const url = URL.createObjectURL(imageBlob)
+      previewUrlRef.current = url
       setPreviewUrl(url)
       setCurrentLog(log)
       setState('done')
@@ -94,13 +113,16 @@ export function DailyLogGenerator() {
 
   const handleShare = useCallback(async () => {
     if (!currentLog?.imageBlob) return
-    const shared = await shareDailyLog(currentLog.imageBlob, currentLog.logDate)
-    if (shared) {
+    const result = await shareDailyLog(currentLog.imageBlob, currentLog.logDate)
+    if (result === 'shared') {
       const updated: DailyActivityLog = { ...currentLog, status: 'shared' }
       await saveDailyLog(updated)
       setCurrentLog(updated)
       reportDailyLogAuditEvent({ action: 'DAILY_LOG_SHARED', logId: currentLog.id, logDate: currentLog.logDate })
       setShareResult('success')
+    } else if (result === 'downloaded') {
+      reportDailyLogAuditEvent({ action: 'DAILY_LOG_DOWNLOADED', logId: currentLog.id, logDate: currentLog.logDate })
+      setShareResult('downloaded')
     } else {
       setShareResult('cancelled')
     }
@@ -115,15 +137,15 @@ export function DailyLogGenerator() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-neutral-900 mb-6">{t('title')}</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
 
       {/* Date selector + Generate */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 mb-4">
+      <div className="rounded-lg border border-border bg-card p-4 mb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label
               htmlFor="log-date"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               {t('selectDate')}
             </label>
@@ -133,7 +155,7 @@ export function DailyLogGenerator() {
               value={date}
               max={todayISO()}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <button
@@ -162,13 +184,13 @@ export function DailyLogGenerator() {
 
       {/* Image preview */}
       {previewUrl && state === 'done' && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4 mb-4">
-          <p className="text-sm font-medium text-neutral-700 mb-3">{t('preview')}</p>
+        <div className="rounded-lg border border-border bg-card p-4 mb-4">
+          <p className="text-sm font-medium text-foreground mb-3">{t('preview')}</p>
           <img
             ref={previewRef}
             src={previewUrl}
             alt={`Daily report for ${date}`}
-            className="w-full rounded border border-neutral-100"
+            className="w-full rounded border border-border/50"
           />
 
           {/* Action buttons */}
@@ -181,13 +203,13 @@ export function DailyLogGenerator() {
             </button>
             <button
               onClick={handleDownload}
-              className="rounded-md bg-neutral-100 border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-200"
+              className="rounded-md bg-muted border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
             >
               {t('download')}
             </button>
             <button
               onClick={handleGenerate}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted/30"
             >
               {t('regenerate')}
             </button>
@@ -198,7 +220,7 @@ export function DailyLogGenerator() {
             <p className="mt-2 text-sm text-green-600">{t('shareSuccess')}</p>
           )}
           {shareResult === 'cancelled' && (
-            <p className="mt-2 text-sm text-neutral-500">Share cancelled.</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t('shareUnsupported')}</p>
           )}
           {shareResult === 'downloaded' && (
             <p className="mt-2 text-sm text-blue-600">{t('downloading')}</p>

@@ -162,7 +162,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       {/* Test Category */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <label htmlFor="test-category" className="text-sm font-medium text-neutral-700">
+          <label htmlFor="test-category" className="text-sm font-medium text-foreground">
             {t('testCategory')}
           </label>
           <HelpTip content={t('testCategoryHelp')} />
@@ -185,7 +185,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             if (errors.category) setErrors((prev) => ({ ...prev, category: undefined }))
           }}
           disabled={disabled}
-          className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">{t('selectCategory')}</option>
           {LOINC_CATEGORIES.map((cat) => (
@@ -207,7 +207,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
       {/* Collection Date */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <label htmlFor="collection-date" className="text-sm font-medium text-neutral-700">
+          <label htmlFor="collection-date" className="text-sm font-medium text-foreground">
             {t('collectionDate')}
           </label>
           <HelpTip content={t('collectionDateHelp')} />
@@ -232,7 +232,7 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
             if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }))
           }}
           disabled={disabled}
-          className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         {ocrDateSuggestion && ocrDateSuggestion.confidence < CONFIDENCE_THRESHOLD && (
           <p className="text-xs text-amber-600">
@@ -255,10 +255,10 @@ export function MetadataForm({ onSubmit, disabled, ocrSuggestions, ocrStatus }: 
                 setConfirmed(e.target.checked)
                 if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: undefined }))
               }}
-              className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              className="mt-0.5 h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
               data-testid="ocr-confirm-checkbox"
             />
-            <span className="text-neutral-700">
+            <span className="text-foreground">
               {t('confirmCheckbox')}
             </span>
           </label>

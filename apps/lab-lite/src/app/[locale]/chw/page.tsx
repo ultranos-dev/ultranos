@@ -78,7 +78,7 @@ export default function CHWPage() {
   const SyncIcon = !isOnline ? WifiOff : pendingCount === 0 ? CheckCircle : AlertCircle
 
   return (
-    <div className="flex min-h-screen flex-col bg-white px-4 py-6">
+    <div className="flex min-h-screen flex-col bg-card px-4 py-6">
       {/* Header */}
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>

@@ -65,7 +65,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
       <div className="flex flex-col items-center gap-6 py-8 text-center">
         <div className="text-5xl">✅</div>
         <h2 className="text-2xl font-bold text-green-700">{t('restoration.done')}</h2>
-        <p className="text-neutral-600">{t('restoration.doneDescription')}</p>
+        <p className="text-muted-foreground">{t('restoration.doneDescription')}</p>
         <button
           type="button"
           onClick={onComplete}
@@ -89,8 +89,8 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
         <button
           type="button"
           onClick={() => { setStep('source'); setError(null) }}
-          className="w-full py-3 bg-neutral-800 text-white rounded-lg font-semibold
-            hover:bg-neutral-700"
+          className="w-full py-3 bg-card text-white rounded-lg font-semibold
+            hover:bg-muted"
         >
           {t('restoration.tryAgain')}
         </button>
@@ -100,16 +100,16 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-xl font-bold text-neutral-900">{t('restoration.title')}</h2>
+      <h2 className="text-xl font-bold text-foreground">{t('restoration.title')}</h2>
 
       {step === 'source' && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-neutral-600">{t('restoration.chooseSource')}</p>
+          <p className="text-sm text-muted-foreground">{t('restoration.chooseSource')}</p>
           <button
             type="button"
             onClick={() => { setSource('file'); setStep('import') }}
-            className="w-full py-4 border-2 border-neutral-300 rounded-lg font-semibold
-              text-neutral-800 hover:border-neutral-500 hover:bg-neutral-50
+            className="w-full py-4 border-2 border-border rounded-lg font-semibold
+              text-foreground hover:border-border hover:bg-muted/30
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
               focus-visible:outline-neutral-600"
           >
@@ -130,24 +130,24 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
 
       {step === 'import' && source === 'file' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-neutral-600">{t('restoration.fileInstructions')}</p>
+          <p className="text-sm text-muted-foreground">{t('restoration.fileInstructions')}</p>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('restoration.backupFile')}
             </label>
             <input
               ref={fileRef}
               type="file"
               accept=".ultranos.bak,.json"
-              className="block w-full text-sm text-neutral-700 file:mr-3 file:py-2 file:px-4
-                file:rounded file:border-0 file:bg-neutral-100 file:font-medium
-                file:hover:bg-neutral-200"
+              className="block w-full text-sm text-foreground file:mr-3 file:py-2 file:px-4
+                file:rounded file:border-0 file:bg-muted file:font-medium
+                file:hover:bg-muted"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('restoration.oneTimeKey')}
             </label>
             <input
@@ -155,7 +155,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
               placeholder={t('restoration.keyPlaceholder')}
-              className="w-full border border-neutral-300 rounded px-3 py-2 text-sm
+              className="w-full border border-border rounded px-3 py-2 text-sm
                 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -180,10 +180,10 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
 
       {step === 'import' && source === 'hub' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-neutral-600">{t('restoration.hubInstructions')}</p>
+          <p className="text-sm text-muted-foreground">{t('restoration.hubInstructions')}</p>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('restoration.hubUrl')}
             </label>
             <input
@@ -191,13 +191,13 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               value={hubUrl}
               onChange={(e) => setHubUrl(e.target.value)}
               placeholder="https://hub.ultranos.com"
-              className="w-full border border-neutral-300 rounded px-3 py-2 text-sm
+              className="w-full border border-border rounded px-3 py-2 text-sm
                 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               {t('restoration.authToken')}
             </label>
             <input
@@ -205,7 +205,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
               value={hubToken}
               onChange={(e) => setHubToken(e.target.value)}
               placeholder={t('restoration.tokenPlaceholder')}
-              className="w-full border border-neutral-300 rounded px-3 py-2 text-sm
+              className="w-full border border-border rounded px-3 py-2 text-sm
                 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

@@ -118,33 +118,33 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
   const showCredentialFields = provider === 'twilio' || provider === 'local'
 
   if (loading) {
-    return <p className="text-sm text-neutral-400">{t('title')}...</p>
+    return <p className="text-sm text-muted-foreground">{t('title')}...</p>
   }
 
   return (
     <div
-      className="rounded-lg border border-neutral-200 bg-white p-4"
+      className="rounded-lg border border-border bg-card p-4"
       data-testid="sms-gateway-config"
     >
       <div className="flex items-center gap-2 mb-4">
-        <MessageSquare size={16} className="text-neutral-500 shrink-0" aria-hidden />
+        <MessageSquare size={16} className="text-muted-foreground shrink-0" aria-hidden />
         <div>
-          <h2 className="text-sm font-semibold text-neutral-500">{t('smsGateway')}</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">{t('smsGatewayDescription')}</p>
+          <h2 className="text-sm font-semibold text-muted-foreground">{t('smsGateway')}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{t('smsGatewayDescription')}</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {/* Provider selection */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="sms-provider" className="text-sm text-neutral-600">
+          <label htmlFor="sms-provider" className="text-sm text-muted-foreground">
             {t('smsProvider')}
           </label>
           <select
             id="sms-provider"
             value={provider}
             onChange={(e) => setProvider(e.target.value as SmsProvider)}
-            className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm"
+            className="w-full rounded border border-border px-2 py-1.5 text-sm"
             data-testid="sms-provider-select"
           >
             {PROVIDER_OPTIONS.map((p) => (
@@ -159,7 +159,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
         {showCredentialFields && (
           <>
             <div className="flex flex-col gap-1">
-              <label htmlFor="sms-account-sid" className="text-sm text-neutral-600">
+              <label htmlFor="sms-account-sid" className="text-sm text-muted-foreground">
                 {t('smsAccountSid')}
               </label>
               <input
@@ -167,13 +167,13 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
                 type="text"
                 value={accountSid}
                 onChange={(e) => setAccountSid(e.target.value)}
-                className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm font-mono"
+                className="w-full rounded border border-border px-2 py-1.5 text-sm font-mono"
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 data-testid="sms-account-sid-input"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="sms-auth-token" className="text-sm text-neutral-600">
+              <label htmlFor="sms-auth-token" className="text-sm text-muted-foreground">
                 {t('smsAuthToken')}
               </label>
               <input
@@ -181,7 +181,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
                 type="password"
                 value={authToken}
                 onChange={(e) => setAuthToken(e.target.value)}
-                className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm font-mono"
+                className="w-full rounded border border-border px-2 py-1.5 text-sm font-mono"
                 data-testid="sms-auth-token-input"
               />
             </div>
@@ -190,7 +190,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
 
         {/* Sender number — always shown */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="sms-sender-number" className="text-sm text-neutral-600">
+          <label htmlFor="sms-sender-number" className="text-sm text-muted-foreground">
             {t('smsSenderNumber')}
           </label>
           <input
@@ -198,7 +198,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
             type="tel"
             value={senderNumber}
             onChange={(e) => setSenderNumber(e.target.value)}
-            className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm font-mono"
+            className="w-full rounded border border-border px-2 py-1.5 text-sm font-mono"
             placeholder="+93701234567"
             data-testid="sms-sender-number-input"
           />
@@ -207,7 +207,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
         {/* Local provider URL — only for local provider */}
         {provider === 'local' && (
           <div className="flex flex-col gap-1">
-            <label htmlFor="sms-local-url" className="text-sm text-neutral-600">
+            <label htmlFor="sms-local-url" className="text-sm text-muted-foreground">
               {t('smsLocalProviderUrl')}
             </label>
             <input
@@ -215,7 +215,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
               type="url"
               value={localProviderUrl}
               onChange={(e) => setLocalProviderUrl(e.target.value)}
-              className="w-full rounded border border-neutral-300 px-2 py-1.5 text-sm font-mono"
+              className="w-full rounded border border-border px-2 py-1.5 text-sm font-mono"
               placeholder="https://sms.local-provider.example/api/send"
               data-testid="sms-local-url-input"
             />
@@ -257,7 +257,7 @@ export function SmsGatewayConfig({ isManager }: SmsGatewayConfigProps) {
               value={testPhone}
               onChange={(e) => setTestPhone(e.target.value)}
               placeholder={t('smsTestPhone')}
-              className="flex-1 rounded border border-neutral-300 px-2 py-1.5 text-sm font-mono"
+              className="flex-1 rounded border border-border px-2 py-1.5 text-sm font-mono"
               data-testid="sms-test-phone-input"
             />
             <Button

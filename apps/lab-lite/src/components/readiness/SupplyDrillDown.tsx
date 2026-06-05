@@ -38,7 +38,7 @@ const STOCK_DOT: Record<RAGStatus, string> = {
 function daysColor(days: number): string {
   if (days <= 1) return 'text-red-600 font-semibold'
   if (days <= 3) return 'text-amber-600 font-medium'
-  return 'text-neutral-500'
+  return 'text-muted-foreground'
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ function StockEditor({
         step="any"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-24 rounded-md border border-neutral-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+        className="w-24 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
         aria-label={t('rag.drillDown.newStockValue')}
       />
       <button
@@ -89,7 +89,7 @@ function StockEditor({
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+        className="inline-flex items-center rounded-md border border-border bg-card px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-border"
         aria-label={t('rag.drillDown.cancelEdit')}
       >
         <X size={13} aria-hidden="true" />
@@ -118,12 +118,12 @@ function SupplyRow({
   }
 
   return (
-    <li className="px-4 py-3 bg-white">
+    <li className="px-4 py-3 bg-card">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-neutral-800">{supply.name}</span>
-            <span className="text-xs text-neutral-400">{supply.category}</span>
+            <span className="text-sm font-medium text-foreground">{supply.name}</span>
+            <span className="text-xs text-muted-foreground">{supply.category}</span>
           </div>
 
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -194,18 +194,18 @@ export function SupplyDrillDown({ details, onBack, onUpdateStock }: SupplyDrillD
             <ArrowLeft size={18} aria-hidden="true" />
           </DirectionalIcon>
         </Button>
-        <h2 className="text-base font-semibold text-neutral-800">
+        <h2 className="text-base font-semibold text-foreground">
           {t('rag.drillDown.suppliesTitle')}
         </h2>
       </div>
 
       {/* List */}
       {sorted.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           {t('rag.drillDown.noSupplies')}
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 overflow-hidden">
+        <ul className="divide-y divide-border/50 rounded-lg border border-border overflow-hidden">
           {sorted.map((supply) => (
             <SupplyRow key={supply.id} supply={supply} onUpdateStock={onUpdateStock} />
           ))}

@@ -14,7 +14,7 @@
  * RTL support: uses logical CSS properties throughout.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { ChevronDown } from '@ultranos/ui-kit/icons'
 import { LabRole } from '@ultranos/shared-types'
@@ -41,7 +41,7 @@ export function canEditRanges(labRole: string | undefined): boolean {
 // ---------------------------------------------------------------------------
 
 const BADGE_CLASSES: Record<string, string> = {
-  gray: 'bg-neutral-100 text-neutral-600',
+  gray: 'bg-muted text-muted-foreground',
   blue: 'bg-blue-50 text-blue-700',
   green: 'bg-green-50 text-green-700',
   yellow: 'bg-amber-50 text-amber-700',
@@ -53,7 +53,6 @@ function SourceBadge({ source }: { source: RangeSource }) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_CLASSES[variant]}`}
-      aria-label={`Range source: ${label}`}
     >
       {label}
     </span>
@@ -61,18 +60,18 @@ function SourceBadge({ source }: { source: RangeSource }) {
 }
 
 // ---------------------------------------------------------------------------
-// Types for the edit form
+// Types for the edit form — string fields prevent Number('') → 0 bug
 // ---------------------------------------------------------------------------
 
 interface EditFormValues {
-  ageMin: number
-  ageMax: number
+  ageMin: string
+  ageMax: string
   gender: 'M' | 'F' | 'ALL'
-  altitudeMin: number
-  altitudeMax: string // '' for no upper limit
-  rangeMin: number
-  rangeMax: number
-  criticalMin: string // '' for no critical threshold
+  altitudeMin: string
+  altitudeMax: string
+  rangeMin: string
+  rangeMax: string
+  criticalMin: string
   criticalMax: string
   unit: string
   source: RangeSource
@@ -89,15 +88,32 @@ interface AnalyteGroup {
   ranges: ReferenceRange[]
 }
 
-// Group ranges by LOINC code for display
+/**
+ * Group ranges by LOINC code for display.
+ * Custom ranges override defaults for the same bracket (age/gender/altitude).
+ */
 function buildAnalyteGroups(
   defaultRanges: ReferenceRange[],
   customRanges: ReferenceRange[],
 ): AnalyteGroup[] {
   const map = new Map<string, AnalyteGroup>()
 
+  // Build a set of keys for custom ranges so we can filter out overridden defaults
+  const customKeys = new Set<string>()
+  for (const r of customRanges) {
+    if (!r.effectiveTo) {
+      customKeys.add(`${r.loincCode}|${r.gender}|${r.ageMin}|${r.altitudeMin}`)
+    }
+  }
+
   for (const r of [...defaultRanges, ...customRanges]) {
     if (!r.effectiveTo) {
+      // Skip default ranges that have been overridden by a custom range
+      if (r.source === 'DEFAULT') {
+        const key = `${r.loincCode}|${r.gender}|${r.ageMin}|${r.altitudeMin}`
+        if (customKeys.has(key)) continue
+      }
+
       const existing = map.get(r.loincCode)
       if (existing) {
         existing.ranges.push(r)
@@ -117,10 +133,61 @@ function buildAnalyteGroups(
 }
 
 // ---------------------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------------------
+
+function validateForm(form: EditFormValues): string | null {
+  const ageMin = Number(form.ageMin)
+  const ageMax = Number(form.ageMax)
+  const rangeMin = Number(form.rangeMin)
+  const rangeMax = Number(form.rangeMax)
+  const altitudeMin = Number(form.altitudeMin)
+
+  if (isNaN(ageMin) || isNaN(ageMax) || ageMin >= ageMax) {
+    return 'Age Min must be less than Age Max.'
+  }
+  if (isNaN(rangeMin) || isNaN(rangeMax) || rangeMin >= rangeMax) {
+    return 'Range Min must be less than Range Max.'
+  }
+  if (isNaN(altitudeMin) || altitudeMin < 0) {
+    return 'Altitude Min must be 0 or greater.'
+  }
+  if (form.criticalMin !== '') {
+    const critMin = Number(form.criticalMin)
+    if (isNaN(critMin) || critMin >= rangeMin) {
+      return 'Critical Min must be less than Range Min.'
+    }
+  }
+  if (form.criticalMax !== '') {
+    const critMax = Number(form.criticalMax)
+    if (isNaN(critMax) || critMax <= rangeMax) {
+      return 'Critical Max must be greater than Range Max.'
+    }
+  }
+  if (form.changeReason.trim().length < 10) {
+    return 'Change reason must be at least 10 characters.'
+  }
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// Format critical range for display
+// ---------------------------------------------------------------------------
+
+function formatCritical(criticalMin?: number, criticalMax?: number): string {
+  if (criticalMin == null && criticalMax == null) return '—'
+  const parts: string[] = []
+  if (criticalMin != null) parts.push(`<${criticalMin}`)
+  if (criticalMax != null) parts.push(`>${criticalMax}`)
+  return parts.join(' / ')
+}
+
+// ---------------------------------------------------------------------------
 // ReferenceRangeEditor main component
 // ---------------------------------------------------------------------------
 
 export function ReferenceRangeEditor() {
+  const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
   const canEdit = canEditRanges(session?.labRole)
 
@@ -132,14 +199,17 @@ export function ReferenceRangeEditor() {
   const [editForm, setEditForm] = useState<EditFormValues | null>(null)
   const [versionHistory, setVersionHistory] = useState<RangeVersion[]>([])
   const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [confirmResetId, setConfirmResetId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const modalRef = useRef<HTMLDivElement>(null)
 
   // Load custom ranges from Dexie on mount
   useEffect(() => {
     let mounted = true
     void (async () => {
       try {
-        // Dynamic import to avoid SSR issues — Dexie is client-only
         const { getDb } = await import('@/lib/db')
         const db = getDb()
         const rows = (await db.table('referenceRanges').toArray()) as ReferenceRange[]
@@ -151,7 +221,10 @@ export function ReferenceRangeEditor() {
     return () => { mounted = false }
   }, [])
 
-  const analyteGroups = buildAnalyteGroups(ALL_DEFAULT_RANGES, customRanges)
+  const analyteGroups = useMemo(
+    () => buildAnalyteGroups(ALL_DEFAULT_RANGES, customRanges),
+    [customRanges],
+  )
 
   const filtered = search
     ? analyteGroups.filter(
@@ -161,16 +234,41 @@ export function ReferenceRangeEditor() {
       )
     : analyteGroups
 
+  // Close modal helper
+  const closeModal = useCallback(() => {
+    setShowEditModal(false)
+    setEditTarget(null)
+    setEditForm(null)
+    setError(null)
+  }, [])
+
+  // Escape key to close modal
+  useEffect(() => {
+    if (!showEditModal) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeModal()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showEditModal, closeModal])
+
+  // Focus first input in modal on open
+  useEffect(() => {
+    if (!showEditModal || !modalRef.current) return
+    const firstInput = modalRef.current.querySelector<HTMLInputElement>('input, select, textarea')
+    firstInput?.focus()
+  }, [showEditModal])
+
   function openEditModal(range: ReferenceRange) {
     setEditTarget(range)
     setEditForm({
-      ageMin: range.ageMin,
-      ageMax: range.ageMax === 999 ? 999 : range.ageMax,
+      ageMin: String(range.ageMin),
+      ageMax: range.ageMax === 999 ? '999' : String(range.ageMax),
       gender: range.gender,
-      altitudeMin: range.altitudeMin,
+      altitudeMin: String(range.altitudeMin),
       altitudeMax: range.altitudeMax != null ? String(range.altitudeMax) : '',
-      rangeMin: range.rangeMin,
-      rangeMax: range.rangeMax,
+      rangeMin: String(range.rangeMin),
+      rangeMax: String(range.rangeMax),
       criticalMin: range.criticalMin != null ? String(range.criticalMin) : '',
       criticalMax: range.criticalMax != null ? String(range.criticalMax) : '',
       unit: range.unit,
@@ -181,16 +279,24 @@ export function ReferenceRangeEditor() {
     setShowEditModal(true)
   }
 
-  async function loadVersionHistory(rangeId: string) {
+  async function loadVersionHistory(loincCode: string) {
+    setVersionHistory([])
     try {
       const { getDb } = await import('@/lib/db')
       const db = getDb()
-      const rows = (await db
-        .table('rangeVersions')
-        .where('rangeId')
-        .equals(rangeId)
-        .sortBy('version')) as RangeVersion[]
-      setVersionHistory(rows)
+      // Get all range IDs for this LOINC code
+      const ranges = (await db
+        .table('referenceRanges')
+        .where('loincCode')
+        .equals(loincCode)
+        .toArray()) as ReferenceRange[]
+      const rangeIds = new Set(ranges.map((r) => r.id))
+      // Get all versions for these ranges
+      const allVersions = (await db.table('rangeVersions').toArray()) as RangeVersion[]
+      const filtered = allVersions
+        .filter((v) => rangeIds.has(v.rangeId))
+        .sort((a, b) => b.version - a.version)
+      setVersionHistory(filtered)
     } catch {
       setVersionHistory([])
     }
@@ -199,8 +305,9 @@ export function ReferenceRangeEditor() {
   const handleSave = useCallback(async () => {
     if (!editTarget || !editForm || !session?.practitionerId) return
 
-    if (editForm.changeReason.trim().length < 10) {
-      setError('Change reason must be at least 10 characters.')
+    const validationError = validateForm(editForm)
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -215,87 +322,90 @@ export function ReferenceRangeEditor() {
       const now = new Date().toISOString()
       const hlcTs = serializeHlc(hlc.now())
 
-      // Mark old range as superseded
-      if (editTarget.source !== 'DEFAULT') {
-        await db.table('referenceRanges').update(editTarget.id, { effectiveTo: now })
-      }
+      await db.transaction('rw', db.table('referenceRanges'), db.table('rangeVersions'), async () => {
+        // Mark old range as superseded
+        if (editTarget.source !== 'DEFAULT') {
+          await db.table('referenceRanges').update(editTarget.id, { effectiveTo: now })
+        }
 
-      // Create new version
-      const newVersion = editTarget.version + 1
-      const newRange: ReferenceRange = {
-        id: uuid(),
-        loincCode: editTarget.loincCode,
-        analyteName: editTarget.analyteName,
-        ageMin: editForm.ageMin,
-        ageMax: editForm.ageMax,
-        gender: editForm.gender,
-        altitudeMin: editForm.altitudeMin,
-        altitudeMax: editForm.altitudeMax !== '' ? Number(editForm.altitudeMax) : undefined,
-        rangeMin: editForm.rangeMin,
-        rangeMax: editForm.rangeMax,
-        criticalMin: editForm.criticalMin !== '' ? Number(editForm.criticalMin) : undefined,
-        criticalMax: editForm.criticalMax !== '' ? Number(editForm.criticalMax) : undefined,
-        unit: editForm.unit,
-        source: editForm.source,
-        version: newVersion,
-        effectiveFrom: now,
-        effectiveTo: undefined,
-        createdBy: session.practitionerId,
-        createdAt: now,
-        hlcTimestamp: hlcTs,
-      }
+        // Create new version
+        const newVersion = editTarget.version + 1
+        const newRange: ReferenceRange = {
+          id: uuid(),
+          loincCode: editTarget.loincCode,
+          analyteName: editTarget.analyteName,
+          ageMin: Number(editForm.ageMin),
+          ageMax: Number(editForm.ageMax),
+          gender: editForm.gender,
+          altitudeMin: Number(editForm.altitudeMin),
+          altitudeMax: editForm.altitudeMax !== '' ? Number(editForm.altitudeMax) : undefined,
+          rangeMin: Number(editForm.rangeMin),
+          rangeMax: Number(editForm.rangeMax),
+          criticalMin: editForm.criticalMin !== '' ? Number(editForm.criticalMin) : undefined,
+          criticalMax: editForm.criticalMax !== '' ? Number(editForm.criticalMax) : undefined,
+          unit: editForm.unit,
+          source: editForm.source,
+          version: newVersion,
+          effectiveFrom: now,
+          effectiveTo: undefined,
+          createdBy: session.practitionerId,
+          createdAt: now,
+          hlcTimestamp: hlcTs,
+        }
 
-      await db.table('referenceRanges').add(newRange)
+        await db.table('referenceRanges').add(newRange)
 
-      // Append a RangeVersion audit trail entry
-      const versionEntry: RangeVersion = {
-        id: uuid(),
-        rangeId: newRange.id,
-        version: newVersion,
-        changedBy: session.practitionerId,
-        changedAt: now,
-        previousValues: {
-          rangeMin: editTarget.rangeMin,
-          rangeMax: editTarget.rangeMax,
-          criticalMin: editTarget.criticalMin,
-          criticalMax: editTarget.criticalMax,
-          source: editTarget.source,
-        },
-        newValues: {
-          rangeMin: newRange.rangeMin,
-          rangeMax: newRange.rangeMax,
-          criticalMin: newRange.criticalMin,
-          criticalMax: newRange.criticalMax,
-          source: newRange.source,
-        },
-        changeReason: editForm.changeReason.trim(),
-      }
-      await db.table('rangeVersions').add(versionEntry)
+        // Append a RangeVersion audit trail entry
+        const versionEntry: RangeVersion = {
+          id: uuid(),
+          rangeId: newRange.id,
+          version: newVersion,
+          changedBy: session.practitionerId,
+          changedAt: now,
+          previousValues: {
+            rangeMin: editTarget.rangeMin,
+            rangeMax: editTarget.rangeMax,
+            criticalMin: editTarget.criticalMin,
+            criticalMax: editTarget.criticalMax,
+            source: editTarget.source,
+          },
+          newValues: {
+            rangeMin: newRange.rangeMin,
+            rangeMax: newRange.rangeMax,
+            criticalMin: newRange.criticalMin,
+            criticalMax: newRange.criticalMax,
+            source: newRange.source,
+          },
+          changeReason: editForm.changeReason.trim(),
+        }
+        await db.table('rangeVersions').add(versionEntry)
 
-      // Emit audit event (AC #4)
-      reportRangeChangeEvent({
-        loincCode: editTarget.loincCode,
-        analyteName: editTarget.analyteName,
-        previousVersion: editTarget.version,
-        newVersion,
-        changeReason: editForm.changeReason.trim(),
-        changedBy: session.practitionerId,
+        // Emit audit event (AC #4)
+        reportRangeChangeEvent({
+          loincCode: editTarget.loincCode,
+          analyteName: editTarget.analyteName,
+          previousVersion: editTarget.version,
+          newVersion,
+          changeReason: editForm.changeReason.trim(),
+          changedBy: session.practitionerId,
+        })
       })
 
       // Refresh custom ranges in state
       const rows = (await db.table('referenceRanges').toArray()) as ReferenceRange[]
       setCustomRanges(rows.filter((r) => !r.effectiveTo))
-      setShowEditModal(false)
-    } catch (e) {
+      closeModal()
+    } catch {
       setError('Failed to save. Please try again.')
     } finally {
       setSaving(false)
     }
-  }, [editTarget, editForm, session])
+  }, [editTarget, editForm, session, closeModal])
 
   async function handleResetToDefault(range: ReferenceRange) {
-    if (!session?.practitionerId) return
+    if (!session?.practitionerId || resetting) return
 
+    setResetting(true)
     try {
       const { getDb } = await import('@/lib/db')
       const uuid = () => crypto.randomUUID()
@@ -303,20 +413,47 @@ export function ReferenceRangeEditor() {
 
       const now = new Date().toISOString()
 
-      // Supersede the custom range
-      await db.table('referenceRanges').update(range.id, { effectiveTo: now })
+      await db.transaction('rw', db.table('referenceRanges'), db.table('rangeVersions'), async () => {
+        // Supersede the custom range
+        await db.table('referenceRanges').update(range.id, { effectiveTo: now })
 
-      // Find the corresponding default range
-      const defaults = DEFAULT_RANGES_BY_LOINC[range.loincCode] ?? []
-      const matchingDefault = defaults.find(
-        (d) =>
-          d.ageMin === range.ageMin &&
-          d.ageMax === range.ageMax &&
-          d.gender === range.gender &&
-          d.altitudeMin === range.altitudeMin,
-      )
+        // Find the corresponding default range
+        const defaults = DEFAULT_RANGES_BY_LOINC[range.loincCode] ?? []
+        const matchingDefault = defaults.find(
+          (d) =>
+            d.ageMin === range.ageMin &&
+            d.ageMax === range.ageMax &&
+            d.gender === range.gender &&
+            d.altitudeMin === range.altitudeMin,
+        )
 
-      if (matchingDefault) {
+        // Write a version entry for auditing the reset
+        const versionEntry: RangeVersion = {
+          id: uuid(),
+          rangeId: range.id,
+          version: range.version + 1,
+          changedBy: session.practitionerId,
+          changedAt: now,
+          previousValues: {
+            rangeMin: range.rangeMin,
+            rangeMax: range.rangeMax,
+            criticalMin: range.criticalMin,
+            criticalMax: range.criticalMax,
+            source: range.source,
+          },
+          newValues: matchingDefault
+            ? {
+                rangeMin: matchingDefault.rangeMin,
+                rangeMax: matchingDefault.rangeMax,
+                criticalMin: matchingDefault.criticalMin,
+                criticalMax: matchingDefault.criticalMax,
+                source: 'DEFAULT' as RangeSource,
+              }
+            : { source: 'DEFAULT' as RangeSource },
+          changeReason: 'Reset to default values',
+        }
+        await db.table('rangeVersions').add(versionEntry)
+
         // Emit audit event for reset
         reportRangeChangeEvent({
           loincCode: range.loincCode,
@@ -326,12 +463,15 @@ export function ReferenceRangeEditor() {
           changeReason: 'Reset to default values',
           changedBy: session.practitionerId,
         })
-      }
+      })
 
       const rows = (await db.table('referenceRanges').toArray()) as ReferenceRange[]
       setCustomRanges(rows.filter((r) => !r.effectiveTo))
+      setConfirmResetId(null)
     } catch {
       // Silently fail — reset is best-effort
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -339,11 +479,11 @@ export function ReferenceRangeEditor() {
     <div className="space-y-4" data-testid="reference-range-editor">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-neutral-900">
-          Reference Ranges
+        <h2 className="text-base font-semibold text-foreground">
+          {t('referenceRanges')}
         </h2>
         {!canEdit && (
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-muted-foreground">
             View only — requires Manager or Supervisor role
           </span>
         )}
@@ -355,14 +495,14 @@ export function ReferenceRangeEditor() {
         placeholder="Search analyte name or LOINC code..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm placeholder:text-neutral-400"
+        className="w-full rounded border border-border px-3 py-1.5 text-sm placeholder:text-muted-foreground"
         aria-label="Search analytes"
       />
 
       {/* Analyte list */}
-      <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+      <div className="divide-y divide-border/50 rounded-lg border border-border bg-card">
         {filtered.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-neutral-400">
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
             No analytes found
           </p>
         )}
@@ -371,7 +511,7 @@ export function ReferenceRangeEditor() {
             {/* Analyte header row */}
             <button
               type="button"
-              className="flex w-full items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors"
+              className="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
               onClick={() => {
                 setExpandedLoinc(
                   expandedLoinc === group.loincCode ? null : group.loincCode,
@@ -381,10 +521,10 @@ export function ReferenceRangeEditor() {
               aria-expanded={expandedLoinc === group.loincCode}
             >
               <div className="flex items-center gap-2 text-start">
-                <span className="text-sm font-medium text-neutral-900">
+                <span className="text-sm font-medium text-foreground">
                   {group.analyteName}
                 </span>
-                <span className="text-xs text-neutral-400 font-mono">
+                <span className="text-xs text-muted-foreground font-mono">
                   {group.loincCode}
                 </span>
               </div>
@@ -394,7 +534,7 @@ export function ReferenceRangeEditor() {
                 )}
                 <ChevronDown
                   size={16}
-                  className={`text-neutral-400 transition-transform ${
+                  className={`text-muted-foreground transition-transform ${
                     expandedLoinc === group.loincCode ? 'rotate-180' : ''
                   }`}
                   aria-hidden="true"
@@ -404,10 +544,10 @@ export function ReferenceRangeEditor() {
 
             {/* Expanded range rows */}
             {expandedLoinc === group.loincCode && (
-              <div className="border-t border-neutral-100 bg-neutral-50 px-4 pb-3 pt-2">
+              <div className="border-t border-border/50 bg-muted/30 px-4 pb-3 pt-2">
                 <table className="w-full text-xs" role="table">
                   <thead>
-                    <tr className="text-neutral-500">
+                    <tr className="text-muted-foreground">
                       <th className="py-1 text-start font-medium">Age</th>
                       <th className="py-1 text-start font-medium">Gender</th>
                       <th className="py-1 text-start font-medium">Alt (m)</th>
@@ -424,28 +564,26 @@ export function ReferenceRangeEditor() {
                     {group.ranges.map((r) => (
                       <tr
                         key={r.id}
-                        className="border-t border-neutral-100"
+                        className="border-t border-border/50"
                         data-testid={`range-row-${r.id}`}
                       >
-                        <td className="py-1.5 text-neutral-700">
+                        <td className="py-1.5 text-foreground">
                           {r.ageMin}–{r.ageMax === 999 ? '∞' : r.ageMax} yr
                         </td>
-                        <td className="py-1.5 text-neutral-700">
+                        <td className="py-1.5 text-foreground">
                           {r.gender === 'ALL' ? 'All' : r.gender}
                         </td>
-                        <td className="py-1.5 text-neutral-700">
+                        <td className="py-1.5 text-foreground">
                           {r.altitudeMin}
                           {r.altitudeMax != null ? `–${r.altitudeMax}` : '+'}
                         </td>
-                        <td className="py-1.5 text-neutral-700">
+                        <td className="py-1.5 text-foreground">
                           {r.rangeMin}–{r.rangeMax}
                         </td>
-                        <td className="py-1.5 text-neutral-700">
-                          {r.criticalMin != null
-                            ? `<${r.criticalMin} / >${r.criticalMax}`
-                            : '—'}
+                        <td className="py-1.5 text-foreground">
+                          {formatCritical(r.criticalMin, r.criticalMax)}
                         </td>
-                        <td className="py-1.5 text-neutral-500">{r.unit}</td>
+                        <td className="py-1.5 text-muted-foreground">{r.unit}</td>
                         <td className="py-1.5">
                           <SourceBadge source={r.source} />
                         </td>
@@ -461,14 +599,36 @@ export function ReferenceRangeEditor() {
                                 Edit
                               </button>
                               {r.source !== 'DEFAULT' && (
-                                <button
-                                  type="button"
-                                  onClick={() => void handleResetToDefault(r)}
-                                  className="rounded px-1.5 py-0.5 text-neutral-500 hover:bg-neutral-100 text-xs"
-                                  aria-label={`Reset ${group.analyteName} to default`}
-                                >
-                                  Reset
-                                </button>
+                                confirmResetId === r.id ? (
+                                  <span className="flex gap-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleResetToDefault(r)}
+                                      disabled={resetting}
+                                      className="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 text-xs disabled:opacity-50"
+                                      aria-label={`Confirm reset ${group.analyteName} to default`}
+                                    >
+                                      {resetting ? 'Resetting…' : 'Confirm'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmResetId(null)}
+                                      className="rounded px-1.5 py-0.5 text-muted-foreground hover:bg-muted text-xs"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmResetId(r.id)}
+                                    disabled={resetting}
+                                    className="rounded px-1.5 py-0.5 text-muted-foreground hover:bg-muted text-xs disabled:opacity-50"
+                                    aria-label={`Reset ${group.analyteName} to default`}
+                                  >
+                                    Reset
+                                  </button>
+                                )
                               )}
                             </div>
                           </td>
@@ -481,14 +641,14 @@ export function ReferenceRangeEditor() {
                 {/* Version history */}
                 {versionHistory.length > 0 && (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-neutral-400 hover:text-neutral-600">
+                    <summary className="cursor-pointer text-xs text-muted-foreground hover:text-muted-foreground">
                       Change history ({versionHistory.length})
                     </summary>
                     <ol className="mt-1 space-y-0.5">
                       {versionHistory.map((v) => (
-                        <li key={v.id} className="text-xs text-neutral-500">
+                        <li key={v.id} className="text-xs text-muted-foreground">
                           v{v.version} — {v.changedAt.slice(0, 10)} —{' '}
-                          <span className="text-neutral-700">{v.changeReason}</span>
+                          <span className="text-foreground">{v.changeReason}</span>
                         </li>
                       ))}
                     </ol>
@@ -507,32 +667,57 @@ export function ReferenceRangeEditor() {
           aria-modal="true"
           aria-label="Edit reference range"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
         >
-          <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
-            <div className="border-b border-neutral-200 px-5 py-4">
-              <h3 className="font-semibold text-neutral-900">
+          <div
+            ref={modalRef}
+            className="w-full max-w-lg rounded-lg bg-card shadow-xl overflow-y-auto max-h-[90vh]"
+          >
+            <div className="border-b border-border px-5 py-4">
+              <h3 className="font-semibold text-foreground">
                 Edit Range — {editTarget.analyteName}
               </h3>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 LOINC {editTarget.loincCode} · currently v{editTarget.version}
               </p>
             </div>
 
             <div className="px-5 py-4 space-y-3">
-              {/* Diff preview */}
-              <div className="rounded bg-neutral-50 p-3 text-xs">
-                <p className="font-medium text-neutral-600 mb-1">Preview changes</p>
-                <div className="flex gap-4">
+              {/* Diff preview — shows all fields */}
+              <div className="rounded bg-muted/30 p-3 text-xs">
+                <p className="font-medium text-muted-foreground mb-1">Preview changes</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   <div>
-                    <p className="text-neutral-400">Current</p>
-                    <p className="text-neutral-700">
+                    <p className="text-muted-foreground">Current</p>
+                    <p className="text-foreground">
                       {editTarget.rangeMin}–{editTarget.rangeMax} {editTarget.unit}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Critical: {formatCritical(editTarget.criticalMin, editTarget.criticalMax)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Age: {editTarget.ageMin}–{editTarget.ageMax} · Gender: {editTarget.gender}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Alt: {editTarget.altitudeMin}m+ · Source: {SOURCE_DISPLAY_LABEL[editTarget.source]}
                     </p>
                   </div>
                   <div>
-                    <p className="text-neutral-400">New</p>
+                    <p className="text-muted-foreground">New</p>
                     <p className="text-blue-700">
                       {editForm.rangeMin}–{editForm.rangeMax} {editForm.unit}
+                    </p>
+                    <p className="text-blue-600">
+                      Critical: {formatCritical(
+                        editForm.criticalMin !== '' ? Number(editForm.criticalMin) : undefined,
+                        editForm.criticalMax !== '' ? Number(editForm.criticalMax) : undefined,
+                      )}
+                    </p>
+                    <p className="text-blue-600">
+                      Age: {editForm.ageMin}–{editForm.ageMax} · Gender: {editForm.gender}
+                    </p>
+                    <p className="text-blue-600">
+                      Alt: {editForm.altitudeMin}m{editForm.altitudeMax ? `–${editForm.altitudeMax}m` : '+'} · Source: {SOURCE_DISPLAY_LABEL[editForm.source]}
                     </p>
                   </div>
                 </div>
@@ -541,29 +726,29 @@ export function ReferenceRangeEditor() {
               {/* Form fields */}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <label>
-                  <span className="text-xs text-neutral-500">Age Min (yr)</span>
+                  <span className="text-xs text-muted-foreground">Age Min (yr)</span>
                   <input
                     type="number"
                     value={editForm.ageMin}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, ageMin: Number(e.target.value) })
+                      setEditForm({ ...editForm, ageMin: e.target.value })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Age Max (yr)</span>
+                  <span className="text-xs text-muted-foreground">Age Max (yr)</span>
                   <input
                     type="number"
                     value={editForm.ageMax}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, ageMax: Number(e.target.value) })
+                      setEditForm({ ...editForm, ageMax: e.target.value })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Gender</span>
+                  <span className="text-xs text-muted-foreground">Gender</span>
                   <select
                     value={editForm.gender}
                     onChange={(e) =>
@@ -572,7 +757,7 @@ export function ReferenceRangeEditor() {
                         gender: e.target.value as 'M' | 'F' | 'ALL',
                       })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   >
                     <option value="ALL">All</option>
                     <option value="M">Male</option>
@@ -580,21 +765,36 @@ export function ReferenceRangeEditor() {
                   </select>
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Altitude Min (m)</span>
+                  <span className="text-xs text-muted-foreground">Altitude Min (m)</span>
                   <input
                     type="number"
                     value={editForm.altitudeMin}
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        altitudeMin: Number(e.target.value),
+                        altitudeMin: e.target.value,
                       })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Range Min</span>
+                  <span className="text-xs text-muted-foreground">Altitude Max (m, opt)</span>
+                  <input
+                    type="number"
+                    value={editForm.altitudeMax}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        altitudeMax: e.target.value,
+                      })
+                    }
+                    placeholder="No limit"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
+                  />
+                </label>
+                <label>
+                  <span className="text-xs text-muted-foreground">Range Min</span>
                   <input
                     type="number"
                     step="0.1"
@@ -602,14 +802,14 @@ export function ReferenceRangeEditor() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        rangeMin: Number(e.target.value),
+                        rangeMin: e.target.value,
                       })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Range Max</span>
+                  <span className="text-xs text-muted-foreground">Range Max</span>
                   <input
                     type="number"
                     step="0.1"
@@ -617,14 +817,14 @@ export function ReferenceRangeEditor() {
                     onChange={(e) =>
                       setEditForm({
                         ...editForm,
-                        rangeMax: Number(e.target.value),
+                        rangeMax: e.target.value,
                       })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Critical Min (opt)</span>
+                  <span className="text-xs text-muted-foreground">Critical Min (opt)</span>
                   <input
                     type="number"
                     step="0.1"
@@ -633,11 +833,11 @@ export function ReferenceRangeEditor() {
                       setEditForm({ ...editForm, criticalMin: e.target.value })
                     }
                     placeholder="None"
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label>
-                  <span className="text-xs text-neutral-500">Critical Max (opt)</span>
+                  <span className="text-xs text-muted-foreground">Critical Max (opt)</span>
                   <input
                     type="number"
                     step="0.1"
@@ -646,22 +846,22 @@ export function ReferenceRangeEditor() {
                       setEditForm({ ...editForm, criticalMax: e.target.value })
                     }
                     placeholder="None"
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label className="col-span-2">
-                  <span className="text-xs text-neutral-500">Unit</span>
+                  <span className="text-xs text-muted-foreground">Unit</span>
                   <input
                     type="text"
                     value={editForm.unit}
                     onChange={(e) =>
                       setEditForm({ ...editForm, unit: e.target.value })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   />
                 </label>
                 <label className="col-span-2">
-                  <span className="text-xs text-neutral-500">Source</span>
+                  <span className="text-xs text-muted-foreground">Source</span>
                   <select
                     value={editForm.source}
                     onChange={(e) =>
@@ -670,7 +870,7 @@ export function ReferenceRangeEditor() {
                         source: e.target.value as RangeSource,
                       })
                     }
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm"
                   >
                     <option value="LAB_CUSTOM">Lab Custom</option>
                     <option value="POPULATION_STUDY">Population Study</option>
@@ -678,10 +878,10 @@ export function ReferenceRangeEditor() {
                   </select>
                 </label>
                 <label className="col-span-2">
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-muted-foreground">
                     Change Reason{' '}
                     <span className="text-red-500">*</span>
-                    <span className="text-neutral-300 ms-1">(min 10 chars)</span>
+                    <span className="text-muted-foreground ms-1">(min 10 chars)</span>
                   </span>
                   <textarea
                     value={editForm.changeReason}
@@ -689,7 +889,7 @@ export function ReferenceRangeEditor() {
                       setEditForm({ ...editForm, changeReason: e.target.value })
                     }
                     rows={2}
-                    className="mt-0.5 w-full rounded border border-neutral-300 px-2 py-1 text-sm resize-none"
+                    className="mt-0.5 w-full rounded border border-border px-2 py-1 text-sm resize-none"
                     placeholder="Reason for this change (required)"
                   />
                 </label>
@@ -702,11 +902,11 @@ export function ReferenceRangeEditor() {
               )}
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-3">
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
               <button
                 type="button"
-                onClick={() => setShowEditModal(false)}
-                className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50"
+                onClick={closeModal}
+                className="rounded border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted/30"
               >
                 Cancel
               </button>

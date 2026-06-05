@@ -46,12 +46,23 @@ export function RAGBoardWallDisplay({ boardState, onExit, labName }: RAGBoardWal
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onExit])
 
-  // Cursor auto-hide after 5 s of inactivity
+  // Cursor auto-hide after 5 s of inactivity.
+  // We use a mounted ref to guard against post-unmount style mutations.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
   const resetCursorTimer = useCallback(() => {
     document.body.style.cursor = 'default'
     if (cursorTimerRef.current) clearTimeout(cursorTimerRef.current)
     cursorTimerRef.current = setTimeout(() => {
-      document.body.style.cursor = 'none'
+      if (mountedRef.current) {
+        document.body.style.cursor = 'none'
+      }
     }, CURSOR_HIDE_DELAY_MS)
   }, [])
 
@@ -92,7 +103,7 @@ export function RAGBoardWallDisplay({ boardState, onExit, labName }: RAGBoardWal
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-neutral-900"
+      className="fixed inset-0 z-50 flex flex-col bg-card"
       role="region"
       aria-label={t('rag.boardTitle')}
     >
@@ -121,10 +132,8 @@ export function RAGBoardWallDisplay({ boardState, onExit, labName }: RAGBoardWal
                 dimension={dim}
                 status={result.status}
                 summary={result.summary}
-                onClick={() => {
-                  // Wall display is read-only ambient mode. Exit wall display
-                  // to interact with drill-downs.
-                }}
+                // Wall display is read-only — no drill-down interaction.
+                // onClick is omitted; the card renders as a non-interactive div.
                 wallDisplay
               />
             )
@@ -133,9 +142,9 @@ export function RAGBoardWallDisplay({ boardState, onExit, labName }: RAGBoardWal
       </div>
 
       {/* Footer: last refresh timestamp + ESC hint */}
-      <div className="flex items-center justify-between px-8 py-3 border-t border-white/10 text-xs text-neutral-400">
+      <div className="flex items-center justify-between px-8 py-3 border-t border-white/10 text-xs text-muted-foreground">
         <span>{t('rag.lastRefresh', { time: generatedTime })}</span>
-        <span className="text-neutral-500">{t('rag.pressEscToExit')}</span>
+        <span className="text-muted-foreground">{t('rag.pressEscToExit')}</span>
       </div>
     </div>
   )

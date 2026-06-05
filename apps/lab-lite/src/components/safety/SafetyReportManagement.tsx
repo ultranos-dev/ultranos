@@ -63,7 +63,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
 
   if (!isManager) {
     return (
-      <div className="p-6 text-center text-neutral-500">
+      <div className="p-6 text-center text-muted-foreground">
         {t('managerOnly')}
       </div>
     )
@@ -117,7 +117,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
           ← {t('backToList')}
         </button>
 
-        <div className="rounded-lg border border-neutral-200 p-6">
+        <div className="rounded-lg border border-border p-6">
           <div className="mb-4 flex items-center gap-3">
             <span className="text-2xl">{CATEGORY_ICONS[selectedReport.category]}</span>
             <div>
@@ -130,17 +130,17 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
             </div>
           </div>
 
-          <div className="mb-4 text-sm text-neutral-500">
+          <div className="mb-4 text-sm text-muted-foreground">
             {t('submittedLabel')}: {new Date(selectedReport.submittedAt).toLocaleDateString()}
           </div>
 
-          <div className="mb-6 rounded bg-neutral-50 p-4 text-sm whitespace-pre-wrap">
+          <div className="mb-6 rounded bg-muted/30 p-4 text-sm whitespace-pre-wrap">
             {selectedReport.details}
           </div>
 
           {selectedReport.investigatorNotes && (
             <div className="mb-4">
-              <h3 className="mb-1 text-sm font-medium text-neutral-700">
+              <h3 className="mb-1 text-sm font-medium text-foreground">
                 {t('investigationNotes')}
               </h3>
               <p className="rounded bg-purple-50 p-3 text-sm whitespace-pre-wrap">
@@ -151,7 +151,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
 
           {selectedReport.resolution && (
             <div className="mb-4">
-              <h3 className="mb-1 text-sm font-medium text-neutral-700">
+              <h3 className="mb-1 text-sm font-medium text-foreground">
                 {t('resolutionLabel')}
               </h3>
               <p className="rounded bg-green-50 p-3 text-sm whitespace-pre-wrap">
@@ -187,7 +187,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
                 onChange={(e) => setInvestigationNotes(e.target.value)}
                 placeholder={t('investigationNotesPlaceholder')}
                 rows={3}
-                className="w-full rounded-lg border border-neutral-300 p-3 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
               <Button
                 onClick={() => handleInvestigate(selectedReport.id)}
@@ -201,8 +201,8 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
           {(selectedReport.status === ReportStatus.INVESTIGATING ||
             selectedReport.status === ReportStatus.SUBMITTED) &&
             selectedReport.status !== ReportStatus.CLOSED && (
-            <div className="mt-4 space-y-3 border-t border-neutral-200 pt-4">
-              <label className="text-sm font-medium text-neutral-700">
+            <div className="mt-4 space-y-3 border-t border-border pt-4">
+              <label className="text-sm font-medium text-foreground">
                 {t('resolutionLabel')}
               </label>
               <textarea
@@ -210,7 +210,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
                 onChange={(e) => setResolutionText(e.target.value)}
                 placeholder={t('resolutionPlaceholder')}
                 rows={3}
-                className="w-full rounded-lg border border-neutral-300 p-3 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
               <Button
                 variant="warning"
@@ -243,7 +243,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ReportStatus | 'ALL')}
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-border px-3 py-2 text-sm"
         >
           <option value="ALL">{t('filterAllStatuses')}</option>
           {Object.values(ReportStatus).map((s) => (
@@ -253,7 +253,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value as SafetyConcernCategory | 'ALL')}
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-border px-3 py-2 text-sm"
         >
           <option value="ALL">{t('filterAllCategories')}</option>
           {Object.values(SafetyConcernCategory).map((c) => (
@@ -264,9 +264,9 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
 
       {/* Report list */}
       {loading ? (
-        <p className="text-sm text-neutral-500">{t('loading')}</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       ) : filteredReports.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t('noReports')}</p>
+        <p className="text-sm text-muted-foreground">{t('noReports')}</p>
       ) : (
         <div className="space-y-3">
           {filteredReports.map((report) => (
@@ -274,7 +274,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
               key={report.id}
               type="button"
               onClick={() => setSelectedReport(report)}
-              className="w-full rounded-lg border border-neutral-200 p-4 text-start transition-colors hover:bg-neutral-50"
+              className="w-full rounded-lg border border-border p-4 text-start transition-colors hover:bg-muted/30"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{CATEGORY_ICONS[report.category]}</span>
@@ -287,10 +287,10 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
                       {t(`status.${report.status}`)}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-sm text-neutral-500">
+                  <p className="mt-1 truncate text-sm text-muted-foreground">
                     {report.details}
                   </p>
-                  <p className="mt-1 text-xs text-neutral-400">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {new Date(report.submittedAt).toLocaleDateString()}
                   </p>
                 </div>

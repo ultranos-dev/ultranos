@@ -44,8 +44,8 @@ function StatusBadge({ status }: { status: PersonnelDetail['status'] }) {
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-500 border border-neutral-200">
-      <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground border border-border">
+      <span className="h-1.5 w-1.5 rounded-full bg-muted" aria-hidden="true" />
       {t('rag.status.ended')}
     </span>
   )
@@ -72,28 +72,28 @@ export function PersonnelDrillDown({ details, onBack }: PersonnelDrillDownProps)
             <ArrowLeft size={18} aria-hidden="true" />
           </DirectionalIcon>
         </Button>
-        <h2 className="text-base font-semibold text-neutral-800">
+        <h2 className="text-base font-semibold text-foreground">
           {t('rag.drillDown.personnelTitle')}
         </h2>
       </div>
 
       {/* List */}
       {details.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           {t('rag.drillDown.noShiftData')}
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 overflow-hidden">
+        <ul className="divide-y divide-border/50 rounded-lg border border-border overflow-hidden">
           {details.map((tech) => (
             <li
               key={tech.techId}
-              className="flex items-center gap-3 px-4 py-3 bg-white"
+              className="flex items-center gap-3 px-4 py-3 bg-card"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-mono font-medium text-neutral-800 truncate">
+                <p className="text-sm font-mono font-medium text-foreground truncate">
                   {techDisplay(tech.techId)}
                 </p>
-                <p className="text-xs text-neutral-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {tech.status === 'ON_SHIFT'
                     ? t('rag.drillDown.shiftStarted', { time: formatTime(tech.startedAt) })
                     : t('rag.drillDown.shiftEnded', { time: formatTime(tech.endedAt) })}

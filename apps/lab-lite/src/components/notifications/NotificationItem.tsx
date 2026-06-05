@@ -40,7 +40,7 @@ function getNotificationDisplay(type: string): NotificationDisplay {
       // SYSTEM_MAINTENANCE and any other types
       return {
         label: 'System notice',
-        iconColor: 'text-neutral-600',
+        iconColor: 'text-muted-foreground',
         icon: <Settings size={20} className="h-5 w-5" aria-hidden="true" />,
       }
   }
@@ -90,7 +90,7 @@ export function NotificationItemRow({
       onClick={() => {
         if (isUnread) onAcknowledge(notification.id)
       }}
-      className={`flex w-full items-start gap-3 border-b border-neutral-100 px-4 py-3 text-start transition-colors hover:bg-neutral-50 ${
+      className={`flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-start transition-colors hover:bg-muted/30 ${
         isUnread ? 'bg-blue-50' : ''
       }`}
       data-testid="notification-item"
@@ -102,10 +102,10 @@ export function NotificationItemRow({
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className={`text-sm ${isUnread ? 'font-semibold text-neutral-900' : 'font-normal text-neutral-700'}`}>
+        <p className={`text-sm ${isUnread ? 'font-semibold text-foreground' : 'font-normal text-foreground'}`}>
           {message}
         </p>
-        <p className="mt-0.5 text-xs text-neutral-400">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {formatTimestamp(notification.createdAt)}
         </p>
       </div>

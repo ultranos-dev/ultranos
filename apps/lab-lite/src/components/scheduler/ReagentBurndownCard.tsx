@@ -202,9 +202,9 @@ function ReagentRow({
     : <span>{item.currentStock} {item.unit}</span>
 
   return (
-    <tr className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
+    <tr className="border-b border-border/50 last:border-0 hover:bg-muted/30">
       {/* Name + alert badge */}
-      <td className="py-2 ps-3 pe-2 text-sm font-medium text-neutral-900">
+      <td className="py-2 ps-3 pe-2 text-sm font-medium text-foreground">
         <div className="flex flex-col gap-1">
           <span>{item.reagentName}</span>
           {item.alertLevel !== 'none' && <AlertBadge level={item.alertLevel} />}
@@ -212,10 +212,10 @@ function ReagentRow({
       </td>
 
       {/* Current stock */}
-      <td className="py-2 px-2 text-sm text-neutral-700">{stockDisplay}</td>
+      <td className="py-2 px-2 text-sm text-foreground">{stockDisplay}</td>
 
       {/* Daily rate + confidence */}
-      <td className="py-2 px-2 text-sm text-neutral-700">
+      <td className="py-2 px-2 text-sm text-foreground">
         <div className="flex items-center gap-1">
           <span>
             {item.consumptionRate.averageDailyUsage > 0
@@ -227,23 +227,23 @@ function ReagentRow({
       </td>
 
       {/* Depletion date + reason badge */}
-      <td className="py-2 px-2 text-sm text-neutral-700">
+      <td className="py-2 px-2 text-sm text-foreground">
         <div className="flex flex-col gap-0.5">
           <span>{formatDate(item.effectiveDepletionDate.toISOString())}</span>
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-muted-foreground">
             {t(`reason.${item.depletionReason}`)}
           </span>
         </div>
       </td>
 
       {/* Expiry date */}
-      <td className="py-2 px-2 text-sm text-neutral-500">{formatDate(item.expiryDate)}</td>
+      <td className="py-2 px-2 text-sm text-muted-foreground">{formatDate(item.expiryDate)}</td>
 
       {/* Reorder by */}
-      <td className="py-2 px-2 text-sm font-medium text-neutral-900">
+      <td className="py-2 px-2 text-sm font-medium text-foreground">
         {formatDate(item.reorderDate.toISOString())}
         {item.supplierName && (
-          <div className="text-xs text-neutral-500 font-normal">{item.supplierName}</div>
+          <div className="text-xs text-muted-foreground font-normal">{item.supplierName}</div>
         )}
       </td>
 
@@ -305,10 +305,10 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
   if (!isLoading && burndownData.length === 0 && !error) {
     return (
       <section
-        className="rounded-lg border border-neutral-200 bg-white p-4"
+        className="rounded-lg border border-border bg-card p-4"
         data-testid="burndown-card"
       >
-        <div className="text-center py-6 text-sm text-neutral-500">
+        <div className="text-center py-6 text-sm text-muted-foreground">
           <p>{t('emptyState')}</p>
           <Link
             href={`${locale ? `/${locale}` : ''}/settings`}
@@ -323,13 +323,13 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
 
   return (
     <section
-      className="rounded-lg border border-neutral-200 bg-white overflow-hidden"
+      className="rounded-lg border border-border bg-card overflow-hidden"
       data-testid="burndown-card"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-neutral-900">{t('title')}</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t('title')}</h2>
           {/* Alert summary chips */}
           {(counts.critical ?? 0) > 0 && (
             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
@@ -359,7 +359,7 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
           </Button>
           <Link
             href={`${locale ? `/${locale}` : ''}/settings/suppliers`}
-            className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             <Settings size={13} aria-hidden="true" />
             {t('configureSuppliers')}
@@ -376,8 +376,8 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
 
       {/* Loading */}
       {isLoading && (
-        <div className="px-4 py-6 text-center text-sm text-neutral-500">
-          <svg className="animate-spin h-4 w-4 mx-auto text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+          <svg className="animate-spin h-4 w-4 mx-auto text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
           </svg>
@@ -387,7 +387,7 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
       {/* Sort controls */}
       {!isLoading && burndownData.length > 0 && (
         <>
-          <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-100 text-xs text-neutral-500">
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 text-xs text-muted-foreground">
             <span>{t('sortBy')}</span>
             {(['urgency', 'depletion', 'name'] as SortKey[]).map((key) => (
               <button
@@ -395,8 +395,8 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
                 onClick={() => setSortKey(key)}
                 className={`rounded px-2 py-0.5 transition-colors ${
                   sortKey === key
-                    ? 'bg-neutral-900 text-white'
-                    : 'hover:bg-neutral-100 text-neutral-600'
+                    ? 'bg-card text-white'
+                    : 'hover:bg-muted text-muted-foreground'
                 }`}
                 data-testid={`sort-${key}`}
               >
@@ -409,7 +409,7 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
           <div className="overflow-x-auto">
             <table className="w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
               <thead>
-                <tr className="text-xs text-neutral-500 border-b border-neutral-100">
+                <tr className="text-xs text-muted-foreground border-b border-border/50">
                   <th className="ps-3 pe-2 py-2 text-start font-medium">{t('reagentName')}</th>
                   <th className="px-2 py-2 text-start font-medium">{t('currentStock')}</th>
                   <th className="px-2 py-2 text-start font-medium">{t('dailyRate')}</th>
@@ -429,7 +429,7 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
 
           {/* View All / Collapse */}
           {burndownData.length > 3 && (
-            <div className="border-t border-neutral-100 px-4 py-2">
+            <div className="border-t border-border/50 px-4 py-2">
               <button
                 onClick={() => setShowAll((v) => !v)}
                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"

@@ -73,39 +73,37 @@ export function EquipmentDrillDown({ details, onBack }: EquipmentDrillDownProps)
             <ArrowLeft size={18} aria-hidden="true" />
           </DirectionalIcon>
         </Button>
-        <h2 className="text-base font-semibold text-neutral-800">
+        <h2 className="text-base font-semibold text-foreground">
           {t('rag.drillDown.equipmentTitle')}
         </h2>
       </div>
 
       {/* List */}
       {sorted.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           {t('rag.drillDown.noInstruments')}
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 overflow-hidden">
+        <ul className="divide-y divide-border/50 rounded-lg border border-border overflow-hidden">
           {sorted.map((instrument) => (
             <li
               key={instrument.instrumentId}
-              className={`px-4 py-3 bg-white ${
-                instrument.status === 'OUT_OF_SERVICE' ? 'bg-red-50/40' : ''
+              className={`px-4 py-3 ${
+                instrument.status === 'OUT_OF_SERVICE' ? 'bg-red-50/40' : 'bg-card'
               }`}
             >
               <div className="flex items-start gap-3">
-                <DirectionalIcon category="medical">
-                  <Wrench
-                    size={16}
-                    className={
-                      instrument.status === 'OUT_OF_SERVICE'
-                        ? 'text-red-500 mt-0.5 shrink-0'
-                        : 'text-neutral-400 mt-0.5 shrink-0'
-                    }
-                    aria-hidden="true"
-                  />
-                </DirectionalIcon>
+                <Wrench
+                  size={16}
+                  className={
+                    instrument.status === 'OUT_OF_SERVICE'
+                      ? 'text-red-500 mt-0.5 shrink-0'
+                      : 'text-muted-foreground mt-0.5 shrink-0'
+                  }
+                  aria-hidden="true"
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-800 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {instrument.name}
                   </p>
                   {instrument.status === 'OUT_OF_SERVICE' && instrument.outOfServiceReason && (
@@ -113,7 +111,7 @@ export function EquipmentDrillDown({ details, onBack }: EquipmentDrillDownProps)
                       {instrument.outOfServiceReason}
                     </p>
                   )}
-                  <p className="text-xs text-neutral-400 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {t('rag.drillDown.updatedAt', { time: formatTime(instrument.updatedAt) })}
                   </p>
                 </div>

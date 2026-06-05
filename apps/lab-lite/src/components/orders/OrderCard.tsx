@@ -45,7 +45,7 @@ export function OrderCard({ order }: { order: LabOrderEntry }) {
   }, [order.patientRef])
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {/* Patient: first name + age */}

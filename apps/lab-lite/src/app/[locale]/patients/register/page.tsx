@@ -8,7 +8,7 @@ export default function RegisterPatientPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-xl font-bold text-neutral-900">{t('registerTitle')}</h1>
+      <h1 className="mb-6 text-xl font-bold text-foreground">{t('registerTitle')}</h1>
       <PatientRegistrationForm />
     </div>
   )

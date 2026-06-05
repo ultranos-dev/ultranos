@@ -244,10 +244,10 @@ function GroupRow({ group }: { group: ScheduledGroup }) {
         )}
       </div>
       <div className="flex items-center gap-2 shrink-0 ms-2">
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           {t('testCount', { count: group.testCount })}
         </span>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           {t('estimatedTime', { minutes: group.estimatedMinutes })}
         </span>
         <PhaseBadge phase={group.phase} />

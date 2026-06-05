@@ -29,11 +29,13 @@ import {
 } from '@/lib/db'
 import type { LabResult, LabObservation } from '@/lib/db'
 import { resolveTemplate } from '@/lib/result-templates'
+import type { RangeResolutionContext } from '@/lib/result-templates'
 import { ResultEntryForm } from '@/components/ResultEntryForm'
 import { mapResultToFhirBundle } from '@/lib/result-to-fhir'
 import { enqueueSyncEvent } from '@/lib/db'
 import { reportLabResultAuditEvent } from '@/lib/audit-client'
 import type { FhirSpecimen } from '@ultranos/shared-types'
+import type { ReferenceRange as LocalizedRange, RangeSnapshot } from '@/lib/reference-ranges/types'
 
 interface PageProps {
   params: Promise<{ sampleId: string; locale: string }>
@@ -52,6 +54,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   const [existingDraft, setExistingDraft] = useState<
     { result: LabResult; observations: LabObservation[] } | undefined
   >(undefined)
+  const [rangeContext, setRangeContext] = useState<RangeResolutionContext | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -90,6 +93,24 @@ export default function ResultEntryPage({ params }: PageProps) {
           const observations = await getObservationsForResult(draft.id)
           setExistingDraft({ result: draft, observations })
         }
+
+        // Load localized range context (Story 43.8 AC #2)
+        try {
+          const customRanges = (await db.table('referenceRanges').toArray()) as LocalizedRange[]
+          const activeCustom = customRanges.filter((r) => !r.effectiveTo)
+          // Lab altitude from settings (default 0 = sea level)
+          const labSettings = await db.table('labSettings').get('config').catch(() => undefined) as { altitude?: number } | undefined
+          const labAltitude = labSettings?.altitude ?? 0
+
+          setRangeContext({
+            patientAge: cached?.age ?? 0,
+            patientGender: fullPatient?.gender ?? 'unknown',
+            labAltitude,
+            customRanges: activeCustom,
+          })
+        } catch {
+          // Range tables may not be migrated yet — flagging falls back to template inline ranges
+        }
       } catch (err) {
         setError(t('loadError'))
         console.error('[ResultEntryPage] load error', err) // no PHI — error shape only
@@ -103,7 +124,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <p className="text-sm text-neutral-500">{t('loading')}</p>
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     )
   }
@@ -157,6 +178,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   async function handleSave(
     resultRecord: Omit<LabResult, 'id'>,
     observations: Omit<LabObservation, 'id'>[],
+    rangeSnapshots?: Map<string, RangeSnapshot>,
   ) {
     const resultId = existingDraft?.result.id ?? crypto.randomUUID()
 
@@ -172,6 +194,17 @@ export default function ResultEntryPage({ params }: PageProps) {
 
     // Build FHIR bundle and queue for sync
     const bundle = mapResultToFhirBundle(fullResult, fullObs, template, sample)
+
+    // Attach range snapshots to FHIR observations (Story 43.8 AC #5)
+    if (rangeSnapshots) {
+      for (const fhirObs of bundle.observations) {
+        const fieldCode = fhirObs.code?.text
+        if (fieldCode && rangeSnapshots.has(fieldCode)) {
+          ;(fhirObs._ultranos as any).referenceRange = rangeSnapshots.get(fieldCode)
+        }
+      }
+    }
+
     await enqueueSyncEvent({
       resourceType: 'DiagnosticReport',
       resourceId: bundle.diagnosticReport.id,
@@ -185,6 +218,15 @@ export default function ResultEntryPage({ params }: PageProps) {
       await transitionSampleStatus(sampleId, 'completed')
     } catch {
       // Non-fatal — result is saved; status transition may be retried
+    }
+
+    // AC 3: Release the sample lock now that the result is entered.
+    // Non-fatal — if the lock already expired or was released, we continue normally.
+    try {
+      const { releaseLock } = await import('@/lib/sample-lock-service')
+      await releaseLock(sampleId, session?.practitionerId ?? 'unknown', 'RESULT_ENTERED')
+    } catch {
+      // Lock may have already expired — not a blocker for result save
     }
 
     reportLabResultAuditEvent({
@@ -204,7 +246,7 @@ export default function ResultEntryPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
+      <div className="border-b border-border px-4 py-3 dark:border-border">
         <button
           type="button"
           onClick={() => router.back()}
@@ -224,6 +266,7 @@ export default function ResultEntryPage({ params }: PageProps) {
         onSaveDraft={handleSaveDraft}
         enteredBy={session?.practitionerId ?? 'unknown'}
         existingDraft={existingDraft}
+        rangeContext={rangeContext}
       />
     </div>
   )

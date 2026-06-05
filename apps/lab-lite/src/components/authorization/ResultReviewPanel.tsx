@@ -8,9 +8,9 @@
  * Action buttons respect role permissions (disabled if insufficient role).
  * RTL: uses logical CSS properties throughout.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-import { AlertTriangle, X } from '@ultranos/ui-kit/icons'
+import { AlertTriangle, X, Info } from '@ultranos/ui-kit/icons'
 import { approveResult, rejectResult, holdResult } from '@/lib/authorization-actions'
 import { canAuthorize, canReject, canHold, isCriticalResult } from '@/lib/permissions'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -18,6 +18,11 @@ import { LabRole } from '@ultranos/shared-types'
 import type { LabResult, LabObservation } from '@/lib/db'
 import type { AbnormalityFlag } from '@/types/authorization'
 import { AuthorizationStatus } from '@/types/authorization'
+import type { RangeSnapshot, RangeSource } from '@/lib/reference-ranges/types'
+import {
+  SOURCE_BADGE_VARIANT,
+  SOURCE_DISPLAY_LABEL,
+} from '@/lib/reference-ranges/types'
 
 interface ResultReviewPanelProps {
   result: LabResult
@@ -76,11 +81,11 @@ function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h3 id="confirm-dialog-title" className="text-lg font-semibold text-neutral-900">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h3 id="confirm-dialog-title" className="text-lg font-semibold text-foreground">
           {title}
         </h3>
-        <p className="mt-2 text-sm text-neutral-600">{description}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
 
         {requireCheckbox && checkboxLabel && (
           <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
@@ -96,7 +101,7 @@ function ConfirmDialog({
 
         {requireComment && (
           <textarea
-            className="mt-4 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
             placeholder="Enter reason..."
             value={comment}
@@ -109,7 +114,7 @@ function ConfirmDialog({
 
         <div className="mt-5 flex justify-end gap-3">
           <button
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"
             onClick={onCancel}
           >
             Cancel
@@ -124,6 +129,34 @@ function ConfirmDialog({
       </div>
     </div>
   )
+}
+
+// ---------------------------------------------------------------------------
+// Range source badge (matches ReferenceRangeEditor pattern)
+// ---------------------------------------------------------------------------
+
+const BADGE_CLASSES: Record<string, string> = {
+  gray: 'bg-muted text-muted-foreground',
+  blue: 'bg-blue-50 text-blue-700',
+  green: 'bg-green-50 text-green-700',
+  yellow: 'bg-amber-50 text-amber-700',
+}
+
+function RangeSourceBadge({ source }: { source: RangeSource }) {
+  const variant = SOURCE_BADGE_VARIANT[source]
+  const label = SOURCE_DISPLAY_LABEL[source]
+  return (
+    <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${BADGE_CLASSES[variant]}`}>
+      {label}
+    </span>
+  )
+}
+
+/**
+ * Extract the RangeSnapshot from an observation's _ultranos extension, if present.
+ */
+function getObsRangeSnapshot(obs: LabObservation): RangeSnapshot | undefined {
+  return (obs as any)?._ultranos?.referenceRange as RangeSnapshot | undefined
 }
 
 type ActionDialogType = 'approve' | 'reject' | 'hold' | null
@@ -142,6 +175,40 @@ export function ResultReviewPanel({
   const [activeDialog, setActiveDialog] = useState<ActionDialogType>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // Load current ranges for comparison with historical snapshots (AC #5)
+  const [currentRanges, setCurrentRanges] = useState<Map<string, { rangeMin: number; rangeMax: number }>>(new Map())
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { resolveLocalizedRange } = await import('@/lib/result-templates')
+        const { getDb } = await import('@/lib/db')
+        const db = getDb()
+        const customRows = await db.table('referenceRanges').toArray()
+        const active = customRows.filter((r: any) => !r.effectiveTo)
+        const labSettings = await db.table('labSettings').get('config').catch(() => undefined) as { altitude?: number } | undefined
+        const ctx = {
+          patientAge: result.patientAge ?? 0,
+          patientGender: 'unknown',
+          labAltitude: labSettings?.altitude ?? 0,
+          customRanges: active,
+        }
+        const map = new Map<string, { rangeMin: number; rangeMax: number }>()
+        for (const obs of observations) {
+          const snapshot = getObsRangeSnapshot(obs)
+          if (snapshot) {
+            const resolved = resolveLocalizedRange(obs.fieldCode, ctx)
+            if (resolved) {
+              map.set(obs.fieldCode, { rangeMin: resolved.rangeMin, rangeMax: resolved.rangeMax })
+            }
+          }
+        }
+        setCurrentRanges(map)
+      } catch {
+        // Range tables may not be available — no comparison possible
+      }
+    })()
+  }, [observations, result.patientAge])
 
   const flags = (result.abnormalityFlags ?? []) as AbnormalityFlag[]
   const critical = isCriticalResult(flags)
@@ -220,7 +287,7 @@ export function ResultReviewPanel({
       <div className="flex-1 bg-black/40" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
-      <div className="flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl overflow-hidden">
+      <div className="flex h-full w-full max-w-2xl flex-col bg-card shadow-2xl overflow-hidden">
         {/* Critical value banner */}
         {critical && (
           <div
@@ -234,12 +301,12 @@ export function ResultReviewPanel({
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h2 id="review-panel-title" className="text-lg font-semibold text-neutral-900">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 id="review-panel-title" className="text-lg font-semibold text-foreground">
             {t('reviewPanelTitle')}
           </h2>
           <button
-            className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100"
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
             onClick={onClose}
             aria-label={t('closePanel')}
           >
@@ -251,21 +318,21 @@ export function ResultReviewPanel({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
           {/* Patient & meta */}
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
               {t('patientSection')}
             </h3>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <dt className="text-neutral-500">{t('patientName')}</dt>
+              <dt className="text-muted-foreground">{t('patientName')}</dt>
               <dd className="font-medium">{result.patientFirstName ?? '—'}</dd>
-              <dt className="text-neutral-500">{t('patientAge')}</dt>
+              <dt className="text-muted-foreground">{t('patientAge')}</dt>
               <dd>{result.patientAge != null ? `${result.patientAge}y` : '—'}</dd>
-              <dt className="text-neutral-500">{t('testCategory')}</dt>
+              <dt className="text-muted-foreground">{t('testCategory')}</dt>
               <dd>{result.testCategory ?? '—'}</dd>
-              <dt className="text-neutral-500">{t('loincCode')}</dt>
+              <dt className="text-muted-foreground">{t('loincCode')}</dt>
               <dd className="font-mono text-xs">{result.loincCode ?? '—'}</dd>
-              <dt className="text-neutral-500">{t('enteredBy')}</dt>
+              <dt className="text-muted-foreground">{t('enteredBy')}</dt>
               <dd className="font-mono text-xs">{result.enteredBy}</dd>
-              <dt className="text-neutral-500">{t('qcStatus')}</dt>
+              <dt className="text-muted-foreground">{t('qcStatus')}</dt>
               <dd>
                 <span className={`font-medium ${result.qcStatus === 'passing' ? 'text-green-600' : 'text-red-600'}`}>
                   {result.qcStatus ?? '—'}
@@ -276,24 +343,29 @@ export function ResultReviewPanel({
 
           {/* Observation values */}
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
               {t('observationsSection')}
             </h3>
             {observations.length === 0 ? (
-              <p className="text-sm text-neutral-400">{t('noObservations')}</p>
+              <p className="text-sm text-muted-foreground">{t('noObservations')}</p>
             ) : (
-              <table className="w-full text-sm border border-neutral-200 rounded-lg overflow-hidden">
-                <thead className="bg-neutral-50">
+              <table className="w-full text-sm border border-border rounded-lg overflow-hidden">
+                <thead className="bg-muted/30">
                   <tr>
-                    <th className="px-3 py-2 text-start text-neutral-700">{t('fieldCode')}</th>
-                    <th className="px-3 py-2 text-start text-neutral-700">{t('value')}</th>
-                    <th className="px-3 py-2 text-start text-neutral-700">{t('flag')}</th>
-                    <th className="px-3 py-2 text-start text-neutral-700">{t('comment')}</th>
+                    <th className="px-3 py-2 text-start text-foreground">{t('fieldCode')}</th>
+                    <th className="px-3 py-2 text-start text-foreground">{t('value')}</th>
+                    <th className="px-3 py-2 text-start text-foreground">{t('flag')}</th>
+                    <th className="px-3 py-2 text-start text-foreground">Range</th>
+                    <th className="px-3 py-2 text-start text-foreground">{t('comment')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-border/50">
                   {observations.map((obs) => {
                     const criticalObs = obs.flag === 'LL' || obs.flag === 'HH'
+                    const snapshot = getObsRangeSnapshot(obs)
+                    const currentRange = currentRanges.get(obs.fieldCode)
+                    const rangeChanged = snapshot && currentRange &&
+                      (snapshot.rangeMin !== currentRange.rangeMin || snapshot.rangeMax !== currentRange.rangeMax)
                     return (
                       <tr key={obs.id} className={criticalObs ? 'bg-red-50' : ''}>
                         <td className="px-3 py-2 font-mono text-xs">{obs.fieldCode}</td>
@@ -307,7 +379,25 @@ export function ResultReviewPanel({
                             <span className="text-green-600 text-xs">Normal</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-neutral-500 text-xs">{obs.comment ?? '—'}</td>
+                        <td className="px-3 py-2 text-xs">
+                          {snapshot ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-foreground">
+                                {snapshot.rangeMin}–{snapshot.rangeMax}
+                              </span>
+                              <RangeSourceBadge source={snapshot.source} />
+                              {rangeChanged && (
+                                <span className="flex items-center gap-1 text-amber-600 mt-0.5">
+                                  <Info size={12} aria-hidden="true" />
+                                  <span>Range updated since result. Current: {currentRange.rangeMin}–{currentRange.rangeMax}</span>
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground text-xs">{obs.comment ?? '—'}</td>
                       </tr>
                     )
                   })}
@@ -319,10 +409,10 @@ export function ResultReviewPanel({
           {/* Report comment */}
           {result.reportComment && (
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                 {t('reportComment')}
               </h3>
-              <p className="text-sm text-neutral-700 bg-neutral-50 rounded-lg p-3 border border-neutral-200">
+              <p className="text-sm text-foreground bg-muted/30 rounded-lg p-3 border border-border">
                 {result.reportComment}
               </p>
             </section>
@@ -336,9 +426,9 @@ export function ResultReviewPanel({
         </div>
 
         {/* Action footer */}
-        <div className="border-t border-neutral-200 px-6 py-4 flex justify-end gap-3 bg-neutral-50">
+        <div className="border-t border-border px-6 py-4 flex justify-end gap-3 bg-muted/30">
           <button
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-40"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-40"
             disabled={!canHoldResult || busy}
             onClick={() => setActiveDialog('hold')}
           >

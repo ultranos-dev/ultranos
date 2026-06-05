@@ -207,7 +207,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
         <p className="text-lg font-medium text-gray-700">Sample Condition</p>
         <div className="flex flex-col gap-2">
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+            condition === 'acceptable' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-card hover:bg-gray-50'
           }`}>
             <input
               data-testid="condition-acceptable"
@@ -222,7 +222,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'damaged' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+            condition === 'damaged' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-card hover:bg-gray-50'
           }`}>
             <input
               data-testid="condition-damaged"
@@ -237,7 +237,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
           </label>
 
           <label className={`flex items-center gap-3 rounded-xl border-2 p-4 cursor-pointer transition-colors ${
-            condition === 'temperature-excursion' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:bg-gray-50'
+            condition === 'temperature-excursion' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-card hover:bg-gray-50'
           }`}>
             <input
               data-testid="condition-temperature-excursion"

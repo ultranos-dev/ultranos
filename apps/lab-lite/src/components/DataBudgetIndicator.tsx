@@ -35,7 +35,7 @@ export function DataBudgetIndicator() {
       ? 'text-red-400'
       : thresholdLevel === 'warning'
         ? 'text-yellow-400'
-        : 'text-neutral-400'
+        : 'text-muted-foreground'
 
   return (
     <Link
@@ -44,7 +44,7 @@ export function DataBudgetIndicator() {
       title={t('viewDashboard')}
     >
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-neutral-700 overflow-hidden">
+        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
           <div
             className={`h-full rounded-full ${barColor}`}
             style={{ width: `${usedPct}%` }}

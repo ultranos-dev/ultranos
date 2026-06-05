@@ -39,8 +39,8 @@ const TABS: { id: Tab; label: string }[] = [
 function AccessDenied() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center" role="alert">
-      <p className="text-lg font-semibold text-neutral-700">Access Restricted</p>
-      <p className="mt-2 text-sm text-neutral-500">
+      <p className="text-lg font-semibold text-foreground">Access Restricted</p>
+      <p className="mt-2 text-sm text-muted-foreground">
         The Seasonal Operations Planner is only available to Lab Managers and Supervisors.
       </p>
     </div>
@@ -55,13 +55,13 @@ function PlanSummaryCard({ plan }: { plan: SeasonalPlan }) {
   }[plan.status]
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 flex flex-wrap items-center gap-4 justify-between">
+    <div className="rounded-lg border border-border bg-card p-4 flex flex-wrap items-center gap-4 justify-between">
       <div>
-        <p className="text-xs text-neutral-500 uppercase tracking-wide">Active Plan</p>
-        <p className="text-sm font-semibold text-neutral-800">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Plan</p>
+        <p className="text-sm font-semibold text-foreground">
           {plan.planPeriod.start} → {plan.planPeriod.end}
         </p>
-        <p className="text-xs text-neutral-500 mt-0.5">
+        <p className="text-xs text-muted-foreground mt-0.5">
           Generated {new Date(plan.meta.lastUpdated).toLocaleDateString()}
           {' · '}Confidence:{' '}
           <span className="capitalize">{plan._ultranos.dataConfidence}</span>
@@ -210,8 +210,8 @@ export default function SeasonalPlannerPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <RefreshCw size={20} className="animate-spin text-neutral-400" aria-hidden="true" />
-        <span className="ms-2 text-sm text-neutral-500">Loading planner…</span>
+        <RefreshCw size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="ms-2 text-sm text-muted-foreground">Loading planner…</span>
       </div>
     )
   }
@@ -222,13 +222,13 @@ export default function SeasonalPlannerPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Calendar size={20} className="text-blue-500" aria-hidden="true" />
-          <h1 className="text-xl font-semibold text-neutral-900">Seasonal Operations Planner</h1>
+          <h1 className="text-xl font-semibold text-foreground">Seasonal Operations Planner</h1>
         </div>
         <div className="flex gap-2">
           {plan && plan.status === 'draft' && (
             <button
               onClick={handleFinalizePlan}
-              className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30"
             >
               Finalize Plan
             </button>
@@ -236,7 +236,7 @@ export default function SeasonalPlannerPage() {
           {plan && (
             <button
               onClick={handleExportPdf}
-              className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30"
             >
               Export PDF
             </button>
@@ -262,10 +262,10 @@ export default function SeasonalPlannerPage() {
       {plan && <PlanSummaryCard plan={plan} />}
 
       {!plan && !generating && (
-        <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
-          <Calendar size={32} className="mx-auto text-neutral-300 mb-3" aria-hidden="true" />
-          <p className="text-sm text-neutral-600 font-medium">No seasonal plan generated yet</p>
-          <p className="text-xs text-neutral-400 mt-1">
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
+          <Calendar size={32} className="mx-auto text-muted-foreground mb-3" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground font-medium">No seasonal plan generated yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
             Click "Generate New Plan" to analyze historical demand and create a 30-day operational plan.
           </p>
         </div>
@@ -278,7 +278,7 @@ export default function SeasonalPlannerPage() {
 
           {/* Domain tabs */}
           <div>
-            <div className="flex border-b border-neutral-200" role="tablist">
+            <div className="flex border-b border-border" role="tablist">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
@@ -288,7 +288,7 @@ export default function SeasonalPlannerPage() {
                   className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-neutral-500 hover:text-neutral-700'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {tab.label}

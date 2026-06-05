@@ -42,7 +42,7 @@ export function OrderFilters({ value, onChange }: OrderFiltersProps) {
             onClick={() => onChange({ ...value, status: s })}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               value.status === s
-                ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                ? 'bg-card text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
                 : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
             }`}
           >
@@ -61,7 +61,7 @@ export function OrderFilters({ value, onChange }: OrderFiltersProps) {
         onChange={(e) =>
           onChange({ ...value, urgency: e.target.value as OrderUrgency | 'ALL' })
         }
-        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+        className="rounded-md border border-gray-300 bg-card px-3 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
       >
         <option value="ALL">{t('filters.all')}</option>
         {URGENCY_OPTIONS.filter((u) => u !== 'ALL').map((u) => (

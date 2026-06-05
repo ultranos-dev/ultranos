@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { LabRole } from '@ultranos/shared-types'
+import { LabPermission } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { useRequireLabRole } from '@/hooks/useLabPermission'
+import { useLabPermission } from '@/hooks/useLabPermission'
 import {
   getCurrentWorkloads,
   reassignSample,
@@ -33,7 +33,7 @@ function WorkloadSkeleton() {
       aria-label="Loading workload data…"
     >
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="h-44 animate-pulse rounded-lg bg-neutral-200" />
+        <div key={i} className="h-44 animate-pulse rounded-lg bg-muted" />
       ))}
     </div>
   )
@@ -52,8 +52,8 @@ type Tab = 'dashboard' | 'patterns'
 export function WorkloadDashboard() {
   const t = useTranslations('workload')
   const session = useAuthSessionStore((s) => s.session)
-  const canView = useRequireLabRole('SUPERVISOR' as LabRole)
-  const canReassign = session?.labRole === LabRole.LAB_MANAGER
+  const canView = useLabPermission(LabPermission.VIEW_STAFF)
+  const canReassign = useLabPermission(LabPermission.MANAGE_STAFF_ROLES)
 
   const [workloads, setWorkloads] = useState<TechWorkload[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,6 +90,7 @@ export function WorkloadDashboard() {
 
   useEffect(() => {
     cancelledRef.current = false
+    inFlightRef.current = false  // reset in case component was previously unmounted while in-flight
     fetchWorkloads()
     const interval = setInterval(fetchWorkloads, REFRESH_INTERVAL_MS)
     return () => {
@@ -121,7 +122,7 @@ export function WorkloadDashboard() {
       // Trigger a refresh
       setRefreshTick((n) => n + 1)
     } catch {
-      // Non-blocking — tech can retry
+      setError(t('errorReassigning'))
     }
   }
 
@@ -131,7 +132,7 @@ export function WorkloadDashboard() {
 
   if (!canView) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-lg border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-500">
+      <div className="flex h-40 items-center justify-center rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
         {t('insufficientPermissions')}
       </div>
     )
@@ -145,15 +146,22 @@ export function WorkloadDashboard() {
     <div className="space-y-4">
       {/* Header + tabs */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold text-neutral-800">{t('dashboard')}</h1>
-        <div className="flex gap-1 rounded-lg border border-neutral-200 bg-neutral-50 p-0.5">
+        <h1 className="text-lg font-semibold text-foreground">{t('dashboard')}</h1>
+        <div
+          role="tablist"
+          className="flex gap-1 rounded-lg border border-border bg-muted/30 p-0.5"
+        >
           <TabButton
+            id="tab-dashboard"
+            panelId="panel-dashboard"
             active={activeTab === 'dashboard'}
             onClick={() => setActiveTab('dashboard')}
           >
             {t('dashboard')}
           </TabButton>
           <TabButton
+            id="tab-patterns"
+            panelId="panel-patterns"
             active={activeTab === 'patterns'}
             onClick={() => setActiveTab('patterns')}
           >
@@ -217,7 +225,7 @@ export function WorkloadDashboard() {
 
       {/* Patterns tab */}
       {activeTab === 'patterns' && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+        <div className="rounded-lg border border-border bg-card p-4">
           <WorkloadPatternsView />
         </div>
       )}
@@ -230,10 +238,14 @@ export function WorkloadDashboard() {
 // ---------------------------------------------------------------------------
 
 function TabButton({
+  id,
+  panelId,
   active,
   onClick,
   children,
 }: {
+  id: string
+  panelId: string
   active: boolean
   onClick: () => void
   children: React.ReactNode
@@ -241,11 +253,15 @@ function TabButton({
   return (
     <button
       type="button"
+      role="tab"
+      id={id}
+      aria-controls={panelId}
+      aria-selected={active}
       onClick={onClick}
       className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
         active
-          ? 'bg-white text-neutral-800 shadow-sm'
-          : 'text-neutral-500 hover:text-neutral-700'
+          ? 'bg-card text-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       {children}
@@ -255,16 +271,16 @@ function TabButton({
 
 function EmptyState({ t }: { t: ReturnType<typeof useTranslations<'workload'>> }) {
   return (
-    <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white p-6 text-center">
-      <p className="text-sm font-medium text-neutral-500">{t('noAssignments')}</p>
-      <p className="mt-1 text-xs text-neutral-400">{t('noAssignmentsHint')}</p>
+    <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-6 text-center">
+      <p className="text-sm font-medium text-muted-foreground">{t('noAssignments')}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t('noAssignmentsHint')}</p>
     </div>
   )
 }
 
 function LoadLevelLegend({ t }: { t: ReturnType<typeof useTranslations<'workload'>> }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span>{t('legend')}:</span>
       <span className="flex items-center gap-1">
         <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-green-400" />

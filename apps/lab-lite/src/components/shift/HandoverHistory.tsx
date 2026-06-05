@@ -13,7 +13,7 @@ function StatusBadge({ status }: { status: HandoverReport['status'] }) {
       ? 'bg-green-100 text-green-700'
       : status === 'PENDING'
         ? 'bg-amber-100 text-amber-700'
-        : 'bg-neutral-100 text-neutral-600'
+        : 'bg-muted text-muted-foreground'
 
   return (
     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${classes}`}>
@@ -64,19 +64,19 @@ export function HandoverHistory() {
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-900">{t('history')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('historyTitle')}</h2>
         <select
           aria-label="Filter by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none"
+          className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground focus:border-blue-500 focus:outline-none"
         >
-          <option value="ALL">All</option>
-          <option value="PENDING">Pending</option>
-          <option value="ACKNOWLEDGED">Acknowledged</option>
-          <option value="EXPIRED">Expired</option>
+          <option value="ALL">{t('allFilter')}</option>
+          <option value="PENDING">{t('statusPending')}</option>
+          <option value="ACKNOWLEDGED">{t('statusAcknowledged')}</option>
+          <option value="EXPIRED">{t('statusExpired')}</option>
         </select>
       </div>
 
@@ -91,45 +91,45 @@ export function HandoverHistory() {
       )}
 
       {!isLoading && !error && filtered.length === 0 && (
-        <p className="py-8 text-center text-sm text-neutral-500">No handover records found.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">No handover records found.</p>
       )}
 
       {!isLoading && !error && filtered.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 text-start text-xs text-neutral-500">
-                <th className="pb-2 pe-4 font-medium">Date</th>
-                <th className="pb-2 pe-4 font-medium">Outgoing Tech</th>
-                <th className="pb-2 pe-4 font-medium">Incoming Tech</th>
-                <th className="pb-2 pe-4 font-medium">Status</th>
-                <th className="pb-2 pe-4 font-medium">Pending Samples</th>
-                <th className="pb-2 font-medium">Actions</th>
+              <tr className="border-b border-border text-start text-xs text-muted-foreground">
+                <th className="pb-2 pe-4 font-medium">{t('shiftDate')}</th>
+                <th className="pb-2 pe-4 font-medium">{t('outgoingTech')}</th>
+                <th className="pb-2 pe-4 font-medium">{t('incomingTech')}</th>
+                <th className="pb-2 pe-4 font-medium">{t('statusColumn')}</th>
+                <th className="pb-2 pe-4 font-medium">{t('pendingSamplesColumn')}</th>
+                <th className="pb-2 font-medium">{t('actionsColumn')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-b border-neutral-100 last:border-0"
+                  className="border-b border-border/50 last:border-0"
                 >
-                  <td className="py-2 pe-4 text-neutral-700">
+                  <td className="py-2 pe-4 text-foreground">
                     {r.shiftDate}
-                    <span className="ms-1 text-xs text-neutral-400">
+                    <span className="ms-1 text-xs text-muted-foreground">
                       {new Date(r.createdAt).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
                     </span>
                   </td>
-                  <td className="py-2 pe-4 text-neutral-700">{r.outgoingTechName}</td>
-                  <td className="py-2 pe-4 text-neutral-500">
-                    {r.incomingTechId ? r.incomingTechId : '—'}
+                  <td className="py-2 pe-4 text-foreground">{r.outgoingTechName}</td>
+                  <td className="py-2 pe-4 text-muted-foreground">
+                    {r.incomingTechName ?? (r.incomingTechId ? r.incomingTechId : '—')}
                   </td>
                   <td className="py-2 pe-4">
                     <StatusBadge status={r.status} />
                   </td>
-                  <td className="py-2 pe-4 text-neutral-700">
+                  <td className="py-2 pe-4 text-foreground">
                     {r.pendingSamples.stat + r.pendingSamples.routine}
                     {r.pendingSamples.stat > 0 && (
                       <span className="ms-1 text-xs font-medium text-red-600">
@@ -143,7 +143,7 @@ export function HandoverHistory() {
                       onClick={() => setSelected(r)}
                       className="text-blue-600 underline hover:text-blue-800"
                     >
-                      View
+                      {t('viewAction')}
                     </button>
                   </td>
                 </tr>
@@ -166,38 +166,38 @@ function HandoverDetail({
   const t = useTranslations('shift')
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <button
         type="button"
         onClick={onBack}
         className="mb-4 text-sm text-blue-600 hover:text-blue-800"
       >
-        ← Back to history
+        {t('backToHistory')}
       </button>
 
       <div className="mb-4 flex items-center gap-3">
-        <h2 className="text-lg font-semibold text-neutral-900">{t('handoverReport')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('handoverReportTitle')}</h2>
         <StatusBadge status={report.status} />
       </div>
 
       <dl className="mb-6 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <dt className="text-neutral-500">Date</dt>
-          <dd className="font-medium text-neutral-900">{report.shiftDate}</dd>
+          <dt className="text-muted-foreground">{t('shiftDate')}</dt>
+          <dd className="font-medium text-foreground">{report.shiftDate}</dd>
         </div>
         <div>
-          <dt className="text-neutral-500">Time</dt>
-          <dd className="font-medium text-neutral-900">
+          <dt className="text-muted-foreground">{t('timeLabel')}</dt>
+          <dd className="font-medium text-foreground">
             {new Date(report.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </dd>
         </div>
         <div>
-          <dt className="text-neutral-500">Outgoing Tech</dt>
-          <dd className="font-medium text-neutral-900">{report.outgoingTechName}</dd>
+          <dt className="text-muted-foreground">{t('outgoingTech')}</dt>
+          <dd className="font-medium text-foreground">{report.outgoingTechName}</dd>
         </div>
         <div>
-          <dt className="text-neutral-500">Acknowledged</dt>
-          <dd className="font-medium text-neutral-900">
+          <dt className="text-muted-foreground">{t('acknowledgedAt')}</dt>
+          <dd className="font-medium text-foreground">
             {report.acknowledgedAt
               ? new Date(report.acknowledgedAt).toLocaleString()
               : '—'}
@@ -207,23 +207,23 @@ function HandoverDetail({
 
       <div className="space-y-4">
         <section aria-labelledby="detail-samples">
-          <h3 id="detail-samples" className="mb-2 text-sm font-medium text-neutral-700">
-            {t('pendingSamples')}
+          <h3 id="detail-samples" className="mb-2 text-sm font-medium text-foreground">
+            {t('pendingSamplesLabel')}
           </h3>
-          <p className="text-sm text-neutral-600">
-            STAT: {report.pendingSamples.stat} | Routine: {report.pendingSamples.routine}
+          <p className="text-sm text-muted-foreground">
+            {t('statLabel')}: {report.pendingSamples.stat} | {t('routineLabel')}: {report.pendingSamples.routine}
           </p>
           {report.pendingSamples.sampleIds.length > 0 && (
-            <p className="mt-1 text-xs text-neutral-400">
-              IDs: {report.pendingSamples.sampleIds.join(', ')}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('sampleIdsLabel')}: {report.pendingSamples.sampleIds.join(', ')}
             </p>
           )}
         </section>
 
         {report.equipmentAlerts.length > 0 && (
           <section aria-labelledby="detail-equipment">
-            <h3 id="detail-equipment" className="mb-2 text-sm font-medium text-neutral-700">
-              {t('equipmentAlerts')}
+            <h3 id="detail-equipment" className="mb-2 text-sm font-medium text-foreground">
+              {t('equipmentAlertsLabel')}
             </h3>
             <ul className="space-y-1">
               {report.equipmentAlerts.map((a) => (
@@ -236,22 +236,22 @@ function HandoverDetail({
         )}
 
         <section aria-labelledby="detail-orders">
-          <h3 id="detail-orders" className="mb-2 text-sm font-medium text-neutral-700">
-            {t('incompleteOrders')}
+          <h3 id="detail-orders" className="mb-2 text-sm font-medium text-foreground">
+            {t('incompleteOrdersLabel')}
           </h3>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             {report.incompleteOrders.length === 0
-              ? 'None'
-              : `${report.incompleteOrders.length} orders`}
+              ? t('noneLabel')
+              : t('ordersAwaiting', { count: report.incompleteOrders.length })}
           </p>
         </section>
 
         {report.outgoingNotes && (
           <section aria-labelledby="detail-notes-out">
-            <h3 id="detail-notes-out" className="mb-1 text-sm font-medium text-neutral-700">
-              Outgoing Notes
+            <h3 id="detail-notes-out" className="mb-1 text-sm font-medium text-foreground">
+              {t('outgoingNotesLabel')}
             </h3>
-            <p className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+            <p className="rounded-md bg-muted/30 px-3 py-2 text-sm text-foreground">
               {report.outgoingNotes}
             </p>
           </section>
@@ -259,10 +259,10 @@ function HandoverDetail({
 
         {report.incomingNotes && (
           <section aria-labelledby="detail-notes-in">
-            <h3 id="detail-notes-in" className="mb-1 text-sm font-medium text-neutral-700">
-              Incoming Notes
+            <h3 id="detail-notes-in" className="mb-1 text-sm font-medium text-foreground">
+              {t('incomingNotesLabel')}
             </h3>
-            <p className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+            <p className="rounded-md bg-muted/30 px-3 py-2 text-sm text-foreground">
               {report.incomingNotes}
             </p>
           </section>

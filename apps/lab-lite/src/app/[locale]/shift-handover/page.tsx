@@ -10,8 +10,8 @@ function ShiftHandoverContent() {
 
   if (!canViewHistory) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center">
-        <p className="text-sm text-neutral-500">
+      <div className="rounded-lg border border-border bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">
           Handover history is available to Supervisors and Lab Managers only.
         </p>
       </div>

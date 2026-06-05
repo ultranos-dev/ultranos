@@ -149,7 +149,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-white overflow-y-auto"
+      className="fixed inset-0 z-50 bg-card overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t('flow.title')}
@@ -163,7 +163,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
             <button
               type="button"
               onClick={onClose}
-              className="text-neutral-500 hover:text-neutral-700 p-2 rounded
+              className="text-muted-foreground hover:text-foreground p-2 rounded
                 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
                 focus-visible:outline-neutral-500"
               aria-label={t('flow.close')}
@@ -191,7 +191,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
                 {t('flow.notManagerWarning')}
               </div>
             )}
-            <p className="text-neutral-700">{t('flow.activateDescription')}</p>
+            <p className="text-foreground">{t('flow.activateDescription')}</p>
             <button
               type="button"
               disabled={!isManager || isWorking}
@@ -213,7 +213,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
         {/* ── Step: Encrypt ──────────────────────────────────────────── */}
         {step === 'encrypt' && (
           <div className="flex flex-col gap-6">
-            <p className="text-neutral-700">{t('flow.encryptDescription')}</p>
+            <p className="text-foreground">{t('flow.encryptDescription')}</p>
 
             {!encryptionKey && (
               <button
@@ -240,7 +240,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={t('flow.encryptProgressLabel')}
-                className="w-full h-3 bg-neutral-200 rounded-full overflow-hidden"
+                className="w-full h-3 bg-muted rounded-full overflow-hidden"
               >
                 <div
                   className="h-full bg-red-500 transition-all duration-300"
@@ -268,16 +268,16 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
                     <button
                       type="button"
                       onClick={() => setShowQr(!showQr)}
-                      className="w-full py-3 bg-white border border-green-400 text-green-800
+                      className="w-full py-3 bg-card border border-green-400 text-green-800
                         rounded font-semibold hover:bg-green-50"
                     >
                       📷 {t('flow.showQr')}
                     </button>
                   </div>
                   {showQr && (
-                    <div className="mt-3 p-3 bg-white border border-neutral-200 rounded">
-                      <p className="text-xs text-neutral-500 mb-2">{t('flow.qrInstructions')}</p>
-                      <code className="text-xs break-all font-mono text-neutral-800 block">
+                    <div className="mt-3 p-3 bg-card border border-border rounded">
+                      <p className="text-xs text-muted-foreground mb-2">{t('flow.qrInstructions')}</p>
+                      <code className="text-xs break-all font-mono text-foreground block">
                         {encryptionKey}
                       </code>
                     </div>
@@ -286,8 +286,8 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
                 <button
                   type="button"
                   onClick={() => setStep('backup')}
-                  className="w-full py-4 bg-neutral-800 text-white rounded-lg font-bold text-lg
-                    hover:bg-neutral-700"
+                  className="w-full py-4 bg-card text-white rounded-lg font-bold text-lg
+                    hover:bg-muted"
                 >
                   {t('flow.continueToBackup')}
                 </button>
@@ -299,7 +299,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
         {/* ── Step: Backup ───────────────────────────────────────────── */}
         {step === 'backup' && (
           <div className="flex flex-col gap-6">
-            <p className="text-neutral-700">{t('flow.backupDescription')}</p>
+            <p className="text-foreground">{t('flow.backupDescription')}</p>
             <button
               type="button"
               disabled={isWorking}
@@ -317,7 +317,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
         {/* ── Step: Checklist ────────────────────────────────────────── */}
         {step === 'checklist' && (
           <div className="flex flex-col gap-6">
-            <p className="text-neutral-700">{t('flow.checklistDescription')}</p>
+            <p className="text-foreground">{t('flow.checklistDescription')}</p>
             <ShutdownChecklist onComplete={() => setStep('wipe')} />
           </div>
         )}
@@ -340,14 +340,14 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
                 onChange={(e) => setWipeConfirm1(e.target.checked)}
                 className="mt-0.5 h-5 w-5 accent-red-600"
               />
-              <span className="text-sm font-medium text-neutral-800">
+              <span className="text-sm font-medium text-foreground">
                 {t('wipe.firstConfirmLabel')}
               </span>
             </label>
 
             {/* Typed phrase */}
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1">
                 {t('wipe.typeToConfirm', { phrase: localizedWipePhrase })}
               </label>
               <input
@@ -378,8 +378,8 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
             <button
               type="button"
               onClick={() => setStep('done')}
-              className="w-full py-3 bg-white border border-neutral-300 text-neutral-700
-                rounded-lg font-medium hover:bg-neutral-50"
+              className="w-full py-3 bg-card border border-border text-foreground
+                rounded-lg font-medium hover:bg-muted/30"
             >
               {t('wipe.skipButton')}
             </button>
@@ -390,8 +390,8 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
         {step === 'done' && (
           <div className="flex flex-col items-center gap-6 py-6 text-center">
             <div className="text-6xl">🔒</div>
-            <h2 className="text-2xl font-bold text-neutral-800">{t('flow.doneTitle')}</h2>
-            <p className="text-neutral-600">{t('flow.doneDescription')}</p>
+            <h2 className="text-2xl font-bold text-foreground">{t('flow.doneTitle')}</h2>
+            <p className="text-muted-foreground">{t('flow.doneDescription')}</p>
             <div
               data-testid="security-mode-banner"
               className="w-full rounded-lg bg-red-100 border border-red-300 p-3

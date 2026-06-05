@@ -40,7 +40,7 @@ export function DonorReportList({ programCode, onOpenReport }: Props) {
     <div className="space-y-4" data-testid="donor-report-list">
       <h2 className="text-sm font-semibold text-gray-700">{t('reportHistory')}</h2>
       {Array.from(grouped.entries()).map(([code, groupReports]) => (
-        <div key={code} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div key={code} className="rounded-lg border border-gray-200 bg-card overflow-hidden">
           <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
             <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
               {groupReports[0]?.programName} ({code})

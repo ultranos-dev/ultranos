@@ -60,7 +60,7 @@ export function AnomalyFlagDisplay({
     >
       <h3
         id="anomaly-flags-heading"
-        className="text-sm font-semibold text-neutral-700 dark:text-neutral-300"
+        className="text-sm font-semibold text-foreground dark:text-muted-foreground"
       >
         {t('sectionTitle')}
       </h3>
@@ -111,7 +111,7 @@ function FlagCard({ flag }: { flag: AnomalyFlag }) {
     >
       {/* Header row: severity badge + confidence pill */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
           {t(`severity.${flag.severity}`)}
         </span>
         <span className={['rounded-full px-2 py-0.5 text-xs font-medium', confidencePillStyle].join(' ')}>
@@ -120,19 +120,19 @@ function FlagCard({ flag }: { flag: AnomalyFlag }) {
       </div>
 
       {/* Pattern description — i18n key, NEVER a diagnosis */}
-      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+      <p className="text-sm font-medium text-foreground dark:text-foreground">
         {t(flag.descriptionKey)}
       </p>
 
       {/* Matched field codes (traceability — no values) */}
       {flag.matchedConditions.length > 0 && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground">
           {t('matchedFields')}: {flag.matchedConditions.join(', ')}
         </p>
       )}
 
       {/* Mandatory disclaimer — AC: 5 */}
-      <p className="text-xs italic text-neutral-500 dark:text-neutral-400 border-t border-neutral-200 dark:border-neutral-700 pt-2 mt-1">
+      <p className="text-xs italic text-muted-foreground dark:text-muted-foreground border-t border-border dark:border-border pt-2 mt-1">
         {flag.disclaimer}
       </p>
     </article>

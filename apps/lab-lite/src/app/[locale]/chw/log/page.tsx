@@ -20,7 +20,7 @@ export default function CHWLogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <SamplesCollectedLog onBack={() => router.replace(`/${locale}/chw`)} />
     </div>
   )

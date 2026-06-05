@@ -8,6 +8,7 @@ import type { HandoverReport } from '@/lib/db'
 interface HandoverAcknowledgmentProps {
   report: HandoverReport
   incomingTechId: string
+  incomingTechName: string
   onAcknowledged: () => void
 }
 
@@ -18,6 +19,7 @@ interface HandoverAcknowledgmentProps {
 export function HandoverAcknowledgment({
   report,
   incomingTechId,
+  incomingTechName,
   onAcknowledged,
 }: HandoverAcknowledgmentProps) {
   const t = useTranslations('shift')
@@ -36,7 +38,7 @@ export function HandoverAcknowledgment({
     setIsSubmitting(true)
     setError(null)
     try {
-      await acknowledgeHandover(report.id, incomingTechId, notes || undefined)
+      await acknowledgeHandover(report.id, incomingTechId, incomingTechName, notes || undefined)
       onAcknowledged()
     } catch {
       setError('Failed to acknowledge handover. Please try again.')
@@ -55,7 +57,7 @@ export function HandoverAcknowledgment({
         <div className="flex items-center gap-3">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-amber-500" />
           <p className="text-sm font-medium text-amber-900">
-            {t('handoverReport')}: {report.outgoingTechName} at {handoverTime}
+            {t('handoverReportTitle')}: {report.outgoingTechName} at {handoverTime}
             {' — '}
             {pendingTotal} pending sample{pendingTotal !== 1 ? 's' : ''}
           </p>
@@ -66,7 +68,7 @@ export function HandoverAcknowledgment({
           className="text-sm font-medium text-amber-700 underline hover:text-amber-900"
           aria-expanded={isExpanded}
         >
-          {isExpanded ? 'Hide details' : 'View details'}
+          {isExpanded ? t('hideDetails') : t('viewDetails')}
         </button>
       </div>
 
@@ -75,29 +77,29 @@ export function HandoverAcknowledgment({
         <div className="border-t border-amber-200 px-4 pb-4">
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {/* Pending Samples */}
-            <div className="rounded-md border border-amber-200 bg-white p-3">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {t('pendingSamples')}
+            <div className="rounded-md border border-amber-200 bg-card p-3">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('pendingSamplesLabel')}
               </h4>
               <div className="flex gap-4">
                 <div className="text-center">
                   <p className="text-xl font-bold text-red-600">{report.pendingSamples.stat}</p>
-                  <p className="text-xs text-neutral-500">STAT</p>
+                  <p className="text-xs text-muted-foreground">{t('statLabel')}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xl font-bold text-amber-600">{report.pendingSamples.routine}</p>
-                  <p className="text-xs text-neutral-500">Routine</p>
+                  <p className="text-xs text-muted-foreground">{t('routineLabel')}</p>
                 </div>
               </div>
             </div>
 
             {/* Equipment Alerts */}
-            <div className="rounded-md border border-amber-200 bg-white p-3">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {t('equipmentAlerts')}
+            <div className="rounded-md border border-amber-200 bg-card p-3">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('equipmentAlertsLabel')}
               </h4>
               {report.equipmentAlerts.length === 0 ? (
-                <p className="text-sm text-neutral-500">None</p>
+                <p className="text-sm text-muted-foreground">{t('noneLabel')}</p>
               ) : (
                 <ul className="space-y-1">
                   {report.equipmentAlerts.map((a) => (
@@ -111,9 +113,9 @@ export function HandoverAcknowledgment({
 
             {/* QC Status */}
             {report.qcStatus.length > 0 && (
-              <div className="rounded-md border border-amber-200 bg-white p-3">
-                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                  {t('qcStatus')}
+              <div className="rounded-md border border-amber-200 bg-card p-3">
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('qcStatusLabel')}
                 </h4>
                 <ul className="space-y-1">
                   {report.qcStatus.map((q) => (
@@ -125,7 +127,7 @@ export function HandoverAcknowledgment({
                             ? 'font-medium text-green-600'
                             : q.status === 'FAIL'
                               ? 'font-medium text-red-600'
-                              : 'text-neutral-500'
+                              : 'text-muted-foreground'
                         }
                       >
                         {q.status}
@@ -137,25 +139,25 @@ export function HandoverAcknowledgment({
             )}
 
             {/* Incomplete Orders */}
-            <div className="rounded-md border border-amber-200 bg-white p-3">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {t('incompleteOrders')}
+            <div className="rounded-md border border-amber-200 bg-card p-3">
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('incompleteOrdersLabel')}
               </h4>
-              <p className="text-sm text-neutral-700">
+              <p className="text-sm text-foreground">
                 {report.incompleteOrders.length === 0
-                  ? 'None'
-                  : `${report.incompleteOrders.length} order(s) awaiting processing`}
+                  ? t('noneLabel')
+                  : t('ordersAwaiting', { count: report.incompleteOrders.length })}
               </p>
             </div>
           </div>
 
           {/* Outgoing notes */}
           {report.outgoingNotes && (
-            <div className="mt-4 rounded-md border border-amber-200 bg-white p-3">
-              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                {t('notes')} from {report.outgoingTechName}
+            <div className="mt-4 rounded-md border border-amber-200 bg-card p-3">
+              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('notesLabel')} from {report.outgoingTechName}
               </h4>
-              <p className="text-sm text-neutral-700">{report.outgoingNotes}</p>
+              <p className="text-sm text-foreground">{report.outgoingNotes}</p>
             </div>
           )}
 
@@ -166,8 +168,8 @@ export function HandoverAcknowledgment({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Add optional notes..."
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder={t('incomingNotesPlaceholder')}
+              className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
 
             {error && (
@@ -180,7 +182,7 @@ export function HandoverAcknowledgment({
               disabled={isSubmitting}
               className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Acknowledging…' : t('acknowledge')}
+              {isSubmitting ? t('acknowledging') : t('acknowledgeHandover')}
             </button>
           </div>
         </div>

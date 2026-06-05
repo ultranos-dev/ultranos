@@ -158,7 +158,7 @@ export function InspectionReadinessView() {
           </div>
 
           {/* Overall Score — prominent display */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
+          <div className="rounded-lg border border-gray-200 bg-card p-6 text-center">
             <p
               className={`text-5xl font-bold ${
                 pack.overallComplianceScore >= 80
@@ -176,7 +176,7 @@ export function InspectionReadinessView() {
           {/* Audit Scores */}
           <section
             aria-labelledby="audit-scores-heading"
-            className="rounded-lg border border-gray-200 bg-white p-4"
+            className="rounded-lg border border-gray-200 bg-card p-4"
           >
             <h3 id="audit-scores-heading" className="text-sm font-semibold mb-3">
               {t('auditScoresSection')}
@@ -217,7 +217,7 @@ export function InspectionReadinessView() {
           {/* Waste Compliance */}
           <section
             aria-labelledby="waste-compliance-heading"
-            className="rounded-lg border border-gray-200 bg-white p-4"
+            className="rounded-lg border border-gray-200 bg-card p-4"
           >
             <h3 id="waste-compliance-heading" className="text-sm font-semibold mb-2">
               {t('wasteComplianceSection')}
@@ -236,7 +236,7 @@ export function InspectionReadinessView() {
           {/* Temperature Compliance */}
           <section
             aria-labelledby="temp-compliance-heading"
-            className="rounded-lg border border-gray-200 bg-white p-4"
+            className="rounded-lg border border-gray-200 bg-card p-4"
           >
             <h3 id="temp-compliance-heading" className="text-sm font-semibold mb-2">
               {t('temperatureComplianceSection')}
@@ -278,7 +278,7 @@ export function InspectionReadinessView() {
           {/* Spill Incidents */}
           <section
             aria-labelledby="spill-incidents-heading"
-            className="rounded-lg border border-gray-200 bg-white p-4"
+            className="rounded-lg border border-gray-200 bg-card p-4"
           >
             <h3 id="spill-incidents-heading" className="text-sm font-semibold mb-2">
               {t('spillIncidentsSection')}

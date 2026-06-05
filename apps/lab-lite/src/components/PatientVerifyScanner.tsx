@@ -192,12 +192,12 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
       <div
         id="qr-scanner-region"
         ref={scannerRef}
-        className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100"
+        className="overflow-hidden rounded-lg border border-border bg-muted"
         style={{ minHeight: scanning ? 300 : 0 }}
       />
 
       {loading && (
-        <p className="text-center text-sm text-neutral-500">Verifying patient...</p>
+        <p className="text-center text-sm text-muted-foreground">Verifying patient...</p>
       )}
 
       {/* Verification card — confirm identity before proceeding (AC 5) */}
@@ -208,10 +208,10 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="font-medium text-neutral-600">First Name</dt>
-            <dd className="text-neutral-900">{verifiedResult.firstName}</dd>
-            <dt className="font-medium text-neutral-600">Age</dt>
-            <dd className="text-neutral-900">{verifiedResult.age}</dd>
+            <dt className="font-medium text-muted-foreground">First Name</dt>
+            <dd className="text-foreground">{verifiedResult.firstName}</dd>
+            <dt className="font-medium text-muted-foreground">Age</dt>
+            <dd className="text-foreground">{verifiedResult.age}</dd>
           </dl>
           <div className="mt-4 flex gap-3">
             <Button

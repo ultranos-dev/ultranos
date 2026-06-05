@@ -82,7 +82,7 @@ export default function QueueDisplayPage() {
             />
           </div>
         ) : (
-          <p className="text-2xl text-neutral-500">—</p>
+          <p className="text-2xl text-muted-foreground">—</p>
         )}
       </section>
 
@@ -93,15 +93,15 @@ export default function QueueDisplayPage() {
       <section className="pb-4">
         <h2 className="text-[32px] font-semibold mb-4">{t('waiting')}</h2>
         {waiting.length === 0 ? (
-          <p className="text-xl text-neutral-500">{t('emptyQueue')}</p>
+          <p className="text-xl text-muted-foreground">{t('emptyQueue')}</p>
         ) : (
           <div className="flex flex-wrap gap-4">
             {waiting.map((entry, index) => (
               <div
                 key={entry.id}
-                className="flex items-center gap-3 rounded-lg bg-neutral-900 px-4 py-3"
+                className="flex items-center gap-3 rounded-lg bg-card px-4 py-3"
               >
-                <span className="text-[32px] font-mono text-neutral-400">
+                <span className="text-[32px] font-mono text-muted-foreground">
                   {index + 1}
                 </span>
                 <TokenBadge

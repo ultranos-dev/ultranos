@@ -286,7 +286,7 @@ export default function UploadPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-neutral-900">{t('upload.title')}</h1>
+        <h1 className="text-xl font-bold text-foreground">{t('upload.title')}</h1>
       </div>
 
       <StepIndicator currentStep={state.step} />
@@ -305,10 +305,10 @@ export default function UploadPage() {
             <div className="rounded-lg border border-green-200 bg-green-50 p-4">
               <h3 className="mb-3 text-sm font-semibold text-green-800">{t('verification.patientVerified')}</h3>
               <dl className="grid grid-cols-2 gap-2 text-sm">
-                <dt className="font-medium text-neutral-600">{t('verification.firstName')}</dt>
-                <dd className="text-neutral-900">{state.patient.patientFirstName}</dd>
-                <dt className="font-medium text-neutral-600">{t('verification.age')}</dt>
-                <dd className="text-neutral-900">{state.patient.patientAge}</dd>
+                <dt className="font-medium text-muted-foreground">{t('verification.firstName')}</dt>
+                <dd className="text-foreground">{state.patient.patientFirstName}</dd>
+                <dt className="font-medium text-muted-foreground">{t('verification.age')}</dt>
+                <dd className="text-foreground">{state.patient.patientAge}</dd>
               </dl>
             </div>
           )}
@@ -319,14 +319,14 @@ export default function UploadPage() {
               <RecentPatientsList patients={recentPatients} onSelect={handleRecentPatientSelect} />
 
               {/* Search / Manual / QR toggle */}
-              <div className="flex rounded-lg border border-neutral-200 bg-neutral-50 p-1">
+              <div className="flex rounded-lg border border-border bg-muted/30 p-1">
                 <button
                   type="button"
                   onClick={() => setVerifyMode('search')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'search'
-                      ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                      ? 'bg-card text-primary-700 shadow-sm'
+                      : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
                   {t('verification.searchPatients')}
@@ -336,8 +336,8 @@ export default function UploadPage() {
                   onClick={() => setVerifyMode('manual')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'manual'
-                      ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                      ? 'bg-card text-primary-700 shadow-sm'
+                      : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
                   {t('upload.manualId')}
@@ -347,8 +347,8 @@ export default function UploadPage() {
                   onClick={() => setVerifyMode('qr')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     verifyMode === 'qr'
-                      ? 'bg-white text-primary-700 shadow-sm'
-                      : 'text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700'
+                      ? 'bg-card text-primary-700 shadow-sm'
+                      : 'text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-foreground'
                   }`}
                 >
                   {t('upload.qrScan')}

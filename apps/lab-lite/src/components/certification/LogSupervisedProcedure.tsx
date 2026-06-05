@@ -91,7 +91,7 @@ export function LogSupervisedProcedure({
           {t('procedure')}
         </label>
         <select
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           onChange={(e) => handleProcedureSelect(e.target.value)}
           defaultValue=""
         >
@@ -111,7 +111,7 @@ export function LogSupervisedProcedure({
             </label>
             <input
               type="text"
-              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. 58410-2"
               value={procedureCode}
               onChange={(e) => setProcedureCode(e.target.value)}
@@ -124,7 +124,7 @@ export function LogSupervisedProcedure({
             </label>
             <input
               type="text"
-              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder={t('procedureNamePlaceholder')}
               value={procedureName}
               onChange={(e) => setProcedureName(e.target.value)}
@@ -140,7 +140,7 @@ export function LogSupervisedProcedure({
         </label>
         <input
           type="datetime-local"
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={performedAt}
           onChange={(e) => setPerformedAt(e.target.value)}
           required
@@ -152,7 +152,7 @@ export function LogSupervisedProcedure({
           {t('supervisorNotes')} <span className="text-gray-400">({t('optional')})</span>
         </label>
         <textarea
-          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-gray-300 dark:border-gray-600 bg-card dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

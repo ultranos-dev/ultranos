@@ -27,10 +27,9 @@ interface SampleLockBlockerProps {
 }
 
 function formatLockTime(iso: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const diffMs = now.getTime() - d.getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const diffMin = Math.max(0, Math.floor(diffMs / 60_000))
+  if (diffMin === 0) return 'just now'
   if (diffMin < 60) return `${diffMin}m ago`
   const diffHrs = Math.floor(diffMin / 60)
   return `${diffHrs}h ${diffMin % 60}m ago`
@@ -45,12 +44,16 @@ export function SampleLockBlocker({
   const t = useTranslations('lock')
   const [requesting, setRequesting] = useState(false)
   const [requested, setRequested] = useState(false)
+  const [requestError, setRequestError] = useState(false)
 
   async function handleRequestRelease() {
     setRequesting(true)
+    setRequestError(false)
     try {
       await onRequestRelease()
       setRequested(true)
+    } catch {
+      setRequestError(true)
     } finally {
       setRequesting(false)
     }
@@ -66,9 +69,9 @@ export function SampleLockBlocker({
       data-testid="sample-lock-blocker"
     >
       {/* Card */}
-      <div className="w-full max-w-sm rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-sm rounded-xl bg-card shadow-xl">
         {/* Header */}
-        <div className="flex items-start gap-3 border-b border-neutral-100 p-5">
+        <div className="flex items-start gap-3 border-b border-border/50 p-5">
           {/* Lock icon */}
           <span className="shrink-0 text-yellow-500" aria-hidden="true">
             <Lock size={24} />
@@ -76,11 +79,11 @@ export function SampleLockBlocker({
           <div>
             <h2
               id="lock-blocker-title"
-              className="text-base font-semibold text-neutral-900"
+              className="text-base font-semibold text-foreground"
             >
               {t('duplicatePrevented')}
             </h2>
-            <p className="mt-1 text-sm text-neutral-600" data-testid="lock-blocker-message">
+            <p className="mt-1 text-sm text-muted-foreground" data-testid="lock-blocker-message">
               {t('lockedBy', { name: lockedByName, time: formatLockTime(lockedAt) })}
             </p>
           </div>
@@ -88,6 +91,16 @@ export function SampleLockBlocker({
 
         {/* Actions */}
         <div className="flex flex-col gap-2 p-4">
+          {requestError && (
+            <p
+              className="text-center text-sm text-red-600 font-medium py-1"
+              data-testid="release-request-error"
+              role="alert"
+            >
+              {t('requestReleaseFailed')}
+            </p>
+          )}
+
           {!requested ? (
             <button
               type="button"
@@ -117,8 +130,8 @@ export function SampleLockBlocker({
             onClick={onDismiss}
             data-testid="dismiss-button"
             className="
-              w-full rounded-lg border border-neutral-200 bg-white px-4 py-2.5
-              text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors
+              w-full rounded-lg border border-border bg-card px-4 py-2.5
+              text-sm font-medium text-foreground hover:bg-muted/30 transition-colors
               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
               focus-visible:outline-neutral-500
             "

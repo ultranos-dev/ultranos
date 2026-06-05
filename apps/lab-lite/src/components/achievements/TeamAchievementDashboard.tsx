@@ -50,16 +50,16 @@ function MilestoneProgressBar({
   return (
     <div className="space-y-1.5" data-testid="milestone-progress-bar">
       <div className="flex items-center justify-between text-sm">
-        <span className={`font-medium ${earned ? 'text-indigo-700' : 'text-neutral-700'}`}>
+        <span className={`font-medium ${earned ? 'text-indigo-700' : 'text-foreground'}`}>
           {label}
           {earned && <span className="ms-2 text-xs text-indigo-500">✓ Earned!</span>}
         </span>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           {current.toLocaleString()} / {target.toLocaleString()}
         </span>
       </div>
       <div
-        className="h-2 w-full rounded-full bg-neutral-200"
+        className="h-2 w-full rounded-full bg-muted"
         role="progressbar"
         aria-valuenow={current}
         aria-valuemin={0}
@@ -157,7 +157,7 @@ export function TeamAchievementDashboard() {
 
   if (!isLoaded) {
     return (
-      <div className="p-4 text-sm text-neutral-500" data-testid="achievement-dashboard-loading">
+      <div className="p-4 text-sm text-muted-foreground" data-testid="achievement-dashboard-loading">
         Loading achievements…
       </div>
     )
@@ -178,8 +178,8 @@ export function TeamAchievementDashboard() {
     <div className="space-y-6" data-testid="team-achievement-dashboard">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-neutral-900">Team Achievements</h2>
-        <p className="text-sm text-neutral-500 mt-1">
+        <h2 className="text-lg font-semibold text-foreground">Team Achievements</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Quality milestones celebrated together — not surveillance, but recognition.
         </p>
       </div>
@@ -187,7 +187,7 @@ export function TeamAchievementDashboard() {
       {/* Active Streaks */}
       {streaks.length > 0 && (
         <section aria-label="Active streaks">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">Active Streaks</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Active Streaks</h3>
           <div className="space-y-3">
             {streaks.map((streak) => (
               <StreakProgress key={streak.type} streak={streak} />
@@ -199,7 +199,7 @@ export function TeamAchievementDashboard() {
       {/* My Achievements This Month */}
       {thisMonthAchievements.length > 0 && (
         <section aria-label="My achievements this month">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+          <h3 className="text-sm font-semibold text-foreground mb-3">
             Your Achievements This Month
           </h3>
           <div className="space-y-2">
@@ -218,7 +218,7 @@ export function TeamAchievementDashboard() {
       {/* Recent Team Achievements */}
       {recentTeamAchievements.length > 0 && (
         <section aria-label="Recent team achievements">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-3">
+          <h3 className="text-sm font-semibold text-foreground mb-3">
             Recent Team Achievements
           </h3>
           <div className="space-y-2">
@@ -231,7 +231,7 @@ export function TeamAchievementDashboard() {
 
       {/* Team Milestones Progress */}
       <section aria-label="Team milestones">
-        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Team Milestones</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-3">Team Milestones</h3>
         <div className="space-y-4">
           {MILESTONE_THRESHOLDS.map((m) => (
             <MilestoneProgressBar
@@ -249,8 +249,8 @@ export function TeamAchievementDashboard() {
       {thisMonthAchievements.length === 0 &&
         recentTeamAchievements.length === 0 &&
         streaks.length === 0 && (
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center">
-            <p className="text-sm text-neutral-500">
+          <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
+            <p className="text-sm text-muted-foreground">
               No achievements yet this period. Keep up the quality work — the first milestone
               is coming!
             </p>

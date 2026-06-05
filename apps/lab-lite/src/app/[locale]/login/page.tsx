@@ -151,8 +151,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-center text-xl font-bold text-neutral-900">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm">
+        <h2 className="mb-6 text-center text-xl font-bold text-foreground">
           Lab Portal Sign In
         </h2>
 
@@ -168,7 +168,7 @@ export default function LoginPage() {
         {step === 'credentials' && (
           <form onSubmit={handleCredentialSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground">
                 Email
               </label>
               <input
@@ -177,13 +177,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="technician@lab.example"
                 autoComplete="email"
               />
             </div>
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground">
                 Password
               </label>
               <input
@@ -192,7 +192,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 autoComplete="current-password"
               />
             </div>
@@ -209,11 +209,11 @@ export default function LoginPage() {
 
         {step === 'mfa' && (
           <form onSubmit={handleMfaSubmit} className="space-y-4">
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               Enter the 6-digit code from your authenticator app.
             </p>
             <div>
-              <label htmlFor="totp" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="totp" className="mb-1 block text-sm font-medium text-foreground">
                 TOTP Code
               </label>
               <input
@@ -225,7 +225,7 @@ export default function LoginPage() {
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-center text-lg tracking-widest focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus

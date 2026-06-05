@@ -78,7 +78,7 @@ export function SOPAcknowledgmentTracker() {
         {rows.map(({ sop, acknowledgments }) => (
           <div
             key={sop.id}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+            className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
           >
             <div className="flex items-start justify-between gap-3">
               <div>

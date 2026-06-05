@@ -95,9 +95,10 @@ export function ProgramRegistration() {
       setError(t('validationRequired'))
       return
     }
-    // Uniqueness check (only for new programs)
+    // Uniqueness check (only for new programs) — normalize before checking
+    const normalizedCode = form.programCode.toUpperCase().replace(/\s+/g, '_')
     if (!editingId) {
-      const existing = await getDonorProgramByCode(form.programCode)
+      const existing = await getDonorProgramByCode(normalizedCode)
       if (existing) {
         setError(t('programCodeExists'))
         return
@@ -109,7 +110,7 @@ export function ProgramRegistration() {
     const now = new Date().toISOString()
     const program: DonorProgram = {
       id: editingId ?? crypto.randomUUID(),
-      programCode: form.programCode.toUpperCase().replace(/\s+/g, '_'),
+      programCode: normalizedCode,
       programName: form.programName,
       donorOrganization: form.donorOrganization,
       status: form.status,
@@ -140,14 +141,18 @@ export function ProgramRegistration() {
   }
 
   async function handleToggleStatus(program: DonorProgram) {
-    const updated: DonorProgram = {
-      ...program,
-      status: program.status === 'active' ? 'inactive' : 'active',
-      updatedAt: new Date().toISOString(),
-      syncStatus: 'pending',
+    try {
+      const updated: DonorProgram = {
+        ...program,
+        status: program.status === 'active' ? 'inactive' : 'active',
+        updatedAt: new Date().toISOString(),
+        syncStatus: 'pending',
+      }
+      await saveDonorProgram(updated)
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update status')
     }
-    await saveDonorProgram(updated)
-    await reload()
   }
 
   function handleEditProgram(program: DonorProgram) {

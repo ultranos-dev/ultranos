@@ -110,21 +110,21 @@ export function LogTemperatureModal({
       }}
     >
       <div
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl mx-4"
+        className="w-full max-w-sm rounded-lg bg-card p-6 shadow-xl mx-4"
         role="dialog"
         aria-modal="true"
         aria-label={t('logReadingTitle')}
       >
-        <h2 className="text-lg font-semibold text-neutral-900 mb-4">
+        <h2 className="text-lg font-semibold text-foreground mb-4">
           {t('logReadingTitle')}
         </h2>
 
         {/* Location (pre-selected) */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-neutral-600 mb-1">
+          <label className="block text-sm font-medium text-muted-foreground mb-1">
             {t('location')}
           </label>
-          <div className="rounded border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+          <div className="rounded border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
             {location.name}
           </div>
         </div>
@@ -133,7 +133,7 @@ export function LogTemperatureModal({
         <div className="mb-4">
           <label
             htmlFor="temp-input"
-            className="block text-sm font-medium text-neutral-600 mb-1"
+            className="block text-sm font-medium text-muted-foreground mb-1"
           >
             {t('temperatureLabel')} (°C)
           </label>
@@ -145,7 +145,7 @@ export function LogTemperatureModal({
             max={MAX_PLAUSIBLE}
             value={temperature}
             onChange={(e) => handleTemperatureChange(e.target.value)}
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             autoFocus
           />
         </div>

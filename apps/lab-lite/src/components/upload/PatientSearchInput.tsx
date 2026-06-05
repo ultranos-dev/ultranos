@@ -43,7 +43,7 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
 
   return (
     <div ref={containerRef} className="relative">
-      <label htmlFor="patient-search" className="text-sm font-medium text-neutral-700">
+      <label htmlFor="patient-search" className="text-sm font-medium text-foreground">
         {t('searchPatients')}
       </label>
       <input
@@ -52,7 +52,7 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
         placeholder={t('searchPatientsPlaceholder')}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => { if (query.trim().length >= 2) setIsOpen(true) }}
-        className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="mt-1 w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
         autoComplete="off"
         aria-expanded={isOpen}
         aria-controls="patient-search-results"
@@ -63,13 +63,13 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
         <ul
           id="patient-search-results"
           role="listbox"
-          className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-lg"
         >
           {isSearching && results.length === 0 && (
-            <li className="px-4 py-3 text-sm text-neutral-400">{t('searching')}</li>
+            <li className="px-4 py-3 text-sm text-muted-foreground">{t('searching')}</li>
           )}
           {!isSearching && results.length === 0 && query.trim().length >= 2 && (
-            <li className="px-4 py-3 text-sm text-neutral-400">{t('noSearchResults')}</li>
+            <li className="px-4 py-3 text-sm text-muted-foreground">{t('noSearchResults')}</li>
           )}
           {results.map((patient) => (
             <li key={patient.id}>
@@ -79,8 +79,8 @@ export function PatientSearchInput({ token, onSelect }: PatientSearchInputProps)
                 onClick={() => handleSelect(patient)}
                 className="flex w-full items-center justify-between px-4 py-2.5 text-start hover:bg-primary-50 focus:bg-primary-50 focus:outline-none"
               >
-                <span className="text-sm font-medium text-neutral-900">{patient.firstName}</span>
-                <span className="text-xs text-neutral-400">{patient.age} years</span>
+                <span className="text-sm font-medium text-foreground">{patient.firstName}</span>
+                <span className="text-xs text-muted-foreground">{patient.age} years</span>
               </button>
             </li>
           ))}

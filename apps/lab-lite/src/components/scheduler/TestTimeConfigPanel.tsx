@@ -63,7 +63,7 @@ export function TestTimeConfigPanel() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-900">{t('title')}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
         <Button variant="outline" onClick={handleReset}>
           {t('resetDefaults')}
         </Button>
@@ -76,25 +76,25 @@ export function TestTimeConfigPanel() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 text-start">
-              <th className="py-2 pe-3 text-start font-medium text-neutral-600">
+            <tr className="border-b border-border text-start">
+              <th className="py-2 pe-3 text-start font-medium text-muted-foreground">
                 {t('testName')}
               </th>
-              <th className="py-2 pe-3 text-start font-medium text-neutral-600">
+              <th className="py-2 pe-3 text-start font-medium text-muted-foreground">
                 {t('estimatedMinutes')}
               </th>
-              <th className="py-2 pe-3 text-start font-medium text-neutral-600">
+              <th className="py-2 pe-3 text-start font-medium text-muted-foreground">
                 {t('requiresPower')}
               </th>
-              <th className="py-2 text-start font-medium text-neutral-600">
+              <th className="py-2 text-start font-medium text-muted-foreground">
                 {t('batchSize')}
               </th>
             </tr>
           </thead>
           <tbody>
             {estimates.map((est) => (
-              <tr key={est.loincCode} className="border-b border-neutral-100">
-                <td className="py-2 pe-3 text-neutral-900">{est.displayName}</td>
+              <tr key={est.loincCode} className="border-b border-border/50">
+                <td className="py-2 pe-3 text-foreground">{est.displayName}</td>
                 <td className="py-2 pe-3">
                   <input
                     type="number"
@@ -103,7 +103,7 @@ export function TestTimeConfigPanel() {
                     onChange={(e) =>
                       handleUpdate(est.loincCode, 'estimatedMinutes', Number(e.target.value))
                     }
-                    className="w-16 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="w-16 rounded border border-border px-2 py-1 text-sm"
                   />
                 </td>
                 <td className="py-2 pe-3">
@@ -113,7 +113,7 @@ export function TestTimeConfigPanel() {
                     onChange={(e) =>
                       handleUpdate(est.loincCode, 'requiresPower', e.target.checked)
                     }
-                    className="h-4 w-4 rounded border-neutral-300"
+                    className="h-4 w-4 rounded border-border"
                   />
                 </td>
                 <td className="py-2">
@@ -124,7 +124,7 @@ export function TestTimeConfigPanel() {
                     onChange={(e) =>
                       handleUpdate(est.loincCode, 'batchSize', Number(e.target.value))
                     }
-                    className="w-16 rounded border border-neutral-300 px-2 py-1 text-sm"
+                    className="w-16 rounded border border-border px-2 py-1 text-sm"
                   />
                 </td>
               </tr>

@@ -10,7 +10,7 @@
  * AC #5: Tech is notified in-app when a surveillance alert is generated.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { AlertTriangle, X } from '@ultranos/ui-kit/icons'
@@ -28,33 +28,40 @@ interface ToastEntry {
 
 export function SurveillanceAlertToast() {
   const [toasts, setToasts] = useState<ToastEntry[]>([])
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('surveillance')
+
+  const dismiss = useCallback((id: string) => {
+    const timer = timersRef.current.get(id)
+    if (timer) { clearTimeout(timer); timersRef.current.delete(id) }
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
 
   useEffect(() => {
     const unsubscribe = onSurveillanceAlert((alert) => {
       setToasts((prev) => {
         const entry: ToastEntry = { alert, id: alert.id }
         const updated = [entry, ...prev].slice(0, MAX_TOASTS)
+        // Clear timers for any toasts that got dropped by MAX_TOASTS limit
+        for (const dropped of prev.slice(MAX_TOASTS - 1)) {
+          const timer = timersRef.current.get(dropped.id)
+          if (timer) { clearTimeout(timer); timersRef.current.delete(dropped.id) }
+        }
         return updated
       })
+      // Set per-toast auto-dismiss timer
+      const timer = setTimeout(() => dismiss(alert.id), AUTO_DISMISS_MS)
+      timersRef.current.set(alert.id, timer)
     })
-    return unsubscribe
-  }, [])
-
-  // Auto-dismiss
-  useEffect(() => {
-    if (toasts.length === 0) return
-    const timer = setTimeout(() => {
-      setToasts((prev) => prev.slice(0, -1))
-    }, AUTO_DISMISS_MS)
-    return () => clearTimeout(timer)
-  }, [toasts])
-
-  const dismiss = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }
+    return () => {
+      unsubscribe()
+      // Cleanup all timers on unmount
+      for (const timer of timersRef.current.values()) clearTimeout(timer)
+      timersRef.current.clear()
+    }
+  }, [dismiss])
 
   const navigateToAlert = (alert: SurveillanceAlert) => {
     dismiss(alert.id)

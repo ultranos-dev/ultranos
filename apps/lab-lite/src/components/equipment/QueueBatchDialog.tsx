@@ -70,7 +70,15 @@ export function QueueBatchDialog({
     }
     void (async () => {
       const queue = await getInstrumentQueue(selectedInstrumentId)
-      const totalWait = queue.reduce((sum, b) => sum + b.estimatedRunMinutes, 0)
+      // P18: for RUNNING batch, subtract elapsed time so the estimate reflects remaining wait,
+      // not the full run time of a batch that's already partially complete.
+      const totalWait = queue.reduce((sum, b) => {
+        if (b.status === 'RUNNING' && b.estimatedCompletionTime) {
+          const remainingMs = b.estimatedCompletionTime.getTime() - Date.now()
+          return sum + Math.max(0, Math.round(remainingMs / 60_000))
+        }
+        return sum + b.estimatedRunMinutes
+      }, 0)
       setEstimatedWaitMinutes(totalWait)
     })()
   }, [selectedInstrumentId])
@@ -92,13 +100,20 @@ export function QueueBatchDialog({
     setSaving(true)
     setError(null)
     try {
+      // P6: guard against NaN from non-numeric override input
+      const parsedOverride = runTimeOverride ? parseInt(runTimeOverride, 10) : undefined
+      if (parsedOverride !== undefined && (isNaN(parsedOverride) || parsedOverride < 1)) {
+        setError(t('errorRunTimeOverride') ?? 'Run time override must be a whole number of at least 1')
+        setSaving(false)
+        return
+      }
       const input: QueueBatchInput = {
         techId,
         techName,
         sampleIds: [],
         sampleCount,
         testType: testType.trim(),
-        estimatedRunMinutes: runTimeOverride ? parseInt(runTimeOverride, 10) : undefined,
+        estimatedRunMinutes: parsedOverride,
       }
       const batch = await queueBatch(selectedInstrumentId, input)
       onSuccess(batch)
@@ -117,7 +132,7 @@ export function QueueBatchDialog({
       aria-modal="true"
       aria-label={t('queueBatch')}
     >
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl p-6 space-y-4">
+      <div className="w-full max-w-md rounded-xl bg-card shadow-xl p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-900">{t('queueBatch')}</h2>
           <button

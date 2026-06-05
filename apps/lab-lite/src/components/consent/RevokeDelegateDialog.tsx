@@ -60,7 +60,7 @@ export function RevokeDelegateDialog({
       aria-modal="true"
       aria-labelledby="revoke-dialog-title"
     >
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-neutral-800">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl dark:bg-card">
         <h2
           id="revoke-dialog-title"
           className="mb-4 text-lg font-semibold text-red-600 dark:text-red-400"
@@ -68,11 +68,11 @@ export function RevokeDelegateDialog({
           {t('revokeDelegate')}
         </h2>
 
-        <p className="mb-4 text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="mb-4 text-sm text-foreground dark:text-muted-foreground">
           {t('revokeConfirm')}
         </p>
 
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label className="block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('revokeReason')}
           <textarea
             value={reason}
@@ -83,7 +83,7 @@ export function RevokeDelegateDialog({
             placeholder={t('revokeReasonPlaceholder')}
             rows={3}
             disabled={submitting}
-            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-700"
+            className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:border-border dark:bg-muted"
           />
         </label>
 
@@ -96,7 +96,7 @@ export function RevokeDelegateDialog({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-700"
+            className="rounded-md border px-4 py-2 text-sm hover:bg-muted/30 disabled:opacity-50 dark:border-border dark:hover:bg-muted"
           >
             {t('cancel')}
           </button>

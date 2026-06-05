@@ -117,7 +117,7 @@ export function PhotoCaptureButton({
     return (
       <div className="flex items-center gap-3">
         {/* Thumbnail */}
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-neutral-200">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={thumbnailUrl}
@@ -127,7 +127,7 @@ export function PhotoCaptureButton({
         </div>
 
         {existingFileName && (
-          <span className="max-w-[120px] truncate text-xs text-neutral-500">
+          <span className="max-w-[120px] truncate text-xs text-muted-foreground">
             {existingFileName}
           </span>
         )}
@@ -179,7 +179,7 @@ export function PhotoCaptureButton({
         onClick={() => cameraInputRef.current?.click()}
         disabled={disabled || processing}
         aria-label={t('capturePhotoCamera')}
-        className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm hover:bg-muted/30 disabled:opacity-50"
       >
         <Camera size={16} aria-hidden="true" />
         {processing ? t('processing') : t('capturePhotoCamera')}
@@ -190,7 +190,7 @@ export function PhotoCaptureButton({
         onClick={() => uploadInputRef.current?.click()}
         disabled={disabled || processing}
         aria-label={t('uploadPhoto')}
-        className="inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm hover:bg-muted/30 disabled:opacity-50"
       >
         <Upload size={16} aria-hidden="true" />
         {t('uploadPhoto')}

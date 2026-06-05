@@ -76,10 +76,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
         setReady(true)
 
-        // Check for pending handover reports after session is established
+        // Check for pending handover reports after session is established.
+        // Filter out reports where the current user is the outgoing tech (D2: no self-acknowledge).
         try {
           const pending = await getPendingHandoverReports()
-          if (!cancelled && pending.length > 0) setPendingHandover(pending[0])
+          const userId = useAuthSessionStore.getState().session?.userId
+          const incoming = pending.find((r) => r.outgoingTechId !== userId)
+          if (!cancelled && incoming) setPendingHandover(incoming)
         } catch {
           // Offline or Dexie unavailable — skip handover check
         }
@@ -114,9 +117,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="h-3 w-24 rounded bg-neutral-200" />
-            <div className="mt-3 h-5 w-48 rounded bg-neutral-100" />
+          <div key={i} className="animate-pulse rounded-lg border border-border bg-card p-4">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="mt-3 h-5 w-48 rounded bg-muted" />
           </div>
         ))}
       </div>
@@ -134,6 +137,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         <HandoverAcknowledgment
           report={pendingHandover}
           incomingTechId={session.userId}
+          incomingTechName={session.email?.split('@')[0] ?? 'Technician'}
           onAcknowledged={() => setPendingHandover(null)}
         />
       )}

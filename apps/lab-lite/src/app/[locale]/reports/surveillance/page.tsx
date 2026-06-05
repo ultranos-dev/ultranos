@@ -1,10 +1,11 @@
 // Surveillance alert history page — server component shell.
 import { SurveillanceDashboard } from '@/components/reports/SurveillanceDashboard'
 
-export default function SurveillancePage({
+export default async function SurveillancePage({
   searchParams,
 }: {
-  searchParams: { alertId?: string }
+  searchParams: Promise<{ alertId?: string }>
 }) {
-  return <SurveillanceDashboard highlightAlertId={searchParams.alertId} />
+  const params = await searchParams
+  return <SurveillanceDashboard highlightAlertId={params.alertId} />
 }

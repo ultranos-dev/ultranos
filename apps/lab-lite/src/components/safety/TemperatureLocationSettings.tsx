@@ -119,13 +119,13 @@ export function TemperatureLocationSettings() {
   }
 
   if (loading) {
-    return <div className="animate-pulse h-32 bg-neutral-100 rounded-lg" aria-busy="true" />
+    return <div className="animate-pulse h-32 bg-muted rounded-lg" aria-busy="true" />
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-900">
+        <h2 className="text-lg font-semibold text-foreground">
           {t('locationsTitle')}
         </h2>
         <Button
@@ -143,8 +143,8 @@ export function TemperatureLocationSettings() {
 
       {/* Seed defaults prompt */}
       {locations.length === 0 && !showForm && (
-        <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-center">
-          <p className="text-sm text-neutral-500 mb-3">{t('noLocationsSetup')}</p>
+        <div className="rounded-lg border border-dashed border-border p-6 text-center">
+          <p className="text-sm text-muted-foreground mb-3">{t('noLocationsSetup')}</p>
           <Button variant="outline" onClick={seedDefaults}>
             {t('seedDefaults')}
           </Button>
@@ -155,11 +155,11 @@ export function TemperatureLocationSettings() {
       {locations.map((loc) => (
         <div
           key={loc.id}
-          className="rounded-lg border border-neutral-200 bg-white p-4 flex items-center justify-between"
+          className="rounded-lg border border-border bg-card p-4 flex items-center justify-between"
         >
           <div>
-            <p className="text-sm font-medium text-neutral-900">{loc.name}</p>
-            <p className="text-xs text-neutral-500">
+            <p className="text-sm font-medium text-foreground">{loc.name}</p>
+            <p className="text-xs text-muted-foreground">
               {t(`locationType.${loc.type.toLowerCase()}`)} — {loc.minTemp}–{loc.maxTemp}°C
               {loc.sensorId && ` — BLE: ${loc.sensorId}`}
             </p>
@@ -182,12 +182,12 @@ export function TemperatureLocationSettings() {
       {/* Add/Edit form */}
       {showForm && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-neutral-900">
+          <h3 className="text-sm font-semibold text-foreground">
             {editingId ? t('editLocation') : t('addLocation')}
           </h3>
 
           <div>
-            <label htmlFor="loc-name" className="block text-xs text-neutral-600 mb-1">
+            <label htmlFor="loc-name" className="block text-xs text-muted-foreground mb-1">
               {t('locationName')}
             </label>
             <input
@@ -195,19 +195,19 @@ export function TemperatureLocationSettings() {
               type="text"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm"
+              className="w-full rounded border border-border px-3 py-1.5 text-sm"
             />
           </div>
 
           <div>
-            <label htmlFor="loc-type" className="block text-xs text-neutral-600 mb-1">
+            <label htmlFor="loc-type" className="block text-xs text-muted-foreground mb-1">
               {t('type')}
             </label>
             <select
               id="loc-type"
               value={form.type}
               onChange={(e) => handleTypeChange(e.target.value as TemperatureLocationType)}
-              className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm"
+              className="w-full rounded border border-border px-3 py-1.5 text-sm"
             >
               <option value="FRIDGE">{t('locationType.fridge')}</option>
               <option value="FREEZER">{t('locationType.freezer')}</option>
@@ -217,7 +217,7 @@ export function TemperatureLocationSettings() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="loc-min" className="block text-xs text-neutral-600 mb-1">
+              <label htmlFor="loc-min" className="block text-xs text-muted-foreground mb-1">
                 {t('minTemp')} (°C)
               </label>
               <input
@@ -226,11 +226,11 @@ export function TemperatureLocationSettings() {
                 step="0.5"
                 value={form.minTemp}
                 onChange={(e) => setForm((f) => ({ ...f, minTemp: e.target.value }))}
-                className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm"
+                className="w-full rounded border border-border px-3 py-1.5 text-sm"
               />
             </div>
             <div>
-              <label htmlFor="loc-max" className="block text-xs text-neutral-600 mb-1">
+              <label htmlFor="loc-max" className="block text-xs text-muted-foreground mb-1">
                 {t('maxTemp')} (°C)
               </label>
               <input
@@ -239,13 +239,13 @@ export function TemperatureLocationSettings() {
                 step="0.5"
                 value={form.maxTemp}
                 onChange={(e) => setForm((f) => ({ ...f, maxTemp: e.target.value }))}
-                className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm"
+                className="w-full rounded border border-border px-3 py-1.5 text-sm"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="loc-sensor" className="block text-xs text-neutral-600 mb-1">
+            <label htmlFor="loc-sensor" className="block text-xs text-muted-foreground mb-1">
               {t('bleDeviceId')} ({t('optional')})
             </label>
             <input
@@ -253,7 +253,7 @@ export function TemperatureLocationSettings() {
               type="text"
               value={form.sensorId}
               onChange={(e) => setForm((f) => ({ ...f, sensorId: e.target.value }))}
-              className="w-full rounded border border-neutral-300 px-3 py-1.5 text-sm"
+              className="w-full rounded border border-border px-3 py-1.5 text-sm"
             />
           </div>
 

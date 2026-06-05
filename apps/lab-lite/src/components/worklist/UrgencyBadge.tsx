@@ -15,7 +15,7 @@ const CONFIG: Record<SampleUrgency, { label: string; className: string }> = {
   },
   routine: {
     label: 'Routine',
-    className: 'bg-neutral-100 text-neutral-600 border border-neutral-300',
+    className: 'bg-muted text-muted-foreground border border-border',
   },
 }
 

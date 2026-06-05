@@ -76,9 +76,9 @@ export function InstallPrompt() {
   if (!showBanner) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-lg">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card p-4 shadow-lg">
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
-        <p className="text-sm text-neutral-700">
+        <p className="text-sm text-foreground">
           {t('message')}
         </p>
         <div className="flex shrink-0 gap-2">

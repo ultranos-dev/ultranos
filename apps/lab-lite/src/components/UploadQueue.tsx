@@ -83,9 +83,9 @@ export function UploadQueue() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6" aria-busy="true">
-        <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <svg className="motion-safe:animate-spin h-4 w-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <div className="rounded-lg border border-border bg-card p-6" aria-busy="true">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <svg className="motion-safe:animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
           </svg>
@@ -97,21 +97,21 @@ export function UploadQueue() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
-        <h2 className="mb-2 text-sm font-semibold text-neutral-700">{t('title')}</h2>
-        <p className="text-sm text-neutral-500">{t('empty')}</p>
+      <div className="rounded-lg border border-border bg-card p-6">
+        <h2 className="mb-2 text-sm font-semibold text-foreground">{t('title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('empty')}</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white">
-      <div className="border-b border-neutral-200 px-4 py-3">
-        <h2 className="text-sm font-semibold text-neutral-700">
+    <div className="rounded-lg border border-border bg-card">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-sm font-semibold text-foreground">
           {t('titleWithCount', { count: items.length })}
         </h2>
       </div>
-      <ul className="divide-y divide-neutral-100">
+      <ul className="divide-y divide-border/50">
         {items.map((item) => (
           <li
             key={item.id}
@@ -120,7 +120,7 @@ export function UploadQueue() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-neutral-900">
+                  <span className="text-sm font-medium text-foreground">
                     {item.patientFirstName}
                   </span>
                   <span
@@ -129,10 +129,10 @@ export function UploadQueue() {
                     {t(STATUS_KEYS[item.status])}
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-neutral-600">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {item.metadata.loincDisplay}
                 </p>
-                <p className="mt-0.5 text-xs text-neutral-400">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {t('queued', { timestamp: formatTimestamp(item.queuedAt) })}
                 </p>
               </div>
@@ -151,7 +151,7 @@ export function UploadQueue() {
                   <>
                     {confirmingId === item.id ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-600">{t('confirmPrompt')}</span>
+                        <span className="text-xs text-muted-foreground">{t('confirmPrompt')}</span>
                         <Button
                           variant="danger"
                           type="button"

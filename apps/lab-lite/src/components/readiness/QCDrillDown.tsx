@@ -48,8 +48,8 @@ const STATUS_BADGE: Record<
     labelKey: 'rag.status.failed',
   },
   NOT_RUN: {
-    container: 'bg-neutral-100 text-neutral-500 border border-neutral-200',
-    dot: 'bg-neutral-400',
+    container: 'bg-muted text-muted-foreground border border-border',
+    dot: 'bg-muted',
     labelKey: 'rag.status.notRun',
   },
 }
@@ -82,18 +82,18 @@ function StatusBadge({ status }: { status: QcStatus }) {
 function AnalyteRow({ detail }: { detail: QcDetail }) {
   const t = useTranslations()
   return (
-    <li className="px-4 py-3 bg-white">
+    <li className="px-4 py-3 bg-card">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-neutral-800">{detail.analyte}</span>
+            <span className="text-sm font-medium text-foreground">{detail.analyte}</span>
             {detail.loincCode && (
-              <span className="text-xs text-neutral-400 font-mono">{detail.loincCode}</span>
+              <span className="text-xs text-muted-foreground font-mono">{detail.loincCode}</span>
             )}
           </div>
 
           {detail.lastRunAt && (
-            <p className="text-xs text-neutral-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {t('rag.drillDown.lastRun', { time: formatTime(detail.lastRunAt) })}
             </p>
           )}
@@ -146,7 +146,7 @@ export function QCDrillDown({ details, onBack }: QCDrillDownProps) {
             <ArrowLeft size={18} aria-hidden="true" />
           </DirectionalIcon>
         </Button>
-        <h2 className="text-base font-semibold text-neutral-800">
+        <h2 className="text-base font-semibold text-foreground">
           {t('rag.drillDown.qcTitle')}
         </h2>
       </div>
@@ -169,11 +169,11 @@ export function QCDrillDown({ details, onBack }: QCDrillDownProps) {
 
       {/* Analyte list */}
       {sorted.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center">
+        <p className="text-sm text-muted-foreground py-4 text-center">
           {t('rag.drillDown.noQcData')}
         </p>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 overflow-hidden">
+        <ul className="divide-y divide-border/50 rounded-lg border border-border overflow-hidden">
           {sorted.map((detail) => (
             <AnalyteRow key={`${detail.analyte}-${detail.loincCode}`} detail={detail} />
           ))}

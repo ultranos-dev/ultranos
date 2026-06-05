@@ -17,7 +17,7 @@ const CATEGORY_COLORS: Record<SafetyConcernCategory, string> = {
   [SafetyConcernCategory.PPE_NON_USE]: 'bg-amber-500',
   [SafetyConcernCategory.IMPROPER_WASTE_DISPOSAL]: 'bg-red-500',
   [SafetyConcernCategory.EQUIPMENT_MISUSE]: 'bg-purple-500',
-  [SafetyConcernCategory.OTHER]: 'bg-neutral-400',
+  [SafetyConcernCategory.OTHER]: 'bg-muted',
 }
 
 interface SafetyTrendDashboardProps {
@@ -107,7 +107,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
   const maxCatCount = Math.max(1, ...Object.values(stats.byCat))
 
   if (loading) {
-    return <p className="p-6 text-sm text-neutral-500">{t('loading')}</p>
+    return <p className="p-6 text-sm text-muted-foreground">{t('loading')}</p>
   }
 
   return (
@@ -134,7 +134,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               period === p
                 ? 'bg-primary-500 text-white'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted'
             }`}
           >
             {t(`period.${p}`)}
@@ -143,36 +143,36 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
       </div>
 
       {filteredReports.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t('noDataForPeriod')}</p>
+        <p className="text-sm text-muted-foreground">{t('noDataForPeriod')}</p>
       ) : (
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-lg border border-neutral-200 p-4 text-center">
+            <div className="rounded-lg border border-border p-4 text-center">
               <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-xs text-neutral-500">{t('totalReports')}</p>
+              <p className="text-xs text-muted-foreground">{t('totalReports')}</p>
             </div>
-            <div className="rounded-lg border border-neutral-200 p-4 text-center">
+            <div className="rounded-lg border border-border p-4 text-center">
               <p className="text-2xl font-bold">{stats.resolutionRate}%</p>
-              <p className="text-xs text-neutral-500">{t('resolutionRate')}</p>
+              <p className="text-xs text-muted-foreground">{t('resolutionRate')}</p>
             </div>
-            <div className="rounded-lg border border-neutral-200 p-4 text-center">
+            <div className="rounded-lg border border-border p-4 text-center">
               <p className="text-2xl font-bold">{formatDuration(stats.avgAckTime)}</p>
-              <p className="text-xs text-neutral-500">{t('avgAckTime')}</p>
+              <p className="text-xs text-muted-foreground">{t('avgAckTime')}</p>
             </div>
-            <div className="rounded-lg border border-neutral-200 p-4 text-center">
+            <div className="rounded-lg border border-border p-4 text-center">
               <p className="text-2xl font-bold">{formatDuration(stats.avgCloseTime)}</p>
-              <p className="text-xs text-neutral-500">{t('avgCloseTime')}</p>
+              <p className="text-xs text-muted-foreground">{t('avgCloseTime')}</p>
             </div>
           </div>
 
           {/* Category bar chart */}
-          <div className="rounded-lg border border-neutral-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <h2 className="mb-4 text-sm font-semibold">{t('reportsByCategory')}</h2>
             <div className="space-y-3">
               {Object.entries(stats.byCat).map(([cat, count]) => (
                 <div key={cat} className="flex items-center gap-3">
-                  <span className="w-28 text-xs text-neutral-600 truncate">
+                  <span className="w-28 text-xs text-muted-foreground truncate">
                     {t(`category.${cat}`)}
                   </span>
                   <div className="flex-1">

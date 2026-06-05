@@ -62,7 +62,7 @@ export function ModuleViewer({
 
   return (
     <div
-      className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+      className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-card p-5 shadow-lg dark:border-gray-700 dark:bg-gray-800"
       data-testid="module-viewer"
     >
       {/* Header */}

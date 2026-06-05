@@ -117,7 +117,7 @@ export function ReferenceLabConfigPanel() {
 
   if (!canEdit) {
     return (
-      <div role="alert" className="rounded-md bg-neutral-50 border border-neutral-200 px-4 py-3 text-sm text-neutral-600">
+      <div role="alert" className="rounded-md bg-muted/30 border border-border px-4 py-3 text-sm text-muted-foreground">
         Only Lab Managers and Supervisors can configure reference labs.
       </div>
     )
@@ -126,7 +126,7 @@ export function ReferenceLabConfigPanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-700">Reference Laboratories</h3>
+        <h3 className="text-sm font-semibold text-foreground">Reference Laboratories</h3>
         {canEdit && editingId === null && (
           <button
             type="button"
@@ -156,7 +156,7 @@ export function ReferenceLabConfigPanel() {
             { id: 'lab-tat', label: 'Average TAT days (LOINC:days, comma-separated)', key: 'averageTATDays', required: false, placeholder: '2085-9:5, 4548-4:3' },
           ].map(({ id, label, key, required, placeholder }) => (
             <div key={id}>
-              <label htmlFor={id} className="block text-xs font-medium text-neutral-700 mb-0.5">
+              <label htmlFor={id} className="block text-xs font-medium text-foreground mb-0.5">
                 {label}{required && <span aria-hidden="true" className="text-red-500 ms-0.5">*</span>}
               </label>
               <input
@@ -166,7 +166,7 @@ export function ReferenceLabConfigPanel() {
                 onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                 required={required}
                 placeholder={placeholder}
-                className="w-full rounded border border-neutral-300 px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded border border-border px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
               />
             </div>
           ))}
@@ -174,7 +174,7 @@ export function ReferenceLabConfigPanel() {
             <button
               type="button"
               onClick={() => { setEditingId(null); setForm(EMPTY_FORM) }}
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/30"
             >
               Cancel
             </button>
@@ -191,15 +191,15 @@ export function ReferenceLabConfigPanel() {
 
       {/* Labs list */}
       {labs.length === 0 && editingId === null ? (
-        <p className="text-sm text-neutral-500">No reference labs configured yet.</p>
+        <p className="text-sm text-muted-foreground">No reference labs configured yet.</p>
       ) : (
         <ul className="space-y-2">
           {labs.map((lab) => (
-            <li key={lab.id} className="flex items-start justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3">
+            <li key={lab.id} className="flex items-start justify-between rounded-lg border border-border bg-card px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-neutral-900">{lab.name}</p>
-                <p className="text-xs text-neutral-500">Accred. #{lab.accreditationNumber} · {lab.address}</p>
-                <p className="text-xs text-neutral-400 mt-0.5">
+                <p className="text-sm font-medium text-foreground">{lab.name}</p>
+                <p className="text-xs text-muted-foreground">Accred. #{lab.accreditationNumber} · {lab.address}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Supports: {lab.supportedTests.length} test{lab.supportedTests.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -209,7 +209,7 @@ export function ReferenceLabConfigPanel() {
                     type="button"
                     onClick={() => startEdit(lab)}
                     aria-label={`Edit ${lab.name}`}
-                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-blue-600"
+                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-blue-600"
                   >
                     <Edit size={16} />
                   </button>
@@ -217,7 +217,7 @@ export function ReferenceLabConfigPanel() {
                     type="button"
                     onClick={() => handleDeactivate(lab.id)}
                     aria-label={`Deactivate ${lab.name}`}
-                    className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-red-600"
+                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-red-600"
                   >
                     <X size={16} />
                   </button>

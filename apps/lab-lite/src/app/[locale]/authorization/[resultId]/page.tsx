@@ -66,7 +66,7 @@ export default function ResultDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-48 items-center justify-center text-neutral-500" aria-busy="true">
+      <div className="flex h-48 items-center justify-center text-muted-foreground" aria-busy="true">
         {t('loading')}
       </div>
     )
@@ -74,7 +74,7 @@ export default function ResultDetailPage() {
 
   if (notFound || !result) {
     return (
-      <div className="mx-auto max-w-xl py-20 text-center text-neutral-500">
+      <div className="mx-auto max-w-xl py-20 text-center text-muted-foreground">
         <p className="text-lg">{t('resultNotFound')}</p>
         <button
           className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

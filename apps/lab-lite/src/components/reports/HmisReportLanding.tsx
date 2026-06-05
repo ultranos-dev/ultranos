@@ -17,10 +17,11 @@ export function HmisReportLanding() {
       description: t('hmisDescription'),
     },
     {
-      href: `/${locale}/reports/daily`,
+      href: '#',
       icon: <Calendar size={24} />,
       title: t('dailyLogTitle'),
-      description: t('dailyLogDescription'),
+      description: `${t('dailyLogDescription')} (Coming Soon)`,
+      disabled: true,
     },
   ]
 
@@ -36,9 +37,10 @@ export function HmisReportLanding() {
           <Link
             key={link.href}
             href={link.href}
-            className="flex items-start gap-4 rounded-lg border border-border p-4 hover:bg-accent transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+            aria-disabled={link.disabled || undefined}
+            className={`flex items-start gap-4 rounded-lg border border-border p-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring ${link.disabled ? 'pointer-events-none opacity-50' : 'hover:bg-accent'}`}
           >
-            <span className="mt-0.5 text-primary" aria-hidden="true">{link.icon}</span>
+            <span className={`mt-0.5 ${link.disabled ? 'text-muted-foreground' : 'text-primary'}`} aria-hidden="true">{link.icon}</span>
             <div>
               <p className="font-semibold">{link.title}</p>
               <p className="text-sm text-muted-foreground mt-1">{link.description}</p>

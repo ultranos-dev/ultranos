@@ -13,7 +13,8 @@ interface RAGDimensionCardProps {
   dimension: RAGDimension
   status: RAGStatus
   summary: string
-  onClick: () => void
+  /** When provided, the card renders as an interactive button; omit for read-only display. */
+  onClick?: () => void
   /** Wall display mode: full saturation backgrounds, white text, larger fonts. */
   wallDisplay?: boolean
 }
@@ -41,9 +42,9 @@ const STATUS_DOT: Record<RAGStatus, string> = {
 }
 
 const STATUS_DOT_WALL: Record<RAGStatus, string> = {
-  GREEN: 'bg-white/70',
-  AMBER: 'bg-white/70',
-  RED: 'bg-white/70',
+  GREEN: 'bg-card/70',
+  AMBER: 'bg-card/70',
+  RED: 'bg-card/70',
 }
 
 // ---------------------------------------------------------------------------
@@ -87,21 +88,16 @@ export function RAGDimensionCard({
   const cardBg = wallDisplay ? CARD_BG_WALL[status] : CARD_BG[status]
   const dotClass = wallDisplay ? STATUS_DOT_WALL[status] : STATUS_DOT[status]
   const textClass = wallDisplay ? 'text-white' : ''
-  const mutedTextClass = wallDisplay ? 'text-white/80' : 'text-neutral-500'
+  const mutedTextClass = wallDisplay ? 'text-white/80' : 'text-muted-foreground'
   const dimensionNameClass = wallDisplay
     ? 'text-2xl font-bold text-white'
-    : 'text-base font-bold text-neutral-800'
-  const summaryClass = wallDisplay ? 'text-xl text-white/80' : 'text-sm text-neutral-500'
+    : 'text-base font-bold text-foreground'
+  const summaryClass = wallDisplay ? 'text-xl text-white/80' : 'text-sm text-muted-foreground'
 
   const dimensionLabel = t(`rag.${dimension.toLowerCase()}`)
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full rounded-lg border p-4 text-start transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${cardBg}`}
-      aria-label={`${dimensionLabel}: ${status}`}
-    >
+  const content = (
+    <>
       {/* Header row: icon + status dot */}
       <div className="flex items-center justify-between gap-x-3">
         <span className={mutedTextClass}>
@@ -122,6 +118,28 @@ export function RAGDimensionCard({
       <p className={`mt-1 ${summaryClass}`}>
         {summary}
       </p>
-    </button>
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`w-full rounded-lg border p-4 text-start transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${cardBg}`}
+        aria-label={`${dimensionLabel}: ${status}`}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <div
+      className={`w-full rounded-lg border p-4 ${cardBg}`}
+      aria-label={`${dimensionLabel}: ${status}`}
+    >
+      {content}
+    </div>
   )
 }

@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { aggregateMonthlyData } from '@/lib/hmis-aggregator'
 import { saveHmisReport, getHmisReportsByYear, getDailyLogSettings } from '@/lib/db'
@@ -12,21 +13,23 @@ import type { HmisMonthlyReport } from '@/lib/hmis-types'
 
 type PageState = 'idle' | 'generating' | 'review' | 'error'
 
-const CURRENT_YEAR = new Date().getFullYear()
-const CURRENT_MONTH = new Date().getMonth() + 1  // 1-based
-
 export function HmisReportGenerator() {
   const t = useTranslations('hmisReport')
+  const locale = useLocale()
   const session = useAuthSessionStore((s) => s.session)
 
-  const [year, setYear] = useState<number>(CURRENT_YEAR)
-  const [month, setMonth] = useState<number>(CURRENT_MONTH)
+  const [year, setYear] = useState<number>(() => new Date().getFullYear())
+  const [month, setMonth] = useState<number>(() => new Date().getMonth() + 1)
   const [state, setState] = useState<PageState>('idle')
   const [errorMsg, setErrorMsg] = useState<string>('')
   const [report, setReport] = useState<HmisMonthlyReport | null>(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  const generatingRef = useRef(false)
+
   const handleGenerate = useCallback(async () => {
+    if (generatingRef.current) return
+    generatingRef.current = true
     setState('generating')
     setErrorMsg('')
     try {
@@ -69,6 +72,8 @@ export function HmisReportGenerator() {
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Unknown error')
       setState('error')
+    } finally {
+      generatingRef.current = false
     }
   }, [year, month, session])
 
@@ -91,7 +96,8 @@ export function HmisReportGenerator() {
     )
   }
 
-  const yearOptions = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1]
+  const currentYear = new Date().getFullYear()
+  const yearOptions = [currentYear - 1, currentYear, currentYear + 1]
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1)
 
   return (
@@ -134,7 +140,7 @@ export function HmisReportGenerator() {
             >
               {monthOptions.map((m) => (
                 <option key={m} value={m}>
-                  {new Date(2000, m - 1, 1).toLocaleString('en-US', { month: 'long' })}
+                  {new Date(2000, m - 1, 1).toLocaleString(locale, { month: 'long' })}
                 </option>
               ))}
             </select>

@@ -116,7 +116,7 @@ export function SOPDetailView({
       </button>
 
       {/* Metadata header */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="mb-6 rounded-lg border border-gray-200 bg-card p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {sop.title}
         </h1>
@@ -153,7 +153,7 @@ export function SOPDetailView({
 
       {/* Markdown content */}
       <div
-        className="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:prose-invert dark:border-gray-700 dark:bg-gray-800"
+        className="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-card p-6 shadow-sm dark:prose-invert dark:border-gray-700 dark:bg-gray-800"
         dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
 

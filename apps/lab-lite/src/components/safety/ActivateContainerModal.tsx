@@ -50,7 +50,7 @@ export function ActivateContainerModal({
       aria-modal="true"
       aria-labelledby="activate-container-title"
     >
-      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
         <h2
           id="activate-container-title"
           className="text-lg font-semibold mb-4"

@@ -66,16 +66,16 @@ export function SendOutModal({
       aria-labelledby="sendout-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
+      <div className="w-full max-w-lg rounded-lg bg-card shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h2 id="sendout-modal-title" className="text-base font-semibold text-neutral-900">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 id="sendout-modal-title" className="text-base font-semibold text-foreground">
             Send to Reference Lab
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
             aria-label="Close"
           >
             <X size={20} />
@@ -85,15 +85,15 @@ export function SendOutModal({
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
           {/* Test info (read-only) */}
-          <div className="rounded-md bg-neutral-50 p-3 text-sm">
-            <p className="text-neutral-500">Test Requested</p>
-            <p className="font-medium text-neutral-900">{loincDisplay}</p>
-            <p className="text-xs text-neutral-400">{loincCode} · {sampleType}</p>
+          <div className="rounded-md bg-muted/30 p-3 text-sm">
+            <p className="text-muted-foreground">Test Requested</p>
+            <p className="font-medium text-foreground">{loincDisplay}</p>
+            <p className="text-xs text-muted-foreground">{loincCode} · {sampleType}</p>
           </div>
 
           {/* Reference Lab selector */}
           <div>
-            <label htmlFor="reflab-select" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="reflab-select" className="block text-sm font-medium text-foreground mb-1">
               Reference Lab <span aria-hidden="true" className="text-red-500">*</span>
             </label>
             {labs.length === 0 ? (
@@ -106,7 +106,7 @@ export function SendOutModal({
                 value={selectedLabId}
                 onChange={(e) => setSelectedLabId(e.target.value)}
                 required
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select a reference lab…</option>
                 {labs.map((lab) => (
@@ -120,7 +120,7 @@ export function SendOutModal({
 
           {/* Clinical context */}
           <div>
-            <label htmlFor="clinical-context" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="clinical-context" className="block text-sm font-medium text-foreground mb-1">
               Clinical Context
             </label>
             <textarea
@@ -129,9 +129,9 @@ export function SendOutModal({
               onChange={(e) => setClinicalContext(e.target.value)}
               rows={3}
               placeholder='e.g., suspected TB, follow-up after treatment'
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               Keep brief. No diagnosis codes or full medical history.
             </p>
           </div>
@@ -167,7 +167,7 @@ export function SendOutModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"
             >
               Cancel
             </button>

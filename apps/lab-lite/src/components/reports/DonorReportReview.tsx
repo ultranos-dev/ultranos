@@ -42,14 +42,14 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
     setFinalizing(true)
     setError(null)
     try {
-      await finalizeDonorReport(report.id, session?.userId ?? 'unknown')
+      const finalized = await finalizeDonorReport(report.id, session?.userId ?? 'unknown')
       reportDonorAuditEvent({
         action: 'DONOR_REPORT_FINALIZED',
         reportId: report.id,
         programCode: report.programCode,
         finalizerId: session?.userId ?? 'unknown',
       })
-      onUpdate({ ...report, status: 'finalized', finalizedBy: session?.userId, finalizedAt: new Date().toISOString() })
+      onUpdate(finalized)
       setConfirmFinalize(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Finalize failed')
@@ -87,17 +87,19 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
     try {
       const blob = await exportDonorPdf(report, locale)
       const filename = `donor-report-${report.programCode}-${report.periodStart}.pdf`
-      await shareFile(blob, filename, {
+      const result = await shareFile(blob, filename, {
         title: `${report.programName} — ${report.periodStart} to ${report.periodEnd}`,
         text: `Donor report for ${report.programName}`,
       })
-      reportDonorAuditEvent({
-        action: 'DONOR_REPORT_EXPORTED',
-        reportId: report.id,
-        format: 'share',
-      })
+      if (result !== 'cancelled') {
+        reportDonorAuditEvent({
+          action: 'DONOR_REPORT_EXPORTED',
+          reportId: report.id,
+          format: result === 'shared' ? 'share' : 'download',
+        })
+      }
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
+      if (e instanceof Error) {
         setError(e.message)
       }
     } finally {
@@ -140,6 +142,13 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
       corrections: [...report.corrections, correction],
     }
     await saveDonorReport(updated)
+    reportDonorAuditEvent({
+      action: 'DONOR_REPORT_CORRECTED',
+      reportId: report.id,
+      programCode: report.programCode,
+      fieldPath: correction.fieldPath,
+      correctedBy: correction.correctedBy,
+    })
     onUpdate(updated)
   }
 
@@ -169,7 +178,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
 
       {/* Sections */}
       {report.sections.map((section, sectionIdx) => (
-        <div key={section.sectionId} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div key={section.sectionId} className="rounded-lg border border-gray-200 bg-card overflow-hidden">
           <div className="bg-blue-600 px-3 py-2">
             <h3 className="text-sm font-semibold text-white">{section.sectionTitle}</h3>
           </div>
@@ -195,6 +204,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
                         <td key={k} className="px-3 py-2 text-gray-700">
                           {!isFinalized && typeof v === 'number' ? (
                             <input
+                              key={`${sectionIdx}-${rowIdx}-${k}-${v}`}
                               type="number"
                               className="w-20 rounded border border-gray-200 px-1 py-0.5 text-sm text-end"
                               defaultValue={v}
@@ -219,7 +229,7 @@ export function DonorReportReview({ report, onUpdate, onBack }: Props) {
 
       {/* Reimbursement summary */}
       {report.reimbursement && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-2">
+        <div className="rounded-lg border border-gray-200 bg-card p-4 space-y-2">
           <h3 className="text-sm font-semibold text-gray-700">{t('reimbursement')}</h3>
           {report.reimbursement.lineItems.map((item) => (
             <div key={item.loincCode} className="flex justify-between text-sm">

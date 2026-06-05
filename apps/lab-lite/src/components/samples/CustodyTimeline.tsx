@@ -106,7 +106,7 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
 
   if (events.length === 0) {
     return (
-      <p className="text-sm text-neutral-400 py-4 text-center" data-testid="timeline-empty">
+      <p className="text-sm text-muted-foreground py-4 text-center" data-testid="timeline-empty">
         {t('empty')}
       </p>
     )
@@ -127,7 +127,7 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
             {/* Vertical connector line (RTL-safe: border-inline-start) */}
             {!isLast && (
               <span
-                className="absolute start-4 top-8 bottom-0 w-0 border-2 border-neutral-200"
+                className="absolute start-4 top-8 bottom-0 w-0 border-2 border-border"
                 aria-hidden="true"
               />
             )}
@@ -146,21 +146,21 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
                 <p className={`text-sm font-semibold ${config.colorClass}`}>
                   {t(`eventTypes.${event.eventType}`)}
                   {event.eventType === 'status-change' && event.toStatus && (
-                    <span className="ms-1 font-normal text-neutral-600">
+                    <span className="ms-1 font-normal text-muted-foreground">
                       : {t(`pipelineStatus.${event.toStatus.replace('-', '_')}`)}
                     </span>
                   )}
                 </p>
                 <time
                   dateTime={event.timestamp}
-                  className="shrink-0 text-xs text-neutral-400"
+                  className="shrink-0 text-xs text-muted-foreground"
                 >
                   {formatTimestamp(event.timestamp, locale)}
                 </time>
               </div>
 
               {/* Actor info */}
-              <p className="mt-0.5 text-xs text-neutral-500">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {event.eventType === 'handoff'
                   ? t('handoffActors', {
                       from: actorName(event.fromActorId),
@@ -171,7 +171,7 @@ export function CustodyTimeline({ events, practitionerNames = {} }: CustodyTimel
 
               {/* Notes */}
               {event.notes && (
-                <p className="mt-1 text-xs italic text-neutral-500">
+                <p className="mt-1 text-xs italic text-muted-foreground">
                   &ldquo;{event.notes}&rdquo;
                 </p>
               )}

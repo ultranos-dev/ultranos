@@ -70,7 +70,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
       <button
         type="button"
         onClick={() => setShowDialog(true)}
-        className="text-xs text-neutral-400 hover:text-amber-600"
+        className="text-xs text-muted-foreground hover:text-amber-600"
         aria-label={t('flagContent')}
         title={t('flagContent')}
       >
@@ -83,10 +83,10 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
       {showDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowDialog(false)}>
           <div
-            className="mx-4 w-full max-w-sm rounded-lg bg-white p-4 shadow-lg"
+            className="mx-4 w-full max-w-sm rounded-lg bg-card p-4 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold text-neutral-900">{t('flagContent')}</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('flagContent')}</h3>
 
             <div className="mt-3 flex flex-col gap-2">
               {REASONS.map((r) => (
@@ -104,7 +104,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
 
             {reason === 'other' && (
               <textarea
-                className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-sm"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 placeholder={t('flagDetailsPlaceholder')}
@@ -116,7 +116,7 @@ export function FlagButton({ targetId, targetType }: FlagButtonProps) {
               <button
                 type="button"
                 onClick={() => setShowDialog(false)}
-                className="rounded-lg px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
+                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
               >
                 {t('cancel')}
               </button>

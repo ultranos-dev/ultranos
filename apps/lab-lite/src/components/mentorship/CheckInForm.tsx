@@ -132,12 +132,12 @@ export function CheckInForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="check-in-notes"
-          className="text-sm font-medium text-neutral-700"
+          className="text-sm font-medium text-foreground"
         >
           {t('checkInNotesLabel')}
           <span className="ms-1 text-red-600" aria-hidden="true">*</span>
         </label>
-        <p className="text-xs text-neutral-500">{t('checkInNotesHint')}</p>
+        <p className="text-xs text-muted-foreground">{t('checkInNotesHint')}</p>
         <textarea
           id="check-in-notes"
           dir="auto"
@@ -149,7 +149,7 @@ export function CheckInForm({
           }}
           disabled={saving}
           required
-          className="rounded-lg border border-neutral-300 px-4 py-3 text-sm text-start
+          className="rounded-lg border border-border px-4 py-3 text-sm text-start
             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
             disabled:opacity-50"
           aria-describedby={notesError ? 'notes-error' : undefined}
@@ -163,9 +163,9 @@ export function CheckInForm({
 
       {/* Mentee Goals */}
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-neutral-700">
+        <p className="text-sm font-medium text-foreground">
           {t('checkInGoalsLabel')}
-          <span className="ms-1 text-xs font-normal text-neutral-500">
+          <span className="ms-1 text-xs font-normal text-muted-foreground">
             {t('checkInGoalsOptional')}
           </span>
         </p>
@@ -179,7 +179,7 @@ export function CheckInForm({
               onChange={(e) => handleGoalChange(index, e.target.value)}
               disabled={saving}
               placeholder={t('checkInGoalPlaceholder', { number: index + 1 })}
-              className="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-sm text-start
+              className="flex-1 rounded-lg border border-border px-4 py-2 text-sm text-start
                 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
                 disabled:opacity-50"
               aria-label={t('checkInGoalAriaLabel', { number: index + 1 })}
@@ -189,7 +189,7 @@ export function CheckInForm({
                 type="button"
                 onClick={() => handleRemoveGoal(index)}
                 disabled={saving}
-                className="rounded p-1 text-neutral-400 hover:text-red-500
+                className="rounded p-1 text-muted-foreground hover:text-red-500
                   focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50"
                 aria-label={t('checkInGoalRemove', { number: index + 1 })}
               >
@@ -214,7 +214,7 @@ export function CheckInForm({
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 pt-4">
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
         <Button
           type="button"
           variant="ghost"

@@ -155,7 +155,7 @@ export function LabInventoryDetail({ labId, labName }: Props) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <tbody className="divide-y divide-gray-100 bg-card">
             {sortedItems.map((item: InventorySnapshotItem) => {
               const colorClass = getCellColor(item)
               const stats = computeNetworkStats(item.reagentCode, item.daysOfSupply, allEntries)

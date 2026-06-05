@@ -44,20 +44,20 @@ export function TemperatureTrendChart({
 
   if (loading) {
     return (
-      <div className="h-48 rounded-lg bg-neutral-50 animate-pulse" aria-busy="true" />
+      <div className="h-48 rounded-lg bg-muted/30 animate-pulse" aria-busy="true" />
     )
   }
 
   if (readings.length === 0) {
     return (
-      <div className="h-48 rounded-lg bg-neutral-50 flex items-center justify-center text-sm text-neutral-400">
+      <div className="h-48 rounded-lg bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
         {t('noReadings')}
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-3">
+    <div className="rounded-lg border border-border bg-card p-3">
       <canvas
         ref={canvasRef}
         width={600}
@@ -66,7 +66,7 @@ export function TemperatureTrendChart({
         aria-label={t('chartAriaLabel', { location: location.name, days })}
         role="img"
       />
-      <div className="flex gap-4 mt-2 text-xs text-neutral-500 justify-center">
+      <div className="flex gap-4 mt-2 text-xs text-muted-foreground justify-center">
         <span className="flex items-center gap-1">
           <span className="inline-block w-3 h-3 rounded bg-green-200" />
           {t('normal')}

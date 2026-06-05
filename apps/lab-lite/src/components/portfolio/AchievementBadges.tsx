@@ -42,12 +42,12 @@ export function AchievementBadges({ techId, exportMode = false }: AchievementBad
   }, [techId])
 
   if (!isLoaded) {
-    return <p className="text-sm text-neutral-400">Loading badges…</p>
+    return <p className="text-sm text-muted-foreground">Loading badges…</p>
   }
 
   if (achievements.length === 0) {
     return (
-      <p className="text-sm text-neutral-500 italic" data-testid="no-achievements">
+      <p className="text-sm text-muted-foreground italic" data-testid="no-achievements">
         No achievement badges yet.
       </p>
     )

@@ -210,12 +210,12 @@ export function AtlasBrowser() {
       {/* ---- Category navigation sidebar (inline-start) ---- */}
       <nav
         aria-label={t('categoryNavLabel')}
-        className="w-56 shrink-0 border-e border-neutral-200 bg-neutral-50 overflow-y-auto dark:border-neutral-700 dark:bg-neutral-900"
+        className="w-56 shrink-0 border-e border-border bg-muted/30 overflow-y-auto dark:border-border dark:bg-card"
       >
         {/* Search input */}
-        <div className="p-3 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="p-3 border-b border-border dark:border-border">
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2 text-neutral-400">
+            <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2 text-muted-foreground">
               <Search size={16} aria-hidden="true" />
             </span>
             <input
@@ -224,7 +224,7 @@ export function AtlasBrowser() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchPlaceholder')}
               aria-label={t('searchAriaLabel')}
-              className="w-full rounded-md border border-neutral-300 bg-white py-1.5 ps-8 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-400"
+              className="w-full rounded-md border border-border bg-card py-1.5 ps-8 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground dark:placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -234,7 +234,7 @@ export function AtlasBrowser() {
           {loading
             ? Array.from({ length: 5 }).map((_, i) => (
                 <li key={i} className="px-3 py-2">
-                  <div className="h-4 w-32 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+                  <div className="h-4 w-32 animate-pulse rounded bg-muted dark:bg-muted" />
                 </li>
               ))
             : categories.map((cat) => (
@@ -243,10 +243,10 @@ export function AtlasBrowser() {
                   <button
                     type="button"
                     onClick={() => toggleCategory(cat.id)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-muted-foreground dark:hover:bg-card"
                     aria-label={t(cat.name)}
                   >
-                    <span className="text-neutral-400 dark:text-neutral-500">
+                    <span className="text-muted-foreground dark:text-muted-foreground">
                       {categoryIcon(cat.icon)}
                     </span>
                     <span className="flex-1 text-start">{t(cat.name)}</span>
@@ -268,14 +268,14 @@ export function AtlasBrowser() {
                               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500',
                               selectedSubcategoryId === sub.id
                                 ? 'font-semibold text-blue-600 dark:text-blue-400'
-                                : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200',
+                                : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground',
                             ].join(' ')}
                           >
-                            <span className="text-neutral-300 dark:text-neutral-600">
+                            <span className="text-muted-foreground dark:text-muted-foreground">
                               <ChevronDown size={14} aria-hidden="true" />
                             </span>
                             <span className="flex-1 text-start">{t(sub.name)}</span>
-                            <span className="text-xs text-neutral-400">
+                            <span className="text-xs text-muted-foreground">
                               {sub.entries.length}
                             </span>
                           </button>
@@ -311,7 +311,7 @@ export function AtlasBrowser() {
 // ---------------------------------------------------------------------------
 function AtlasWelcome({ t }: { t: ReturnType<typeof useTranslations<'visualAtlas'>> }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 p-8 text-center text-neutral-500 dark:text-neutral-400">
+    <div className="flex flex-col items-center justify-center gap-4 p-8 text-center text-muted-foreground dark:text-muted-foreground">
       <Microscope size={20} aria-hidden="true" />
       <p className="max-w-xs text-sm">{t('welcomeMessage')}</p>
     </div>
@@ -332,15 +332,15 @@ function EntryGridView({
 }) {
   return (
     <div className="p-4">
-      <h2 className="mb-4 text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+      <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">
         {t(subcategory.name)}
-        <span className="ms-2 text-sm font-normal text-neutral-500">
+        <span className="ms-2 text-sm font-normal text-muted-foreground">
           ({subcategory.entries.length})
         </span>
       </h2>
 
       {subcategory.entries.length === 0 ? (
-        <p className="text-sm text-neutral-400">{t('noEntries')}</p>
+        <p className="text-sm text-muted-foreground">{t('noEntries')}</p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" role="list">
           {subcategory.entries.map((entry) => (
@@ -371,11 +371,11 @@ function EntryCard({
       <button
         type="button"
         onClick={() => onSelect(entry)}
-        className="group flex w-full flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white text-start shadow-sm transition hover:border-blue-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-blue-500"
+        className="group flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-start shadow-sm transition hover:border-blue-400 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-border dark:bg-card dark:hover:border-blue-500"
         aria-label={name}
       >
         {/* Thumbnail */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 dark:bg-neutral-700">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted dark:bg-muted">
           {entry.placeholder ? (
             <PlaceholderThumbnail name={name} />
           ) : (
@@ -389,7 +389,7 @@ function EntryCard({
         </div>
         {/* Name */}
         <div className="px-2 py-1.5">
-          <p className="text-xs font-medium text-neutral-700 dark:text-neutral-200 line-clamp-2">
+          <p className="text-xs font-medium text-foreground dark:text-foreground line-clamp-2">
             {name}
           </p>
         </div>
@@ -410,7 +410,7 @@ function PlaceholderThumbnail({ name }: { name: string }) {
       <span className="text-blue-300 dark:text-blue-600">
         <CircleX size={16} aria-hidden="true" />
       </span>
-      <span className="text-center text-[10px] leading-tight text-neutral-400 px-2 line-clamp-2 dark:text-neutral-500">
+      <span className="text-center text-[10px] leading-tight text-muted-foreground px-2 line-clamp-2 dark:text-muted-foreground">
         {name}
       </span>
     </div>
@@ -448,10 +448,10 @@ function EntryDetailView({
       </button>
 
       {/* Entry name */}
-      <h1 className="mb-3 text-2xl font-bold text-neutral-900 dark:text-neutral-100">{name}</h1>
+      <h1 className="mb-3 text-2xl font-bold text-foreground dark:text-foreground">{name}</h1>
 
       {/* Full image */}
-      <div className="mb-4 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="mb-4 overflow-hidden rounded-xl border border-border bg-muted dark:border-border dark:bg-card">
         {entry.placeholder ? (
           <div className="flex aspect-[4/3] max-h-72 w-full items-center justify-center">
             <PlaceholderThumbnail name={name} />
@@ -473,10 +473,10 @@ function EntryDetailView({
 
       {/* Description */}
       <section className="mb-4" aria-label={t('descriptionLabel')}>
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
           {t('descriptionLabel')}
         </h2>
-        <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{description}</p>
+        <p className="text-sm text-foreground dark:text-muted-foreground leading-relaxed">{description}</p>
       </section>
 
       {/* Clinical significance */}
@@ -489,12 +489,12 @@ function EntryDetailView({
 
       {/* Recommended next steps */}
       <section className="mb-4" aria-label={t('nextStepsLabel')}>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
           {t('nextStepsLabel')}
         </h2>
         <ul className="space-y-1">
           {nextSteps.map((step, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <li key={i} className="flex items-start gap-2 text-sm text-foreground dark:text-muted-foreground">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" aria-hidden />
               {step}
             </li>
@@ -503,18 +503,18 @@ function EntryDetailView({
       </section>
 
       {/* Author attribution */}
-      <footer className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800/50">
-        <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+      <footer className="mt-6 rounded-lg border border-border bg-muted/30 px-4 py-3 dark:border-border dark:bg-card/50">
+        <p className="text-xs font-medium text-muted-foreground dark:text-muted-foreground">
           {t('curatedBy')}
         </p>
-        <p className="mt-0.5 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+        <p className="mt-0.5 text-sm font-semibold text-foreground dark:text-foreground">
           {entry.author.name}
-          <span className="ms-1 text-xs font-normal text-neutral-500 dark:text-neutral-400">
+          <span className="ms-1 text-xs font-normal text-muted-foreground dark:text-muted-foreground">
             {entry.author.credentials}
           </span>
         </p>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">{entry.author.institution}</p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground">{entry.author.institution}</p>
+        <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
           {t('version')} {entry.version} · {t('lastReviewed')} {entry.lastReviewedAt.slice(0, 10)}
         </p>
       </footer>
@@ -536,7 +536,7 @@ function SearchResultsView({
 }) {
   if (results.length === 0) {
     return (
-      <div className="p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="p-8 text-center text-sm text-muted-foreground dark:text-muted-foreground">
         {t('noSearchResults')}
       </div>
     )
@@ -552,12 +552,12 @@ function SearchResultsView({
 
   return (
     <div className="p-4">
-      <p className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
+      <p className="mb-4 text-sm text-muted-foreground dark:text-muted-foreground">
         {t('searchResultCount', { count: results.length })}
       </p>
       {Object.entries(grouped).map(([categoryName, groupEntries]) => (
         <div key={categoryName} className="mb-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground">
             {categoryName}
           </h2>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" role="list">
@@ -577,13 +577,13 @@ function SearchResultsView({
 function AtlasLoadingSkeleton() {
   return (
     <div className="p-4" aria-busy="true" aria-label="Loading atlas">
-      <div className="mb-4 h-6 w-40 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+      <div className="mb-4 h-6 w-40 animate-pulse rounded bg-muted dark:bg-muted" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <div className="aspect-[4/3] w-full animate-pulse bg-neutral-200 dark:bg-neutral-700" />
+          <div key={i} className="overflow-hidden rounded-lg border border-border dark:border-border">
+            <div className="aspect-[4/3] w-full animate-pulse bg-muted dark:bg-muted" />
             <div className="p-2">
-              <div className="h-3 w-3/4 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+              <div className="h-3 w-3/4 animate-pulse rounded bg-muted dark:bg-muted" />
             </div>
           </div>
         ))}

@@ -241,7 +241,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
           type="button"
           onClick={handleSyncNow}
           disabled={isSyncing}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-card px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden />
           {isSyncing ? t('syncing') : t('syncNow')}
@@ -271,7 +271,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-gray-100 bg-card">
               {rows.map(row => (
                 <tr
                   key={row.labId}
@@ -331,7 +331,7 @@ export function NetworkInventoryHeatMap({ myLabId }: Props) {
           onClick={() => setDrillDown(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+            className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl"
             onClick={e => e.stopPropagation()}
           >
             <h3 className="text-base font-semibold text-gray-900">

@@ -86,7 +86,7 @@ export function PowerScheduleForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-neutral-900">{t('title')}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
 
       {/* Existing schedules */}
       {schedules.length > 0 && (
@@ -94,13 +94,13 @@ export function PowerScheduleForm() {
           {schedules.map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-3"
+              className="flex items-center justify-between rounded-lg border border-border bg-card p-3"
             >
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-neutral-900">
+                <span className="text-sm font-medium text-foreground">
                   {s.dayOfWeek !== null ? t(DAY_KEYS[s.dayOfWeek]) : t('defaultSchedule')}
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-muted-foreground">
                   {s.startTime} — {Math.round(s.durationMinutes / 60 * 10) / 10}h
                   {!s.isActive && (
                     <span className="ms-2 text-amber-600">({t('active')}: off)</span>
@@ -119,17 +119,17 @@ export function PowerScheduleForm() {
       )}
 
       {/* Add schedule form */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+      <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex flex-col gap-3">
           {/* Day of week */}
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">{t('dayOfWeek')}</span>
+            <span className="text-sm font-medium text-foreground">{t('dayOfWeek')}</span>
             <select
               value={dayOfWeek ?? 'default'}
               onChange={(e) =>
                 setDayOfWeek(e.target.value === 'default' ? null : Number(e.target.value))
               }
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="rounded-md border border-border px-3 py-2 text-sm"
             >
               <option value="default">{t('defaultSchedule')}</option>
               {DAY_KEYS.map((key, i) => (
@@ -142,25 +142,25 @@ export function PowerScheduleForm() {
 
           {/* Start time */}
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">{t('startTime')}</span>
+            <span className="text-sm font-medium text-foreground">{t('startTime')}</span>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="rounded-md border border-border px-3 py-2 text-sm"
             />
           </label>
 
           {/* Duration */}
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-neutral-700">{t('duration')}</span>
+            <span className="text-sm font-medium text-foreground">{t('duration')}</span>
             <input
               type="number"
               min={0.5}
               step={0.5}
               value={durationHours}
               onChange={(e) => setDurationHours(Number(e.target.value))}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="rounded-md border border-border px-3 py-2 text-sm"
             />
           </label>
 
@@ -170,9 +170,9 @@ export function PowerScheduleForm() {
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-neutral-300"
+              className="h-4 w-4 rounded border-border"
             />
-            <span className="text-sm text-neutral-700">{t('active')}</span>
+            <span className="text-sm text-foreground">{t('active')}</span>
           </label>
 
           {error && (

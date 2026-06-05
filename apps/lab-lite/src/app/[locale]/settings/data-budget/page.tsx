@@ -14,14 +14,14 @@ export default function DataBudgetPage() {
       <div className="flex items-center gap-2 mb-6">
         <Link
           href="/settings"
-          className="text-neutral-400 hover:text-neutral-600"
+          className="text-muted-foreground hover:text-muted-foreground"
           aria-label="Back"
         >
           <DirectionalIcon category="navigation">
             <ChevronLeft size={20} />
           </DirectionalIcon>
         </Link>
-        <h1 className="text-2xl font-bold text-neutral-900">{t('usageTitle')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('usageTitle')}</h1>
       </div>
       <DataBudgetDashboard />
     </div>

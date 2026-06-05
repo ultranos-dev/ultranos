@@ -13,11 +13,11 @@ import type { PeerPost, PostPhoto, LabContext } from '@/lib/peer-network-types'
 import { processPhoto, isValidPhotoType } from '@/lib/peer-network-photos'
 
 const INPUT_CLASS =
-  'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm ' +
+  'w-full rounded-lg border border-border px-4 py-2.5 text-sm ' +
   'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
 
 const TEXTAREA_CLASS =
-  'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm min-h-[120px] resize-y ' +
+  'w-full rounded-lg border border-border px-4 py-2.5 text-sm min-h-[120px] resize-y ' +
   'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
 
 interface CreatePostFormProps {
@@ -174,7 +174,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
       {/* Title */}
       <div>
-        <label htmlFor="post-title" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="post-title" className="mb-1 block text-sm font-medium text-foreground">
           {t('title')}
         </label>
         <input
@@ -190,7 +190,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
       {/* Body */}
       <div>
-        <label htmlFor="post-body" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="post-body" className="mb-1 block text-sm font-medium text-foreground">
           {t('body')}
         </label>
         <textarea
@@ -204,7 +204,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
       {/* Photos */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">
+        <label className="mb-1 block text-sm font-medium text-foreground">
           {t('photos')} ({photos.length}/{MAX_PHOTOS})
         </label>
         {photos.length > 0 && (
@@ -243,7 +243,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={photoProcessing}
-              className="rounded-lg border border-dashed border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:border-primary-500 hover:text-primary-600 disabled:opacity-50"
+              className="rounded-lg border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-primary-500 hover:text-primary-600 disabled:opacity-50"
             >
               {photoProcessing ? t('processingPhoto') : t('addPhoto')}
             </button>
@@ -252,11 +252,11 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
       </div>
 
       {/* Lab Context */}
-      <fieldset className="rounded-lg border border-neutral-200 p-3">
-        <legend className="px-1 text-sm font-medium text-neutral-700">{t('labContext')}</legend>
+      <fieldset className="rounded-lg border border-border p-3">
+        <legend className="px-1 text-sm font-medium text-foreground">{t('labContext')}</legend>
         <div className="flex flex-col gap-3">
           <div>
-            <label htmlFor="post-category" className="mb-1 block text-xs text-neutral-600">
+            <label htmlFor="post-category" className="mb-1 block text-xs text-muted-foreground">
               {t('category')}
             </label>
             <select
@@ -274,7 +274,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
             </select>
           </div>
           <div>
-            <label htmlFor="post-test-type" className="mb-1 block text-xs text-neutral-600">
+            <label htmlFor="post-test-type" className="mb-1 block text-xs text-muted-foreground">
               {t('testType')}
             </label>
             <input
@@ -287,7 +287,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
             />
           </div>
           <div>
-            <label htmlFor="post-instrument" className="mb-1 block text-xs text-neutral-600">
+            <label htmlFor="post-instrument" className="mb-1 block text-xs text-muted-foreground">
               {t('instrument')}
             </label>
             <input
@@ -304,7 +304,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
 
       {/* Tags */}
       <div>
-        <label htmlFor="post-tags" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label htmlFor="post-tags" className="mb-1 block text-sm font-medium text-foreground">
           {t('tags')}
         </label>
         <input
@@ -315,11 +315,11 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
           onChange={(e) => setTagsInput(e.target.value)}
           placeholder={t('tagsPlaceholder')}
         />
-        <p className="mt-1 text-xs text-neutral-500">{t('tagsHint')}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('tagsHint')}</p>
       </div>
 
       {/* Anonymization toggle */}
-      <div className="rounded-lg border border-neutral-200 p-3">
+      <div className="rounded-lg border border-border p-3">
         <div className="flex items-start gap-3">
           <input
             id="reveal-lab"
@@ -329,10 +329,10 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
             className="mt-0.5"
           />
           <div>
-            <label htmlFor="reveal-lab" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="reveal-lab" className="text-sm font-medium text-foreground">
               {t('revealLabName')}
             </label>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               {revealLabName
                 ? t('identityRevealed')
                 : t('identityAnonymous', { name: anonymousName })}
@@ -350,7 +350,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
           onChange={(e) => setPhiConfirmed(e.target.checked)}
           className="mt-0.5"
         />
-        <label htmlFor="phi-confirm" className="text-sm text-neutral-700">
+        <label htmlFor="phi-confirm" className="text-sm text-foreground">
           {t('phiConfirmLabel')}
         </label>
       </div>
@@ -361,7 +361,7 @@ export function CreatePostForm({ onPostCreated, onCancel }: CreatePostFormProps)
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100"
+            className="rounded-lg px-4 py-2.5 text-sm text-muted-foreground hover:bg-muted"
           >
             {t('cancel')}
           </button>

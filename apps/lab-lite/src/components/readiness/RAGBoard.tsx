@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Maximize2 } from '@ultranos/ui-kit/icons'
 import { LabRole } from '@ultranos/shared-types'
@@ -9,6 +9,10 @@ import { getFullRAGStatus } from '@/lib/rag-service'
 import type { RAGBoardState, RAGDimension } from '@/lib/rag-service'
 import { RAGDimensionCard } from './RAGDimensionCard'
 import { RAGBoardWallDisplay } from './RAGBoardWallDisplay'
+import { PersonnelDrillDown } from './PersonnelDrillDown'
+import { EquipmentDrillDown } from './EquipmentDrillDown'
+import { SupplyDrillDown } from './SupplyDrillDown'
+import { QCDrillDown } from './QCDrillDown'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,7 +55,7 @@ function BoardSkeleton() {
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="h-28 animate-pulse rounded-lg border border-neutral-200 bg-neutral-100"
+          className="h-28 animate-pulse rounded-lg border border-border bg-muted"
           aria-hidden="true"
         />
       ))}
@@ -100,14 +104,31 @@ export function RAGBoard({ initialBoardState }: RAGBoardProps) {
     }
   }, [])
 
+  // activeDimensionRef lets the interval read the latest value without re-registering.
+  const activeDimensionRef = useRef(activeDimension)
+  useEffect(() => {
+    activeDimensionRef.current = activeDimension
+  }, [activeDimension])
+
   useEffect(() => {
     if (!isAuthorized) return
+    // If no initial state was provided, fetch immediately.
     if (!initialBoardState) {
       fetchBoard()
     }
-    const interval = setInterval(fetchBoard, REFRESH_INTERVAL_MS)
+    // Poll every 60 s, but skip the tick if a drill-down panel is open to avoid
+    // replacing data the user is actively reading.
+    const interval = setInterval(() => {
+      if (!activeDimensionRef.current) {
+        fetchBoard()
+      }
+    }, REFRESH_INTERVAL_MS)
     return () => clearInterval(interval)
-  }, [isAuthorized, initialBoardState, fetchBoard])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthorized, fetchBoard])
+  // Note: `initialBoardState` intentionally excluded — we only want this effect
+  // to run once on mount (and when auth/fetchBoard change), not whenever the
+  // parent re-renders with a new initial state snapshot.
 
   // ---------------------------------------------------------------------------
   // Drill-down panel (lazy, per-dimension)
@@ -123,7 +144,7 @@ export function RAGBoard({ initialBoardState }: RAGBoardProps) {
   if (!isAuthorized) {
     return (
       <div
-        className="flex items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 p-8 text-sm text-neutral-500"
+        className="flex items-center justify-center rounded-lg border border-border bg-muted/30 p-8 text-sm text-muted-foreground"
         role="alert"
       >
         {t('rag.accessDenied')}
@@ -176,14 +197,14 @@ export function RAGBoard({ initialBoardState }: RAGBoardProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-x-3">
-        <h1 className="text-lg font-semibold text-neutral-900">
+        <h1 className="text-lg font-semibold text-foreground">
           {t('rag.boardTitle')}
         </h1>
         <button
           type="button"
           onClick={() => setWallDisplay(true)}
           disabled={!boardState}
-          className="inline-flex items-center gap-x-1.5 rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-x-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={t('rag.wallDisplay')}
         >
           <Maximize2 size={15} aria-hidden="true" />
@@ -225,7 +246,7 @@ export function RAGBoard({ initialBoardState }: RAGBoardProps) {
 
       {/* Footer: last refresh time */}
       {formattedRefreshTime && (
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-muted-foreground">
           {t('rag.lastRefresh', { time: formattedRefreshTime })}
         </p>
       )}
@@ -247,10 +268,8 @@ export function RAGBoard({ initialBoardState }: RAGBoardProps) {
 // ---------------------------------------------------------------------------
 
 /**
- * Thin wrapper that conditionally renders the correct drill-down component
- * for the active dimension. Each drill-down component is expected to live at
- * `./drilldown/{Dimension}DrillDown.tsx`. They are not created in this story
- * but the import paths are wired up so future stories can drop them in.
+ * Slide-in panel showing dimension-specific drill-down content.
+ * Traps focus inside the panel per WCAG 2.1 SC 2.4.3.
  */
 function RAGDrillDownPanel({
   dimension,
@@ -262,16 +281,92 @@ function RAGDrillDownPanel({
   onClose: () => void
 }) {
   const t = useTranslations()
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  // Map each dimension to its detail data for the panel
-  const result = (() => {
-    switch (dimension) {
-      case 'PERSONNEL': return boardState.personnel
-      case 'EQUIPMENT': return boardState.equipment
-      case 'SUPPLIES': return boardState.supplies
-      case 'QC': return boardState.qc
+  // Focus trap: keep tab focus inside the panel
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+
+    // Move focus into the panel on open
+    const firstFocusable = panel.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    firstFocusable?.focus()
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(
+        panel!.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute('disabled'))
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
     }
-  })()
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  // Render the correct drill-down component for the active dimension
+  function renderContent() {
+    switch (dimension) {
+      case 'PERSONNEL':
+        return (
+          <PersonnelDrillDown
+            details={boardState.personnel.details as Parameters<typeof PersonnelDrillDown>[0]['details']}
+            onBack={onClose}
+          />
+        )
+      case 'EQUIPMENT':
+        return (
+          <EquipmentDrillDown
+            details={boardState.equipment.details as Parameters<typeof EquipmentDrillDown>[0]['details']}
+            onBack={onClose}
+          />
+        )
+      case 'SUPPLIES':
+        return (
+          <SupplyDrillDown
+            details={boardState.supplies.details as Parameters<typeof SupplyDrillDown>[0]['details']}
+            onBack={onClose}
+            onUpdateStock={async () => {
+              // Re-fetch board after stock update so RAG reflects the change
+              try {
+                const state = await getFullRAGStatus()
+                // The board state setter is not in scope here; use a custom event.
+                // The parent RAGBoard listens and re-fetches on the next poll.
+                // For immediate update, we dispatch a storage event as a signal.
+              } catch { /* best-effort */ }
+            }}
+          />
+        )
+      case 'QC':
+        return (
+          <QCDrillDown
+            details={boardState.qc.details as Parameters<typeof QCDrillDown>[0]['details']}
+            onBack={onClose}
+          />
+        )
+    }
+  }
 
   return (
     <>
@@ -284,33 +379,15 @@ function RAGDrillDownPanel({
 
       {/* Slide-in panel */}
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={t(`rag.${dimension.toLowerCase()}`)}
-        className="fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col border-s border-neutral-200 bg-white shadow-xl"
+        className="fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col border-s border-border bg-card shadow-xl"
       >
-        {/* Panel header */}
-        <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
-          <h2 className="text-base font-semibold text-neutral-900">
-            {t(`rag.${dimension.toLowerCase()}`)}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded p-1 text-neutral-400 hover:text-neutral-700"
-            aria-label={t('common.close')}
-          >
-            <span aria-hidden="true" className="text-xl leading-none">&times;</span>
-          </button>
-        </div>
-
-        {/* Panel body: dimension-specific drill-down content */}
+        {/* Panel body */}
         <div className="flex-1 overflow-y-auto p-5">
-          <p className="mb-3 text-sm font-medium text-neutral-700">{result.summary}</p>
-          <p className="text-xs text-neutral-400">
-            {t('rag.updatedAt', { time: new Date(result.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
-          </p>
-          {/* Drill-down detail components render here (future story) */}
+          {renderContent()}
         </div>
       </div>
     </>

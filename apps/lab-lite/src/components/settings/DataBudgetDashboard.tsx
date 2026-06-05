@@ -69,11 +69,11 @@ export function DataBudgetDashboard() {
       )}
 
       {/* Usage Gauge */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('usageTitle')}</h2>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('usageTitle')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <div className="h-4 w-full rounded-full bg-neutral-100 overflow-hidden">
+            <div className="h-4 w-full rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${barColor}`}
                 style={{ width: `${usedPct}%` }}
@@ -88,19 +88,19 @@ export function DataBudgetDashboard() {
               />
             </div>
           </div>
-          <span className="text-sm font-medium text-neutral-700 whitespace-nowrap">
+          <span className="text-sm font-medium text-foreground whitespace-nowrap">
             {currentCycleUsedMB.toFixed(1)} / {planSizeMB} MB
           </span>
         </div>
-        <p className="text-xs text-neutral-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           {usedPct.toFixed(0)}% {t('used')} &middot; {remainingMB.toFixed(1)} MB {t('remaining')}
         </p>
       </div>
 
       {/* Projection Card */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-neutral-500 mb-2">{t('projectionTitle')}</h2>
-        <p className="text-sm text-neutral-700">
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t('projectionTitle')}</h2>
+        <p className="text-sm text-foreground">
           {projectedExhaustionDate
             ? t('projectionExhaustion', { date: projectedExhaustionDate })
             : t('projectionNoData')}
@@ -108,8 +108,8 @@ export function DataBudgetDashboard() {
       </div>
 
       {/* Daily Usage Chart (CSS bars) */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('dailyUsageTitle')}</h2>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('dailyUsageTitle')}</h2>
         <div className="flex items-end gap-1" style={{ height: '120px' }}>
           {dailyUsage.map((day) => {
             const heightPct = maxDailyMB > 0 ? (day.totalMB / maxDailyMB) * 100 : 0
@@ -124,7 +124,7 @@ export function DataBudgetDashboard() {
                   style={{ height: `${Math.max(heightPct, 2)}%` }}
                   title={`${day.date}: ${day.totalMB.toFixed(2)} MB`}
                 />
-                <span className="text-[9px] text-neutral-400 mt-1 truncate w-full text-center">
+                <span className="text-[9px] text-muted-foreground mt-1 truncate w-full text-center">
                   {day.date.slice(5)}
                 </span>
               </div>
@@ -134,20 +134,20 @@ export function DataBudgetDashboard() {
       </div>
 
       {/* Category Breakdown */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('categoryTitle')}</h2>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-neutral-500 text-xs">
+            <tr className="text-muted-foreground text-xs">
               <th className="text-start pb-1">{t('categoryHeader')}</th>
               <th className="text-end pb-1">MB</th>
             </tr>
           </thead>
           <tbody>
             {['upload', 'audit', 'notification', 'other'].map((cat) => (
-              <tr key={cat} className="border-t border-neutral-100">
-                <td className="py-1 text-neutral-700">{t(`category.${cat}`)}</td>
-                <td className="py-1 text-end text-neutral-700 font-mono">
+              <tr key={cat} className="border-t border-border/50">
+                <td className="py-1 text-foreground">{t(`category.${cat}`)}</td>
+                <td className="py-1 text-end text-foreground font-mono">
                   {(categoryBreakdown[cat] ?? 0).toFixed(2)}
                 </td>
               </tr>

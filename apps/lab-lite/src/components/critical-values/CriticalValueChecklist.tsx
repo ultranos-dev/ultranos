@@ -180,7 +180,7 @@ export function CriticalValueChecklist({
       data-testid="critical-value-checklist-modal"
     >
       {/* Modal panel */}
-      <div className="relative w-full max-w-lg rounded-xl bg-white shadow-2xl mx-4">
+      <div className="relative w-full max-w-lg rounded-xl bg-card shadow-2xl mx-4">
         {/* Header */}
         <div className="flex items-start gap-3 rounded-t-xl bg-red-50 border-b border-red-200 p-4">
           <AlertTriangle
@@ -202,7 +202,7 @@ export function CriticalValueChecklist({
         {/* Critical values summary */}
         {criticalValues.length > 0 && (
           <div className="px-4 pt-3 pb-1">
-            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
               {t('criticalValuesDetected')}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -227,7 +227,7 @@ export function CriticalValueChecklist({
         {/* Checklist items */}
         <div className="px-4 py-3 space-y-2 max-h-72 overflow-y-auto">
           {isLoading ? (
-            <div className="py-4 text-center text-sm text-neutral-400">…</div>
+            <div className="py-4 text-center text-sm text-muted-foreground">…</div>
           ) : (
             items.map((item) => (
               <ChecklistRow
@@ -243,11 +243,11 @@ export function CriticalValueChecklist({
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-neutral-100 px-4 py-3 rounded-b-xl">
+        <div className="flex items-center justify-end gap-3 border-t border-border/50 px-4 py-3 rounded-b-xl">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             data-testid="checklist-cancel-button"
           >
             {t('cancelButton')}
@@ -309,7 +309,7 @@ function ChecklistRow({
               ? item.isAutoVerified
                 ? 'border-green-500 bg-green-500'
                 : 'border-blue-600 bg-blue-600'
-              : 'border-neutral-300 bg-white group-hover:border-neutral-400'
+              : 'border-border bg-card group-hover:border-border'
           }`}
           aria-hidden="true"
         >
@@ -323,8 +323,8 @@ function ChecklistRow({
       <span className="flex-1 min-w-0">
         <span
           className={`text-sm ${
-            isEffectivelyChecked ? 'text-neutral-700' : 'text-neutral-800'
-          } ${item.isNotApplicable ? 'text-neutral-400' : ''}`}
+            isEffectivelyChecked ? 'text-foreground' : 'text-foreground'
+          } ${item.isNotApplicable ? 'text-muted-foreground' : ''}`}
         >
           {labelOverride}
         </span>
@@ -339,7 +339,7 @@ function ChecklistRow({
         )}
         {item.isNotApplicable && (
           <span
-            className="ms-2 inline-flex items-center gap-0.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-xs font-medium text-neutral-500"
+            className="ms-2 inline-flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
             data-testid={`na-badge-${item.id}`}
           >
             <CircleX size={10} aria-hidden="true" />

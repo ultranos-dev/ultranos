@@ -6,7 +6,7 @@ interface Props { recommendations: ProtocolRecommendation[] }
 const priorityBadge: Record<ProtocolPriority, string> = {
   high: 'bg-red-100 text-red-700',
   medium: 'bg-amber-100 text-amber-700',
-  low: 'bg-neutral-100 text-neutral-600',
+  low: 'bg-muted text-muted-foreground',
 }
 
 function fmtDate(d: string): string {
@@ -16,7 +16,7 @@ function fmtDate(d: string): string {
 export function ProtocolRecommendationsPanel({ recommendations }: Props) {
   if (recommendations.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         No protocol recommendations.
       </div>
     )
@@ -28,8 +28,8 @@ export function ProtocolRecommendationsPanel({ recommendations }: Props) {
   })
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <ClipboardList size={16} className="text-purple-500" aria-hidden="true" />
         Protocol Recommendations
       </h3>
@@ -41,8 +41,8 @@ export function ProtocolRecommendationsPanel({ recommendations }: Props) {
               {rec.priority}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-neutral-700">{rec.recommendation}</p>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-sm text-foreground">{rec.recommendation}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {rec.category.charAt(0).toUpperCase() + rec.category.slice(1)} · Effective {fmtDate(rec.effectiveDate)}
               </p>
             </div>

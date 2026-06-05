@@ -14,7 +14,7 @@ interface MpiResultModalProps {
 function scoreBadgeClass(score: number): string {
   if (score >= 80) return 'bg-red-100 text-red-800'
   if (score >= 60) return 'bg-amber-100 text-amber-800'
-  return 'bg-neutral-100 text-neutral-600'
+  return 'bg-muted text-muted-foreground'
 }
 
 /**
@@ -35,11 +35,11 @@ export function MpiResultModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-bold text-neutral-900">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
+        <h2 className="text-lg font-bold text-foreground">
           {isBlocked ? t('mpiBlocked') : t('mpiWarning')}
         </h2>
-        <p className="mt-1 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           {isBlocked ? t('mpiBlockedDesc') : t('mpiWarningDesc')}
         </p>
 
@@ -47,13 +47,13 @@ export function MpiResultModal({
           {result.candidates.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-lg border border-neutral-200 p-3"
+              className="flex items-center justify-between rounded-lg border border-border p-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-neutral-900">
+                <p className="truncate text-sm font-medium text-foreground">
                   {[c.nameGiven, c.nameFather].filter(Boolean).join(' ') || '---'}
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-muted-foreground">
                   {[
                     c.gender,
                     c.birthYear ? String(c.birthYear) : null,

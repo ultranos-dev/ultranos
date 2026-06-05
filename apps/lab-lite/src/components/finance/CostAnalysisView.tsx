@@ -263,7 +263,7 @@ export function CostAnalysisView() {
 
       {/* Recommendations panel */}
       {subsidizedWithRecs.length > 0 && (
-        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 print:border-gray-300 print:bg-white">
+        <section aria-labelledby="recommendations-heading" className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2 print:border-gray-300 print:bg-card">
           <h2 id="recommendations-heading" className="text-base font-medium text-amber-800">
             {t('recommendationsTitle')}
           </h2>

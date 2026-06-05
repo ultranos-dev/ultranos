@@ -33,19 +33,19 @@ export function SurveillanceAlertList({ highlightAlertId }: SurveillanceAlertLis
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+      <div className="flex flex-wrap gap-3 rounded-lg border border-border bg-muted/30 p-3">
         <input
           type="text"
           placeholder={t('filterByDisease')}
           value={diseaseFilter}
           onChange={(e) => setDiseaseFilter(e.target.value.toLowerCase())}
-          className="rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label={t('filterByDisease')}
         />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as 'spike' | 'cluster' | '')}
-          className="rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label={t('filterByType')}
         >
           <option value="">{t('filterByType')}</option>
@@ -55,7 +55,7 @@ export function SurveillanceAlertList({ highlightAlertId }: SurveillanceAlertLis
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as SurveillanceAlert['transmissionStatus'] | '')}
-          className="rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label={t('transmissionStatus')}
         >
           <option value="">{t('transmissionStatus')}</option>
@@ -67,7 +67,7 @@ export function SurveillanceAlertList({ highlightAlertId }: SurveillanceAlertLis
 
       {/* Loading / error */}
       {loading && (
-        <div className="flex items-center justify-center py-12 text-neutral-500 text-sm">
+        <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
           {t('loading', { defaultMessage: 'Loading...' })}
         </div>
       )}
@@ -78,7 +78,7 @@ export function SurveillanceAlertList({ highlightAlertId }: SurveillanceAlertLis
         </div>
       )}
       {!loading && !error && alerts.length === 0 && (
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-12 text-center text-sm text-neutral-500">
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-12 text-center text-sm text-muted-foreground">
           {t('noAlerts')}
         </div>
       )}
@@ -126,10 +126,10 @@ function SurveillanceAlertCard({
       {/* Header row */}
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <AlertTriangle size={16} className={alert.severity === 'critical' ? 'text-red-600' : 'text-amber-600'} aria-hidden />
-        <span className="font-semibold text-neutral-900 text-sm">{alert.diseaseLabel}</span>
+        <span className="font-semibold text-foreground text-sm">{alert.diseaseLabel}</span>
 
         {/* Alert type badge */}
-        <span className="rounded px-2 py-0.5 text-xs font-medium bg-neutral-200 text-neutral-700">
+        <span className="rounded px-2 py-0.5 text-xs font-medium bg-muted text-foreground">
           {alert.alertType === 'spike' ? t('spikeDetected') : t('clusterDetected')}
         </span>
 
@@ -142,17 +142,17 @@ function SurveillanceAlertCard({
         <TransmissionStatusBadge status={alert.transmissionStatus} t={t} />
 
         {/* Timestamp */}
-        <time className="ms-auto text-xs text-neutral-500" dateTime={alert.createdAt}>
+        <time className="ms-auto text-xs text-muted-foreground" dateTime={alert.createdAt}>
           {new Date(alert.createdAt).toLocaleString()}
         </time>
       </div>
 
       {/* Alert message */}
-      <p className="text-sm text-neutral-700">{alert.message}</p>
+      <p className="text-sm text-foreground">{alert.message}</p>
 
       {/* Spike details */}
       {alert.alertType === 'spike' && (
-        <div className="mt-2 flex flex-wrap gap-4 text-xs text-neutral-600">
+        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span>{t('currentRate')}: <strong>{(alert.currentRate ?? 0).toFixed(1)}%</strong></span>
           <span>{t('baseline')}: <strong>{(alert.baselineRate ?? 0).toFixed(1)}%</strong></span>
           <span>{t('ratio')}: <strong>{isFinite(alert.spikeRatio ?? 0) ? `${(alert.spikeRatio ?? 0).toFixed(1)}x` : '—'}</strong></span>
@@ -162,7 +162,7 @@ function SurveillanceAlertCard({
 
       {/* Cluster details */}
       {alert.alertType === 'cluster' && (
-        <div className="mt-2 flex flex-wrap gap-4 text-xs text-neutral-600">
+        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span>{t('caseCount')}: <strong>{alert.clusterCaseCount}</strong></span>
           {alert.clusterWindowStart && alert.clusterWindowEnd && (
             <span>
@@ -173,7 +173,7 @@ function SurveillanceAlertCard({
       )}
 
       {/* Lab location */}
-      <div className="mt-1 text-xs text-neutral-500">
+      <div className="mt-1 text-xs text-muted-foreground">
         {t('labLocation')}: {alert.labFacilityName}, {alert.labDistrict}, {alert.labProvince}
       </div>
     </div>
@@ -204,7 +204,7 @@ function TransmissionStatusBadge({
     )
   }
   return (
-    <span className="flex items-center gap-1 text-xs text-neutral-500">
+    <span className="flex items-center gap-1 text-xs text-muted-foreground">
       <Clock size={12} aria-hidden />
       {t('pending')}
     </span>

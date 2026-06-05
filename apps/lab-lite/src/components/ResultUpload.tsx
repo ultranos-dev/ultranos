@@ -106,14 +106,14 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
     return (
       <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
         <div className="flex-1">
-          <p className="text-sm font-medium text-neutral-900">{selectedFile.name}</p>
-          <p className="text-xs text-neutral-500">{formatFileSize(selectedFile.size)}</p>
+          <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+          <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
         </div>
         <button
           type="button"
           onClick={handleRemove}
           aria-label="Remove file"
-          className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
         >
           <X size={20} />
         </button>
@@ -131,7 +131,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
         className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
           dragOver
             ? 'border-primary-500 bg-primary-50'
-            : 'border-neutral-300 bg-neutral-50 hover:border-primary-400'
+            : 'border-border bg-muted/30 hover:border-primary-400'
         } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
         onClick={() => !disabled && inputRef.current?.click()}
         role="button"
@@ -141,12 +141,12 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
         }}
       >
-        <Upload size={32} className="text-neutral-400" aria-hidden="true" />
-        <p className="text-sm text-neutral-600">
+        <Upload size={32} className="text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm text-muted-foreground">
           Drag and drop your lab result file here, or{' '}
           <span className="font-semibold text-primary-600">browse files</span>
         </p>
-        <p className="text-xs text-neutral-400">PDF, JPEG, or PNG (max 20 MB)</p>
+        <p className="text-xs text-muted-foreground">PDF, JPEG, or PNG (max 20 MB)</p>
         <input
           ref={inputRef}
           type="file"

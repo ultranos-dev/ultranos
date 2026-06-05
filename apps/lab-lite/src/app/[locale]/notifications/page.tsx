@@ -79,7 +79,7 @@ export default function NotificationsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         {unreadCount > 0 && (
           <Button
             variant="ghost"
@@ -91,11 +91,11 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
         {loading && (
-          <div className="px-4 py-8 text-center text-sm text-neutral-500" aria-busy="true">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground" aria-busy="true">
             <span className="flex items-center gap-2 justify-center">
-              <svg className="motion-safe:animate-spin h-4 w-4 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="motion-safe:animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
               </svg>
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
         )}
 
         {!loading && !error && notifications.length === 0 && (
-          <div className="px-4 py-8 text-center text-sm text-neutral-500">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             {t('empty')}
           </div>
         )}

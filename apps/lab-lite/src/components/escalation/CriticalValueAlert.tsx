@@ -197,7 +197,7 @@ export function CriticalValueAlert({
         <source src="/sounds/critical-alert.mp3" type="audio/mpeg" />
       </audio>
 
-      <div className="w-full max-w-lg mx-4 rounded-2xl border-4 border-red-500 bg-white p-8 shadow-2xl">
+      <div className="w-full max-w-lg mx-4 rounded-2xl border-4 border-red-500 bg-card p-8 shadow-2xl">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="text-red-600">

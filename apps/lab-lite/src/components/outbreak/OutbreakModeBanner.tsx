@@ -120,7 +120,7 @@ export function OutbreakModeBanner({ onDeactivate }: Props) {
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}
-          className="hover:bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+          className="hover:bg-card/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
           Deactivate
         </button>

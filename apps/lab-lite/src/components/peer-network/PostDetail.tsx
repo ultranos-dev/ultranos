@@ -85,7 +85,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
       </button>
 
       {/* Post content */}
-      <article className="rounded-lg border border-neutral-200 p-4">
+      <article className="rounded-lg border border-border p-4">
         {/* Flagged warning overlay */}
         {currentPost.status === 'flagged' && (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-sm text-amber-700">
@@ -94,7 +94,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
         )}
 
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-lg font-semibold text-neutral-900">{currentPost.title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{currentPost.title}</h2>
           <div className="flex items-center gap-2">
             {currentPost.status === 'resolved' && (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
@@ -106,16 +106,16 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
         </div>
 
         {/* Author + time */}
-        <div className="mt-1 flex items-center gap-3 text-xs text-neutral-500">
+        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
           <span>{currentPost.authorDisplayName}</span>
           {currentPost.labName && (
-            <span className="rounded bg-neutral-100 px-1.5 py-0.5">{currentPost.labName}</span>
+            <span className="rounded bg-muted px-1.5 py-0.5">{currentPost.labName}</span>
           )}
           <span>{new Date(currentPost.createdAt).toLocaleString()}</span>
         </div>
 
         {/* Body */}
-        <div className="mt-3 whitespace-pre-wrap text-sm text-neutral-800">
+        <div className="mt-3 whitespace-pre-wrap text-sm text-foreground">
           {currentPost.body}
         </div>
 
@@ -135,19 +135,19 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
 
         {/* Lab context */}
         {(currentPost.labContext.category || currentPost.labContext.testType || currentPost.labContext.instrument) && (
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-500">
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
             {currentPost.labContext.category && (
-              <span className="rounded bg-neutral-100 px-2 py-0.5">
+              <span className="rounded bg-muted px-2 py-0.5">
                 {t(`categories.${currentPost.labContext.category}`)}
               </span>
             )}
             {currentPost.labContext.testType && (
-              <span className="rounded bg-neutral-100 px-2 py-0.5">
+              <span className="rounded bg-muted px-2 py-0.5">
                 {currentPost.labContext.testType}
               </span>
             )}
             {currentPost.labContext.instrument && (
-              <span className="rounded bg-neutral-100 px-2 py-0.5">
+              <span className="rounded bg-muted px-2 py-0.5">
                 {currentPost.labContext.instrument}
               </span>
             )}
@@ -183,7 +183,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
       {/* Responses */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-neutral-700">
+          <h3 className="text-sm font-semibold text-foreground">
             {t('responses')} ({responses.length})
           </h3>
           {!showResponseForm && (
@@ -208,7 +208,7 @@ export function PostDetail({ post, onBack, onPostUpdated }: PostDetailProps) {
 
         {/* Response list */}
         {responses.length === 0 ? (
-          <p className="py-4 text-center text-sm text-neutral-500">{t('noResponses')}</p>
+          <p className="py-4 text-center text-sm text-muted-foreground">{t('noResponses')}</p>
         ) : (
           responses.map((response) => (
             <ResponseCard key={response.id} response={response} />
@@ -227,11 +227,11 @@ function ResponseCard({ response }: { response: PeerResponse }) {
       className={`rounded-lg border p-3 ${
         response.isFromMentor
           ? 'border-primary-200 bg-primary-50'
-          : 'border-neutral-200'
+          : 'border-border'
       }`}
     >
-      <div className="flex items-center gap-2 text-xs text-neutral-500">
-        <span className="font-medium text-neutral-700">{response.authorDisplayName}</span>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{response.authorDisplayName}</span>
         {response.isFromMentor && (
           <span className="rounded-full bg-primary-200 px-2 py-0.5 text-xs font-medium text-primary-800">
             {t('mentor')}
@@ -243,7 +243,7 @@ function ResponseCard({ response }: { response: PeerResponse }) {
         </div>
       </div>
 
-      <div className="mt-2 whitespace-pre-wrap text-sm text-neutral-800">
+      <div className="mt-2 whitespace-pre-wrap text-sm text-foreground">
         {response.body}
       </div>
 

@@ -41,7 +41,7 @@ export function ShutdownChecklist({ onComplete }: ShutdownChecklistProps) {
         aria-live="polite"
         className="flex items-center justify-between text-sm font-medium"
       >
-        <span className={allComplete ? 'text-green-700' : 'text-neutral-600'}>
+        <span className={allComplete ? 'text-green-700' : 'text-muted-foreground'}>
           {t('checklist.progress', { completed: completedCount, total: totalCount })}
         </span>
         {allComplete && (
@@ -56,7 +56,7 @@ export function ShutdownChecklist({ onComplete }: ShutdownChecklistProps) {
         aria-valuemin={0}
         aria-valuemax={totalCount}
         aria-label={t('checklist.progressBarLabel')}
-        className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden"
+        className="w-full h-2 bg-muted rounded-full overflow-hidden"
       >
         <div
           className={`h-full transition-all duration-300 rounded-full ${
@@ -76,7 +76,7 @@ export function ShutdownChecklist({ onComplete }: ShutdownChecklistProps) {
                 min-h-[48px] transition-colors
                 ${item.checked
                   ? 'border-green-300 bg-green-50 text-green-900'
-                  : 'border-neutral-200 bg-white hover:bg-neutral-50'}
+                  : 'border-border bg-card hover:bg-muted/30'}
               `}
             >
               <input

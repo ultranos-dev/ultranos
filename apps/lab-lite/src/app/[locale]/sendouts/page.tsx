@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<SendOutStatus, string> = {
   received: 'bg-yellow-100 text-yellow-800',
   processing: 'bg-orange-100 text-orange-800',
   'results-available': 'bg-green-100 text-green-800',
-  cancelled: 'bg-neutral-100 text-neutral-500',
+  cancelled: 'bg-muted text-muted-foreground',
 }
 
 export default function SendOutsPage() {
@@ -72,7 +72,7 @@ export default function SendOutsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-neutral-900">Send-Outs</h1>
+      <h1 className="text-2xl font-bold text-foreground">Send-Outs</h1>
 
       {/* Overdue alert banner */}
       {overdueSendOuts.length > 0 && (
@@ -100,7 +100,7 @@ export default function SendOutsPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+          className="rounded-md border border-border bg-card px-3 py-1.5 text-sm"
           aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
@@ -112,7 +112,7 @@ export default function SendOutsPage() {
         <select
           value={filterLabId}
           onChange={(e) => setFilterLabId(e.target.value)}
-          className="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+          className="rounded-md border border-border bg-card px-3 py-1.5 text-sm"
           aria-label="Filter by reference lab"
         >
           <option value="">All labs</option>
@@ -126,17 +126,17 @@ export default function SendOutsPage() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-lg bg-neutral-100" />
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-neutral-300 py-12 text-center">
-          <p className="text-sm text-neutral-500">No send-outs found.</p>
+        <div className="rounded-lg border border-dashed border-border py-12 text-center">
+          <p className="text-sm text-muted-foreground">No send-outs found.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-xs text-neutral-500 uppercase tracking-wide">
+            <thead className="bg-muted/30 text-xs text-muted-foreground uppercase tracking-wide">
               <tr>
                 <th className="px-4 py-3 text-start font-medium">Tracking ID</th>
                 <th className="px-4 py-3 text-start font-medium">Reference Lab</th>
@@ -147,7 +147,7 @@ export default function SendOutsPage() {
                 <th className="px-4 py-3 text-start font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-border/50">
               {filtered.map((sendOut) => {
                 const lab = labs.get(sendOut.referenceLabId)
                 const elapsed = elapsedDays(sendOut.sentAt)
@@ -155,12 +155,12 @@ export default function SendOutsPage() {
                 const isOverdue = elapsed > expected && !['results-available', 'cancelled'].includes(sendOut.status)
                 return (
                   <tr key={sendOut.id} className={isOverdue ? 'bg-amber-50' : ''}>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-500 max-w-[120px] truncate">
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground max-w-[120px] truncate">
                       {sendOut.id.slice(0, 8)}…
                     </td>
-                    <td className="px-4 py-3 text-neutral-900">{lab?.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-neutral-700">{sendOut.testRequested.loincDisplay}</td>
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td className="px-4 py-3 text-foreground">{lab?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-foreground">{sendOut.testRequested.loincDisplay}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
                       {new Date(Number(sendOut.sentAt.split('|')[0]) || sendOut.sentAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
@@ -169,7 +169,7 @@ export default function SendOutsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`flex items-center gap-1 text-xs ${isOverdue ? 'text-amber-700 font-semibold' : 'text-neutral-500'}`}>
+                      <span className={`flex items-center gap-1 text-xs ${isOverdue ? 'text-amber-700 font-semibold' : 'text-muted-foreground'}`}>
                         {isOverdue && <AlertTriangle size={12} />}
                         {elapsed}d / {expected}d
                       </span>

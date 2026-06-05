@@ -95,10 +95,10 @@ export function TemperatureDashboard() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-6" aria-busy="true">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 rounded bg-neutral-200" />
+          <div className="h-8 w-48 rounded bg-muted" />
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 rounded-lg bg-neutral-100" />
+              <div key={i} className="h-40 rounded-lg bg-muted" />
             ))}
           </div>
         </div>
@@ -108,7 +108,7 @@ export function TemperatureDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-neutral-900 mb-6">
+      <h1 className="text-2xl font-bold text-foreground mb-6">
         {t('dashboardTitle')}
       </h1>
 
@@ -136,7 +136,7 @@ export function TemperatureDashboard() {
 
       {/* Location cards */}
       {cards.length === 0 ? (
-        <div className="text-center py-12 text-neutral-500">
+        <div className="text-center py-12 text-muted-foreground">
           <p>{t('noLocations')}</p>
         </div>
       ) : (
@@ -144,11 +144,11 @@ export function TemperatureDashboard() {
           {cards.map((card) => (
             <div
               key={card.location.id}
-              className={`rounded-lg border bg-white p-4 ${statusBorderClasses[card.status]}`}
+              className={`rounded-lg border bg-card p-4 ${statusBorderClasses[card.status]}`}
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-neutral-900">
+                <h3 className="text-sm font-semibold text-foreground">
                   {card.location.name}
                 </h3>
                 <span
@@ -161,18 +161,18 @@ export function TemperatureDashboard() {
               <div className="text-center mb-3">
                 {card.latestReading ? (
                   <>
-                    <span className="text-3xl font-bold text-neutral-900">
+                    <span className="text-3xl font-bold text-foreground">
                       {card.latestReading.temperatureCelsius}
                     </span>
-                    <span className="text-lg text-neutral-500">°C</span>
+                    <span className="text-lg text-muted-foreground">°C</span>
                   </>
                 ) : (
-                  <span className="text-sm text-neutral-400">{t('noReadings')}</span>
+                  <span className="text-sm text-muted-foreground">{t('noReadings')}</span>
                 )}
               </div>
 
               {/* Meta info */}
-              <dl className="space-y-1 text-xs text-neutral-500 mb-3">
+              <dl className="space-y-1 text-xs text-muted-foreground mb-3">
                 {card.latestReading && (
                   <>
                     <div className="flex justify-between">
@@ -242,7 +242,7 @@ export function TemperatureDashboard() {
       {chartLocation && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold text-neutral-900">
+            <h2 className="text-lg font-semibold text-foreground">
               {chartLocation.name} — {t('trendTitle')}
             </h2>
             <Button

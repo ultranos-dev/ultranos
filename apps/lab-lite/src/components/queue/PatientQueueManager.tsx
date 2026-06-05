@@ -148,7 +148,7 @@ export function PatientQueueManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-8 text-neutral-500">
+      <div className="text-center py-8 text-muted-foreground">
         {t('tokens.loading')}
       </div>
     )
@@ -179,7 +179,7 @@ export function PatientQueueManager() {
         <button
           type="button"
           onClick={handleOpenDisplay}
-          className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-300 transition-colors"
+          className="rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
         >
           {t('tokens.displayMode')}
         </button>
@@ -194,14 +194,14 @@ export function PatientQueueManager() {
 
       {/* Register patient modal */}
       {showRegister && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
           <h3 className="font-semibold mb-3">
             {t('tokens.registerPatient')}
           </h3>
           <select
             value={selectedPatientId}
             onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm mb-3"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm mb-3"
           >
             <option value="">{t('tokens.selectPatient')}</option>
             {patients.map((p) => (
@@ -222,7 +222,7 @@ export function PatientQueueManager() {
             <button
               type="button"
               onClick={() => setShowRegister(false)}
-              className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
+              className="rounded-md bg-muted px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
             >
               {t('tokens.cancel')}
             </button>
@@ -240,7 +240,7 @@ export function PatientQueueManager() {
             <button
               type="button"
               onClick={() => setPrintToken(null)}
-              className="text-neutral-400 hover:text-neutral-600"
+              className="text-muted-foreground hover:text-muted-foreground"
               aria-label={t('tokens.cancel')}
             >
               &times;
@@ -279,7 +279,7 @@ export function PatientQueueManager() {
                 servingEntry.tokenDisplayKey,
               )}
             />
-            <div className="text-sm text-neutral-700">
+            <div className="text-sm text-foreground">
               <span className="font-medium">
                 {servingEntry.patientFirstName}
               </span>
@@ -298,21 +298,21 @@ export function PatientQueueManager() {
 
       {/* Waiting list */}
       <div>
-        <h3 className="font-semibold text-neutral-900 mb-2">
+        <h3 className="font-semibold text-foreground mb-2">
           {t('tokens.waiting')} ({waitingCount})
         </h3>
         {waitingCount === 0 ? (
-          <p className="text-sm text-neutral-500 py-4">
+          <p className="text-sm text-muted-foreground py-4">
             {t('tokens.emptyQueue')}
           </p>
         ) : (
-          <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+          <div className="divide-y divide-border/50 rounded-lg border border-border bg-card">
             {waitingEntries.map((entry, index) => (
               <div
                 key={entry.id}
                 className="flex items-center gap-3 px-4 py-3"
               >
-                <span className="text-sm font-mono text-neutral-400 w-6 text-end">
+                <span className="text-sm font-mono text-muted-foreground w-6 text-end">
                   {index + 1}
                 </span>
                 <TokenBadge
@@ -323,9 +323,9 @@ export function PatientQueueManager() {
                 />
                 <div className="flex-1 text-sm">
                   <span className="font-medium">{entry.patientFirstName}</span>
-                  <span className="text-neutral-500">, {entry.patientAge}</span>
+                  <span className="text-muted-foreground">, {entry.patientAge}</span>
                 </div>
-                <span className="text-xs text-neutral-400">
+                <span className="text-xs text-muted-foreground">
                   {formatWaitTime(entry.registeredAt)}
                 </span>
                 <div className="flex gap-1.5">

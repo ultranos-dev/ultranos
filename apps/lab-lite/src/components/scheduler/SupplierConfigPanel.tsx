@@ -85,7 +85,7 @@ function SupplierForm({
     extra?: React.InputHTMLAttributes<HTMLInputElement>,
   ) => (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-neutral-700" htmlFor={`supplier-${name}`}>
+      <label className="text-xs font-medium text-foreground" htmlFor={`supplier-${name}`}>
         {label}
       </label>
       <input
@@ -94,7 +94,7 @@ function SupplierForm({
         value={values[name]}
         onChange={(ev) => setValues((v) => ({ ...v, [name]: ev.target.value }))}
         className={`rounded border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          errors[name] ? 'border-red-400' : 'border-neutral-300'
+          errors[name] ? 'border-red-400' : 'border-border'
         }`}
         {...extra}
       />
@@ -103,7 +103,7 @@ function SupplierForm({
   )
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 border border-neutral-200 rounded-lg bg-neutral-50">
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 border border-border rounded-lg bg-muted/30">
       {field('supplierName', t('name'))}
       {field('leadTimeDays', t('leadTimeDays'), 'number', { min: 1, max: 365 })}
       {field('contactInfo', t('contactInfo'))}
@@ -139,14 +139,14 @@ function ReagentMappingRow({
 }) {
   const t = useTranslations('scheduler.supplier')
   return (
-    <tr className="border-b border-neutral-100 last:border-0">
-      <td className="py-2 ps-3 pe-2 text-sm text-neutral-800">{reagent.name}</td>
+    <tr className="border-b border-border/50 last:border-0">
+      <td className="py-2 ps-3 pe-2 text-sm text-foreground">{reagent.name}</td>
       <td className="py-2 ps-2 pe-3">
         <select
           aria-label={t('assignSupplier', { reagent: reagent.name })}
           value={currentSupplierId ?? ''}
           onChange={(e) => onChange(reagent.reagentId, e.target.value || null)}
-          className="rounded border border-neutral-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           data-testid={`mapping-${reagent.reagentId}`}
         >
           <option value="">{t('noSupplier')}</option>
@@ -233,8 +233,8 @@ export function SupplierConfigPanel() {
 
   if (isLoading) {
     return (
-      <div className="py-8 text-center text-sm text-neutral-500">
-        <svg className="animate-spin h-4 w-4 mx-auto text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        <svg className="animate-spin h-4 w-4 mx-auto text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
         </svg>
@@ -247,7 +247,7 @@ export function SupplierConfigPanel() {
       {/* Supplier list */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-neutral-900">{t('title')}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t('title')}</h3>
           <Button
             size="sm"
             onClick={() => setEditingId('new')}
@@ -268,12 +268,12 @@ export function SupplierConfigPanel() {
         )}
 
         {suppliers.length === 0 && editingId !== 'new' && (
-          <p className="text-sm text-neutral-500">{t('noSuppliers')}</p>
+          <p className="text-sm text-muted-foreground">{t('noSuppliers')}</p>
         )}
 
         <div className="flex flex-col gap-3">
           {suppliers.map((supplier) => (
-            <div key={supplier.id} className="rounded-lg border border-neutral-200 p-3">
+            <div key={supplier.id} className="rounded-lg border border-border p-3">
               {editingId === supplier.id ? (
                 <SupplierForm
                   initial={{
@@ -288,13 +288,13 @@ export function SupplierConfigPanel() {
               ) : (
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium text-neutral-900">{supplier.supplierName}</span>
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-sm font-medium text-foreground">{supplier.supplierName}</span>
+                    <span className="text-xs text-muted-foreground">
                       {t('leadTime', { days: supplier.leadTimeDays })}
                       {supplier.contactInfo && ` · ${supplier.contactInfo}`}
                     </span>
                     {supplier.notes && (
-                      <span className="text-xs text-neutral-400">{supplier.notes}</span>
+                      <span className="text-xs text-muted-foreground">{supplier.notes}</span>
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
@@ -326,11 +326,11 @@ export function SupplierConfigPanel() {
       {/* Reagent-supplier mapping */}
       {reagents.length > 0 && suppliers.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-neutral-900 mb-3">{t('mappingTitle')}</h3>
-          <div className="rounded-lg border border-neutral-200 overflow-hidden">
+          <h3 className="text-sm font-semibold text-foreground mb-3">{t('mappingTitle')}</h3>
+          <div className="rounded-lg border border-border overflow-hidden">
             <table className="w-full text-start">
               <thead>
-                <tr className="text-xs text-neutral-500 border-b border-neutral-100 bg-neutral-50">
+                <tr className="text-xs text-muted-foreground border-b border-border/50 bg-muted/30">
                   <th className="ps-3 pe-2 py-2 text-start font-medium">{t('reagent')}</th>
                   <th className="ps-2 pe-3 py-2 text-start font-medium">{t('defaultSupplier')}</th>
                 </tr>

@@ -42,7 +42,7 @@ const ACTIVE_TOGGLE: Record<ChecklistItemStatus, string> = {
   [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-gray-400 text-white border-gray-400',
 }
 
-const INACTIVE_TOGGLE = 'bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50'
+const INACTIVE_TOGGLE = 'bg-card text-muted-foreground border-border hover:bg-muted/30'
 
 export function AuditChecklistView({
   audit,
@@ -155,27 +155,27 @@ export function AuditChecklistView({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t('checklistTitle')}</h2>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-muted-foreground">
             {t('auditDate')}: {audit.auditDate}
           </p>
           {/* Opaque manager ID — never expand to a name */}
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs text-muted-foreground">
             {t('conductedBy')}: {audit.conductedBy}
           </p>
         </div>
 
         {/* Progress indicator */}
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
+        <div className="rounded-lg border border-border bg-muted/30 px-4 py-2 text-center">
           <p className="text-lg font-bold">
             {assessedCount}
-            <span className="text-sm font-normal text-neutral-500"> / {totalCount}</span>
+            <span className="text-sm font-normal text-muted-foreground"> / {totalCount}</span>
           </p>
-          <p className="text-xs text-neutral-500">{t('itemsAssessed')}</p>
+          <p className="text-xs text-muted-foreground">{t('itemsAssessed')}</p>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 overflow-hidden rounded-full bg-neutral-100">
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary-500 transition-all"
           style={{ width: totalCount > 0 ? `${(assessedCount / totalCount) * 100}%` : '0%' }}
@@ -191,29 +191,29 @@ export function AuditChecklistView({
         return (
           <section
             key={category}
-            className="overflow-hidden rounded-lg border border-neutral-200"
+            className="overflow-hidden rounded-lg border border-border"
           >
             {/* Section header */}
             <button
               type="button"
               onClick={() => toggleSection(category)}
-              className="flex w-full items-center justify-between bg-neutral-50 px-4 py-3 text-start hover:bg-neutral-100"
+              className="flex w-full items-center justify-between bg-muted/30 px-4 py-3 text-start hover:bg-muted"
               aria-expanded={isOpen}
             >
-              <span className="font-medium text-neutral-800">{category}</span>
-              <span className="text-neutral-400">{isOpen ? '▲' : '▼'}</span>
+              <span className="font-medium text-foreground">{category}</span>
+              <span className="text-muted-foreground">{isOpen ? '▲' : '▼'}</span>
             </button>
 
             {/* Items */}
             {isOpen && (
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-border/50">
                 {items.map((template) => {
                   const result = resultMap.get(template.id)
                   const status = result?.status ?? null
                   const rowClass =
                     status !== null
                       ? `${ROW_CLASSES[status]} border`
-                      : 'bg-white border border-neutral-200'
+                      : 'bg-card border border-border'
                   const noteValue = localNotes[template.id] ?? ''
                   const showNotes =
                     status === ChecklistItemStatus.FAIL || noteValue.length > 0
@@ -224,7 +224,7 @@ export function AuditChecklistView({
                     <div key={template.id} className={`p-4 ${rowClass} rounded-none`}>
                       {/* Description + toggles */}
                       <div className="flex flex-wrap items-start gap-3">
-                        <p className="flex-1 text-sm text-neutral-800">{template.description}</p>
+                        <p className="flex-1 text-sm text-foreground">{template.description}</p>
 
                         {/* Status toggles */}
                         <div className="flex shrink-0 gap-1">
@@ -267,7 +267,7 @@ export function AuditChecklistView({
                           onBlur={() => void handleNotesBlur(template.id)}
                           placeholder={t('notesPlaceholder')}
                           rows={2}
-                          className="mt-2 w-full rounded-md border border-neutral-200 p-2 text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                          className="mt-2 w-full rounded-md border border-border p-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-400"
                         />
                       )}
 
@@ -313,28 +313,28 @@ export function AuditChecklistView({
           aria-labelledby="confirm-complete-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         >
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl">
             <h3 id="confirm-complete-title" className="mb-2 text-base font-semibold">
               {t('confirmCompleteTitle')}
             </h3>
 
-            <p className="mb-4 text-sm text-neutral-600">
+            <p className="mb-4 text-sm text-muted-foreground">
               {t('confirmCompleteBody')}
             </p>
 
             {/* Compliance score preview */}
-            <div className="mb-5 rounded-lg bg-neutral-50 p-4 text-center">
+            <div className="mb-5 rounded-lg bg-muted/30 p-4 text-center">
               <p className="text-3xl font-bold">
                 {previewScore !== null ? `${previewScore}%` : t('scoreNA')}
               </p>
-              <p className="text-xs text-neutral-500">{t('complianceScore')}</p>
+              <p className="text-xs text-muted-foreground">{t('complianceScore')}</p>
             </div>
 
             <div className="flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+                className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-muted/30"
               >
                 {t('cancel')}
               </button>

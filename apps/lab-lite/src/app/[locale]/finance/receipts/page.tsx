@@ -41,7 +41,7 @@ export default function ReceiptsPage() {
       </h1>
 
       {payments.length === 0 ? (
-        <p className="text-sm text-neutral-500">No receipts yet.</p>
+        <p className="text-sm text-muted-foreground">No receipts yet.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {payments.map((p) => (
@@ -49,15 +49,15 @@ export default function ReceiptsPage() {
               key={p.paymentId}
               type="button"
               onClick={() => setSelected(p)}
-              className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-3 text-start hover:bg-neutral-50"
+              className="flex items-center justify-between rounded-lg border border-border bg-card p-3 text-start hover:bg-muted/30"
             >
               <div>
-                <span className="text-sm font-medium text-neutral-900">{p.receiptNumber}</span>
-                <span className="ms-2 text-xs text-neutral-500">
+                <span className="text-sm font-medium text-foreground">{p.receiptNumber}</span>
+                <span className="ms-2 text-xs text-muted-foreground">
                   {new Date(p.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <span className="text-sm font-semibold text-neutral-700">
+              <span className="text-sm font-semibold text-foreground">
                 {new Intl.NumberFormat('fa-AF', { style: 'currency', currency: 'AFN' }).format(p.amount)}
               </span>
             </button>

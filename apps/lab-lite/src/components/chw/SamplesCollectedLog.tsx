@@ -103,7 +103,7 @@ function SampleRow({ sample }: { sample: CHWSampleCollection }) {
   const timeDisplay = hlcToTimeDisplay(sample.collectedAt)
 
   return (
-    <li className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+    <li className="flex items-center gap-4 rounded-xl border border-gray-100 bg-card p-4 shadow-sm">
       {/* Sample type icon badge */}
       <div
         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${colorClass}`}

@@ -83,7 +83,7 @@ function ActiveRequestCard({ request, onClick }: RequestCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border bg-white p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+      className="w-full rounded-md border bg-card p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -125,7 +125,7 @@ function HistoryRequestCard({ request, onClick }: RequestCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border bg-white p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+      className="w-full rounded-md border bg-card p-4 text-start hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">

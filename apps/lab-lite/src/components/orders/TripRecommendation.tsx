@@ -40,8 +40,8 @@ export function TripRecommendation({
   }, [])
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm print:shadow-none">
-      <h2 className="mb-4 text-lg font-bold text-neutral-900">{t('title')}</h2>
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm print:shadow-none">
+      <h2 className="mb-4 text-lg font-bold text-foreground">{t('title')}</h2>
 
       <div className="flex flex-col gap-4">
         {/* WAIT section — blue */}
@@ -106,7 +106,7 @@ export function TripRecommendation({
         <button
           data-testid="trip-print-button"
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
           type="button"
         >
           🖨️ {t('printSummary')}
@@ -117,14 +117,14 @@ export function TripRecommendation({
       <div className="hidden print:block mt-6 border-t border-dashed pt-4">
         {labName && <p className="text-sm font-semibold">{labName}</p>}
         {patientToken && (
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             Token: <span className="font-bold">{patientToken}</span>
           </p>
         )}
         {optimalReturnDate && (
           <p className="mt-2 text-2xl font-bold">{optimalReturnDate}</p>
         )}
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-muted-foreground">
           {t('printSummary')}
         </p>
       </div>

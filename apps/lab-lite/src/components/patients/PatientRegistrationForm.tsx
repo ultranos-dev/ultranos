@@ -17,7 +17,7 @@ import { CulturalFlagsEditor } from './CulturalFlagsEditor'
 import type { PatientCulturalPreferences } from '@/lib/cultural-flags'
 
 const INPUT_CLASS =
-  'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
+  'w-full rounded-lg border border-border px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500'
 
 const currentYear = new Date().getFullYear()
 
@@ -195,7 +195,7 @@ export function PatientRegistrationForm() {
 
         {/* Given Name */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             {t('nameGiven')} *
           </label>
           <input
@@ -209,7 +209,7 @@ export function PatientRegistrationForm() {
 
         {/* Father's Name */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             {t('nameFather')}
           </label>
           <input
@@ -223,7 +223,7 @@ export function PatientRegistrationForm() {
 
         {/* Gender */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             {t('gender')} *
           </label>
           <select
@@ -240,16 +240,16 @@ export function PatientRegistrationForm() {
 
         {/* Birth Info */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             {t('birthInfo')} *
           </label>
           <div className="mb-2 flex items-center gap-3">
-            <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+            <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <input
                 type="checkbox"
                 checked={yearOnly}
                 onChange={(e) => setYearOnly(e.target.checked)}
-                className="rounded border-neutral-300"
+                className="rounded border-border"
               />
               {t('yearOnly')}
             </label>
@@ -277,7 +277,7 @@ export function PatientRegistrationForm() {
 
         {/* Phone */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             {t('phone')}
           </label>
           <input
@@ -290,11 +290,11 @@ export function PatientRegistrationForm() {
 
         {/* Consent */}
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-neutral-700">
+          <legend className="mb-2 text-sm font-medium text-foreground">
             {t('consent')} *
           </legend>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="radio"
                 name="consent"
@@ -304,7 +304,7 @@ export function PatientRegistrationForm() {
               />
               {t('consentWritten')}
             </label>
-            <label className="flex items-center gap-2 text-sm text-neutral-700">
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="radio"
                 name="consent"
@@ -317,7 +317,7 @@ export function PatientRegistrationForm() {
           </div>
           {consentMethod === 'VERBAL_WITNESSED' && (
             <div className="mt-2">
-              <label className="mb-1 block text-sm text-neutral-600">
+              <label className="mb-1 block text-sm text-muted-foreground">
                 {t('witnessName')} *
               </label>
               <input

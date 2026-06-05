@@ -71,7 +71,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
   }, [posts, filterStatus, filterCategory, filterTag, searchQuery])
 
   if (loading) {
-    return <p className="py-8 text-center text-sm text-neutral-500">{t('loading')}</p>
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('loading')}</p>
   }
 
   return (
@@ -81,7 +81,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm"
           aria-label={t('filterByStatus')}
         >
           <option value="all">{t('statusAll')}</option>
@@ -94,7 +94,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
           value={filterTag}
           onChange={(e) => setFilterTag(e.target.value)}
           placeholder={t('filterByTag')}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm"
         />
         <button
           type="button"
@@ -108,7 +108,7 @@ export function PostFeed({ onSelectPost, onCreatePost, searchQuery }: PostFeedPr
       {/* Post list */}
       {filteredPosts.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-sm text-neutral-500">{t('noPosts')}</p>
+          <p className="text-sm text-muted-foreground">{t('noPosts')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -130,7 +130,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-lg border border-neutral-200 p-4 text-start hover:border-primary-300 hover:bg-neutral-50"
+      className="w-full rounded-lg border border-border p-4 text-start hover:border-primary-300 hover:bg-muted/30"
     >
       <div className="flex items-start gap-3">
         {/* Photo thumbnail */}
@@ -145,7 +145,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
         <div className="min-w-0 flex-1">
           {/* Title + status */}
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-neutral-900">{post.title}</h3>
+            <h3 className="truncate text-sm font-semibold text-foreground">{post.title}</h3>
             {post.status === 'resolved' && (
               <span className="flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                 {t('resolved')}
@@ -159,10 +159,10 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
           </div>
 
           {/* Preview text */}
-          <p className="mt-1 text-xs text-neutral-600">{previewText}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{previewText}</p>
 
           {/* Meta row */}
-          <div className="mt-2 flex items-center gap-3 text-xs text-neutral-500">
+          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span>{post.authorDisplayName}</span>
             <span>{new Date(post.createdAt).toLocaleDateString()}</span>
             {post.responseCount > 0 && (
@@ -171,7 +171,7 @@ function PostCard({ post, onClick }: { post: PeerPost; onClick: () => void }) {
               </span>
             )}
             {post.labContext.category && (
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5">
+              <span className="rounded bg-muted px-1.5 py-0.5">
                 {t(`categories.${post.labContext.category}`)}
               </span>
             )}

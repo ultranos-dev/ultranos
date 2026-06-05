@@ -72,12 +72,12 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
       aria-labelledby="status-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h2 id="status-modal-title" className="text-base font-semibold text-neutral-900">
+      <div className="w-full max-w-md rounded-lg bg-card shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 id="status-modal-title" className="text-base font-semibold text-foreground">
             Update Status
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-neutral-400 hover:bg-neutral-100">
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1 text-muted-foreground hover:bg-muted">
             <X size={20} />
           </button>
         </div>
@@ -85,7 +85,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
         <div className="px-5 py-4 space-y-5">
           {/* Pipeline visualizer */}
           <div>
-            <p className="text-xs text-neutral-500 mb-3 uppercase tracking-wide font-medium">Status Pipeline</p>
+            <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide font-medium">Status Pipeline</p>
             <ol className="flex items-center gap-1" role="list">
               {PIPELINE_STEPS.map((step, i) => {
                 const isDone = i < currentStepIndex
@@ -98,14 +98,14 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
                           ? 'bg-green-100 text-green-700'
                           : isCurrent
                           ? 'bg-blue-600 text-white'
-                          : 'bg-neutral-100 text-neutral-400'
+                          : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {STATUS_LABELS[step]}
                     </div>
                     {i < PIPELINE_STEPS.length - 1 && (
                       <DirectionalIcon category="navigation">
-                        <ChevronRight size={12} className="text-neutral-300 shrink-0" />
+                        <ChevronRight size={12} className="text-muted-foreground shrink-0" />
                       </DirectionalIcon>
                     )}
                   </li>
@@ -116,8 +116,8 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
 
           {/* Notes field */}
           <div>
-            <label htmlFor="status-notes" className="block text-sm font-medium text-neutral-700 mb-1">
-              Notes <span className="text-neutral-400 font-normal">(optional)</span>
+            <label htmlFor="status-notes" className="block text-sm font-medium text-foreground mb-1">
+              Notes <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <textarea
               id="status-notes"
@@ -125,7 +125,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder='e.g., Called reference lab, they confirmed receipt yesterday'
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -142,7 +142,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
               Cancel Send-Out
             </button>
             <div className="flex gap-3">
-              <button type="button" onClick={onClose} className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+              <button type="button" onClick={onClose} className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30">
                 Close
               </button>
               {nextStatus && (

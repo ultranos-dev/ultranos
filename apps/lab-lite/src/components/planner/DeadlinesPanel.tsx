@@ -52,7 +52,7 @@ function DeadlineItem({
   const isActioned = Boolean(deadline.actionedAt)
 
   return (
-    <li className={`rounded-md border p-3 ${isActioned ? 'opacity-50 bg-neutral-50 border-neutral-200' : 'bg-white border-neutral-200'}`}>
+    <li className={`rounded-md border p-3 ${isActioned ? 'opacity-50 bg-muted/30 border-border' : 'bg-card border-border'}`}>
       <div className="flex items-start gap-2">
         <CategoryIcon category={deadline.category} />
         <div className="flex-1 min-w-0">
@@ -63,17 +63,17 @@ function DeadlineItem({
             <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${urgencyBadge[deadline.urgency]}`}>
               {deadline.urgency}
             </span>
-            <span className="text-xs text-neutral-400 capitalize">{deadline.category}</span>
+            <span className="text-xs text-muted-foreground capitalize">{deadline.category}</span>
           </div>
-          <p className="text-sm text-neutral-800 font-medium">{deadline.action}</p>
-          <p className="text-xs text-neutral-500 mt-0.5">
+          <p className="text-sm text-foreground font-medium">{deadline.action}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {fmtDate(deadline.deadlineDate)} ·{' '}
             <span className={deadline.isOverdue && !isActioned ? 'text-red-600 font-medium' : ''}>
               {countdown(deadline.deadlineDate)}
             </span>
           </p>
           {deadline.notes && (
-            <p className="text-xs text-neutral-400 mt-1">{deadline.notes}</p>
+            <p className="text-xs text-muted-foreground mt-1">{deadline.notes}</p>
           )}
           {isActioned && (
             <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
@@ -97,7 +97,7 @@ function DeadlineItem({
       {open && !isActioned && (
         <div className="mt-3 space-y-2">
           <textarea
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
             placeholder="Optional notes…"
             value={notes}
@@ -119,7 +119,7 @@ function DeadlineItem({
 export function DeadlinesPanel({ deadlines, onAction }: Props) {
   if (deadlines.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         No upcoming deadlines.
       </div>
     )
@@ -139,8 +139,8 @@ export function DeadlinesPanel({ deadlines, onAction }: Props) {
   const overdueCount = deadlines.filter((d) => d.isOverdue && !d.actionedAt).length
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <AlertTriangle size={16} className="text-amber-500" aria-hidden="true" />
         Action Deadlines
         {overdueCount > 0 && (

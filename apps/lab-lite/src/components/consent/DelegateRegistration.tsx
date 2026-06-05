@@ -136,14 +136,14 @@ export function DelegateRegistration({
   if (loadingConsent) {
     return (
       <div className="flex items-center justify-center p-6" aria-busy="true">
-        <span className="text-sm text-neutral-500">{t('registering')}</span>
+        <span className="text-sm text-muted-foreground">{t('registering')}</span>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
-      <h2 className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+    <div className="rounded-lg border bg-card p-6 shadow-sm dark:border-border dark:bg-card">
+      <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">
         {t('registerTitle')}
       </h2>
 
@@ -163,7 +163,7 @@ export function DelegateRegistration({
 
       {/* Phone number */}
       <div className="mb-4">
-        <label htmlFor="delegate-phone" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="delegate-phone" className="block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('phone')}
         </label>
         <input
@@ -175,7 +175,7 @@ export function DelegateRegistration({
           placeholder={t('phonePlaceholder')}
           disabled={!activeConsent || submitting}
           aria-describedby={errors.phone ? 'phone-error' : undefined}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-700"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
         />
         {errors.phone && (
           <p id="phone-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -186,7 +186,7 @@ export function DelegateRegistration({
 
       {/* Relationship */}
       <div className="mb-4">
-        <label htmlFor="delegate-relationship" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="delegate-relationship" className="block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('relationship')}
         </label>
         <select
@@ -195,7 +195,7 @@ export function DelegateRegistration({
           onChange={(e) => setRelationship(e.target.value as DelegateRelationship)}
           disabled={!activeConsent || submitting}
           aria-describedby={errors.relationship ? 'relationship-error' : undefined}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-700"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
         >
           <option value="" disabled>—</option>
           {RELATIONSHIP_OPTIONS.map((rel) => (
@@ -213,7 +213,7 @@ export function DelegateRegistration({
 
       {/* Optional delegate name */}
       <div className="mb-6">
-        <label htmlFor="delegate-name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="delegate-name" className="block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('name')}
         </label>
         <input
@@ -223,7 +223,7 @@ export function DelegateRegistration({
           onChange={(e) => setDelegateName(e.target.value)}
           placeholder={t('namePlaceholder')}
           disabled={!activeConsent || submitting}
-          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-700"
+          className="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 dark:border-border dark:bg-muted"
         />
       </div>
 
@@ -239,7 +239,7 @@ export function DelegateRegistration({
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-700"
+          className="rounded-md border px-4 py-2 text-sm hover:bg-muted/30 disabled:opacity-50 dark:border-border dark:hover:bg-muted"
         >
           {t('cancel')}
         </button>

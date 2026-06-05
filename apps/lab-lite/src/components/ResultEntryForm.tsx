@@ -13,10 +13,14 @@ import { useState, useEffect, useCallback, useId } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { MessageSquare } from '@ultranos/ui-kit/icons'
-import type { ResultTemplate, TemplateField } from '@/lib/result-templates'
+import type { ResultTemplate, TemplateField, RangeResolutionContext } from '@/lib/result-templates'
+import { resolveLocalizedRange } from '@/lib/result-templates'
 import type { LabResult, LabObservation } from '@/lib/db'
 import { evaluateFlag, evaluateSelectFlag } from '@/lib/abnormal-flags'
+import type { LocalizedRangeThresholds } from '@/lib/abnormal-flags'
 import { computeAutoFields } from '@/lib/auto-calc'
+import type { ReferenceRange as LocalizedRange } from '@/lib/reference-ranges/types'
+import type { RangeSnapshot } from '@/lib/reference-ranges/types'
 
 export interface ResultEntryFormProps {
   sampleId: string
@@ -24,13 +28,15 @@ export interface ResultEntryFormProps {
   patientFirstName: string
   patientAge: number
   patientGender: string
-  onSave: (result: Omit<LabResult, 'id'>, observations: Omit<LabObservation, 'id'>[]) => Promise<void>
+  onSave: (result: Omit<LabResult, 'id'>, observations: Omit<LabObservation, 'id'>[], rangeSnapshots?: Map<string, RangeSnapshot>) => Promise<void>
   onSaveDraft: (result: Omit<LabResult, 'id'>, observations: Omit<LabObservation, 'id'>[]) => Promise<void>
   enteredBy: string
   existingDraft?: {
     result: LabResult
     observations: LabObservation[]
   }
+  /** Localized range resolution context (Story 43.8 AC #2). */
+  rangeContext?: RangeResolutionContext
 }
 
 type FieldValues = Record<string, string | number | null>
@@ -59,7 +65,7 @@ function AutoCalcBadge({ formulaDisplay }: { formulaDisplay: string }) {
     <span
       title={formulaDisplay}
       aria-label={`Auto-calculated: ${formulaDisplay}`}
-      className="ms-1 inline-flex cursor-help items-center rounded bg-neutral-100 px-1 py-0.5 text-xs text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
+      className="ms-1 inline-flex cursor-help items-center rounded bg-muted px-1 py-0.5 text-xs text-muted-foreground dark:bg-muted dark:text-muted-foreground"
     >
       ƒ
     </span>
@@ -76,6 +82,7 @@ export function ResultEntryForm({
   onSaveDraft,
   enteredBy,
   existingDraft,
+  rangeContext,
 }: ResultEntryFormProps) {
   const t = useTranslations('resultEntry')
   const tAtlas = useTranslations('visualAtlas')
@@ -127,7 +134,20 @@ export function ResultEntryForm({
   const computed = computeAutoFields(numericValues, template)
 
   // ---------------------------------------------------------------------------
-  // Flag evaluation
+  // Localized range resolution (Story 43.8 AC #2)
+  // ---------------------------------------------------------------------------
+
+  const resolvedRanges: Record<string, LocalizedRange | null> = {}
+  if (rangeContext) {
+    for (const field of template.fields) {
+      if (field.type === 'numeric' && field.loincCode && field.loincCode !== 'custom') {
+        resolvedRanges[field.code] = resolveLocalizedRange(field.loincCode, rangeContext)
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Flag evaluation — localized ranges take priority over template inline
   // ---------------------------------------------------------------------------
 
   const fieldFlags: Record<string, string | null> = {}
@@ -135,7 +155,17 @@ export function ResultEntryForm({
     if (field.type === 'numeric') {
       const displayValue = field.autoCalc ? computed[field.code] : numericValues[field.code]
       if (displayValue != null) {
-        fieldFlags[field.code] = evaluateFlag(displayValue, field, patientAge, patientGender)
+        // Convert localized range to thresholds for evaluateFlag
+        const localized = resolvedRanges[field.code]
+        const localizedThresholds: LocalizedRangeThresholds | undefined = localized
+          ? {
+              referenceLow: localized.rangeMin,
+              referenceHigh: localized.rangeMax,
+              criticalLow: localized.criticalMin,
+              criticalHigh: localized.criticalMax,
+            }
+          : undefined
+        fieldFlags[field.code] = evaluateFlag(displayValue, field, patientAge, patientGender, localizedThresholds)
       } else {
         fieldFlags[field.code] = null
       }
@@ -245,7 +275,25 @@ export function ResultEntryForm({
         enteredAt: existingDraft?.result.enteredAt ?? now(),
         updatedAt: now(),
       }
-      await onSave(resultRecord, buildObservations())
+
+      // Build range snapshots for AC #5 — attach to FHIR bundle
+      const rangeSnapshots = new Map<string, RangeSnapshot>()
+      for (const field of template.fields) {
+        const localized = resolvedRanges[field.code]
+        if (localized) {
+          rangeSnapshots.set(field.code, {
+            rangeId: localized.id,
+            version: localized.version,
+            rangeMin: localized.rangeMin,
+            rangeMax: localized.rangeMax,
+            criticalMin: localized.criticalMin,
+            criticalMax: localized.criticalMax,
+            source: localized.source,
+          })
+        }
+      }
+
+      await onSave(resultRecord, buildObservations(), rangeSnapshots.size > 0 ? rangeSnapshots : undefined)
     } finally {
       setSaving(false)
     }
@@ -264,17 +312,17 @@ export function ResultEntryForm({
     const commentOpen = openCommentFields.has(field.code)
 
     return (
-      <div key={field.code} className="border-b border-neutral-100 py-3 dark:border-neutral-800 last:border-0">
+      <div key={field.code} className="border-b border-border/50 py-3 dark:border-border last:border-0">
         <div className="grid items-start gap-2" style={{ gridTemplateColumns: '1fr auto auto' }}>
           {/* Label + input */}
           <div className="flex flex-col gap-1">
             <label
               htmlFor={`${formId}-${field.code}`}
-              className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
+              className="text-sm font-medium text-foreground dark:text-muted-foreground"
             >
               {t(field.label.replace('resultEntry.', ''))}
               {field.unit && (
-                <span className="ms-1 text-xs text-neutral-400">({field.unit})</span>
+                <span className="ms-1 text-xs text-muted-foreground">({field.unit})</span>
               )}
               {isAutoCalc && (
                 <AutoCalcBadge formulaDisplay={field.autoCalc!.formulaDisplay} />
@@ -290,10 +338,10 @@ export function ResultEntryForm({
                 readOnly={isAutoCalc}
                 onChange={(e) => handleNumericChange(field.code, e.target.value)}
                 className={[
-                  'w-full rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100',
+                  'w-full rounded-md border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground',
                   isAutoCalc
-                    ? 'cursor-default bg-neutral-100 dark:bg-neutral-700'
-                    : 'bg-white',
+                    ? 'cursor-default bg-muted dark:bg-muted'
+                    : 'bg-card',
                 ].join(' ')}
                 aria-label={t(field.label.replace('resultEntry.', ''))}
                 tabIndex={isAutoCalc ? -1 : undefined}
@@ -306,7 +354,7 @@ export function ResultEntryForm({
                 type="text"
                 value={(displayValue as string) ?? ''}
                 onChange={(e) => handleTextChange(field.code, e.target.value)}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
               />
             )}
 
@@ -315,7 +363,7 @@ export function ResultEntryForm({
                 id={`${formId}-${field.code}`}
                 value={(values[field.code] as string) ?? ''}
                 onChange={(e) => handleSelectChange(field.code, e.target.value)}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                className="w-full rounded-md border border-border bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
               >
                 <option value="">{t('selectPlaceholder')}</option>
                 {field.options?.map((opt) => (
@@ -335,7 +383,7 @@ export function ResultEntryForm({
                 onChange={(e) =>
                   setFieldComments((prev) => ({ ...prev, [field.code]: e.target.value }))
                 }
-                className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
                 aria-label={t('fieldCommentAriaLabel', { field: t(field.label.replace('resultEntry.', '')) })}
               />
             )}
@@ -353,7 +401,7 @@ export function ResultEntryForm({
               onClick={() => toggleComment(field.code)}
               aria-label={t('toggleFieldComment')}
               aria-expanded={commentOpen}
-              className="rounded p-1 text-neutral-400 hover:text-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-neutral-500 dark:hover:text-blue-400"
+              className="rounded p-1 text-muted-foreground hover:text-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-muted-foreground dark:hover:text-blue-400"
             >
               <MessageSquare className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -372,16 +420,16 @@ export function ResultEntryForm({
   return (
     <div className="flex flex-col gap-0">
       {/* ---- Sticky patient header ---- */}
-      <div className="sticky top-0 z-10 border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 dark:border-border dark:bg-card">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <p className="text-base font-semibold text-foreground dark:text-foreground">
               {patientFirstName}
-              <span className="ms-2 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+              <span className="ms-2 text-sm font-normal text-muted-foreground dark:text-muted-foreground">
                 {t('patientAge', { age: patientAge })}
               </span>
             </p>
-            <p className="text-xs text-neutral-400 dark:text-neutral-500">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">
               {t('sampleId', { id: sampleId })}
             </p>
           </div>
@@ -416,7 +464,7 @@ export function ResultEntryForm({
       )}
 
       {/* ---- Open Atlas contextual link (AC 10) ---- */}
-      <div className="flex items-center justify-end border-b border-neutral-100 px-4 py-2 dark:border-neutral-800">
+      <div className="flex items-center justify-end border-b border-border/50 px-4 py-2 dark:border-border">
         <Link
           href="/atlas"
           className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
@@ -432,8 +480,8 @@ export function ResultEntryForm({
       </div>
 
       {/* ---- Report-level comment ---- */}
-      <div className="border-t border-neutral-200 px-4 py-4 dark:border-neutral-700">
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+      <div className="border-t border-border px-4 py-4 dark:border-border">
+        <label className="block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('reportComment')}
         </label>
         <textarea
@@ -441,17 +489,17 @@ export function ResultEntryForm({
           value={reportComment}
           onChange={(e) => setReportComment(e.target.value)}
           placeholder={t('reportCommentPlaceholder')}
-          className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          className="mt-1 w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-border dark:bg-card dark:text-foreground"
         />
       </div>
 
       {/* ---- Sticky action bar ---- */}
-      <div className="sticky bottom-0 z-10 flex justify-end gap-3 border-t border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="sticky bottom-0 z-10 flex justify-end gap-3 border-t border-border bg-card px-4 py-3 dark:border-border dark:bg-card">
         <button
           type="button"
           onClick={handleSaveDraft}
           disabled={savingDraft || saving}
-          className="rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+          className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 dark:border-border dark:bg-card dark:text-muted-foreground"
         >
           {savingDraft ? t('savingDraft') : t('saveAsDraft')}
         </button>

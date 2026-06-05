@@ -86,7 +86,7 @@ export function ActiveTransportCard({ session, onClick }: ActiveTransportCardPro
       onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick() } : undefined}
       className={[
-        'rounded-lg border border-gray-200 bg-white p-4 shadow-sm',
+        'rounded-lg border border-gray-200 bg-card p-4 shadow-sm',
         onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-md transition-shadow' : '',
       ].join(' ')}
     >

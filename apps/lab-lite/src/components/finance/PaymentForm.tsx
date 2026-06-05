@@ -137,12 +137,12 @@ export function PaymentForm() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="text-2xl font-bold text-neutral-900 mb-6">{t('title')}</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">{t('title')}</h1>
 
       <div className="flex flex-col gap-4">
         {/* Patient Reference */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
-          <label className="block text-sm font-semibold text-neutral-500 mb-2">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             {t('patientRef')}
           </label>
           <input
@@ -153,45 +153,45 @@ export function PaymentForm() {
               setPatientRef(e.target.value)
             }}
             placeholder="Ahmad, 45"
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
         {/* Test Selection */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('testSelection')}</h2>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('testSelection')}</h2>
           <div className="flex flex-col gap-2">
             {tests.map((test, idx) => (
               <label
                 key={test.testCode}
-                className="flex items-center justify-between rounded-md border border-neutral-200 p-3 cursor-pointer hover:bg-neutral-50"
+                className="flex items-center justify-between rounded-md border border-border p-3 cursor-pointer hover:bg-muted/30"
               >
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={test.selected}
                     onChange={() => toggleTest(idx)}
-                    className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-neutral-900">{test.testName}</span>
+                  <span className="text-sm text-foreground">{test.testName}</span>
                 </div>
-                <span className="text-sm font-medium text-neutral-700">
+                <span className="text-sm font-medium text-foreground">
                   {formatAFN(test.price)}
                 </span>
               </label>
             ))}
           </div>
           {selectedTests.length > 0 && (
-            <div className="mt-3 flex justify-between border-t border-neutral-200 pt-3">
-              <span className="text-sm font-semibold text-neutral-700">{t('totalDue')}</span>
-              <span className="text-sm font-bold text-neutral-900">{formatAFN(totalDue)}</span>
+            <div className="mt-3 flex justify-between border-t border-border pt-3">
+              <span className="text-sm font-semibold text-foreground">{t('totalDue')}</span>
+              <span className="text-sm font-bold text-foreground">{formatAFN(totalDue)}</span>
             </div>
           )}
         </div>
 
         {/* Amount */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
-          <label className="block text-sm font-semibold text-neutral-500 mb-2">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <label className="block text-sm font-semibold text-muted-foreground mb-2">
             {t('amount')}
           </label>
           <input
@@ -200,7 +200,7 @@ export function PaymentForm() {
             min="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           {amountNum > 0 && amountNum < totalDue && (
             <p className="mt-2 text-sm text-amber-600">
@@ -210,8 +210,8 @@ export function PaymentForm() {
         </div>
 
         {/* Payment Method */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('paymentMethod')}</h2>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('paymentMethod')}</h2>
           <div className="flex flex-wrap gap-3">
             {PAYMENT_METHODS.map((m) => (
               <label key={m} className="flex items-center gap-2 cursor-pointer">
@@ -221,9 +221,9 @@ export function PaymentForm() {
                   value={m}
                   checked={method === m}
                   onChange={() => setMethod(m)}
-                  className="h-4 w-4 border-neutral-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 border-border text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-neutral-900">
+                <span className="text-sm text-foreground">
                   {t(m.toLowerCase() as 'cash' | 'card' | 'insurance' | 'waiver')}
                 </span>
               </label>
@@ -232,12 +232,12 @@ export function PaymentForm() {
 
           {method === 'WAIVER' && (
             <div className="mt-3">
-              <label className="block text-sm text-neutral-600 mb-1">{t('waiverReason')}</label>
+              <label className="block text-sm text-muted-foreground mb-1">{t('waiverReason')}</label>
               <textarea
                 value={waiverReason}
                 onChange={(e) => setWaiverReason(e.target.value)}
                 placeholder={t('waiverReasonPlaceholder')}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 rows={2}
               />
             </div>
@@ -245,13 +245,13 @@ export function PaymentForm() {
 
           {method === 'INSURANCE' && (
             <div className="mt-3">
-              <label className="block text-sm text-neutral-600 mb-1">{t('insurancePolicyRef')}</label>
+              <label className="block text-sm text-muted-foreground mb-1">{t('insurancePolicyRef')}</label>
               <input
                 type="text"
                 value={insurancePolicyRef}
                 onChange={(e) => setInsurancePolicyRef(e.target.value)}
                 placeholder={t('insurancePolicyPlaceholder')}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           )}
@@ -274,9 +274,9 @@ export function PaymentForm() {
         {/* Confirmation Dialog */}
         {showConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-neutral-900 mb-2">{t('confirmTitle')}</h3>
-              <p className="text-sm text-neutral-600 mb-4">
+            <div className="mx-4 w-full max-w-md rounded-xl bg-card p-6 shadow-lg">
+              <h3 className="text-lg font-bold text-foreground mb-2">{t('confirmTitle')}</h3>
+              <p className="text-sm text-muted-foreground mb-4">
                 {t('confirmMessage', { amount: formatAFN(amountNum), method: method })}
               </p>
               <div className="flex gap-3 justify-end">

@@ -104,7 +104,7 @@ function TrendIcon({ trend }: { trend: CompetencyTrend | null }) {
     return (
       <Minus
         size={14}
-        className="text-neutral-400 dark:text-neutral-500"
+        className="text-muted-foreground dark:text-muted-foreground"
         aria-label="Stable"
       />
     )
@@ -169,15 +169,15 @@ function CompetencyRow({
 
   return (
     <tr
-      className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+      className="border-b border-border/50 last:border-0 dark:border-border"
       data-testid={`competency-row-${row.procedureRef}`}
     >
       <td className="py-3 pe-4 ps-2">
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-neutral-900 dark:text-white">
+          <span className="text-sm font-medium text-foreground dark:text-white">
             {row.procedureName}
           </span>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          <span className="text-xs text-muted-foreground dark:text-muted-foreground">
             {row.procedureRef}
           </span>
         </div>
@@ -185,13 +185,13 @@ function CompetencyRow({
       <td className="py-3 pe-4">
         <StatusBadge status={row.status} daysSinceLast={row.daysSinceLast} t={t} />
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-neutral-600 dark:text-neutral-400 sm:table-cell">
+      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground sm:table-cell">
         {lastPerformedLabel}
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-neutral-600 dark:text-neutral-400 sm:table-cell">
+      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground sm:table-cell">
         {row.totalPerformed}
       </td>
-      <td className="hidden py-3 pe-4 text-sm text-neutral-600 dark:text-neutral-400 md:table-cell">
+      <td className="hidden py-3 pe-4 text-sm text-muted-foreground dark:text-muted-foreground md:table-cell">
         {row.performedLast90Days}
       </td>
       <td className="py-3 pe-2">
@@ -276,7 +276,7 @@ export function CompetencyDashboard({ technicianId }: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-sm text-neutral-500">
+      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
         {t('loading')}
       </div>
     )
@@ -284,11 +284,11 @@ export function CompetencyDashboard({ technicianId }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center dark:border-neutral-700 dark:bg-neutral-900">
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="rounded-lg border border-border bg-card p-6 text-center dark:border-border dark:bg-card">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
           {t('noProcedures')}
         </p>
-        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+        <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
           {t('noProceduresHint')}
         </p>
       </div>
@@ -354,26 +354,26 @@ export function CompetencyDashboard({ technicianId }: Props) {
       </div>
 
       {/* Procedure table */}
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card dark:border-border dark:bg-card">
         <table className="w-full text-start" data-testid="competency-table">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-700">
-              <th className="px-2 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            <tr className="border-b border-border dark:border-border">
+              <th className="px-2 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
                 {t('colProcedure')}
               </th>
-              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
                 {t('colStatus')}
               </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400 sm:table-cell">
+              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground sm:table-cell">
                 {t('colLastPerformed')}
               </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400 sm:table-cell">
+              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground sm:table-cell">
                 {t('colTotal')}
               </th>
-              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400 md:table-cell">
+              <th className="hidden px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground md:table-cell">
                 {t('colLast90')}
               </th>
-              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <th className="px-0 py-3 text-start text-xs font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
                 {t('colTrend')}
               </th>
             </tr>

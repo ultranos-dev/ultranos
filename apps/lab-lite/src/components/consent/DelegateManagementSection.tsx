@@ -52,7 +52,7 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
   return (
     <section aria-labelledby="delegates-section-title" className="mt-6">
       <div className="flex items-center justify-between">
-        <h3 id="delegates-section-title" className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+        <h3 id="delegates-section-title" className="text-base font-semibold text-foreground dark:text-foreground">
           {t('sectionTitle')}
         </h3>
         <button
@@ -65,9 +65,9 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
       </div>
 
       {loading ? (
-        <div className="mt-4 text-sm text-neutral-500" aria-busy="true">…</div>
+        <div className="mt-4 text-sm text-muted-foreground" aria-busy="true">…</div>
       ) : activeDelegates.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-muted-foreground dark:text-muted-foreground">
           {t('noActiveDelegates')}
         </p>
       ) : (
@@ -75,16 +75,16 @@ export function DelegateManagementSection({ patientRef }: DelegateManagementSect
           {activeDelegates.map((d) => (
             <li
               key={d.id}
-              className="flex items-center justify-between rounded-lg border px-4 py-3 dark:border-neutral-700"
+              className="flex items-center justify-between rounded-lg border px-4 py-3 dark:border-border"
             >
               <div className="text-sm">
-                <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                <span className="font-medium text-foreground dark:text-foreground">
                   {t(`relationship.${REL_I18N[d.delegateRelationship] ?? 'other'}`)}
                 </span>
                 <span className="ms-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   {t('activeLabel')}
                 </span>
-                <p className="text-neutral-500 dark:text-neutral-400">
+                <p className="text-muted-foreground dark:text-muted-foreground">
                   {new Date(d.registeredAt).toLocaleDateString()}
                 </p>
               </div>

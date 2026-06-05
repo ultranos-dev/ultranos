@@ -130,17 +130,17 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
       aria-labelledby="location-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
     >
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-4">
-          <h2 id="location-modal-title" className="text-base font-semibold text-neutral-900">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 id="location-modal-title" className="text-base font-semibold text-foreground">
             {isEdit ? t('editLocation') : t('addLocation')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('close')}
-            className="rounded p-1 text-neutral-400 hover:text-neutral-600"
+            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -156,7 +156,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
 
           {/* Name */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="loc-name">
+            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="loc-name">
               {t('locationName')} <span aria-hidden="true">*</span>
             </label>
             <input
@@ -165,13 +165,13 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Type — disabled in edit mode */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="loc-type">
+            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="loc-type">
               {t('locationType')}
             </label>
             <select
@@ -179,7 +179,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               value={form.type}
               disabled={isEdit}
               onChange={(e) => handleTypeChange(e.target.value as FormState['type'])}
-              className="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-neutral-50"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-muted/30"
             >
               <option value="main">{t('typeMain')}</option>
               <option value="satellite">{t('typeSatellite')}</option>
@@ -188,14 +188,14 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
 
           {/* Mode */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="loc-mode">
+            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="loc-mode">
               {t('locationMode')}
             </label>
             <select
               id="loc-mode"
               value={form.mode}
               onChange={(e) => setForm((f) => ({ ...f, mode: e.target.value as FormState['mode'] }))}
-              className="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="full">{t('modeFull')}</option>
               <option value="collection-only">{t('modeCollectionOnly')}</option>
@@ -204,7 +204,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
 
           {/* Address */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="loc-address">
+            <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="loc-address">
               {t('locationAddress')}
             </label>
             <input
@@ -212,14 +212,14 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               type="text"
               value={form.address}
               onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-              className="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Parent Lab — only for satellite */}
           {form.type === 'satellite' && (
             <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="loc-parent">
+              <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="loc-parent">
                 {t('parentLab')} <span aria-hidden="true">*</span>
               </label>
               <select
@@ -227,7 +227,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
                 value={form.parentLabId}
                 required
                 onChange={(e) => setForm((f) => ({ ...f, parentLabId: e.target.value }))}
-                className="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('selectParentLab')}</option>
                 {mainLabOptions.map((lab) => (
@@ -265,7 +265,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
                 <button
                   type="button"
                   onClick={() => setConfirming(false)}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600"
+                  className="rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground"
                 >
                   {t('cancel')}
                 </button>
@@ -278,7 +278,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
+              className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30"
             >
               {t('cancel')}
             </button>

@@ -46,7 +46,7 @@ function StatusBadge({ variant }: { variant: StatusBadgeVariant }) {
     delivering: 'bg-blue-100 text-blue-800 border border-blue-300',
     delivered: 'bg-green-100 text-green-700 border border-green-300',
     failed: 'bg-red-100 text-red-700 border border-red-300',
-    'not-queued': 'bg-neutral-100 text-neutral-500 border border-neutral-200',
+    'not-queued': 'bg-muted text-muted-foreground border border-border',
   }
 
   return (
@@ -126,10 +126,10 @@ export function DistributionStatusPanel({ reportId }: DistributionStatusPanelPro
 
   return (
     <section aria-label={t('distributionSection')}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
         {t('distributionSection')}
       </h3>
-      <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 overflow-hidden">
+      <ul className="divide-y divide-border/50 rounded-lg border border-border overflow-hidden">
         {ALL_DESTINATIONS.map((dest) => {
           const entry = entryByDestination.get(dest)
           const variant: StatusBadgeVariant = entry ? (entry.status as StatusBadgeVariant) : 'not-queued'
@@ -137,19 +137,19 @@ export function DistributionStatusPanel({ reportId }: DistributionStatusPanelPro
           return (
             <li
               key={dest}
-              className="flex items-center justify-between px-4 py-2.5 bg-white text-sm"
+              className="flex items-center justify-between px-4 py-2.5 bg-card text-sm"
             >
-              <span className="text-neutral-700">{DESTINATION_LABELS[dest]}</span>
+              <span className="text-foreground">{DESTINATION_LABELS[dest]}</span>
               <div className="flex items-center gap-2">
                 <StatusBadge variant={variant} />
                 {entry && entry.status === 'failed' && (
-                  <span className="text-xs text-neutral-400">
+                  <span className="text-xs text-muted-foreground">
                     {t('retryCount', { count: entry.retryCount })}
                   </span>
                 )}
                 {entry && entry.status === 'failed' && (
                   <button
-                    className="inline-flex items-center gap-1 rounded-md border border-neutral-300 px-2 py-0.5 text-xs text-neutral-600 hover:bg-neutral-50 disabled:opacity-40"
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-40"
                     disabled={retrying.has(entry.id!)}
                     onClick={() => void handleRetry(entry.id!)}
                     aria-label={`Retry ${DESTINATION_LABELS[dest]}`}

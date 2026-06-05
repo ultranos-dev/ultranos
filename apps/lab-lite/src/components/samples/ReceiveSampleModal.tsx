@@ -170,16 +170,16 @@ export function ReceiveSampleModal({
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         data-testid="verification-step"
       >
-        <div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-            <h2 id="verification-step-title" className="text-lg font-semibold text-neutral-900">
+        <div className="w-full max-w-lg rounded-xl bg-card shadow-xl">
+          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <h2 id="verification-step-title" className="text-lg font-semibold text-foreground">
               {t('modal.patientVerification')}
             </h2>
             <button
               type="button"
               onClick={onClose}
               aria-label={t('modal.close')}
-              className="rounded p-1 text-neutral-400 hover:text-neutral-600"
+              className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
             >
               <X size={20} aria-hidden="true" />
             </button>
@@ -209,15 +209,15 @@ export function ReceiveSampleModal({
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         data-testid="sample-collection-confirmation"
       >
-        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl">
-          <div className="px-6 py-4 border-b border-neutral-200 flex items-center gap-3">
+        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-card shadow-xl">
+          <div className="px-6 py-4 border-b border-border flex items-center gap-3">
             <span className="text-2xl">✅</span>
-            <h2 id="confirmation-title" className="text-lg font-semibold text-neutral-900">
+            <h2 id="confirmation-title" className="text-lg font-semibold text-foreground">
               {t('modal.sampleReceived')}
             </h2>
           </div>
           <div className="px-6 py-5 space-y-4">
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               {t('modal.sampleId')}: <span className="font-mono font-bold">{confirmedSampleId}</span>
             </p>
             {tripAnalysis && (
@@ -251,17 +251,17 @@ export function ReceiveSampleModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       data-testid="receive-sample-modal"
     >
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-lg rounded-xl bg-card shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4">
-          <h2 id="receive-sample-title" className="text-lg font-semibold text-neutral-900">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 id="receive-sample-title" className="text-lg font-semibold text-foreground">
             {t('modal.receiveTitle')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('modal.close')}
-            className="rounded p-1 text-neutral-400 hover:text-neutral-600"
+            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
           >
             <X size={20} />
           </button>
@@ -271,14 +271,14 @@ export function ReceiveSampleModal({
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
           {/* Sample Type */}
           <div className="space-y-1">
-            <label htmlFor="sample-type" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="sample-type" className="text-sm font-medium text-foreground">
               {t('form.sampleType')}
             </label>
             <select
               id="sample-type"
               value={sampleType}
               onChange={(e) => setSampleType(e.target.value)}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               data-testid="sample-type-select"
             >
               <option value="blood">{t('sampleTypes.blood')}</option>
@@ -292,7 +292,7 @@ export function ReceiveSampleModal({
 
           {/* Condition at Receipt */}
           <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-neutral-700">
+            <legend className="text-sm font-medium text-foreground">
               {t('form.conditionAtReceipt')}
             </legend>
             <div className="space-y-1.5" data-testid="condition-group">
@@ -311,7 +311,7 @@ export function ReceiveSampleModal({
                       className="h-4 w-4 text-blue-600"
                       data-testid={`condition-${c}`}
                     />
-                    <span className="text-sm text-neutral-700">{t(`conditions.${c}`)}</span>
+                    <span className="text-sm text-foreground">{t(`conditions.${c}`)}</span>
                   </label>
                 ),
               )}
@@ -344,7 +344,7 @@ export function ReceiveSampleModal({
 
           {/* Received From */}
           <div className="space-y-1">
-            <label htmlFor="received-from" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="received-from" className="text-sm font-medium text-foreground">
               {t('form.receivedFrom')}
             </label>
             <input
@@ -353,14 +353,14 @@ export function ReceiveSampleModal({
               value={receivedFrom}
               onChange={(e) => setReceivedFrom(e.target.value)}
               placeholder={t('form.receivedFromPlaceholder')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               data-testid="received-from-input"
             />
           </div>
 
           {/* Notes */}
           <div className="space-y-1">
-            <label htmlFor="sample-notes" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="sample-notes" className="text-sm font-medium text-foreground">
               {t('form.notes')}
             </label>
             <textarea
@@ -369,7 +369,7 @@ export function ReceiveSampleModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t('form.notesPlaceholder')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               data-testid="notes-input"
             />
           </div>
@@ -387,7 +387,7 @@ export function ReceiveSampleModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 disabled:opacity-50"
             >
               {t('form.cancel')}
             </button>

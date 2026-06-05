@@ -190,7 +190,7 @@ export function CourierHandoffScreen({ onDone }: Props) {
                 type="button"
                 onClick={() => setTempUnit('C')}
                 className={`px-4 text-lg font-semibold transition-colors ${
-                  tempUnit === 'C' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+                  tempUnit === 'C' ? 'bg-blue-600 text-white' : 'bg-card text-gray-700'
                 }`}
               >
                 {t('celsius')}
@@ -199,7 +199,7 @@ export function CourierHandoffScreen({ onDone }: Props) {
                 type="button"
                 onClick={() => setTempUnit('F')}
                 className={`px-4 text-lg font-semibold transition-colors ${
-                  tempUnit === 'F' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
+                  tempUnit === 'F' ? 'bg-blue-600 text-white' : 'bg-card text-gray-700'
                 }`}
               >
                 {t('fahrenheit')}

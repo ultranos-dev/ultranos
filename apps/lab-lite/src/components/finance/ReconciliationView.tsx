@@ -75,12 +75,12 @@ export function ReconciliationView() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -91,29 +91,29 @@ export function ReconciliationView() {
       )}
 
       {loading ? (
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       ) : payments.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t('noTransactions')}</p>
+        <p className="text-sm text-muted-foreground">{t('noTransactions')}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {/* Summary Card */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="rounded-lg border border-border bg-card p-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-xs text-neutral-500">{t('expectedTotal')}</span>
-                <p className="text-lg font-bold text-neutral-900">{formatAFN(stats.expectedTotal)}</p>
+                <span className="text-xs text-muted-foreground">{t('expectedTotal')}</span>
+                <p className="text-lg font-bold text-foreground">{formatAFN(stats.expectedTotal)}</p>
               </div>
               <div>
-                <span className="text-xs text-neutral-500">{t('collectedTotal')}</span>
-                <p className="text-lg font-bold text-neutral-900">{formatAFN(stats.collectedTotal)}</p>
+                <span className="text-xs text-muted-foreground">{t('collectedTotal')}</span>
+                <p className="text-lg font-bold text-foreground">{formatAFN(stats.collectedTotal)}</p>
               </div>
               <div>
-                <span className="text-xs text-neutral-500">{t('outstanding')}</span>
+                <span className="text-xs text-muted-foreground">{t('outstanding')}</span>
                 <p className="text-lg font-bold text-amber-600">{formatAFN(stats.outstanding)}</p>
               </div>
               <div>
-                <span className="text-xs text-neutral-500">{t('variance')}</span>
-                <p className={`text-lg font-bold ${stats.variance < 0 ? 'text-red-600' : 'text-neutral-900'}`}>
+                <span className="text-xs text-muted-foreground">{t('variance')}</span>
+                <p className={`text-lg font-bold ${stats.variance < 0 ? 'text-red-600' : 'text-foreground'}`}>
                   {formatAFN(stats.variance)}
                 </p>
               </div>
@@ -135,33 +135,33 @@ export function ReconciliationView() {
           )}
 
           {/* Breakdown by Method */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('byMethod')}</h2>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('byMethod')}</h2>
             <div className="space-y-2">
               {(Object.entries(stats.byMethod) as [PaymentMethod, { count: number; total: number }][])
                 .filter(([, v]) => v.count > 0)
                 .map(([method, v]) => (
                   <div key={method} className="flex justify-between text-sm">
-                    <span className="text-neutral-700">
+                    <span className="text-foreground">
                       {method} ({t('methodCount', { count: String(v.count) })})
                     </span>
-                    <span className="font-medium text-neutral-900">{formatAFN(v.total)}</span>
+                    <span className="font-medium text-foreground">{formatAFN(v.total)}</span>
                   </div>
                 ))}
             </div>
           </div>
 
           {/* Transactions List */}
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-neutral-500 mb-3">{t('transactions')}</h2>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('transactions')}</h2>
             <div className="space-y-2">
               {payments.map((p) => (
-                <div key={p.paymentId} className="flex items-center justify-between rounded-md border border-neutral-100 p-2">
+                <div key={p.paymentId} className="flex items-center justify-between rounded-md border border-border/50 p-2">
                   <div>
-                    <span className="text-sm font-mono text-neutral-700">{p.receiptNumber}</span>
-                    <span className="ms-2 text-xs text-neutral-500">{p.paymentMethod}</span>
+                    <span className="text-sm font-mono text-foreground">{p.receiptNumber}</span>
+                    <span className="ms-2 text-xs text-muted-foreground">{p.paymentMethod}</span>
                   </div>
-                  <span className="text-sm font-semibold text-neutral-900">{formatAFN(p.amount)}</span>
+                  <span className="text-sm font-semibold text-foreground">{formatAFN(p.amount)}</span>
                 </div>
               ))}
             </div>

@@ -40,7 +40,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                     ? 'bg-green-600 text-white'
                     : isCurrent
                       ? 'bg-primary-600 text-white'
-                      : 'bg-neutral-200 text-neutral-500'
+                      : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {isCompleted ? (
@@ -51,7 +51,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
               </div>
               <span
                 className={`mt-1 text-center text-xs ${
-                  isCurrent ? 'font-semibold text-primary-700' : 'text-neutral-500'
+                  isCurrent ? 'font-semibold text-primary-700' : 'text-muted-foreground'
                 }`}
               >
                 {label}
@@ -62,7 +62,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
             {i < STEPS.length - 1 && (
               <div
                 className={`mx-2 h-0.5 flex-1 ${
-                  i < currentIndex ? 'bg-green-600' : 'bg-neutral-200'
+                  i < currentIndex ? 'bg-green-600' : 'bg-muted'
                 }`}
               />
             )}

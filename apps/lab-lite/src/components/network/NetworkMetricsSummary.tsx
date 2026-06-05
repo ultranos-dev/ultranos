@@ -28,15 +28,15 @@ function MetricCard({ label, value, asOf, warnThreshold, numericValue }: MetricC
   return (
     <div
       className={`rounded-lg border p-4 ${
-        isWarning ? 'border-amber-200 bg-amber-50' : 'border-neutral-200 bg-white'
+        isWarning ? 'border-amber-200 bg-amber-50' : 'border-border bg-card'
       }`}
     >
-      <p className="text-sm text-neutral-600">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${isWarning ? 'text-amber-700' : 'text-neutral-900'}`}>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-3xl font-bold ${isWarning ? 'text-amber-700' : 'text-foreground'}`}>
         {value}
       </p>
       <p
-        className={`mt-1 text-xs ${age.stale ? 'text-amber-600' : 'text-neutral-400'}`}
+        className={`mt-1 text-xs ${age.stale ? 'text-amber-600' : 'text-muted-foreground'}`}
         aria-label={`Data updated ${age.label}`}
       >
         {age.stale ? `⚠ Data from ${age.label}` : `Updated ${age.label}`}

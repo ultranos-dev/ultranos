@@ -24,8 +24,8 @@ type ModalState = { open: false } | { open: true; location?: LabLocation }
 function AccessDenied({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center" role="alert">
-      <p className="text-lg font-semibold text-neutral-700">{t('accessDenied')}</p>
-      <p className="mt-2 text-sm text-neutral-500">{t('accessDeniedDesc')}</p>
+      <p className="text-lg font-semibold text-foreground">{t('accessDenied')}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{t('accessDeniedDesc')}</p>
     </div>
   )
 }
@@ -74,7 +74,7 @@ export default function NetworkDashboardPage() {
     <div className="flex flex-col gap-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-neutral-900">{t('networkDashboard')}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('networkDashboard')}</h1>
         <button
           type="button"
           onClick={() => setModal({ open: true })}
@@ -98,7 +98,7 @@ export default function NetworkDashboardPage() {
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-busy="true">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg border border-neutral-200 bg-white" />
+            <div key={i} className="h-24 animate-pulse rounded-lg border border-border bg-card" />
           ))}
         </div>
       ) : metrics ? (
@@ -107,18 +107,18 @@ export default function NetworkDashboardPage() {
 
       {/* Location cards */}
       <section aria-label={t('locations')}>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {t('locations')}
         </h2>
         {loading ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 animate-pulse rounded-lg border border-neutral-200 bg-white" />
+              <div key={i} className="h-40 animate-pulse rounded-lg border border-border bg-card" />
             ))}
           </div>
         ) : locations.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-neutral-300 py-12 text-center">
-            <p className="text-sm text-neutral-500">{t('noLocations')}</p>
+          <div className="rounded-lg border border-dashed border-border py-12 text-center">
+            <p className="text-sm text-muted-foreground">{t('noLocations')}</p>
             <button
               type="button"
               onClick={() => setModal({ open: true })}

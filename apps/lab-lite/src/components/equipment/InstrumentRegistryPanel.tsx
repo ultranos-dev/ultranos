@@ -9,6 +9,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronLeft } from '@ultranos/ui-kit/icons'
 import {
   getInstruments,
   registerInstrument,
@@ -84,6 +86,61 @@ function FormField({
   )
 }
 
+/**
+ * P8: Inline modal to collect an out-of-service reason.
+ * Replaces window.prompt — accessible, RTL-safe, works in all PWA contexts.
+ */
+function OutOfServiceModal({
+  instrumentName,
+  onConfirm,
+  onCancel,
+}: {
+  instrumentName: string
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+}) {
+  const t = useTranslations('equipment')
+  const [reason, setReason] = useState('')
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('setOutOfService') ?? 'Set Out of Service'}
+    >
+      <div className="w-full max-w-sm rounded-xl bg-card shadow-xl p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-900">
+          {t('setOutOfService') ?? 'Set Out of Service'}
+        </h2>
+        <p className="text-sm text-gray-600">{instrumentName}</p>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            {t('outOfServiceReason') ?? 'Reason'}
+          </label>
+          <input
+            type="text"
+            className="form-input w-full"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t('outOfServiceReasonPrompt') ?? 'Reason for taking out of service'}
+            autoFocus
+            data-testid="oos-reason-input"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onCancel}>
+            {t('cancel') ?? 'Cancel'}
+          </Button>
+          <Button onClick={() => onConfirm(reason)} data-testid="oos-confirm-btn">
+            {t('setOutOfService') ?? 'Confirm'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function InstrumentRegistryPanel() {
   const t = useTranslations('equipment')
   const [view, setView] = useState<ViewMode>('list')
@@ -92,6 +149,8 @@ export function InstrumentRegistryPanel() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // P8: modal state for out-of-service reason
+  const [oosTarget, setOosTarget] = useState<Instrument | null>(null)
 
   const reload = useCallback(async () => {
     const all = await getInstruments()
@@ -116,15 +175,29 @@ export function InstrumentRegistryPanel() {
     setView('edit')
   }
 
+  // P3: guard against acting on a cancelled prompt.
+  // P8: use inline modal instead of window.prompt for out-of-service reason.
   async function handleToggleStatus(instrument: Instrument) {
-    const newStatus: 'IN_SERVICE' | 'OUT_OF_SERVICE' =
-      instrument.status === 'IN_SERVICE' ? 'OUT_OF_SERVICE' : 'IN_SERVICE'
-    const reason =
-      newStatus === 'OUT_OF_SERVICE'
-        ? window.prompt(t('outOfServiceReasonPrompt') ?? 'Reason for taking out of service:') ?? undefined
-        : undefined
-    await setInstrumentStatus(instrument.id, newStatus, reason)
+    if (instrument.status === 'IN_SERVICE') {
+      // Show modal to collect reason before committing status change
+      setOosTarget(instrument)
+    } else {
+      // Restoring to IN_SERVICE needs no reason — apply immediately
+      await setInstrumentStatus(instrument.id, 'IN_SERVICE')
+      await reload()
+    }
+  }
+
+  async function handleOosConfirm(reason: string) {
+    if (!oosTarget) return
+    await setInstrumentStatus(oosTarget.id, 'OUT_OF_SERVICE', reason || undefined)
+    setOosTarget(null)
     await reload()
+  }
+
+  function handleOosCancel() {
+    setOosTarget(null)
+    // P3: user cancelled — no status change occurs
   }
 
   async function handleSave() {
@@ -171,6 +244,15 @@ export function InstrumentRegistryPanel() {
   if (view === 'list') {
     return (
       <div className="space-y-3" data-testid="instrument-registry-panel">
+        {/* P8: out-of-service reason modal */}
+        {oosTarget && (
+          <OutOfServiceModal
+            instrumentName={oosTarget.name}
+            onConfirm={handleOosConfirm}
+            onCancel={handleOosCancel}
+          />
+        )}
+
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">{t('instruments')}</h3>
           <Button onClick={handleAddNew} data-testid="add-instrument-btn">
@@ -226,7 +308,7 @@ export function InstrumentRegistryPanel() {
                       {t('editInstrument') ?? 'Edit'}
                     </button>
                     <button
-                      onClick={() => handleToggleStatus(inst)}
+                      onClick={() => void handleToggleStatus(inst)}
                       className={`text-xs hover:underline ${
                         inst.status === 'IN_SERVICE'
                           ? 'text-red-500'
@@ -252,12 +334,15 @@ export function InstrumentRegistryPanel() {
   return (
     <div className="space-y-4" data-testid="instrument-form">
       <div className="flex items-center gap-2">
+        {/* P9: RTL-safe back arrow using DirectionalIcon */}
         <button
           onClick={() => setView('list')}
           className="text-sm text-gray-500 hover:text-gray-700"
-          aria-label="Back to list"
+          aria-label={t('backToList') ?? 'Back to list'}
         >
-          ←
+          <DirectionalIcon category="navigation">
+            <ChevronLeft size={18} />
+          </DirectionalIcon>
         </button>
         <h3 className="text-sm font-semibold text-gray-700">
           {view === 'add' ? t('addInstrument') : t('editInstrument') ?? 'Edit Instrument'}

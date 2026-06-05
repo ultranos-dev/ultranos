@@ -8,8 +8,8 @@ export function StaffingForecastPanel({ forecast }: Props) {
   const isUnderstaffed = gap > 0
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Users size={16} className="text-blue-500" aria-hidden="true" />
         Staffing Forecast
       </h3>
@@ -19,7 +19,7 @@ export function StaffingForecastPanel({ forecast }: Props) {
         <StatCard label="Projected Tests/Day" value={String(forecast.projectedDailyTests)} />
         <StatCard label="Recommended Staff" value={String(forecast.recommendedStaffCount)} />
         <div className={`rounded-md border p-3 ${isUnderstaffed ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}`}>
-          <p className="text-xs text-neutral-500">Staff Gap</p>
+          <p className="text-xs text-muted-foreground">Staff Gap</p>
           <p className={`text-lg font-semibold ${isUnderstaffed ? 'text-red-700' : 'text-green-700'}`}>
             {isUnderstaffed ? `+${gap} needed` : 'Sufficient'}
           </p>
@@ -34,7 +34,7 @@ export function StaffingForecastPanel({ forecast }: Props) {
 
       <ul className="space-y-1">
         {forecast.shiftAdjustments.map((adj, i) => (
-          <li key={i} className="text-sm text-neutral-600 flex gap-2">
+          <li key={i} className="text-sm text-muted-foreground flex gap-2">
             <span className="text-blue-400 mt-0.5 shrink-0">•</span>
             <span>{adj}</span>
           </li>
@@ -46,9 +46,9 @@ export function StaffingForecastPanel({ forecast }: Props) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-neutral-50 border border-neutral-200 p-3">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="text-lg font-semibold text-neutral-800">{value}</p>
+    <div className="rounded-md bg-muted/30 border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-lg font-semibold text-foreground">{value}</p>
     </div>
   )
 }

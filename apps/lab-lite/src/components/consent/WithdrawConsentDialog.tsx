@@ -52,7 +52,7 @@ export function WithdrawConsentDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-xl dark:bg-gray-800">
         <h2 className="mb-4 text-lg font-semibold text-red-600 dark:text-red-400">{t('withdraw.title')}</h2>
 
         <p className="mb-4 text-sm">{t('withdraw.confirm')}</p>

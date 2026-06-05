@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { RAGBoard } from '@/components/readiness/RAGBoard'
 
@@ -8,7 +9,9 @@ export const metadata: Metadata = {
 export default function ReadinessPage() {
   return (
     <main className="p-4 md:p-6">
-      <RAGBoard />
+      <Suspense>
+        <RAGBoard />
+      </Suspense>
     </main>
   )
 }

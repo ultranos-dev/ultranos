@@ -102,7 +102,7 @@ export function SupervisorAuthGate({
       aria-labelledby="supervisor-auth-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+      <div className="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
         <h2
           id="supervisor-auth-title"
           className="text-lg font-semibold text-gray-900 mb-4"

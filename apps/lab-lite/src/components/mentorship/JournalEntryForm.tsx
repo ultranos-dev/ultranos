@@ -199,7 +199,7 @@ export function JournalEntryForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="journal-title"
-          className="text-sm font-medium text-neutral-700"
+          className="text-sm font-medium text-foreground"
         >
           {t('journalTitleLabel')}
           <span className="ms-1 text-red-600" aria-hidden="true">*</span>
@@ -215,7 +215,7 @@ export function JournalEntryForm({
           }}
           disabled={saving}
           required
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-start
+          className="rounded-lg border border-border px-4 py-2 text-sm text-start
             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
             disabled:opacity-50"
           aria-describedby={titleError ? 'journal-title-error' : undefined}
@@ -231,7 +231,7 @@ export function JournalEntryForm({
       <div className="flex flex-col gap-1">
         <label
           htmlFor="journal-body"
-          className="text-sm font-medium text-neutral-700"
+          className="text-sm font-medium text-foreground"
         >
           {t('journalBodyLabel')}
           <span className="ms-1 text-red-600" aria-hidden="true">*</span>
@@ -247,7 +247,7 @@ export function JournalEntryForm({
           }}
           disabled={saving}
           required
-          className="rounded-lg border border-neutral-300 px-4 py-3 text-sm text-start
+          className="rounded-lg border border-border px-4 py-3 text-sm text-start
             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
             disabled:opacity-50"
           aria-describedby={bodyError ? 'journal-body-error' : undefined}
@@ -261,9 +261,9 @@ export function JournalEntryForm({
 
       {/* Photos */}
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-neutral-700">
+        <p className="text-sm font-medium text-foreground">
           {t('journalPhotosLabel')}
-          <span className="ms-1 text-xs font-normal text-neutral-500">
+          <span className="ms-1 text-xs font-normal text-muted-foreground">
             {t('journalPhotosHint', { max: MAX_PHOTOS })}
           </span>
         </p>
@@ -277,7 +277,7 @@ export function JournalEntryForm({
                 <img
                   src={photo.data}
                   alt={photo.alt || t('journalPhotoPreviewAlt')}
-                  className="h-20 w-20 rounded-md object-cover ring-1 ring-neutral-200"
+                  className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
                 />
                 <button
                   type="button"
@@ -313,8 +313,8 @@ export function JournalEntryForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={saving || processingPhoto}
-            className="self-start rounded-lg border border-dashed border-neutral-300 px-4 py-2
-              text-sm text-neutral-600 hover:border-primary-400 hover:text-primary-600
+            className="self-start rounded-lg border border-dashed border-border px-4 py-2
+              text-sm text-muted-foreground hover:border-primary-400 hover:text-primary-600
               focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:opacity-50"
           >
             {processingPhoto ? t('journalPhotoProcessing') : t('journalAddPhoto')}
@@ -328,24 +328,24 @@ export function JournalEntryForm({
 
       {/* Case context toggle */}
       <div className="flex flex-col gap-3">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"
             checked={showCaseContext}
             onChange={(e) => setShowCaseContext(e.target.checked)}
             disabled={saving}
-            className="h-4 w-4 rounded border-neutral-300 accent-primary-500 disabled:opacity-50"
+            className="h-4 w-4 rounded border-border accent-primary-500 disabled:opacity-50"
           />
           {t('journalAddCaseContext')}
         </label>
 
         {showCaseContext && (
-          <div className="flex flex-col gap-3 rounded-lg bg-neutral-50 p-4">
+          <div className="flex flex-col gap-3 rounded-lg bg-muted/30 p-4">
             {/* Procedure ref (LOINC code) */}
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="journal-procedure-ref"
-                className="text-xs font-medium text-neutral-600"
+                className="text-xs font-medium text-muted-foreground"
               >
                 {t('journalProcedureRefLabel')}
               </label>
@@ -357,7 +357,7 @@ export function JournalEntryForm({
                 onChange={(e) => setProcedureRef(e.target.value)}
                 disabled={saving}
                 placeholder={t('journalProcedureRefPlaceholder')}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-start
+                className="rounded-lg border border-border px-4 py-2 text-sm text-start
                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
                   disabled:opacity-50"
               />
@@ -367,7 +367,7 @@ export function JournalEntryForm({
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="journal-procedure-name"
-                className="text-xs font-medium text-neutral-600"
+                className="text-xs font-medium text-muted-foreground"
               >
                 {t('journalProcedureNameLabel')}
               </label>
@@ -378,7 +378,7 @@ export function JournalEntryForm({
                 value={procedureName}
                 onChange={(e) => setProcedureName(e.target.value)}
                 disabled={saving}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-start
+                className="rounded-lg border border-border px-4 py-2 text-sm text-start
                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
                   disabled:opacity-50"
               />
@@ -388,7 +388,7 @@ export function JournalEntryForm({
             <div className="flex flex-col gap-1">
               <label
                 htmlFor="journal-learning-outcome"
-                className="text-xs font-medium text-neutral-600"
+                className="text-xs font-medium text-muted-foreground"
               >
                 {t('journalLearningOutcomeFormLabel')}
               </label>
@@ -399,7 +399,7 @@ export function JournalEntryForm({
                 value={learningOutcome}
                 onChange={(e) => setLearningOutcome(e.target.value)}
                 disabled={saving}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-start
+                className="rounded-lg border border-border px-4 py-2 text-sm text-start
                   focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500
                   disabled:opacity-50"
               />
@@ -409,7 +409,7 @@ export function JournalEntryForm({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 pt-4">
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
         <Button
           type="button"
           variant="ghost"

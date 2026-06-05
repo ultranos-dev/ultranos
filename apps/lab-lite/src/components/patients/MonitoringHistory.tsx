@@ -46,7 +46,7 @@ function StatusBadge({ status }: { status: MonitoringFlagStatus }) {
     completed: 'Completed',
   }
   const styles: Record<MonitoringFlagStatus, string> = {
-    upcoming: 'bg-neutral-100 text-neutral-600',
+    upcoming: 'bg-muted text-muted-foreground',
     due: 'bg-amber-100 text-amber-700',
     overdue: 'bg-red-100 text-red-700 ring-1 ring-inset ring-red-200',
     completed: 'bg-green-100 text-green-700',
@@ -72,18 +72,18 @@ interface MonitoringFlagRowProps {
 
 function MonitoringFlagRow({ flag }: MonitoringFlagRowProps) {
   return (
-    <div className={`rounded-md border p-3 ${flag.status === 'overdue' ? 'border-red-200 bg-red-50' : 'border-neutral-100 bg-white'}`}>
+    <div className={`rounded-md border p-3 ${flag.status === 'overdue' ? 'border-red-200 bg-red-50' : 'border-border/50 bg-card'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-neutral-900">{flag.testDisplay}</p>
-          <p className="mt-0.5 text-xs text-neutral-500">
+          <p className="text-sm font-medium text-foreground">{flag.testDisplay}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Every {flag.frequencyDays} days
           </p>
         </div>
         <StatusBadge status={flag.status} />
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-neutral-600">
+      <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
         <div>
           <span className="font-medium">Due: </span>
           {flag.dueDate}
@@ -141,7 +141,7 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
     return (
       <div className="space-y-2" aria-busy="true">
         {[1, 2].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-md bg-neutral-100" />
+          <div key={i} className="h-20 animate-pulse rounded-md bg-muted" />
         ))}
       </div>
     )
@@ -149,11 +149,11 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 text-center">
-        <FlaskConical size={24} className="mx-auto text-neutral-300" aria-hidden="true" />
-        <p className="mt-2 text-sm text-neutral-500">No monitoring flags on record</p>
+      <div className="rounded-lg border border-border bg-card p-4 text-center">
+        <FlaskConical size={24} className="mx-auto text-muted-foreground" aria-hidden="true" />
+        <p className="mt-2 text-sm text-muted-foreground">No monitoring flags on record</p>
         {patientFirstName && patientAge && (
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             {patientFirstName}, {patientAge} yr — no medications requiring lab follow-up
           </p>
         )}
@@ -164,16 +164,16 @@ export function MonitoringHistory({ patientRef, patientFirstName, patientAge }: 
   return (
     <div className="space-y-4">
       {patientFirstName && patientAge && (
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           <span className="font-medium">{patientFirstName}</span>, {patientAge} yr
         </p>
       )}
 
       {groups.map((group) => (
-        <div key={group.medicationCode} className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+        <div key={group.medicationCode} className="rounded-lg border border-border bg-muted/30 p-3">
           <div className="mb-2 flex items-center gap-2">
-            <FlaskConical size={14} className="text-neutral-500 shrink-0" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-neutral-800">{group.medicationDisplay}</h3>
+            <FlaskConical size={14} className="text-muted-foreground shrink-0" aria-hidden="true" />
+            <h3 className="text-sm font-semibold text-foreground">{group.medicationDisplay}</h3>
           </div>
           <div className="space-y-2">
             {group.flags.map((flag) => (

@@ -19,7 +19,7 @@ export default function PowerSchedulePage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-neutral-900 mb-6">
+      <h1 className="text-2xl font-bold text-foreground mb-6">
         {t('nav.powerScheduling')}
       </h1>
 

@@ -104,7 +104,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
       {/* National ID input */}
       {!verifiedResult && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <label htmlFor="national-id" className="text-sm font-medium text-neutral-700">
+          <label htmlFor="national-id" className="text-sm font-medium text-foreground">
             National ID
           </label>
           <input
@@ -114,7 +114,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             onChange={(e) => setNationalId(e.target.value)}
             placeholder={isOnline ? 'Enter patient National ID' : 'Enter cached patient ID'}
             disabled={loading}
-            className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
             autoComplete="off"
           />
           {!isOnline && (
@@ -141,10 +141,10 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="font-medium text-neutral-600">First Name</dt>
-            <dd className="text-neutral-900">{verifiedResult.firstName}</dd>
-            <dt className="font-medium text-neutral-600">Age</dt>
-            <dd className="text-neutral-900">{verifiedResult.age}</dd>
+            <dt className="font-medium text-muted-foreground">First Name</dt>
+            <dd className="text-foreground">{verifiedResult.firstName}</dd>
+            <dt className="font-medium text-muted-foreground">Age</dt>
+            <dd className="text-foreground">{verifiedResult.age}</dd>
           </dl>
           <div className="mt-4 flex gap-3">
             <Button

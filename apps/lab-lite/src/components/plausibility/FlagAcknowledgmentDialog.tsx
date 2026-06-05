@@ -89,7 +89,7 @@ export function FlagAcknowledgmentDialog({ flag, resultId, patientRef, onConfirm
       aria-labelledby="ack-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
     >
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-gray-900">
+      <div className="w-full max-w-md rounded-lg bg-card shadow-xl dark:bg-gray-900">
         {/* Header */}
         <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
           <h2

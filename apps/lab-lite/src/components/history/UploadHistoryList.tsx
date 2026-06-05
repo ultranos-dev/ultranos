@@ -82,21 +82,21 @@ export function UploadHistoryList({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t('searchPlaceholder')}
-          className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label={t('searchAriaLabel')}
         />
       </div>
 
       {/* List */}
       {items.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-white p-6 text-center">
-          <p className="text-sm text-neutral-500">
+        <div className="rounded-lg border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">
             {searchQuery ? t('noResults') : t('empty')}
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-neutral-200 bg-white">
-          <ul className="divide-y divide-neutral-100" role="list">
+        <div className="rounded-lg border border-border bg-card">
+          <ul className="divide-y divide-border/50" role="list">
             {items.map((item) => (
               <li
                 key={item.id}
@@ -105,7 +105,7 @@ export function UploadHistoryList({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-neutral-900">
+                      <span className="text-sm font-medium text-foreground">
                         {item.source === 'local'
                           ? item.patientFirstName
                           : item.testCategory}
@@ -113,11 +113,11 @@ export function UploadHistoryList({
                       <StatusBadge status={item.status} />
                     </div>
                     {item.source === 'local' && (
-                      <p className="mt-0.5 text-xs text-neutral-600">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {item.testCategory}
                       </p>
                     )}
-                    <p className="mt-0.5 text-xs text-neutral-400">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {formatTimestamp(item.uploadDate)}
                     </p>
                     {item.status === 'failed' && item.failureReason && (
@@ -140,7 +140,7 @@ export function UploadHistoryList({
                       <>
                         {confirmingId === item.id ? (
                           <div className="flex items-center gap-1">
-                            <span className="text-xs text-neutral-600">
+                            <span className="text-xs text-muted-foreground">
                               {t('discardConfirm')}
                             </span>
                             <Button

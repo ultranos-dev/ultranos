@@ -90,9 +90,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="flex flex-col gap-4 p-4" aria-busy="true" aria-label="Loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse rounded-lg border border-neutral-200 bg-white p-4">
-            <div className="h-3 w-24 rounded bg-neutral-200" />
-            <div className="mt-3 h-5 w-48 rounded bg-neutral-100" />
+          <div key={i} className="animate-pulse rounded-lg border border-border bg-card p-4">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="mt-3 h-5 w-48 rounded bg-muted" />
           </div>
         ))}
       </div>

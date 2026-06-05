@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslations } from 'next-intl'
-import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Plus, Pencil, Trash2, X, Check, AlertTriangle } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
 import {
@@ -61,13 +60,13 @@ function formToItem(
     id,
     name: form.name.trim(),
     category: form.category,
-    currentStock: parseFloat(form.currentStock) || 0,
+    currentStock: Math.max(0, parseFloat(form.currentStock) || 0),
     unit: form.unit.trim(),
-    reorderThreshold: parseFloat(form.reorderThreshold) || 0,
-    criticalThreshold: parseFloat(form.criticalThreshold) || 0,
-    dailyUsageEstimate: parseFloat(form.dailyUsageEstimate) || 0,
+    reorderThreshold: Math.max(0, parseFloat(form.reorderThreshold) || 0),
+    criticalThreshold: Math.max(0, parseFloat(form.criticalThreshold) || 0),
+    dailyUsageEstimate: Math.max(0, parseFloat(form.dailyUsageEstimate) || 0),
     lastUpdated: new Date().toISOString(),
-    updatedBy,
+    updatedBy: updatedBy || 'unknown',
   }
 }
 
@@ -97,6 +96,38 @@ function DeleteConfirmDialog({
   onCancel: () => void
 }) {
   const t = useTranslations()
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Focus trap + Escape key handler
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const firstFocusable = dialog.querySelector<HTMLElement>(
+      'button, [href], input, select, [tabindex]:not([tabindex="-1"])',
+    )
+    firstFocusable?.focus()
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onCancel(); return }
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(
+        dialog!.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute('disabled'))
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onCancel])
+
   return (
     <div
       role="dialog"
@@ -104,14 +135,14 @@ function DeleteConfirmDialog({
       aria-labelledby="delete-confirm-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
     >
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+      <div ref={dialogRef} className="w-full max-w-sm rounded-xl bg-card p-6 shadow-xl">
         <div className="flex items-start gap-3 mb-4">
           <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <h3 id="delete-confirm-title" className="text-sm font-semibold text-neutral-800">
+            <h3 id="delete-confirm-title" className="text-sm font-semibold text-foreground">
               {t('rag.supply.deleteConfirmTitle')}
             </h3>
-            <p className="text-sm text-neutral-600 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {t('rag.supply.deleteConfirmBody', { name: itemName })}
             </p>
           </div>
@@ -151,12 +182,22 @@ function SupplyForm({
   function validate(): boolean {
     const newErrors: Partial<Record<keyof SupplyFormValues, string>> = {}
     if (!form.name.trim()) newErrors.name = t('rag.supply.errorRequired')
-    if (form.currentStock === '' || isNaN(parseFloat(form.currentStock))) {
+    const stock = parseFloat(form.currentStock)
+    if (form.currentStock === '' || isNaN(stock) || stock < 0) {
       newErrors.currentStock = t('rag.supply.errorNumber')
     }
     if (!form.unit.trim()) newErrors.unit = t('rag.supply.errorRequired')
-    if (form.reorderThreshold === '' || isNaN(parseFloat(form.reorderThreshold))) {
+    const reorder = parseFloat(form.reorderThreshold)
+    if (form.reorderThreshold === '' || isNaN(reorder) || reorder < 0) {
       newErrors.reorderThreshold = t('rag.supply.errorNumber')
+    }
+    const critical = parseFloat(form.criticalThreshold)
+    if (form.criticalThreshold !== '' && (isNaN(critical) || critical < 0)) {
+      newErrors.criticalThreshold = t('rag.supply.errorNumber')
+    }
+    const dailyUsage = parseFloat(form.dailyUsageEstimate)
+    if (form.dailyUsageEstimate !== '' && (isNaN(dailyUsage) || dailyUsage < 0)) {
+      newErrors.dailyUsageEstimate = t('rag.supply.errorNumber')
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -174,20 +215,20 @@ function SupplyForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      <h3 className="text-sm font-semibold text-neutral-800">
+      <h3 className="text-sm font-semibold text-foreground">
         {isEdit ? t('rag.supply.editTitle') : t('rag.supply.addTitle')}
       </h3>
 
       {/* Name */}
       <div>
-        <label className="block text-xs font-medium text-neutral-700 mb-1">
+        <label className="block text-xs font-medium text-foreground mb-1">
           {t('rag.supply.fieldName')} <span aria-hidden="true">*</span>
         </label>
         <input
           type="text"
           value={form.name}
           onChange={(e) => handleChange('name', e.target.value)}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
           aria-required="true"
           aria-invalid={!!errors.name}
         />
@@ -196,13 +237,13 @@ function SupplyForm({
 
       {/* Category */}
       <div>
-        <label className="block text-xs font-medium text-neutral-700 mb-1">
+        <label className="block text-xs font-medium text-foreground mb-1">
           {t('rag.supply.fieldCategory')}
         </label>
         <select
           value={form.category}
           onChange={(e) => handleChange('category', e.target.value)}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
         >
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
@@ -215,7 +256,7 @@ function SupplyForm({
       {/* Stock + Unit (side by side) */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutral-700 mb-1">
+          <label className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldCurrentStock')} <span aria-hidden="true">*</span>
           </label>
           <input
@@ -224,7 +265,7 @@ function SupplyForm({
             step="any"
             value={form.currentStock}
             onChange={(e) => handleChange('currentStock', e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
             aria-required="true"
             aria-invalid={!!errors.currentStock}
           />
@@ -233,14 +274,14 @@ function SupplyForm({
           )}
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutral-700 mb-1">
+          <label className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldUnit')} <span aria-hidden="true">*</span>
           </label>
           <input
             type="text"
             value={form.unit}
             onChange={(e) => handleChange('unit', e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
             aria-required="true"
             aria-invalid={!!errors.unit}
           />
@@ -251,7 +292,7 @@ function SupplyForm({
       {/* Reorder + Critical thresholds */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutral-700 mb-1">
+          <label className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldReorderThreshold')} <span aria-hidden="true">*</span>
           </label>
           <input
@@ -260,7 +301,7 @@ function SupplyForm({
             step="any"
             value={form.reorderThreshold}
             onChange={(e) => handleChange('reorderThreshold', e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
             aria-required="true"
             aria-invalid={!!errors.reorderThreshold}
           />
@@ -269,7 +310,7 @@ function SupplyForm({
           )}
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutral-700 mb-1">
+          <label className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldCriticalThreshold')}
           </label>
           <input
@@ -278,14 +319,14 @@ function SupplyForm({
             step="any"
             value={form.criticalThreshold}
             onChange={(e) => handleChange('criticalThreshold', e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
           />
         </div>
       </div>
 
       {/* Daily usage estimate */}
       <div>
-        <label className="block text-xs font-medium text-neutral-700 mb-1">
+        <label className="block text-xs font-medium text-foreground mb-1">
           {t('rag.supply.fieldDailyUsage')}
         </label>
         <input
@@ -294,9 +335,9 @@ function SupplyForm({
           step="any"
           value={form.dailyUsageEstimate}
           onChange={(e) => handleChange('dailyUsageEstimate', e.target.value)}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
         />
-        <p className="text-xs text-neutral-400 mt-1">{t('rag.supply.dailyUsageHint')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('rag.supply.dailyUsageHint')}</p>
       </div>
 
       {/* Actions */}
@@ -335,7 +376,7 @@ function QuickStockEdit({
         step="any"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-20 rounded-md border border-neutral-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+        className="w-20 rounded-md border border-border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
         aria-label={t('rag.supply.quickStockAriaLabel')}
       />
       <button
@@ -352,7 +393,7 @@ function QuickStockEdit({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-md border border-neutral-200 bg-white p-1.5 text-neutral-500 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+        className="rounded-md border border-border bg-card p-1.5 text-muted-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-border"
         aria-label={t('rag.supply.cancel')}
       >
         <X size={13} aria-hidden="true" />
@@ -371,6 +412,7 @@ export function SupplyManagement() {
 
   const [items, setItems] = useState<SupplyItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<'none' | 'add' | 'edit'>('none')
   const [editingItem, setEditingItem] = useState<SupplyItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<SupplyItem | null>(null)
@@ -400,35 +442,56 @@ export function SupplyManagement() {
 
   async function handleAdd(values: SupplyFormValues) {
     if (!session) return
-    const item = formToItem(values, crypto.randomUUID(), session.practitionerId)
-    await putSupplyItem(item)
-    setFormMode('none')
-    await loadItems()
+    setError(null)
+    try {
+      const item = formToItem(values, crypto.randomUUID(), session.practitionerId ?? 'unknown')
+      await putSupplyItem(item)
+      setFormMode('none')
+      await loadItems()
+    } catch {
+      setError(t('rag.supply.errorSave'))
+    }
   }
 
   async function handleEdit(values: SupplyFormValues) {
     if (!session || !editingItem) return
-    const updated = formToItem(values, editingItem.id, session.practitionerId)
-    await putSupplyItem(updated)
-    setFormMode('none')
-    setEditingItem(null)
-    await loadItems()
+    setError(null)
+    try {
+      const updated = formToItem(values, editingItem.id, session.practitionerId ?? 'unknown')
+      await putSupplyItem(updated)
+      setFormMode('none')
+      setEditingItem(null)
+      await loadItems()
+    } catch {
+      setError(t('rag.supply.errorSave'))
+    }
   }
 
   async function handleDelete(item: SupplyItem) {
-    await deleteSupplyItem(item.id)
-    setDeleteTarget(null)
-    await loadItems()
+    setError(null)
+    try {
+      await deleteSupplyItem(item.id)
+      setDeleteTarget(null)
+      await loadItems()
+    } catch {
+      setDeleteTarget(null)
+      setError(t('rag.supply.errorDelete'))
+    }
   }
 
   async function handleQuickStock(item: SupplyItem, newStock: number) {
-    await updateSupplyItem(item.id, {
-      currentStock: newStock,
-      lastUpdated: new Date().toISOString(),
-      updatedBy: session?.practitionerId ?? 'unknown',
-    })
-    setQuickStockItem(null)
-    await loadItems()
+    setError(null)
+    try {
+      await updateSupplyItem(item.id, {
+        currentStock: newStock,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: session?.practitionerId ?? 'unknown',
+      })
+      setQuickStockItem(null)
+      await loadItems()
+    } catch {
+      setError(t('rag.supply.errorSave'))
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -489,9 +552,17 @@ export function SupplyManagement() {
       )}
 
       <div className="flex flex-col gap-4">
+        {/* Error banner */}
+        {error && (
+          <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-xs text-red-700" role="alert">
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-neutral-800">
+          <h2 className="text-base font-semibold text-foreground">
             {t('rag.supply.manageTitle')}
           </h2>
           <Button
@@ -510,41 +581,41 @@ export function SupplyManagement() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-14 animate-pulse rounded-lg bg-neutral-100"
+                className="h-14 animate-pulse rounded-lg bg-muted"
               />
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-neutral-200 py-10 text-center text-sm text-neutral-400">
+          <div className="rounded-lg border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
             {t('rag.supply.empty')}
           </div>
         ) : (
-          <div className="rounded-lg border border-neutral-200 overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
+              <thead className="bg-muted/30 border-b border-border">
                 <tr>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium text-neutral-500">
+                  <th className="px-4 py-2.5 text-start text-xs font-medium text-muted-foreground">
                     {t('rag.supply.colName')}
                   </th>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium text-neutral-500">
+                  <th className="px-4 py-2.5 text-start text-xs font-medium text-muted-foreground">
                     {t('rag.supply.colCategory')}
                   </th>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium text-neutral-500">
+                  <th className="px-4 py-2.5 text-start text-xs font-medium text-muted-foreground">
                     {t('rag.supply.colStock')}
                   </th>
-                  <th className="px-4 py-2.5 text-start text-xs font-medium text-neutral-500">
+                  <th className="px-4 py-2.5 text-start text-xs font-medium text-muted-foreground">
                     {t('rag.supply.colThresholds')}
                   </th>
-                  <th className="px-4 py-2.5 text-end text-xs font-medium text-neutral-500">
+                  <th className="px-4 py-2.5 text-end text-xs font-medium text-muted-foreground">
                     {t('rag.supply.colActions')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 bg-white">
+              <tbody className="divide-y divide-border/50 bg-card">
                 {items.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 font-medium text-neutral-800">{item.name}</td>
-                    <td className="px-4 py-3 text-neutral-500">{item.category}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{item.category}</td>
                     <td className="px-4 py-3">
                       {quickStockItem === item.id ? (
                         <QuickStockEdit
@@ -554,7 +625,7 @@ export function SupplyManagement() {
                         />
                       ) : (
                         <div>
-                          <span className="text-neutral-800">
+                          <span className="text-foreground">
                             {item.currentStock} {item.unit}
                           </span>
                           <button
@@ -567,7 +638,7 @@ export function SupplyManagement() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-neutral-500">
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       <span>
                         {t('rag.supply.reorder')}: {item.reorderThreshold} /&nbsp;
                         {t('rag.supply.critical')}: {item.criticalThreshold}
@@ -581,17 +652,15 @@ export function SupplyManagement() {
                             setEditingItem(item)
                             setFormMode('edit')
                           }}
-                          className="rounded p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-border"
                           aria-label={t('rag.supply.editAriaLabel', { name: item.name })}
                         >
-                          <DirectionalIcon category="navigation">
-                            <Pencil size={14} aria-hidden="true" />
-                          </DirectionalIcon>
+                          <Pencil size={14} aria-hidden="true" />
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(item)}
-                          className="rounded p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
                           aria-label={t('rag.supply.deleteAriaLabel', { name: item.name })}
                         >
                           <Trash2 size={14} aria-hidden="true" />

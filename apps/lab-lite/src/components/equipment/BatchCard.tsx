@@ -75,7 +75,7 @@ export function BatchCard({
       className={`rounded-lg border px-3 py-2 ${
         isCurrent
           ? 'border-amber-300 bg-amber-50'
-          : 'border-gray-200 bg-white'
+          : 'border-gray-200 bg-card'
       }`}
       data-testid={`batch-card-${batch.id}`}
     >
@@ -131,7 +131,12 @@ export function BatchCard({
       {/* Time estimates */}
       <div className="mt-1.5 flex gap-4 text-xs text-gray-500">
         <span>
-          {t('estimatedStart')}: <strong className="text-gray-700">{formatTime(batch.estimatedStartTime)}</strong>
+          {t('estimatedStart')}:{' '}
+          <strong className="text-gray-700">
+            {isCurrent && batch.status === 'QUEUED'
+              ? (t('now') ?? 'Now')
+              : formatTime(batch.estimatedStartTime)}
+          </strong>
         </span>
         <span>
           {t('estimatedCompletion')}: <strong className="text-gray-700">{formatTime(batch.estimatedCompletionTime)}</strong>

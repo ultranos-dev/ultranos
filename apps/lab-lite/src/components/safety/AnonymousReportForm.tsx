@@ -104,7 +104,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
 
       {/* Category selection */}
       <div>
-        <label className="mb-3 block text-sm font-medium text-neutral-700">
+        <label className="mb-3 block text-sm font-medium text-foreground">
           {t('categoryLabel')}
         </label>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -116,7 +116,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
               className={`flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors ${
                 category === cat
                   ? 'border-primary-500 bg-primary-50'
-                  : 'border-neutral-200 hover:border-neutral-300'
+                  : 'border-border hover:border-border'
               }`}
             >
               <span className="text-2xl">{CATEGORY_ICONS[cat]}</span>
@@ -132,7 +132,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
       <div>
         <label
           htmlFor="safety-report-details"
-          className="mb-2 block text-sm font-medium text-neutral-700"
+          className="mb-2 block text-sm font-medium text-foreground"
         >
           {t('detailsLabel')}
         </label>
@@ -142,7 +142,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
           onChange={(e) => setDetails(e.target.value)}
           placeholder={t('detailsPlaceholder')}
           rows={5}
-          className="w-full rounded-lg border border-neutral-300 p-3 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+          className="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
         />
         {details.length > 0 && !detailsValid && (
           <p className="mt-1 text-xs text-amber-600">

@@ -76,7 +76,7 @@ export function LearningJournal({
     <section aria-label={t('journalSectionLabel')} className="flex flex-col gap-4">
       {/* Header row */}
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-neutral-800">
+        <h2 className="text-base font-semibold text-foreground">
           {t('journalTitle')}
         </h2>
         <Button
@@ -91,12 +91,12 @@ export function LearningJournal({
 
       {/* Loading state */}
       {loading && (
-        <p className="text-sm text-neutral-500">{t('journalLoading')}</p>
+        <p className="text-sm text-muted-foreground">{t('journalLoading')}</p>
       )}
 
       {/* Empty state */}
       {!loading && entries.length === 0 && (
-        <p className="rounded-lg border border-dashed border-neutral-300 px-5 py-8 text-center text-sm text-neutral-500">
+        <p className="rounded-lg border border-dashed border-border px-5 py-8 text-center text-sm text-muted-foreground">
           {t('journalEmpty')}
         </p>
       )}
@@ -111,7 +111,7 @@ export function LearningJournal({
                 'rounded-xl border p-4 shadow-sm ' +
                 (entry.authorId === currentUserId
                   ? 'border-primary-200 bg-primary-50'
-                  : 'border-neutral-200 bg-white')
+                  : 'border-border bg-card')
               }
             >
               {/* Entry header */}
@@ -132,31 +132,31 @@ export function LearningJournal({
 
                 {/* "You" badge — shown only for current user's own entries */}
                 {entry.authorId === currentUserId && (
-                  <span className="inline-flex items-center rounded-full bg-neutral-200 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
+                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
                     {t('journalYou')}
                   </span>
                 )}
 
                 {/* Date */}
-                <span className="text-xs text-neutral-400">
+                <span className="text-xs text-muted-foreground">
                   {formatDate(entry.createdAt)}
                 </span>
 
                 {/* Pending sync badge */}
                 {entry.syncStatus === 'pending' && (
-                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-500">
+                  <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                     {t('journalSyncPending')}
                   </span>
                 )}
               </div>
 
               {/* Title */}
-              <h3 className="mb-1 text-sm font-semibold text-neutral-900 text-start">
+              <h3 className="mb-1 text-sm font-semibold text-foreground text-start">
                 {entry.title}
               </h3>
 
               {/* Body — rendered as preformatted plain text; no full markdown renderer needed */}
-              <pre className="mb-3 whitespace-pre-wrap break-words text-start font-sans text-sm text-neutral-700">
+              <pre className="mb-3 whitespace-pre-wrap break-words text-start font-sans text-sm text-foreground">
                 {entry.body}
               </pre>
 
@@ -169,7 +169,7 @@ export function LearningJournal({
                       key={photo.id}
                       src={photo.data}
                       alt={photo.alt ?? t('journalPhotoAlt')}
-                      className="h-20 w-20 rounded-md object-cover ring-1 ring-neutral-200"
+                      className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
                     />
                   ))}
                 </div>
@@ -177,7 +177,7 @@ export function LearningJournal({
 
               {/* Case context */}
               {entry.caseContext && (
-                <div className="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+                <div className="mt-2 rounded-lg bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
                   {entry.caseContext.procedureName && (
                     <p>
                       <span className="font-medium">{t('journalProcedureLabel')}</span>{' '}

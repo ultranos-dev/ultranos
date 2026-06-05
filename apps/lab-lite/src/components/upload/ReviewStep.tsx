@@ -31,24 +31,24 @@ export function ReviewStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-neutral-900">{t('reviewTitle')}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t('reviewTitle')}</h2>
 
-      <dl className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+      <dl className="divide-y divide-border/50 rounded-lg border border-border bg-card">
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">{t('patient')}</dt>
-          <dd className="text-sm text-neutral-900">{t('patientValue', { firstName: patientFirstName, age: patientAge })}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('patient')}</dt>
+          <dd className="text-sm text-foreground">{t('patientValue', { firstName: patientFirstName, age: patientAge })}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">{t('testCategory')}</dt>
-          <dd className="text-sm text-neutral-900">{loincDisplay}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('testCategory')}</dt>
+          <dd className="text-sm text-foreground">{loincDisplay}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">{t('file')}</dt>
-          <dd className="text-sm text-neutral-900">{t('fileValue', { fileName, fileSize: formatFileSize(fileSize) })}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('file')}</dt>
+          <dd className="text-sm text-foreground">{t('fileValue', { fileName, fileSize: formatFileSize(fileSize) })}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">{t('collectionDate')}</dt>
-          <dd className="text-sm text-neutral-900">{collectionDate}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('collectionDate')}</dt>
+          <dd className="text-sm text-foreground">{collectionDate}</dd>
         </div>
       </dl>
 

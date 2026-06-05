@@ -146,7 +146,7 @@ export function WasteDashboardView() {
             className={`rounded-full px-3 py-1 text-sm font-medium border transition-colors ${
               period === p
                 ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                : 'bg-card text-gray-700 border-gray-300 hover:border-blue-400'
             }`}
           >
             {t(`period.${p.replace('-', '_')}`)}
@@ -379,7 +379,7 @@ function SummaryCard({
   colorClass?: string
 }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-card p-4 shadow-sm">
       <p className="text-xs text-gray-500 mb-1">{label}</p>
       <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
     </div>

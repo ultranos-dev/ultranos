@@ -9,12 +9,12 @@ export default function CriticalValuesSettingsPage() {
       <div className="flex items-center gap-2">
         <Link
           href="/settings"
-          className="text-neutral-400 hover:text-neutral-600 rtl:-scale-x-100"
+          className="text-muted-foreground hover:text-muted-foreground rtl:-scale-x-100"
           aria-label="Back to settings"
         >
           <ChevronLeft size={20} />
         </Link>
-        <h1 className="text-2xl font-bold text-neutral-900">Critical Values &amp; Escalation</h1>
+        <h1 className="text-2xl font-bold text-foreground">Critical Values &amp; Escalation</h1>
       </div>
 
       {/* Thresholds */}

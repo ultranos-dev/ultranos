@@ -89,23 +89,23 @@ export function DriftAlertAcknowledgment({
       aria-modal="true"
       aria-labelledby="ack-dialog-title"
     >
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
         {/* Header */}
-        <div className="border-b border-neutral-200 px-5 py-4">
-          <h2 id="ack-dialog-title" className="text-base font-semibold text-neutral-900">
+        <div className="border-b border-border px-5 py-4">
+          <h2 id="ack-dialog-title" className="text-base font-semibold text-foreground">
             {t('acknowledgeAlertTitle')}
           </h2>
-          <p className="mt-0.5 text-sm text-neutral-500">{alert.analyte}</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">{alert.analyte}</p>
         </div>
 
         {/* Alert summary */}
         <div className="px-5 py-4">
-          <div className="mb-4 rounded-lg bg-neutral-50 p-3">
+          <div className="mb-4 rounded-lg bg-muted/30 p-3">
             <div className="flex items-center gap-2">
               <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${severityBadgeBg}`}>
                 {alert.severity}
               </span>
-              <span className="text-xs text-neutral-500">{alert.ruleViolated}</span>
+              <span className="text-xs text-muted-foreground">{alert.ruleViolated}</span>
             </div>
             <p className={`mt-1.5 text-sm ${severityColor}`}>{alert.message}</p>
           </div>
@@ -113,7 +113,7 @@ export function DriftAlertAcknowledgment({
           <form onSubmit={handleSubmit} noValidate>
             {/* Resolution selection — mandatory */}
             <fieldset>
-              <legend className="mb-2 text-sm font-medium text-neutral-700">
+              <legend className="mb-2 text-sm font-medium text-foreground">
                 {t('resolutionActionLabel')}
                 <span className="ms-1 text-red-500" aria-hidden="true">*</span>
               </legend>
@@ -121,7 +121,7 @@ export function DriftAlertAcknowledgment({
                 {RESOLUTION_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-neutral-200 p-2.5 hover:bg-neutral-50"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border p-2.5 hover:bg-muted/30"
                   >
                     <input
                       type="radio"
@@ -132,7 +132,7 @@ export function DriftAlertAcknowledgment({
                       className="h-4 w-4 text-blue-600"
                       required
                     />
-                    <span className="text-sm text-neutral-800">{t(opt.labelKey)}</span>
+                    <span className="text-sm text-foreground">{t(opt.labelKey)}</span>
                   </label>
                 ))}
               </div>
@@ -142,10 +142,10 @@ export function DriftAlertAcknowledgment({
             <div className="mt-4">
               <label
                 htmlFor="ack-notes"
-                className="mb-1.5 block text-sm font-medium text-neutral-700"
+                className="mb-1.5 block text-sm font-medium text-foreground"
               >
                 {t('notesLabel')}
-                <span className="ms-1 text-xs font-normal text-neutral-400">
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
                   ({t('optional')})
                 </span>
               </label>
@@ -155,7 +155,7 @@ export function DriftAlertAcknowledgment({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 maxLength={500}
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder={t('notesPlaceholder')}
               />
             </div>
@@ -172,7 +172,7 @@ export function DriftAlertAcknowledgment({
                 type="button"
                 onClick={onCancel}
                 disabled={submitting}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30 disabled:opacity-50"
               >
                 {t('cancel')}
               </button>

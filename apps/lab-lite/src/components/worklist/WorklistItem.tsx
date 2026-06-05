@@ -2,9 +2,11 @@
 
 import { useRef } from 'react'
 import type { PrioritizedSample } from '@/lib/prioritization-engine'
+import type { SampleLock } from '@/lib/db'
 import { UrgencyBadge } from './UrgencyBadge'
 import { StabilityBadge } from './StabilityBadge'
 import { BatchGroupIndicator } from './BatchGroupIndicator'
+import { LockIndicator } from '@/components/samples/LockIndicator'
 
 interface WorklistItemProps {
   sample: PrioritizedSample
@@ -19,6 +21,10 @@ interface WorklistItemProps {
   onTouchStart: (e: React.TouchEvent, index: number) => void
   index: number
   onResetOverride: (sampleId: string) => Promise<void>
+  /** AC 6: active lock for this sample, if any */
+  activeLock?: SampleLock | null
+  /** ID of the current technician — used to dim action buttons on locked samples */
+  currentTechId?: string
 }
 
 /**
@@ -42,7 +48,10 @@ export function WorklistItem({
   onTouchStart,
   index,
   onResetOverride,
+  activeLock,
+  currentTechId,
 }: WorklistItemProps) {
+  const isLockedByOther = activeLock?.status === 'ACTIVE' && activeLock.techId !== currentTechId
   const rowRef = useRef<HTMLDivElement>(null)
 
   const timeInQueueLabel =
@@ -53,9 +62,10 @@ export function WorklistItem({
   return (
     <div
       ref={rowRef}
-      className={`relative flex items-center gap-3 rounded-lg border bg-white px-4 py-3 shadow-sm transition-opacity select-none
-        ${isDragging ? 'opacity-50 border-dashed border-blue-400' : 'border-neutral-200 hover:border-neutral-300'}
+      className={`relative flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm transition-opacity select-none
+        ${isDragging ? 'opacity-50 border-dashed border-blue-400' : 'border-border hover:border-border'}
         ${sample.stabilityStatus === 'expired' ? 'border-red-300 bg-red-50' : ''}
+        ${isLockedByOther ? 'opacity-60' : ''}
       `}
       draggable
       onDragStart={() => onDragStart(index)}
@@ -69,7 +79,7 @@ export function WorklistItem({
       <BatchGroupIndicator isInBatch={isInBatch} isBatchStart={isBatchStart} />
 
       {/* Rank number */}
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
         {rank}
       </div>
 
@@ -78,13 +88,13 @@ export function WorklistItem({
 
       {/* Patient + test info — grows to fill space */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-neutral-900">
+        <p className="truncate text-sm font-medium text-foreground">
           {sample.patientRef.firstName}
-          <span className="ms-1 text-xs font-normal text-neutral-500">
+          <span className="ms-1 text-xs font-normal text-muted-foreground">
             {sample.patientRef.age}y
           </span>
         </p>
-        <p className="truncate text-xs text-neutral-500">{sample.loincDisplay}</p>
+        <p className="truncate text-xs text-muted-foreground">{sample.loincDisplay}</p>
       </div>
 
       {/* Stability badge */}
@@ -94,9 +104,12 @@ export function WorklistItem({
       />
 
       {/* Time in queue */}
-      <span className="shrink-0 text-xs text-neutral-400" aria-label={`In queue: ${timeInQueueLabel}`}>
+      <span className="shrink-0 text-xs text-muted-foreground" aria-label={`In queue: ${timeInQueueLabel}`}>
         {timeInQueueLabel}
       </span>
+
+      {/* AC 6: Lock indicator — shown when another tech holds the lock */}
+      {activeLock && <LockIndicator lock={activeLock} />}
 
       {/* Manual override chip */}
       {sample.isManualOverride && (

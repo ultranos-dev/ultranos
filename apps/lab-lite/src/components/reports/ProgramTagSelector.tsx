@@ -38,16 +38,17 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
         .filter((p) => p.loincCodes.includes(testLoincCode))
         .map((p) => p.programCode)
       setAutoTagged(suggested)
-
-      // Pre-select auto-tagged programs if value is currently empty
-      if (value.length === 0 && suggested.length > 0) {
-        onChange(suggested)
-      }
     })
     return () => { mounted = false }
-    // Run once on mount; testLoincCode changes should re-evaluate
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testLoincCode])
+
+  // Apply auto-tag when value is empty and suggestions are available
+  useEffect(() => {
+    if (value.length === 0 && autoTagged.length > 0) {
+      onChange(autoTagged)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoTagged])
 
   if (programs.length === 0) return null
 
@@ -61,7 +62,7 @@ export function ProgramTagSelector({ testLoincCode, value, onChange }: Props) {
   return (
     <div className="space-y-1" data-testid="program-tag-selector">
       <label className="block text-xs font-medium text-gray-600">
-        {t('tagPrograms')}
+        {t('tagTests')}
       </label>
       <div className="flex flex-wrap gap-2">
         {programs.map((p) => {

@@ -334,7 +334,7 @@ export function ChecklistTemplateEditor() {
                     key={item.id}
                     className={`rounded-lg border p-3 ${
                       item.isActive
-                        ? 'border-gray-200 bg-white'
+                        ? 'border-gray-200 bg-card'
                         : 'border-gray-100 bg-gray-50 opacity-60'
                     }`}
                   >

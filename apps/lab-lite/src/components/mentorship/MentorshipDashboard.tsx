@@ -183,7 +183,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
         {[1, 2].map((n) => (
           <div
             key={n}
-            className="h-24 animate-pulse rounded-xl border border-neutral-200 bg-neutral-100"
+            className="h-24 animate-pulse rounded-xl border border-border bg-muted"
             aria-hidden="true"
           />
         ))}
@@ -213,8 +213,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
           <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBack')}
         </button>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-neutral-800">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="mb-4 text-base font-semibold text-foreground">
             {t('checkInFormTitle', { name: getPartnerName(checkInPairing, currentUserId) })}
           </h2>
           <CheckInForm
@@ -271,8 +271,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
           <span className="inline-block rtl:scale-x-[-1]" aria-hidden>←</span>{' '}{t('dashboardBackToJournal')}
         </button>
 
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-neutral-800">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="mb-4 text-base font-semibold text-foreground">
             {t('journalAddEntry')}
           </h2>
           <JournalEntryForm
@@ -294,7 +294,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
   return (
     <section aria-label={t('dashboardSectionLabel')} className="flex flex-col gap-5">
       {/* Page title */}
-      <h1 className="text-lg font-semibold text-neutral-900">{t('dashboardTitle')}</h1>
+      <h1 className="text-lg font-semibold text-foreground">{t('dashboardTitle')}</h1>
 
       {/* Overdue check-in banner */}
       {overduePairings.length > 0 && (
@@ -308,9 +308,9 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
       {pairings.length === 0 && (
         <div
           role="status"
-          className="rounded-xl border border-dashed border-neutral-300 px-6 py-10 text-center"
+          className="rounded-xl border border-dashed border-border px-6 py-10 text-center"
         >
-          <p className="text-sm text-neutral-600">{t('dashboardNoPairings')}</p>
+          <p className="text-sm text-muted-foreground">{t('dashboardNoPairings')}</p>
         </div>
       )}
 
@@ -333,12 +333,12 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                     ? 'border-red-200 bg-red-50'
                     : overdue
                     ? 'border-amber-200 bg-amber-50'
-                    : 'border-neutral-200 bg-white')
+                    : 'border-border bg-card')
                 }
               >
                 {/* Top row: partner name + warning indicators */}
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-neutral-900">{partner}</span>
+                  <span className="font-medium text-foreground">{partner}</span>
 
                   {/* Role badge */}
                   <span
@@ -359,8 +359,8 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                       (pairing.status === 'active'
                         ? 'bg-green-100 text-green-800'
                         : pairing.status === 'paused'
-                        ? 'bg-neutral-200 text-neutral-700'
-                        : 'bg-neutral-100 text-neutral-500')
+                        ? 'bg-muted text-foreground'
+                        : 'bg-muted text-muted-foreground')
                     }
                   >
                     {t(`dashboardStatus_${pairing.status}`)}
@@ -390,24 +390,24 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
                 </div>
 
                 {/* Details row */}
-                <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-600 sm:grid-cols-4">
+                <dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-4">
                   <div>
-                    <dt className="font-medium text-neutral-500">{t('dashboardLastCheckIn')}</dt>
+                    <dt className="font-medium text-muted-foreground">{t('dashboardLastCheckIn')}</dt>
                     <dd>{formatDate(pairing.lastCheckInAt, t('dashboardNever'))}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-neutral-500">{t('dashboardNextCheckIn')}</dt>
+                    <dt className="font-medium text-muted-foreground">{t('dashboardNextCheckIn')}</dt>
                     <dd>{formatDate(pairing.nextCheckInDue, '—')}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-neutral-500">{t('dashboardJournalCount')}</dt>
+                    <dt className="font-medium text-muted-foreground">{t('dashboardJournalCount')}</dt>
                     <dd>{journalCount}</dd>
                   </div>
                 </dl>
 
                 {/* Action buttons — only for active/paused pairings */}
                 {pairing.status !== 'completed' && (
-                  <div className="flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+                  <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                     {pairing.status === 'active' && (
                       <Button
                         type="button"
@@ -431,7 +431,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
 
                 {/* Completed pairings: journal-only */}
                 {pairing.status === 'completed' && (
-                  <div className="flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+                  <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
                     <Button
                       type="button"
                       variant="ghost"

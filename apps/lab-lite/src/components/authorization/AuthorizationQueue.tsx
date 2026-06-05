@@ -53,7 +53,7 @@ function FlagBadge({ flag }: { flag: AbnormalityFlag }) {
 
 function EmptyState({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-neutral-500">
+    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
       <CircleCheck size={56} className="mb-4 text-green-400" aria-hidden="true" />
       <p className="text-lg font-medium">{t('emptyTitle')}</p>
       <p className="mt-1 text-sm">{t('emptySubtitle')}</p>
@@ -166,7 +166,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
     return (
       <div className="animate-pulse space-y-3 p-4" aria-busy="true" aria-label={t('loading')}>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 rounded-lg bg-neutral-100" />
+          <div key={i} className="h-14 rounded-lg bg-muted" />
         ))}
       </div>
     )
@@ -177,7 +177,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3">
         <select
-          className="rounded border border-neutral-300 px-3 py-1.5 text-sm"
+          className="rounded border border-border px-3 py-1.5 text-sm"
           value={sortKey}
           onChange={(e) => setSortKey(e.target.value as SortKey)}
           aria-label={t('sortBy')}
@@ -189,7 +189,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
         {categories.length > 0 && (
           <select
-            className="rounded border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded border border-border px-3 py-1.5 text-sm"
             value={categoryFilter ?? ''}
             onChange={(e) => setCategoryFilter(e.target.value || null)}
             aria-label={t('filterCategory')}
@@ -203,7 +203,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
 
         {technicians.length > 0 && (
           <select
-            className="rounded border border-neutral-300 px-3 py-1.5 text-sm"
+            className="rounded border border-border px-3 py-1.5 text-sm"
             value={techFilter ?? ''}
             onChange={(e) => setTechFilter(e.target.value || null)}
             aria-label={t('filterTechnician')}
@@ -220,19 +220,19 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
       {sorted.length === 0 ? (
         <EmptyState t={t} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
           <table className="w-full text-sm" role="table" aria-label={t('queueTitle')}>
-            <thead className="bg-neutral-50">
+            <thead className="bg-muted/30">
               <tr>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colPatient')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colTest')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colTech')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colTime')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colFlags')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-neutral-700">{t('colActions')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colPatient')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTest')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTech')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colTime')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colFlags')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-border/50">
               {sorted.map((result) => {
                 const flags = (result.abnormalityFlags ?? []) as AbnormalityFlag[]
                 const critical = isCriticalResult(flags)
@@ -250,18 +250,18 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
                   <tr
                     key={result.id}
                     className={[
-                      'transition-colors hover:bg-neutral-50',
+                      'transition-colors hover:bg-muted/30',
                       critical ? 'border-s-4 border-s-red-500' : '',
                     ].join(' ')}
                     role="row"
                   >
                     {/* Patient — first name + age only */}
                     <td className="px-4 py-3">
-                      <span className="font-medium text-neutral-900">
+                      <span className="font-medium text-foreground">
                         {result.patientFirstName ?? '—'}
                       </span>
                       {result.patientAge != null && (
-                        <span className="ms-1.5 text-neutral-500">
+                        <span className="ms-1.5 text-muted-foreground">
                           {result.patientAge}y
                         </span>
                       )}
@@ -273,17 +273,17 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
                     </td>
 
                     {/* Test */}
-                    <td className="px-4 py-3 text-neutral-700">
+                    <td className="px-4 py-3 text-foreground">
                       {result.testCategory ?? result.loincCode ?? '—'}
                     </td>
 
                     {/* Tech */}
-                    <td className="px-4 py-3 text-neutral-500 font-mono text-xs">
+                    <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                       {result.enteredBy}
                     </td>
 
                     {/* Time */}
-                    <td className="px-4 py-3 text-neutral-500">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {result.enteredAt ? formatRelativeTime(result.enteredAt) : '—'}
                     </td>
 
@@ -291,7 +291,7 @@ export function AuthorizationQueue({ results: externalResults }: AuthorizationQu
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {flags.length === 0 ? (
-                          <span className="text-neutral-400 text-xs">{t('noFlags')}</span>
+                          <span className="text-muted-foreground text-xs">{t('noFlags')}</span>
                         ) : (
                           flags.map((f, i) => <FlagBadge key={i} flag={f} />)
                         )}

@@ -11,7 +11,7 @@ const STATUS_CONFIG: Record<HistoryStatus, { label: string; className: string }>
   pending: { label: 'Pending', className: 'bg-yellow-50 text-yellow-700' },
   uploading: { label: 'Uploading', className: 'bg-orange-50 text-orange-700' },
   failed: { label: 'Failed', className: 'bg-red-50 text-red-700' },
-  expired: { label: 'Expired', className: 'bg-neutral-100 text-neutral-500' },
+  expired: { label: 'Expired', className: 'bg-muted text-muted-foreground' },
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {

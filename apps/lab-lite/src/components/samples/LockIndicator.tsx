@@ -20,7 +20,8 @@ interface LockIndicatorProps {
 
 function formatLockAge(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
+  const diffMin = Math.max(0, Math.floor(diffMs / 60_000))
+  if (diffMin === 0) return 'just now'
   if (diffMin < 60) return `${diffMin}m`
   return `${Math.floor(diffMin / 60)}h ${diffMin % 60}m`
 }

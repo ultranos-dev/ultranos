@@ -164,7 +164,7 @@ export function SOPLibrary() {
               <button
                 key={sop.id}
                 onClick={() => setSelectedSOP(sop)}
-                className="w-full rounded-lg border border-gray-200 bg-white p-4 text-start shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+                className="w-full rounded-lg border border-gray-200 bg-card p-4 text-start shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">

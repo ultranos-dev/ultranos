@@ -82,18 +82,18 @@ export function ComplianceTrendView({
     <div className="mx-auto max-w-3xl space-y-6 p-4">
       {/* ── Large score display ─────────────────────────────────────────────── */}
       {hasLatestCompleted && latestAudit ? (
-        <div className="rounded-xl border border-neutral-200 p-6 text-center">
+        <div className="rounded-xl border border-border p-6 text-center">
           <p
             className={`text-6xl font-bold ${
-              latestScore !== null ? scoreColorClass(latestScore) : 'text-neutral-400'
+              latestScore !== null ? scoreColorClass(latestScore) : 'text-muted-foreground'
             }`}
           >
             {latestScore !== null ? `${latestScore}%` : t('scoreNA')}
           </p>
-          <p className="mt-1 text-sm font-medium text-neutral-600">
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
             {t('complianceScore')}
           </p>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             {t('lastAudit')}: {latestAudit.auditDate}
           </p>
 
@@ -105,7 +105,7 @@ export function ComplianceTrendView({
                   ? 'bg-green-100 text-green-700'
                   : momDelta < 0
                     ? 'bg-red-100 text-red-700'
-                    : 'bg-neutral-100 text-neutral-500'
+                    : 'bg-muted text-muted-foreground'
               }`}
             >
               {momDelta > 0 ? '↑' : momDelta < 0 ? '↓' : '—'}
@@ -121,20 +121,20 @@ export function ComplianceTrendView({
         </div>
       ) : (
         /* No audits completed yet */
-        <div className="rounded-xl border border-dashed border-neutral-300 p-8 text-center">
-          <p className="text-sm font-medium text-neutral-600">{t('noAuditsCompleted')}</p>
-          <p className="mt-1 text-xs text-neutral-400">{t('noAuditsCTA')}</p>
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <p className="text-sm font-medium text-muted-foreground">{t('noAuditsCompleted')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('noAuditsCTA')}</p>
         </div>
       )}
 
       {/* ── Trend bar chart ─────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-neutral-200 p-4">
-        <h2 className="mb-4 text-sm font-semibold text-neutral-700">
+      <div className="rounded-xl border border-border p-4">
+        <h2 className="mb-4 text-sm font-semibold text-foreground">
           {t('trendChartTitle')}
         </h2>
 
         {chartData.length < 2 ? (
-          <p className="text-xs text-neutral-400">{t('notEnoughTrendData')}</p>
+          <p className="text-xs text-muted-foreground">{t('notEnoughTrendData')}</p>
         ) : (
           <div className="flex h-32 items-end gap-1.5" role="img" aria-label={t('trendChartAriaLabel')}>
             {chartData.map((point) => {
@@ -145,7 +145,7 @@ export function ComplianceTrendView({
                   className="flex flex-1 flex-col items-center gap-1"
                 >
                   {/* Score label above bar */}
-                  <span className="text-[9px] font-medium text-neutral-500">
+                  <span className="text-[9px] font-medium text-muted-foreground">
                     {point.score}%
                   </span>
                   {/* Bar */}
@@ -155,7 +155,7 @@ export function ComplianceTrendView({
                     title={`${point.month}: ${point.score}%`}
                   />
                   {/* Month label */}
-                  <span className="text-[8px] text-neutral-400 truncate w-full text-center">
+                  <span className="text-[8px] text-muted-foreground truncate w-full text-center">
                     {point.month}
                   </span>
                 </div>

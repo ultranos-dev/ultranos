@@ -18,7 +18,7 @@ export function HelpTip({ content, children }: HelpTipProps) {
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-xs text-neutral-500 hover:bg-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary-300"
         aria-label={content}
       >
         {children ?? '?'}
@@ -26,7 +26,7 @@ export function HelpTip({ content, children }: HelpTipProps) {
       {visible && (
         <div
           role="tooltip"
-          className="absolute bottom-full start-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-md bg-neutral-800 px-3 py-2 text-xs text-white shadow-lg"
+          className="absolute bottom-full start-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-md bg-card px-3 py-2 text-xs text-white shadow-lg"
         >
           {content}
           <div className="absolute top-full start-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-800" />

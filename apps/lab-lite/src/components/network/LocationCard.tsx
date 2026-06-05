@@ -30,7 +30,7 @@ function StatusBadge({ status, mode }: { status: LabLocation['status']; mode: La
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-        isActive ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-500'
+        isActive ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
       }`}
     >
       {isActive ? (mode === 'full' ? 'Full' : 'Collection Only') : 'Inactive'}
@@ -69,20 +69,20 @@ export function LocationCard({ location, snapshot }: LocationCardProps) {
     <button
       type="button"
       onClick={handleClick}
-      className="w-full rounded-lg border border-neutral-200 bg-white p-4 text-start shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+      className="w-full rounded-lg border border-border bg-card p-4 text-start shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
       aria-label={`${location.name} — ${snapshot.connectivityStatus}`}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-neutral-900">{location.name}</p>
+          <p className="truncate font-medium text-foreground">{location.name}</p>
           <div className="mt-0.5 flex items-center gap-1.5">
             <ConnectivityDot status={snapshot.connectivityStatus} />
-            <span className="text-xs text-neutral-500 capitalize">{snapshot.connectivityStatus}</span>
+            <span className="text-xs text-muted-foreground capitalize">{snapshot.connectivityStatus}</span>
           </div>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 capitalize">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize">
             {location.type}
           </span>
           <StatusBadge status={location.status} mode={location.mode} />
@@ -91,26 +91,26 @@ export function LocationCard({ location, snapshot }: LocationCardProps) {
 
       {/* Metrics row */}
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-md bg-neutral-50 p-2 text-center">
-          <p className="text-lg font-semibold text-neutral-900">{snapshot.pendingSamples}</p>
-          <p className="text-xs text-neutral-500">{t('pendingSamples')}</p>
+        <div className="rounded-md bg-muted/30 p-2 text-center">
+          <p className="text-lg font-semibold text-foreground">{snapshot.pendingSamples}</p>
+          <p className="text-xs text-muted-foreground">{t('pendingSamples')}</p>
         </div>
-        <div className="rounded-md bg-neutral-50 p-2 text-center">
-          <p className={`text-lg font-semibold ${snapshot.stockAlerts > 0 ? 'text-amber-600' : 'text-neutral-900'}`}>
+        <div className="rounded-md bg-muted/30 p-2 text-center">
+          <p className={`text-lg font-semibold ${snapshot.stockAlerts > 0 ? 'text-amber-600' : 'text-foreground'}`}>
             {snapshot.stockAlerts}
           </p>
-          <p className="text-xs text-neutral-500">{t('stockAlerts')}</p>
+          <p className="text-xs text-muted-foreground">{t('stockAlerts')}</p>
         </div>
-        <div className="rounded-md bg-neutral-50 p-2 text-center">
-          <p className="text-lg font-semibold text-neutral-900">{snapshot.staffOnDuty}</p>
-          <p className="text-xs text-neutral-500">{t('staffOnDuty')}</p>
+        <div className="rounded-md bg-muted/30 p-2 text-center">
+          <p className="text-lg font-semibold text-foreground">{snapshot.staffOnDuty}</p>
+          <p className="text-xs text-muted-foreground">{t('staffOnDuty')}</p>
         </div>
       </div>
 
       {/* Last sync row */}
       <div className="mt-3 flex items-center gap-1.5">
-        <Clock size={12} className={isStale ? 'text-amber-500' : 'text-neutral-400'} aria-hidden="true" />
-        <span className={`text-xs ${isStale ? 'text-amber-600' : 'text-neutral-500'}`}>
+        <Clock size={12} className={isStale ? 'text-amber-500' : 'text-muted-foreground'} aria-hidden="true" />
+        <span className={`text-xs ${isStale ? 'text-amber-600' : 'text-muted-foreground'}`}>
           {formatRelativeTime(snapshot.lastSyncTimestamp)}
           {!isOnline && <span className="ms-1 font-medium">{t('staleDataWarning')}</span>}
         </span>

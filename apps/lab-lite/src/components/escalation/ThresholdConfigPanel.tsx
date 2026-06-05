@@ -237,7 +237,7 @@ export function ThresholdConfigPanel() {
                     aria-label={t('toggleActive', { analyte: threshold.analyte })}
                   >
                     <span
-                      className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      className={`h-4 w-4 rounded-full bg-card shadow transition-transform ${
                         threshold.isActive ? 'translate-x-5' : 'translate-x-0.5'
                       }`}
                     />

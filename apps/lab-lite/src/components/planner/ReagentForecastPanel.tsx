@@ -33,20 +33,20 @@ function fmtDate(d: string | null): string {
 export function ReagentForecastPanel({ forecast }: Props) {
   if (forecast.items.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
         No active reagent inventory found.
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 space-y-3">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-700 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <FlaskConical size={16} className="text-blue-500" aria-hidden="true" />
           Reagent Forecast
         </h3>
-        <span className="text-xs rounded-full px-2 py-0.5 bg-neutral-100 text-neutral-500">
+        <span className="text-xs rounded-full px-2 py-0.5 bg-muted text-muted-foreground">
           {forecast.dataSource === 'burndown_48_2' ? 'Predictive Burndown' : 'Linear Projection'}
         </span>
       </div>
@@ -56,7 +56,7 @@ export function ReagentForecastPanel({ forecast }: Props) {
           <thead>
             <tr>
               {['Reagent', 'Stock', 'Projected Use', 'Depletion', 'Expiry', 'Order By', 'Est. Cost'].map((h) => (
-                <th key={h} className="text-start text-xs font-medium text-neutral-500 uppercase pb-2 border-b border-neutral-200 px-1">
+                <th key={h} className="text-start text-xs font-medium text-muted-foreground uppercase pb-2 border-b border-border px-1">
                   {h}
                 </th>
               ))}
@@ -65,13 +65,13 @@ export function ReagentForecastPanel({ forecast }: Props) {
           <tbody>
             {forecast.items.map((item) => (
               <tr key={item.reagentId ?? item.reagentName} className={rowClass(item)}>
-                <td className="py-2 px-1 border-b border-neutral-100 font-medium">{item.reagentName}</td>
-                <td className="py-2 px-1 border-b border-neutral-100">{item.currentStock}</td>
-                <td className="py-2 px-1 border-b border-neutral-100">{item.projectedConsumption}</td>
-                <td className="py-2 px-1 border-b border-neutral-100">{fmtDate(item.projectedDepletionDate)}</td>
-                <td className="py-2 px-1 border-b border-neutral-100">{fmtDate(item.expiryDate)}</td>
-                <td className="py-2 px-1 border-b border-neutral-100 font-medium">{fmtDate(item.reorderDeadline)}</td>
-                <td className="py-2 px-1 border-b border-neutral-100">
+                <td className="py-2 px-1 border-b border-border/50 font-medium">{item.reagentName}</td>
+                <td className="py-2 px-1 border-b border-border/50">{item.currentStock}</td>
+                <td className="py-2 px-1 border-b border-border/50">{item.projectedConsumption}</td>
+                <td className="py-2 px-1 border-b border-border/50">{fmtDate(item.projectedDepletionDate)}</td>
+                <td className="py-2 px-1 border-b border-border/50">{fmtDate(item.expiryDate)}</td>
+                <td className="py-2 px-1 border-b border-border/50 font-medium">{fmtDate(item.reorderDeadline)}</td>
+                <td className="py-2 px-1 border-b border-border/50">
                   {item.estimatedCost != null ? `${item.estimatedCost.toFixed(0)} AFN` : '—'}
                 </td>
               </tr>

@@ -134,7 +134,7 @@ export function PriorityWorklist({
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-16 animate-pulse rounded-lg bg-neutral-100"
+            className="h-16 animate-pulse rounded-lg bg-muted"
             aria-hidden="true"
           />
         ))}
@@ -152,10 +152,10 @@ export function PriorityWorklist({
 
   if (samples.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 px-6 py-12 text-center">
-        <ClipboardList size={40} className="mb-3 text-neutral-300" aria-hidden="true" />
-        <p className="text-sm font-medium text-neutral-500">No samples in queue</p>
-        <p className="mt-1 text-xs text-neutral-400">Received samples will appear here automatically.</p>
+      <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-muted/30 px-6 py-12 text-center">
+        <ClipboardList size={40} className="mb-3 text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm font-medium text-muted-foreground">No samples in queue</p>
+        <p className="mt-1 text-xs text-muted-foreground">Received samples will appear here automatically.</p>
       </div>
     )
   }
