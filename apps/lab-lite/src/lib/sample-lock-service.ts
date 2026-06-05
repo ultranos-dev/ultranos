@@ -98,8 +98,9 @@ export async function acquireLock(
 /**
  * Release the lock on a sample.
  *
- * Marks the lock as RELEASED or EXPIRED and records a chain-of-custody entry.
- * If the lock does not exist or is not ACTIVE, this is a no-op (already released).
+ * Only the lock holder (or the system for EXPIRED) may release.
+ * Wrapped in a Dexie transaction for atomicity.
+ * If the lock does not exist or is not ACTIVE, this is a no-op.
  */
 export async function releaseLock(
   sampleId: string,
@@ -111,30 +112,38 @@ export async function releaseLock(
   const existing = await getActiveLock(sampleId)
   if (!existing) return // Already released — no-op
 
+  // Ownership check: only the lock holder may release (system passes 'EXPIRED')
+  if (existing.techId !== techId && reason !== 'EXPIRED') {
+    throw new Error(`Unauthorized: lock on ${sampleId} is held by a different technician`)
+  }
+
+  const now = new Date().toISOString()
   const newStatus = reason === 'EXPIRED' ? 'EXPIRED' : 'RELEASED'
-  await putSampleLock({ ...existing, status: newStatus })
 
-  // Add chain-of-custody entry (append-only per CLAUDE.md Tier 1)
-  const custodyEventId = `lock-release-${sampleId}-${Date.now()}`
-  await addCustodyEvent({
-    id: custodyEventId,
-    sampleId,
-    eventType: 'lock-released',
-    fromActorId: existing.techId,
-    toActorId: techId,
-    timestamp: new Date().toISOString(),
-    notes: reason,
-  })
+  await db.transaction('rw', db.sample_locks, db.custody_events, db.syncQueue, async () => {
+    await putSampleLock({ ...existing, status: newStatus })
 
-  // Queue sync event for Hub (so other devices learn about the release)
-  await enqueueSyncEvent({
-    resourceType: 'SAMPLE_LOCK',
-    resourceId: sampleId,
-    status: 'pending',
-    payload: { action: 'RELEASE', sampleId, techId, reason, releasedAt: new Date().toISOString() },
-    createdAt: new Date().toISOString(),
-    lastAttemptAt: null,
-    retryCount: 0,
+    // Add chain-of-custody entry (append-only per CLAUDE.md Tier 1)
+    await addCustodyEvent({
+      id: crypto.randomUUID(),
+      sampleId,
+      eventType: 'lock-released',
+      fromActorId: existing.techId,
+      toActorId: techId,
+      timestamp: now,
+      notes: reason,
+    })
+
+    // Queue sync event for Hub (so other devices learn about the release)
+    await enqueueSyncEvent({
+      resourceType: 'SAMPLE_LOCK',
+      resourceId: sampleId,
+      status: 'pending',
+      payload: { action: 'RELEASE', sampleId, techId, reason, releasedAt: now },
+      createdAt: now,
+      lastAttemptAt: null,
+      retryCount: 0,
+    })
   })
 
   reportSampleLockAuditEvent({
@@ -159,49 +168,57 @@ export async function checkExpiredLocks(): Promise<SampleLock[]> {
 }
 
 // ---------------------------------------------------------------------------
-// autoReleaseLock (for expired locks)
+// autoReleaseLock (for expired locks — system-driven, no ownership check)
 // ---------------------------------------------------------------------------
 
 /**
  * Auto-release a lock that has passed its expiresAt.
  * Flags the sample with lockExpired and queues a manager notification.
+ * Wrapped in a Dexie transaction for atomicity.
  */
 export async function autoReleaseLock(lock: SampleLock): Promise<void> {
   const db = getDb()
 
-  // Mark lock as EXPIRED
-  await putSampleLock({ ...lock, status: 'EXPIRED' })
+  const now = new Date().toISOString()
+  const durationHours = Math.round(
+    (Date.now() - new Date(lock.lockedAt).getTime()) / 3_600_000,
+  )
 
-  // Chain-of-custody entry
-  const custodyEventId = `lock-expired-${lock.sampleId}-${Date.now()}`
-  await addCustodyEvent({
-    id: custodyEventId,
-    sampleId: lock.sampleId,
-    eventType: 'lock-expired',
-    fromActorId: lock.techId,
-    toActorId: 'SYSTEM',
-    timestamp: new Date().toISOString(),
-    notes: `Lock expired after ${Math.round((Date.now() - new Date(lock.lockedAt).getTime()) / 3_600_000)}h`,
-  })
+  await db.transaction('rw', db.sample_locks, db.custody_events, db.syncQueue, async () => {
+    // Re-read inside transaction to guard against concurrent double-release
+    const current = await db.sample_locks.get(lock.sampleId)
+    if (!current || current.status !== 'ACTIVE') return // Already released by a concurrent call
 
-  // Queue manager notification sync event
-  const durationMs = Date.now() - new Date(lock.lockedAt).getTime()
-  const durationHours = Math.round(durationMs / 3_600_000)
-  await enqueueSyncEvent({
-    resourceType: 'SAMPLE_LOCK_NOTIFICATION',
-    resourceId: lock.sampleId,
-    status: 'pending',
-    payload: {
-      type: 'LOCK_EXPIRED',
+    await putSampleLock({ ...lock, status: 'EXPIRED' })
+
+    // Chain-of-custody entry
+    await addCustodyEvent({
+      id: crypto.randomUUID(),
       sampleId: lock.sampleId,
-      techId: lock.techId,
-      techName: lock.techName,
-      durationHours,
-      expiredAt: new Date().toISOString(),
-    },
-    createdAt: new Date().toISOString(),
-    lastAttemptAt: null,
-    retryCount: 0,
+      eventType: 'lock-expired',
+      fromActorId: lock.techId,
+      toActorId: 'SYSTEM',
+      timestamp: now,
+      notes: `Lock expired after ${durationHours}h`,
+    })
+
+    // Queue manager notification sync event
+    await enqueueSyncEvent({
+      resourceType: 'SAMPLE_LOCK_NOTIFICATION',
+      resourceId: lock.sampleId,
+      status: 'pending',
+      payload: {
+        type: 'LOCK_EXPIRED',
+        sampleId: lock.sampleId,
+        techId: lock.techId,
+        techName: lock.techName,
+        durationHours,
+        expiredAt: now,
+      },
+      createdAt: now,
+      lastAttemptAt: null,
+      retryCount: 0,
+    })
   })
 
   reportSampleLockAuditEvent({
@@ -219,6 +236,7 @@ export async function autoReleaseLock(lock: SampleLock): Promise<void> {
 /**
  * Queue a release request notification to the lock holder and lab manager.
  * Does not release the lock — the lock holder must release it manually.
+ * Deduplicates: if a request was already sent for this lock, this is a no-op.
  */
 export async function requestRelease(
   sampleId: string,
@@ -226,6 +244,13 @@ export async function requestRelease(
 ): Promise<void> {
   const existing = await getActiveLock(sampleId)
   if (!existing) return // Lock already gone — nothing to request
+
+  // Deduplication: only send one release request per lock acquisition
+  if (existing.releaseRequestedAt) return
+
+  const now = new Date().toISOString()
+  // Record that the request was sent (prevents duplicate notifications on re-open)
+  await putSampleLock({ ...existing, releaseRequestedAt: now })
 
   await enqueueSyncEvent({
     resourceType: 'SAMPLE_LOCK_REQUEST',
@@ -237,9 +262,9 @@ export async function requestRelease(
       lockHolderTechId: existing.techId,
       lockHolderTechName: existing.techName,
       requestingTechId,
-      requestedAt: new Date().toISOString(),
+      requestedAt: now,
     },
-    createdAt: new Date().toISOString(),
+    createdAt: now,
     lastAttemptAt: null,
     retryCount: 0,
   })

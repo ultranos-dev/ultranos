@@ -24,6 +24,17 @@ import type { TemplateField, ReferenceRange } from '@/lib/result-templates'
 export type AbnormalFlag = 'L' | 'H' | 'LL' | 'HH'
 
 /**
+ * Localized range thresholds (from Story 43.8 range resolver).
+ * When provided, these take priority over template inline ranges.
+ */
+export interface LocalizedRangeThresholds {
+  referenceLow: number
+  referenceHigh: number
+  criticalLow?: number
+  criticalHigh?: number
+}
+
+/**
  * Resolve the most specific matching reference range for the given age/gender.
  * Preference order:
  *   1. Gender + age match (most specific)
@@ -69,20 +80,36 @@ function resolveRange(
 }
 
 /**
- * Evaluate a numeric value against the field's reference ranges and return
+ * Evaluate a numeric value against reference ranges and return
  * the appropriate abnormal flag, or null if the value is within normal range.
  *
- * @param value        - The numeric result value to evaluate
- * @param field        - The template field definition (provides reference ranges)
- * @param patientAge   - Patient age in years
- * @param patientGender - Patient gender string ('male' | 'female' | other)
+ * When `localizedRange` is provided (Story 43.8), it takes priority over the
+ * field's inline reference ranges. This enables altitude-adjusted, population-
+ * specific flagging without modifying templates.
+ *
+ * @param value          - The numeric result value to evaluate
+ * @param field          - The template field definition (provides fallback reference ranges)
+ * @param patientAge     - Patient age in years
+ * @param patientGender  - Patient gender string ('male' | 'female' | other)
+ * @param localizedRange - Optional localized range thresholds (takes priority over template)
  */
 export function evaluateFlag(
   value: number,
   field: TemplateField,
   patientAge: number,
   patientGender: string,
+  localizedRange?: LocalizedRangeThresholds,
 ): AbnormalFlag | null {
+  // Use localized range if provided (Story 43.8 AC #2)
+  if (localizedRange) {
+    if (localizedRange.criticalLow != null && value <= localizedRange.criticalLow) return 'LL'
+    if (value < localizedRange.referenceLow) return 'L'
+    if (localizedRange.criticalHigh != null && value >= localizedRange.criticalHigh) return 'HH'
+    if (value > localizedRange.referenceHigh) return 'H'
+    return null
+  }
+
+  // Fallback to template inline ranges
   if (!field.referenceRanges || field.referenceRanges.length === 0) return null
 
   const range = resolveRange(field.referenceRanges, patientAge, patientGender)

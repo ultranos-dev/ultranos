@@ -185,6 +185,7 @@ function ImageModal({ log, onClose }: ImageModalProps) {
 
 export function DailyLogHistory() {
   const t = useTranslations('dailyLog')
+  const tCommon = useTranslations('common')
   // Recalculate dates on each render so they stay fresh past midnight (P12)
   const today = todayISO()
   const from = thirtyDaysAgoISO()
@@ -196,7 +197,7 @@ export function DailyLogHistory() {
     return (
       <div className="rounded-lg border border-border bg-card p-4">
         <p className="text-sm font-semibold text-foreground mb-3">{t('history')}</p>
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{tCommon('loading')}</p>
       </div>
     )
   }

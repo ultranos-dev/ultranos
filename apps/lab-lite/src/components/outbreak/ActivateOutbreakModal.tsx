@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { AlertTriangle, ChevronDown } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -77,6 +78,7 @@ interface Props {
 }
 
 export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }: Props) {
+  const t = useTranslations('outbreak')
   const session = useAuthSessionStore((s) => s.session)
 
   // Role gate: only render for authorized roles
@@ -141,11 +143,11 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
   }
 
   function validateForm(): string | null {
-    if (!selectedPathogen) return 'Please select a target pathogen.'
-    if (selectedTestCodes.length === 0) return 'Please select at least one target test.'
-    if (selectedScope.length === 0) return 'Please select at least one lab location.'
-    if (!activationReason.trim()) return 'Please enter an activation reason.'
-    if (surgeMultiplier < 1.5 || surgeMultiplier > 10) return 'Surge multiplier must be between 1.5 and 10.'
+    if (!selectedPathogen) return t('validationPathogen')
+    if (selectedTestCodes.length === 0) return t('validationTestCodes')
+    if (selectedScope.length === 0) return t('validationScope')
+    if (!activationReason.trim()) return t('validationReason')
+    if (surgeMultiplier < 1.5 || surgeMultiplier > 10) return t('validationSurge')
     return null
   }
 
@@ -174,7 +176,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
       }
       await onActivated(input)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Activation failed. Please try again.')
+      setError(err instanceof Error ? err.message : t('activationFailed'))
       setShowConfirm(false)
     } finally {
       setSubmitting(false)
@@ -183,7 +185,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
 
   if (showConfirm) {
     return (
-      <div role="dialog" aria-modal="true" aria-label="Confirm Outbreak Mode Activation"
+      <div role="dialog" aria-modal="true" aria-label={t('confirmActivateAriaLabel')}
         style={{
           position: 'fixed', inset: 0, zIndex: 10000,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -198,26 +200,24 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBlockEnd: '1rem' }}>
             <AlertTriangle size={28} color="#dc2626" aria-hidden="true" />
             <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#dc2626' }}>
-              Confirm Outbreak Mode Activation
+              {t('confirmActivateTitle')}
             </h2>
           </div>
 
           <p style={{ marginBlockEnd: '0.75rem' }}>
-            You are activating <strong>Outbreak Mode</strong> for{' '}
-            <strong>{selectedPathogen!.display}</strong> across{' '}
-            <strong>{selectedScope.length} location{selectedScope.length !== 1 ? 's' : ''}</strong>.
+            {t('confirmActivateBody', { pathogen: selectedPathogen!.display, count: selectedScope.length })}
           </p>
 
           <ul style={{ marginBlockEnd: '1rem', paddingInlineStart: '1.5rem' }}>
-            <li>Target tests: <strong>{selectedTestCodes.join(', ')}</strong></li>
-            <li>Surge multiplier: <strong>{surgeMultiplier}×</strong></li>
-            <li>Reporting switches to <strong>real-time</strong></li>
-            <li>Queue priority enabled for target pathogen samples</li>
-            <li>Inventory alerts recalibrated for surge demand</li>
+            <li>{t('targetTestsItem', { codes: selectedTestCodes.join(', ') })}</li>
+            <li>{t('surgeMultiplierItem', { value: surgeMultiplier })}</li>
+            <li>{t('realtimeReportingItem')}</li>
+            <li>{t('queuePriorityItem')}</li>
+            <li>{t('inventoryAlertsItem')}</li>
           </ul>
 
           <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBlockEnd: '1.5rem' }}>
-            <strong>Reason:</strong> {activationReason}
+            <strong>{t('reasonLabel')}</strong> {activationReason}
           </p>
 
           {error && (
@@ -236,7 +236,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
                 border: '1px solid #d1d5db', cursor: 'pointer', backgroundColor: '#fff',
               }}
             >
-              Cancel
+              {t('cancelButton')}
             </button>
             <button
               type="button"
@@ -248,7 +248,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
                 border: 'none', cursor: 'pointer', fontWeight: 600,
               }}
             >
-              {submitting ? 'Activating…' : 'Activate Outbreak Mode'}
+              {submitting ? t('activatingButton') : t('activateButton')}
             </button>
           </div>
         </div>
@@ -257,7 +257,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Activate Outbreak Mode"
+    <div role="dialog" aria-modal="true" aria-label={t('activateAriaLabel')}
       style={{
         position: 'fixed', inset: 0, zIndex: 10000,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -271,14 +271,14 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBlockEnd: '1.5rem' }}>
           <AlertTriangle size={24} color="#dc2626" aria-hidden="true" />
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-            Activate Outbreak Mode
+            {t('activateTitle')}
           </h2>
         </div>
 
         {/* Target Pathogen */}
         <div style={{ marginBlockEnd: '1rem' }}>
           <label htmlFor="pathogen-input" style={{ display: 'block', fontWeight: 600, marginBlockEnd: '0.375rem' }}>
-            Target Pathogen *
+            {t('targetPathogenLabel')} *
           </label>
           <div style={{ position: 'relative' }}>
             <input
@@ -291,7 +291,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
               }}
               onFocus={() => setShowPathogenDropdown(true)}
               onBlur={() => setTimeout(() => setShowPathogenDropdown(false), 150)}
-              placeholder="Search pathogens or enter custom…"
+              placeholder={t('pathogenSearchPlaceholder')}
               style={{
                 width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px',
                 border: '1px solid #d1d5db', fontSize: '0.9375rem', boxSizing: 'border-box',
@@ -323,7 +323,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
                     onMouseDown={handleCustomPathogen}
                     style={{ padding: '0.5rem 0.75rem', cursor: 'pointer', color: '#6b7280', fontStyle: 'italic' }}
                   >
-                    Use &ldquo;{pathogenQuery}&rdquo; as custom pathogen
+                    {t('customPathogenOption', { query: pathogenQuery })}
                   </li>
                 )}
               </ul>
@@ -334,7 +334,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
         {/* Target Test Codes */}
         {availableLoincCodes.length > 0 && (
           <div style={{ marginBlockEnd: '1rem' }}>
-            <p style={{ fontWeight: 600, marginBlockEnd: '0.375rem' }}>Target Test Codes *</p>
+            <p style={{ fontWeight: 600, marginBlockEnd: '0.375rem' }}>{t('targetTestCodesLabel')} *</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {availableLoincCodes.map(({ code, display }) => (
                 <label key={code} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -353,7 +353,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
         {/* Affected Scope */}
         {labLocationIds.length > 0 && (
           <div style={{ marginBlockEnd: '1rem' }}>
-            <p style={{ fontWeight: 600, marginBlockEnd: '0.375rem' }}>Affected Lab Locations *</p>
+            <p style={{ fontWeight: 600, marginBlockEnd: '0.375rem' }}>{t('affectedLocationsLabel')} *</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
               {labLocationIds.map((locationId) => (
                 <label key={locationId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -372,13 +372,13 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
         {/* Activation Reason */}
         <div style={{ marginBlockEnd: '1rem' }}>
           <label htmlFor="activation-reason" style={{ display: 'block', fontWeight: 600, marginBlockEnd: '0.375rem' }}>
-            Activation Reason *
+            {t('activationReasonLabel')} *
           </label>
           <textarea
             id="activation-reason"
             value={activationReason}
             onChange={(e) => setActivationReason(e.target.value)}
-            placeholder='e.g. "WHO outbreak alert", "Provincial directive #12"'
+            placeholder={t('activationReasonPlaceholder')}
             rows={3}
             style={{
               width: '100%', padding: '0.5rem 0.75rem', borderRadius: '6px',
@@ -390,7 +390,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
         {/* Surge Multiplier */}
         <div style={{ marginBlockEnd: '1.5rem' }}>
           <label htmlFor="surge-multiplier" style={{ display: 'block', fontWeight: 600, marginBlockEnd: '0.375rem' }}>
-            Surge Inventory Multiplier
+            {t('surgeMultiplierLabel')}
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <input
@@ -407,7 +407,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
               }}
             />
             <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-              × normal consumption rate (range: 1.5× – 10×, default 3×)
+              {t('surgeMultiplierHint')}
             </span>
           </div>
         </div>
@@ -427,7 +427,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
               border: '1px solid #d1d5db', cursor: 'pointer', backgroundColor: '#fff',
             }}
           >
-            Cancel
+            {t('cancelButton')}
           </button>
           <button
             type="button"
@@ -438,7 +438,7 @@ export function ActivateOutbreakModal({ labLocationIds, onActivated, onCancel }:
               border: 'none', cursor: 'pointer', fontWeight: 600,
             }}
           >
-            Review &amp; Confirm
+            {t('reviewConfirm')}
           </button>
         </div>
       </div>

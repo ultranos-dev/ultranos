@@ -18,12 +18,15 @@ import type { ReportableDiseaseConfig, SurveillanceBaseline, SpikeDetectionResul
 // Date utilities
 // ---------------------------------------------------------------------------
 
-/** Parse a YYYY-MM-DD date string into a Date. */
+/** Parse a YYYY-MM-DD date string into a Date. Throws on malformed input. */
 function parseDate(dateStr: string): Date {
   const parts = dateStr.split('-').map(Number)
-  const y = parts[0] ?? 2000
-  const m = parts[1] ?? 1
-  const d = parts[2] ?? 1
+  const y = parts[0]
+  const m = parts[1]
+  const d = parts[2]
+  if (!y || !m || !d || isNaN(y) || isNaN(m) || isNaN(d)) {
+    throw new Error(`Invalid date string: "${dateStr}"`)
+  }
   return new Date(y, m - 1, d)
 }
 
@@ -42,16 +45,22 @@ function daysFromDate(baseISO: string, days: number): string {
   return formatDate(d)
 }
 
-/** Get ISO 8601 week number string for a date. */
+/** Get ISO 8601 week number string for a date (year-boundary safe). */
 function isoWeekKey(dateStr: string): string {
   const d = parseDate(dateStr)
-  const jan4 = new Date(d.getFullYear(), 0, 4)
-  const dayOfWeek = jan4.getDay() || 7
-  const weekStart = new Date(jan4)
-  weekStart.setDate(jan4.getDate() - dayOfWeek + 1)
-  const diff = d.getTime() - weekStart.getTime()
+  // Find the Thursday of this date's week (ISO weeks are defined by their Thursday)
+  const dayOfWeek = d.getDay() || 7 // Mon=1 … Sun=7
+  const thursday = new Date(d)
+  thursday.setDate(d.getDate() + (4 - dayOfWeek))
+  // The ISO week-year is the year that contains this Thursday
+  const isoYear = thursday.getFullYear()
+  // Week 1 contains Jan 4, so find Jan 1 of isoYear and its Thursday-based week start
+  const jan1 = new Date(isoYear, 0, 1)
+  const jan1Day = jan1.getDay() || 7
+  const week1Start = new Date(isoYear, 0, 1 + (1 - jan1Day)) // Monday of week containing Jan 1
+  const diff = thursday.getTime() - week1Start.getTime()
   const week = Math.floor(diff / (7 * 86400000)) + 1
-  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`
+  return `${isoYear}-W${String(week).padStart(2, '0')}`
 }
 
 // ---------------------------------------------------------------------------
@@ -106,10 +115,10 @@ export async function calculateRollingBaseline(
   const windowStart = daysFromDate(asOfDate, -35) // 5 weeks back
   const windowEnd = daysFromDate(asOfDate, -7)   // exclude current week
 
-  // Query logbook entries in the 4-week historical window
+  // Query logbook entries in the 4-week historical window (end exclusive to avoid overlap with current period)
   const entries = await db.labLogbook
     .where('date')
-    .between(windowStart, windowEnd, true, true)
+    .between(windowStart, windowEnd, true, false)
     .filter((e) => disease.loincCodes.includes(e.testLoincCode))
     .toArray()
 

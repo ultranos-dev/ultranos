@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSyncStore } from '@/stores/sync-store'
 import { getDb } from '@/lib/db'
@@ -26,6 +26,8 @@ export function SyncPulse() {
   const router = useRouter()
   const { pendingCount, failedCount, lastSyncedAt, updateSyncStatus } = useSyncStore()
   const [, setTick] = useState(0)
+  // Track previous total to detect when queue clears (drain completed)
+  const prevTotalRef = useRef<number | null>(null)
 
   // Tick every 30s so timestamp ages correctly
   useEffect(() => {
@@ -33,19 +35,27 @@ export function SyncPulse() {
     return () => clearInterval(interval)
   }, [])
 
-  // Refresh counts from Dexie on mount and every 10s
+  // Refresh counts from Dexie on mount and every 10s.
+  // When the queue transitions from non-zero to zero, mark lastSyncedAt.
   useEffect(() => {
     const refresh = async () => {
       const db = getDb()
       const pending = await db.uploadQueue.where('status').anyOf(['pending', 'uploading']).count()
       const failed = await db.uploadQueue.where('status').equals('failed').count()
+      const total = pending + failed
+
+      const prevTotal = prevTotalRef.current
+      const justCleared = prevTotal !== null && prevTotal > 0 && total === 0
+
       updateSyncStatus({
         isPending: pending > 0,
         isError: failed > 0,
-        lastSyncedAt: useSyncStore.getState().lastSyncedAt,
+        lastSyncedAt: justCleared ? new Date().toISOString() : useSyncStore.getState().lastSyncedAt,
         pendingCount: pending,
         failedCount: failed,
       })
+
+      prevTotalRef.current = total
     }
     void refresh()
     const interval = setInterval(() => void refresh(), 10_000)

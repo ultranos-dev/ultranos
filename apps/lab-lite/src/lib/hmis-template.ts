@@ -108,5 +108,6 @@ export const MONTH_NAMES_EN = [
 
 /** Format a reporting period label. */
 export function formatReportingPeriod(year: number, month: number): string {
-  return `${MONTH_NAMES_EN[month - 1]} ${year}`
+  const name = (month >= 1 && month <= 12) ? MONTH_NAMES_EN[month - 1] : `Month ${month}`
+  return `${name} ${year}`
 }

@@ -49,7 +49,7 @@ export function onSurveillanceAlert(listener: SurveillanceAlertListener): () => 
 }
 
 function emitSurveillanceAlert(alert: SurveillanceAlert): void {
-  for (const listener of alertListeners) {
+  for (const listener of [...alertListeners]) {
     try { listener(alert) } catch { /* listener errors must not break scheduler */ }
   }
 }
@@ -111,9 +111,13 @@ export function buildAlertMessage(alert: Omit<SurveillanceAlert, 'id' | 'message
     return `${alert.diseaseLabel} positivity rate at ${rate}% (baseline: ${baseline}%) — ${ratio} above 4-week average. ${count} positive cases out of ${total} tests in the past 7 days.`
   }
 
-  // Cluster
+  // Cluster — derive window hours from timestamps when available
   const count = alert.clusterCaseCount ?? 0
-  const hours = 48 // default window
+  let hours = 48
+  if (alert.clusterWindowStart && alert.clusterWindowEnd) {
+    const diffMs = new Date(alert.clusterWindowEnd).getTime() - new Date(alert.clusterWindowStart).getTime()
+    hours = Math.round(diffMs / (60 * 60 * 1000))
+  }
   return `${alert.diseaseLabel} cluster detected: ${count} confirmed cases within the last ${hours} hours.`
 }
 
@@ -259,6 +263,10 @@ const SPIKE_CHECK_INTERVAL_MS = 60 * 60 * 1000    // 1 hour (checks if daily run
 let clusterIntervalHandle: ReturnType<typeof setInterval> | null = null
 let spikeIntervalHandle: ReturnType<typeof setInterval> | null = null
 
+// Mutex guards to prevent concurrent surveillance checks from generating duplicate alerts
+let spikeCheckRunning = false
+let clusterCheckRunning = false
+
 /**
  * Check if the daily spike check is due.
  * Due if: never run, or last run was on a previous calendar day, AND current
@@ -275,44 +283,68 @@ async function isDailySpikeCheckDue(): Promise<boolean> {
   if (!config.lastSpikeCheckAt) return true
 
   const lastRun = new Date(config.lastSpikeCheckAt)
-  const lastRunDate = lastRun.toISOString().slice(0, 10)
-  const todayDate = now.toISOString().slice(0, 10)
+  // Use local date components to avoid UTC/local timezone mismatch (Afghanistan is UTC+4:30)
+  const toLocalDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const lastRunDate = toLocalDateStr(lastRun)
+  const todayDate = toLocalDateStr(now)
 
   return lastRunDate < todayDate
 }
 
 async function runDailySpikeCheck(): Promise<void> {
+  if (spikeCheckRunning) return
   if (!(await isDailySpikeCheckDue())) return
 
-  const { alertsGenerated, diseasesChecked } = await runSurveillanceCheck('spike')
+  spikeCheckRunning = true
+  try {
+    const { alertsGenerated, diseasesChecked } = await runSurveillanceCheck('spike')
 
-  // Update last run timestamp
-  const config = await getSurveillanceSchedulerConfig()
-  await putSurveillanceSchedulerConfig({
-    ...config,
-    lastSpikeCheckAt: new Date().toISOString(),
-  })
-
-  // Audit: SURVEILLANCE_CHECK_COMPLETED
-  void import('./audit-client').then(({ reportSurveillanceAuditEvent }) => {
-    reportSurveillanceAuditEvent({
-      action: 'SURVEILLANCE_CHECK_COMPLETED',
-      diseasesChecked,
-      alertsGenerated,
+    // Update last run timestamp
+    const config = await getSurveillanceSchedulerConfig()
+    await putSurveillanceSchedulerConfig({
+      ...config,
+      lastSpikeCheckAt: new Date().toISOString(),
     })
-  })
+
+    // Audit: SURVEILLANCE_CHECK_COMPLETED
+    void import('./audit-client').then(({ reportSurveillanceAuditEvent }) => {
+      reportSurveillanceAuditEvent({
+        action: 'SURVEILLANCE_CHECK_COMPLETED',
+        diseasesChecked,
+        alertsGenerated,
+      })
+    })
+  } finally {
+    spikeCheckRunning = false
+  }
 }
 
 async function runClusterCheck(): Promise<void> {
+  if (clusterCheckRunning) return
   const config = await getSurveillanceSchedulerConfig()
   if (!config.isEnabled) return
 
-  await runSurveillanceCheck('cluster')
+  clusterCheckRunning = true
+  try {
+    const { alertsGenerated, diseasesChecked } = await runSurveillanceCheck('cluster')
 
-  await putSurveillanceSchedulerConfig({
-    ...config,
-    lastClusterCheckAt: new Date().toISOString(),
-  })
+    await putSurveillanceSchedulerConfig({
+      ...config,
+      lastClusterCheckAt: new Date().toISOString(),
+    })
+
+    // Audit: SURVEILLANCE_CHECK_COMPLETED
+    void import('./audit-client').then(({ reportSurveillanceAuditEvent }) => {
+      reportSurveillanceAuditEvent({
+        action: 'SURVEILLANCE_CHECK_COMPLETED',
+        diseasesChecked,
+        alertsGenerated,
+      })
+    })
+  } finally {
+    clusterCheckRunning = false
+  }
 }
 
 /** Start the surveillance scheduler (call on app init, client-side only). */

@@ -308,11 +308,11 @@ describe('shareFile', () => {
 
     const blob = new Blob(['data'], { type: 'image/png' })
     const result = await shareFile(blob, 'test.png', { title: 'Test', text: 'Test report' })
-    expect(result).toBe(true)
+    expect(result).toBe('shared')
     expect(mockShare).toHaveBeenCalledOnce()
   })
 
-  it('returns false when user cancels share (AbortError)', async () => {
+  it('returns cancelled when user cancels share (AbortError)', async () => {
     const mockShare = vi.fn().mockRejectedValue(Object.assign(new Error('Aborted'), { name: 'AbortError' }))
     const mockCanShare = vi.fn().mockReturnValue(true)
     Object.defineProperty(navigator, 'canShare', { value: mockCanShare, configurable: true })
@@ -320,7 +320,7 @@ describe('shareFile', () => {
 
     const blob = new Blob(['data'], { type: 'image/png' })
     const result = await shareFile(blob, 'test.png', { title: 'Test', text: 'Test' })
-    expect(result).toBe(false)
+    expect(result).toBe('cancelled')
   })
 
   it('falls back to download when canShare is not available', async () => {
@@ -333,7 +333,7 @@ describe('shareFile', () => {
 
     const blob = new Blob(['data'], { type: 'image/png' })
     const result = await shareFile(blob, 'test.png', { title: 'Test', text: 'Test' })
-    expect(result).toBe(true)
+    expect(result).toBe('downloaded')
     expect(mockAnchor.click).toHaveBeenCalledOnce()
   })
 

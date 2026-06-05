@@ -47,11 +47,11 @@ function isRtl(locale: string): boolean {
  * Returns a hex string. First 8 chars serve as the verification code.
  */
 export async function computeLogHash(log: Omit<DailyActivityLog, 'imageBlob' | 'imageHash' | 'status' | 'id'>): Promise<string> {
+  // Exclude volatile fields (generatedAt, generatedBy) so the same date's data
+  // produces the same verification code regardless of when/who regenerates it.
   const json = JSON.stringify({
     logDate: log.logDate,
     facilityName: log.facilityName,
-    generatedAt: log.generatedAt,
-    generatedBy: log.generatedBy,
     testSummary: log.testSummary,
     workflowMetrics: log.workflowMetrics,
     turnaroundTime: log.turnaroundTime,
@@ -69,8 +69,13 @@ export async function computeLogHash(log: Omit<DailyActivityLog, 'imageBlob' | '
 function calculateImageHeight(log: DailyActivityLog): number {
   const base = 260 // header + footer + padding
   const testRows = Math.max(1, log.testSummary.length) * 28
-  const rejectionsHeight = log.rejections.totalRejected > 0 ? 80 : 60
-  const alertsHeight = log.stockoutAlerts.length > 0 || log.equipmentStatus.length > 0 ? 120 : 0
+  // Dynamic height for rejection reasons (each reason on its own line)
+  const rejectionLines = Math.max(1, log.rejections.reasons.length)
+  const rejectionsHeight = log.rejections.totalRejected > 0 ? 40 + rejectionLines * 20 : 60
+  // Dynamic height for alerts: each stockout + each non-operational equipment entry
+  const nonOperational = log.equipmentStatus.filter((e) => e.status !== 'operational')
+  const alertCount = log.stockoutAlerts.length + nonOperational.length
+  const alertsHeight = alertCount > 0 ? 60 + alertCount * 22 : 0
   return base + 200 + testRows + rejectionsHeight + alertsHeight
 }
 
@@ -103,7 +108,7 @@ function drawSection(ctx: CanvasRenderingContext2D, title: string, y: number, rt
  */
 export async function renderDailyLogImage(
   log: DailyActivityLog,
-  options: { locale: string; logoBlob?: Blob } = { locale: 'en' },
+  options: { locale: string; logoBlob?: Blob; watermarkText?: string } = { locale: 'en' },
 ): Promise<Blob> {
   const rtl = isRtl(options.locale)
   const height = calculateImageHeight(log)
@@ -111,7 +116,12 @@ export async function renderDailyLogImage(
   const canvas = document.createElement('canvas')
   canvas.width = WIDTH
   canvas.height = height
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context unavailable')
+
+  if (rtl) {
+    ctx.direction = 'rtl'
+  }
 
   // ── Background ─────────────────────────────────────────────────────────────
   ctx.fillStyle = COLORS.bg
@@ -132,7 +142,10 @@ export async function renderDailyLogImage(
           URL.revokeObjectURL(imgUrl)
           resolve()
         }
-        img.onerror = () => resolve()
+        img.onerror = () => {
+          URL.revokeObjectURL(imgUrl)
+          resolve()
+        }
         img.src = imgUrl
       })
     } catch {
@@ -333,7 +346,7 @@ export async function renderDailyLogImage(
   ctx.font = FONT.watermark
   ctx.fillStyle = '#000000'
   ctx.textAlign = 'center'
-  ctx.fillText(log.facilityName, 0, 0)
+  ctx.fillText(options.watermarkText || log.facilityName, 0, 0)
   ctx.restore()
 
   // ── Footer ─────────────────────────────────────────────────────────────────

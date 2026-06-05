@@ -31,6 +31,8 @@ export interface EquipmentDetail {
   name: string
   status: 'IN_SERVICE' | 'OUT_OF_SERVICE'
   outOfServiceReason: string | null
+  nextMaintenanceDue: string | null
+  lastMaintenanceDate: string | null
   updatedAt: string
 }
 
@@ -162,11 +164,17 @@ export async function calculateEquipmentRAG(): Promise<RAGDimensionResult> {
       }
     }
 
+    const now = new Date()
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const sevenDayThreshold = sevenDaysFromNow.toISOString().slice(0, 10)
+
     const details: EquipmentDetail[] = instruments.map((inst) => ({
       instrumentId: inst.id,
       name: inst.name,
       status: inst.status,
       outOfServiceReason: inst.outOfServiceReason ?? null,
+      nextMaintenanceDue: inst.nextMaintenanceDue ?? null,
+      lastMaintenanceDate: inst.lastMaintenanceDate ?? null,
       updatedAt: inst.updatedAt,
     }))
 
@@ -175,10 +183,21 @@ export async function calculateEquipmentRAG(): Promise<RAGDimensionResult> {
     ).length
     const operationalCount = instruments.length - outOfServiceCount
 
-    // All instruments are treated as critical in v1: any OUT_OF_SERVICE → RED
+    // Check for maintenance due within 7 days
+    const maintenanceDueSoon = instruments.some(
+      (inst) =>
+        inst.status === 'IN_SERVICE' &&
+        inst.nextMaintenanceDue != null &&
+        inst.nextMaintenanceDue <= sevenDayThreshold,
+    )
+
     let status: RAGStatus
     if (outOfServiceCount > 0) {
+      // Any instrument OOS → RED (all treated as critical in v1)
       status = 'RED'
+    } else if (maintenanceDueSoon) {
+      // Maintenance due within 7 days → AMBER
+      status = 'AMBER'
     } else {
       status = 'GREEN'
     }
@@ -224,19 +243,31 @@ export async function calculateSupplyRAG(): Promise<RAGDimensionResult> {
     }
 
     const details: SupplyDetail[] = supplyItems.map((item) => {
-      let ragStatus: RAGStatus
-      if (item.currentStock <= item.criticalThreshold) {
-        ragStatus = 'RED'
-      } else if (item.currentStock <= item.reorderThreshold) {
-        ragStatus = 'AMBER'
-      } else {
-        ragStatus = 'GREEN'
-      }
-
       const estimatedDaysRemaining =
         item.dailyUsageEstimate > 0
           ? Math.floor(item.currentStock / item.dailyUsageEstimate)
           : null
+
+      let ragStatus: RAGStatus
+      if (estimatedDaysRemaining !== null) {
+        // Time-based thresholds per spec AC 4: Red=0 days, Amber=<7 days, Green=>14 days
+        if (estimatedDaysRemaining <= 0) {
+          ragStatus = 'RED'
+        } else if (estimatedDaysRemaining < 7) {
+          ragStatus = 'AMBER'
+        } else {
+          ragStatus = 'GREEN'
+        }
+      } else {
+        // Fallback to numeric thresholds when dailyUsageEstimate is not set
+        if (item.currentStock <= item.criticalThreshold) {
+          ragStatus = 'RED'
+        } else if (item.currentStock <= item.reorderThreshold) {
+          ragStatus = 'AMBER'
+        } else {
+          ragStatus = 'GREEN'
+        }
+      }
 
       return {
         id: item.id,
@@ -354,8 +385,11 @@ export async function calculateQCRAG(): Promise<RAGDimensionResult> {
       const targetSd = run.targetSd ?? 0
       const observedValue = run.observedValue ?? 0
 
-      const zScore = targetSd > 0 ? Math.abs(observedValue - targetMean) / targetSd : 0
-      const isRejected = targetSd > 0 && zScore > 3
+      // targetSd === 0 is scientifically invalid; treat as a drift warning rather
+      // than silently passing — a zero SD means the QC target is misconfigured.
+      const sdInvalid = targetSd <= 0
+      const zScore = !sdInvalid ? Math.abs(observedValue - targetMean) / targetSd : 0
+      const isRejected = !sdInvalid && zScore > 3
 
       // Check for active (unacknowledged) drift alerts for this analyte
       const analyteDriftAlerts = activeDriftAlerts.filter(
@@ -364,14 +398,15 @@ export async function calculateQCRAG(): Promise<RAGDimensionResult> {
       const hasDriftWarning = analyteDriftAlerts.length > 0
 
       // Collect Westgard rule violations from drift alerts (human-readable)
-      const westgardViolations: string[] = analyteDriftAlerts.map(
-        (a) => a.ruleViolated,
-      )
+      const westgardViolations: string[] = [
+        ...analyteDriftAlerts.map((a) => a.ruleViolated),
+        ...(sdInvalid ? ['SD=0: QC target misconfigured'] : []),
+      ]
 
       let status: QcDetail['status']
       if (isRejected) {
         status = 'FAILED'
-      } else if (hasDriftWarning) {
+      } else if (hasDriftWarning || sdInvalid) {
         status = 'DRIFT_WARNING'
       } else {
         status = 'PASSING'

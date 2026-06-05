@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { AlertTriangle } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
+  const t = useTranslations('outbreak')
   const session = useAuthSessionStore((s) => s.session)
   const [outbreakConfig, setOutbreakConfig] = useState<OutbreakModeConfig | null>(null)
   const [loading, setLoading] = useState(true)
@@ -87,7 +89,7 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
 
       onDeactivated()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Deactivation failed. Please try again.')
+      setError(err instanceof Error ? err.message : t('deactivationFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -101,7 +103,7 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
         backgroundColor: 'rgba(0,0,0,0.5)',
       }}>
         <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '2rem', color: '#6b7280' }}>
-          Loading outbreak status…
+          {t('loadingStatus')}
         </div>
       </div>
     )
@@ -112,7 +114,7 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Deactivate Outbreak Mode"
+    <div role="dialog" aria-modal="true" aria-label={t('deactivateAriaLabel')}
       style={{
         position: 'fixed', inset: 0, zIndex: 10001,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -127,26 +129,25 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBlockEnd: '1rem' }}>
           <AlertTriangle size={28} color="#f59e0b" aria-hidden="true" />
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#92400e' }}>
-            Deactivate Outbreak Mode
+            {t('deactivateTitle')}
           </h2>
         </div>
 
         <p style={{ marginBlockEnd: '1rem' }}>
-          You are deactivating <strong>Outbreak Mode</strong> for{' '}
-          <strong>{outbreakConfig.targetPathogen.display}</strong>.
+          {t('deactivateBody', { pathogen: outbreakConfig.targetPathogen.display })}
         </p>
 
         <p style={{ marginBlockEnd: '0.75rem', fontWeight: 600 }}>
-          The following changes will take effect immediately:
+          {t('deactivateEffectsTitle')}
         </p>
 
         <ul style={{ marginBlockEnd: '1.5rem', paddingInlineStart: '1.5rem', lineHeight: 1.6 }}>
-          <li>Queue priority returns to standard (no OUTBREAK PRIORITY badge)</li>
-          <li>Reporting reverts to batch (real-time reporting disabled)</li>
-          <li>Simplified data entry mode is disabled</li>
-          <li>Inventory alerts return to normal consumption thresholds</li>
-          <li>A final situation report will be auto-generated</li>
-          <li>Outbreak banner is removed from all screens</li>
+          <li>{t('deactivateEffect1')}</li>
+          <li>{t('deactivateEffect2')}</li>
+          <li>{t('deactivateEffect3')}</li>
+          <li>{t('deactivateEffect4')}</li>
+          <li>{t('deactivateEffect5')}</li>
+          <li>{t('deactivateEffect6')}</li>
         </ul>
 
         {error && (
@@ -165,7 +166,7 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
               border: '1px solid #d1d5db', cursor: 'pointer', backgroundColor: '#fff',
             }}
           >
-            Cancel
+            {t('cancelButton')}
           </button>
           <button
             type="button"
@@ -178,7 +179,7 @@ export function DeactivateOutbreakModal({ onDeactivated, onCancel }: Props) {
               fontWeight: 600,
             }}
           >
-            {submitting ? 'Deactivating…' : 'Confirm Deactivation'}
+            {submitting ? t('deactivatingButton') : t('confirmDeactivate')}
           </button>
         </div>
       </div>

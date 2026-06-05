@@ -16,11 +16,12 @@ import { REPORTABLE_DISEASE_LOINC_MAP } from './hmis-template'
  */
 export function calculatePositivityRate(positive: number, total: number): number {
   if (total === 0) return 0
-  return Math.round((positive / total) * 10000) / 100
+  return Math.min(100, Math.round((positive / total) * 10000) / 100)
 }
 
 /** Classify a patient age into the corresponding HMIS age group. */
 function classifyAgeGroup(age: number): AgeGroup {
+  if (age == null || isNaN(age) || age < 0) return '0-4'
   if (age <= 4) return '0-4'
   if (age <= 14) return '5-14'
   if (age <= 24) return '15-24'
@@ -35,6 +36,7 @@ function classifyAgeGroup(age: number): AgeGroup {
  * Case-insensitive. Returns false for negative/normal/absent/not detected.
  */
 function isPositiveResult(resultSummary: string): boolean {
+  if (!resultSummary) return false
   const lower = resultSummary.toLowerCase()
   // Negative keywords take priority
   if (/\b(negative|not detected|not reactive|absent|normal|no growth)\b/.test(lower)) return false
@@ -125,6 +127,29 @@ export async function aggregateMonthlyData(
       previousMonthRate: undefined,
     }
   })
+
+  // Populate previousMonthRate from last month's finalized report
+  try {
+    const prevMonth = month === 1 ? 12 : month - 1
+    const prevYear = month === 1 ? year - 1 : year
+    const prevReports = await db.hmisReports
+      .where('[reportYear+reportMonth]')
+      .equals([prevYear, prevMonth])
+      .toArray()
+    const prevFinalized = prevReports.find((r: any) => r.status === 'finalized')
+    if (prevFinalized) {
+      for (const rate of positivityRates) {
+        const prevRate = prevFinalized.positivityRates?.find(
+          (p: any) => p.diseaseCode === rate.diseaseCode,
+        )
+        if (prevRate) {
+          rate.previousMonthRate = prevRate.positivityRate
+        }
+      }
+    }
+  } catch {
+    // Previous month data unavailable — leave as undefined
+  }
 
   // ---------------------------------------------------------------------------
   // Demographic breakdown — age group x gender (unknown since logbook has no gender)

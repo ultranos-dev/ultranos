@@ -40,20 +40,18 @@ export function DataBudgetIndicator() {
   return (
     <Link
       href="/settings/data-budget"
-      className="block mt-1"
+      className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted"
       title={t('viewDashboard')}
     >
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full ${barColor}`}
-            style={{ width: `${usedPct}%` }}
-          />
-        </div>
-        <span className={`text-[10px] font-mono ${textColor} whitespace-nowrap`}>
-          {t('sidebarUsed', { used: currentCycleUsedMB.toFixed(0) })}
-        </span>
+      <div className="w-16 h-1.5 rounded-full bg-border overflow-hidden">
+        <div
+          className={`h-full rounded-full ${barColor}`}
+          style={{ width: `${usedPct}%` }}
+        />
       </div>
+      <span className={`text-sm ${textColor} whitespace-nowrap`}>
+        {t('sidebarUsed', { used: currentCycleUsedMB.toFixed(0) })}
+      </span>
     </Link>
   )
 }

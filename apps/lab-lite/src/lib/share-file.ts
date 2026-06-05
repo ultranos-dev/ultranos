@@ -6,15 +6,16 @@
 
 /**
  * Share or download a PNG file.
- * Returns true if sharing succeeded (or fallback download triggered).
- * Returns false if the user cancelled the share dialog.
- * Never throws — callers must handle the returned boolean.
+ * Returns 'shared' if Web Share API succeeded.
+ * Returns 'cancelled' if the user cancelled the share dialog.
+ * Returns 'downloaded' if sharing was unavailable/failed and a download was triggered instead.
+ * Never throws.
  */
 export async function shareFile(
   blob: Blob,
   fileName: string,
   shareData: { title: string; text: string },
-): Promise<boolean> {
+): Promise<'shared' | 'cancelled' | 'downloaded'> {
   const file = new File([blob], fileName, { type: blob.type })
 
   if (
@@ -27,19 +28,18 @@ export async function shareFile(
         title: shareData.title,
         text: shareData.text,
       })
-      return true
+      return 'shared'
     } catch (err) {
       if ((err as Error).name === 'AbortError') {
-        // User cancelled — not an error
-        return false
+        return 'cancelled'
       }
-      // Other errors — fall through to download
+      // Other errors (NotAllowedError, DataError) — fall through to download
     }
   }
 
   // Fallback: trigger a browser download
   triggerDownload(blob, fileName)
-  return true
+  return 'downloaded'
 }
 
 /** Trigger a browser download for the given blob. */
@@ -60,7 +60,7 @@ export function triggerDownload(blob: Blob, fileName: string): void {
  * @param imageBlob PNG blob of the rendered daily report
  * @param date      YYYY-MM-DD date string for file naming
  */
-export async function shareDailyLog(imageBlob: Blob, date: string): Promise<boolean> {
+export async function shareDailyLog(imageBlob: Blob, date: string): Promise<'shared' | 'cancelled' | 'downloaded'> {
   return shareFile(imageBlob, `lab-daily-report-${date}.png`, {
     title: `Lab Daily Report — ${date}`,
     text: `Daily Activity Log for ${date}`,

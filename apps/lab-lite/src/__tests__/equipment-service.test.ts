@@ -60,38 +60,50 @@ function makeDbTable<T extends { id: string }>(store: T[]) {
         toArray: async () => store.filter((r) => (r as any)[key] === val),
         first: async () => store.find((r) => (r as any)[key] === val),
       }),
-      between: (_lower: any, _upper: any) => ({
-        filter: (fn: (item: T) => boolean) => ({
-          toArray: async () => store.filter(fn),
-          first: async () => store.filter(fn)[0],
-          sortBy: async (_key: string) => {
-            const filtered = store.filter(fn)
-            return filtered.sort((a, b) => {
-              const av = (a as any)[_key] ?? 0
-              const bv = (b as any)[_key] ?? 0
-              return av < bv ? -1 : av > bv ? 1 : 0
-            })
-          },
-        }),
-        filter: (fn: (item: T) => boolean) => ({
-          toArray: async () => store.filter(fn),
-          equals: (val: any) => ({
-            filter: (fn2: (item: T) => boolean) => ({
-              first: async () => store.filter(fn).filter(fn2)[0],
-            }),
-          }),
-          first: async () => store.filter(fn)[0],
-          sortBy: async (_key: string) => store.filter(fn),
-        }),
-        toArray: async () => [...store],
-        equals: (val: any) => ({
+      between: (_lower: any, _upper: any) => {
+        // For compound index queries (lower/upper are arrays), filter by the first
+        // element of the compound key (e.g. instrumentId in [instrumentId+completedAt]).
+        const boundsFilter = (item: T): boolean => {
+          if (Array.isArray(_lower)) {
+            const keyParts = (key as string).replace(/^\[|\]$/g, '').split('+')
+            const firstKey = keyParts[0]
+            return (item as any)[firstKey] === _lower[0]
+          }
+          const v = (item as any)[key as string]
+          return v >= _lower && v <= _upper
+        }
+        const bounded = () => store.filter(boundsFilter)
+        return {
           filter: (fn: (item: T) => boolean) => ({
-            first: async () => store.filter(fn)[0],
+            toArray: async () => bounded().filter(fn),
+            first: async () => bounded().filter(fn)[0],
+            sortBy: async (_key: string) => {
+              const filtered = bounded().filter(fn)
+              return filtered.sort((a, b) => {
+                const av = (a as any)[_key] ?? 0
+                const bv = (b as any)[_key] ?? 0
+                return av < bv ? -1 : av > bv ? 1 : 0
+              })
+            },
           }),
-          first: async () => store[0],
-        }),
-        first: async () => store[0],
-      }),
+          toArray: async () => bounded(),
+          reverse: () => ({
+            sortBy: async (sortKey: string) =>
+              bounded().sort((a, b) => {
+                const av = String((a as any)[sortKey] ?? '')
+                const bv = String((b as any)[sortKey] ?? '')
+                return bv.localeCompare(av)
+              }),
+          }),
+          equals: (_val: any) => ({
+            filter: (fn: (item: T) => boolean) => ({
+              first: async () => bounded().filter(fn)[0],
+            }),
+            first: async () => bounded()[0],
+          }),
+          first: async () => bounded()[0],
+        }
+      },
       reverse: () => ({
         sortBy: async (key: string) => {
           const arr = store.filter((r) => true)
@@ -270,6 +282,7 @@ describe('computeQueueTimes (AC 3)', () => {
       estimatedRunMinutes: runMinutes,
       position,
       status,
+      cancelReason: null,
       queuedAt: new Date().toISOString(),
       startedAt: null,
       completedAt: null,

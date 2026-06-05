@@ -1,10 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import {
-  LayoutGrid,
+  Home,
   Upload,
   UserPlus,
   UserCheck,
@@ -43,6 +42,8 @@ import {
 } from '@/components/ui/sidebar'
 import { NavLab } from '@/components/sidebar/NavLab'
 import { NavLabUser } from '@/components/sidebar/NavLabUser'
+import { LabHeader } from '@/components/sidebar/LabHeader'
+import type { LabNavGroup } from '@/components/sidebar/nav-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getDb } from '@/lib/db'
@@ -50,7 +51,6 @@ import { LabRole } from '@ultranos/shared-types'
 import { canAccessAuthorizationQueue } from '@/lib/permissions'
 import { getPendingAuthorizationCount } from '@/lib/db'
 import { usePendingHandovers } from '@/hooks/usePendingHandovers'
-import type { SidebarNavItem } from '@ultranos/ui-kit'
 
 // ── Badge hooks ───────────────────────────────────────────────────────────────
 
@@ -130,8 +130,9 @@ function useOrdersBadge(): number | null {
 
 export function AppSidebar() {
   const session = useAuthSessionStore((s) => s.session)
-  const pathname = usePathname()
   const t = useTranslations('sidebar')
+  const locale = useLocale()
+  const side = ['ar', 'prs', 'ps'].includes(locale) ? 'right' : 'left'
   const uploadQueueBadge = useQueueBadge()
   const ordersBadge = useOrdersBadge()
   const patientQueueBadge = usePatientQueueBadge()
@@ -152,53 +153,84 @@ export function AppSidebar() {
     ? canAccessAuthorizationQueue(session.labRole as LabRole)
     : false
 
-  const navItems: SidebarNavItem[] = [
-    // Primary
-    { label: t('dashboard'), href: '/', icon: <LayoutGrid size={20} />, active: pathname === '/', group: 'primary' },
-    { label: t('orders'), href: '/orders', icon: <ClipboardList size={20} />, active: pathname === '/orders', badge: ordersBadge, group: 'primary' },
-    { label: t('worklist'), href: '/worklist', icon: <ClipboardList size={20} />, active: pathname === '/worklist', group: 'primary' },
-    { label: t('upload'), href: '/upload', icon: <Upload size={20} />, active: pathname === '/upload', badge: uploadQueueBadge, group: 'primary' },
-    { label: t('reports'), href: '/reports', icon: <FileText size={20} />, active: pathname.startsWith('/reports') && pathname !== '/reports/daily', group: 'primary' },
-    { label: t('dailyLog'), href: '/reports/daily', icon: <FileText size={20} />, active: pathname === '/reports/daily', group: 'primary' },
-    { label: t('registerPatient'), href: '/patients/register', icon: <UserPlus size={20} />, active: pathname === '/patients/register', group: 'primary' },
-    // Clinical
-    { label: t('history'), href: '/history', icon: <History size={20} />, active: pathname === '/history', group: 'clinical' },
-    { label: t('queue'), href: '/queue', icon: <ListOrdered size={20} />, active: pathname.startsWith('/queue'), badge: patientQueueBadge, group: 'clinical' },
-    { label: t('consent'), href: '/consent', icon: <ShieldCheck size={20} />, active: pathname === '/consent', group: 'clinical' },
-    { label: t('sops'), href: '/sops', icon: <BookOpen size={20} />, active: pathname === '/sops', group: 'clinical' },
-    { label: t('visualAtlas'), href: '/atlas', icon: <Microscope size={20} />, active: pathname.startsWith('/atlas'), group: 'clinical' },
-    { label: t('peerNetwork'), href: '/peer-network', icon: <MessageCircle size={20} />, active: pathname === '/peer-network', group: 'clinical' },
-    { label: t('safetyReporting'), href: '/safety-reporting', icon: <AlertTriangle size={20} />, active: pathname === '/safety-reporting', group: 'clinical' },
-    { label: t('equipment'), href: '/equipment', icon: <Wrench size={20} />, active: pathname.startsWith('/equipment'), group: 'clinical' },
-    { label: t('shiftHandover'), href: '/shift-handover', icon: <RefreshCw size={20} />, active: pathname.startsWith('/shift-handover'), badge: handoverBadge, group: 'clinical' },
-    { label: t('qualityDashboard'), href: '/quality', icon: <TrendingUp size={20} />, active: pathname.startsWith('/quality'), group: 'clinical' },
-    { label: t('teamAchievements'), href: '/achievements', icon: <Trophy size={20} />, active: pathname.startsWith('/achievements'), group: 'clinical' },
-    { label: t('certification'), href: '/certification', icon: <Award size={20} />, active: pathname.startsWith('/certification'), group: 'clinical' },
-    { label: t('mentorship'), href: '/mentorship', icon: <UserCheck size={20} />, active: pathname.startsWith('/mentorship'), group: 'clinical' as const },
-    // Finance
-    { label: t('newPayment'), href: '/finance/payment', icon: <Banknote size={20} />, active: pathname === '/finance/payment', group: 'finance' },
-    { label: t('receipts'), href: '/finance/receipts', icon: <Receipt size={20} />, active: pathname === '/finance/receipts', group: 'finance' },
-    { label: t('reconciliation'), href: '/finance/reconciliation', icon: <Scale size={20} />, active: pathname === '/finance/reconciliation', group: 'finance' },
-    { label: t('reagents'), href: '/finance/reagents', icon: <FlaskConical size={20} />, active: pathname.startsWith('/finance/reagents'), group: 'finance' },
-    ...(canAccessCostAnalysis
-      ? [
-          { label: t('costAnalysis'), href: '/finance/cost-analysis', icon: <BarChart3 size={20} />, active: pathname === '/finance/cost-analysis', group: 'finance' as const },
-          { label: t('costSettings'), href: '/finance/cost-settings', icon: <Calculator size={20} />, active: pathname === '/finance/cost-settings', group: 'finance' as const },
-        ]
-      : []),
-    ...(canAccessAuth
-      ? [{ label: t('authorizationQueue'), href: '/authorization', icon: <ClipboardCheck size={20} />, active: pathname.startsWith('/authorization'), badge: authQueueBadge, group: 'clinical' as const }]
-      : []),
-    // System
-    { label: t('notifications'), href: '/notifications', icon: <Bell size={20} />, active: pathname === '/notifications', group: 'system' },
-    ...(canAccessNetwork
-      ? [
-          { label: t('readinessBoard'), href: '/readiness', icon: <BarChart3 size={20} />, active: pathname.startsWith('/readiness'), group: 'system' as const },
-          { label: t('network'), href: '/network', icon: <Globe size={20} />, active: pathname.startsWith('/network'), group: 'system' as const },
-          { label: t('networkInventory'), href: '/inventory/network', icon: <Network size={20} />, active: pathname.startsWith('/inventory/network'), group: 'system' as const },
-        ]
-      : []),
-    { label: t('settings'), href: '/settings', icon: <Settings size={20} />, active: pathname === '/settings', group: 'system' },
+  const navGroups: LabNavGroup[] = [
+    {
+      title: '',
+      items: [
+        { title: t('dashboard'), url: '/', icon: Home },
+      ],
+    },
+    {
+      title: 'Lab Workflow',
+      items: [
+        { title: t('orders'), url: '/orders', icon: ClipboardList, badge: ordersBadge },
+        { title: t('worklist'), url: '/worklist', icon: ClipboardList },
+        { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+        { title: t('reports'), url: '/reports', icon: FileText },
+        { title: t('dailyLog'), url: '/reports/daily' },
+      ],
+    },
+    {
+      title: 'Patients',
+      items: [
+        { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
+        { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
+        { title: t('history'), url: '/history', icon: History },
+        { title: t('consent'), url: '/consent', icon: ShieldCheck },
+      ],
+    },
+    {
+      title: 'Quality',
+      items: [
+        { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
+        { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
+        { title: t('equipment'), url: '/equipment', icon: Wrench },
+        { title: t('sops'), url: '/sops', icon: BookOpen },
+        { title: t('visualAtlas'), url: '/atlas', icon: Microscope },
+      ],
+    },
+    {
+      title: 'Team',
+      items: [
+        { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
+        { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
+        { title: t('certification'), url: '/certification', icon: Award },
+        { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
+        { title: t('peerNetwork'), url: '/peer-network', icon: MessageCircle },
+        ...(canAccessAuth
+          ? [{ title: t('authorizationQueue'), url: '/authorization', icon: ClipboardCheck, badge: authQueueBadge }]
+          : []),
+      ],
+    },
+    {
+      title: 'Finance',
+      items: [
+        { title: t('newPayment'), url: '/finance/payment', icon: Banknote },
+        { title: t('receipts'), url: '/finance/receipts', icon: Receipt },
+        { title: t('reconciliation'), url: '/finance/reconciliation', icon: Scale },
+        { title: t('reagents'), url: '/finance/reagents', icon: FlaskConical },
+        ...(canAccessCostAnalysis
+          ? [
+              { title: t('costAnalysis'), url: '/finance/cost-analysis', icon: BarChart3 },
+              { title: t('costSettings'), url: '/finance/cost-settings', icon: Calculator },
+            ]
+          : []),
+      ],
+    },
+    {
+      title: 'Administration',
+      items: [
+        { title: t('notifications'), url: '/notifications', icon: Bell },
+        ...(canAccessNetwork
+          ? [
+              { title: t('readinessBoard'), url: '/readiness', icon: BarChart3 },
+              { title: t('network'), url: '/network', icon: Globe },
+              { title: t('networkInventory'), url: '/inventory/network', icon: Network },
+            ]
+          : []),
+        { title: t('settings'), url: '/settings', icon: Settings },
+      ],
+    },
   ]
 
   const displayName = session?.email?.split('@')[0] ?? 'Technician'
@@ -210,14 +242,12 @@ export function AppSidebar() {
     .join('')
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="px-3 py-2">
-        <span className="text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-          Lab Lite
-        </span>
+    <Sidebar collapsible="icon" side={side}>
+      <SidebarHeader>
+        <LabHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavLab items={navItems} />
+        <NavLab groups={navGroups} />
       </SidebarContent>
       <SidebarFooter>
         <NavLabUser

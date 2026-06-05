@@ -10,24 +10,24 @@
 // names, IDs, diagnoses, or individual-level data. No PHI in PDF output.
 // ---------------------------------------------------------------------------
 
-import type { DonorReport } from './donor-types'
+import type { DonorReport, DonorReportTemplate } from './donor-types'
 import { resolveTemplate } from './donor-templates'
-import { getCustomDonorTemplates } from './db'
+import { getDonorProgramByCode, getCustomDonorTemplates } from './db'
 
 const RTL_LOCALES = ['ar', 'prs', 'ps']
 
 /**
  * Generate a PDF Blob for a donor report.
- * Template-driven: pulls the template for layout, sections, and columns.
+ * Template-driven: resolves the template via the program's registered templateCode.
  * Returns a Blob that can be downloaded or shared via Web Share API.
  */
 export async function exportDonorPdf(report: DonorReport, locale: string): Promise<Blob> {
+  // Resolve template via program's registered templateCode — not hardcoded convention
+  const program = await getDonorProgramByCode(report.programCode)
   const customTemplates = await getCustomDonorTemplates()
-  const template = resolveTemplate(
-    // Derive templateCode from programCode convention or fall back to first report section
-    `${report.programCode}_QUARTERLY`,
-    customTemplates,
-  ) ?? resolveTemplate(`${report.programCode}_MONTHLY`, customTemplates)
+  const template = program
+    ? resolveTemplate(program.templateCode, customTemplates)
+    : undefined
 
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
@@ -77,7 +77,10 @@ export async function exportDonorPdf(report: DonorReport, locale: string): Promi
   // ---------------------------------------------------------------------------
   // Sections
   // ---------------------------------------------------------------------------
-  for (const section of report.sections) {
+  for (let sectionIdx = 0; sectionIdx < report.sections.length; sectionIdx++) {
+    const section = report.sections[sectionIdx]!
+    const templateSection = template?.sections[sectionIdx]
+
     if (cursorY > 250) {
       doc.addPage()
       cursorY = 20
@@ -97,12 +100,21 @@ export async function exportDonorPdf(report: DonorReport, locale: string): Promi
         theme: 'striped',
       })
     } else {
-      // Derive columns from first row (exclude loincCode internal key)
-      const visibleKeys = Object.keys(section.rows[0] ?? {}).filter((k) => k !== 'loincCode')
-      const head = [visibleKeys.map((k) => formatColumnHeader(k))]
-      const body = section.rows.map((row) =>
-        visibleKeys.map((k) => formatCellValue(row[k])),
-      )
+      // Use template columns for headers if available; otherwise derive from row keys
+      let head: string[][]
+      let body: string[][]
+      if (templateSection?.columns && templateSection.columns.length > 0) {
+        head = [templateSection.columns.map((c) => c.columnHeader)]
+        body = section.rows.map((row) =>
+          templateSection.columns.map((c) => formatCellValue(row[c.dataField])),
+        )
+      } else {
+        const visibleKeys = Object.keys(section.rows[0] ?? {}).filter((k) => k !== 'loincCode')
+        head = [visibleKeys.map((k) => formatColumnHeader(k))]
+        body = section.rows.map((row) =>
+          visibleKeys.map((k) => formatCellValue(row[k])),
+        )
+      }
 
       autoTable(doc, {
         startY: cursorY,
@@ -152,7 +164,6 @@ export async function exportDonorPdf(report: DonorReport, locale: string): Promi
       margin: { left: 14, right: 14 },
       theme: 'striped',
       didParseCell: (data) => {
-        // Bold the grand total row
         if (data.row.index === reimbBody.length - 1) {
           data.cell.styles.fontStyle = 'bold'
         }

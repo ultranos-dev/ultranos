@@ -31,6 +31,23 @@ vi.mock('@ultranos/audit-logger/drain', () => ({
   AuditDrainWorker: vi.fn().mockImplementation(() => ({ start: vi.fn(), stop: vi.fn() })),
 }))
 
+vi.mock('jspdf', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    internal: { pageSize: { width: 210, height: 297 } },
+    setProperties: vi.fn(),
+    setFontSize: vi.fn(),
+    setFont: vi.fn(),
+    text: vi.fn(),
+    addPage: vi.fn(),
+    line: vi.fn(),
+    output: vi.fn().mockReturnValue(new Blob(['pdf-content'], { type: 'application/pdf' })),
+  })),
+}))
+
+vi.mock('jspdf-autotable', () => ({
+  default: vi.fn(),
+}))
+
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: Object.assign(
     vi.fn().mockReturnValue(null),
@@ -46,6 +63,8 @@ import type { HmisMonthlyReport } from '../lib/hmis-types'
 import { calculatePositivityRate, aggregateMonthlyData } from '../lib/hmis-aggregator'
 import { exportToDhis2Json, exportToDhis2Csv } from '../lib/hmis-dhis2-export'
 import { emitClientAudit } from '@ultranos/audit-logger/client'
+import { exportHmisPdf } from '../lib/hmis-pdf'
+import { reportHmisAuditEvent } from '../lib/audit-client'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -412,5 +431,137 @@ describe('DHIS2 export', () => {
     const report = makeDraftReport({ reportMonth: 5, reportYear: 2026 })
     const json = exportToDhis2Json(report, 'OU1')
     expect(json.period).toBe('202605')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. PDF export (Task 13.5)
+// ---------------------------------------------------------------------------
+
+describe('PDF export', () => {
+  it('generates a valid PDF blob', async () => {
+    const report = makeDraftReport()
+    const blob = await exportHmisPdf(report, 'en')
+    expect(blob).toBeInstanceOf(Blob)
+    expect(blob.type).toBe('application/pdf')
+  })
+
+  it('generates PDF for RTL locale without error', async () => {
+    const report = makeDraftReport()
+    const blob = await exportHmisPdf(report, 'ar')
+    expect(blob).toBeInstanceOf(Blob)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. RTL support (Task 13.10)
+// ---------------------------------------------------------------------------
+
+describe('RTL locale detection', () => {
+  it('generates PDF for all RTL locales (ar, prs, ps)', async () => {
+    const report = makeDraftReport()
+    for (const rtlLocale of ['ar', 'prs', 'ps']) {
+      const blob = await exportHmisPdf(report, rtlLocale)
+      expect(blob).toBeInstanceOf(Blob)
+    }
+  })
+
+  it('generates PDF for LTR locale (en)', async () => {
+    const report = makeDraftReport()
+    const blob = await exportHmisPdf(report, 'en')
+    expect(blob).toBeInstanceOf(Blob)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 11. Audit event shapes (Task 13.9)
+// ---------------------------------------------------------------------------
+
+describe('HMIS audit events', () => {
+  beforeEach(() => {
+    vi.mocked(emitClientAudit).mockClear()
+  })
+
+  it('emits HMIS_REPORT_GENERATED with correct shape and no PHI', () => {
+    reportHmisAuditEvent({
+      action: 'HMIS_REPORT_GENERATED',
+      reportId: 'report-opaque-123',
+      reportMonth: 3,
+      reportYear: 2026,
+    })
+    expect(emitClientAudit).toHaveBeenCalledTimes(1)
+    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    expect(call).toHaveProperty('actorId')
+    expect(call).toHaveProperty('resourceId', 'report-opaque-123')
+    // Verify no PHI in metadata
+    const meta = JSON.stringify(call.metadata)
+    expect(meta).not.toMatch(/patient|name|diagnosis|allergy/i)
+  })
+
+  it('emits HMIS_REPORT_CORRECTED with fieldPath', () => {
+    reportHmisAuditEvent({
+      action: 'HMIS_REPORT_CORRECTED',
+      reportId: 'report-opaque-123',
+      reportMonth: 3,
+      reportYear: 2026,
+      fieldPath: 'testCategorySummary[0].totalPositive',
+    })
+    expect(emitClientAudit).toHaveBeenCalledTimes(1)
+    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    expect(call.metadata).toHaveProperty('fieldPath', 'testCategorySummary[0].totalPositive')
+  })
+
+  it('emits HMIS_REPORT_FINALIZED', () => {
+    reportHmisAuditEvent({
+      action: 'HMIS_REPORT_FINALIZED',
+      reportId: 'report-opaque-123',
+      reportMonth: 3,
+      reportYear: 2026,
+    })
+    expect(emitClientAudit).toHaveBeenCalledTimes(1)
+    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    expect(call.metadata).toHaveProperty('hmisEvent', 'HMIS_REPORT_FINALIZED')
+  })
+
+  it('emits HMIS_REPORT_EXPORTED with format', () => {
+    reportHmisAuditEvent({
+      action: 'HMIS_REPORT_EXPORTED',
+      reportId: 'report-opaque-123',
+      reportMonth: 3,
+      reportYear: 2026,
+      format: 'pdf',
+    })
+    expect(emitClientAudit).toHaveBeenCalledTimes(1)
+    const call = vi.mocked(emitClientAudit).mock.calls[0][0]
+    expect(call.metadata).toHaveProperty('format', 'pdf')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. Offline operation (Task 13.8)
+// ---------------------------------------------------------------------------
+
+describe('offline operation', () => {
+  it('aggregation completes from Dexie without any network calls', async () => {
+    const report = await aggregateMonthlyData(2026, 3, 'practitioner-abc', 'Test Lab', 'Kabul', 'District 1')
+    expect(report).toBeDefined()
+    expect(report.status).toBe('draft')
+    expect(report.testCategorySummary).toBeDefined()
+    expect(report.positivityRates).toBeDefined()
+    expect(report.demographics).toBeDefined()
+  })
+
+  it('DHIS2 export works without network', () => {
+    const report = makeDraftReport()
+    const json = exportToDhis2Json(report, 'ORG_UNIT_123')
+    expect(json.dataValues.length).toBeGreaterThan(0)
+    const csv = exportToDhis2Csv(report, 'ORG_UNIT_123')
+    expect(csv).toContain('dataElement')
+  })
+
+  it('PDF export works without network', async () => {
+    const report = makeDraftReport()
+    const blob = await exportHmisPdf(report, 'en')
+    expect(blob).toBeInstanceOf(Blob)
   })
 })

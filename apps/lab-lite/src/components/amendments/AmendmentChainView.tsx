@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import type { AmendmentRecord } from '@ultranos/shared-types'
 import { AmendmentReasonCode } from '@ultranos/shared-types'
 import { getAmendmentChain } from '@/lib/amendment-service'
@@ -50,6 +51,8 @@ function formatTimestamp(iso: string): string {
  * AC #6: The full amendment chain is visible in the audit trail.
  */
 export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps) {
+  const tCommon = useTranslations('common')
+  const t = useTranslations('amendments')
   const [chain, setChain] = useState<AmendmentRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -81,7 +84,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
   if (loading) {
     return (
       <div className="py-4 text-sm text-gray-500" data-testid="chain-loading">
-        Loading amendment history…
+        {tCommon('loading')}
       </div>
     )
   }
@@ -183,7 +186,7 @@ export function AmendmentChainView({ originalReportId }: AmendmentChainViewProps
                             {key}: [original] → [corrected]
                           </div>
                         ))
-                      : <span>No value diff recorded</span>
+                      : <span>{t('noValueDiff')}</span>
                     }
                   </div>
                 </div>

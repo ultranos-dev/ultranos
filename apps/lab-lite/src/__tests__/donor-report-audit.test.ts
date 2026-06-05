@@ -135,6 +135,21 @@ describe('reportDonorAuditEvent', () => {
     expect(meta.format).toBe('share')
   })
 
+  it('emits DONOR_REPORT_CORRECTED with fieldPath and correctedBy', () => {
+    reportDonorAuditEvent({
+      action: 'DONOR_REPORT_CORRECTED',
+      reportId: 'report-uuid-789',
+      programCode: 'WHO_TB',
+      fieldPath: 'sections[0].rows[1].totalPositive',
+      correctedBy: 'user-abc',
+    })
+
+    const meta = (mockEmitClientAudit.mock.calls[0]![0] as Record<string, unknown>).metadata as Record<string, unknown>
+    expect(meta.donorEvent).toBe('DONOR_REPORT_CORRECTED')
+    expect(meta.fieldPath).toBe('sections[0].rows[1].totalPositive')
+    expect(meta.correctedBy).toBe('user-abc')
+  })
+
   it('does not include PHI fields in any donor audit event', () => {
     reportDonorAuditEvent({
       action: 'DONOR_REPORT_GENERATED',

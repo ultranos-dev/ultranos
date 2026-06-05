@@ -18,6 +18,7 @@ import {
   type TechWorkloadSnapshot,
   type TechAvailability,
 } from './db'
+import { releaseLock } from './sample-lock-service'
 import type { FhirSpecimen } from '@ultranos/shared-types'
 import { hlc, serializeHlc } from './hlc'
 
@@ -106,14 +107,33 @@ function computeLoadLevel(totalActive: number, labAvg: number): LoadLevel {
  */
 export async function getCurrentWorkloads(): Promise<TechWorkload[]> {
   const db = getDb()
-
-  // Fetch all samples and group by assigned tech
-  const allSamples: FhirSpecimen[] = await db.samples.toArray()
   const todayStr = todayUTC()
 
-  // Group by assignedTechId (stored in _ultranos extension)
+  // Fetch only active-status samples (not the entire table)
+  const activeStatuses = [...PENDING_STATUSES, ...IN_PROGRESS_STATUSES]
+  const activeSamples: FhirSpecimen[] = await db.samples
+    .filter((s: any) => activeStatuses.includes(s._ultranos?.pipelineStatus))
+    .toArray()
+
+  // Completed-today samples for the completedCount metric
+  const completedToday: FhirSpecimen[] = await db.samples
+    .filter((s: any) =>
+      COMPLETED_STATUSES.includes(s._ultranos?.pipelineStatus) &&
+      (s._ultranos?.completedAt as string | undefined)?.startsWith(todayStr),
+    )
+    .toArray()
+
+  // Hoist tat_overrides — load once for all techs
+  let allTatOverrides: Array<{ loincCode: string; tatMinutes?: number }> = []
+  try {
+    allTatOverrides = await db.tat_overrides.toArray()
+  } catch {
+    // Dexie unavailable — fall through to defaults
+  }
+
+  // Group active samples by assignedTechId
   const byTech = new Map<string, FhirSpecimen[]>()
-  for (const sample of allSamples) {
+  for (const sample of activeSamples) {
     const techId = (sample as any)._ultranos?.assignedTechId as string | undefined
     if (!techId) continue
     const existing = byTech.get(techId)
@@ -122,6 +142,14 @@ export async function getCurrentWorkloads(): Promise<TechWorkload[]> {
     } else {
       byTech.set(techId, [sample])
     }
+  }
+
+  // Group completed-today samples by tech for completedCount
+  const completedByTech = new Map<string, number>()
+  for (const sample of completedToday) {
+    const techId = (sample as any)._ultranos?.assignedTechId as string | undefined
+    if (!techId) continue
+    completedByTech.set(techId, (completedByTech.get(techId) ?? 0) + 1)
   }
 
   // Also include techs from queueEntries (patient queue assignments)
@@ -153,14 +181,10 @@ export async function getCurrentWorkloads(): Promise<TechWorkload[]> {
 
   for (const [techId, samples] of byTech) {
     const counts = techCounts.get(techId) ?? { pending: 0, inProgress: 0 }
-    const completed = samples.filter((s) => {
-      const status = (s as any)._ultranos?.pipelineStatus as string
-      const completedAt = (s as any)._ultranos?.completedAt as string | undefined
-      return COMPLETED_STATUSES.includes(status as any) && completedAt?.startsWith(todayStr)
-    }).length
+    const completed = completedByTech.get(techId) ?? 0
 
-    // Average TAT from TAT overrides or default 30 min
-    const avgTat = await computeAvgTat(samples)
+    // Average TAT using pre-loaded overrides (no extra DB round-trip)
+    const avgTat = computeAvgTatSync(samples, allTatOverrides)
     const eta = estimateCompletionTime(counts.pending, counts.inProgress, avgTat)
     const loadLevel = computeLoadLevel(counts.pending + counts.inProgress, labAvg)
 
@@ -184,32 +208,26 @@ export async function getCurrentWorkloads(): Promise<TechWorkload[]> {
   return workloads
 }
 
-/** Compute average TAT in minutes for a set of samples, falling back to 30 min default. */
-async function computeAvgTat(samples: FhirSpecimen[]): Promise<number> {
-  const db = getDb()
+/**
+ * Compute average TAT in minutes for a set of samples using pre-loaded overrides.
+ * Synchronous — caller must hoist the tat_overrides query outside the per-tech loop.
+ */
+function computeAvgTatSync(
+  samples: FhirSpecimen[],
+  tatOverrides: Array<{ loincCode: string; tatMinutes?: number }>,
+): number {
   if (samples.length === 0) return 30
 
-  try {
-    // Try to get TAT override for the most common LOINC code in the sample set
-    const loincCodes = samples
-      .flatMap((s) => {
-        const code = (s as any)._ultranos?.loincCode as string | undefined
-        return code ? [code] : []
-      })
+  const loincCodes = samples.flatMap((s) => {
+    const code = (s as any)._ultranos?.loincCode as string | undefined
+    return code ? [code] : []
+  })
 
-    if (loincCodes.length > 0) {
-      const overrides = await db.tat_overrides.toArray()
-      if (overrides.length > 0) {
-        // Use the average TAT from applicable overrides
-        const applicable = overrides.filter((o) => loincCodes.includes(o.loincCode))
-        if (applicable.length > 0) {
-          const avg = applicable.reduce((sum, o) => sum + (o.tatMinutes ?? 30), 0) / applicable.length
-          return avg
-        }
-      }
+  if (loincCodes.length > 0 && tatOverrides.length > 0) {
+    const applicable = tatOverrides.filter((o) => loincCodes.includes(o.loincCode))
+    if (applicable.length > 0) {
+      return applicable.reduce((sum, o) => sum + (o.tatMinutes ?? 30), 0) / applicable.length
     }
-  } catch {
-    // Dexie unavailable — fall through to default
   }
 
   return 30 // default 30 minutes
@@ -285,7 +303,7 @@ export async function getHistoricalPatterns(days = 30): Promise<WorkloadPatterns
   const peakHours: Record<number, number> = {}
   for (const s of snapshots) {
     try {
-      const hour = new Date(s.snapshotAt).getUTCHours()
+      const hour = new Date(s.snapshotAt).getHours()
       peakHours[hour] = (peakHours[hour] ?? 0) + s.pendingCount + s.inProgressCount
     } catch {
       // Malformed timestamp — skip
@@ -328,9 +346,9 @@ export async function recordWorkloadSnapshot(techId: string): Promise<void> {
 
 /**
  * Reassign a sample from one tech to another.
- * - Updates sample assignment in Dexie
+ * - Verifies the sample is currently assigned to fromTechId before proceeding
  * - Releases any active lock on the sample (Story 51.3 lock coordination)
- * - Appends chain of custody entry
+ * - Updates sample assignment and appends chain of custody entry (in one Dexie transaction)
  * - Queues sync event
  *
  * No PHI emitted — uses opaque IDs only.
@@ -343,27 +361,41 @@ export async function reassignSample(
 ): Promise<void> {
   const db = getDb()
 
-  // Update sample assignment
-  await db.samples.where('id').equals(sampleId).modify((sample: any) => {
-    if (!sample._ultranos) sample._ultranos = {}
-    sample._ultranos.assignedTechId = toTechId
-    sample._ultranos.reassignedAt = new Date().toISOString()
-    sample._ultranos.reassignedBy = reassignedBy
-  })
+  // Guard: verify sample is currently assigned to fromTechId
+  const sample = await db.samples.get(sampleId)
+  const currentAssignee = (sample as any)?._ultranos?.assignedTechId as string | undefined
+  if (currentAssignee !== fromTechId) {
+    throw new Error(`Sample is not assigned to the specified tech — cannot reassign`)
+  }
 
-  // Append chain of custody event (append-only per CLAUDE.md)
-  await addCustodyEvent({
-    id: crypto.randomUUID(),
-    sampleId,
-    eventType: 'REASSIGNED',
-    timestamp: serializeHlc(hlc.now()),
-    actorId: reassignedBy,
-    detail: {
-      fromTechId,
-      toTechId,
-      // No PHI — only tech IDs and sample ID
-    },
-  } as any)
+  // Release any active lock held by the source tech (AC 2 of spec)
+  await releaseLock(sampleId, fromTechId, 'REASSIGNED')
+
+  const hlcNow = serializeHlc(hlc.now())
+
+  // Atomic: update assignment + append custody event in one transaction
+  await db.transaction('rw', [db.samples, db.custodyEvents], async () => {
+    await db.samples.where('id').equals(sampleId).modify((s: any) => {
+      if (!s._ultranos) s._ultranos = {}
+      s._ultranos.assignedTechId = toTechId
+      s._ultranos.reassignedAt = hlcNow
+      s._ultranos.reassignedBy = reassignedBy
+    })
+
+    // Append chain of custody event (append-only per CLAUDE.md)
+    await addCustodyEvent({
+      id: crypto.randomUUID(),
+      sampleId,
+      eventType: 'REASSIGNED',
+      timestamp: hlcNow,
+      actorId: reassignedBy,
+      detail: {
+        fromTechId,
+        toTechId,
+        // No PHI — only tech IDs and sample ID
+      },
+    } as any)
+  })
 
   // Queue sync event so Hub is updated when online
   await enqueueSyncEvent({
@@ -375,9 +407,9 @@ export async function reassignSample(
       fromTechId,
       toTechId,
       reassignedBy,
-      reassignedAt: new Date().toISOString(),
+      reassignedAt: hlcNow,
     },
-    createdAt: new Date().toISOString(),
+    createdAt: hlcNow,
     lastAttemptAt: null,
     retryCount: 0,
   })
@@ -392,10 +424,12 @@ export async function markTechUnavailable(
   status: TechAvailability['status'],
   reason: string,
 ): Promise<void> {
+  const hlcNow = serializeHlc(hlc.now())
+
   // Close any open record for this tech
   const existing = await getOpenAvailabilityForTech(techId)
   if (existing?.id) {
-    await closeAvailabilityRecord(existing.id, new Date().toISOString())
+    await closeAvailabilityRecord(existing.id, hlcNow)
   }
 
   if (status === 'AVAILABLE') return  // AVAILABLE just closes the record
@@ -405,7 +439,7 @@ export async function markTechUnavailable(
     techId,
     status,
     reason,
-    startedAt: new Date().toISOString(),
+    startedAt: hlcNow,
     endedAt: null,
   })
 }
@@ -416,6 +450,6 @@ export async function markTechUnavailable(
 export async function markTechAvailable(techId: string): Promise<void> {
   const existing = await getOpenAvailabilityForTech(techId)
   if (existing?.id) {
-    await closeAvailabilityRecord(existing.id, new Date().toISOString())
+    await closeAvailabilityRecord(existing.id, serializeHlc(hlc.now()))
   }
 }

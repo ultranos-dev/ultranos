@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { TrendingUp, TrendingDown, Minus, Download, RefreshCw } from '@ultranos/ui-kit/icons'
 import { generateDailySitrep } from '@/lib/sitrep-generator'
 import { getSitrepsByOutbreak } from '@/lib/db'

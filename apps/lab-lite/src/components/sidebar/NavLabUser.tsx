@@ -16,8 +16,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useTheme } from '@/components/ThemeProvider'
-import { OnlineStatusIndicator } from '@/components/OnlineStatusIndicator'
-import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
 interface NavLabUserProps {
   name: string
@@ -33,17 +31,6 @@ export function NavLabUser({ name, email, role, initials, onSignOut }: NavLabUse
 
   return (
     <SidebarMenu>
-      {/* Sync indicators — hidden when sidebar is collapsed to icon mode */}
-      <SidebarMenuItem>
-        <div className="flex items-center gap-1.5 px-2 py-1 group-data-[collapsible=icon]:hidden">
-          <OnlineStatusIndicator />
-          <div className="ms-auto shrink-0">
-            <LanguageSelectorClient collapsed={true} />
-          </div>
-        </div>
-      </SidebarMenuItem>
-
-      {/* User dropdown */}
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

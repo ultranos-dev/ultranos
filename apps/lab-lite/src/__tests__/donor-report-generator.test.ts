@@ -244,14 +244,25 @@ describe('generateDonorReport', () => {
       expect(summarySection.rows[0]!.totalPositive).toBe(1)
     })
 
-    it('detects positive from "+" in result summary', async () => {
+    it('uses resultCode when available for positive detection', async () => {
+      mockGetEntries.mockResolvedValue([
+        makeEntry({ programTags: ['WHO_TB'], date: '2026-02-01', resultSummary: '3+ AFB', resultCode: 'positive', testLoincCode: '11545-1' }),
+      ])
+
+      const report = await generateDonorReport('WHO_TB', '2026-01-01', '2026-03-31', 'tech-1')
+      const summarySection = report.sections.find((s) => s.sectionId === 'afb-summary')!
+      expect(summarySection.rows[0]!.totalPositive).toBe(1)
+    })
+
+    it('does not match bare "+" in resultSummary as positive (no false positives)', async () => {
       mockGetEntries.mockResolvedValue([
         makeEntry({ programTags: ['WHO_TB'], date: '2026-02-01', resultSummary: '3+ AFB', testLoincCode: '11545-1' }),
       ])
 
       const report = await generateDonorReport('WHO_TB', '2026-01-01', '2026-03-31', 'tech-1')
       const summarySection = report.sections.find((s) => s.sectionId === 'afb-summary')!
-      expect(summarySection.rows[0]!.totalPositive).toBe(1)
+      expect(summarySection.rows[0]!.totalPositive).toBe(0)
+      expect(summarySection.rows[0]!.totalNegative).toBe(1)
     })
 
     it('calculates positivity rate as percentage rounded to 1 decimal', async () => {
@@ -370,6 +381,32 @@ describe('generateDonorReport', () => {
     })
   })
 
+  describe('demographics — patientAge null handling', () => {
+    beforeEach(() => {
+      mockGetProgram.mockResolvedValue(WHO_TB_PROGRAM)
+      mockResolveTemplate.mockReturnValue(WHO_TB_TEMPLATE)
+    })
+
+    it('skips entries with null patientAge in demographics', async () => {
+      const entries = Array.from({ length: 6 }, (_, i) =>
+        makeEntry({
+          programTags: ['WHO_TB'],
+          date: `2026-02-0${i + 1}`,
+          resultSummary: 'Positive',
+          resultCode: 'positive',
+          patientAge: i < 5 ? 28 : (null as unknown as number),
+        }),
+      )
+      mockGetEntries.mockResolvedValue(entries)
+
+      const report = await generateDonorReport('WHO_TB', '2026-01-01', '2026-03-31', 'tech-1')
+      const demoSection = report.sections.find((s) => s.sectionId === 'demographics')!
+      const group2534 = demoSection.rows.find((r) => r.ageGroup === '25–34')
+      expect(group2534).toBeDefined()
+      expect(group2534!.total).toBe(5) // null-age entry excluded
+    })
+  })
+
   describe('warnings', () => {
     beforeEach(() => {
       mockGetProgram.mockResolvedValue(WHO_TB_PROGRAM)
@@ -390,6 +427,19 @@ describe('generateDonorReport', () => {
 
       const report = await generateDonorReport('WHO_TB', '2026-01-01', '2026-03-31', 'tech-1')
       expect(report.warnings).not.toContain('no_data')
+    })
+
+    it('does not add partial_data when demographics section is empty due to suppression', async () => {
+      // 3 positives in 25-34 range → demographics suppressed (< 5), test_summary has rows
+      mockGetEntries.mockResolvedValue([
+        makeEntry({ programTags: ['WHO_TB'], date: '2026-02-01', resultCode: 'positive', resultSummary: 'Positive', patientAge: 28 }),
+        makeEntry({ programTags: ['WHO_TB'], date: '2026-02-02', resultCode: 'positive', resultSummary: 'Positive', patientAge: 29 }),
+        makeEntry({ programTags: ['WHO_TB'], date: '2026-02-03', resultCode: 'positive', resultSummary: 'Positive', patientAge: 30 }),
+      ])
+
+      const report = await generateDonorReport('WHO_TB', '2026-01-01', '2026-03-31', 'tech-1')
+      // Demographics empty due to suppression is expected, not partial data
+      expect(report.warnings).not.toContain('partial_data')
     })
   })
 

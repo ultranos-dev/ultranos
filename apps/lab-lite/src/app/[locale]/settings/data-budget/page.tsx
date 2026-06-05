@@ -14,8 +14,8 @@ export default function DataBudgetPage() {
       <div className="flex items-center gap-2 mb-6">
         <Link
           href="/settings"
-          className="text-muted-foreground hover:text-muted-foreground"
-          aria-label="Back"
+          className="text-muted-foreground hover:text-foreground"
+          aria-label={t('backToSettings')}
         >
           <DirectionalIcon category="navigation">
             <ChevronLeft size={20} />

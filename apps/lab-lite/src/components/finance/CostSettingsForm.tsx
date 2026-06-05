@@ -58,6 +58,7 @@ function parseNum(val: string): number {
 
 export function CostSettingsForm() {
   const t = useTranslations('finance.cost.settings')
+  const tCommon = useTranslations('common')
   const session = useAuthSessionStore((s) => s.session)
 
   const [overhead, setOverhead] = useState<OverheadFields>(EMPTY_OVERHEAD)
@@ -239,7 +240,7 @@ export function CostSettingsForm() {
   }
 
   if (!isLoaded) {
-    return <div className="p-6 text-sm text-gray-500">Loading...</div>
+    return <div className="p-6 text-sm text-gray-500">{tCommon('loading')}</div>
   }
 
   return (

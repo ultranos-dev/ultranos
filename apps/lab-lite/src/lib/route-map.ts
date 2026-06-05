@@ -47,6 +47,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/network': 'Network',
   '/inventory/network': 'Network Inventory',
   '/settings': 'Settings',
+  '/settings/data-budget': 'Data Usage',
 }
 
 export function buildBreadcrumbs(pathname: string): BreadcrumbSegment[] {

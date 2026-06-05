@@ -103,10 +103,10 @@ function ConfirmDialog({
           <textarea
             className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
-            placeholder="Enter reason..."
+            placeholder={t('commentPlaceholder')}
             value={comment}
             onChange={(e) => { setComment(e.target.value); setError('') }}
-            aria-label="Comments"
+            aria-label={t('commentAriaLabel')}
           />
         )}
 
@@ -389,7 +389,7 @@ export function ResultReviewPanel({
                               {rangeChanged && (
                                 <span className="flex items-center gap-1 text-amber-600 mt-0.5">
                                   <Info size={12} aria-hidden="true" />
-                                  <span>Range updated since result. Current: {currentRange.rangeMin}–{currentRange.rangeMax}</span>
+                                  <span>{t('rangeUpdated', { min: currentRange.rangeMin, max: currentRange.rangeMax })}</span>
                                 </span>
                               )}
                             </div>

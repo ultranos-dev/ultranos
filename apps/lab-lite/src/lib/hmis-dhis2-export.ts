@@ -23,10 +23,21 @@ export interface Dhis2DataValueSet {
  * Installation-specific IDs should override this via lab settings.
  * Keys match field paths in the HmisMonthlyReport data model.
  */
+/**
+ * Escape a CSV field value per RFC 4180.
+ * Wraps in double quotes if the value contains comma, double-quote, or newline.
+ */
+function escapeCsvField(field: string): string {
+  if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+    return `"${field.replace(/"/g, '""')}"`
+  }
+  return field
+}
+
 const DEFAULT_DATA_ELEMENT_MAP: Record<string, string> = {
-  'testCategory.CBC.total':           'DE_CBC_TOTAL',
-  'testCategory.CBC.positive':        'DE_CBC_POS',
-  'testCategory.CBC.rate':            'DE_CBC_RATE',
+  'testCategory.58410-2.total':       'DE_CBC_TOTAL',
+  'testCategory.58410-2.positive':    'DE_CBC_POS',
+  'testCategory.58410-2.rate':        'DE_CBC_RATE',
   'disease.malaria.total':            'DE_MALARIA_TOTAL',
   'disease.malaria.positive':         'DE_MALARIA_POS',
   'disease.malaria.rate':             'DE_MALARIA_RATE',
@@ -44,6 +55,24 @@ const DEFAULT_DATA_ELEMENT_MAP: Record<string, string> = {
   'quality.rejectionRate':            'DE_REJECTION_RATE',
   'quality.qcPassRate':               'DE_QC_PASS_RATE',
   'quality.avgTatHours':              'DE_AVG_TAT_HOURS',
+  'demographic.0-4.male':             'DE_DEMO_0_4_M',
+  'demographic.0-4.female':           'DE_DEMO_0_4_F',
+  'demographic.0-4.total':            'DE_DEMO_0_4_T',
+  'demographic.5-14.male':            'DE_DEMO_5_14_M',
+  'demographic.5-14.female':          'DE_DEMO_5_14_F',
+  'demographic.5-14.total':           'DE_DEMO_5_14_T',
+  'demographic.15-24.male':           'DE_DEMO_15_24_M',
+  'demographic.15-24.female':         'DE_DEMO_15_24_F',
+  'demographic.15-24.total':          'DE_DEMO_15_24_T',
+  'demographic.25-44.male':           'DE_DEMO_25_44_M',
+  'demographic.25-44.female':         'DE_DEMO_25_44_F',
+  'demographic.25-44.total':          'DE_DEMO_25_44_T',
+  'demographic.45-64.male':           'DE_DEMO_45_64_M',
+  'demographic.45-64.female':         'DE_DEMO_45_64_F',
+  'demographic.45-64.total':          'DE_DEMO_45_64_T',
+  'demographic.65+.male':             'DE_DEMO_65_M',
+  'demographic.65+.female':           'DE_DEMO_65_F',
+  'demographic.65+.total':            'DE_DEMO_65_T',
 }
 
 /**
@@ -70,7 +99,7 @@ export function exportToDhis2Json(
 
   // Test category summary
   for (const cat of report.testCategorySummary) {
-    const prefix = `testCategory.${cat.categoryLabel}`
+    const prefix = `testCategory.${cat.loincCode}`
     if (elementMap[`${prefix}.total`]) {
       dataValues.push({ dataElement: elementMap[`${prefix}.total`], value: String(cat.totalPerformed) })
     }
@@ -105,6 +134,14 @@ export function exportToDhis2Json(
     if (elementMap[key]) {
       dataValues.push({ dataElement: elementMap[key], value: String(val) })
     }
+  }
+
+  // Demographics
+  for (const demo of report.demographics) {
+    const demoPrefix = `demographic.${demo.ageGroup}`
+    if (elementMap[`${demoPrefix}.male`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.male`], value: String(demo.male) })
+    if (elementMap[`${demoPrefix}.female`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.female`], value: String(demo.female) })
+    if (elementMap[`${demoPrefix}.total`]) dataValues.push({ dataElement: elementMap[`${demoPrefix}.total`], value: String(demo.total) })
   }
 
   // Ensure at least disease-level entries are present even if no test categories matched
@@ -143,9 +180,9 @@ export function exportToDhis2Csv(
 ): string {
   const payload = exportToDhis2Json(report, orgUnit, elementMap)
   const period = payload.period
-  const rows = ['dataElement,period,orgUnit,value']
+  const rows = [['dataElement', 'period', 'orgUnit', 'value'].map(escapeCsvField).join(',')]
   for (const dv of payload.dataValues) {
-    rows.push(`${dv.dataElement},${period},${orgUnit},${dv.value}`)
+    rows.push([dv.dataElement, period, orgUnit, dv.value].map(escapeCsvField).join(','))
   }
   return rows.join('\n')
 }

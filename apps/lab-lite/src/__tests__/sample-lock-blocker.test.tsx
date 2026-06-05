@@ -81,4 +81,19 @@ describe('SampleLockBlocker', () => {
     expect(dialog).toBeInTheDocument()
     expect(dialog).toHaveAttribute('aria-modal', 'true')
   })
+
+  it('RTL: dialog card uses logical CSS classes (no directional left/right)', () => {
+    // Render in an RTL context by setting dir on document
+    document.documentElement.setAttribute('dir', 'rtl')
+    renderBlocker()
+    const blocker = screen.getByTestId('sample-lock-blocker')
+    // The backdrop should render correctly — no RTL-specific class breakage
+    expect(blocker).toBeInTheDocument()
+    // Buttons inside must not carry raw 'pl-' or 'pr-' classes (RTL-safe classes use 'ps-'/'pe-')
+    const buttons = blocker.querySelectorAll('button')
+    buttons.forEach((btn) => {
+      expect(btn.className).not.toMatch(/\bpl-|\bpr-/)
+    })
+    document.documentElement.setAttribute('dir', 'ltr')
+  })
 })

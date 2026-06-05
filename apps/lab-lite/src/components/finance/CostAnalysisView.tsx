@@ -35,6 +35,7 @@ const STALE_DAYS_THRESHOLD = 90
 
 export function CostAnalysisView() {
   const t = useTranslations('finance.cost.analysis')
+  const tCommon = useTranslations('common')
   const session = useAuthSessionStore((s) => s.session)
 
   const [analyses, setAnalyses] = useState<CostAnalysis[]>([])
@@ -122,7 +123,7 @@ export function CostAnalysisView() {
   }
 
   if (!isLoaded) {
-    return <div className="p-6 text-sm text-gray-500">Loading...</div>
+    return <div className="p-6 text-sm text-gray-500">{tCommon('loading')}</div>
   }
 
   if (analyses.length === 0) {

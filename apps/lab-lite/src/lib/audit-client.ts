@@ -648,7 +648,7 @@ export function reportHmisAuditEvent(payload: {
 
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
-    actorRole: UserRole.LAB_TECH,
+    actorRole: (session?.labRole as unknown as UserRole) ?? UserRole.LAB_TECH,
     action: actionMap[payload.action],
     resourceType: 'HMIS_REPORT' as AuditResourceType,
     resourceId: payload.reportId,
@@ -1255,7 +1255,7 @@ export function reportDailyLogAuditEvent(payload: {
     actorId: session?.userId ?? 'unknown',
     actorRole: UserRole.LAB_TECH,
     action: AuditAction.UPDATE,
-    resourceType: AuditResourceType.LAB_RESULT,
+    resourceType: 'DAILY_LOG' as AuditResourceType,
     resourceId: payload.logId,
     hlcTimestamp: serializeHlc(hlc.now()),
     metadata: {
@@ -1266,7 +1266,9 @@ export function reportDailyLogAuditEvent(payload: {
     },
   }
 
-  void emitClientAudit(input)
+  emitClientAudit(input).catch(() => {
+    // Audit emission must not throw — but log silently for debugging
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -1551,6 +1553,7 @@ type DonorAuditAction =
   | 'DONOR_REPORT_GENERATED'
   | 'DONOR_REPORT_FINALIZED'
   | 'DONOR_REPORT_EXPORTED'
+  | 'DONOR_REPORT_CORRECTED'
 
 /**
  * Emit a donor report lifecycle audit event.
@@ -1565,36 +1568,44 @@ export function reportDonorAuditEvent(payload: {
   periodStart?: string
   periodEnd?: string
   finalizerId?: string
-  format?: 'pdf' | 'share'
+  format?: 'pdf' | 'share' | 'download'
+  fieldPath?: string
+  correctedBy?: string
 }): void {
-  const session = useAuthSessionStore.getState().session
-  const resourceId = payload.reportId ?? payload.programId ?? 'unknown'
-  const auditAction =
-    payload.action === 'DONOR_REPORT_GENERATED' || payload.action === 'DONOR_PROGRAM_REGISTERED'
-      ? AuditAction.CREATE
-      : AuditAction.UPDATE
+  try {
+    const session = useAuthSessionStore.getState().session
+    const resourceId = payload.reportId ?? payload.programId ?? 'unknown'
+    const auditAction =
+      payload.action === 'DONOR_REPORT_GENERATED' || payload.action === 'DONOR_PROGRAM_REGISTERED'
+        ? AuditAction.CREATE
+        : AuditAction.UPDATE
 
-  const input: ClientAuditEventInput = {
-    actorId: session?.userId ?? 'unknown',
-    actorRole: session?.labRole ? (session.labRole as unknown as UserRole) : UserRole.LAB_TECH,
-    action: auditAction,
-    resourceType: AuditResourceType.DIAGNOSTIC_REPORT,
-    resourceId,
-    hlcTimestamp: serializeHlc(hlc.now()),
-    metadata: {
-      donorEvent: payload.action,
-      ...(payload.programCode ? { programCode: payload.programCode } : {}),
-      ...(payload.programId ? { programId: payload.programId } : {}),
-      ...(payload.reportId ? { reportId: payload.reportId } : {}),
-      ...(payload.periodStart ? { periodStart: payload.periodStart } : {}),
-      ...(payload.periodEnd ? { periodEnd: payload.periodEnd } : {}),
-      ...(payload.finalizerId ? { finalizerId: payload.finalizerId } : {}),
-      ...(payload.format ? { format: payload.format } : {}),
-      source: 'lab-lite',
-    },
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? 'unknown',
+      actorRole: session?.labRole ? (session.labRole as unknown as UserRole) : UserRole.LAB_TECH,
+      action: auditAction,
+      resourceType: AuditResourceType.DIAGNOSTIC_REPORT,
+      resourceId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        donorEvent: payload.action,
+        ...(payload.programCode ? { programCode: payload.programCode } : {}),
+        ...(payload.programId ? { programId: payload.programId } : {}),
+        ...(payload.reportId ? { reportId: payload.reportId } : {}),
+        ...(payload.periodStart ? { periodStart: payload.periodStart } : {}),
+        ...(payload.periodEnd ? { periodEnd: payload.periodEnd } : {}),
+        ...(payload.finalizerId ? { finalizerId: payload.finalizerId } : {}),
+        ...(payload.format ? { format: payload.format } : {}),
+        ...(payload.fieldPath ? { fieldPath: payload.fieldPath } : {}),
+        ...(payload.correctedBy ? { correctedBy: payload.correctedBy } : {}),
+        source: 'lab-lite',
+      },
+    }
+
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
   }
-
-  void emitClientAudit(input)
 }
 
 // ---------------------------------------------------------------------------
@@ -1738,4 +1749,112 @@ export function reportP2PAuditEvent(payload: {
   }
 
   void emitClientAudit(input)
+}
+
+// ---------------------------------------------------------------------------
+// Shift Handover audit events — Story 51.1
+// AC 6: Emit for creation, acknowledgment, and expiry alert.
+// No PHI — tech IDs and operational counts only.
+// ---------------------------------------------------------------------------
+
+type HandoverAuditAction =
+  | 'HANDOVER_CREATED'
+  | 'HANDOVER_ACKNOWLEDGED'
+  | 'HANDOVER_EXPIRY_ALERT'
+
+/**
+ * Emit a shift handover lifecycle audit event.
+ * Never throws — handover workflow must not be blocked by audit failures.
+ * No PHI in metadata — tech IDs only (AC 6).
+ */
+export function reportHandoverAuditEvent(payload: {
+  action: HandoverAuditAction
+  reportId: string
+  outgoingTechId?: string
+  incomingTechId?: string
+}): void {
+  try {
+    const session = useAuthSessionStore.getState().session
+    const auditAction =
+      payload.action === 'HANDOVER_CREATED' ? AuditAction.CREATE : AuditAction.UPDATE
+
+    const input: ClientAuditEventInput = {
+      actorId: session?.userId ?? 'unknown',
+      actorRole: session?.labRole ? (session.labRole as unknown as UserRole) : UserRole.LAB_TECH,
+      action: auditAction,
+      resourceType: AuditResourceType.SHIFT_HANDOVER,
+      resourceId: payload.reportId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        handoverEvent: payload.action,
+        ...(payload.outgoingTechId ? { outgoingTechId: payload.outgoingTechId } : {}),
+        ...(payload.incomingTechId ? { incomingTechId: payload.incomingTechId } : {}),
+        source: 'lab-lite',
+      },
+    }
+
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+export function reportSampleLockAuditEvent(payload: {
+  action: 'SAMPLE_LOCK_ACQUIRED' | 'SAMPLE_LOCK_RELEASED' | 'SAMPLE_LOCK_EXPIRED' | 'SAMPLE_LOCK_RELEASE_REQUESTED'
+  sampleId: string
+  techId: string
+  detail?: Record<string, unknown>
+}): void {
+  try {
+    const input: ClientAuditEventInput = {
+      action: AuditAction.UPDATE,
+      resourceType: AuditResourceType.LAB_RESULT,
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        lockEvent: payload.action,
+        techId: payload.techId,
+        ...(payload.detail ?? {}),
+        source: 'lab-lite',
+      },
+    }
+
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+export function reportWorkloadAuditEvent(payload: {
+  action: 'SAMPLE_REASSIGNED' | 'TECH_AVAILABILITY_CHANGED'
+  sampleId?: string
+  techId?: string
+  fromTechId?: string
+  toTechId?: string
+  status?: string
+  reassignedBy?: string
+  changedBy?: string
+}): void {
+  try {
+    const isSampleEvent = payload.action === 'SAMPLE_REASSIGNED'
+    const input: ClientAuditEventInput = {
+      action: AuditAction.UPDATE,
+      resourceType: isSampleEvent ? AuditResourceType.LAB_RESULT : ('TECH_AVAILABILITY' as AuditResourceType),
+      resourceId: isSampleEvent ? (payload.sampleId ?? '') : (payload.techId ?? ''),
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        workloadEvent: payload.action,
+        ...(payload.fromTechId ? { fromTechId: payload.fromTechId } : {}),
+        ...(payload.toTechId ? { toTechId: payload.toTechId } : {}),
+        ...(payload.status ? { status: payload.status } : {}),
+        ...(payload.reassignedBy ? { reassignedBy: payload.reassignedBy } : {}),
+        ...(payload.changedBy ? { changedBy: payload.changedBy } : {}),
+        source: 'lab-lite',
+      },
+    }
+
+    void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
 }

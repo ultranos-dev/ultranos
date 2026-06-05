@@ -22,8 +22,9 @@ export async function aggregateDailyData(
   facilityName: string,
 ): Promise<Omit<DailyActivityLog, 'id' | 'imageBlob' | 'imageHash' | 'status'>> {
   const db = getDb()
-  const dayStart = `${date}T00:00:00.000Z`
-  const dayEnd = `${date}T23:59:59.999Z`
+  // Use local-midnight anchors (not UTC) so aggregation matches the lab's operating day
+  const dayStart = `${date}T00:00:00`
+  const dayEnd = `${date}T23:59:59.999`
 
   // ---------------------------------------------------------------------------
   // Test summary — from uploadQueue (most commonly populated in lab-lite)
@@ -31,8 +32,11 @@ export async function aggregateDailyData(
   // ---------------------------------------------------------------------------
   const queueEntries = await db.uploadQueue
     .filter(
-      (e) =>
-        e.queuedAt >= dayStart && e.queuedAt <= dayEnd,
+      (e) => {
+        // Normalise to date-only comparison to handle both UTC and local timestamps
+        const entryDate = (e.queuedAt ?? '').slice(0, 10)
+        return entryDate === date
+      },
     )
     .toArray()
 
@@ -45,15 +49,20 @@ export async function aggregateDailyData(
     testMap.set(code, existing)
   }
 
-  // If samples table is available, supplement with structured sample data
+  // If samples table is available, supplement with structured sample data.
+  // De-duplicate: track queue entry IDs to avoid counting a sample in both tables.
+  const queueSampleIds = new Set(queueEntries.map((e) => e.metadata?.sampleId).filter(Boolean))
   let sampleEntries: any[] = []
   try {
     sampleEntries = await db.samples
       .filter((s: any) => {
         const ts: string = s.meta?.lastUpdated ?? s.receivedDateTime ?? ''
-        return ts >= dayStart && ts <= dayEnd
+        const entryDate = ts.slice(0, 10)
+        return entryDate === date
       })
       .toArray()
+    // Remove samples already counted via uploadQueue
+    sampleEntries = sampleEntries.filter((s: any) => !queueSampleIds.has(s.id))
   } catch {
     // samples table may not be available in all versions — graceful fallback
   }
@@ -144,13 +153,10 @@ export async function aggregateDailyData(
 /** Calculate turnaround time stats from custody events (received → authorized/completed). */
 async function calculateTurnaroundTime(date: string): Promise<TurnaroundTimeStats> {
   const db = getDb()
-  const dayStart = `${date}T00:00:00.000Z`
-  const dayEnd = `${date}T23:59:59.999Z`
-
   try {
-    // Get all custody events from this day
+    // Get all custody events from this day (date-only comparison for timezone safety)
     const events = await db.custody_events
-      .filter((e: any) => e.timestamp >= dayStart && e.timestamp <= dayEnd)
+      .filter((e: any) => (e.timestamp ?? '').slice(0, 10) === date)
       .toArray()
 
     // Group by sampleId to find RECEIVED and AUTHORIZED/COMPLETED pairs
@@ -198,16 +204,12 @@ async function calculateTurnaroundTime(date: string): Promise<TurnaroundTimeStat
 /** Aggregate rejection counts and reasons from samples table. */
 async function aggregateRejections(date: string): Promise<RejectionSummary> {
   const db = getDb()
-  const dayStart = `${date}T00:00:00.000Z`
-  const dayEnd = `${date}T23:59:59.999Z`
-
   try {
     const rejected = await db.samples
       .filter(
         (s: any) =>
           s.status === 'unsatisfactory' &&
-          (s.meta?.lastUpdated ?? '') >= dayStart &&
-          (s.meta?.lastUpdated ?? '') <= dayEnd,
+          (s.meta?.lastUpdated ?? '').slice(0, 10) === date,
       )
       .toArray()
 

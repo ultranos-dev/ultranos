@@ -33,6 +33,16 @@ export async function generateHandoverReport(
 ): Promise<HandoverReport> {
   const db = getDb()
 
+  // Idempotency guard — if a PENDING or READY report already exists for this
+  // tech on today's shift date, return it rather than creating an orphan.
+  const todayDate = new Date().toISOString().slice(0, 10)
+  const existing = await db.handover_reports
+    .where('outgoingTechId')
+    .equals(outgoingTechId)
+    .filter((r: HandoverReport) => r.shiftDate === todayDate && (r.status === 'PENDING' || r.status === 'READY'))
+    .first()
+  if (existing) return existing
+
   // Pending samples — count by urgency (STAT/Routine)
   const pendingSamples = await aggregatePendingSamples(db)
 
@@ -53,6 +63,7 @@ export async function generateHandoverReport(
     outgoingTechId,
     outgoingTechName,
     incomingTechId: null,
+    incomingTechName: null,
     status: 'PENDING',
     createdAt: now,
     acknowledgedAt: null,
@@ -118,9 +129,9 @@ async function aggregateEquipmentAlerts(
 ): Promise<HandoverReport['equipmentAlerts']> {
   try {
     // Temperature excursions that are unacknowledged count as equipment alerts
+    // Note: acknowledged is typed as boolean — .equals(false) required (not 0)
     const excursions = await db.temperature_excursions
-      .where('acknowledged')
-      .equals(0)
+      .filter((e: any) => e.acknowledged === false)
       .toArray()
 
     return excursions.map((e: any) => ({
@@ -146,12 +157,13 @@ async function aggregateIncompleteOrders(
   db: ReturnType<typeof getDb>,
 ): Promise<HandoverReport['incompleteOrders']> {
   try {
-    const receivedOrders = await db.orders
-      .where('status')
-      .equals('RECEIVED')
+    // Include RECEIVED (not yet started) and IN_PROGRESS (started but not finished)
+    const incompleteStatuses = ['RECEIVED', 'IN_PROGRESS']
+    const incompleteOrders = await db.orders
+      .filter((o: any) => incompleteStatuses.includes(o.status ?? ''))
       .toArray()
 
-    return receivedOrders.map((o: any) => ({
+    return incompleteOrders.map((o: any) => ({
       orderId: o.orderId,
       urgency: o.urgency ?? 'routine',
       receivedAt: o.receivedAt ?? o.authoredOn,
@@ -174,7 +186,7 @@ export async function finalizeHandover(reportId: string, notes: string): Promise
   const report = await db.handover_reports.get(reportId)
   if (!report) throw new Error(`Handover report ${reportId} not found`)
 
-  const updated: HandoverReport = { ...report, outgoingNotes: notes }
+  const updated: HandoverReport = { ...report, outgoingNotes: notes, status: 'READY' }
   await putHandoverReport(updated)
 
   // End the outgoing tech's active shift session
@@ -211,6 +223,7 @@ export async function finalizeHandover(reportId: string, notes: string): Promise
 export async function acknowledgeHandover(
   reportId: string,
   incomingTechId: string,
+  incomingTechName: string,
   notes?: string,
 ): Promise<void> {
   const db = getDb()
@@ -221,6 +234,7 @@ export async function acknowledgeHandover(
   const updated: HandoverReport = {
     ...report,
     incomingTechId,
+    incomingTechName,
     status: 'ACKNOWLEDGED',
     acknowledgedAt: now,
     incomingNotes: notes ?? null,

@@ -35,6 +35,7 @@ export interface QueueBatchInput {
   sampleCount: number
   testType: string
   estimatedRunMinutes?: number        // override; falls back to instrument avg
+  insertAtPosition?: number           // manager insert-at-position; undefined = append
 }
 
 /** QueuedBatch enriched with computed estimated times. */
@@ -49,11 +50,16 @@ export interface QueuedBatchWithTimes extends QueuedBatch {
 
 /**
  * Register a new instrument. Generates UUID + timestamps.
+ * Validates avgRunTimeMinutes >= 1.
  * Returns the new instrument's ID.
  */
 export async function registerInstrument(
   input: Omit<Instrument, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<string> {
+  // P15: validate avgRunTimeMinutes to prevent zero collapsing all queue times
+  if (!input.avgRunTimeMinutes || input.avgRunTimeMinutes < 1) {
+    throw new Error('Average run time must be at least 1 minute')
+  }
   const db = getDb()
   const now = new Date().toISOString()
   const instrument: Instrument = {
@@ -63,7 +69,7 @@ export async function registerInstrument(
     updatedAt: now,
   }
   await db.instruments.add(instrument)
-  emitEquipmentAuditEvent({
+  await emitEquipmentAuditEvent({
     action: 'CREATE',
     resourceType: 'INSTRUMENT',
     resourceId: instrument.id,
@@ -77,8 +83,11 @@ export async function updateInstrument(
   id: string,
   updates: Partial<Omit<Instrument, 'id' | 'createdAt'>>,
 ): Promise<void> {
+  if (updates.avgRunTimeMinutes !== undefined && updates.avgRunTimeMinutes < 1) {
+    throw new Error('Average run time must be at least 1 minute')
+  }
   await getDb().instruments.update(id, { ...updates, updatedAt: new Date().toISOString() })
-  emitEquipmentAuditEvent({
+  await emitEquipmentAuditEvent({
     action: 'UPDATE',
     resourceType: 'INSTRUMENT',
     resourceId: id,
@@ -100,7 +109,7 @@ export async function setInstrumentStatus(
     outOfServiceReason: status === 'OUT_OF_SERVICE' ? (reason ?? null) : null,
     updatedAt: new Date().toISOString(),
   })
-  emitEquipmentAuditEvent({
+  await emitEquipmentAuditEvent({
     action: 'UPDATE',
     resourceType: 'INSTRUMENT',
     resourceId: id,
@@ -122,7 +131,9 @@ export async function getInstrumentById(id: string): Promise<Instrument | undefi
 
 /**
  * Add a batch to an instrument's queue.
- * Validates instrument is IN_SERVICE.
+ * Validates instrument is IN_SERVICE and estimatedRunMinutes is valid.
+ * Supports manager insert-at-position via input.insertAtPosition.
+ * Entire position assignment is transactional to prevent concurrent duplicates.
  * Returns the full QueuedBatch with position assigned.
  */
 export async function queueBatch(
@@ -137,38 +148,64 @@ export async function queueBatch(
     throw new Error(`Instrument "${instrument.name}" is out of service and cannot accept new batches`)
   }
 
-  // Determine next position (max position of active batches + 1)
-  const existing = await db.instrument_queue
-    .where('instrumentId')
-    .equals(instrumentId)
-    .filter((b) => b.status === 'QUEUED' || b.status === 'RUNNING')
-    .toArray()
-
-  const maxPosition = existing.reduce((max, b) => Math.max(max, b.position), 0)
-  const position = maxPosition + 1
-
-  const batch: QueuedBatch = {
-    id: crypto.randomUUID(),
-    instrumentId,
-    techId: input.techId,
-    techName: input.techName,
-    sampleIds: input.sampleIds,
-    sampleCount: input.sampleCount,
-    testType: input.testType,
-    estimatedRunMinutes: input.estimatedRunMinutes ?? instrument.avgRunTimeMinutes,
-    position,
-    status: 'QUEUED',
-    queuedAt: new Date().toISOString(),
-    startedAt: null,
-    completedAt: null,
+  // P6: validate estimatedRunMinutes override — reject NaN
+  const runMinutesOverride = input.estimatedRunMinutes
+  if (runMinutesOverride !== undefined && (isNaN(runMinutesOverride) || runMinutesOverride < 1)) {
+    throw new Error('Estimated run time override must be a whole number of at least 1 minute')
   }
 
-  await db.instrument_queue.add(batch)
-  emitEquipmentAuditEvent({
+  let batch!: QueuedBatch
+
+  // P14: wrap position assignment + insert in a single transaction to prevent
+  // concurrent calls from reading the same maxPosition and producing duplicates.
+  await db.transaction('rw', db.instrument_queue, async () => {
+    const existing = await db.instrument_queue
+      .where('instrumentId')
+      .equals(instrumentId)
+      .filter((b) => b.status === 'QUEUED' || b.status === 'RUNNING')
+      .toArray()
+
+    const maxPosition = existing.reduce((max, b) => Math.max(max, b.position), 0)
+
+    // P7: insertAtPosition support — manager can inject at any slot.
+    // If insertAtPosition is specified and valid, shift all batches at that position or later.
+    let position: number
+    if (input.insertAtPosition !== undefined && input.insertAtPosition >= 1 && input.insertAtPosition <= maxPosition + 1) {
+      position = input.insertAtPosition
+      // Shift existing batches at or after the insert position
+      const toShift = existing.filter((b) => b.position >= position).sort((a, b) => b.position - a.position)
+      for (const b of toShift) {
+        await db.instrument_queue.update(b.id, { position: b.position + 1 })
+      }
+    } else {
+      position = maxPosition + 1
+    }
+
+    batch = {
+      id: crypto.randomUUID(),
+      instrumentId,
+      techId: input.techId,
+      techName: input.techName,
+      sampleIds: input.sampleIds,
+      sampleCount: input.sampleCount,
+      testType: input.testType,
+      estimatedRunMinutes: runMinutesOverride ?? instrument.avgRunTimeMinutes,
+      position,
+      status: 'QUEUED',
+      cancelReason: null,
+      queuedAt: new Date().toISOString(),
+      startedAt: null,
+      completedAt: null,
+    }
+
+    await db.instrument_queue.add(batch)
+  })
+
+  await emitEquipmentAuditEvent({
     action: 'CREATE',
     resourceType: 'INSTRUMENT_BATCH',
     resourceId: batch.id,
-    detail: { instrumentId, techId: input.techId },
+    detail: { instrumentId, techId: input.techId, position: batch.position },
   })
   return batch
 }
@@ -192,13 +229,26 @@ export async function getInstrumentQueue(instrumentId: string): Promise<QueuedBa
   return computeQueueTimes(batches, instrument)
 }
 
-/** Mark the position-1 batch as RUNNING. Must be in position 1 and QUEUED. */
+/**
+ * Mark the position-1 batch as RUNNING.
+ * Validates: must be in position 1, QUEUED, and no other RUNNING batch on the instrument.
+ */
 export async function startBatch(batchId: string): Promise<void> {
   const db = getDb()
   const batch = await db.instrument_queue.get(batchId)
   if (!batch) throw new Error(`Batch ${batchId} not found`)
   if (batch.position !== 1) throw new Error('Only the first batch in queue can be started')
   if (batch.status !== 'QUEUED') throw new Error('Batch is not in QUEUED state')
+
+  // P2: guard against two RUNNING batches on the same instrument (multi-tab race)
+  const existingRunning = await db.instrument_queue
+    .where('instrumentId')
+    .equals(batch.instrumentId)
+    .filter((b) => b.status === 'RUNNING')
+    .toArray()
+  if (existingRunning.length > 0) {
+    throw new Error('Another batch is already running on this instrument')
+  }
 
   await db.instrument_queue.update(batchId, {
     status: 'RUNNING',
@@ -209,7 +259,7 @@ export async function startBatch(batchId: string): Promise<void> {
 /**
  * Mark a RUNNING batch as COMPLETED.
  * - Writes to instrument_history
- * - Updates instrument avg run time (rolling average of last 10 runs)
+ * - Updates instrument avg run time (rolling average of last 10 runs, bounded query)
  * - Promotes next QUEUED batch to position 1
  * - Creates next-in-line notification for the promoted batch's owner
  */
@@ -247,17 +297,21 @@ export async function completeBatch(batchId: string): Promise<void> {
       }
       await db.instrument_history.add(historyEntry)
 
-      // Update instrument avg run time (rolling avg of last 10 completed runs)
-      const allHistory = await db.instrument_history
-        .where('instrumentId')
-        .equals(batch.instrumentId)
-        .toArray()
-      // Sort descending by completedAt to get most recent runs first
-      allHistory.sort((a, b) => b.completedAt.localeCompare(a.completedAt))
-      const last10 = allHistory.slice(0, 10)
-      if (last10.length > 0) {
-        const newAvg = Math.round(
-          last10.reduce((sum, h) => sum + h.runTimeMinutes, 0) / last10.length,
+      // P11: bounded history query — use compound index to get only the last 10 runs.
+      // Sort descending by completedAt using the [instrumentId+completedAt] compound index.
+      const recentHistory = await db.instrument_history
+        .where('[instrumentId+completedAt]')
+        .between(
+          [batch.instrumentId, Dexie.minKey],
+          [batch.instrumentId, Dexie.maxKey],
+        )
+        .reverse()
+        .sortBy('completedAt')
+        .then((all) => all.slice(0, 10))
+      if (recentHistory.length > 0) {
+        const newAvg = Math.max(
+          1,
+          Math.round(recentHistory.reduce((sum, h) => sum + h.runTimeMinutes, 0) / recentHistory.length),
         )
         await db.instruments.update(batch.instrumentId, {
           avgRunTimeMinutes: newAvg,
@@ -265,8 +319,7 @@ export async function completeBatch(batchId: string): Promise<void> {
         })
       }
 
-      // Promote next batch: find QUEUED batch at position 2, move to position 1
-      // Resequence all remaining QUEUED batches (positions 1-N)
+      // Promote next batch: resequence all remaining QUEUED batches to positions 1..N
       const allQueued = await db.instrument_queue
         .where('instrumentId')
         .equals(batch.instrumentId)
@@ -289,12 +342,13 @@ export async function completeBatch(batchId: string): Promise<void> {
         instrumentId: batch.instrumentId,
         instrumentName: instrument.name,
         batchId: nextBatch.id,
+        type: 'NEXT_IN_LINE',
         estimatedStartTime: new Date().toISOString(),
       })
     }
   }
 
-  emitEquipmentAuditEvent({
+  await emitEquipmentAuditEvent({
     action: 'UPDATE',
     resourceType: 'INSTRUMENT_BATCH',
     resourceId: batchId,
@@ -304,35 +358,61 @@ export async function completeBatch(batchId: string): Promise<void> {
 
 /**
  * Cancel a batch (owner or LAB_MANAGER).
- * Removes from active queue and reorders remaining positions.
+ * - Stores the cancellation reason (P1).
+ * - Resequences all remaining active batches — including promotion when a RUNNING
+ *   batch at position 1 is cancelled (P4).
+ * - Notifies the owning tech that their batch was cancelled (D1).
  */
-export async function cancelBatch(batchId: string, _reason: string): Promise<void> {
+export async function cancelBatch(batchId: string, reason: string): Promise<void> {
   const db = getDb()
   const batch = await db.instrument_queue.get(batchId)
   if (!batch) throw new Error(`Batch ${batchId} not found`)
   if (batch.status === 'COMPLETED') throw new Error('Cannot cancel a completed batch')
 
   await db.transaction('rw', db.instrument_queue, async () => {
+    // P1: store reason
     await db.instrument_queue.update(batchId, {
       status: 'CANCELLED',
+      cancelReason: reason || null,
       completedAt: new Date().toISOString(),
     })
-    // Re-fetch all QUEUED batches for this instrument and resequence positions
-    const allQueued = await db.instrument_queue
+    // P4: resequence ALL active (QUEUED + still-running) batches so position 1 is
+    // always occupied after a cancellation, even if the cancelled batch was RUNNING.
+    const remaining = await db.instrument_queue
       .where('instrumentId')
       .equals(batch.instrumentId)
-      .filter((b) => b.status === 'QUEUED')
+      .filter((b) => b.status === 'QUEUED' || b.status === 'RUNNING')
       .toArray()
-    allQueued.sort((a, b) => a.position - b.position)
-    for (let i = 0; i < allQueued.length; i++) {
-      await db.instrument_queue.update(allQueued[i].id, { position: i + 1 })
+    remaining.sort((a, b) => a.position - b.position)
+    for (let i = 0; i < remaining.length; i++) {
+      await db.instrument_queue.update(remaining[i].id, { position: i + 1 })
     }
+  })
+
+  // D1: notify the tech whose batch was cancelled so they can re-queue
+  const instrument = await db.instruments.get(batch.instrumentId)
+  if (instrument) {
+    await createInstrumentNotification({
+      techId: batch.techId,
+      instrumentId: batch.instrumentId,
+      instrumentName: instrument.name,
+      batchId: batch.id,
+      type: 'BATCH_CANCELLED',
+      estimatedStartTime: new Date().toISOString(),
+    })
+  }
+
+  await emitEquipmentAuditEvent({
+    action: 'UPDATE',
+    resourceType: 'INSTRUMENT_BATCH',
+    resourceId: batchId,
+    detail: { status: 'CANCELLED', instrumentId: batch.instrumentId, reason },
   })
 }
 
 /**
- * Reorder the queue by providing a new ordered list of batch IDs.
- * LAB_MANAGER only — enforced at the UI layer; service trusts the caller.
+ * Reorder the queue by providing a complete ordered list of active batch IDs.
+ * LAB_MANAGER only — enforced at the UI layer; service validates IDs belong to the instrument.
  * Notifies affected techs and emits audit event.
  */
 export async function reorderQueue(
@@ -342,30 +422,48 @@ export async function reorderQueue(
 ): Promise<void> {
   const db = getDb()
 
+  // P5: validate all IDs belong to this instrument and are active
+  const activeBatches = await db.instrument_queue
+    .where('instrumentId')
+    .equals(instrumentId)
+    .filter((b) => b.status === 'QUEUED' || b.status === 'RUNNING')
+    .toArray()
+  const activeBatchIds = new Set(activeBatches.map((b) => b.id))
+  for (const id of newOrder) {
+    if (!activeBatchIds.has(id)) {
+      throw new Error(`Batch ${id} does not belong to instrument ${instrumentId} or is not active`)
+    }
+  }
+  // All active batches must be represented in newOrder to prevent position gaps
+  if (newOrder.length !== activeBatches.length) {
+    throw new Error('newOrder must contain all active batches for the instrument')
+  }
+
   await db.transaction('rw', db.instrument_queue, async () => {
     for (let i = 0; i < newOrder.length; i++) {
       await db.instrument_queue.update(newOrder[i], { position: i + 1 })
     }
   })
 
-  // Notify affected techs of their updated positions
+  // Notify affected techs of their updated positions (QUEUED batches only — RUNNING position is fixed)
   const instrument = await db.instruments.get(instrumentId)
   if (instrument) {
     const updatedQueue = await getInstrumentQueue(instrumentId)
     for (const batch of updatedQueue) {
-      if (batch.status === 'QUEUED' || batch.status === 'RUNNING') {
+      if (batch.status === 'QUEUED') {
         await createInstrumentNotification({
           techId: batch.techId,
           instrumentId,
           instrumentName: instrument.name,
           batchId: batch.id,
+          type: 'NEXT_IN_LINE',
           estimatedStartTime: batch.estimatedStartTime?.toISOString() ?? new Date().toISOString(),
         })
       }
     }
   }
 
-  emitEquipmentAuditEvent({
+  await emitEquipmentAuditEvent({
     action: 'UPDATE',
     resourceType: 'INSTRUMENT_QUEUE',
     resourceId: instrumentId,
@@ -382,7 +480,7 @@ export async function reorderQueue(
  *
  * First batch:
  *   - If RUNNING and startedAt set: startTime = startedAt (already running)
- *   - Otherwise: startTime = now (next to run)
+ *   - Otherwise: startTime = now (next to run); isNow = true for "Now" display
  * Subsequent batches:
  *   - startTime  = previous batch's estimatedCompletionTime
  *   - completion = startTime + estimatedRunMinutes
@@ -405,8 +503,12 @@ export function computeQueueTimes(
       estimatedStartTime = cursor
     }
 
-    const runMinutes =
-      batch.estimatedRunMinutes > 0 ? batch.estimatedRunMinutes : instrument.avgRunTimeMinutes
+    // P15 + P6: guard against zero/NaN run times that collapse all times to same point
+    const rawRunMinutes = batch.estimatedRunMinutes > 0 && !isNaN(batch.estimatedRunMinutes)
+      ? batch.estimatedRunMinutes
+      : instrument.avgRunTimeMinutes
+    const runMinutes = Math.max(1, rawRunMinutes)
+
     const estimatedCompletionTime = new Date(estimatedStartTime.getTime() + runMinutes * 60_000)
     cursor = estimatedCompletionTime
 
@@ -420,18 +522,25 @@ export function computeQueueTimes(
 // Instrument Notifications — Dexie-based, offline-capable (AC 4)
 // ---------------------------------------------------------------------------
 
-/** Store a next-in-line (or position-changed) notification for a tech. */
+/** Store a notification for a tech (next-in-line or batch-cancelled). */
 export async function createInstrumentNotification(input: {
   techId: string
   instrumentId: string
   instrumentName: string
   batchId: string
+  type: InstrumentNotification['type']
   estimatedStartTime: string
 }): Promise<void> {
   const db = getDb()
   const notif: InstrumentNotification = {
     id: crypto.randomUUID(),
-    ...input,
+    techId: input.techId,
+    instrumentId: input.instrumentId,
+    instrumentName: input.instrumentName,
+    batchId: input.batchId,
+    type: input.type,
+    message: '',           // populated by UI layer using localised t() strings
+    estimatedStartTime: input.estimatedStartTime,
     createdAt: new Date().toISOString(),
     dismissed: false,
   }

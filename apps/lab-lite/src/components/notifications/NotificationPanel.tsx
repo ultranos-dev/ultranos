@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
 import { listNotifications, acknowledgeNotification, type NotificationItem } from '@/lib/trpc'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -18,6 +19,7 @@ export function NotificationPanel({
   onClose: () => void
   onCountChange: (count: number) => void
 }) {
+  const t = useTranslations('notifications')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -118,17 +120,17 @@ export function NotificationPanel({
         ref={panelRef}
         className="absolute end-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-lg border border-border bg-card shadow-lg animate-[notifPanelIn_150ms_ease-out_forwards] [transform-origin:top_right]"
         role="dialog"
-        aria-label="Notifications"
+        aria-label={t('title')}
         data-testid="notification-panel"
       >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t('title')}</h3>
         <button
           type="button"
           onClick={onClose}
           className="p-2 text-muted-foreground [@media(hover:hover)and(pointer:fine)]:hover:text-muted-foreground active:brightness-[0.88] transition-all duration-150"
-          aria-label="Close notifications"
+          aria-label={t('closeAriaLabel')}
         >
           <X size={16} aria-hidden="true" />
         </button>
@@ -143,20 +145,20 @@ export function NotificationPanel({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.938l3-2.647z" />
               </svg>
-              Loading...
+              {t('loading')}
             </span>
           </div>
         )}
 
         {!loading && error && (
           <div className="px-4 py-8 text-center text-sm text-amber-600" data-testid="notification-error">
-            Unable to load notifications. Check your connection.
+            {t('loadError')}
           </div>
         )}
 
         {!loading && !error && notifications.length === 0 && (
           <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No notifications
+            {t('empty')}
           </div>
         )}
 

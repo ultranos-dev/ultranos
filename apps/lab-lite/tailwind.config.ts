@@ -6,10 +6,6 @@ const config: Config = {
   content: ['./src/**/*.{ts,tsx}', '../../packages/ui-kit/src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      fontFamily: {
-        sans:    ["'Manrope'", 'var(--font-manrope)', 'system-ui', 'sans-serif'],
-        heading: ["'Public Sans'", 'var(--font-public-sans)', 'system-ui', 'sans-serif'],
-      },
       colors: {
         primary: {
           50: 'var(--color-primary-50)',

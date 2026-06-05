@@ -20,6 +20,7 @@ function todayISO(): string {
 
 export function ReconciliationView() {
   const t = useTranslations('finance.reconciliation')
+  const tCommon = useTranslations('common')
   const session = useAuthSessionStore((s) => s.session)
   const syncPending = useSyncStore((s) => s.isPending)
 
@@ -91,7 +92,7 @@ export function ReconciliationView() {
       )}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{tCommon('loading')}</p>
       ) : payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('noTransactions')}</p>
       ) : (
