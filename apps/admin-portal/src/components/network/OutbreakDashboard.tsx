@@ -36,7 +36,7 @@ interface OutbreakDashboardProps {
   onRefresh: () => void
 }
 
-export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakDashboardProps) {
+export function OutbreakDashboard({ outbreaks, onResolve: _onResolve, onRefresh }: OutbreakDashboardProps) {
   const [resolving, setResolving] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -52,8 +52,8 @@ export function OutbreakDashboard({ outbreaks, onResolve, onRefresh }: OutbreakD
       await trpc.admin.deactivateOutbreakMode.mutate({ outbreakId })
       setConfirmId(null)
       onRefresh()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to resolve outbreak')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to resolve outbreak')
     } finally {
       setResolving(null)
     }

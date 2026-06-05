@@ -9,10 +9,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans:    ["'Manrope'", 'system-ui', '-apple-system', 'sans-serif'],
-        heading: ["'Public Sans'", 'system-ui', '-apple-system', 'sans-serif'],
-      },
     },
   },
   plugins: [],

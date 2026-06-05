@@ -46,8 +46,8 @@ export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwE
         assignedLabId,
       })
       setCreatedId(result.chwId)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to enroll CHW')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to enroll CHW')
     } finally {
       setSubmitting(false)
     }

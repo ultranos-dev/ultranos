@@ -65,13 +65,13 @@ export function EscalationSection({
     async function loadAdmins() {
       try {
         const result = await trpc.admin.listUsers.query({
-          page: 1,
-          pageSize: 50,
-          roleFilter: 'ADMIN',
-          statusFilter: 'ACTIVE',
+          cursor: 0,
+          limit: 50,
+          role: 'ADMIN',
+          status: 'ACTIVE',
         })
         setAdminUsers(
-          result.users.map((u: any) => ({ id: u.id, name: u.name ?? u.email })),
+          result.users.map((u: { id: string; name?: string; email: string }) => ({ id: u.id, name: u.name ?? u.email })),
         )
       } catch {
         // Non-blocking
@@ -87,8 +87,8 @@ export function EscalationSection({
       await trpc.admin.resolveAnomaly.mutate({ alertId, resolutionNote: resolveNote })
       setShowResolveForm(false)
       onResolve()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to resolve alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to resolve alert')
     } finally {
       setResolving(false)
     }
@@ -101,8 +101,8 @@ export function EscalationSection({
       await trpc.admin.reassignAnomaly.mutate({ alertId, assigneeId: newAssigneeId })
       setShowReassign(false)
       onReassign()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to reassign alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to reassign alert')
     } finally {
       setReassigning(false)
     }

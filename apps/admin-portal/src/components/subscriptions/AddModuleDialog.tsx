@@ -41,8 +41,8 @@ export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModule
       try {
         const result = await trpc.subscription.getAvailableModules.query()
         setModules(result.modules)
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to load available modules')
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load available modules')
       } finally {
         setLoading(false)
       }
@@ -58,9 +58,9 @@ export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModule
       await trpc.subscription.addModule.mutate({ moduleCode })
       onModuleAdded()
       onOpenChange(false)
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (mountedRef.current) {
-        setError(err?.message ?? 'Failed to add module')
+        setError((err as Error)?.message ?? 'Failed to add module')
       }
     } finally {
       if (mountedRef.current) {

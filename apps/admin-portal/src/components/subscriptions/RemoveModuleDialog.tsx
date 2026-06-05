@@ -45,8 +45,8 @@ export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenCha
 
     if (affectedRoles.length === 0) return
 
-    trpc.admin.listUsers.query({ page: 1, pageSize: 1, roleFilter: affectedRoles[0], statusFilter: 'ACTIVE' })
-      .then((r) => setAffectedUserCount(r.totalCount))
+    trpc.admin.listUsers.query({ cursor: 0, limit: 1, role: affectedRoles[0], status: 'ACTIVE' })
+      .then((r: { total: number }) => setAffectedUserCount(r.total))
       .catch(() => {})
   }, [subscription.moduleCode])
 
@@ -57,8 +57,8 @@ export function RemoveModuleDialog({ subscription, isLastActive, open, onOpenCha
       await trpc.subscription.removeModule.mutate({ subscriptionId: subscription.id })
       onModuleRemoved()
       onOpenChange(false)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to cancel subscription')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to cancel subscription')
     } finally {
       setCancelling(false)
     }

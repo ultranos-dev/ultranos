@@ -57,8 +57,8 @@ export function OutbreakActivationModal({ labs, open, onOpenChange, onSuccess }:
         notes: notes.trim() || undefined,
       })
       onSuccess()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to activate outbreak mode')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to activate outbreak mode')
       setStep('form')
     } finally {
       setSubmitting(false)

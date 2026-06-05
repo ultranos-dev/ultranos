@@ -15,7 +15,7 @@ export function ExpiryWarningWidget() {
 
   useEffect(() => {
     trpc.admin.getExpiringCredentials.query({ daysAhead: 90 })
-      .then((result) => setBuckets(result.buckets))
+      .then((result: { buckets: Parameters<typeof setBuckets>[0] }) => setBuckets(result.buckets))
       .catch(() => {
         setError(true)
       })

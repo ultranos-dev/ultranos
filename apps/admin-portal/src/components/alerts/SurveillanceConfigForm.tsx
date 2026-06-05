@@ -24,7 +24,7 @@ interface Threshold {
 }
 
 interface Channels {
-  in_app: true
+  in_app: boolean
   sms_phone?: string
   email?: string
 }
@@ -59,11 +59,11 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         setLoading(true)
         const [configResult, labsResult] = await Promise.all([
           trpc.admin.getSurveillanceConfig.query(),
-          trpc.admin.listLabs.query({ page: 1, pageSize: 200 }),
+          trpc.admin.listLabs.query({ cursor: 0, limit: 100 }),
         ])
 
-        const labs = (labsResult as any).labs ?? []
-        setAllLabs(labs.map((l: any) => ({ id: l.id, name: l.name, status: l.status })))
+        const labs = labsResult.labs ?? []
+        setAllLabs(labs.map((l) => ({ id: l.id, name: l.labName, status: l.status })))
 
         if (configResult.config) {
           const cfg = configResult.config
@@ -73,8 +73,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
           setSmsEnabled(!!cfg.channels.sms_phone)
           setEmailEnabled(!!cfg.channels.email)
         }
-      } catch (err: any) {
-        setError(err?.message ?? 'Failed to load configuration')
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load configuration')
       } finally {
         setLoading(false)
       }
@@ -161,8 +161,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       setSuccess(true)
       onSaved?.()
       setTimeout(() => setSuccess(false), 3000)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to save configuration')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to save configuration')
     } finally {
       setSaving(false)
     }

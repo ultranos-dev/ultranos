@@ -17,7 +17,7 @@ export function DunningBanner() {
   useEffect(() => {
     trpc.subscription.getOrgSubscriptions
       .query()
-      .then((r) => {
+      .then((r: { organization?: { status: string; paymentFailureReason?: string | null; gracePeriodEndsAt?: string | null } }) => {
         const org = r.organization as {
           status: string
           paymentFailureReason?: string | null

@@ -20,7 +20,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@ultranos/shared-types": ["../../packages/shared-types/src/index.ts"],
-      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"]
+      "@ultranos/ui-kit": ["../../packages/ui-kit/src/index.ts"],
+      "hub-api/*": ["../hub-api/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

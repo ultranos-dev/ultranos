@@ -56,8 +56,8 @@ export function SurveillanceAlertHistory() {
       })
       setAlerts(result.alerts)
       setTotal(result.total)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load alerts')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load alerts')
     } finally {
       setLoading(false)
     }
@@ -86,14 +86,14 @@ export function SurveillanceAlertHistory() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Alert History</h3>
         {/* Filter tabs */}
-        <div className="flex gap-1 rounded-full bg-card p-1">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1">
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => handleFilterChange(f)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 filter === f
-                  ? 'bg-primary text-foreground'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

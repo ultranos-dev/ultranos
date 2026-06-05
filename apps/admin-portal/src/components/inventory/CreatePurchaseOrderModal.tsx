@@ -81,8 +81,8 @@ export function CreatePurchaseOrderModal({ suppliers, labs, open, onOpenChange, 
         notes: notes.trim() || undefined,
       })
       onSuccess()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to create purchase order')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to create purchase order')
     } finally {
       setSubmitting(false)
     }

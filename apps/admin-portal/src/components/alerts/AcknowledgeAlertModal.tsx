@@ -43,8 +43,8 @@ export function AcknowledgeAlertModal({
         notes: notes.trim() || undefined,
       })
       onSuccess()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to acknowledge alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to acknowledge alert')
     } finally {
       setSubmitting(false)
     }

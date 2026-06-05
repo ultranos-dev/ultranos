@@ -55,7 +55,7 @@ export function PathwayCreateModal({ open, onOpenChange, onCreated }: Props) {
 
   function updateMilestone(index: number, field: keyof MilestoneRow, value: string | number) {
     const updated = [...milestones]
-    updated[index] = { ...updated[index], [field]: value }
+    const current = updated[index]; if (current) { updated[index] = { ...current, [field]: value } }
     setMilestones(updated)
   }
 
@@ -80,8 +80,8 @@ export function PathwayCreateModal({ open, onOpenChange, onCreated }: Props) {
         milestones: validMilestones,
       })
       onCreated()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to create pathway')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to create pathway')
     } finally {
       setSubmitting(false)
     }

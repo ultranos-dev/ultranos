@@ -7,7 +7,7 @@ interface OrderStatusPipelineProps {
 }
 
 export function OrderStatusPipeline({ currentStatus }: OrderStatusPipelineProps) {
-  const currentIdx = STATUSES.indexOf(currentStatus as any)
+  const currentIdx = STATUSES.indexOf(currentStatus as (typeof STATUSES)[number])
 
   return (
     <div className="flex items-center gap-1">
@@ -38,8 +38,8 @@ export function OrderStatusPipeline({ currentStatus }: OrderStatusPipelineProps)
   )
 }
 
-export function getNextStatus(current: string): string | null {
-  const idx = STATUSES.indexOf(current as any)
+export function getNextStatus(current: string): string | null | undefined {
+  const idx = STATUSES.indexOf(current as (typeof STATUSES)[number])
   if (idx < 0 || idx >= STATUSES.length - 1) return null
   return STATUSES[idx + 1]
 }

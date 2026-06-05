@@ -14,7 +14,7 @@ interface AuditEvent {
   actorRole: string
   resourceType: string
   resourceId: string
-  outcome: 'SUCCESS' | 'DENIED'
+  outcome: 'SUCCESS' | 'FAILURE'
   metadata: Record<string, unknown>
 }
 
@@ -27,7 +27,7 @@ type ActionGroup =
   | 'AUTH_EVENTS'
   | 'SETTINGS_CHANGES'
 
-type OutcomeFilter = 'ALL' | 'SUCCESS' | 'DENIED'
+type OutcomeFilter = 'ALL' | 'SUCCESS' | 'FAILURE'
 
 const ACTION_GROUP_LABELS: Record<ActionGroup, string> = {
   ALL: 'All Actions',
@@ -39,14 +39,6 @@ const ACTION_GROUP_LABELS: Record<ActionGroup, string> = {
   SETTINGS_CHANGES: 'Settings Changes',
 }
 
-const ACTION_GROUP_TYPES: Record<Exclude<ActionGroup, 'ALL'>, string[]> = {
-  KYC_ACTIONS: ['KYC_APPROVED', 'KYC_REJECTED', 'KYC_MORE_INFO_REQUESTED'],
-  LAB_ACTIONS: ['LAB_APPROVED', 'LAB_REJECTED', 'LAB_RESULT_SUBMITTED'],
-  USER_ACTIONS: ['USER_CREATED', 'USER_UPDATED', 'USER_SUSPENDED', 'USER_REACTIVATED'],
-  ALERT_ACTIONS: ['ALERT_ACKNOWLEDGED', 'ALERT_DISMISSED', 'ALERT_ESCALATED'],
-  AUTH_EVENTS: ['LOGIN', 'LOGOUT', 'MFA_ENROLLED', 'MFA_VERIFIED', 'PASSWORD_RESET'],
-  SETTINGS_CHANGES: ['SETTINGS_UPDATED', 'SUBSCRIPTION_CHANGED', 'PLAN_UPGRADED'],
-}
 
 const REDACTED_KEYS = ['patient', 'diagnosis', 'medication', 'allergy', 'note']
 
@@ -114,8 +106,6 @@ export function EventBrowser() {
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const selectedActionTypes =
-    actionGroup === 'ALL' ? undefined : ACTION_GROUP_TYPES[actionGroup]
   const selectedOutcome =
     outcomeFilter === 'ALL' ? undefined : outcomeFilter
 
@@ -124,22 +114,20 @@ export function EventBrowser() {
       setLoading(true)
       setError(null)
       const result = await trpc.admin.listAuditEvents.query({
-        page,
-        pageSize: PAGE_SIZE,
-        dateFrom,
-        dateTo,
-        ...(selectedActionTypes && { actionTypes: selectedActionTypes }),
-        ...(actorSearch.trim() && { actorSearch: actorSearch.trim() }),
-        ...(selectedOutcome && { outcome: selectedOutcome }),
+        cursor: (page - 1) * PAGE_SIZE,
+        limit: PAGE_SIZE,
+        startDate: `${dateFrom}T00:00:00.000Z`,
+        endDate: `${dateTo}T23:59:59.999Z`,
+        ...(selectedOutcome && { outcome: selectedOutcome as 'SUCCESS' | 'FAILURE' }),
       })
-      setEvents(result.events)
-      setTotalCount(result.totalCount)
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to load audit events')
+      setEvents(result.events as AuditEvent[])
+      setTotalCount(result.total)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load audit events')
     } finally {
       setLoading(false)
     }
-  }, [page, dateFrom, dateTo, actionGroup, actorSearch, outcomeFilter])
+  }, [page, dateFrom, dateTo, outcomeFilter])
 
   useEffect(() => {
     fetchEvents()
@@ -196,7 +184,7 @@ export function EventBrowser() {
           >
             <option value="ALL">All Outcomes</option>
             <option value="SUCCESS">SUCCESS</option>
-            <option value="DENIED">DENIED</option>
+            <option value="FAILURE">FAILURE</option>
           </select>
 
           <input
@@ -212,11 +200,9 @@ export function EventBrowser() {
         <ExportButton
           exportFn={() =>
             trpc.admin.exportAuditEvents.query({
-              dateFrom,
-              dateTo,
-              actionTypes: selectedActionTypes,
-              outcome: selectedOutcome,
-              format: 'csv',
+              startDate: `${dateFrom}T00:00:00.000Z`,
+              endDate: `${dateTo}T23:59:59.999Z`,
+              ...(selectedOutcome && { outcome: selectedOutcome as 'SUCCESS' | 'FAILURE' }),
             })
           }
           filters={{}}

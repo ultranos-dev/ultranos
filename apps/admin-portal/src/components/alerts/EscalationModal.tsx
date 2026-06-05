@@ -37,13 +37,13 @@ export function EscalationModal({ alertId, open, onOpenChange, onSuccess }: Esca
     async function loadAdmins() {
       try {
         const result = await trpc.admin.listUsers.query({
-          page: 1,
-          pageSize: 50,
-          roleFilter: 'ADMIN',
-          statusFilter: 'ACTIVE',
+          cursor: 0,
+          limit: 50,
+          role: 'ADMIN',
+          status: 'ACTIVE',
         })
         setAdminUsers(
-          result.users.map((u: any) => ({ id: u.id, name: u.name ?? u.email })),
+          result.users.map((u: { id: string; name?: string; email: string }) => ({ id: u.id, name: u.name ?? u.email })),
         )
       } catch {
         // Non-blocking — dropdown will just show "Unassigned"
@@ -63,8 +63,8 @@ export function EscalationModal({ alertId, open, onOpenChange, onSuccess }: Esca
         note,
       })
       onSuccess()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to escalate alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to escalate alert')
     } finally {
       setSubmitting(false)
     }

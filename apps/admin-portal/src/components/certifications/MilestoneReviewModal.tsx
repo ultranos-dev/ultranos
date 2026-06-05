@@ -52,8 +52,8 @@ export function MilestoneReviewModal({ milestone, open, onOpenChange, onReviewed
         note: note.trim() || undefined,
       })
       onReviewed()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to review milestone')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to review milestone')
     } finally {
       setSubmitting(false)
       setConfirmAction(null)
