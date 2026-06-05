@@ -208,7 +208,7 @@ export default function UserDetailPage() {
           <div className="mt-4 rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{actionMessage}</div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Section A: Profile */}
           <div className="rounded-3xl bg-card p-5 border border-border">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">

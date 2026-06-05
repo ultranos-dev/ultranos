@@ -227,7 +227,7 @@ export default function ProviderProfilePage() {
         )}
 
         {/* Section A: Identity Card */}
-        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileIdentity')}</span>
           </h2>
@@ -253,7 +253,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section B: KYC History */}
-        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileKycHistory')}</span>
           </h2>
@@ -296,7 +296,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section C: License Timeline */}
-        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileLicenseTimeline')}</span>
           </h2>
@@ -316,7 +316,7 @@ export default function ProviderProfilePage() {
         </div>
 
         {/* Section D: Prescribing Alert History */}
-        <div className="mt-6 rounded-3xl bg-card p-5 border border-border">
+        <div className="rounded-3xl bg-card p-5 border border-border">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             <span className="wavy-divider">{t('profileAlertHistory')}</span>
           </h2>

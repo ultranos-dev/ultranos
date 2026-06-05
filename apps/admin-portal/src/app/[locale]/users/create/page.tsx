@@ -110,7 +110,7 @@ export default function CreateUserPage() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6">
-        <div className="rounded-3xl bg-popover p-5 border border-border space-y-6">
+        <div className="rounded-3xl bg-popover p-5 border border-border space-y-4">
           {/* Name Field */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">

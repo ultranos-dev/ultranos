@@ -313,7 +313,7 @@ export default function KycSubmissionDetailPage() {
         )}
 
         {/* Side-by-side: Document viewer + OCR fields — AC #3 */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Left panel: Document viewer */}
           <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailDocuments')}</h2>
@@ -353,7 +353,7 @@ export default function KycSubmissionDetailPage() {
             {detail.ocrFields.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No OCR data available.</p>
             ) : (
-              <div className="mt-3 space-y-6">
+              <div className="mt-3 space-y-4">
                 {detail.ocrFields.map((section) => (
                   <div key={section.documentType}>
                     <p className="text-sm font-medium text-foreground mb-2">{DOC_TYPE_LABELS[section.documentType] ?? section.documentType}</p>
@@ -380,7 +380,7 @@ export default function KycSubmissionDetailPage() {
         </div>
 
         {/* Submission metadata */}
-        <div className="mt-6 rounded-2xl bg-popover p-6 border border-border shadow-card">
+        <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailSubmissionInfo')}</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
