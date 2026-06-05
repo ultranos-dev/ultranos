@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useStockAlerts } from '@/hooks/useStockAlerts'
 import { StockAlertPanel } from './StockAlertPanel'
@@ -9,24 +10,25 @@ import { StockTable } from './StockTable'
 
 type ActiveFilter = 'all' | 'low-stock' | 'near-expiry' | 'quarantined'
 
-const filterLabels: Record<ActiveFilter, string> = {
-  all: 'All',
-  'low-stock': 'Low Stock',
-  'near-expiry': 'Near Expiry',
-  quarantined: 'Quarantined',
-}
-
 export function StockOverviewPage() {
+  const t = useTranslations('inventory')
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all')
   useStockAlerts()
+
+  const filterLabels: Record<ActiveFilter, string> = {
+    all: t('filterAll' as never) ?? 'All',
+    'low-stock': t('lowStock'),
+    'near-expiry': t('nearExpiry'),
+    quarantined: t('quarantined'),
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Stock Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('stockOverview')}</h1>
         <Link href="/inventory/receive">
-          <Button variant="default">Receive Stock</Button>
+          <Button variant="default">{t('receiveStock')}</Button>
         </Link>
       </div>
 
@@ -46,7 +48,7 @@ export function StockOverviewPage() {
               type="button"
               onClick={() => setActiveFilter('all')}
               className="ms-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              aria-label="Clear filter"
+              aria-label={t('clearFilter')}
             >
               ×
             </button>

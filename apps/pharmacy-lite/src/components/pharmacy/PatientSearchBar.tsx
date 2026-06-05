@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { usePatientSearch } from '@/hooks/usePatientSearch'
 import { PatientSearchResults } from './PatientSearchResults'
 import type { LocalPatient } from '@/lib/db'
@@ -10,6 +11,7 @@ interface PatientSearchBarProps {
 }
 
 export function PatientSearchBar({ onSelectPatient, onRegisterNew }: PatientSearchBarProps) {
+  const t = useTranslations('patientSearch')
   const { query, setQuery, results, isSearching, hasSearched } = usePatientSearch()
 
   return (
@@ -19,7 +21,7 @@ export function PatientSearchBar({ onSelectPatient, onRegisterNew }: PatientSear
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search patient by name or phone..."
+          placeholder={t('placeholder')}
           className="w-full rounded-lg border border-border px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
           data-testid="patient-search-input"
           autoComplete="off"

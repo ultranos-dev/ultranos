@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { TopHeader } from '@/components/TopHeader'
 import { Button } from '@/components/ui/button'
 import { Check, X } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -283,8 +282,6 @@ export default function PaperRxPage() {
 
   return (
     <div className="space-y-6">
-      <TopHeader title="Paper Prescription" />
-
       {/* AC #9: Non-dismissible Manual Verification Required banner */}
       <div
         className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
@@ -324,7 +321,7 @@ export default function PaperRxPage() {
                 playsInline
                 muted
                 onLoadedData={handleVideoReady}
-                className="w-full rounded-lg border border-neutral-200"
+                className="w-full rounded-lg border border-border"
               />
               <canvas ref={canvasRef} className="hidden" />
               <Button
@@ -343,18 +340,18 @@ export default function PaperRxPage() {
                 className="w-full"
                 onClick={startWebcam}
               >
-                <span className="block text-lg font-medium text-neutral-700">
+                <span className="block text-lg font-medium text-foreground">
                   Open Camera
                 </span>
-                <span className="text-sm text-neutral-500">
+                <span className="text-sm text-muted-foreground">
                   Use webcam to capture prescription
                 </span>
               </Button>
 
               <div className="relative flex items-center gap-3">
-                <div className="flex-1 border-t border-neutral-200" />
-                <span className="text-xs text-neutral-400">or</span>
-                <div className="flex-1 border-t border-neutral-200" />
+                <div className="flex-1 border-t border-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 border-t border-border" />
               </div>
 
               <Button
@@ -362,10 +359,10 @@ export default function PaperRxPage() {
                 className="w-full"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <span className="block text-lg font-medium text-neutral-700">
+                <span className="block text-lg font-medium text-foreground">
                   Upload File
                 </span>
-                <span className="text-sm text-neutral-500">
+                <span className="text-sm text-muted-foreground">
                   Select an image file (JPEG, PNG)
                 </span>
               </Button>
@@ -389,7 +386,7 @@ export default function PaperRxPage() {
       {phase === 'processing' && (
         <div className="flex flex-col items-center gap-3 py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             Extracting prescription details...
           </p>
         </div>
@@ -428,7 +425,7 @@ export default function PaperRxPage() {
               <div key={key}>
                 <label
                   htmlFor={key}
-                  className="block text-sm font-medium text-neutral-700"
+                  className="block text-sm font-medium text-foreground"
                 >
                   {label}
                   {isLowConfidence(key) && (
@@ -442,10 +439,10 @@ export default function PaperRxPage() {
                   type="text"
                   value={fields[key]}
                   onChange={(e) => handleFieldChange(key, e.target.value)}
-                  className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 ${
+                  className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-ring ${
                     isLowConfidence(key)
                       ? 'border-yellow-400 bg-yellow-50'
-                      : 'border-neutral-300'
+                      : 'border-border bg-background text-foreground'
                   }`}
                 />
               </div>
@@ -470,7 +467,7 @@ export default function PaperRxPage() {
       {phase === 'submitting' && (
         <div className="flex flex-col items-center gap-3 py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             Recording paper prescription...
           </p>
         </div>
@@ -482,10 +479,10 @@ export default function PaperRxPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <Check className="h-6 w-6 text-green-600" />
           </div>
-          <p className="text-lg font-medium text-neutral-900">
+          <p className="text-lg font-medium text-foreground">
             Paper prescription recorded as LEGACY_PAPER
           </p>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-muted-foreground">
             Manual verification flag applied. This prescription cannot be
             digitally invalidated.
           </p>

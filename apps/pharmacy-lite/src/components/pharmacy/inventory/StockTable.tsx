@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { StockBatch, CatalogItem, StockBatchStatus } from '@/lib/inventory/types'
 
@@ -22,8 +23,8 @@ export function StockTable({
   filterNearExpiry,
   expiryAlertDays = 90,
 }: StockTableProps) {
+  const t = useTranslations('inventory')
   const [rows, setRows] = useState<StockRow[]>([])
-  const [catalogMap, setCatalogMap] = useState<Map<string, CatalogItem>>(new Map())
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -33,7 +34,6 @@ export function StockTable({
         db.catalogItems.toArray(),
       ])
       const map = new Map(items.map((item) => [item.id, item]))
-      setCatalogMap(map)
       setRows(batches.map((batch) => ({ batch, catalogItem: map.get(batch.catalogItemId) })))
     }
     load()
@@ -98,7 +98,7 @@ export function StockTable({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by product name or batch number..."
+          placeholder={t('searchByProduct')}
           className="w-full rounded-lg border border-border px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         />
       </div>
@@ -108,19 +108,19 @@ export function StockTable({
           <thead className="bg-muted">
             <tr>
               <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Product
+                {t('productCol')}
               </th>
               <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Batch
+                {t('batchCol')}
               </th>
               <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Qty
+                {t('qtyCol')}
               </th>
               <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Expiry
+                {t('expiryCol')}
               </th>
               <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Status
+                {t('statusCol')}
               </th>
             </tr>
           </thead>
@@ -128,7 +128,7 @@ export function StockTable({
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  No stock batches found.
+                  {t('noStockBatches')}
                 </td>
               </tr>
             ) : (
@@ -136,7 +136,7 @@ export function StockTable({
                 <tr key={r.batch.id} className="hover:bg-accent">
                   <td className="px-4 py-3">
                     <span className="font-medium text-foreground">
-                      {r.catalogItem?.name ?? 'Unknown'}
+                      {r.catalogItem?.name ?? t('unknown')}
                     </span>
                     {r.catalogItem?.controlledSchedule && (
                       <span className="ms-2 inline-flex items-center rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
@@ -156,7 +156,7 @@ export function StockTable({
                     {r.batch.expiryDate}
                   </td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={r.batch.status} />
+                    <StatusBadge status={r.batch.status} tActive={t('active')} tDepleted={t('depleted')} tQuarantined={t('quarantined')} />
                   </td>
                 </tr>
               ))
@@ -168,18 +168,24 @@ export function StockTable({
   )
 }
 
-function StatusBadge({ status }: { status: StockBatchStatus }) {
+function StatusBadge({ status, tActive, tDepleted, tQuarantined }: { status: StockBatchStatus; tActive: string; tDepleted: string; tQuarantined: string }) {
   const classes: Record<StockBatchStatus, string> = {
     active: 'bg-success/10 text-success',
     quarantined: 'bg-destructive/10 text-destructive',
     depleted: 'bg-muted text-muted-foreground',
   }
 
+  const labels: Record<StockBatchStatus, string> = {
+    active: tActive,
+    quarantined: tQuarantined,
+    depleted: tDepleted,
+  }
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${classes[status]}`}
     >
-      {status}
+      {labels[status]}
     </span>
   )
 }

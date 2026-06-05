@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { createSupplier, updateSupplier } from '@/lib/procurement/supplier-service'
 import type { Supplier } from '@/lib/procurement/types'
@@ -12,6 +13,7 @@ interface SupplierFormProps {
 }
 
 export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps) {
+  const t = useTranslations('procurement')
   const [name, setName] = useState(supplier?.name ?? '')
   const [contactName, setContactName] = useState(supplier?.contactName ?? '')
   const [phone, setPhone] = useState(supplier?.phone ?? '')
@@ -27,7 +29,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) {
-      setError('Supplier name is required')
+      setError(t('supplierNameRequired'))
       return
     }
     setSaving(true)
@@ -51,7 +53,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
       }
       onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save supplier')
+      setError(err instanceof Error ? err.message : t('failedSaveSupplier'))
     } finally {
       setSaving(false)
     }
@@ -64,7 +66,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <h2 className="text-lg font-semibold text-foreground">
-        {isEdit ? 'Edit Supplier' : 'Add Supplier'}
+        {isEdit ? t('editSupplier') : t('addSupplier')}
       </h2>
 
       {error && (
@@ -74,32 +76,32 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
       <div className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-foreground">
-            Name <span className="text-destructive">*</span>
+            {t('supplierName')} <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Supplier name"
+            placeholder={t('supplierName')}
             className={inputClasses}
             required
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Contact Person</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">{t('contactPerson')}</label>
           <input
             type="text"
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
-            placeholder="Contact person name"
+            placeholder={t('contactPerson')}
             className={inputClasses}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Phone</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('phone')}</label>
             <input
               type="tel"
               value={phone}
@@ -109,7 +111,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('email')}</label>
             <input
               type="email"
               value={email}
@@ -121,11 +123,11 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Address</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">{t('address')}</label>
           <textarea
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Supplier address"
+            placeholder={t('address')}
             rows={2}
             className={inputClasses}
           />
@@ -134,7 +136,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-              Lead Time (days)
+              {t('leadTimeDays')}
             </label>
             <input
               type="number"
@@ -146,7 +148,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Payment Terms</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">{t('paymentTerms')}</label>
             <input
               type="text"
               value={paymentTerms}
@@ -160,10 +162,10 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
 
       <div className="flex items-center gap-3 pt-2">
         <Button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : isEdit ? 'Update Supplier' : 'Create Supplier'}
+          {saving ? t('saving') : isEdit ? t('updateSupplier') : t('createSupplier')}
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
       </div>
     </form>

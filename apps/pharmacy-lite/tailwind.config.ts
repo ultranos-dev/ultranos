@@ -9,10 +9,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans:    ['var(--font-family-sans)', 'system-ui', 'sans-serif'],
-        heading: ['var(--font-family-heading)', 'system-ui', 'sans-serif'],
-      },
       fontWeight: {
         black: '900',
       },

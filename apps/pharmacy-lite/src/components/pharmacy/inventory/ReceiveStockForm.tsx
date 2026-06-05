@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
@@ -15,6 +16,7 @@ interface ReceiveStockFormProps {
 }
 
 export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }: ReceiveStockFormProps) {
+  const t = useTranslations('inventory')
   const [items, setItems] = useState<ReceiveLineItem[]>([])
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -66,7 +68,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
       })
       onComplete()
     } catch {
-      setError('Failed to process goods receipt. Please try again.')
+      setError(t('failedProcessReceipt'))
     } finally {
       setSaving(false)
     }
@@ -80,7 +82,7 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
       )}
       {items.length === 0 ? (
         <div className="rounded-lg border border-border bg-muted p-8 text-center">
-          <p className="text-sm text-muted-foreground">Search or scan a product above to start receiving stock.</p>
+          <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -92,11 +94,11 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
       {items.length > 0 && (
         <>
           <div>
-            <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-muted-foreground">Notes (optional)</label>
-            <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Delivery ref #1234" className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
+            <label htmlFor="receipt-notes" className="mb-1 block text-xs font-medium text-muted-foreground">{t('notesOptional')}</label>
+            <input id="receipt-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('notesPlaceholder')} className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500" />
           </div>
           <Button variant="default" className="w-full" type="button" disabled={!isValid || saving} onClick={handleSubmit} data-testid="confirm-receipt-btn">
-            {saving ? 'Processing...' : `Confirm Receipt (${items.length} item${items.length !== 1 ? 's' : ''})`}
+            {saving ? t('processingReceipt') : t('confirmReceipt', { count: items.length })}
           </Button>
         </>
       )}

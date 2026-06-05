@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { recordPayment } from '@/lib/pos/payment-service'
@@ -33,6 +34,7 @@ export function PaymentForm({
   enableCredit,
   onPaymentRecorded,
 }: PaymentFormProps) {
+  const t = useTranslations('pos')
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [amountStr, setAmountStr] = useState('')
   const [cardReference, setCardReference] = useState('')
@@ -45,16 +47,16 @@ export function PaymentForm({
   if (invoice.amountDue <= 0) {
     return (
       <div className="rounded-lg border border-success/20 bg-success/5 p-6 text-center">
-        <p className="text-lg font-semibold text-success">Payment Complete</p>
-        <p className="mt-1 text-sm text-success">This invoice has been paid in full.</p>
+        <p className="text-lg font-semibold text-success">{t('paymentComplete')}</p>
+        <p className="mt-1 text-sm text-success">{t('invoicePaidInFull')}</p>
       </div>
     )
   }
 
   const methods: { value: PaymentMethod; label: string }[] = [
-    { value: 'cash', label: 'Cash' },
-    { value: 'card', label: 'Card' },
-    ...(enableCredit ? [{ value: 'credit' as PaymentMethod, label: 'Credit' }] : []),
+    { value: 'cash', label: t('cash') },
+    { value: 'card', label: t('card') },
+    ...(enableCredit ? [{ value: 'credit' as PaymentMethod, label: t('credit') }] : []),
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,12 +65,12 @@ export function PaymentForm({
 
     const amount = parseAmount(amountStr, currencyMinorUnits)
     if (amount <= 0) {
-      setError('Enter a valid payment amount.')
+      setError(t('enterValidPaymentAmount'))
       return
     }
 
     if (!session) {
-      setError('No active session.')
+      setError(t('noActiveSession'))
       return
     }
 
@@ -87,7 +89,7 @@ export function PaymentForm({
       setCardReference('')
       onPaymentRecorded()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed.')
+      setError(err instanceof Error ? err.message : t('paymentFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -97,7 +99,7 @@ export function PaymentForm({
     <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-4 space-y-4">
       {/* Amount due */}
       <div className="text-center">
-        <p className="text-sm text-muted-foreground">Amount Due</p>
+        <p className="text-sm text-muted-foreground">{t('amountDue')}</p>
         <p className="text-2xl font-bold tabular-nums text-foreground">
           {formatAmount(invoice.amountDue, currencyMinorUnits)}
         </p>
@@ -124,14 +126,14 @@ export function PaymentForm({
       {/* Credit warning */}
       {method === 'credit' && (
         <p className="rounded-md bg-warning/5 p-2 text-sm text-warning">
-          This will add the amount to the patient&apos;s credit account.
+          {t('creditWarning')}
         </p>
       )}
 
       {/* Amount input */}
       <div className="space-y-1">
         <label htmlFor="payment-amount" className="text-sm font-medium text-foreground">
-          Amount
+          {t('amount')}
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -149,7 +151,7 @@ export function PaymentForm({
             onClick={() => setAmountStr(formatAmount(invoice.amountDue, currencyMinorUnits))}
             className="whitespace-nowrap text-sm font-medium text-primary-600 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
-            Pay full amount
+            {t('payFullAmount')}
           </button>
         </div>
       </div>
@@ -158,7 +160,7 @@ export function PaymentForm({
       {method === 'card' && (
         <div className="space-y-1">
           <label htmlFor="card-reference" className="text-sm font-medium text-foreground">
-            Card Reference
+            {t('cardReference')}
           </label>
           <input
             id="card-reference"
@@ -166,7 +168,7 @@ export function PaymentForm({
             value={cardReference}
             onChange={(e) => setCardReference(e.target.value)}
             className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-            placeholder="Last 4 digits or approval code"
+            placeholder={t('cardReferencePlaceholder')}
           />
         </div>
       )}
@@ -178,7 +180,7 @@ export function PaymentForm({
 
       {/* Submit */}
       <Button type="submit" variant="default" className="w-full" disabled={submitting}>
-        {submitting ? 'Recording...' : `Record ${method} payment`}
+        {submitting ? t('recording') : t('recordPaymentBtn')}
       </Button>
     </form>
   )

@@ -1,7 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { useDataBudgetStore } from '@/stores/data-budget-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 function formatRole(role: string): string {
@@ -35,8 +40,9 @@ function countdownColor(remainingMs: number): string {
 
 const MAX_SESSION_MS = 12 * 60 * 60 * 1000 // 12 hours for pharmacist role
 
-// --- Profile Card (Task 2) ---
+// --- Profile Card ---
 function ProfileCard() {
+  const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
   if (!session) return null
 
@@ -45,18 +51,18 @@ function ProfileCard() {
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="profile-heading">
-      <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-foreground">Profile</h2>
+      <h2 id="profile-heading" className="mb-4 text-sm font-semibold text-foreground">{t('profile')}</h2>
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
           {initials}
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="text-xs font-medium text-muted-foreground">Name</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('name')}</p>
             <p className="text-sm text-foreground" data-testid="profile-name">{displayName}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground">Role</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('role')}</p>
             <span
               className="inline-block rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
               data-testid="profile-role"
@@ -65,7 +71,7 @@ function ProfileCard() {
             </span>
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground">Email</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('emailLabel')}</p>
             <p className="text-sm text-foreground" data-testid="profile-email">{session.email || '\u2014'}</p>
           </div>
         </div>
@@ -74,35 +80,37 @@ function ProfileCard() {
   )
 }
 
-// --- Pharmacy Info Card (Task 3) ---
+// --- Pharmacy Info Card ---
 function PharmacyInfoCard() {
+  const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
   if (!session) return null
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="pharmacy-heading">
-      <h2 id="pharmacy-heading" className="mb-4 text-sm font-semibold text-foreground">Pharmacy Info</h2>
+      <h2 id="pharmacy-heading" className="mb-4 text-sm font-semibold text-foreground">{t('pharmacyInfo')}</h2>
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">Pharmacy Name</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('pharmacyName')}</p>
           <p className="text-sm text-foreground" data-testid="pharmacy-name">
-            {session.pharmacyName || 'Not configured'}
+            {session.pharmacyName || t('notConfigured')}
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground">License Reference</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('licenseRef')}</p>
           <p className="text-sm text-foreground" data-testid="license-ref">
-            {session.licenseRef || 'Not configured'}
+            {session.licenseRef || t('notConfigured')}
           </p>
         </div>
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">These fields are managed by your organization administrator.</p>
+      <p className="mt-3 text-xs text-muted-foreground">{t('adminManaged')}</p>
     </section>
   )
 }
 
-// --- Session Info Card (Task 4) ---
+// --- Session Info Card ---
 function SessionInfoCard() {
+  const t = useTranslations('settings')
   const session = useAuthSessionStore((s) => s.session)
   const [remainingMs, setRemainingMs] = useState<number | null>(null)
 
@@ -122,18 +130,18 @@ function SessionInfoCard() {
 
   if (!session) return null
 
-  const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : 'Unknown'
+  const loginTime = loginAtMs ? new Date(loginAtMs).toLocaleTimeString() : t('unavailable')
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="session-heading">
-      <h2 id="session-heading" className="mb-4 text-sm font-semibold text-foreground">Session Info</h2>
+      <h2 id="session-heading" className="mb-4 text-sm font-semibold text-foreground">{t('sessionInfo')}</h2>
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">Login Time</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('loginTime')}</p>
           <p className="text-sm text-foreground" data-testid="login-time">{loginTime}</p>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground">Session Expiry</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('sessionExpiry')}</p>
           {remainingMs !== null ? (
             <p
               data-testid="session-countdown"
@@ -142,7 +150,7 @@ function SessionInfoCard() {
               {formatCountdown(remainingMs)}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">Unavailable</p>
+            <p className="text-sm text-muted-foreground">{t('unavailable')}</p>
           )}
         </div>
       </div>
@@ -150,8 +158,9 @@ function SessionInfoCard() {
   )
 }
 
-// --- MFA Status Card (Task 5) ---
+// --- MFA Status Card ---
 function MfaStatusCard() {
+  const t = useTranslations('settings')
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -184,35 +193,74 @@ function MfaStatusCard() {
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6" aria-labelledby="mfa-heading">
-      <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-foreground">MFA Status</h2>
+      <h2 id="mfa-heading" className="mb-4 text-sm font-semibold text-foreground">{t('mfaStatus')}</h2>
 
-      {loading && <p className="text-sm text-muted-foreground">Loading MFA status...</p>}
+      {loading && <p className="text-sm text-muted-foreground">{t('loadingMfa')}</p>}
 
       {!loading && error && (
-        <p className="text-sm text-warning" data-testid="mfa-error">Unable to check MFA status</p>
+        <p className="text-sm text-warning" data-testid="mfa-error">{t('mfaCheckError')}</p>
       )}
 
       {!loading && !error && isEnrolled !== null && (
         <div className="flex items-center gap-2">
-          <p className="text-xs font-medium text-muted-foreground">TOTP Status</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('totpStatus')}</p>
           {isEnrolled ? (
             <span
               className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
               data-testid="mfa-status"
             >
-              TOTP Enabled
+              {t('totpEnabled')}
             </span>
           ) : (
             <span
               className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
               data-testid="mfa-status"
             >
-              Not Configured
+              {t('totpNotConfigured')}
             </span>
           )}
         </div>
       )}
     </section>
+  )
+}
+
+// --- Data Budget Card ---
+function DataBudgetCard() {
+  const tData = useTranslations('dataBudget')
+  const { planSizeMB, currentCycleUsedMB, thresholdLevel, isLoaded, loadFromDexie } = useDataBudgetStore()
+
+  useEffect(() => {
+    if (!isLoaded) void loadFromDexie()
+  }, [isLoaded, loadFromDexie])
+
+  const usedPct = planSizeMB > 0 ? Math.min((currentCycleUsedMB / planSizeMB) * 100, 100) : 0
+  const barColor =
+    thresholdLevel === 'critical' ? 'bg-red-500'
+    : thresholdLevel === 'warning' ? 'bg-yellow-500'
+    : 'bg-green-500'
+
+  return (
+    <Link
+      href="/settings/data-budget"
+      className="rounded-2xl border border-border bg-card p-6 flex items-center justify-between hover:bg-muted/30 transition-colors"
+      aria-label={tData('viewDashboard')}
+    >
+      <div className="flex flex-col gap-2 min-w-0">
+        <h2 className="text-sm font-semibold text-foreground">{tData('settingsTitle')}</h2>
+        <div className="flex items-center gap-2">
+          <div className="w-24 h-1.5 rounded-full bg-border overflow-hidden">
+            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${usedPct}%` }} />
+          </div>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {tData('sidebarUsed', { used: currentCycleUsedMB.toFixed(0) })}
+          </span>
+        </div>
+      </div>
+      <DirectionalIcon category="navigation">
+        <ChevronRight size={20} className="text-muted-foreground shrink-0" />
+      </DirectionalIcon>
+    </Link>
   )
 }
 
@@ -224,6 +272,7 @@ export function PharmacySettingsView() {
       <PharmacyInfoCard />
       <SessionInfoCard />
       <MfaStatusCard />
+      <DataBudgetCard />
     </div>
   )
 }

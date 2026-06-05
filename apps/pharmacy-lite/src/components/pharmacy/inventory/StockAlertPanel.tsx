@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useInventoryStore } from '@/stores/inventory-store'
 
 interface StockAlertPanelProps {
@@ -13,6 +14,7 @@ export function StockAlertPanel({
   onFilterNearExpiry,
   onFilterQuarantined,
 }: StockAlertPanelProps) {
+  const t = useTranslations('inventory')
   const alerts = useInventoryStore((s) => s.alerts)
 
   const hasAlerts =
@@ -29,7 +31,7 @@ export function StockAlertPanel({
           className="rounded-lg border border-warning/20 bg-warning/5 px-4 py-3 text-start transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
         >
           <span className="block text-2xl font-bold text-warning">{alerts.lowStockCount}</span>
-          <span className="text-sm text-warning">Low Stock</span>
+          <span className="text-sm text-warning">{t('lowStock')}</span>
         </button>
       )}
 
@@ -42,7 +44,7 @@ export function StockAlertPanel({
           <span className="block text-2xl font-bold text-warning">
             {alerts.nearExpiryCount}
           </span>
-          <span className="text-sm text-warning">Near Expiry</span>
+          <span className="text-sm text-warning">{t('nearExpiry')}</span>
         </button>
       )}
 
@@ -55,7 +57,7 @@ export function StockAlertPanel({
           <span className="block text-2xl font-bold text-destructive">
             {alerts.quarantinedCount}
           </span>
-          <span className="text-sm text-destructive">Quarantined</span>
+          <span className="text-sm text-destructive">{t('quarantined')}</span>
         </button>
       )}
     </div>

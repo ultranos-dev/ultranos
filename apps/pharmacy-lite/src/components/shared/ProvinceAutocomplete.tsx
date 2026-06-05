@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { X } from '@ultranos/ui-kit/icons'
 import { AFGHAN_PROVINCES } from '@ultranos/shared-types'
@@ -62,6 +62,7 @@ export function ProvinceAutocomplete({
   required,
   error,
 }: ProvinceAutocompleteProps) {
+  const t = useTranslations('patientSearch')
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs'
   const [query, setQuery] = useState('')
@@ -179,7 +180,7 @@ export function ProvinceAutocomplete({
                 setQuery('')
                 inputRef.current?.focus()
               }}
-              aria-label="Clear province"
+              aria-label={t('clearProvince')}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -255,7 +256,7 @@ export function ProvinceAutocomplete({
 
       {isOpen && !value && filtered.length === 0 && query && (
         <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
-          No matching province
+          {t('noMatchingProvince')}
         </div>
       )}
 

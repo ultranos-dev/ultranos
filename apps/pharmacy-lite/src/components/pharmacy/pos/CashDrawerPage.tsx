@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { usePosStore } from '@/stores/pos-store'
@@ -28,6 +29,7 @@ function parseMinor(value: string): number {
 }
 
 export function CashDrawerPage() {
+  const t = useTranslations('pos')
   const session = useAuthSessionStore((s) => s.session)
   const { activeCashDrawer, setActiveCashDrawer } = usePosStore()
   const [recentDrawers, setRecentDrawers] = useState<CashDrawer[]>([])
@@ -63,7 +65,7 @@ export function CashDrawerPage() {
       setActiveCashDrawer(drawer)
       setOpeningStr('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to open drawer.')
+      setError(err instanceof Error ? err.message : t('failedOpenDrawer'))
     } finally {
       setSubmitting(false)
     }
@@ -88,7 +90,7 @@ export function CashDrawerPage() {
       const recent = await getRecentDrawers(10)
       setRecentDrawers(recent)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to close drawer.')
+      setError(err instanceof Error ? err.message : t('failedCloseDrawer'))
     } finally {
       setSubmitting(false)
     }
@@ -96,13 +98,13 @@ export function CashDrawerPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Cash Drawer</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('cashDrawer')}</h1>
 
       {/* Active drawer or open form */}
       {activeCashDrawer ? (
         <div className="rounded-lg border-2 border-success bg-card p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-success">Drawer Open</h2>
+            <h2 className="text-lg font-semibold text-success">{t('drawerOpen')}</h2>
             <span className="text-xs text-muted-foreground">
               Since {new Date(activeCashDrawer.openedAt).toLocaleTimeString()}
             </span>
@@ -110,19 +112,19 @@ export function CashDrawerPage() {
 
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-xs text-muted-foreground">Opening Balance</p>
+              <p className="text-xs text-muted-foreground">{t('openingBalance')}</p>
               <p className="text-sm font-semibold tabular-nums text-foreground">
                 {fmt(activeCashDrawer.openingBalance)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Cash In</p>
+              <p className="text-xs text-muted-foreground">{t('cashIn')}</p>
               <p className="text-sm font-semibold tabular-nums text-foreground">
                 {fmt(activeCashDrawer.cashIn)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Expected Balance</p>
+              <p className="text-xs text-muted-foreground">{t('expectedBalance')}</p>
               <p className="text-sm font-semibold tabular-nums text-foreground">
                 {fmt(activeCashDrawer.openingBalance + activeCashDrawer.cashIn - activeCashDrawer.cashOut)}
               </p>
@@ -133,7 +135,7 @@ export function CashDrawerPage() {
           <form onSubmit={handleClose} className="space-y-3 border-t border-border pt-4">
             <div className="space-y-1">
               <label htmlFor="closing-balance" className="text-sm font-medium text-foreground">
-                Closing Balance (counted)
+                {t('closingBalance')}
               </label>
               <input
                 id="closing-balance"
@@ -148,7 +150,7 @@ export function CashDrawerPage() {
             </div>
             <div className="space-y-1">
               <label htmlFor="close-notes" className="text-sm font-medium text-foreground">
-                Notes (optional)
+                {t('notesOptional')}
               </label>
               <input
                 id="close-notes"
@@ -160,16 +162,16 @@ export function CashDrawerPage() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" variant="default" className="w-full" disabled={submitting}>
-              {submitting ? 'Closing...' : 'Close Drawer'}
+              {submitting ? t('closing') : t('closeDrawer')}
             </Button>
           </form>
         </div>
       ) : (
         <form onSubmit={handleOpen} className="rounded-lg border border-border bg-card p-4 space-y-3">
-          <h2 className="text-lg font-semibold text-foreground">Open Cash Drawer</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('openCashDrawer')}</h2>
           <div className="space-y-1">
             <label htmlFor="opening-balance" className="text-sm font-medium text-foreground">
-              Opening Balance
+              {t('openingBalance')}
             </label>
             <input
               id="opening-balance"
@@ -184,7 +186,7 @@ export function CashDrawerPage() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" variant="default" className="w-full" disabled={submitting}>
-            {submitting ? 'Opening...' : 'Open Drawer'}
+            {submitting ? t('opening') : t('openDrawer')}
           </Button>
         </form>
       )}
@@ -192,7 +194,7 @@ export function CashDrawerPage() {
       {/* Recent closed sessions */}
       {recentDrawers.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Recent Sessions</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t('recentSessions')}</h2>
           <ul className="divide-y divide-border rounded-lg border border-border bg-card">
             {recentDrawers.map((d) => {
               const disc = d.discrepancy ?? 0

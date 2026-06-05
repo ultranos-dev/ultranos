@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   getControlledDiscrepancies,
   type ControlledDiscrepancy,
 } from '@/lib/reports/controlled-discrepancy'
 
 export function ControlledDiscrepancyCard() {
+  const t = useTranslations('reports')
   const [discrepancies, setDiscrepancies] = useState<ControlledDiscrepancy[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -20,7 +22,7 @@ export function ControlledDiscrepancyCard() {
     return (
       <div className="rounded-lg border border-border bg-card p-4">
         <p className="text-sm text-muted-foreground">
-          Loading controlled substance discrepancies...
+          {t('loadingDiscrepancies')}
         </p>
       </div>
     )
@@ -30,9 +32,9 @@ export function ControlledDiscrepancyCard() {
     return (
       <div className="rounded-lg border border-success/20 bg-success/5 p-4">
         <h3 className="mb-1 text-sm font-medium text-success">
-          Controlled Substance Discrepancies
+          {t('controlledDiscrepancies')}
         </h3>
-        <p className="text-sm text-success">No discrepancies found.</p>
+        <p className="text-sm text-success">{t('noDiscrepancies')}</p>
       </div>
     )
   }
@@ -40,7 +42,7 @@ export function ControlledDiscrepancyCard() {
   return (
     <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
       <h3 className="mb-3 text-sm font-medium text-destructive">
-        Controlled Substance Discrepancies
+        {t('controlledDiscrepancies')}
       </h3>
       <div className="space-y-2">
         {discrepancies.map((d) => (

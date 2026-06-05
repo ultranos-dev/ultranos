@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { OfflineGraceForm } from './OfflineGraceForm'
 
@@ -21,6 +22,7 @@ export function ManualRxEntry({
   onGraceDispense,
   isOnline,
 }: ManualRxEntryProps) {
+  const t = useTranslations('manualRx')
   const [rxId, setRxId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,10 +48,10 @@ export function ManualRxEntry({
           medications: result.medications,
         })
       } else {
-        setError('Prescription not found')
+        setError(t('prescriptionNotFound'))
       }
     } catch {
-      setError('Prescription not found')
+      setError(t('prescriptionNotFound'))
     } finally {
       setIsLoading(false)
     }
@@ -67,7 +69,7 @@ export function ManualRxEntry({
         className="rounded-2xl border border-border bg-card p-4 shadow-card"
       >
         <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-          Grace Dispensing
+          {t('graceDispensingHeading')}
         </h3>
         <OfflineGraceForm
           onSubmit={handleGraceSubmit}
@@ -83,14 +85,14 @@ export function ManualRxEntry({
       className="rounded-2xl border border-border bg-card p-4 shadow-card"
     >
       <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-        Manual Prescription Entry
+        {t('manualEntryHeading')}
       </h3>
 
       {/* Offline warning banner */}
       {!isOnline && (
         <div className="mb-3 rounded-2xl border border-warning/20 bg-warning/10 p-3">
           <p className="text-sm font-medium text-warning">
-            You are offline. Use grace dispensing for urgent prescriptions.
+            {t('offlineWarning')}
           </p>
         </div>
       )}
@@ -101,13 +103,13 @@ export function ManualRxEntry({
           htmlFor="rx-id-input"
           className="block text-sm font-medium text-foreground mb-1"
         >
-          Prescription ID
+          {t('prescriptionIdLabel')}
         </label>
         <input
           id="rx-id-input"
           data-testid="rx-id-input"
           type="text"
-          placeholder="Enter Rx ID (UUID or short code)"
+          placeholder={t('rxIdPlaceholder')}
           value={rxId}
           onChange={(e) => {
             setRxId(e.target.value)
@@ -143,7 +145,7 @@ export function ManualRxEntry({
             disabled={!rxId.trim() || isLoading}
             data-testid="rx-lookup-button"
           >
-            {isLoading ? 'Looking up...' : 'Look Up'}
+            {isLoading ? t('lookingUp') : t('lookUp')}
           </Button>
         ) : (
           <Button
@@ -153,7 +155,7 @@ export function ManualRxEntry({
             onClick={() => setShowGraceForm(true)}
             data-testid="grace-dispense-button"
           >
-            Proceed with Grace Dispensing
+            {t('proceedGraceDispensing')}
           </Button>
         )}
       </div>

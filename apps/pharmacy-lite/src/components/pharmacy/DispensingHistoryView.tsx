@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { getHistoryPage, type HistoryFilters, type HistoryPage } from '@/lib/history-data'
 import { HistoryFilterBar } from './HistoryFilterBar'
@@ -9,6 +10,7 @@ import { Pagination } from './Pagination'
 import { ShiftSummary } from './ShiftSummary'
 
 export function DispensingHistoryView() {
+  const t = useTranslations('history')
   const [filters, setFilters] = useState<HistoryFilters>({})
   const [page, setPage] = useState(1)
   const [data, setData] = useState<HistoryPage | null>(null)
@@ -23,11 +25,11 @@ export function DispensingHistoryView() {
       const result = await getHistoryPage(filters, page)
       setData(result)
     } catch {
-      setError('Failed to load dispensing history. Please retry.')
+      setError(t('loadError'))
     } finally {
       setLoading(false)
     }
-  }, [filters, page])
+  }, [filters, page, t])
 
   useEffect(() => {
     fetchData()
@@ -47,13 +49,13 @@ export function DispensingHistoryView() {
           data-testid="shift-summary-button"
           onClick={() => setShowShiftSummary(true)}
         >
-          Shift Summary
+          {t('shiftSummaryButton')}
         </Button>
       </div>
 
       {loading ? (
         <div data-testid="history-loading" className="py-8 text-center text-sm text-muted-foreground">
-          Loading...
+          {t('loading')}
         </div>
       ) : error ? (
         <div data-testid="history-error" className="py-8 text-center text-sm text-destructive">
@@ -62,7 +64,7 @@ export function DispensingHistoryView() {
       ) : data && data.items.length > 0 ? (
         <>
           <div className="text-xs text-muted-foreground">
-            {data.totalCount} record{data.totalCount !== 1 ? 's' : ''} found
+            {t('recordsFound', { count: data.totalCount })}
           </div>
           <ul
             data-testid="history-list"
@@ -76,7 +78,7 @@ export function DispensingHistoryView() {
         </>
       ) : (
         <div data-testid="history-empty" className="py-8 text-center text-sm text-muted-foreground">
-          No dispensing records found
+          {t('noRecords')}
         </div>
       )}
 

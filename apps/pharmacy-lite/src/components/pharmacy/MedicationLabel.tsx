@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Sun, Utensils, Moon } from '@ultranos/ui-kit/icons'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 
@@ -13,6 +14,8 @@ interface MedicationLabelProps {
   item: FulfillmentItem
   dir?: 'ltr' | 'rtl' | 'auto'
   locale?: string
+  pharmacyName?: string
+  dispensingDate?: string
 }
 
 /** Sun icon — Morning dosage */
@@ -70,6 +73,10 @@ function getTimingSlots(freqN?: number): ('morning' | 'noon' | 'night')[] {
  * visual icons for dosage timing. Supports RTL for Arabic/Dari.
  */
 export function MedicationLabel({ item, dir, locale = 'en' }: MedicationLabelProps) {
+  const tLabelPreview = useTranslations('labelPreview')
+  const tCommon = useTranslations('common')
+  const tFulfillment = useTranslations('fulfillment')
+
   const { prescription, brandName, batchLot } = item
   const timingSlots = getTimingSlots(prescription.dos.freqN)
   const labels = TIMING_LABELS[locale] ?? TIMING_LABELS.en
@@ -97,20 +104,20 @@ export function MedicationLabel({ item, dir, locale = 'en' }: MedicationLabelPro
         {prescription.dos.qty} {prescription.dos.unit}
         {prescription.dos.freqN && prescription.dos.freqN > 3 && (
           <span className="text-sm font-normal text-muted-foreground">
-            {' '}({prescription.dos.freqN}× daily)
+            {' '}({tFulfillment('frequency.daily', { count: prescription.dos.freqN })})
           </span>
         )}
       </p>
 
       {/* Visual timing icons */}
       {timingSlots.length > 0 && (
-        <div className="mt-3 flex items-center gap-4" role="group" aria-label="Dosage timing">
+        <div className="mt-3 flex items-center gap-4" role="group" aria-label={tLabelPreview('dosageTiming')}>
           {timingSlots.map((slot) => (
             <div key={slot} className="flex flex-col items-center gap-1">
-              {slot === 'morning' && <SunIcon label={labels.morning} />}
-              {slot === 'noon' && <FoodIcon label={labels.noon} />}
-              {slot === 'night' && <MoonIcon label={labels.night} />}
-              <span className="text-xs font-medium text-muted-foreground">{labels[slot]}</span>
+              {slot === 'morning' && <SunIcon label={labels!.morning} />}
+              {slot === 'noon' && <FoodIcon label={labels!.noon} />}
+              {slot === 'night' && <MoonIcon label={labels!.night} />}
+              <span className="text-xs font-medium text-muted-foreground">{labels![slot]}</span>
             </div>
           ))}
         </div>
@@ -118,13 +125,13 @@ export function MedicationLabel({ item, dir, locale = 'en' }: MedicationLabelPro
 
       {/* Duration */}
       <p data-testid="label-duration" className="mt-3 text-base text-foreground">
-        {prescription.dur} days
+        {tCommon('days', { count: prescription.dur })}
       </p>
 
       {/* Batch/Lot (optional) */}
       {batchLot && (
         <p data-testid="label-batch" className="mt-1 text-xs text-muted-foreground">
-          Lot: {batchLot}
+          {tCommon('lot', { lot: batchLot })}
         </p>
       )}
     </div>

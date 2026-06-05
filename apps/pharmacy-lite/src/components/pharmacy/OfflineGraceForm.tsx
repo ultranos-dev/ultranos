@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 
 const GRACE_DISPENSE_KEY = 'grace_dispense_count'
@@ -23,6 +24,7 @@ interface OfflineGraceFormProps {
 }
 
 export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) {
+  const t = useTranslations('offlineGrace')
   const [supervisorName, setSupervisorName] = useState('')
   const [reason, setReason] = useState('')
   const [graceCount, setGraceCount] = useState(0)
@@ -53,8 +55,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       {/* Warning banner */}
       <div className="rounded-2xl border border-warning/20 bg-warning/10 p-3">
         <p className="text-sm font-medium text-warning">
-          Grace dispensing creates an unverified record that must be reviewed
-          when connectivity returns.
+          {t('warningMessage')}
         </p>
       </div>
 
@@ -62,7 +63,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
       {isLimitReached && (
         <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-3">
           <p className="text-sm font-medium text-destructive">
-            Maximum grace dispenses reached for this shift ({MAX_GRACE_DISPENSES}/{MAX_GRACE_DISPENSES})
+            {t('limitReached', { max: MAX_GRACE_DISPENSES })}
           </p>
         </div>
       )}
@@ -73,13 +74,13 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           htmlFor="supervisor-name"
           className="block text-sm font-medium text-foreground mb-1"
         >
-          Supervisor Name
+          {t('supervisorName')}
         </label>
         <input
           id="supervisor-name"
           data-testid="supervisor-input"
           type="text"
-          placeholder="Enter supervisor name"
+          placeholder={t('supervisorPlaceholder')}
           value={supervisorName}
           onChange={(e) => setSupervisorName(e.target.value)}
           disabled={isLimitReached}
@@ -93,12 +94,12 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           htmlFor="grace-reason"
           className="block text-sm font-medium text-foreground mb-1"
         >
-          Reason for Grace Dispensing
+          {t('graceReason')}
         </label>
         <textarea
           id="grace-reason"
           data-testid="grace-reason-input"
-          placeholder="Describe the reason for grace dispensing (min 10 characters)"
+          placeholder={t('graceReasonPlaceholder')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           disabled={isLimitReached}
@@ -109,8 +110,8 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
         <div className="mt-1 flex justify-between text-xs text-muted-foreground">
           <span>
             {reason.trim().length < 10
-              ? `${10 - reason.trim().length} more characters needed`
-              : 'Valid'}
+              ? t('moreCharsNeeded', { count: 10 - reason.trim().length })
+              : t('valid')}
           </span>
           <span>{reason.length}/500</span>
         </div>
@@ -118,7 +119,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
 
       {/* Grace count indicator */}
       <div className="text-xs text-muted-foreground">
-        Grace dispenses this shift: {graceCount}/{MAX_GRACE_DISPENSES}
+        {t('graceCountDisplay', { count: graceCount, max: MAX_GRACE_DISPENSES })}
       </div>
 
       {/* Actions */}
@@ -129,7 +130,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           type="button"
           onClick={onCancel}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           variant="outline"
@@ -138,7 +139,7 @@ export function OfflineGraceForm({ onSubmit, onCancel }: OfflineGraceFormProps) 
           disabled={!canSubmit}
           data-testid="grace-submit-button"
         >
-          Submit Grace Dispense
+          {t('submitGraceDispense')}
         </Button>
       </div>
     </form>

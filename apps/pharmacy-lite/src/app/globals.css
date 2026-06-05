@@ -5,15 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Font overrides: Manrope replaces Urbanist as body font ── */
-:root {
-  --font-family-sans:    var(--font-manrope), system-ui, sans-serif;
-  --font-family-heading: var(--font-public-sans), system-ui, sans-serif;
-}
-[dir="rtl"] {
-  --font-family-sans: var(--font-family-sans-ar);
-}
-
 /* ── Base resets (matches admin-portal) ── */
 @layer base {
   * {

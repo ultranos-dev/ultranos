@@ -1,20 +1,10 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type { SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 
 const STALE_THRESHOLD_MS = 2 * 60 * 1000 // 2 minutes
-
-function formatRelativeTime(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime()
-  const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes} min ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
-}
 
 const FHIR_REF_PATTERN = /^[A-Za-z]+\/[A-Za-z0-9._-]+$/
 
@@ -23,17 +13,10 @@ function extractPatientRef(payload: string): string {
     const parsed = JSON.parse(payload)
     const ref = parsed.patientRef
     if (typeof ref === 'string' && FHIR_REF_PATTERN.test(ref)) return ref
-    return 'Unknown'
+    return 'unknown'
   } catch {
-    return 'Unknown'
+    return 'unknown'
   }
-}
-
-function getGenericErrorMessage(entry: SyncQueueEntryType): string {
-  if (entry.status !== 'failed') return ''
-  if (entry.retryCount >= 5) return 'Server error — will retry'
-  if (entry.retryCount >= 2) return 'Network error — check connectivity'
-  return 'Sync failed — will retry'
 }
 
 function isStale(entry: SyncQueueEntryType): boolean {
@@ -50,7 +33,30 @@ interface SyncQueueEntryProps {
 }
 
 export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueEntryProps) {
+  const t = useTranslations('sync')
+  const tTime = useTranslations('time')
+
+  function formatRelativeTime(isoDate: string): string {
+    const diff = Date.now() - new Date(isoDate).getTime()
+    const minutes = Math.floor(diff / 60_000)
+    if (minutes < 1) return tTime('justNow')
+    if (minutes < 60) return tTime('minutesAgo', { minutes })
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return tTime('hoursAgo', { hours })
+    const days = Math.floor(hours / 24)
+    return tTime('daysAgo', { days })
+  }
+
+  function getGenericErrorMessage(e: SyncQueueEntryType): string {
+    if (e.status !== 'failed') return ''
+    if (e.retryCount >= 5) return t('serverError')
+    if (e.retryCount >= 2) return t('networkError')
+    return t('syncFailed')
+  }
+
   const patientRef = extractPatientRef(entry.payload)
+  const unknownRef = t('unknownRef')
+  const displayRef = patientRef === 'unknown' ? unknownRef : patientRef
   const errorMessage = getGenericErrorMessage(entry)
   const stale = isStale(entry)
 
@@ -75,7 +81,7 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
         </span>
       </div>
 
-      <span className="text-xs text-muted-foreground font-mono">{patientRef}</span>
+      <span className="text-xs text-muted-foreground font-mono">{displayRef}</span>
 
       {errorMessage && (
         <span className="text-xs text-destructive">{errorMessage}</span>
@@ -86,11 +92,11 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
           <Button
             variant="default"
             type="button"
-            aria-label="Retry Now"
+            aria-label={t('retryNowAriaLabel')}
             disabled={retrying}
             onClick={() => onRetry(entry)}
           >
-            Retry Now
+            {t('retryNow')}
           </Button>
         )}
         {stale && onReset && (
@@ -98,10 +104,10 @@ export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueE
             variant="outline"
             className="border-warning text-warning hover:bg-warning/10"
             type="button"
-            aria-label="Stale — Reset"
+            aria-label={t('staleResetAriaLabel')}
             onClick={() => onReset(entry)}
           >
-            Stale — Reset
+            {t('staleReset')}
           </Button>
         )}
       </div>

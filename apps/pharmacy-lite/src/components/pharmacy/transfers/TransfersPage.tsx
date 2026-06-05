@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   getTransfers,
   approveTransfer,
@@ -15,6 +16,7 @@ import { TransferCard } from './TransferCard'
 const CURRENT_LOCATION_ID = 'default'
 
 export function TransfersPage() {
+  const t = useTranslations('transfers')
   const session = useAuthSessionStore((s) => s.session)
   const [transfers, setTransfers] = useState<StockTransfer[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,26 +78,26 @@ export function TransfersPage() {
     async (id: string) => {
       setActionInProgress(true)
       try {
-        await cancelTransfer(id, 'Cancelled by user')
+        await cancelTransfer(id, t('cancelledByUser'))
         await loadTransfers()
       } finally {
         setActionInProgress(false)
       }
     },
-    [loadTransfers],
+    [loadTransfers, t],
   )
 
   const activeTransfers = transfers.filter(
-    (t) => t.status !== 'received' && t.status !== 'cancelled',
+    (tr) => tr.status !== 'received' && tr.status !== 'cancelled',
   )
   const completedTransfers = transfers.filter(
-    (t) => t.status === 'received' || t.status === 'cancelled',
+    (tr) => tr.status === 'received' || tr.status === 'cancelled',
   )
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
-        Loading transfers...
+        {t('loading')}
       </div>
     )
   }
@@ -103,9 +105,9 @@ export function TransfersPage() {
   if (transfers.length === 0) {
     return (
       <div className="space-y-4">
-        <h1 className="text-xl font-semibold text-foreground">Transfers</h1>
+        <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
         <div className="rounded-lg border border-dashed border-border bg-muted py-12 text-center text-sm text-muted-foreground">
-          No transfers found.
+          {t('noTransfers')}
         </div>
       </div>
     )
@@ -113,17 +115,17 @@ export function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-foreground">Transfers</h1>
+      <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
 
       {/* Active */}
       {activeTransfers.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Active</h2>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">{t('active')}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {activeTransfers.map((t) => (
+            {activeTransfers.map((tr) => (
               <TransferCard
-                key={t.id}
-                transfer={t}
+                key={tr.id}
+                transfer={tr}
                 currentLocationId={CURRENT_LOCATION_ID}
                 onApprove={handleApprove}
                 onShip={handleShip}
@@ -140,13 +142,13 @@ export function TransfersPage() {
       {completedTransfers.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-            Completed
+            {t('completed')}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {completedTransfers.map((t) => (
+            {completedTransfers.map((tr) => (
               <TransferCard
-                key={t.id}
-                transfer={t}
+                key={tr.id}
+                transfer={tr}
                 currentLocationId={CURRENT_LOCATION_ID}
                 actionInProgress={false}
               />

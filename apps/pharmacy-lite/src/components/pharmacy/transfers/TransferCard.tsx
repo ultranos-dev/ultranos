@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import type { StockTransfer } from '@/lib/transfers/types'
 
@@ -30,8 +31,9 @@ export function TransferCard({
   onCancel,
   actionInProgress = false,
 }: TransferCardProps) {
+  const t = useTranslations('transfers')
   const isOutgoing = transfer.fromLocationId === currentLocationId
-  const direction = isOutgoing ? 'Outgoing' : 'Incoming'
+  const direction = isOutgoing ? t('outgoing') : t('incoming')
   const directionColor = isOutgoing
     ? 'bg-warning/10 text-warning'
     : 'bg-teal-100 text-teal-800'
@@ -63,10 +65,10 @@ export function TransferCard({
       {/* From / To */}
       <div className="mb-2 text-sm text-foreground">
         <p>
-          <span className="font-medium">From:</span> {transfer.fromLocationName}
+          <span className="font-medium">{t('from')}:</span> {transfer.fromLocationName}
         </p>
         <p>
-          <span className="font-medium">To:</span> {transfer.toLocationName}
+          <span className="font-medium">{t('to')}:</span> {transfer.toLocationName}
         </p>
       </div>
 
@@ -91,7 +93,7 @@ export function TransferCard({
             onClick={() => onApprove(transfer.id)}
             className="text-xs"
           >
-            Approve
+            {t('approve')}
           </Button>
         )}
         {transfer.status === 'approved' && isOutgoing && onShip && (
@@ -101,7 +103,7 @@ export function TransferCard({
             onClick={() => onShip(transfer.id)}
             className="text-xs"
           >
-            Ship
+            {t('ship')}
           </Button>
         )}
         {transfer.status === 'shipped' && !isOutgoing && onReceive && (
@@ -111,7 +113,7 @@ export function TransferCard({
             onClick={() => onReceive(transfer.id)}
             className="text-xs"
           >
-            Receive
+            {t('receive')}
           </Button>
         )}
         {(transfer.status === 'requested' || transfer.status === 'approved') &&
@@ -122,7 +124,7 @@ export function TransferCard({
               onClick={() => onCancel(transfer.id)}
               className="text-xs"
             >
-              Cancel
+              {t('cancel')}
             </Button>
           )}
       </div>

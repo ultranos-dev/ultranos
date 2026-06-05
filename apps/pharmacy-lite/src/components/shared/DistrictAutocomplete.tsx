@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { X } from '@ultranos/ui-kit/icons'
 import { getDistrictsByProvince } from '@ultranos/shared-types'
@@ -26,6 +26,7 @@ export function DistrictAutocomplete({
   required,
   error,
 }: DistrictAutocompleteProps) {
+  const t = useTranslations('patientSearch')
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs'
   const [query, setQuery] = useState('')
@@ -165,7 +166,7 @@ export function DistrictAutocomplete({
                   setQuery('')
                   inputRef.current?.focus()
                 }}
-                aria-label="Clear district"
+                aria-label={t('clearDistrict')}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -248,7 +249,7 @@ export function DistrictAutocomplete({
 
       {isOpen && !disabled && !value && filtered.length === 0 && query && (
         <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
-          No matching district
+          {t('noMatchingDistrict')}
         </div>
       )}
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
@@ -39,6 +40,7 @@ interface AccountWithName extends PatientAccount {
 }
 
 export function PatientAccountsPage() {
+  const t = useTranslations('pos')
   const session = useAuthSessionStore((s) => s.session)
   const [accounts, setAccounts] = useState<AccountWithName[]>([])
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
@@ -56,13 +58,13 @@ export function PatientAccountsPage() {
         const patient = await db.patients.get(account.patientId)
         return {
           ...account,
-          patientName: patient ? patient.nameGiven : 'Unknown',
+          patientName: patient ? patient.nameGiven : t('unknown' as never) ?? 'Unknown',
         }
       })
     )
     setAccounts(enriched)
     setLoading(false)
-  }, [])
+  }, [t])
 
   useEffect(() => {
     loadAccounts()
@@ -87,7 +89,7 @@ export function PatientAccountsPage() {
 
     const amount = parseMinor(paymentStr)
     if (amount <= 0) {
-      setError('Enter a valid payment amount.')
+      setError(t('enterValidAmount'))
       return
     }
 
@@ -103,7 +105,7 @@ export function PatientAccountsPage() {
       await selectPatient(selectedPatientId)
       await loadAccounts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed.')
+      setError(err instanceof Error ? err.message : t('paymentFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -112,7 +114,7 @@ export function PatientAccountsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t('recording')}</p>
       </div>
     )
   }
@@ -125,16 +127,16 @@ export function PatientAccountsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-            {account?.patientName ?? 'Patient'} — Account
+            {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
           </h1>
           <Button variant="secondary" onClick={() => setSelectedPatientId(null)}>
-            Back to list
+            {t('backToList')}
           </Button>
         </div>
 
         {/* Balance */}
         <div className="rounded-lg border border-border bg-card p-4 text-center">
-          <p className="text-sm text-muted-foreground">Outstanding Balance</p>
+          <p className="text-sm text-muted-foreground">{t('outstandingBalance')}</p>
           <p className="text-2xl font-bold tabular-nums text-warning">
             {fmt(account?.balance ?? 0)}
           </p>
@@ -166,7 +168,7 @@ export function PatientAccountsPage() {
         <form onSubmit={handleRecordPayment} className="rounded-lg border border-border bg-card p-4 space-y-3">
           <div className="space-y-1">
             <label htmlFor="credit-payment" className="text-sm font-medium text-foreground">
-              Record Payment
+              {t('recordPayment')}
             </label>
             <div className="flex gap-2">
               <input
@@ -180,7 +182,7 @@ export function PatientAccountsPage() {
                 placeholder="0.00"
               />
               <Button type="submit" variant="default" disabled={submitting}>
-                {submitting ? 'Recording...' : 'Record Payment'}
+                {submitting ? t('recording') : t('recordPaymentBtn')}
               </Button>
             </div>
           </div>
@@ -189,9 +191,9 @@ export function PatientAccountsPage() {
 
         {/* Ledger entries */}
         <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Ledger</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t('ledger')}</h2>
           {ledger.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No entries.</p>
+            <p className="text-sm text-muted-foreground">{t('noEntries')}</p>
           ) : (
             <ul className="divide-y divide-border rounded-lg border border-border bg-card">
               {ledger.map((entry) => {
@@ -221,11 +223,11 @@ export function PatientAccountsPage() {
   // Account list view
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Patient Accounts</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('patientAccounts')}</h1>
 
       {accounts.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">No outstanding patient accounts.</p>
+          <p className="text-muted-foreground">{t('noOutstandingAccounts')}</p>
         </div>
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
@@ -239,7 +241,7 @@ export function PatientAccountsPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{account.patientName}</p>
                   <p className="text-xs text-muted-foreground">
-                    Last activity: {new Date(account.lastActivityAt).toLocaleDateString()}
+                    {t('lastActivity', { date: new Date(account.lastActivityAt).toLocaleDateString() })}
                   </p>
                 </div>
                 <p className="text-sm font-semibold tabular-nums text-warning">

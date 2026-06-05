@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { db, type SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
 import { SyncQueueEntry } from './SyncQueueEntry'
@@ -63,6 +64,7 @@ async function cleanupOldSynced(): Promise<void> {
 }
 
 export function SyncQueueDashboard() {
+  const t = useTranslations('sync')
   const [entries, setEntries] = useState<CategorizedEntries>({
     pending: [],
     inFlight: [],
@@ -148,7 +150,7 @@ export function SyncQueueDashboard() {
     const failedIds = entries.failed.map((e) => e.id)
 
     for (let i = 0; i < failedIds.length; i++) {
-      setRetryProgress(`Retrying ${i + 1} of ${failedIds.length}...`)
+      setRetryProgress(t('retryingProgress', { current: i + 1, total: failedIds.length }))
       // Re-read from DB to avoid stale snapshot issues
       const fresh = await db.syncQueue.get(failedIds[i]!)
       if (fresh && fresh.status === 'failed') {
@@ -182,27 +184,27 @@ export function SyncQueueDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-4">
-      <h1 className="text-lg font-semibold text-foreground">Sync Queue</h1>
+      <h1 className="text-lg font-semibold text-foreground">{t('syncQueue')}</h1>
 
       {totalCount === 0 && (
-        <p className="text-sm text-muted-foreground">No items in the sync queue.</p>
+        <p className="text-sm text-muted-foreground">{t('noItems')}</p>
       )}
 
       {entries.failed.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold text-destructive">
-              Failed ({entries.failed.length})
+              {t('failedCount', { count: entries.failed.length })}
             </h2>
             {entries.failed.length > 1 && (
               <Button
                 variant="destructive"
                 type="button"
-                aria-label="Retry All Failed"
+                aria-label={t('retryAllFailedAriaLabel')}
                 disabled={isRetrying}
                 onClick={handleRetryAllFailed}
               >
-                {retryProgress ?? 'Retry All Failed'}
+                {retryProgress ?? t('retryAllFailed')}
               </Button>
             )}
           </div>
@@ -223,7 +225,7 @@ export function SyncQueueDashboard() {
       {entries.inFlight.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-primary mb-2">
-            In-Flight ({entries.inFlight.length})
+            {t('inFlightCount', { count: entries.inFlight.length })}
           </h2>
           <div className="flex flex-col gap-2">
             {entries.inFlight.map((entry) => (
@@ -240,7 +242,7 @@ export function SyncQueueDashboard() {
       {entries.pending.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-warning mb-2">
-            Pending ({entries.pending.length})
+            {t('pendingCount', { count: entries.pending.length })}
           </h2>
           <div className="flex flex-col gap-2">
             {entries.pending.map((entry) => (
@@ -253,7 +255,7 @@ export function SyncQueueDashboard() {
       {entries.synced.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-success mb-2">
-            Recently Synced ({entries.synced.length})
+            {t('recentlySynced', { count: entries.synced.length })}
           </h2>
           <div className="flex flex-col gap-2">
             {entries.synced.map((entry) => (

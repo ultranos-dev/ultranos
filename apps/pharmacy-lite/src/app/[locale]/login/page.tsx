@@ -164,11 +164,11 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-neutral-900">Pharmacy Lite</h1>
-        <p className="text-sm text-neutral-500 mt-1">Powered by Ultranos</p>
+        <h1 className="text-2xl font-bold text-foreground">Pharmacy Lite</h1>
+        <p className="text-sm text-muted-foreground mt-1">Powered by Ultranos</p>
       </div>
-      <div className="w-full max-w-sm rounded-lg border border-neutral-200 bg-background p-6 shadow-sm">
-        <h2 className="mb-6 text-center text-lg font-semibold text-neutral-800">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm">
+        <h2 className="mb-6 text-center text-lg font-semibold text-foreground">
           Sign In
         </h2>
 
@@ -184,7 +184,7 @@ export default function LoginPage() {
         {step === 'credentials' && (
           <form onSubmit={handleCredentialSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground">
                 Email
               </label>
               <input
@@ -193,13 +193,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="pharmacist@hospital.example"
                 autoComplete="email"
               />
             </div>
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground">
                 Password
               </label>
               <input
@@ -208,7 +208,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 autoComplete="current-password"
               />
             </div>
@@ -225,11 +225,11 @@ export default function LoginPage() {
 
         {step === 'mfa' && (
           <form onSubmit={handleMfaSubmit} className="space-y-4">
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               Enter the 6-digit code from your authenticator app.
             </p>
             <div>
-              <label htmlFor="totp" className="mb-1 block text-sm font-medium text-neutral-700">
+              <label htmlFor="totp" className="mb-1 block text-sm font-medium text-foreground">
                 TOTP Code
               </label>
               <input
@@ -241,7 +241,7 @@ export default function LoginPage() {
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-center text-lg tracking-widest focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-center text-lg tracking-widest text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 placeholder="000000"
                 autoComplete="one-time-code"
                 autoFocus
@@ -266,7 +266,7 @@ export default function LoginPage() {
           </form>
         )}
       </div>
-      <p className="mt-6 text-xs text-neutral-400">Secure healthcare platform</p>
+      <p className="mt-6 text-xs text-muted-foreground">Secure healthcare platform</p>
     </div>
   )
 }

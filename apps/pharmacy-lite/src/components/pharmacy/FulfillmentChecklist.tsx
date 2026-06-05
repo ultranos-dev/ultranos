@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
 import { Button } from '@/components/ui/button'
 import { DispensingConfirmationModal } from './DispensingConfirmationModal'
@@ -20,6 +21,8 @@ function formatFrequency(freqN?: number, perU?: string): string {
 }
 
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
+  const t = useTranslations('fulfillment')
+  const tD = useTranslations('dispensing')
   const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandName, setBatchLot } =
     useFulfillmentStore()
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -30,7 +33,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
   if (phase === 'empty' || items.length === 0) {
     return (
       <div data-testid="fulfillment-empty-state" className="rounded-2xl border border-border p-8 text-center">
-        <p className="text-muted-foreground">No prescriptions loaded. Scan a prescription QR code first.</p>
+        <p className="text-muted-foreground">{t('emptyState')}</p>
       </div>
     )
   }
@@ -42,14 +45,14 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Fulfillment Checklist</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
           {patientName && (
             <p data-testid="patient-info" className="text-sm font-medium text-foreground">
-              Patient: {patientName}{patientAge != null ? `, ${patientAge} y/o` : ''}
+              {patientAge != null ? t('patientInfoWithAge', { name: patientName, age: patientAge }) : t('patientInfo', { name: patientName })}
             </p>
           )}
           {practitionerName && (
-            <p className="text-sm text-muted-foreground">Prescribed by {practitionerName}</p>
+            <p className="text-sm text-muted-foreground">{t('prescribedBy', { name: practitionerName })}</p>
           )}
         </div>
         <div className="flex gap-2">
@@ -59,7 +62,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
             type="button"
             onClick={selectAll}
           >
-            Select All
+            {t('selectAll')}
           </Button>
           <Button
             variant="secondary"
@@ -67,7 +70,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
             type="button"
             onClick={deselectAll}
           >
-            Deselect All
+            {t('deselectAll')}
           </Button>
         </div>
       </div>
@@ -114,7 +117,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         htmlFor={`brand-${item.prescription.id}`}
                         className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
-                        Brand Name
+                        {t('brandName')}
                       </label>
                       <input
                         id={`brand-${item.prescription.id}`}
@@ -122,7 +125,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         type="text"
                         value={item.brandName}
                         onChange={(e) => setBrandName(item.prescription.id, e.target.value)}
-                        placeholder="e.g. Amoxil"
+                        placeholder={t('brandPlaceholder')}
                         className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
@@ -131,7 +134,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         htmlFor={`batch-${item.prescription.id}`}
                         className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
-                        Batch / Lot No. <span className="text-muted-foreground">(Optional)</span>
+                        {t('batchLot')} <span className="text-muted-foreground">{t('batchOptional')}</span>
                       </label>
                       <input
                         id={`batch-${item.prescription.id}`}
@@ -139,7 +142,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         type="text"
                         value={item.batchLot}
                         onChange={(e) => setBatchLot(item.prescription.id, e.target.value)}
-                        placeholder="e.g. LOT-2026-04A"
+                        placeholder={t('batchPlaceholder')}
                         className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
@@ -160,16 +163,16 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
         disabled={!hasSelection}
         onClick={() => setShowConfirmModal(true)}
       >
-        Confirm Dispensing
+        {t('confirmDispensing')}
       </Button>
 
       {dispensingComplete && (
         <div className="rounded-2xl border-2 border-success/20 bg-success/10 p-4 space-y-3" data-testid="dispensing-complete-card">
-          <p className="text-sm font-bold text-success">Dispensing Complete</p>
+          <p className="text-sm font-bold text-success">{tD('dispensingComplete')}</p>
           {activeInvoice && (
             <Link href="/pos">
               <Button variant="default" className="w-full" type="button" data-testid="collect-payment-cta">
-                Collect Payment — {activeInvoice.invoiceNumber}
+                {tD('collectPayment', { invoiceNumber: activeInvoice.invoiceNumber })}
               </Button>
             </Link>
           )}

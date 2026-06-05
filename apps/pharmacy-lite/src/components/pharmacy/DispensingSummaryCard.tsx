@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface DispensingSummaryCardProps {
   dispensedToday: number
@@ -13,13 +14,14 @@ export const DispensingSummaryCard = memo(function DispensingSummaryCard({
   pendingSync,
   failedSync,
 }: DispensingSummaryCardProps) {
+  const t = useTranslations('dispensing')
   return (
     <div data-testid="dispensing-summary-card" className="space-y-3">
       {/* Primary metric — dispensed today (largest, most prominent) */}
       <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium text-primary uppercase tracking-wide">Dispensed Today</p>
-          <p className="text-sm text-muted-foreground mt-0.5">Prescriptions fulfilled this shift</p>
+          <p className="text-xs font-medium text-primary uppercase tracking-wide">{t('todaysDispensing')}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('dispensed')}</p>
         </div>
         <div data-testid="dispensed-today-count" className="text-3xl font-bold text-primary tabular-nums">
           {dispensedToday}
@@ -31,7 +33,7 @@ export const DispensingSummaryCard = memo(function DispensingSummaryCard({
         <div className={`rounded-2xl border p-3 flex items-center justify-between ${
           pendingSync > 0 ? 'border-warning/20 bg-warning/10' : 'border-border bg-card'
         }`}>
-          <p className="text-xs font-medium text-muted-foreground">Pending Sync</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('pendingSync')}</p>
           <span
             data-testid="pending-sync-count"
             className={`text-lg font-bold tabular-nums ${pendingSync > 0 ? 'text-warning' : 'text-muted-foreground'}`}
@@ -43,7 +45,7 @@ export const DispensingSummaryCard = memo(function DispensingSummaryCard({
         <div className={`rounded-2xl border p-3 flex items-center justify-between ${
           failedSync > 0 ? 'border-destructive/30 bg-destructive/10' : 'border-border bg-card'
         }`}>
-          <p className="text-xs font-medium text-muted-foreground">Failed</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('failedSync')}</p>
           <span
             data-testid="failed-sync-count"
             className={`text-lg font-bold tabular-nums ${failedSync > 0 ? 'text-destructive' : 'text-muted-foreground'}`}

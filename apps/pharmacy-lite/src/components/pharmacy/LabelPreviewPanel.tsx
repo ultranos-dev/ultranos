@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import { MedicationLabel } from './MedicationLabel'
@@ -32,6 +33,8 @@ export function LabelPreviewPanel({
   dispensingDate,
   onClose,
 }: LabelPreviewPanelProps) {
+  const t = useTranslations('labelPreview')
+
   const defaultLang = (
     patientLanguage && ['en', 'ar', 'fa'].includes(patientLanguage)
       ? patientLanguage
@@ -43,7 +46,7 @@ export function LabelPreviewPanel({
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-border p-8 text-center">
-        <p className="text-muted-foreground">No labels to preview.</p>
+        <p className="text-muted-foreground">{t('noLabels')}</p>
       </div>
     )
   }
@@ -61,12 +64,12 @@ export function LabelPreviewPanel({
               data-testid="close-label-preview-btn"
               type="button"
               onClick={onClose}
-              aria-label="Close label preview"
+              aria-label={t('closeAriaLabel')}
             >
-              &larr; Back
+              &larr; {t('back')}
             </Button>
           )}
-          <h3 className="text-lg font-semibold text-foreground">Label Preview</h3>
+          <h3 className="text-lg font-semibold text-foreground">{t('title')}</h3>
         </div>
         <div className="flex items-center gap-3">
           <select
@@ -88,7 +91,7 @@ export function LabelPreviewPanel({
             type="button"
             onClick={() => window.print()}
           >
-            Print All Labels
+            {t('printAllLabels')}
           </Button>
         </div>
       </div>

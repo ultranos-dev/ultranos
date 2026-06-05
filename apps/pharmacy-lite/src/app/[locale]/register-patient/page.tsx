@@ -1,7 +1,6 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { TopHeader } from '@/components/TopHeader'
 import { PatientRegistrationForm } from '@/components/registration/PatientRegistrationForm'
 
 export default function RegisterPatientPage() {
@@ -9,11 +8,8 @@ export default function RegisterPatientPage() {
   const prefilledName = searchParams.get('nameGiven') ?? ''
 
   return (
-    <>
-      <TopHeader title="Register Patient" />
-      <div className="mx-auto max-w-3xl px-4 pb-8">
-        <PatientRegistrationForm prefilledNameGiven={prefilledName} />
-      </div>
-    </>
+    <div className="mx-auto max-w-3xl px-4 pb-8">
+      <PatientRegistrationForm prefilledNameGiven={prefilledName} />
+    </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { AllergyBanner } from './AllergyBanner'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
@@ -21,17 +22,18 @@ export function DispensingConfirmationModal({
   onCancel,
 }: DispensingConfirmationModalProps) {
   const [acknowledged, setAcknowledged] = useState(false)
+  const t = useTranslations('dispensingConfirmation')
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50"
       role="dialog"
       aria-modal="true"
-      aria-label="Confirm Dispensing"
+      aria-label={t('ariaLabel')}
       onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
     >
       <div className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-card mx-4 max-h-[80vh] overflow-y-auto">
-        <h3 className="text-lg font-bold text-foreground mb-4">Confirm Dispensing</h3>
+        <h3 className="text-lg font-bold text-foreground mb-4">{t('title')}</h3>
 
         <div className="mb-4">
           <AllergyBanner allergies={patientAllergies} patientName={patientName} />
@@ -39,9 +41,9 @@ export function DispensingConfirmationModal({
 
         <div className="mb-4">
           <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-            Dispensing {items.length} medication{items.length !== 1 ? 's' : ''} to:
+            {t('dispensingTo', { count: items.length })}
           </p>
-          <p className="text-sm font-semibold text-foreground mb-3">{patientName ?? 'Unknown Patient'}</p>
+          <p className="text-sm font-semibold text-foreground mb-3">{patientName ?? t('unknownPatient')}</p>
 
           <ul className="space-y-2">
             {items.map((item) => (
@@ -69,7 +71,7 @@ export function DispensingConfirmationModal({
             data-testid="dispensing-ack-checkbox"
           />
           <span className="text-sm text-foreground">
-            I confirm that I have verified the patient identity, checked for allergies and interactions, and the medications are correct.
+            {t('ackText')}
           </span>
         </label>
 
@@ -82,10 +84,10 @@ export function DispensingConfirmationModal({
             onClick={onConfirm}
             data-testid="modal-confirm-dispensing-btn"
           >
-            Dispense Medication
+            {t('dispenseMedication')}
           </Button>
           <Button variant="secondary" type="button" onClick={onCancel}>
-            Cancel
+            {t('cancel')}
           </Button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type { HistoryFilters, SyncStatus } from '@/lib/history-data'
 
 interface HistoryFilterBarProps {
@@ -8,6 +9,7 @@ interface HistoryFilterBarProps {
 }
 
 export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarProps) {
+  const t = useTranslations('history')
   const update = (patch: Partial<HistoryFilters>) => {
     onFiltersChange({ ...filters, ...patch })
   }
@@ -19,7 +21,7 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
     >
       <div className="flex flex-col gap-1">
         <label htmlFor="filter-date-from" className="text-xs font-medium text-muted-foreground">
-          From
+          {t('filterFrom')}
         </label>
         <input
           id="filter-date-from"
@@ -32,7 +34,7 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
 
       <div className="flex flex-col gap-1">
         <label htmlFor="filter-date-to" className="text-xs font-medium text-muted-foreground">
-          To
+          {t('filterTo')}
         </label>
         <input
           id="filter-date-to"
@@ -45,12 +47,12 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
 
       <div className="flex flex-col gap-1">
         <label htmlFor="filter-medication" className="text-xs font-medium text-muted-foreground">
-          Medication
+          {t('filterMedication')}
         </label>
         <input
           id="filter-medication"
           type="text"
-          placeholder="Search medication..."
+          placeholder={t('filterMedicationPlaceholder')}
           value={filters.medicationName ?? ''}
           onChange={(e) => update({ medicationName: e.target.value || undefined })}
           className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
@@ -59,7 +61,7 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
 
       <div className="flex flex-col gap-1">
         <label htmlFor="filter-sync-status" className="text-xs font-medium text-muted-foreground">
-          Sync Status
+          {t('filterSyncStatus')}
         </label>
         <select
           id="filter-sync-status"
@@ -69,10 +71,10 @@ export function HistoryFilterBar({ filters, onFiltersChange }: HistoryFilterBarP
           }
           className="rounded-md border border-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
         >
-          <option value="">All</option>
-          <option value="synced">Synced</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
+          <option value="">{t('filterAll')}</option>
+          <option value="synced">{t('filterSynced')}</option>
+          <option value="pending">{t('filterPending')}</option>
+          <option value="failed">{t('filterFailed')}</option>
         </select>
       </div>
     </div>

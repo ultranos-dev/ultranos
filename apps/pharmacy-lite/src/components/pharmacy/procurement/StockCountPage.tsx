@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { StockCountForm } from './StockCountForm'
 import {
@@ -12,6 +13,8 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 import type { StockCount, StockCountType } from '@/lib/procurement/types'
 
 export function StockCountPage() {
+  const t = useTranslations('procurement')
+  const tApp = useTranslations('app')
   const [activeCount, setActiveCount] = useState<StockCount | null>(null)
   const [recentCounts, setRecentCounts] = useState<StockCount[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,7 +52,7 @@ export function StockCountPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{tApp('loading')}</p>
       </div>
     )
   }
@@ -59,16 +62,16 @@ export function StockCountPage() {
   }
 
   const typeLabels: Record<string, string> = {
-    full: 'Full Count',
-    spot: 'Spot Check',
-    controlled_only: 'Controlled Only',
+    full: t('fullCount'),
+    spot: t('spotCheck'),
+    controlled_only: t('controlledOnly'),
   }
 
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h1 className="text-xl font-bold text-foreground">Stock Count</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Start a new physical inventory count</p>
+        <h1 className="text-xl font-bold text-foreground">{t('stockCountTitle')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('startNewCount')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -77,35 +80,35 @@ export function StockCountPage() {
           className="w-full py-6 text-base"
           onClick={() => handleStart('full')}
         >
-          Full Count
+          {t('fullCount')}
         </Button>
         <Button
           variant="secondary"
           className="w-full py-6 text-base"
           onClick={() => handleStart('spot')}
         >
-          Spot Check
+          {t('spotCheck')}
         </Button>
         <Button
           variant="destructive"
           className="w-full py-6 text-base"
           onClick={() => handleStart('controlled_only')}
         >
-          Controlled Only
+          {t('controlledOnly')}
         </Button>
       </div>
 
       {recentCounts.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Recent Counts</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t('recentCounts')}</h2>
           <div className="overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">Type</th>
-                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">Completed</th>
-                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">Items</th>
-                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">Variances</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('typeCol')}</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('completedCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('itemsCol')}</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('variancesCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

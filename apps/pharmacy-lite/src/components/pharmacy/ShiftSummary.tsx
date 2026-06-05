@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Badge } from '@/components/ui/badge'
 import { getShiftSummary, type ShiftSummaryStats } from '@/lib/history-data'
 
@@ -9,6 +10,7 @@ interface ShiftSummaryProps {
 }
 
 export function ShiftSummary({ onClose }: ShiftSummaryProps) {
+  const t = useTranslations('history')
   const [stats, setStats] = useState<ShiftSummaryStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,14 +22,14 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
         const result = await getShiftSummary()
         if (!cancelled) setStats(result)
       } catch {
-        if (!cancelled) setError('Failed to load shift summary.')
+        if (!cancelled) setError(t('shiftSummaryError'))
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [t])
 
   return (
     <div
@@ -38,28 +40,28 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="Shift Summary"
+      aria-label={t('shiftSummaryTitle')}
     >
       <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-card mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-foreground">Shift Summary</h3>
+          <h3 className="text-lg font-bold text-foreground">{t('shiftSummaryTitle')}</h3>
           <button
             data-testid="shift-summary-close"
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground text-xl leading-none"
-            aria-label="Close"
+            aria-label={t('close')}
           >
             &times;
           </button>
         </div>
 
         <p className="text-xs text-muted-foreground mb-4">
-          Today&apos;s activity (midnight to now)
+          {t('shiftSummaryDescription')}
         </p>
 
         {loading ? (
           <div data-testid="shift-summary-loading" className="py-6 text-center text-sm text-muted-foreground">
-            Calculating...
+            {t('calculating')}
           </div>
         ) : error ? (
           <div data-testid="shift-summary-error" className="py-6 text-center text-sm text-destructive">
@@ -72,19 +74,19 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
                 <div data-testid="stat-prescriptions" className="text-2xl font-bold text-foreground">
                   {stats.totalPrescriptions}
                 </div>
-                <div className="text-xs text-muted-foreground">Prescriptions Dispensed</div>
+                <div className="text-xs text-muted-foreground">{t('prescriptionsDispensed')}</div>
               </div>
               <div className="rounded-2xl border border-border p-3 text-center">
                 <div data-testid="stat-items" className="text-2xl font-bold text-foreground">
                   {stats.totalMedicationItems}
                 </div>
-                <div className="text-xs text-muted-foreground">Medication Items</div>
+                <div className="text-xs text-muted-foreground">{t('medicationItems')}</div>
               </div>
             </div>
 
             <div className="rounded-2xl border border-border p-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Sync Success Rate</span>
+                <span className="text-sm text-muted-foreground">{t('syncSuccessRate')}</span>
                 <span
                   data-testid="stat-sync-rate"
                   className={`text-lg font-bold ${
@@ -103,7 +105,7 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
             {stats.unresolvedFailures.length > 0 && (
               <div data-testid="unresolved-failures" className="space-y-2">
                 <h4 className="text-sm font-semibold text-destructive">
-                  Unresolved Sync Failures ({stats.unresolvedFailures.length})
+                  {t('unresolvedFailures', { count: stats.unresolvedFailures.length })}
                 </h4>
                 <ul className="divide-y divide-border rounded-2xl border border-destructive/20 overflow-hidden">
                   {stats.unresolvedFailures.map((item) => (
@@ -120,7 +122,7 @@ export function ShiftSummary({ onClose }: ShiftSummaryProps) {
                         </div>
                       </div>
                       <Badge variant="outline" className="ms-2 bg-destructive/10 text-destructive border-destructive/20">
-                        Failed
+                        {t('filterFailed')}
                       </Badge>
                     </li>
                   ))}

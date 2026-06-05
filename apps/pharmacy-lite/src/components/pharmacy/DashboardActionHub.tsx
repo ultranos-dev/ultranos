@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import Link from 'next/link'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { PatientSearchBar } from './PatientSearchBar'
 import { usePatientStore } from '@/stores/patient-store'
 import type { LocalPatient } from '@/lib/db'
@@ -10,6 +10,7 @@ import { Scan, FileText, UserPlus } from '@ultranos/ui-kit/icons'
 
 export function DashboardActionHub() {
   const locale = useLocale()
+  const t = useTranslations('dashboard')
   const setActivePatient = usePatientStore((s) => s.setActivePatient)
 
   const handleSelectPatient = useCallback((patient: LocalPatient) => {
@@ -26,7 +27,7 @@ export function DashboardActionHub() {
     <div className="space-y-4" data-testid="dashboard-action-hub">
       {/* Patient Search — primary action for walk-ins */}
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Find or Register Patient</h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">{t('findOrRegisterPatient')}</h3>
         <PatientSearchBar
           onSelectPatient={handleSelectPatient}
           onRegisterNew={handleRegisterNew}
@@ -41,8 +42,8 @@ export function DashboardActionHub() {
           data-testid="action-scan-qr"
         >
           <Scan size={24} className="text-primary-700" />
-          <span className="text-xs font-semibold text-primary-800">Scan QR Rx</span>
-          <span className="text-[10px] text-muted-foreground">From OPD-Lite</span>
+          <span className="text-xs font-semibold text-primary-800">{t('scanQrRx')}</span>
+          <span className="text-[10px] text-muted-foreground">{t('fromOpdLite')}</span>
         </Link>
 
         <Link
@@ -51,8 +52,8 @@ export function DashboardActionHub() {
           data-testid="action-paper-rx"
         >
           <FileText size={24} className="text-warning" />
-          <span className="text-xs font-semibold text-warning">Paper Rx</span>
-          <span className="text-[10px] text-muted-foreground">OCR Scan</span>
+          <span className="text-xs font-semibold text-warning">{t('paperRx')}</span>
+          <span className="text-[10px] text-muted-foreground">{t('ocrScan')}</span>
         </Link>
 
         <Link
@@ -61,8 +62,8 @@ export function DashboardActionHub() {
           data-testid="action-walk-in"
         >
           <UserPlus size={24} className="text-foreground" />
-          <span className="text-xs font-semibold text-foreground">Walk-in</span>
-          <span className="text-[10px] text-muted-foreground">New Patient</span>
+          <span className="text-xs font-semibold text-foreground">{t('walkIn')}</span>
+          <span className="text-[10px] text-muted-foreground">{t('newPatient')}</span>
         </Link>
       </div>
     </div>

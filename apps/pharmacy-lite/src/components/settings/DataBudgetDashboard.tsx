@@ -1,13 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Label } from '@ultranos/ui-kit/components/ui/label'
+import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
 export function DataBudgetDashboard() {
   const t = useTranslations('dataBudget')
   const {
     planSizeMB,
+    billingCycleDay,
+    lowDataMode,
     currentCycleUsedMB,
     projectedExhaustionDate,
     dailyUsage,
@@ -16,7 +21,31 @@ export function DataBudgetDashboard() {
     isLoaded,
     loadFromDexie,
     refreshUsageStats,
+    updateConfig,
   } = useDataBudgetStore()
+
+  const [planInput, setPlanInput] = useState(String(planSizeMB))
+  const [cycleInput, setCycleInput] = useState(String(billingCycleDay))
+  const [lowData, setLowData] = useState(lowDataMode)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (isLoaded) {
+      setPlanInput(String(planSizeMB))
+      setCycleInput(String(billingCycleDay))
+      setLowData(lowDataMode)
+    }
+  }, [isLoaded, planSizeMB, billingCycleDay, lowDataMode])
+
+  async function handleSave() {
+    const newPlan = Math.max(1, parseInt(planInput, 10) || planSizeMB)
+    const newCycle = Math.min(28, Math.max(1, parseInt(cycleInput, 10) || billingCycleDay))
+    await updateConfig({ planSizeMB: newPlan, billingCycleDay: newCycle, lowDataMode: lowData })
+    setPlanInput(String(newPlan))
+    setCycleInput(String(newCycle))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
 
   useEffect(() => {
     if (!isLoaded) void loadFromDexie()
@@ -115,6 +144,54 @@ export function DataBudgetDashboard() {
           </table>
         </div>
       )}
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-4">{t('settingsTitle')}</h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="plan-size">{t('planSize')}</Label>
+            <Input
+              id="plan-size"
+              type="number"
+              min={1}
+              value={planInput}
+              onChange={(e) => setPlanInput(e.target.value)}
+              className="w-36"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cycle-day">{t('billingCycleDay')}</Label>
+            <Input
+              id="cycle-day"
+              type="number"
+              min={1}
+              max={28}
+              value={cycleInput}
+              onChange={(e) => setCycleInput(e.target.value)}
+              className="w-24"
+            />
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={lowData}
+              onChange={(e) => setLowData(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+            />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium text-foreground">{t('lowDataMode')}</span>
+              <span className="text-xs text-muted-foreground">{t('lowDataModeDesc')}</span>
+            </div>
+          </label>
+
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} size="sm">{t('save')}</Button>
+            {saved && <span className="text-xs text-green-600">{t('saved')}</span>}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

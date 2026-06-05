@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { useCatalogSync } from '@/hooks/useCatalogSync'
 import { useInventoryStore } from '@/stores/inventory-store'
@@ -13,6 +14,7 @@ interface CatalogRowData {
 }
 
 export function CatalogBrowsePage() {
+  const t = useTranslations('inventory')
   useCatalogSync()
   const isSyncingCatalog = useInventoryStore((s) => s.isSyncingCatalog)
 
@@ -49,9 +51,9 @@ export function CatalogBrowsePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Catalog</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('catalog')}</h1>
         {isSyncingCatalog && (
-          <span className="text-sm text-muted-foreground">Syncing...</span>
+          <span className="text-sm text-muted-foreground">{t('syncing')}</span>
         )}
       </div>
 
@@ -61,7 +63,7 @@ export function CatalogBrowsePage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, barcode, or category..."
+          placeholder={t('searchByName')}
           className="w-full rounded-lg border border-border px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         />
       </div>
@@ -69,7 +71,7 @@ export function CatalogBrowsePage() {
       {/* Table */}
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-border px-4 py-12 text-center text-muted-foreground">
-          No catalog items found. Catalog syncs from Hub when online.
+          {t('noCatalogItems')}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
@@ -77,22 +79,22 @@ export function CatalogBrowsePage() {
             <thead className="bg-muted">
               <tr>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Name
+                  {t('nameCol')}
                 </th>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Form
+                  {t('formCol')}
                 </th>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Strength
+                  {t('strengthCol')}
                 </th>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Category
+                  {t('categoryCol')}
                 </th>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Stock
+                  {t('stockCol')}
                 </th>
                 <th className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Reorder Point
+                  {t('reorderPointCol')}
                 </th>
               </tr>
             </thead>

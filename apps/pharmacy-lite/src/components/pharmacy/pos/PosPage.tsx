@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { usePosStore } from '@/stores/pos-store'
 import { db } from '@/lib/db'
@@ -14,6 +15,7 @@ const CURRENCY_MINOR_UNITS = 2
 const ENABLE_CREDIT = true
 
 export function PosPage() {
+  const t = useTranslations('pos')
   const { activeInvoice, setActiveInvoice, activeCashDrawer, setActiveCashDrawer, clearActiveInvoice } = usePosStore()
   const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,7 +56,7 @@ export function PosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t('recording')}</p>
       </div>
     )
   }
@@ -66,12 +68,12 @@ export function PosPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('pointOfSale')}</h1>
           <Button
             variant="secondary"
             onClick={() => clearActiveInvoice()}
           >
-            Back to list
+            {t('backToList')}
           </Button>
         </div>
 
@@ -84,14 +86,14 @@ export function PosPage() {
         {isPaidInFull ? (
           <div className="space-y-3">
             <div className="rounded-lg border border-success/20 bg-success/5 p-6 text-center">
-              <p className="text-lg font-semibold text-success">Paid in Full</p>
+              <p className="text-lg font-semibold text-success">{t('paidInFull')}</p>
             </div>
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1">
-                Print Receipt
+                {t('printReceipt')}
               </Button>
               <Button variant="default" className="flex-1" onClick={() => clearActiveInvoice()}>
-                Done
+                {t('done')}
               </Button>
             </div>
           </div>
@@ -111,13 +113,13 @@ export function PosPage() {
   // Invoice list mode
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
+      <h1 className="text-2xl font-bold text-foreground">{t('pointOfSale')}</h1>
 
       {/* No cash drawer warning */}
       {!activeCashDrawer && (
         <div className="rounded-md border border-warning/20 bg-warning/5 p-3">
           <p className="text-sm font-medium text-warning">
-            No cash drawer open. Cash payments will not be tracked until a drawer is opened.
+            {t('noCashDrawerWarning')}
           </p>
         </div>
       )}
@@ -125,11 +127,11 @@ export function PosPage() {
       {/* Pending invoices */}
       {pendingInvoices.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">No pending invoices.</p>
+          <p className="text-muted-foreground">{t('noPendingInvoices')}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Pending Invoices</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t('pendingInvoices')}</h2>
           <ul className="divide-y divide-border rounded-lg border border-border bg-card">
             {pendingInvoices.map((inv) => (
               <li key={inv.id}>

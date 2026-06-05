@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { EmptyState } from './EmptyState'
 import { Badge } from '@/components/ui/badge'
 
@@ -33,24 +34,27 @@ const syncBadgeClasses: Record<RecentDispenseItem['syncStatus'], string> = {
   failed: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
-const syncLabels: Record<RecentDispenseItem['syncStatus'], string> = {
-  synced: 'Synced',
-  pending: 'Pending',
-  failed: 'Failed',
-}
-
 export function RecentDispensingList({ items }: RecentDispensingListProps) {
+  const t = useTranslations('dispensing')
+  const tCommon = useTranslations('common')
+
+  const syncLabels: Record<RecentDispenseItem['syncStatus'], string> = {
+    synced: tCommon('synced'),
+    pending: tCommon('pending'),
+    failed: tCommon('failed'),
+  }
+
   return (
     <div data-testid="recent-dispensing-list" className="space-y-2">
       <h3 className="text-sm font-semibold text-muted-foreground">
-        Recent Dispensing
+        {t('recentDispensing')}
       </h3>
       {items.length === 0 ? (
         <EmptyState
           icon="dispensing"
-          title="No dispensing activity today"
-          description="Dispensed medications will appear here as you fill prescriptions throughout your shift."
-          actionLabel="Start Scanning"
+          title={t('noActivityToday')}
+          description={t('noActivityDescription')}
+          actionLabel={t('startScanning')}
           actionHref="/scan"
         />
       ) : (

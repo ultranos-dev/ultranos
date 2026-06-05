@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { CatalogSearchInput } from '@/components/pharmacy/inventory/CatalogSearchInput'
 import { addCountItem, completeStockCount } from '@/lib/procurement/stock-count-service'
@@ -14,13 +15,14 @@ interface StockCountFormProps {
 }
 
 export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
+  const t = useTranslations('procurement')
   const [items, setItems] = useState<StockCountItem[]>(count.items)
   const [completing, setCompleting] = useState(false)
 
   const typeLabels: Record<string, string> = {
-    full: 'Full Count',
-    spot: 'Spot Check',
-    controlled_only: 'Controlled Only',
+    full: t('fullCount'),
+    spot: t('spotCheck'),
+    controlled_only: t('controlledOnly'),
   }
 
   async function handleProductSelect(catalogItem: CatalogItem) {
@@ -95,7 +97,7 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Stock Count</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('stockCountTitle')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {typeLabels[count.type]} — started{' '}
             {new Date(count.startedAt).toLocaleString()}
@@ -106,25 +108,25 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
       <div>
         <CatalogSearchInput
           onSelect={handleProductSelect}
-          placeholder="Search products to add to count..."
+          placeholder={t('searchProductsPlaceholder')}
         />
       </div>
 
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center">
-          <p className="text-muted-foreground">No items added yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Search for products above to begin counting</p>
+          <p className="text-muted-foreground">{t('noItemsAdded')}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('searchProductsToCount')}</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-muted-foreground">Product</th>
-                <th className="px-4 py-3 text-start font-medium text-muted-foreground">Batch</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Expected</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Actual</th>
-                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Variance</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('productCol')}</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground">{t('batchCol')}</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('expectedCol')}</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('actualCol')}</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">{t('varianceCol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -159,10 +161,10 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
 
       <div className="flex items-center justify-between pt-2">
         <p className="text-sm text-muted-foreground">
-          {items.length} items{varianceCount > 0 && ` — ${varianceCount} with variance`}
+          {t('itemsWithVariance', { count: items.length, variances: varianceCount })}
         </p>
         <Button onClick={handleComplete} disabled={completing || items.length === 0}>
-          {completing ? 'Completing...' : `Complete Count${varianceCount > 0 ? ` (${varianceCount} variances)` : ''}`}
+          {completing ? t('completing') : varianceCount > 0 ? t('completeCountWithVariances', { variances: varianceCount }) : t('completeCount')}
         </Button>
       </div>
     </div>
