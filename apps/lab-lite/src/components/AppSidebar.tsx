@@ -233,7 +233,7 @@ export function AppSidebar() {
     },
   ]
 
-  const displayName = session?.email?.split('@')[0] ?? 'Technician'
+  const displayName = session?.name || session?.email?.split('@')[0] || 'Technician'
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)
@@ -253,7 +253,7 @@ export function AppSidebar() {
         <NavLabUser
           name={displayName}
           email={session?.email}
-          role={session?.role ?? ''}
+          role={session?.labRole ?? session?.role ?? ''}
           initials={initials}
           onSignOut={handleSignOut}
         />
