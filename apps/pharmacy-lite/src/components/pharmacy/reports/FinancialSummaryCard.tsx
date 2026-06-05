@@ -19,8 +19,8 @@ export function FinancialSummaryCard() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <p className="text-sm text-neutral-500">Loading financial summary...</p>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <p className="text-sm text-muted-foreground">Loading financial summary...</p>
       </div>
     )
   }
@@ -28,32 +28,32 @@ export function FinancialSummaryCard() {
   if (!data) return null
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4">
-      <h3 className="mb-4 text-sm font-medium text-neutral-700">
+    <div className="rounded-lg border border-border bg-card p-4">
+      <h3 className="mb-4 text-sm font-medium text-foreground">
         Revenue Summary
       </h3>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-neutral-500">Today</p>
-          <p className="text-lg font-semibold tabular-nums text-neutral-900">
+          <p className="text-xs text-muted-foreground">Today</p>
+          <p className="text-lg font-semibold tabular-nums text-foreground">
             {formatAmount(data.todayRevenue)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-neutral-500">This Week</p>
-          <p className="text-lg font-semibold tabular-nums text-neutral-900">
+          <p className="text-xs text-muted-foreground">This Week</p>
+          <p className="text-lg font-semibold tabular-nums text-foreground">
             {formatAmount(data.weekRevenue)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-neutral-500">This Month</p>
-          <p className="text-lg font-semibold tabular-nums text-neutral-900">
+          <p className="text-xs text-muted-foreground">This Month</p>
+          <p className="text-lg font-semibold tabular-nums text-foreground">
             {formatAmount(data.monthRevenue)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-amber-600">Outstanding</p>
-          <p className="text-lg font-semibold tabular-nums text-amber-700">
+          <p className="text-xs text-warning">Outstanding</p>
+          <p className="text-lg font-semibold tabular-nums text-warning">
             {formatAmount(data.totalOutstanding)}
           </p>
         </div>

@@ -86,17 +86,17 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
   const varianceCount = items.filter((i) => i.variance !== 0).length
 
   function varianceColor(variance: number) {
-    if (variance > 0) return 'text-green-600'
-    if (variance < 0) return 'text-red-600'
-    return 'text-neutral-400'
+    if (variance > 0) return 'text-success'
+    if (variance < 0) return 'text-destructive'
+    return 'text-muted-foreground'
   }
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900">Stock Count</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <h1 className="text-xl font-bold text-foreground">Stock Count</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {typeLabels[count.type]} — started{' '}
             {new Date(count.startedAt).toLocaleString()}
           </p>
@@ -111,40 +111,40 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-neutral-300 py-12 text-center">
-          <p className="text-neutral-500">No items added yet</p>
-          <p className="mt-1 text-sm text-neutral-400">Search for products above to begin counting</p>
+        <div className="rounded-xl border border-dashed border-border py-12 text-center">
+          <p className="text-muted-foreground">No items added yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">Search for products above to begin counting</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-neutral-200">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50">
+            <thead className="border-b border-border bg-muted">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-neutral-600">Product</th>
-                <th className="px-4 py-3 text-start font-medium text-neutral-600">Batch</th>
-                <th className="px-4 py-3 text-end font-medium text-neutral-600">Expected</th>
-                <th className="px-4 py-3 text-end font-medium text-neutral-600">Actual</th>
-                <th className="px-4 py-3 text-end font-medium text-neutral-600">Variance</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground">Product</th>
+                <th className="px-4 py-3 text-start font-medium text-muted-foreground">Batch</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Expected</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Actual</th>
+                <th className="px-4 py-3 text-end font-medium text-muted-foreground">Variance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-border">
               {items.map((item, index) => (
                 <tr
                   key={item.stockBatchId}
-                  className={item.variance !== 0 ? 'bg-amber-50' : ''}
+                  className={item.variance !== 0 ? 'bg-warning/5' : ''}
                 >
-                  <td className="px-4 py-3 font-medium text-neutral-900">
+                  <td className="px-4 py-3 font-medium text-foreground">
                     {item.catalogItemName}
                   </td>
-                  <td className="px-4 py-3 font-mono text-neutral-600">{item.batchNumber}</td>
-                  <td className="px-4 py-3 text-end text-neutral-600">{item.expectedQty}</td>
+                  <td className="px-4 py-3 font-mono text-muted-foreground">{item.batchNumber}</td>
+                  <td className="px-4 py-3 text-end text-muted-foreground">{item.expectedQty}</td>
                   <td className="px-4 py-3 text-end">
                     <input
                       type="number"
                       value={item.actualQty}
                       onChange={(e) => handleActualQtyChange(index, e.target.value)}
                       min={0}
-                      className="w-20 rounded border border-neutral-300 px-2 py-1 text-end text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                      className="w-20 rounded border border-border px-2 py-1 text-end text-sm focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
                     />
                   </td>
                   <td className={`px-4 py-3 text-end font-medium ${varianceColor(item.variance)}`}>
@@ -158,7 +158,7 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-muted-foreground">
           {items.length} items{varianceCount > 0 && ` — ${varianceCount} with variance`}
         </p>
         <Button onClick={handleComplete} disabled={completing || items.length === 0}>

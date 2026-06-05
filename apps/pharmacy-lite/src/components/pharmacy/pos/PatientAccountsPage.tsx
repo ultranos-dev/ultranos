@@ -112,7 +112,7 @@ export function PatientAccountsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -124,7 +124,7 @@ export function PatientAccountsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-neutral-900">
+          <h1 className="text-2xl font-bold text-foreground">
             {account?.patientName ?? 'Patient'} — Account
           </h1>
           <Button variant="secondary" onClick={() => setSelectedPatientId(null)}>
@@ -133,9 +133,9 @@ export function PatientAccountsPage() {
         </div>
 
         {/* Balance */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-4 text-center">
-          <p className="text-sm text-neutral-500">Outstanding Balance</p>
-          <p className="text-2xl font-bold tabular-nums text-amber-600">
+        <div className="rounded-lg border border-border bg-card p-4 text-center">
+          <p className="text-sm text-muted-foreground">Outstanding Balance</p>
+          <p className="text-2xl font-bold tabular-nums text-warning">
             {fmt(account?.balance ?? 0)}
           </p>
         </div>
@@ -143,29 +143,29 @@ export function PatientAccountsPage() {
         {/* Aging buckets */}
         {aging && (
           <div className="grid grid-cols-4 gap-2">
-            <div className="rounded-md border border-green-200 bg-green-50 p-3 text-center">
-              <p className="text-xs text-green-700">0-30d</p>
-              <p className="text-sm font-semibold tabular-nums text-green-800">{fmtRaw(aging.current)}</p>
+            <div className="rounded-md border border-success/20 bg-success/5 p-3 text-center">
+              <p className="text-xs text-success">0-30d</p>
+              <p className="text-sm font-semibold tabular-nums text-success">{fmtRaw(aging.current)}</p>
             </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-center">
-              <p className="text-xs text-amber-700">31-60d</p>
-              <p className="text-sm font-semibold tabular-nums text-amber-800">{fmtRaw(aging.thirtyDay)}</p>
+            <div className="rounded-md border border-warning/20 bg-warning/5 p-3 text-center">
+              <p className="text-xs text-warning">31-60d</p>
+              <p className="text-sm font-semibold tabular-nums text-warning">{fmtRaw(aging.thirtyDay)}</p>
             </div>
-            <div className="rounded-md border border-orange-200 bg-orange-50 p-3 text-center">
-              <p className="text-xs text-orange-700">61-90d</p>
-              <p className="text-sm font-semibold tabular-nums text-orange-800">{fmtRaw(aging.sixtyDay)}</p>
+            <div className="rounded-md border border-warning/20 bg-warning/5 p-3 text-center">
+              <p className="text-xs text-warning">61-90d</p>
+              <p className="text-sm font-semibold tabular-nums text-warning">{fmtRaw(aging.sixtyDay)}</p>
             </div>
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-center">
-              <p className="text-xs text-red-700">90+d</p>
-              <p className="text-sm font-semibold tabular-nums text-red-800">{fmtRaw(aging.ninetyPlus)}</p>
+            <div className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-center">
+              <p className="text-xs text-destructive">90+d</p>
+              <p className="text-sm font-semibold tabular-nums text-destructive">{fmtRaw(aging.ninetyPlus)}</p>
             </div>
           </div>
         )}
 
         {/* Payment input */}
-        <form onSubmit={handleRecordPayment} className="rounded-lg border border-neutral-200 bg-white p-4 space-y-3">
+        <form onSubmit={handleRecordPayment} className="rounded-lg border border-border bg-card p-4 space-y-3">
           <div className="space-y-1">
-            <label htmlFor="credit-payment" className="text-sm font-medium text-neutral-700">
+            <label htmlFor="credit-payment" className="text-sm font-medium text-foreground">
               Record Payment
             </label>
             <div className="flex gap-2">
@@ -176,7 +176,7 @@ export function PatientAccountsPage() {
                 min="0"
                 value={paymentStr}
                 onChange={(e) => setPaymentStr(e.target.value)}
-                className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                className="flex-1 rounded-md border border-border px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 placeholder="0.00"
               />
               <Button type="submit" variant="default" disabled={submitting}>
@@ -184,28 +184,28 @@ export function PatientAccountsPage() {
               </Button>
             </div>
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </form>
 
         {/* Ledger entries */}
         <div className="space-y-2">
-          <h2 className="text-sm font-medium text-neutral-500">Ledger</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">Ledger</h2>
           {ledger.length === 0 ? (
-            <p className="text-sm text-neutral-400">No entries.</p>
+            <p className="text-sm text-muted-foreground">No entries.</p>
           ) : (
-            <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+            <ul className="divide-y divide-border rounded-lg border border-border bg-card">
               {ledger.map((entry) => {
                 const isCharge = entry.amount > 0
                 return (
                   <li key={entry.id} className="flex items-center justify-between px-4 py-3">
                     <div>
-                      <p className="text-sm text-neutral-800 capitalize">{entry.type}</p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-sm text-foreground capitalize">{entry.type}</p>
+                      <p className="text-xs text-muted-foreground">
                         {new Date(entry.timestamp).toLocaleDateString()}
                         {entry.note && ` — ${entry.note}`}
                       </p>
                     </div>
-                    <p className={`text-sm font-semibold tabular-nums ${isCharge ? 'text-red-600' : 'text-green-600'}`}>
+                    <p className={`text-sm font-semibold tabular-nums ${isCharge ? 'text-destructive' : 'text-success'}`}>
                       {isCharge ? '+' : ''}{fmtRaw(entry.amount)}
                     </p>
                   </li>
@@ -221,28 +221,28 @@ export function PatientAccountsPage() {
   // Account list view
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-neutral-900">Patient Accounts</h1>
+      <h1 className="text-2xl font-bold text-foreground">Patient Accounts</h1>
 
       {accounts.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center">
-          <p className="text-neutral-500">No outstanding patient accounts.</p>
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <p className="text-muted-foreground">No outstanding patient accounts.</p>
         </div>
       ) : (
-        <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {accounts.map((account) => (
             <li key={account.id}>
               <button
                 type="button"
                 onClick={() => selectPatient(account.patientId)}
-                className="flex w-full items-center justify-between px-4 py-3 text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
+                className="flex w-full items-center justify-between px-4 py-3 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
               >
                 <div>
-                  <p className="text-sm font-medium text-neutral-900">{account.patientName}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-sm font-medium text-foreground">{account.patientName}</p>
+                  <p className="text-xs text-muted-foreground">
                     Last activity: {new Date(account.lastActivityAt).toLocaleDateString()}
                   </p>
                 </div>
-                <p className="text-sm font-semibold tabular-nums text-amber-600">
+                <p className="text-sm font-semibold tabular-nums text-warning">
                   {fmt(account.balance)}
                 </p>
               </button>

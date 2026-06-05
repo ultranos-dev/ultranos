@@ -54,7 +54,7 @@ export function PosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -66,7 +66,7 @@ export function PosPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-neutral-900">Point of Sale</h1>
+          <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
           <Button
             variant="secondary"
             onClick={() => clearActiveInvoice()}
@@ -83,8 +83,8 @@ export function PosPage() {
 
         {isPaidInFull ? (
           <div className="space-y-3">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-              <p className="text-lg font-semibold text-green-800">Paid in Full</p>
+            <div className="rounded-lg border border-success/20 bg-success/5 p-6 text-center">
+              <p className="text-lg font-semibold text-success">Paid in Full</p>
             </div>
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1">
@@ -111,12 +111,12 @@ export function PosPage() {
   // Invoice list mode
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-neutral-900">Point of Sale</h1>
+      <h1 className="text-2xl font-bold text-foreground">Point of Sale</h1>
 
       {/* No cash drawer warning */}
       {!activeCashDrawer && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-800">
+        <div className="rounded-md border border-warning/20 bg-warning/5 p-3">
+          <p className="text-sm font-medium text-warning">
             No cash drawer open. Cash payments will not be tracked until a drawer is opened.
           </p>
         </div>
@@ -124,34 +124,34 @@ export function PosPage() {
 
       {/* Pending invoices */}
       {pendingInvoices.length === 0 ? (
-        <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center">
-          <p className="text-neutral-500">No pending invoices.</p>
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <p className="text-muted-foreground">No pending invoices.</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <h2 className="text-sm font-medium text-neutral-500">Pending Invoices</h2>
-          <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+          <h2 className="text-sm font-medium text-muted-foreground">Pending Invoices</h2>
+          <ul className="divide-y divide-border rounded-lg border border-border bg-card">
             {pendingInvoices.map((inv) => (
               <li key={inv.id}>
                 <button
                   type="button"
                   onClick={() => setActiveInvoice(inv)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-start hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
+                  className="flex w-full items-center justify-between px-4 py-3 text-start hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
                 >
                   <div>
-                    <p className="text-sm font-medium text-neutral-900">{inv.invoiceNumber}</p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-sm font-medium text-foreground">{inv.invoiceNumber}</p>
+                    <p className="text-xs text-muted-foreground">
                       {new Date(inv.createdAt).toLocaleDateString()} - {inv.items.length} item{inv.items.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                   <div className="text-end">
-                    <p className="text-sm font-semibold tabular-nums text-neutral-900">
+                    <p className="text-sm font-semibold tabular-nums text-foreground">
                       {CURRENCY} {(inv.amountDue / Math.pow(10, CURRENCY_MINOR_UNITS)).toFixed(CURRENCY_MINOR_UNITS)}
                     </p>
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
                       inv.status === 'partial'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-neutral-100 text-neutral-600'
+                        ? 'bg-warning/10 text-warning'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       {inv.status}
                     </span>

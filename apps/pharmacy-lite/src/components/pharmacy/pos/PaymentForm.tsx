@@ -44,9 +44,9 @@ export function PaymentForm({
   // Payment complete state
   if (invoice.amountDue <= 0) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-lg font-semibold text-green-800">Payment Complete</p>
-        <p className="mt-1 text-sm text-green-600">This invoice has been paid in full.</p>
+      <div className="rounded-lg border border-success/20 bg-success/5 p-6 text-center">
+        <p className="text-lg font-semibold text-success">Payment Complete</p>
+        <p className="mt-1 text-sm text-success">This invoice has been paid in full.</p>
       </div>
     )
   }
@@ -94,11 +94,11 @@ export function PaymentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-neutral-200 bg-white p-4 space-y-4">
+    <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-card p-4 space-y-4">
       {/* Amount due */}
       <div className="text-center">
-        <p className="text-sm text-neutral-500">Amount Due</p>
-        <p className="text-2xl font-bold tabular-nums text-neutral-900">
+        <p className="text-sm text-muted-foreground">Amount Due</p>
+        <p className="text-2xl font-bold tabular-nums text-foreground">
           {formatAmount(invoice.amountDue, currencyMinorUnits)}
         </p>
       </div>
@@ -113,7 +113,7 @@ export function PaymentForm({
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
               method === m.value
                 ? 'bg-primary-600 text-white'
-                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                : 'bg-muted text-foreground hover:bg-accent'
             }`}
           >
             {m.label}
@@ -123,14 +123,14 @@ export function PaymentForm({
 
       {/* Credit warning */}
       {method === 'credit' && (
-        <p className="rounded-md bg-amber-50 p-2 text-sm text-amber-700">
+        <p className="rounded-md bg-warning/5 p-2 text-sm text-warning">
           This will add the amount to the patient&apos;s credit account.
         </p>
       )}
 
       {/* Amount input */}
       <div className="space-y-1">
-        <label htmlFor="payment-amount" className="text-sm font-medium text-neutral-700">
+        <label htmlFor="payment-amount" className="text-sm font-medium text-foreground">
           Amount
         </label>
         <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export function PaymentForm({
             min="0"
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             placeholder="0.00"
           />
           <button
@@ -157,7 +157,7 @@ export function PaymentForm({
       {/* Card reference (only for card) */}
       {method === 'card' && (
         <div className="space-y-1">
-          <label htmlFor="card-reference" className="text-sm font-medium text-neutral-700">
+          <label htmlFor="card-reference" className="text-sm font-medium text-foreground">
             Card Reference
           </label>
           <input
@@ -165,7 +165,7 @@ export function PaymentForm({
             type="text"
             value={cardReference}
             onChange={(e) => setCardReference(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             placeholder="Last 4 digits or approval code"
           />
         </div>
@@ -173,7 +173,7 @@ export function PaymentForm({
 
       {/* Error */}
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       )}
 
       {/* Submit */}

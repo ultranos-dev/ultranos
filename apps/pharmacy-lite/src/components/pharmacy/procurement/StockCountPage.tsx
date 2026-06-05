@@ -49,7 +49,7 @@ export function StockCountPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -67,8 +67,8 @@ export function StockCountPage() {
   return (
     <div className="space-y-8 p-6">
       <div>
-        <h1 className="text-xl font-bold text-neutral-900">Stock Count</h1>
-        <p className="mt-1 text-sm text-neutral-500">Start a new physical inventory count</p>
+        <h1 className="text-xl font-bold text-foreground">Stock Count</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Start a new physical inventory count</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -97,31 +97,31 @@ export function StockCountPage() {
 
       {recentCounts.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-neutral-700">Recent Counts</h2>
-          <div className="overflow-hidden rounded-xl border border-neutral-200">
+          <h2 className="text-sm font-semibold text-foreground">Recent Counts</h2>
+          <div className="overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50">
+              <thead className="border-b border-border bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Type</th>
-                  <th className="px-4 py-3 text-start font-medium text-neutral-600">Completed</th>
-                  <th className="px-4 py-3 text-end font-medium text-neutral-600">Items</th>
-                  <th className="px-4 py-3 text-end font-medium text-neutral-600">Variances</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">Type</th>
+                  <th className="px-4 py-3 text-start font-medium text-muted-foreground">Completed</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">Items</th>
+                  <th className="px-4 py-3 text-end font-medium text-muted-foreground">Variances</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-border">
                 {recentCounts.map((c) => (
                   <tr key={c.id}>
-                    <td className="px-4 py-3 font-medium text-neutral-900">
+                    <td className="px-4 py-3 font-medium text-foreground">
                       {typeLabels[c.type]}
                     </td>
-                    <td className="px-4 py-3 text-neutral-600">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {c.completedAt ? new Date(c.completedAt).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-4 py-3 text-end text-neutral-600">{c.items.length}</td>
+                    <td className="px-4 py-3 text-end text-muted-foreground">{c.items.length}</td>
                     <td className="px-4 py-3 text-end">
                       <span
                         className={
-                          c.totalVarianceItems > 0 ? 'font-medium text-amber-600' : 'text-neutral-400'
+                          c.totalVarianceItems > 0 ? 'font-medium text-warning' : 'text-muted-foreground'
                         }
                       >
                         {c.totalVarianceItems}

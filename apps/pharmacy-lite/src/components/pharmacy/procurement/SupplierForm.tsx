@@ -58,23 +58,23 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
   }
 
   const inputClasses =
-    'w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 ' +
+    'w-full rounded-lg border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground ' +
     'focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <h2 className="text-lg font-semibold text-neutral-900">
+      <h2 className="text-lg font-semibold text-foreground">
         {isEdit ? 'Edit Supplier' : 'Add Supplier'}
       </h2>
 
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-lg bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Name <span className="text-red-500">*</span>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Name <span className="text-destructive">*</span>
           </label>
           <input
             type="text"
@@ -87,7 +87,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Contact Person</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Contact Person</label>
           <input
             type="text"
             value={contactName}
@@ -99,7 +99,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Phone</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">Phone</label>
             <input
               type="tel"
               value={phone}
@@ -109,7 +109,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
             <input
               type="email"
               value={email}
@@ -121,7 +121,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Address</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Address</label>
           <textarea
             value={address}
             onChange={(e) => setAddress(e.target.value)}
@@ -133,7 +133,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               Lead Time (days)
             </label>
             <input
@@ -146,7 +146,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Payment Terms</label>
+            <label className="mb-1 block text-sm font-medium text-foreground">Payment Terms</label>
             <input
               type="text"
               value={paymentTerms}

@@ -94,7 +94,7 @@ export function TransfersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-neutral-500">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         Loading transfers...
       </div>
     )
@@ -103,8 +103,8 @@ export function TransfersPage() {
   if (transfers.length === 0) {
     return (
       <div className="space-y-4">
-        <h1 className="text-xl font-semibold text-neutral-900">Transfers</h1>
-        <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 py-12 text-center text-sm text-neutral-500">
+        <h1 className="text-xl font-semibold text-foreground">Transfers</h1>
+        <div className="rounded-lg border border-dashed border-border bg-muted py-12 text-center text-sm text-muted-foreground">
           No transfers found.
         </div>
       </div>
@@ -113,12 +113,12 @@ export function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-neutral-900">Transfers</h1>
+      <h1 className="text-xl font-semibold text-foreground">Transfers</h1>
 
       {/* Active */}
       {activeTransfers.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-medium text-neutral-600">Active</h2>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Active</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {activeTransfers.map((t) => (
               <TransferCard
@@ -139,7 +139,7 @@ export function TransfersPage() {
       {/* Completed */}
       {completedTransfers.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-medium text-neutral-600">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
             Completed
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">

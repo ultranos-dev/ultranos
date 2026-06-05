@@ -14,11 +14,11 @@ interface TransferCardProps {
 }
 
 const statusColors: Record<string, string> = {
-  requested: 'bg-amber-100 text-amber-800',
-  approved: 'bg-blue-100 text-blue-800',
+  requested: 'bg-warning/10 text-warning',
+  approved: 'bg-primary/10 text-primary',
   shipped: 'bg-purple-100 text-purple-800',
-  received: 'bg-green-100 text-green-800',
-  cancelled: 'bg-neutral-100 text-neutral-500',
+  received: 'bg-success/10 text-success',
+  cancelled: 'bg-muted text-muted-foreground',
 }
 
 export function TransferCard({
@@ -33,7 +33,7 @@ export function TransferCard({
   const isOutgoing = transfer.fromLocationId === currentLocationId
   const direction = isOutgoing ? 'Outgoing' : 'Incoming'
   const directionColor = isOutgoing
-    ? 'bg-orange-100 text-orange-800'
+    ? 'bg-warning/10 text-warning'
     : 'bg-teal-100 text-teal-800'
 
   const itemsSummary =
@@ -45,7 +45,7 @@ export function TransferCard({
     transfer.shippedAt ?? transfer.approvedAt ?? transfer.requestedAt
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-card">
       {/* Header badges */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span
@@ -61,7 +61,7 @@ export function TransferCard({
       </div>
 
       {/* From / To */}
-      <div className="mb-2 text-sm text-neutral-700">
+      <div className="mb-2 text-sm text-foreground">
         <p>
           <span className="font-medium">From:</span> {transfer.fromLocationName}
         </p>
@@ -71,10 +71,10 @@ export function TransferCard({
       </div>
 
       {/* Items summary */}
-      <p className="mb-1 text-sm text-neutral-600">{itemsSummary}</p>
+      <p className="mb-1 text-sm text-muted-foreground">{itemsSummary}</p>
 
       {/* Date */}
-      <p className="mb-3 text-xs tabular-nums text-neutral-400">
+      <p className="mb-3 text-xs tabular-nums text-muted-foreground">
         {new Date(displayDate).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'short',

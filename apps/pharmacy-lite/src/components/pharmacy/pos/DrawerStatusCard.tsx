@@ -34,22 +34,22 @@ export function DrawerStatusCard() {
   return (
     <Link
       href="/pos/cash-drawer"
-      className="block rounded-lg border border-neutral-200 bg-white p-4 transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      className="block rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-neutral-900">Cash Drawer</p>
+          <p className="text-sm font-medium text-foreground">Cash Drawer</p>
           {drawer ? (
-            <p className="text-xs text-green-600">
+            <p className="text-xs text-success">
               Open since {new Date(drawer.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           ) : (
-            <p className="text-xs text-neutral-500">No drawer open</p>
+            <p className="text-xs text-muted-foreground">No drawer open</p>
           )}
         </div>
         <div className="text-end">
-          <p className="text-xs text-neutral-500">Today&apos;s Revenue</p>
-          <p className="text-sm font-semibold tabular-nums text-neutral-900">{fmt(revenue)}</p>
+          <p className="text-xs text-muted-foreground">Today&apos;s Revenue</p>
+          <p className="text-sm font-semibold tabular-nums text-foreground">{fmt(revenue)}</p>
         </div>
       </div>
     </Link>
