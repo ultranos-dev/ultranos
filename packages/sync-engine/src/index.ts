@@ -45,3 +45,20 @@ export type {
   SyncQueueStorage,
   SyncQueue,
 } from './queue.js'
+
+export {
+  createMeterFetch,
+  estimateRequestSize,
+  estimateResponseSize,
+  categorizeUrl,
+} from './data-meter.js'
+export type { DataUsageCategory, RecordUsageFn } from './data-meter.js'
+
+export {
+  getThresholdLevel,
+  calculateProjectedExhaustion,
+  getCycleStartDate,
+  getCycleEndDate,
+  isCycleBoundaryCrossed,
+} from './data-budget-calc.js'
+export type { ThresholdLevel } from './data-budget-calc.js'

@@ -8,7 +8,7 @@ import {
   markCourierHandoffSynced,
   recordDataUsage,
 } from './db'
-import { createMeterFetch } from '@/lib/data-meter'
+import { createMeterFetch } from '@ultranos/sync-engine'
 import { compressBody, isCompressionAvailable } from '@/lib/compress'
 import type { UploadResultInput, UploadResultResponse } from './trpc'
 import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'

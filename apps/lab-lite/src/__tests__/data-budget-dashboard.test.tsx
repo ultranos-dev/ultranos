@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
-import type { ThresholdLevel } from '@/lib/data-budget-calc'
+import type { ThresholdLevel } from '@ultranos/sync-engine'
 
 // Mock next/link
 vi.mock('next/link', () => ({

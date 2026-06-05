@@ -11,7 +11,7 @@ import {
   getThresholdLevel,
   getCycleEndDate,
   type ThresholdLevel,
-} from '@/lib/data-budget-calc'
+} from '@ultranos/sync-engine'
 
 export interface DataBudgetState {
   planSizeMB: number

@@ -160,7 +160,7 @@ describe('Data Budget — Dexie Schema & Helpers', () => {
 
 describe('Data Budget — Metering Layer', () => {
   it('estimates payload size for JSON body', async () => {
-    const { estimateRequestSize } = await import('../lib/data-meter')
+    const { estimateRequestSize } = await import('@ultranos/sync-engine')
     const body = JSON.stringify({ hello: 'world', nums: [1, 2, 3] })
     const size = estimateRequestSize(body)
     // Should be body length * 1.15 (15% overhead)
@@ -168,21 +168,21 @@ describe('Data Budget — Metering Layer', () => {
   })
 
   it('estimates payload size for Blob body', async () => {
-    const { estimateRequestSize } = await import('../lib/data-meter')
+    const { estimateRequestSize } = await import('@ultranos/sync-engine')
     const blob = new Blob(['a'.repeat(1000)])
     const size = estimateRequestSize(blob)
     expect(size).toBeCloseTo(1000 * 1.15, 0)
   })
 
   it('estimates response size from Content-Length header', async () => {
-    const { estimateResponseSize } = await import('../lib/data-meter')
+    const { estimateResponseSize } = await import('@ultranos/sync-engine')
     const headers = new Headers({ 'Content-Length': '2048' })
     const size = estimateResponseSize(headers, null)
     expect(size).toBe(2048)
   })
 
   it('categorizes URLs correctly', async () => {
-    const { categorizeUrl } = await import('../lib/data-meter')
+    const { categorizeUrl } = await import('@ultranos/sync-engine')
     expect(categorizeUrl('/api/audit.sync')).toBe('audit')
     expect(categorizeUrl('/api/trpc/lab.uploadResult')).toBe('upload')
     expect(categorizeUrl('/api/trpc/notification.list')).toBe('notification')
@@ -190,7 +190,7 @@ describe('Data Budget — Metering Layer', () => {
   })
 
   it('meterFetch records usage without blocking the request', async () => {
-    const { createMeterFetch, estimateRequestSize } = await import('../lib/data-meter')
+    const { createMeterFetch, estimateRequestSize } = await import('@ultranos/sync-engine')
     const recordDataUsageMock = vi.fn().mockResolvedValue(undefined)
 
     const fakeFetch = vi.fn().mockResolvedValue(
@@ -217,7 +217,7 @@ describe('Data Budget — Metering Layer', () => {
   })
 
   it('does not block requests when metering fails', async () => {
-    const { createMeterFetch } = await import('../lib/data-meter')
+    const { createMeterFetch } = await import('@ultranos/sync-engine')
     const recordDataUsageMock = vi.fn().mockRejectedValue(new Error('DB error'))
 
     const fakeFetch = vi.fn().mockResolvedValue(new Response('ok'))
@@ -234,7 +234,7 @@ describe('Data Budget — Metering Layer', () => {
 
 describe('Data Budget — Projection Calculations', () => {
   it('calculates projected exhaustion date', async () => {
-    const { calculateProjectedExhaustion } = await import('../lib/data-budget-calc')
+    const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
     const result = calculateProjectedExhaustion({
       planSizeMB: 500,
       usedMB: 250,
@@ -253,7 +253,7 @@ describe('Data Budget — Projection Calculations', () => {
   })
 
   it('caps projection at cycle end date', async () => {
-    const { calculateProjectedExhaustion } = await import('../lib/data-budget-calc')
+    const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
     const result = calculateProjectedExhaustion({
       planSizeMB: 500,
       usedMB: 10,
@@ -267,7 +267,7 @@ describe('Data Budget — Projection Calculations', () => {
   })
 
   it('returns null when no usage data', async () => {
-    const { calculateProjectedExhaustion } = await import('../lib/data-budget-calc')
+    const { calculateProjectedExhaustion } = await import('@ultranos/sync-engine')
     const result = calculateProjectedExhaustion({
       planSizeMB: 500,
       usedMB: 0,
@@ -278,7 +278,7 @@ describe('Data Budget — Projection Calculations', () => {
   })
 
   it('determines correct threshold level', async () => {
-    const { getThresholdLevel } = await import('../lib/data-budget-calc')
+    const { getThresholdLevel } = await import('@ultranos/sync-engine')
     expect(getThresholdLevel(0, 500)).toBe('normal')
     expect(getThresholdLevel(374, 500)).toBe('normal')
     expect(getThresholdLevel(375, 500)).toBe('warning')

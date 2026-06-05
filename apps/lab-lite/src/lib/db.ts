@@ -1,4 +1,6 @@
 import Dexie from 'dexie'
+import type { DataUsageCategory } from '@ultranos/sync-engine'
+export type { DataUsageCategory }  // re-export for existing consumers
 import type { FhirSpecimen, PatientVerificationRecord, AmendmentRecord } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
 import type { CustodyEvent } from '@/types/custody-event'
@@ -85,6 +87,53 @@ export interface AchievementSchedulerConfig {
 // Re-export with Dexie-friendly names to avoid collision with result-templates.ts ReferenceRange
 export type ReferenceRangeEntry = ReferenceRange
 export type RangeVersionEntry = RangeVersion
+
+// ---------------------------------------------------------------------------
+// Sample Lock types (v32) — Story 51.3: Sample Collision Prevention
+// No PHI — sampleId is a lab-internal ID, techId is an opaque practitioner ID.
+// ---------------------------------------------------------------------------
+
+export type LockStatus = 'ACTIVE' | 'RELEASED' | 'EXPIRED'
+export type LockReleaseReason = 'MANUAL' | 'REASSIGNED' | 'EXPIRED' | 'RESULT_ENTERED'
+
+export type LockResult =
+  | { success: true; alreadyLocked?: boolean }
+  | { success: false; lockedBy: string; lockedAt: string }
+
+export interface SampleLock {
+  sampleId: string          // primary key
+  techId: string
+  techName: string          // display label — not PHI (practitioner, not patient)
+  lockedAt: string          // ISO 8601
+  expiresAt: string         // ISO 8601
+  status: LockStatus
+  releaseRequestedAt?: string  // ISO 8601 — set when a release has been requested; prevents duplicate requests
+}
+
+// ---------------------------------------------------------------------------
+// Workload Balancing types (v33) — Story 51.2: Workload Balancing Dashboard
+// No PHI — techId is an opaque practitioner ID; no patient data stored.
+// ---------------------------------------------------------------------------
+
+export interface TechWorkloadSnapshot {
+  id: string               // UUID
+  techId: string
+  shiftDate: string        // YYYY-MM-DD
+  pendingCount: number
+  inProgressCount: number
+  completedCount: number
+  avgTatMinutes: number
+  snapshotAt: string       // ISO 8601
+}
+
+export interface TechAvailability {
+  id: string               // UUID
+  techId: string
+  status: 'AVAILABLE' | 'BREAK' | 'ABSENT' | 'TRAINING'
+  reason: string
+  startedAt: string        // ISO 8601
+  endedAt: string | null   // null = still unavailable
+}
 
 // ---------------------------------------------------------------------------
 // Security Alert State types (v29) — Story 49.4: Conflict Zone Security Protocols
@@ -316,8 +365,6 @@ export interface DataBudgetConfig {
   currentCycleStart: string  // ISO 8601 date of current cycle start
 }
 
-export type DataUsageCategory = 'upload' | 'audit' | 'notification' | 'other'
-
 export interface DataUsageRecord {
   date: string                 // YYYY-MM-DD
   category: DataUsageCategory
@@ -336,7 +383,12 @@ export interface HandoverReport {
   outgoingTechId: string
   outgoingTechName: string  // display name only — NOT email
   incomingTechId: string | null
-  status: 'PENDING' | 'ACKNOWLEDGED' | 'EXPIRED'
+  incomingTechName: string | null  // display name stored at acknowledgment
+  status: 'PENDING' | 'READY' | 'ACKNOWLEDGED' | 'EXPIRED'
+  // PENDING = generated, not yet reviewed by outgoing tech
+  // READY   = outgoing tech confirmed; awaiting incoming tech acknowledgment
+  // ACKNOWLEDGED = incoming tech has acknowledged
+  // EXPIRED = unacknowledged past threshold
   createdAt: string
   acknowledgedAt: string | null
   pendingSamples: { stat: number; routine: number; sampleIds: string[] }
@@ -354,6 +406,117 @@ export interface ShiftSession {
   startedAt: string
   endedAt: string | null
   status: 'ACTIVE' | 'ENDED'
+}
+
+// ---------------------------------------------------------------------------
+// Supply Inventory types (v31) — Story 51.5: RAG Readiness Board
+// No PHI — supply names, categories, and stock counts are operational data.
+// ---------------------------------------------------------------------------
+
+export interface SupplyItem {
+  id: string                    // UUID
+  name: string
+  category: string              // e.g. "Reagent", "Consumable", "Control Material"
+  currentStock: number
+  unit: string                  // e.g. "tests", "mL", "kits"
+  reorderThreshold: number      // stock level triggering Amber
+  criticalThreshold: number     // stock level triggering Red (default 0)
+  dailyUsageEstimate: number    // for estimated depletion date calculation
+  lastUpdated: string           // ISO 8601
+  updatedBy: string             // opaque practitioner ID
+}
+
+// ---------------------------------------------------------------------------
+// Instrument types (v31) — Story 51.5: RAG Readiness Board
+// No PHI — instrument names and operational metadata only.
+// ---------------------------------------------------------------------------
+
+export interface Instrument {
+  id: string                    // UUID
+  name: string
+  type: string                  // e.g. "Hematology", "Chemistry"
+  model: string
+  serialNumber: string | null
+  avgRunTimeMinutes: number     // rolling average of last 10 runs (Story 51.4)
+  status: 'IN_SERVICE' | 'OUT_OF_SERVICE'
+  outOfServiceReason: string | null
+  nextMaintenanceDue?: string   // ISO 8601 date — used for 7-day Amber check
+  lastMaintenanceDate?: string  // ISO 8601 date
+  createdAt: string             // ISO 8601
+  updatedAt: string             // ISO 8601
+}
+
+// ---------------------------------------------------------------------------
+// Lab Config types (v31) — key-value store for lab-level settings
+// ---------------------------------------------------------------------------
+
+export interface LabConfig {
+  key: string   // e.g. "minimumStaffing"
+  value: string // stored as string; parse on read
+}
+
+// ---------------------------------------------------------------------------
+// Equipment Booking & Scheduling types (v34 — Story 51.4)
+// No PHI: techId is an opaque practitioner ID; sampleIds are operational refs.
+// ---------------------------------------------------------------------------
+
+export interface QueuedBatch {
+  id: string                              // UUID
+  instrumentId: string
+  techId: string                          // opaque practitioner ID
+  techName: string                        // display name stored at queue time
+  sampleIds: string[]                     // operational sample references, no demographics
+  sampleCount: number
+  testType: string
+  estimatedRunMinutes: number
+  position: number                        // 1-based; 1 = currently running/next
+  status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'CANCELLED'
+  cancelReason: string | null             // stored for audit/manager cancellations
+  queuedAt: string                        // ISO 8601
+  startedAt: string | null               // ISO 8601; set when status → RUNNING
+  completedAt: string | null             // ISO 8601; set when status → COMPLETED/CANCELLED
+}
+
+export interface InstrumentHistoryEntry {
+  id: string                              // UUID
+  instrumentId: string
+  batchId: string
+  techId: string
+  sampleCount: number
+  runTimeMinutes: number                  // actual run time used for rolling average
+  completedAt: string                     // ISO 8601
+}
+
+export interface InstrumentNotification {
+  id: string                              // UUID
+  techId: string                          // recipient tech
+  instrumentId: string
+  instrumentName: string                  // denormalised for offline display
+  batchId: string
+  type: 'NEXT_IN_LINE' | 'BATCH_CANCELLED'
+  message: string                         // pre-rendered localised message
+  estimatedStartTime: string             // ISO 8601
+  createdAt: string                       // ISO 8601
+  dismissed: boolean
+}
+
+// v35 — Power-Aware Workload Scheduler (Story 48.1)
+export interface PowerScheduleEntry {
+  id: string                    // UUID
+  dayOfWeek: number             // 0 = Sunday … 6 = Saturday
+  startTime: string             // HH:mm
+  durationMinutes: number       // length of power window
+  isActive: boolean             // false = schedule disabled for this day
+  updatedAt: string             // ISO 8601
+}
+
+export interface TestTimeEstimate {
+  loincCode: string             // primary key
+  displayName: string
+  estimatedMinutes: number      // per-batch run time
+  requiresPower: boolean        // false = manual / benchtop (no analyzer)
+  batchSize: number             // samples per analyzer run
+  updatedAt: string             // ISO 8601
 }
 
 class LabLiteDatabase extends Dexie {
@@ -475,6 +638,24 @@ class LabLiteDatabase extends Dexie {
   // v29 — Conflict Zone Security Protocols (Story 49.4)
   // Persists Security Alert activation state so mode survives browser restart.
   securityAlertState!: Dexie.Table<SecurityAlertStateRecord, number>
+  // v32 — Sample Collision Prevention (Story 51.3)
+  // No PHI — sampleId and techId are opaque identifiers.
+  sample_locks!: Dexie.Table<SampleLock, string>
+  // v33 — Workload Balancing Dashboard (Story 51.2)
+  // No PHI — techId is opaque; no patient data in workload snapshots or availability records.
+  tech_workload_snapshots!: Dexie.Table<TechWorkloadSnapshot, string>
+  tech_availability!: Dexie.Table<TechAvailability, string>
+  // v31 — RAG Readiness Board (Story 51.5)
+  supply_inventory!: Dexie.Table<SupplyItem, string>
+  instruments!: Dexie.Table<Instrument, string>
+  lab_config!: Dexie.Table<LabConfig, string>
+  // v34 — Equipment Booking & Scheduling (Story 51.4)
+  instrument_queue!: Dexie.Table<QueuedBatch, string>
+  instrument_history!: Dexie.Table<InstrumentHistoryEntry, string>
+  instrument_notifications!: Dexie.Table<InstrumentNotification, string>
+  // v35 — Power-Aware Workload Scheduler (Story 48.1)
+  power_schedules!: Dexie.Table<PowerScheduleEntry, string>
+  test_time_estimates!: Dexie.Table<TestTimeEstimate, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1249,6 +1430,54 @@ class LabLiteDatabase extends Dexie {
     this.version(29).stores({
       securityAlertState: '&id',
     })
+    // v30 — Fix dailyLogs indexes (Story 50.4 code review): index actual fields from
+    // DailyActivityLog (logDate, generatedBy, status) and add unique constraint on logDate
+    // to prevent duplicate auto-generation across concurrent tabs.
+    this.version(30).stores({
+      dailyLogs: '&id, &logDate, generatedBy, status',
+    })
+    // v31 — RAG Readiness Board (Story 51.5)
+    // supply_inventory: manually maintained stock counts for consumables & reagents.
+    // instruments: operational instrument list with maintenance tracking.
+    // lab_config: key-value store for lab-level operational settings (e.g. minimumStaffing).
+    // No PHI — operational data only.
+    this.version(31).stores({
+      supply_inventory: '&id, name, category',
+      instruments: '&id, name, status, nextMaintenanceDue',
+      lab_config: '&key',
+    })
+    // v32 — Sample Collision Prevention (Story 51.3)
+    // sample_locks: one record per sample; primary key is sampleId for direct lookup.
+    // Indexed by techId + status + lockedAt + expiresAt per spec Task 1.
+    this.version(32).stores({
+      sample_locks: '&sampleId, techId, status, lockedAt, expiresAt, [techId+status]',
+    })
+    // v33 — Workload Balancing Dashboard (Story 51.2)
+    // tech_workload_snapshots: indexed by [techId+shiftDate] for per-tech history queries.
+    // tech_availability: indexed by techId + endedAt for "open records" queries (endedAt null).
+    this.version(33).stores({
+      tech_workload_snapshots: '&id, techId, shiftDate, [techId+shiftDate]',
+      tech_availability: '&id, techId, endedAt, [techId+endedAt]',
+    })
+    // v34 — Equipment Booking & Scheduling (Story 51.4)
+    // instrument_queue: active batch queue per instrument. Compound index [instrumentId+position]
+    //   enables efficient ordered queries for a single instrument's queue.
+    // instrument_history: append-only run history. Indexed by instrumentId for rolling-avg queries.
+    // instrument_notifications: next-in-line alerts per tech. Indexed by techId for quick lookup.
+    // No PHI — techId/sampleIds are opaque operational identifiers; no patient demographics.
+    this.version(34).stores({
+      instrument_queue: '&id, instrumentId, techId, status, position, [instrumentId+position], [instrumentId+status]',
+      instrument_history: '&id, instrumentId, techId, completedAt, [instrumentId+completedAt]',
+      instrument_notifications: '&id, techId, instrumentId, dismissed, [techId+dismissed]',
+    })
+    // v35 — Power-Aware Workload Scheduler (Story 48.1)
+    // power_schedules: one record per weekday. dayOfWeek indexed for getActiveScheduleForDay lookup.
+    // test_time_estimates: keyed by loincCode; all fields indexed for scheduler queries.
+    // No PHI — operational scheduling data only.
+    this.version(35).stores({
+      power_schedules: '&id, dayOfWeek, isActive',
+      test_time_estimates: '&loincCode, requiresPower',
+    })
   }
 }
 
@@ -1625,11 +1854,10 @@ export async function getDailyLog(id: string): Promise<DailyActivityLog | undefi
   return db.dailyLogs.get(id)
 }
 
-/** Retrieve a daily log by date (YYYY-MM-DD). Returns most recently generated if multiple exist. */
+/** Retrieve a daily log by date (YYYY-MM-DD). Uses logDate index (v30+). */
 export async function getDailyLogByDate(date: string): Promise<DailyActivityLog | undefined> {
   const db = getDb()
-  const logs = await db.dailyLogs.filter((l) => l.logDate === date).toArray()
-  return logs.sort((a, b) => b.generatedAt.localeCompare(a.generatedAt))[0]
+  return db.dailyLogs.where('logDate').equals(date).first()
 }
 
 /** Retrieve daily logs within a date range (inclusive, YYYY-MM-DD). Ordered newest first. */
@@ -1638,7 +1866,7 @@ export async function getDailyLogsByDateRange(
   to: string,
 ): Promise<DailyActivityLog[]> {
   const db = getDb()
-  const logs = await db.dailyLogs.filter((l) => l.logDate >= from && l.logDate <= to).toArray()
+  const logs = await db.dailyLogs.where('logDate').between(from, to, true, true).toArray()
   return logs.sort((a, b) => b.logDate.localeCompare(a.logDate))
 }
 
@@ -2390,6 +2618,7 @@ export interface LabLogbookEntry {
   testType: string               // LOINC display name
   testLoincCode: string
   resultSummary: string          // clinical data — stored locally, never logged
+  resultCode?: 'positive' | 'negative' | 'indeterminate'  // structured result classification (Story 50.2 review patch)
   technicianId: string
   technicianName: string
   authorizerId: string
@@ -2709,37 +2938,31 @@ export async function getHmisReportsByYear(year: number): Promise<HmisMonthlyRep
 export async function finalizeHmisReport(id: string, finalizedBy: string): Promise<void> {
   const db = getDb()
   const now = new Date().toISOString()
-  await db.transaction('rw', db.hmisReports, async () => {
+  await db.transaction('rw', [db.hmisReports, db.syncQueue], async () => {
     const report = await db.hmisReports.get(id)
     if (!report) throw new Error(`HMIS report not found: ${id}`)
     if (report.status === 'finalized') {
       throw new Error(`HMIS report ${id} is already finalized`)
     }
-    await db.hmisReports.update(id, {
-      status: 'finalized',
+    const updated = {
+      ...report,
+      status: 'finalized' as const,
       finalizedBy,
       finalizedAt: now,
+    }
+    await db.hmisReports.put(updated)
+
+    // Enqueue for Hub sync inside the same transaction
+    await enqueueSyncEvent({
+      resourceType: 'HmisReport',
+      resourceId: id,
+      status: 'pending',
+      payload: updated,
+      createdAt: now,
+      lastAttemptAt: null,
+      retryCount: 0,
     })
   })
-
-  // Enqueue for Hub sync — Tier 3 (operational data, Last-Write-Wins)
-  // A newer finalizedAt wins if the same month/year exists on the Hub.
-  try {
-    const finalized = await db.hmisReports.get(id)
-    if (finalized) {
-      await enqueueSyncEvent({
-        resourceType: 'HmisReport',
-        resourceId: id,
-        status: 'pending',
-        payload: finalized,
-        createdAt: now,
-        lastAttemptAt: null,
-        retryCount: 0,
-      })
-    }
-  } catch {
-    // Sync enqueue failure must not block finalization
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -2820,7 +3043,7 @@ export async function saveDonorReportTemplate(template: DonorReportTemplate): Pr
 /** Get all custom (user-defined) donor report templates stored in Dexie. */
 export async function getCustomDonorTemplates(): Promise<DonorReportTemplate[]> {
   const db = getDb()
-  return db.donorReportTemplates.where('isCustom').equals(1 as unknown as string).toArray()
+  return db.donorReportTemplates.filter((t) => t.isCustom === true).toArray()
 }
 
 /** Upsert a donor report. */
@@ -2854,7 +3077,7 @@ export async function getDonorReports(programCode?: string): Promise<DonorReport
  * - Records finalizedBy and finalizedAt
  * - Enqueues for Hub sync (Tier 3 — operational/financial, LWW)
  */
-export async function finalizeDonorReport(id: string, finalizedBy: string): Promise<void> {
+export async function finalizeDonorReport(id: string, finalizedBy: string): Promise<DonorReport> {
   const db = getDb()
   const now = new Date().toISOString()
   await db.transaction('rw', db.donorReports, async () => {
@@ -2864,23 +3087,53 @@ export async function finalizeDonorReport(id: string, finalizedBy: string): Prom
     await db.donorReports.update(id, { status: 'finalized', finalizedBy, finalizedAt: now })
   })
 
+  const finalized = (await db.donorReports.get(id))!
+
   // Enqueue for Hub sync — Tier 3 (financial operational data, LWW)
   try {
-    const finalized = await db.donorReports.get(id)
-    if (finalized) {
-      await enqueueSyncEvent({
-        resourceType: 'DonorReport',
-        resourceId: id,
-        status: 'pending',
-        payload: finalized,
-        createdAt: now,
-        lastAttemptAt: null,
-        retryCount: 0,
-      })
-    }
+    await enqueueSyncEvent({
+      resourceType: 'DonorReport',
+      resourceId: id,
+      status: 'pending',
+      payload: finalized,
+      createdAt: now,
+      lastAttemptAt: null,
+      retryCount: 0,
+    })
   } catch {
     // Sync enqueue failure must not block finalization
   }
+
+  return finalized
+}
+
+/**
+ * Find an existing draft donor report for a given program and period.
+ * Returns the first draft found, or undefined if none exists.
+ */
+export async function getDonorReportDraft(
+  programCode: string,
+  periodStart: string,
+  periodEnd: string,
+): Promise<DonorReport | undefined> {
+  const db = getDb()
+  return db.donorReports
+    .where('[programCode+periodStart+periodEnd]')
+    .equals([programCode, periodStart, periodEnd])
+    .filter((r) => r.status === 'draft')
+    .first()
+    .catch(() =>
+      // Fallback if compound index unavailable — full scan with JS filter
+      db.donorReports
+        .filter(
+          (r) =>
+            r.programCode === programCode &&
+            r.periodStart === periodStart &&
+            r.periodEnd === periodEnd &&
+            r.status === 'draft',
+        )
+        .first(),
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -2909,7 +3162,6 @@ export async function getAlertsByDateRange(
   return db.surveillanceAlerts
     .where('createdAt')
     .between(fromISO, toISO, true, true)
-    .reverse()
     .sortBy('createdAt')
     .then((items) => items.reverse())
 }
@@ -2951,7 +3203,7 @@ export async function getAllReportableDiseases(): Promise<ReportableDiseaseConfi
 /** Get only active reportable disease configs. */
 export async function getActiveReportableDiseases(): Promise<ReportableDiseaseConfig[]> {
   const db = getDb()
-  return db.reportableDiseases.where('isActive').equals(1).toArray()
+  return db.reportableDiseases.filter((d) => d.isActive === true).toArray()
 }
 
 /** Upsert a single reportable disease config. */
@@ -3030,4 +3282,165 @@ export async function getRecentClusterAlerts(
     .equals([diseaseCode, 'cluster'])
     .filter((a) => a.createdAt >= sinceISO)
     .toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Supply Inventory helpers (v31) — Story 51.5: RAG Readiness Board
+// ---------------------------------------------------------------------------
+
+/** Return all supply items. */
+export async function getAllSupplyItems(): Promise<SupplyItem[]> {
+  const db = getDb()
+  return db.supply_inventory.toArray()
+}
+
+/** Upsert a supply item. */
+export async function putSupplyItem(item: SupplyItem): Promise<void> {
+  const db = getDb()
+  await db.supply_inventory.put(item)
+}
+
+/** Update specific fields on a supply item by ID. */
+export async function updateSupplyItem(
+  id: string,
+  updates: Partial<SupplyItem>,
+): Promise<void> {
+  const db = getDb()
+  await db.supply_inventory.update(id, updates)
+}
+
+/** Delete a supply item by ID. */
+export async function deleteSupplyItem(id: string): Promise<void> {
+  const db = getDb()
+  await db.supply_inventory.delete(id)
+}
+
+// ---------------------------------------------------------------------------
+// Lab Config helpers (v31) — Story 51.5: RAG Readiness Board
+// ---------------------------------------------------------------------------
+
+const DEFAULT_MINIMUM_STAFFING = 2
+
+/** Return the configured minimum staffing level (default: 2). */
+export async function getMinimumStaffing(): Promise<number> {
+  const db = getDb()
+  const config = await db.lab_config.get('minimumStaffing')
+  if (!config) return DEFAULT_MINIMUM_STAFFING
+  const parsed = parseInt(config.value, 10)
+  return isNaN(parsed) || parsed < 1 ? DEFAULT_MINIMUM_STAFFING : parsed
+}
+
+/** Set the minimum staffing level. */
+export async function setMinimumStaffing(value: number): Promise<void> {
+  const db = getDb()
+  await db.lab_config.put({ key: 'minimumStaffing', value: String(value) })
+}
+
+// ---------------------------------------------------------------------------
+// Sample Lock helpers (v32) — Story 51.3: Sample Collision Prevention
+// ---------------------------------------------------------------------------
+
+/** Get the currently ACTIVE lock for a sample, or undefined if none/expired. */
+export async function getActiveLock(sampleId: string): Promise<SampleLock | undefined> {
+  const db = getDb()
+  const lock = await db.sample_locks.get(sampleId)
+  if (!lock || lock.status !== 'ACTIVE') return undefined
+  // Read-time expiry guard: treat past-expiresAt locks as gone even before the checker runs.
+  if (lock.expiresAt < new Date().toISOString()) return undefined
+  return lock
+}
+
+/** Upsert a sample lock record. */
+export async function putSampleLock(lock: SampleLock): Promise<void> {
+  const db = getDb()
+  await db.sample_locks.put(lock)
+}
+
+/** Return ACTIVE locks whose expiresAt is before the given ISO timestamp. */
+export async function getExpiredActiveLocks(nowIso: string): Promise<SampleLock[]> {
+  const db = getDb()
+  const active = await db.sample_locks.where('status').equals('ACTIVE').toArray()
+  return active.filter((l) => l.expiresAt < nowIso)
+}
+
+/** Return the configured lock timeout in hours (default 4h). */
+export async function getLockTimeoutHours(): Promise<number> {
+  const db = getDb()
+  const cfg = await db.lab_config.get('lockTimeoutHours')
+  if (!cfg) return 4
+  const parsed = parseFloat(cfg.value)
+  return isNaN(parsed) || parsed <= 0 ? 4 : parsed
+}
+
+// ---------------------------------------------------------------------------
+// Workload snapshot helpers (v33) — Story 51.2: Workload Balancing Dashboard
+// ---------------------------------------------------------------------------
+
+/** Upsert a workload snapshot record. */
+export async function putWorkloadSnapshot(snapshot: TechWorkloadSnapshot): Promise<void> {
+  const db = getDb()
+  await db.tech_workload_snapshots.put(snapshot)
+}
+
+/** Get all snapshots for a date range (YYYY-MM-DD inclusive). */
+export async function getWorkloadSnapshotsByDateRange(
+  from: string,
+  to: string,
+): Promise<TechWorkloadSnapshot[]> {
+  const db = getDb()
+  // Dexie range on shiftDate (lexicographic, works for YYYY-MM-DD strings)
+  return db.tech_workload_snapshots
+    .where('shiftDate')
+    .between(from, to, true, true)
+    .toArray()
+}
+
+/** Get the current open (endedAt=null) availability record for a tech, or undefined. */
+export async function getOpenAvailabilityForTech(techId: string): Promise<TechAvailability | undefined> {
+  const db = getDb()
+  // Filter by techId, then find the one with endedAt null (open record)
+  const records = await db.tech_availability.where('techId').equals(techId).toArray()
+  return records.find((r) => r.endedAt === null)
+}
+
+/** Add a new availability record. */
+export async function addTechAvailability(record: TechAvailability): Promise<void> {
+  const db = getDb()
+  await db.tech_availability.put(record)
+}
+
+/** Close an open availability record by setting its endedAt timestamp. */
+export async function closeAvailabilityRecord(id: string, endedAt: string): Promise<void> {
+  const db = getDb()
+  await db.tech_availability.update(id, { endedAt })
+}
+
+// ---------------------------------------------------------------------------
+// Power-Aware Workload Scheduler (Story 48.1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Return the active power schedule for a given weekday, or undefined if none.
+ * dayOfWeek follows JS Date.getDay() convention: 0 = Sunday … 6 = Saturday.
+ */
+export async function getActiveScheduleForDay(
+  dayOfWeek: number,
+): Promise<PowerScheduleEntry | undefined> {
+  const db = getDb()
+  const entries = await db.power_schedules
+    .where('dayOfWeek')
+    .equals(dayOfWeek)
+    .filter((s) => s.isActive)
+    .first()
+  return entries
+}
+
+/**
+ * Return the time estimate for a given LOINC code, or undefined if not seeded.
+ */
+export async function getTestTimeEstimate(
+  loincCode: string,
+): Promise<TestTimeEstimate | undefined> {
+  const db = getDb()
+  return db.test_time_estimates.get(loincCode)
 }
