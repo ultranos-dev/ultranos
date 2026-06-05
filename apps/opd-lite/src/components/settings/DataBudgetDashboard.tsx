@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useDataBudgetStore } from '@/stores/data-budget-store'
 
@@ -18,13 +18,14 @@ export function DataBudgetDashboard() {
     refreshUsageStats,
   } = useDataBudgetStore()
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
   useEffect(() => {
     if (!isLoaded) void loadFromDexie()
-    intervalRef.current = setInterval(() => void refreshUsageStats(), 60_000)
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [isLoaded, loadFromDexie, refreshUsageStats])
+  }, [isLoaded, loadFromDexie])
+
+  useEffect(() => {
+    const id = setInterval(() => void refreshUsageStats(), 60_000)
+    return () => clearInterval(id)
+  }, [refreshUsageStats])
 
   const usedPct = planSizeMB > 0 ? Math.min((currentCycleUsedMB / planSizeMB) * 100, 100) : 0
   const remainingMB = Math.max(planSizeMB - currentCycleUsedMB, 0)
@@ -53,7 +54,7 @@ export function DataBudgetDashboard() {
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('usageTitle')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <div className="h-4 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-4 w-full rounded-full bg-muted overflow-hidden" aria-hidden="true">
               <div
                 className={`h-full rounded-full transition-all ${barColor}`}
                 style={{ width: `${usedPct}%` }}
@@ -65,7 +66,7 @@ export function DataBudgetDashboard() {
               />
             </div>
           </div>
-          <div className="text-right text-sm">
+          <div className="text-end text-sm">
             <div className="font-semibold text-foreground">{currentCycleUsedMB.toFixed(1)} MB <span className="text-muted-foreground font-normal">{t('used')}</span></div>
             <div className="text-muted-foreground">{remainingMB.toFixed(1)} MB {t('remaining')}</div>
           </div>
