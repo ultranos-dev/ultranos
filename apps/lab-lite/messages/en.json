@@ -78,7 +78,11 @@
     "resetRequestFailed": "Failed to send reset link. Please try again.",
     "passwordUpdateFailed": "Failed to update password. Please try again.",
     "mfaTitle": "Two-factor authentication",
-    "signInSubtitle": "Enter your credentials to access the lab portal"
+    "signInSubtitle": "Enter your credentials to access the lab portal",
+    "panelTagline": "Diagnostic result entry and quality control",
+    "panelFeature1": "Barcode scan & result entry",
+    "panelFeature2": "Quality control charts",
+    "panelFeature3": "AI-assisted result validation"
   },
   "upload": {
     "title": "Upload Lab Result",

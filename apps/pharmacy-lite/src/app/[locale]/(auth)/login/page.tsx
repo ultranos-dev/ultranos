@@ -323,14 +323,10 @@ export default function LoginPage() {
           </div>
           <h2 className="font-heading text-3xl font-bold">Pharmacy Lite</h2>
           <p className="mt-3 text-base text-primary-foreground/75">
-            Medication management and dispensing
+            {tAuth('panelTagline')}
           </p>
           <ul className="mt-10 space-y-2 text-start">
-            {[
-              'Digital prescription verification',
-              'Drug interaction checking',
-              'Inventory & stock management',
-            ].map((item) => (
+            {[tAuth('panelFeature1'), tAuth('panelFeature2'), tAuth('panelFeature3')].map((item) => (
               <li
                 key={item}
                 className="flex items-center gap-2 text-sm text-primary-foreground/70"

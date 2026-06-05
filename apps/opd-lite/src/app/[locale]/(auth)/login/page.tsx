@@ -321,14 +321,10 @@ export default function LoginPage() {
           </div>
           <h2 className="font-heading text-3xl font-bold">OPD Lite</h2>
           <p className="mt-3 text-base text-primary-foreground/75">
-            Clinical workflows for outpatient care
+            {t('panelTagline')}
           </p>
           <ul className="mt-10 space-y-2 text-start">
-            {[
-              'Patient registration & encounters',
-              'Offline-first clinical documentation',
-              'Prescription management',
-            ].map((item) => (
+            {[t('panelFeature1'), t('panelFeature2'), t('panelFeature3')].map((item) => (
               <li
                 key={item}
                 className="flex items-center gap-2 text-sm text-primary-foreground/70"

@@ -54,6 +54,10 @@
     "errorFidoFailed": "فشل التحقق من FIDO2 — يرجى المحاولة مرة أخرى",
     "errorSessionMfa": "فشل استرداد الجلسة بعد التحقق من MFA",
     "errorUnexpectedMfa": "حدث خطأ غير متوقع أثناء التحقق من FIDO2",
-    "errorWebAuthnUnsupported": "WebAuthn غير مدعوم في هذا المتصفح. استخدم متصفحًا يدعم FIDO2."
+    "errorWebAuthnUnsupported": "WebAuthn غير مدعوم في هذا المتصفح. استخدم متصفحًا يدعم FIDO2.",
+    "panelTagline": "إدارة عمليات آمنة للمرافق الطبية",
+    "panelFeature1": "إدارة المؤسسات والمستخدمين",
+    "panelFeature2": "توفير الوحدات والفوترة",
+    "panelFeature3": "سجلات التدقيق وتقارير الامتثال"
   }
 }

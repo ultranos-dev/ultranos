@@ -54,6 +54,10 @@
     "errorFidoFailed": "تأیید FIDO2 ناکام شد — لطفاً دوباره تلاش کنید",
     "errorSessionMfa": "دریافت جلسه پس از تأیید MFA ناکام شد",
     "errorUnexpectedMfa": "یک خطای غیرمنتظره در حین تأیید FIDO2 رخ داد",
-    "errorWebAuthnUnsupported": "WebAuthn در این مرورگر پشتیبانی نمی‌شود. از مرورگری با پشتیبانی FIDO2 استفاده کنید."
+    "errorWebAuthnUnsupported": "WebAuthn در این مرورگر پشتیبانی نمی‌شود. از مرورگری با پشتیبانی FIDO2 استفاده کنید.",
+    "panelTagline": "مدیریت امن عملیات برای مراکز درمانی",
+    "panelFeature1": "مدیریت سازمان و کاربران",
+    "panelFeature2": "تهیه ماژول و صدور فاکتور",
+    "panelFeature3": "گزارش‌های ممیزی و انطباق"
   }
 }

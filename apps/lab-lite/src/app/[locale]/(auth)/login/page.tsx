@@ -315,13 +315,13 @@ export default function LoginPage() {
           <div className="space-y-2">
             <h2 className="text-3xl font-bold">Lab Lite</h2>
             <p className="text-base text-primary-foreground/80">
-              Diagnostic result entry and quality control
+              {t('panelTagline')}
             </p>
           </div>
           <ul className="mt-2 space-y-2 text-sm text-primary-foreground/70">
-            <li>Barcode scan &amp; result entry</li>
-            <li>Quality control charts</li>
-            <li>AI-assisted result validation</li>
+            <li>{t('panelFeature1')}</li>
+            <li>{t('panelFeature2')}</li>
+            <li>{t('panelFeature3')}</li>
           </ul>
         </div>
       </div>

@@ -54,6 +54,10 @@
     "errorFidoFailed": "د FIDO2 تصدیق ناکام شو — مهربانی وکڜئ بیا هصه وکڜئ",
     "errorSessionMfa": "د MFA تصدیق وروسته د سیشن ترلاسه کول ناکام شو",
     "errorUnexpectedMfa": "د FIDO2 تصدیق پرمهال یو غیر متوقع تیروتنه رامنځته شوه",
-    "errorWebAuthnUnsupported": "WebAuthn پدې براوزر کې ملاتښ نه کیژی. د FIDO2 ملاتښ لرونکی براوزر وکاروئ."
+    "errorWebAuthnUnsupported": "WebAuthn پدې براوزر کې ملاتښ نه کیژی. د FIDO2 ملاتښ لرونکی براوزر وکاروئ.",
+    "panelTagline": "د طبی مرکزونو لپاره خوندی عملیاتی مدیریت",
+    "panelFeature1": "د ادارې او کارونکو مدیریت",
+    "panelFeature2": "د ماډلونو چمتو کول او بیل",
+    "panelFeature3": "د آډیټ لاګونه او د اطاعت راپورونه"
   }
 }

@@ -63,7 +63,11 @@
     "resetRequestFailed": "Failed to send reset link. Please try again.",
     "passwordUpdateFailed": "Failed to update password. Please try again.",
     "mfaTitle": "Two-factor authentication",
-    "signInSubtitle": "Enter your credentials to access Pharmacy Lite"
+    "signInSubtitle": "Enter your credentials to access Pharmacy Lite",
+    "panelTagline": "Medication management and dispensing",
+    "panelFeature1": "Digital prescription verification",
+    "panelFeature2": "Drug interaction checking",
+    "panelFeature3": "Inventory & stock management"
   },
   "fulfillment": {
     "title": "Fulfillment Checklist",
