@@ -263,7 +263,7 @@ export default function KycPage() {
       {/* Rejection banner */}
       {isRejected && rejectionReason && step !== 'submitted' && (
         <div
-          className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
+          className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive"
           role="alert"
           data-testid="rejection-banner"
         >
@@ -276,7 +276,7 @@ export default function KycPage() {
       {/* Request more info banner */}
       {isRequestMoreInfo && adminMessage && step !== 'submitted' && (
         <div
-          className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800"
+          className="mb-6 rounded-lg border border-warning/30 bg-warning/10 p-4 text-warning"
           role="alert"
           data-testid="info-request-banner"
         >
@@ -442,7 +442,7 @@ export default function KycPage() {
           </label>
 
           {submitError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
               {submitError}
             </div>
           )}
@@ -460,15 +460,15 @@ export default function KycPage() {
 
       {/* Step 4: Submitted confirmation */}
       {step === 'submitted' && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-8 text-center" data-testid="kyc-submitted">
+        <div className="rounded-lg border border-success/30 bg-success/10 p-8 text-center" data-testid="kyc-submitted">
           <div className="mb-4 text-4xl">&#10003;</div>
-          <h2 className="mb-2 text-xl font-semibold text-green-800">
+          <h2 className="mb-2 text-xl font-semibold text-success">
             Pending Verification
           </h2>
-          <p className="text-green-700">
+          <p className="text-success">
             We will notify you within 3 business days.
           </p>
-          <p className="mt-4 text-sm text-green-600">
+          <p className="mt-4 text-sm text-success">
             You will be able to access clinical features once your account is verified.
           </p>
         </div>
@@ -506,13 +506,13 @@ function DocumentUploadZone({
       )}
 
       {state.uploaded && !state.ocrLoading && (
-        <p className="text-sm text-green-600">
+        <p className="text-sm text-success">
           &#10003; {state.file?.name ?? 'Uploaded'}
         </p>
       )}
 
       {state.error && (
-        <p className="text-sm text-red-600" role="alert">{state.error}</p>
+        <p className="text-sm text-destructive" role="alert">{state.error}</p>
       )}
 
       {!state.uploading && !state.uploaded && !state.ocrLoading && (
@@ -534,7 +534,7 @@ function DocumentUploadZone({
       )}
 
       {state.ocrResult && !state.ocrResult.success && (
-        <p className="mt-2 text-xs text-amber-600">
+        <p className="mt-2 text-xs text-warning">
           {state.ocrResult.error}
         </p>
       )}
