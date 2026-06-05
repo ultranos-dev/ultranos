@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
@@ -20,6 +23,12 @@ export default function AdminLoginPage() {
   const [challengeId, setChallengeId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const t = useTranslations('auth')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const resetSuccess = searchParams.get('reset') === 'success'
+  const [showResetBanner, setShowResetBanner] = useState(resetSuccess)
 
   const supabase = getSupabaseBrowserClient()
 
@@ -220,6 +229,25 @@ export default function AdminLoginPage() {
         {/* Centred form */}
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm space-y-6">
+            {showResetBanner && (
+              <div
+                role="status"
+                className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary"
+              >
+                <span>{t('resetSuccess')}</span>
+                <button
+                  type="button"
+                  aria-label="Dismiss"
+                  onClick={() => {
+                    setShowResetBanner(false)
+                    router.replace('/login')
+                  }}
+                  className="ms-2 text-primary hover:text-primary/80"
+                >
+                  ×
+                </button>
+              </div>
+            )}
             <div>
               <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
                 {step === 'credentials' ? 'Sign in' : 'Verify identity'}
@@ -264,6 +292,18 @@ export default function AdminLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                   />
+                </div>
+                <div className="flex justify-end">
+                  <Link
+                    href={
+                      email
+                        ? `/forgot-password?email=${encodeURIComponent(email)}`
+                        : '/forgot-password'
+                    }
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {t('forgotPassword')}
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing in\u2026' : 'Sign in'}
