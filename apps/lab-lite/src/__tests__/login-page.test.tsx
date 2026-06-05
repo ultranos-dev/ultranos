@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import LoginPage from '../app/login/page'
+import LoginPage from '../app/[locale]/(auth)/login/page'
 
 // Mock Supabase client
 const mockSignInWithPassword = vi.fn()
