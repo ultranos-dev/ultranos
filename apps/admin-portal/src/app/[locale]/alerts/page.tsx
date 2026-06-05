@@ -7,6 +7,7 @@ import { useLocationFilter } from '@/hooks/useLocationFilter'
 import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type AlertTab = 'anomalies' | 'clinical-safety'
 type StatusFilter = 'ALL' | 'UNREVIEWED' | 'ESCALATED' | 'DISMISSED' | 'SUSPENDED'
@@ -292,12 +293,12 @@ export default function AlertsPage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Section tabs — Story 23.2 AC #10 */}
         <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           <button
             onClick={() => setActiveTab('anomalies')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               activeTab === 'anomalies'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -307,7 +308,7 @@ export default function AlertsPage() {
           </button>
           <button
             onClick={() => setActiveTab('clinical-safety')}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               activeTab === 'clinical-safety'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -328,7 +329,7 @@ export default function AlertsPage() {
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -348,9 +349,7 @@ export default function AlertsPage() {
         {loading ? (
           <div className="mt-6 text-muted-foreground">Loading anomaly alerts...</div>
         ) : alerts.length === 0 ? (
-          <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-muted-foreground">No anomaly alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.</p>
-          </div>
+          <EmptyState className="mt-6" title={`No anomaly alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
         ) : (
           <>
             {/* Alert queue table — AC #1, #2 */}

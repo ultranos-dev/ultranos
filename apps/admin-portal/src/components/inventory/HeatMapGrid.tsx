@@ -1,5 +1,7 @@
 'use client'
 
+import { EmptyState } from '@/components/ui/empty-state'
+
 interface HeatMapCell {
   labId: string
   labName: string
@@ -36,9 +38,10 @@ function formatDate(iso: string): string {
 export function HeatMapGrid({ labs, reagentCategories, cells }: HeatMapGridProps) {
   if (labs.length === 0 || reagentCategories.length === 0) {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-        <p className="text-muted-foreground">No inventory data available. Stock snapshots will appear here once labs report their reagent levels.</p>
-      </div>
+      <EmptyState
+        title="No inventory data available."
+        description="Stock snapshots will appear here once labs report their reagent levels."
+      />
     )
   }
 

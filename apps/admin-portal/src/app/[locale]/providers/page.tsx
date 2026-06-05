@@ -8,6 +8,7 @@ import { ExportButton } from '@/components/ExportButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FileText } from '@ultranos/ui-kit/icons'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type StatusFilter = 'ALL' | 'PENDING' | 'SLA_BREACHED'
 
@@ -127,7 +128,7 @@ export default function KycQueuePage() {
   const currentPage = Math.floor(cursor / PAGE_SIZE) + 1
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Filter tabs + Search + Export — AC #11 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
@@ -135,7 +136,7 @@ export default function KycQueuePage() {
               <button
                 key={s}
                 onClick={() => handleFilterChange(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                   filter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -162,9 +163,7 @@ export default function KycQueuePage() {
         {loading ? (
           <div className="mt-6 text-muted-foreground">Loading KYC submissions...</div>
         ) : submissions.length === 0 ? (
-          <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-muted-foreground">No pending KYC submissions{filter !== 'ALL' ? ` matching filter "${FILTER_LABELS[filter]}"` : ''}.</p>
-          </div>
+          <EmptyState className="mt-6" title={`No pending KYC submissions${filter !== 'ALL' ? ` matching filter "${FILTER_LABELS[filter]}"` : ''}.`} />
         ) : (
           <>
             {/* KYC queue table — AC #1, #2, #7 */}

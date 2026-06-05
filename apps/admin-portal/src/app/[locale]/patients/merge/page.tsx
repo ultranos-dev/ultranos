@@ -9,6 +9,7 @@ import { MergePreview } from '@/components/patients/MergePreview'
 import { Check } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface Patient {
   id: string
@@ -170,7 +171,7 @@ export default function MergeWizardPage() {
   // Success state
   if (mergeResult?.success && survivor) {
     return (
-      <div className="mx-auto max-w-7xl px-8 py-6">
+      <div className="flex flex-col gap-4">
           <div className="rounded-3xl bg-card p-8 border border-border text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
               <Check className="h-8 w-8 text-success" />
@@ -196,7 +197,7 @@ export default function MergeWizardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <Link href="/patients" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Patients</Link>
 
         {error && (
@@ -241,11 +242,10 @@ export default function MergeWizardPage() {
               ) : survivor ? (
                 <PatientCard patient={survivor} label="Survivor (will be kept)" />
               ) : (
-                <div className="rounded-3xl border border-dashed border-border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No survivor selected. Navigate from a patient detail page or provide a <code className="text-xs bg-card rounded px-1">?survivor=</code> URL parameter.
-                  </p>
-                </div>
+                <EmptyState
+                  title="No survivor selected."
+                  description="Navigate from a patient detail page or provide a ?survivor= URL parameter."
+                />
               )}
             </div>
 

@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc'
 import { AcknowledgeAlertModal } from './AcknowledgeAlertModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type FilterTab = 'ALL' | 'UNACKNOWLEDGED' | 'ACKNOWLEDGED'
 
@@ -86,12 +87,12 @@ export function SurveillanceAlertHistory() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Alert History</h3>
         {/* Filter tabs */}
-        <div className="flex gap-1 rounded-full border border-border bg-card p-1">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
           {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => handleFilterChange(f)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                 filter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -110,11 +111,7 @@ export function SurveillanceAlertHistory() {
       {loading ? (
         <div className="mt-6 text-muted-foreground">Loading alerts...</div>
       ) : alerts.length === 0 ? (
-        <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground">
-            No surveillance alerts found{filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.
-          </p>
-        </div>
+        <EmptyState className="mt-6" title={`No surveillance alerts found${filter !== 'ALL' ? ` with status ${filter.toLowerCase()}` : ''}.`} />
       ) : (
         <>
           <div className="mt-4 rounded-2xl border border-border overflow-hidden">

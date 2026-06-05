@@ -8,6 +8,7 @@ import { ChevronRight } from '@ultranos/ui-kit/icons'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
   DialogContent,
@@ -146,7 +147,7 @@ export default function PractitionerCertificationsPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-8 py-6">
+      <div className="flex flex-col gap-4">
         <div className="flex justify-end mb-4">
           <Button onClick={openAssignModal}>
             Assign Pathway
@@ -160,9 +161,7 @@ export default function PractitionerCertificationsPage() {
         {loading ? (
           <div className="text-muted-foreground">Loading certification progress...</div>
         ) : pathways.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-muted-foreground">No certification pathways assigned to this practitioner.</p>
-          </div>
+          <EmptyState title="No certification pathways assigned to this practitioner." />
         ) : (
           <div className="space-y-4">
             {pathways.map((pathway) => (

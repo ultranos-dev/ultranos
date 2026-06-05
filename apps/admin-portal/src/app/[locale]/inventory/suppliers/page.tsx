@@ -5,6 +5,7 @@ import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
   DialogContent,
@@ -131,7 +132,7 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <div className="flex items-center justify-end">
           <Button onClick={openCreate}>
             Add Supplier
@@ -145,9 +146,7 @@ export default function SuppliersPage() {
         {loading ? (
           <div className="mt-6 text-muted-foreground">Loading suppliers...</div>
         ) : suppliers.length === 0 ? (
-          <div className="mt-6 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-            <p className="text-muted-foreground">No suppliers registered yet.</p>
-          </div>
+          <EmptyState className="mt-6" title="No suppliers registered yet." />
         ) : (
           <div className="mt-4 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">

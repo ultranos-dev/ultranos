@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
   DialogContent,
@@ -84,9 +85,7 @@ export function AddModuleDialog({ open, onOpenChange, onModuleAdded }: AddModule
         {loading ? (
           <p className="mt-4 text-muted-foreground">Loading available modules...</p>
         ) : modules.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-6 text-center">
-            <p className="text-muted-foreground">You&apos;re subscribed to all available modules.</p>
-          </div>
+          <EmptyState className="mt-4" title="You're subscribed to all available modules." />
         ) : (
           <div className="mt-4 space-y-3">
             {modules.map((mod) => (

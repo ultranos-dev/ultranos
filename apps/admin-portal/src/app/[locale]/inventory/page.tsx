@@ -9,6 +9,7 @@ import { CreatePurchaseOrderModal } from '@/components/inventory/CreatePurchaseO
 import { OrderStatusPipeline, getNextStatus } from '@/components/inventory/OrderStatusPipeline'
 import { PurchaseOrderDetailModal } from '@/components/inventory/PurchaseOrderDetailModal'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type ActiveTab = 'heatmap' | 'orders'
 
@@ -163,13 +164,13 @@ export default function InventoryPage() {
   const currentPage = Math.floor(orderCursor / PAGE_SIZE) + 1
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         {/* Tab toggle + Create PO button */}
         <div className="flex items-center justify-between">
           <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
             <button
               onClick={() => setTab('heatmap')}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                 tab === 'heatmap' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -177,7 +178,7 @@ export default function InventoryPage() {
             </button>
             <button
               onClick={() => setTab('orders')}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
                 tab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -224,9 +225,7 @@ export default function InventoryPage() {
             {ordersLoading ? (
               <div className="text-muted-foreground">Loading purchase orders...</div>
             ) : orders.length === 0 ? (
-              <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
-                <p className="text-muted-foreground">No purchase orders yet.</p>
-              </div>
+              <EmptyState title="No purchase orders yet." />
             ) : (
               <>
                 <div className="overflow-hidden rounded-2xl border border-border">

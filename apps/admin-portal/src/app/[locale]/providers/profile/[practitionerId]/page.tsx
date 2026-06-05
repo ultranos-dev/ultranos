@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { trpc } from '@/lib/trpc'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface Practitioner {
   id: string
@@ -203,7 +204,7 @@ export default function ProviderProfilePage() {
 
   if (error && !profile) {
     return (
-      <div className="mx-auto max-w-7xl px-8 py-6">
+      <div className="flex flex-col gap-4">
         <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Providers</Link>
         <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       </div>
@@ -216,7 +217,7 @@ export default function ProviderProfilePage() {
   const hasUnresolvedAlertWarning = (alertSummary.escalated + alertSummary.unreviewed) >= 3
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
         <Link href="/providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">&larr; Back to Providers</Link>
 
         {error && (
@@ -256,9 +257,7 @@ export default function ProviderProfilePage() {
           </h2>
 
           {kycSubmissions.length === 0 ? (
-            <div className="mt-4 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-              <p className="text-muted-foreground">No KYC submissions found.</p>
-            </div>
+            <EmptyState className="mt-4" title="No KYC submissions found." />
           ) : (
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
@@ -333,9 +332,7 @@ export default function ProviderProfilePage() {
           )}
 
           {alerts.length === 0 ? (
-            <div className="mt-4 rounded-2xl border-2 border-dashed border-border p-8 text-center">
-              <p className="text-muted-foreground">No prescribing alerts.</p>
-            </div>
+            <EmptyState className="mt-4" title="No prescribing alerts." />
           ) : (
             <div className="mt-4 overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
