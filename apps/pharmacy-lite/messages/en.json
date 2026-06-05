@@ -577,5 +577,34 @@
         "withdrawalBody": "شما می‌توانید رضایت خود را با اطلاع دادن به هر یک از کارکنان این مرکز پس بگیرید. پس‌گیری فوراً برای جمع‌آوری معلومات آینده اجرا می‌شود. سوابقی که قبل از پس‌گیری ایجاد شده‌اند طبق قانون نگهداری می‌شوند اما دیگر به صورت فعال پردازش نخواهند شد. پس‌گیری رضایت ممکن است توانایی مرکز را در ارائه مراقبت هماهنگ بین بخش‌ها محدود کند."
       }
     }
+  },
+  "dataBudget": {
+    "usageTitle": "Data Usage",
+    "usageAriaLabel": "{used} of {total} MB used",
+    "used": "used",
+    "remaining": "remaining",
+    "projectionTitle": "Projection",
+    "projectionExhaustion": "At current rate, data runs out on {date}.",
+    "projectionNoData": "Not enough data to project exhaustion.",
+    "dailyUsageTitle": "Daily Usage (14 days)",
+    "categoryTitle": "Usage by Category",
+    "categoryHeader": "Category",
+    "category": {
+      "upload": "Uploads",
+      "audit": "Audit Sync",
+      "notification": "Notifications",
+      "other": "Other"
+    },
+    "warningBanner": "Data usage is high. Consider enabling Low Data Mode.",
+    "criticalBanner": "Data critically low. Enable Low Data Mode to preserve connectivity.",
+    "settingsTitle": "Data & Connectivity",
+    "planSize": "Data Plan Size (MB)",
+    "billingCycleDay": "Billing Cycle Start Day",
+    "lowDataMode": "Low Data Mode",
+    "lowDataModeDesc": "Batches syncs and reduces polling to conserve data.",
+    "viewDashboard": "View Data Dashboard",
+    "sidebarLabel": "Data",
+    "sidebarUsed": "{used} MB",
+    "backToSettings": "Back to Settings"
   }
 }
