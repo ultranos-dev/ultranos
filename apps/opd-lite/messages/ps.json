@@ -55,7 +55,9 @@
     "passwordStrengthWeak": "Weak",
     "passwordStrengthFair": "Fair",
     "passwordStrengthGood": "Good",
-    "passwordStrengthStrong": "Strong"
+    "passwordStrengthStrong": "Strong",
+    "resetRequestFailed": "Failed to send reset link. Please try again.",
+    "passwordUpdateFailed": "Failed to update password. Please try again."
   },
   "patient": {
     "search": "د ناروغ لټون",
