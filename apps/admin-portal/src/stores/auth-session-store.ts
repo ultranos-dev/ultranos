@@ -6,6 +6,7 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  name: string
 }
 
 interface AuthSessionState {
