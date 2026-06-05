@@ -64,10 +64,18 @@ export function NavMain({ groups, badges = {} }: NavMainProps) {
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarMenu>
               {group.items.map((item) => {
+                // If another item in this group is a child of this item's URL,
+                // treat this as a parent — only highlight on exact match so the
+                // child item (not the parent) shows as active when on child routes.
+                const hasChildItem = group.items.some(
+                  (other) => other.url !== item.url && other.url.startsWith(`${item.url}/`)
+                )
                 const isActive =
                   item.url === '/'
                     ? pathname === '/' || pathname === ''
-                    : pathname === item.url || pathname.startsWith(`${item.url}/`)
+                    : hasChildItem
+                      ? pathname === item.url
+                      : pathname === item.url || pathname.startsWith(`${item.url}/`)
 
                 const badgeCount =
                   item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
