@@ -12,6 +12,10 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+}))
+
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
