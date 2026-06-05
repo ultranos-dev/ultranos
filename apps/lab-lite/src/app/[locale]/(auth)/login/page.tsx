@@ -61,6 +61,7 @@ export default function LoginPage() {
         await supabase.auth.mfa.listFactors()
 
       if (factorsError) {
+        await supabase.auth.signOut()
         setError('Failed to retrieve MFA factors')
         setLoading(false)
         return
@@ -68,8 +69,9 @@ export default function LoginPage() {
 
       const totpFactor = factors.totp?.[0]
       if (!totpFactor) {
-        // MFA not enrolled — allow login without MFA
-        await populateSessionAndRedirect()
+        await supabase.auth.signOut()
+        setError('TOTP MFA is required for lab staff')
+        setLoading(false)
         return
       }
 
@@ -78,6 +80,7 @@ export default function LoginPage() {
         await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
 
       if (challengeError) {
+        await supabase.auth.signOut()
         setError('Failed to initiate MFA challenge')
         setLoading(false)
         return
@@ -97,7 +100,7 @@ export default function LoginPage() {
     const { data: sessionData } = await supabase.auth.getSession()
     const user = sessionData.session?.user
     if (!user?.email) {
-      setError('Failed to retrieve session')
+      setError('Session unavailable after MFA verification')
       setLoading(false)
       return
     }
