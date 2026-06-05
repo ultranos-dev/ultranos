@@ -1,26 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { ShieldCheck, KeyRound } from '@ultranos/ui-kit/icons'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAdminAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
 
 type AuthStep = 'credentials' | 'mfa'
 
-/**
- * Admin Portal Login Page
- * Admins authenticate via email + password, with optional FIDO2 hardware token MFA.
- * If a security key is enrolled (via Settings), it is required at sign-in.
- *
- * Flow:
- * 1. Email + password credentials
- * 2. Check for WebAuthn factor — if enrolled, require FIDO2 challenge
- * 3. If no key enrolled, sign in directly
- * 4. Populate auth session store, redirect to /dashboard
- */
 export default function AdminLoginPage() {
   const [step, setStep] = useState<AuthStep>('credentials')
   const [email, setEmail] = useState('')
@@ -38,10 +29,7 @@ export default function AdminLoginPage() {
     setLoading(true)
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
       if (signInError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorEmail: email })
@@ -50,12 +38,9 @@ export default function AdminLoginPage() {
         return
       }
 
-      // Clear password from state after successful credential auth
       setPassword('')
 
-      // Check for WebAuthn (FIDO2) factor — if enrolled, require it
-      const { data: factors, error: factorsError } =
-        await supabase.auth.mfa.listFactors()
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
 
       if (factorsError) {
         reportAdminAuthEvent('ADMIN_LOGIN_FAILURE', { actorId: data.user?.id })
@@ -65,14 +50,12 @@ export default function AdminLoginPage() {
         return
       }
 
-      // Find a verified WebAuthn/FIDO2 factor
       const webauthnFactor = factors.all?.find(
-        (f: { factor_type: string; status: string }) => f.factor_type === 'webauthn' && f.status === 'verified',
+        (f: { factor_type: string; status: string }) =>
+          f.factor_type === 'webauthn' && f.status === 'verified',
       )
 
       if (!webauthnFactor) {
-        // No FIDO2 key enrolled — allow login without MFA
-        // Admin can enroll a key later via Settings
         const session = data.session
         if (!session) {
           setError('Failed to retrieve session')
@@ -99,17 +82,21 @@ export default function AdminLoginPage() {
           role,
           sessionId: payload.session_id ?? '',
           email: session.user?.email ?? '',
+          name:
+            session.user?.user_metadata?.full_name ??
+            session.user?.user_metadata?.name ??
+            '',
         })
 
         reportAdminAuthEvent('ADMIN_LOGIN_SUCCESS', { actorId: payload.sub })
 
         const params = new URLSearchParams(window.location.search)
         const returnUrl = params.get('returnUrl')
-        window.location.href = returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
+        window.location.href =
+          returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
         return
       }
 
-      // Create FIDO2 MFA challenge
       const { data: challenge, error: challengeError } =
         await supabase.auth.mfa.challenge({ factorId: webauthnFactor.id })
 
@@ -142,8 +129,6 @@ export default function AdminLoginPage() {
         return
       }
 
-      // Supabase SDK handles the WebAuthn browser credential prompt internally
-      // when verify is called on a webauthn factor type.
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId,
@@ -157,7 +142,6 @@ export default function AdminLoginPage() {
         return
       }
 
-      // Populate auth session store from JWT claims
       const { data: sessionData } = await supabase.auth.getSession()
       const jwt = sessionData.session?.access_token
       if (!jwt) {
@@ -184,14 +168,18 @@ export default function AdminLoginPage() {
         role,
         sessionId: payload.session_id ?? '',
         email: sessionData.session?.user?.email ?? '',
+        name:
+          sessionData.session?.user?.user_metadata?.full_name ??
+          sessionData.session?.user?.user_metadata?.name ??
+          '',
       })
 
       reportAdminAuthEvent('ADMIN_LOGIN_SUCCESS', { actorId: payload.sub })
 
-      // Redirect to returnUrl (from AuthGuard) or dashboard
       const params = new URLSearchParams(window.location.search)
       const returnUrl = params.get('returnUrl')
-      window.location.href = returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
+      window.location.href =
+        returnUrl && returnUrl.startsWith('/') ? returnUrl : '/dashboard'
     } catch {
       setError('An unexpected error occurred during FIDO2 verification')
     } finally {
@@ -213,83 +201,154 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-sm rounded-2xl bg-popover p-6 shadow-xl">
-        <h2 className="mb-6 text-center text-xl font-bold text-foreground">
-          Admin Portal Sign In
-        </h2>
-
-        {error && (
-          <div
-            role="alert"
-            className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          >
-            {error}
+    <div className="grid min-h-svh lg:grid-cols-2">
+      {/* ── Left: form column ── */}
+      <div className="flex flex-col p-6 md:p-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <ShieldCheck className="size-4" />
+            </div>
+            <span className="font-heading text-sm font-semibold text-foreground">
+              Admin Portal
+            </span>
           </div>
-        )}
+          <LanguageSelectorClient />
+        </div>
 
-        {step === 'credentials' && (
-          <form onSubmit={handleCredentialSubmit} className="space-y-4">
+        {/* Centred form */}
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-sm space-y-6">
             <div>
-              <Label htmlFor="email" className="mb-1 text-muted-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@hospital.example"
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <Label htmlFor="password" className="mb-1 text-muted-foreground">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in\u2026' : 'Sign In'}
-            </Button>
-          </form>
-        )}
-
-        {step === 'mfa' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
-              <p className="font-medium">Hardware Security Key Required</p>
-              <p className="mt-1">
-                Please tap your FIDO2 security key when prompted by your browser.
+              <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+                {step === 'credentials' ? 'Sign in' : 'Verify identity'}
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {step === 'credentials'
+                  ? 'Enter your admin credentials to continue'
+                  : 'Tap your FIDO2 security key when prompted by your browser'}
               </p>
             </div>
-            <Button type="button" onClick={handleMfaVerify} disabled={loading} className="w-full">
-              {loading ? 'Verifying\u2026' : 'Verify Security Key'}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleBackToSignIn}
-              className="w-full"
-            >
-              Back to sign in
-            </Button>
+
+            {error && (
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                {error}
+              </div>
+            )}
+
+            {step === 'credentials' && (
+              <form onSubmit={handleCredentialSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@hospital.example"
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in\u2026' : 'Sign in'}
+                </Button>
+              </form>
+            )}
+
+            {step === 'mfa' && (
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                  <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <div>
+                    <p className="font-medium text-foreground">
+                      Hardware Security Key Required
+                    </p>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Please tap your FIDO2 security key when your browser prompts you.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleMfaVerify}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? 'Verifying\u2026' : 'Verify Security Key'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleBackToSignIn}
+                  className="w-full"
+                >
+                  Back to sign in
+                </Button>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-muted-foreground">
+              New to Ultranos?{' '}
+              <a
+                href="/register"
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                Register your organization
+              </a>
+            </p>
           </div>
-        )}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          New to Ultranos?{' '}
-          <a href="/register" className="font-medium text-foreground hover:text-primary transition-colors duration-200">
-            Register your organization
-          </a>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground">
+          Ultranos Healthcare Platform
         </p>
+      </div>
+
+      {/* ── Right: brand panel ── */}
+      <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:items-center lg:justify-center">
+        <div className="absolute -end-32 -top-32 size-[28rem] rounded-full bg-primary-foreground/5" />
+        <div className="absolute -bottom-40 -start-16 size-96 rounded-full bg-primary-foreground/5" />
+        <div className="relative z-10 px-12 text-center text-primary-foreground">
+          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-2xl bg-primary-foreground/10 ring-1 ring-primary-foreground/20">
+            <ShieldCheck className="size-10" />
+          </div>
+          <h2 className="font-heading text-3xl font-bold">Admin Portal</h2>
+          <p className="mt-3 text-base text-primary-foreground/75">
+            Secure operations management for clinical facilities
+          </p>
+          <ul className="mt-10 space-y-2 text-start">
+            {[
+              'Organization & user management',
+              'Module provisioning & billing',
+              'Audit logs & compliance reporting',
+            ].map((item) => (
+              <li
+                key={item}
+                className="flex items-center gap-2 text-sm text-primary-foreground/70"
+              >
+                <span className="size-1.5 shrink-0 rounded-full bg-primary-foreground/50" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   )
