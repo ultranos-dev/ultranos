@@ -1,13 +1,10 @@
 import type { Metadata } from 'next'
 import { Manrope, Public_Sans } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
-import { getMessages } from 'next-intl/server'
-import { NextIntlClientProvider } from 'next-intl'
 import { getDirection } from '@ultranos/ui-kit'
-import './globals.css'
-import { AuthGuard } from '@/components/AuthGuard'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { cn } from '@/lib/utils'
+import './globals.css'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -30,7 +27,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale()
   const dir = getDirection(locale)
   const isRtl = dir === 'rtl'
-  const messages = await getMessages()
 
   return (
     <html
@@ -48,13 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
       </head>
       <body className="font-sans bg-background text-foreground antialiased">
-        <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>
-            <AuthGuard>
-              {children}
-            </AuthGuard>
-          </ThemeProvider>
-        </NextIntlClientProvider>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
