@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { db } from '@/lib/db'
 import type { FhirPatient, PatientAddress } from '@ultranos/shared-types'
@@ -186,6 +187,8 @@ async function fetchPatientFromHub(
 }
 
 export function PatientChartPage({ patientId }: PatientChartPageProps) {
+  const tPatient = useTranslations('patient')
+  const tNav = useTranslations('nav')
   const router = useRouter()
   const [patient, setPatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(true)
@@ -279,7 +282,7 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   if (loading) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-muted-foreground">Loading patient chart...</p>
+        <p className="font-semibold text-muted-foreground">{tPatient('loadingChart')}</p>
       </main>
     )
   }
@@ -306,9 +309,9 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
           </>
         ) : (
           <>
-            <p className="font-semibold text-muted-foreground">Patient not found in local session.</p>
+            <p className="font-semibold text-muted-foreground">{tPatient('notFound')}</p>
             <Button variant="ghost" onClick={() => router.push('/')} className="mt-4">
-              Return to Patient Search
+              {tNav('returnToSearch')}
             </Button>
           </>
         )}
@@ -319,8 +322,8 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8 space-y-4">
       {/* Back navigation */}
-      <Button variant="ghost" onClick={() => router.push('/')} aria-label="Back to search">
-        &larr; Back to Search
+      <Button variant="ghost" onClick={() => router.push('/')} aria-label={tNav('backToSearch')}>
+        {tNav('backToSearch')}
       </Button>
 
       {/* Safety banners — CLAUDE.md Rule #4: allergies first, never collapsed */}

@@ -9,10 +9,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans:    ["'Manrope'", 'var(--font-manrope)', 'system-ui', 'sans-serif'],
-        heading: ["'Public Sans'", 'var(--font-public-sans)', 'system-ui', 'sans-serif'],
-      },
       fontWeight: {
         black: '900',
       },

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAllergyStore } from '@/stores/allergy-store'
 
 interface AllergyBannerProps {
@@ -20,6 +21,7 @@ interface AllergyBannerProps {
  * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
 export function AllergyBanner({ patientId }: AllergyBannerProps) {
+  const t = useTranslations('allergy')
   const allergies = useAllergyStore((s) => s.allergies)
   const isLoading = useAllergyStore((s) => s.isLoading)
   const loadError = useAllergyStore((s) => s.loadError)
@@ -40,7 +42,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
         data-testid="allergy-banner"
         data-banner-state="loading"
       >
-        Loading allergy data...
+        {t('bannerLoading')}
       </div>
     )
   }
@@ -55,7 +57,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
         data-testid="allergy-banner"
         data-banner-state="warning"
       >
-        Allergy data unavailable — verify before prescribing
+        {t('bannerUnavailable')}
       </div>
     )
   }
@@ -74,8 +76,8 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
         data-testid="allergy-banner"
         data-banner-state="active"
       >
-        <span aria-label={`Patient has ${allergies.length} known allergies`}>
-          ALLERGIES: {substanceList}
+        <span aria-label={t('bannerActiveAria', { count: allergies.length })}>
+          {t('bannerActive', { substances: substanceList })}
         </span>
       </div>
     )
@@ -90,7 +92,7 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
       data-testid="allergy-banner"
       data-banner-state="nka"
     >
-      No Known Allergies (NKA)
+      {t('bannerNka')}
     </div>
   )
 }

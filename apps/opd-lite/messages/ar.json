@@ -65,10 +65,14 @@
     "auditViewed": "عرض سجل المريض",
     "auditLoadMore": "تحميل المزيد",
     "auditLoading": "جارٍ تحميل سجل المراجعة...",
-    "auditEmpty": "لم يتم العثور على سجلات"
+    "auditEmpty": "لم يتم العثور على سجلات",
+    "noResults": "لم يُعثر على مرضى"
   },
   "encounter": {
     "dashboard": "لوحة الزيارات",
+    "loadingPatient": "جاري تحميل بيانات المريض...",
+    "backToSearch": "العودة إلى البحث",
+    "backToSearchLabel": "→ العودة إلى البحث",
     "status": "حالة الزيارة",
     "activeConsultation": "استشارة نشطة",
     "noActiveConsultation": "لا توجد استشارة نشطة",
@@ -340,6 +344,13 @@
   },
   "dashboard": {
     "welcome": "مرحبًا، {name}",
+    "unknownPatient": "مريض مجهول",
+    "statusInProgress": "قيد التنفيذ",
+    "statusCompleted": "مكتمل",
+    "statusCancelled": "ملغى",
+    "statusError": "خطأ",
+    "recentEncountersAria": "الزيارات الأخيرة",
+    "viewChartAria": "عرض سجل المريض",
     "startEncounter": "بدء زيارة جديدة",
     "todayEncounters": "زيارات اليوم",
     "pendingLabResults": "نتائج مختبر معلّقة",
@@ -796,6 +807,9 @@
   },
   "appointments": {
     "title": "المواعيد",
+    "allergyWarning": "⚠ توجد حساسية — يرجى المراجعة قبل الحجز",
+    "closeModal": "إغلاق النافذة",
+    "searching": "جاري البحث…",
     "today": "اليوم",
     "dayView": "يوم",
     "weekView": "أسبوع",

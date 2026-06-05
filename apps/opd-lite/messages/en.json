@@ -65,10 +65,14 @@
     "auditViewed": "viewed patient record",
     "auditLoadMore": "Load more",
     "auditLoading": "Loading audit trail...",
-    "auditEmpty": "No audit entries found"
+    "auditEmpty": "No audit entries found",
+    "noResults": "No patients found"
   },
   "encounter": {
     "dashboard": "Encounter Dashboard",
+    "loadingPatient": "Loading patient...",
+    "backToSearch": "Back to search",
+    "backToSearchLabel": "← Back to Search",
     "status": "Encounter status",
     "activeConsultation": "Active Consultation",
     "noActiveConsultation": "No active consultation",
@@ -340,6 +344,13 @@
   },
   "dashboard": {
     "welcome": "Welcome, {name}",
+    "unknownPatient": "Unknown Patient",
+    "statusInProgress": "In Progress",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "statusError": "Error",
+    "recentEncountersAria": "Recent encounters",
+    "viewChartAria": "View patient chart",
     "startEncounter": "Start New Encounter",
     "todayEncounters": "Today's Encounters",
     "pendingLabResults": "Pending Lab Results",
@@ -796,6 +807,9 @@
   },
   "appointments": {
     "title": "Appointments",
+    "allergyWarning": "⚠ Allergies present — review before booking",
+    "closeModal": "Close modal",
+    "searching": "Searching...",
     "today": "Today",
     "dayView": "Day",
     "weekView": "Week",

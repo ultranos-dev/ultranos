@@ -304,7 +304,7 @@ export function BookingModal({
             variant="icon"
             type="button"
             onClick={onClose}
-            aria-label="Close modal"
+            aria-label={t('closeModal')}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -313,7 +313,7 @@ export function BookingModal({
         {/* Safety Rule 4: Allergy banner at highest prominence */}
         {hasAllergies && (
           <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
-            ⚠ Allergies present — review before booking
+            {t('allergyWarning')}
           </div>
         )}
 
@@ -366,7 +366,7 @@ export function BookingModal({
             )}
             {isSearchingPatient && (
               <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-center text-sm text-muted-foreground shadow-lg">
-                Searching...
+                {t('searching')}
               </div>
             )}
             {patientQuery.trim() && patientResults.length === 0 && !isSearchingPatient && !selectedPatient && (

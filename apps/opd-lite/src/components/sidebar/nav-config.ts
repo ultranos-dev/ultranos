@@ -1,6 +1,6 @@
 import type { LucideIcon } from '@ultranos/ui-kit/icons'
 import {
-  LayoutGrid,
+  Home,
   Calendar,
   Users,
   UserPlus,
@@ -41,9 +41,14 @@ export interface NavGroup {
 
 export const navGroups: NavGroup[] = [
   {
+    title: '',
+    items: [
+      { titleKey: 'dashboard', url: '/', icon: Home },
+    ],
+  },
+  {
     title: 'Core',
     items: [
-      { titleKey: 'dashboard', url: '/', icon: LayoutGrid },
       { titleKey: 'appointments', url: '/appointments', icon: Calendar, badgeKey: 'todayAppointments' },
       { titleKey: 'patients', url: '/patients', icon: Users },
       { titleKey: 'registerPatient', url: '/register-patient', icon: UserPlus },

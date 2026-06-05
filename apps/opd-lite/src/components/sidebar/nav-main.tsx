@@ -28,21 +28,20 @@ export function NavMain({ groups, badges = {} }: NavMainProps) {
 
   return (
     <>
-      {groups.map((group) => (
-        <SidebarGroup key={group.title}>
-          <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-          <SidebarMenu>
-            {group.items.map((item) => {
-              const isActive =
-                item.url === '/'
-                  ? pathname === '/' || pathname === ''
-                  : pathname === item.url || pathname.startsWith(`${item.url}/`)
+      {groups.map((group) => {
+        // Single-item group (Dashboard) — no label
+        if (group.items.length === 1) {
+          const item = group.items[0]!
+          const isActive =
+            item.url === '/'
+              ? pathname === '/' || pathname === ''
+              : pathname === item.url || pathname.startsWith(`${item.url}/`)
+          const badgeCount = item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
 
-              const badgeCount =
-                item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
-
-              return (
-                <SidebarMenuItem key={item.url}>
+          return (
+            <SidebarGroup key={`singleton-${item.url}`}>
+              <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.titleKey)}>
                     <Link href={item.url}>
                       <item.icon />
@@ -55,11 +54,44 @@ export function NavMain({ groups, badges = {} }: NavMainProps) {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
-      ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          )
+        }
+
+        return (
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item) => {
+                const isActive =
+                  item.url === '/'
+                    ? pathname === '/' || pathname === ''
+                    : pathname === item.url || pathname.startsWith(`${item.url}/`)
+
+                const badgeCount =
+                  item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
+
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.titleKey)}>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{t(item.titleKey)}</span>
+                        {badgeCount > 0 && (
+                          <span className="ms-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroup>
+        )
+      })}
     </>
   )
 }

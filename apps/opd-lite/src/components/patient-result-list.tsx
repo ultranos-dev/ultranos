@@ -41,7 +41,8 @@ function getIdentifier(patient: FhirPatient): string | null {
 }
 
 export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
-  const t = useTranslations('registration')
+  const t = useTranslations('patient')
+  const tReg = useTranslations('registration')
 
   if (isSearching) {
     return (
@@ -50,7 +51,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
         </svg>
-        <span className="font-semibold text-muted-foreground">Searching...</span>
+        <span className="font-semibold text-muted-foreground">{t('loading')}</span>
       </div>
     )
   }
@@ -59,7 +60,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
     if (!query) return null
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
-        No patients found
+        {t('noResults')}
       </div>
     )
   }
@@ -76,7 +77,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
           opacity: 0;
         }
       `}</style>
-      <ul className="divide-y divide-border" role="list" aria-label="Patient search results">
+      <ul className="divide-y divide-border" role="list" aria-label={t('searchResults')}>
         {results.map((patient, index) => {
           const identifier = getIdentifier(patient)
           return (
@@ -90,14 +91,14 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
                 {getDisplayName(patient)}
               </p>
               <p className="text-sm font-semibold text-muted-foreground">
-                {patient.gender ?? 'Unknown'} &middot; {formatAge(patient.birthDate, patient.birthYearOnly)}
+                {patient.gender ?? t('unknownGender')} &middot; {formatAge(patient.birthDate, patient.birthYearOnly)}
                 {identifier && (
                   <span className="ms-2">{identifier}</span>
                 )}
               </p>
             </div>
             <PillButton onClick={() => onSelect(patient)}>
-              Select
+              {t('select')}
             </PillButton>
           </li>
         )
@@ -108,7 +109,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
           href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
           className="mt-4 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
         >
-          {t('registerNew')}
+          {tReg('registerNew')}
         </Link>
       )}
     </>

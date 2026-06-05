@@ -65,10 +65,14 @@
     "auditViewed": "مشاهده سوابق بیمار",
     "auditLoadMore": "بارگذاری بیشتر",
     "auditLoading": "در حال بارگذاری گزارش تغییرات...",
-    "auditEmpty": "هیچ موردی یافت نشد"
+    "auditEmpty": "هیچ موردی یافت نشد",
+    "noResults": "هیچ مریضی یافت نشد"
   },
   "encounter": {
     "dashboard": "داشبورد ویزیت",
+    "loadingPatient": "در حال بارگذاری بیمار...",
+    "backToSearch": "بازگشت به جستجو",
+    "backToSearchLabel": "→ بازگشت به جستجو",
     "status": "وضعیت ویزیت",
     "activeConsultation": "مشوره فعال",
     "noActiveConsultation": "مشوره فعال وجود ندارد",
@@ -340,6 +344,13 @@
   },
   "dashboard": {
     "welcome": "خوش آمدید، {name}",
+    "unknownPatient": "بیمار ناشناخته",
+    "statusInProgress": "در حال انجام",
+    "statusCompleted": "تکمیل شد",
+    "statusCancelled": "لغو شد",
+    "statusError": "خطا",
+    "recentEncountersAria": "ویزیت‌های اخیر",
+    "viewChartAria": "مشاهده چارت بیمار",
     "startEncounter": "شروع ویزیت جدید",
     "todayEncounters": "ویزیت‌های امروز",
     "pendingLabResults": "نتایج لابراتوار در انتظار",
@@ -796,6 +807,9 @@
   },
   "appointments": {
     "title": "وقت‌ها",
+    "allergyWarning": "⚠ حساسیت وجود دارد — قبل از رزرو مرور کنید",
+    "closeModal": "بستن پنجره",
+    "searching": "در حال جستجو…",
     "today": "امروز",
     "dayView": "روز",
     "weekView": "هفته",

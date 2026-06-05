@@ -65,10 +65,14 @@
     "auditViewed": "د ناروغ سوابق وکتل شول",
     "auditLoadMore": "نور یې ولولئ",
     "auditLoading": "د بدلونونو راپور لوډ کیږي...",
-    "auditEmpty": "هیڅ مورد ونه موندل شو"
+    "auditEmpty": "هیڅ مورد ونه موندل شو",
+    "noResults": "هیڅ ناروغ ونه موندل شو"
   },
   "encounter": {
     "dashboard": "د لیدنې ډشبورډ",
+    "loadingPatient": "ناروغ لوډ کیږي...",
+    "backToSearch": "لټون ته شاته",
+    "backToSearchLabel": "→ لټون ته شاته",
     "status": "د لیدنې حالت",
     "activeConsultation": "فعاله مشوره",
     "noActiveConsultation": "فعاله مشوره نشته",
@@ -340,6 +344,13 @@
   },
   "dashboard": {
     "welcome": "ښه راغلاست، {name}",
+    "unknownPatient": "نامعلوم ناروغ",
+    "statusInProgress": "روان دی",
+    "statusCompleted": "بشپړ شو",
+    "statusCancelled": "لغو شو",
+    "statusError": "تېروتنه",
+    "recentEncountersAria": "وروستنۍ لیدنې",
+    "viewChartAria": "د ناروغ چارت وګورئ",
     "startEncounter": "نوې لیدنه پیل کړئ",
     "todayEncounters": "د نن لیدنې",
     "pendingLabResults": "انتظار کې لابراتوار پایلې",
@@ -796,6 +807,9 @@
   },
   "appointments": {
     "title": "وختونه",
+    "allergyWarning": "⚠ الرژي شتون لري — د بکنګ دمخه بیاکتنه وکړئ",
+    "closeModal": "کړکۍ بندول",
+    "searching": "لټون روان دی…",
     "today": "نن",
     "dayView": "ورځ",
     "weekView": "اونۍ",

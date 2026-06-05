@@ -17,6 +17,7 @@ import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
+import { useTranslations } from 'next-intl'
 import { checkInteractions, type InteractionCheckSummary, type InteractionResult } from '@/services/interactionService'
 import { InteractionWarningModal } from '@/components/modals/InteractionWarningModal'
 import { logInteractionCheck } from '@/services/interactionAuditService'
@@ -54,6 +55,10 @@ function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
 }
 
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
+  const tPatient = useTranslations('patient')
+  const tPrescription = useTranslations('prescription')
+  const tEncounter = useTranslations('encounter')
+  const tNav = useTranslations('nav')
   const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
@@ -256,7 +261,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     // P2: Block prescription while allergy store is still loading
     const allergyLoading = useAllergyStore.getState().isLoading
     if (allergyLoading) {
-      setPrescriptionError('⚠ Allergy data still loading — please wait before prescribing')
+      setPrescriptionError(tPrescription('errorAllergyLoading'))
       prescriptionCheckInFlight.current = false
       return
     }
@@ -264,7 +269,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     // P3: Treat allergy load error same as interaction check unavailable (CLAUDE.md Rule #3)
     const allergyLoadError = useAllergyStore.getState().loadError
     if (allergyLoadError) {
-      setPrescriptionError('⚠ Allergy data unavailable — interaction check incomplete. Verify allergies before prescribing.')
+      setPrescriptionError(tPrescription('errorAllergyUnavailable'))
       try {
         const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
           interactionCheckResult: 'UNAVAILABLE',
@@ -283,7 +288,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           // Audit log failure must not block the prescription — log is best-effort locally
         }
       } catch (err) {
-        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
       }
       prescriptionCheckInFlight.current = false
       return
@@ -303,7 +308,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         })
       } catch {
         // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
-        setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
+        setPrescriptionError(tPrescription('errorInteractionUnavailable'))
         try {
           const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
             interactionCheckResult: 'UNAVAILABLE',
@@ -318,7 +323,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             practitionerRef: practitionerRef,
           })
         } catch (err) {
-          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+          setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
         }
         return
       }
@@ -337,8 +342,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       if (checkResult.result === 'UNAVAILABLE') {
         // CLAUDE.md safety rule #3: never default to "no interactions found"
         const staleMsg = checkResult.reason === 'DATABASE_STALE'
-          ? '⚠ Interaction check unavailable — drug database outdated'
-          : '⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.'
+          ? tPrescription('errorDatabaseStale')
+          : tPrescription('errorInteractionUnavailable')
         setPrescriptionError(staleMsg)
         try {
           const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
@@ -358,7 +363,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             // Audit log failure must not block the prescription
           }
         } catch (err) {
-          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+          setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
         }
         prescriptionCheckInFlight.current = false
         return
@@ -384,7 +389,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           // Audit log failure must not block the prescription — log is best-effort locally
         }
       } catch (err) {
-        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
       }
     } finally {
       prescriptionCheckInFlight.current = false
@@ -422,7 +427,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         // Audit log failure must not block the prescription — log is best-effort locally
       }
     } catch (err) {
-      setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+      setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
     }
   }, [activeEncounter, addPrescription, patientId, practitionerRef, interactionModal.pendingForm, interactionModal.interactions.length])
 
@@ -435,7 +440,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     try {
       await removePrescription(id)
     } catch (err) {
-      setPrescriptionError(err instanceof Error ? err.message : 'Failed to cancel prescription')
+      setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorCancelFailed'))
     }
   }, [removePrescription])
 
@@ -465,7 +470,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
           </svg>
-          <p className="font-semibold text-muted-foreground">Loading patient...</p>
+          <p className="font-semibold text-muted-foreground">{tEncounter('loadingPatient')}</p>
         </div>
       </main>
     )
@@ -474,13 +479,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   if (!patient) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-muted-foreground">Patient not found in local session.</p>
+        <p className="font-semibold text-muted-foreground">{tPatient('notFound')}</p>
         <Button
           variant="ghost"
           onClick={() => router.push('/')}
           className="mt-4"
         >
-          Return to Patient Search
+          {tNav('returnToSearch')}
         </Button>
       </main>
     )
@@ -512,9 +517,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           variant="ghost"
           onClick={() => router.push('/')}
           className="mb-4"
-          aria-label="Back to search"
+          aria-label={tEncounter('backToSearch')}
         >
-          ← Back to Search
+          {tNav('backToSearch')}
         </Button>
         <h1 className="text-3xl font-black tracking-tight text-foreground">
           Encounter Dashboard
