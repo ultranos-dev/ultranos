@@ -35,7 +35,7 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
         {t('title')}
       </h1>

@@ -50,7 +50,7 @@ export default function ReagentDetailPage() {
   const isActive = reagent.status === ReagentStatus.ACTIVE
 
   return (
-    <main className="p-4 max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto flex flex-col gap-4">
       {view === 'detail' && (
         <>
           <div className="flex items-center justify-between">
@@ -139,6 +139,6 @@ export default function ReagentDetailPage() {
           />
         </>
       )}
-    </main>
+    </div>
   )
 }

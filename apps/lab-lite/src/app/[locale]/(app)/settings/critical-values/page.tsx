@@ -5,7 +5,7 @@ import { EscalationContactsPanel } from '@/components/escalation/EscalationConta
 
 export default function CriticalValuesSettingsPage() {
   return (
-    <div className="mx-auto max-w-3xl flex flex-col gap-8">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <Link
           href="/settings"
