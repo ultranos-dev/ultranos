@@ -9,8 +9,15 @@
  */
 
 import type { SyncQueueEntry, SyncResult } from '@ultranos/sync-engine'
+import { createMeterFetch } from '@ultranos/sync-engine'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
+import { recordDataUsage } from './db'
+
+const meteredFetch = createMeterFetch(
+  fetch,
+  (entry) => recordDataUsage({ date: entry.date, category: entry.category, bytesOut: entry.bytesOut, bytesIn: entry.bytesIn, requestCount: entry.requestCount }).catch(() => {}),
+)
 
 export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
   const token = await useAuthSessionStore.getState().getAccessToken()
@@ -28,7 +35,7 @@ export async function drainSyncFn(entry: SyncQueueEntry): Promise<SyncResult> {
     return { success: false, error: 'invalid-payload' }
   }
 
-  const res = await fetch(url.toString(), {
+  const res = await meteredFetch(url.toString(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
