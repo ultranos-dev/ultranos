@@ -24,6 +24,7 @@ vi.mock('@/components/ui/sidebar', () => ({
 
 import { navGroups } from '../components/sidebar/nav-config'
 import { NavMain } from '../components/sidebar/nav-main'
+import { OpdHeader } from '../components/sidebar/opd-header'
 
 describe('navGroups', () => {
   it('has exactly 4 groups', () => {
@@ -85,5 +86,13 @@ describe('NavMain', () => {
   it('shows 99+ when badge count exceeds 99', () => {
     render(<NavMain groups={navGroups} badges={{ conflicts: 150 }} />)
     expect(screen.getByText('99+')).toBeInTheDocument()
+  })
+})
+
+describe('OpdHeader', () => {
+  it('renders OPD Lite branding text', () => {
+    render(<OpdHeader />)
+    expect(screen.getByText('OPD Lite')).toBeInTheDocument()
+    expect(screen.getByText('Clinic')).toBeInTheDocument()
   })
 })
