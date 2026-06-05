@@ -1,21 +1,16 @@
 'use client'
 
-import { useCallback } from 'react'
 import Link from 'next/link'
-import { useLocale, useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { setAccessToken } from '@/lib/trpc'
 import { useTheme } from '@/components/ThemeProvider'
-import { getDirection } from '@ultranos/ui-kit'
 import {
   ChevronsUpDown,
   LogOut,
   Settings,
   Moon,
   Sun,
-  Globe,
 } from '@ultranos/ui-kit/icons'
 import {
   DropdownMenu,
@@ -33,37 +28,14 @@ import {
 } from '@/components/ui/sidebar'
 import { SessionTimer } from '@/components/SessionTimer'
 
-type SupportedLocale = 'en' | 'ar' | 'prs' | 'ps'
-
-const LANGUAGES: { code: SupportedLocale; nativeLabel: string; langAttr: string }[] = [
-  { code: 'en', nativeLabel: 'English', langAttr: 'en' },
-  { code: 'ar', nativeLabel: 'العربية', langAttr: 'ar' },
-  { code: 'prs', nativeLabel: 'دری', langAttr: 'fa-AF' },
-  { code: 'ps', nativeLabel: 'پښتو', langAttr: 'ps' },
-]
-
-const ARABIC_FONT_STYLE = { fontFamily: 'var(--font-family-sans-ar)' } as const
-
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { theme, toggleTheme } = useTheme()
   const email = useAuthSessionStore((s) => s.session?.email ?? '')
-  const locale = useLocale() as SupportedLocale
-  const t = useTranslations('language')
-  const router = useRouter()
 
   const initials = email
     ? (email.split('@')[0] ?? '').slice(0, 2).toUpperCase()
     : 'AD'
-
-  const setLocale = useCallback(
-    (newLocale: SupportedLocale) => {
-      const secure = window.location.protocol === 'https:' ? ';Secure' : ''
-      document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax${secure}`
-      router.refresh()
-    },
-    [router],
-  )
 
   async function handleSignOut() {
     useAuthSessionStore.getState().clearSession()
@@ -113,25 +85,6 @@ export function NavUser() {
               {theme === 'light' ? <Moon className="me-2 size-4" /> : <Sun className="me-2 size-4" />}
               {theme === 'light' ? 'Dark mode' : 'Light mode'}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground font-normal">
-              <Globe className="size-3.5" />
-              {t('label')}
-            </DropdownMenuLabel>
-            {LANGUAGES.map((lang) => (
-              <DropdownMenuItem
-                key={lang.code}
-                onSelect={() => setLocale(lang.code)}
-                className={locale === lang.code ? 'font-medium text-primary' : undefined}
-              >
-                <span
-                  lang={lang.langAttr}
-                  style={getDirection(lang.code) === 'rtl' ? ARABIC_FONT_STYLE : undefined}
-                >
-                  {lang.nativeLabel}
-                </span>
-              </DropdownMenuItem>
-            ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/settings">
