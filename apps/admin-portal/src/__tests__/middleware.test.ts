@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest'
 // We test the pure normalisation function, not the Next.js middleware itself.
 function normaliseAcceptLanguage(header: string): string {
   return header
-    .replace(/\b(fa-AF|fa|prs)\b/g, 'prs')
-    .replace(/\b(ps-AF)\b/g, 'ps')
+    .replace(/(^|,\s*)(fa-AF|fa|prs)(?=[,;]|$)/gi, '$1prs')
+    .replace(/(^|,\s*)(ps-AF)(?=[,;]|$)/gi, '$1ps')
 }
 
 describe('normaliseAcceptLanguage', () => {
@@ -27,5 +27,9 @@ describe('normaliseAcceptLanguage', () => {
 
   it('leaves en unchanged', () => {
     expect(normaliseAcceptLanguage('en-US,en;q=0.9')).toBe('en-US,en;q=0.9')
+  })
+
+  it('does not rewrite fa-IR (Iranian Farsi is distinct from Dari)', () => {
+    expect(normaliseAcceptLanguage('fa-IR,en;q=0.9')).toBe('fa-IR,en;q=0.9')
   })
 })

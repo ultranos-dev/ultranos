@@ -15,8 +15,8 @@ export default function middleware(request: NextRequest) {
 
   if (acceptLang) {
     const rewritten = acceptLang
-      .replace(/\b(fa-AF|fa|prs)\b/g, 'prs')
-      .replace(/\b(ps-AF)\b/g, 'ps')
+      .replace(/(^|,\s*)(fa-AF|fa|prs)(?=[,;]|$)/gi, '$1prs')
+      .replace(/(^|,\s*)(ps-AF)(?=[,;]|$)/gi, '$1ps')
     if (rewritten !== acceptLang) {
       const headers = new Headers(request.headers)
       headers.set('accept-language', rewritten)
