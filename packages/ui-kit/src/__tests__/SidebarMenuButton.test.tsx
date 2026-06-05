@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from '../components/ui/sidebar.js'
+import { TooltipProvider } from '../components/ui/tooltip.js'
 
 function renderButton(isActive: boolean) {
   return render(
@@ -50,5 +51,39 @@ describe('SidebarMenuButton active state', () => {
     renderButton(true)
     const btn = screen.getByRole('button', { name: /dashboard/i })
     expect(btn.className).not.toContain('data-active:bg-sidebar-accent')
+  })
+})
+
+// Helper — renders SidebarMenuButton inside a controllable SidebarProvider.
+// `defaultOpen` controls sidebar expanded/collapsed state.
+function renderButtonWithTooltip(collapsed: boolean) {
+  return render(
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={!collapsed}>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Dashboard label">Dashboard</SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarProvider>
+    </TooltipProvider>
+  )
+}
+
+describe('SidebarMenuButton tooltip visibility', () => {
+  it('does NOT render TooltipTrigger when sidebar is expanded', () => {
+    const { baseElement } = renderButtonWithTooltip(false)
+    // Radix TooltipTrigger sets data-slot="tooltip-trigger"
+    expect(baseElement.querySelector('[data-slot="tooltip-trigger"]')).toBeNull()
+  })
+
+  it('renders TooltipTrigger when sidebar is collapsed', () => {
+    const { baseElement } = renderButtonWithTooltip(true)
+    expect(baseElement.querySelector('[data-slot="tooltip-trigger"]')).not.toBeNull()
+  })
+
+  it('tooltip content is NOT mounted when expanded', () => {
+    const { baseElement } = renderButtonWithTooltip(false)
+    expect(baseElement.querySelector('[data-slot="tooltip-content"]')).toBeNull()
   })
 })
