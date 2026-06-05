@@ -2,9 +2,11 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken, trpc } from '@/lib/trpc'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { Button } from '@/components/ui/button'
@@ -85,7 +87,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         // Check if the org's trial has expired
         trpc.subscription.getOrgSubscriptions
           .query()
-          .then((r) => {
+          .then((r: { organization?: { status: string; trialEndsAt?: string | null } }) => {
             const org = r.organization as {
               status: string
               trialEndsAt?: string | null
@@ -109,7 +111,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
     // Listen for token refresh events to keep the in-memory token current
     const { data: { subscription } } = getSupabaseBrowserClient().auth.onAuthStateChange(
-      (event, session) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'TOKEN_REFRESHED' && session) {
           setAccessToken(session.access_token)
         }
@@ -203,14 +205,16 @@ function TrialExpiredInterstitial() {
 
 function AuthenticatedShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <BreadcrumbHeader />
-        <main className="flex-1">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <BreadcrumbHeader />
+          <main className="flex-1">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   )
 }

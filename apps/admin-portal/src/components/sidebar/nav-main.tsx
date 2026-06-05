@@ -27,13 +27,9 @@ export function NavMain({ groups }: NavMainProps) {
   return (
     <>
       {groups.map((group) => {
-        const isGroupActive = group.items.some(
-          (item) => pathname === item.url || pathname?.startsWith(`${item.url}/`)
-        )
-
         // Single-item groups (Overview, System) render without collapsible
         if (group.items.length === 1) {
-          const item = group.items[0]
+          const item = group.items[0]!
           const Icon = item.icon ?? group.icon
           const isActive = pathname === item.url || pathname?.startsWith(`${item.url}/`)
 
