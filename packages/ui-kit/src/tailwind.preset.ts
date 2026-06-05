@@ -5,10 +5,11 @@ const preset: Partial<Config> = {
   theme: {
     extend: {
       fontFamily: {
-        // CSS vars allow RTL override in tokens.css to take effect:
-        // [dir="rtl"] { --font-sans: 'Noto Sans Arabic', ... }
-        sans:    ['var(--font-sans)', 'system-ui', 'sans-serif'],
-        heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
+        // Arabic fonts are listed explicitly so Tailwind bakes them into the
+        // generated CSS. unicode-range in fonts-arabic.css ensures the browser
+        // only downloads / uses these for Arabic code points (U+0600-06FF).
+        sans:    ['Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['Noto Kufi Arabic', 'Noto Sans Arabic', 'var(--font-heading)', 'system-ui', 'sans-serif'],
       },
       colors: {
         background: { DEFAULT: 'oklch(var(--background) / <alpha-value>)' },
@@ -71,6 +72,10 @@ const preset: Partial<Config> = {
       },
       boxShadow: {
         card: 'var(--shadow-card)',
+      },
+      data: {
+        // Enables data-active: variant — matches elements with data-active="true"
+        active: 'active="true"',
       },
     },
   },
