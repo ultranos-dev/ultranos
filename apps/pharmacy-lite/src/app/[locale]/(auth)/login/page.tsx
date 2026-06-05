@@ -10,6 +10,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { reportAuthEvent } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
+import { generateSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 
 type AuthStep = 'credentials' | 'mfa'
 
@@ -58,7 +60,9 @@ export default function LoginPage() {
 
       const totpFactor = factors.totp?.[0]
       if (!totpFactor) {
-        await populateSessionAndRedirect()
+        await supabase.auth.signOut()
+        setError('TOTP MFA is required for pharmacy staff')
+        setLoading(false)
         return
       }
 
@@ -89,6 +93,11 @@ export default function LoginPage() {
       setError('Failed to retrieve session')
       setLoading(false)
       return
+    }
+
+    if (!encryptionKeyStore.isReady()) {
+      const encKey = await generateSessionKey()
+      encryptionKeyStore.setKey(encKey)
     }
 
     const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
