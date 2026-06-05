@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 // Mock next-intl
 vi.mock('next-intl', () => ({
   useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
 }))
 
 // Mock next/navigation

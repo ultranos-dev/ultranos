@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import Link from 'next/link'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
@@ -49,6 +49,7 @@ export function NavUser() {
   const { theme, toggleTheme } = useTheme()
   const email = useAuthSessionStore((s) => s.session?.email ?? '')
   const locale = useLocale() as SupportedLocale
+  const t = useTranslations('language')
   const router = useRouter()
 
   const initials = email
@@ -87,7 +88,7 @@ export function NavUser() {
                 <span className="truncate font-semibold">{email}</span>
                 <SessionTimer />
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ms-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -109,13 +110,13 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleTheme}>
-              {theme === 'light' ? <Moon className="mr-2 size-4" /> : <Sun className="mr-2 size-4" />}
+              {theme === 'light' ? <Moon className="me-2 size-4" /> : <Sun className="me-2 size-4" />}
               {theme === 'light' ? 'Dark mode' : 'Light mode'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground font-normal">
               <Globe className="size-3.5" />
-              Language
+              {t('label')}
             </DropdownMenuLabel>
             {LANGUAGES.map((lang) => (
               <DropdownMenuItem
@@ -134,7 +135,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/settings">
-                <Settings className="mr-2 size-4" />
+                <Settings className="me-2 size-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
@@ -143,7 +144,7 @@ export function NavUser() {
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={handleSignOut}
             >
-              <LogOut className="mr-2 size-4" />
+              <LogOut className="me-2 size-4" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

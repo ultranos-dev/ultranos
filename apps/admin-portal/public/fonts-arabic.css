@@ -1,6 +1,7 @@
 /*
  * Arabic font loading for admin-portal (online-only — uses Google Fonts CDN).
  * Loaded conditionally only for RTL locales (ar, prs, ps).
- * unicode-range ensures the font is only downloaded when Arabic characters are present.
+ * Noto Sans Arabic — UI text (body, labels, buttons)
+ * Noto Naskh Arabic — formal/clinical content (reports, prescriptions)
  */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&family=Noto+Naskh+Arabic:wght@400..700&display=swap');

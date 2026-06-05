@@ -11,11 +11,27 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/setup.ts'],
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-      '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
-      '@ultranos/ui-kit/icons': path.resolve(__dirname, '../../packages/ui-kit/src/icons.ts'),
-      '@ultranos/ui-kit': path.resolve(__dirname, '../../packages/ui-kit/src/index.ts'),
-    },
+    alias: [
+      {
+        find: '@',
+        replacement: path.resolve(__dirname, 'src'),
+      },
+      {
+        find: '@ultranos/shared-types',
+        replacement: path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      },
+      {
+        find: '@ultranos/ui-kit/icons',
+        replacement: path.resolve(__dirname, '../../packages/ui-kit/src/icons.ts'),
+      },
+      {
+        find: /^@ultranos\/ui-kit\/(.+)$/,
+        replacement: path.resolve(__dirname, '../../packages/ui-kit/src/$1'),
+      },
+      {
+        find: '@ultranos/ui-kit',
+        replacement: path.resolve(__dirname, '../../packages/ui-kit/src/index.ts'),
+      },
+    ],
   },
 })
