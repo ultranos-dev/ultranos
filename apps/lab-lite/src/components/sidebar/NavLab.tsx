@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -23,9 +24,35 @@ interface NavLabProps {
   groups: LabNavGroup[]
 }
 
+function findActiveItem(groups: LabNavGroup[], pathname: string): string | null {
+  for (const group of groups) {
+    for (const item of group.items.filter((i) => i.icon)) {
+      const subItems = group.items.filter(
+        (sub) => !sub.icon && sub.url.startsWith(`${item.url}/`),
+      )
+      if (subItems.length > 0) {
+        const active =
+          pathname === item.url || pathname?.startsWith(`${item.url}/`)
+        if (active) return item.url
+      }
+    }
+  }
+  return null
+}
+
 export function NavLab({ groups }: NavLabProps) {
   const pathname = usePathname()
   const tCommon = useTranslations('common')
+
+  const [openItem, setOpenItem] = useState<string | null>(() =>
+    findActiveItem(groups, pathname),
+  )
+
+  // Keep the active item open on navigation
+  useEffect(() => {
+    const active = findActiveItem(groups, pathname)
+    if (active) setOpenItem(active)
+  }, [pathname, groups])
 
   return (
     <>
@@ -96,7 +123,8 @@ export function NavLab({ groups }: NavLabProps) {
                     <Collapsible.Root
                       key={item.url}
                       asChild
-                      defaultOpen={isActive || subItems.some((s) => pathname === s.url)}
+                      open={openItem === item.url}
+                      onOpenChange={(open) => setOpenItem(open ? item.url : null)}
                     >
                       <SidebarMenuItem>
                         <Collapsible.Trigger asChild>
