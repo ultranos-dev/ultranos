@@ -62,8 +62,7 @@ export default function ExpiringConsentsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
-      <div className="px-6 pb-6">
+    <div className="flex flex-col gap-4">
 
         {loading && (
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -131,7 +130,6 @@ export default function ExpiringConsentsPage() {
             </div>
           </>
         )}
-      </div>
     </div>
   )
 }

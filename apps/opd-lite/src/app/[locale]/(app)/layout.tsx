@@ -1,6 +1,7 @@
 import { AppSidebar } from '@/components/AppSidebar'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { SyncDashboard } from '@/components/SyncDashboard'
+import { InstallPrompt } from '@/components/InstallPrompt'
 import {
   SidebarInset,
   SidebarProvider,
@@ -20,7 +21,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             Skip to content
           </a>
-          <main id="main-content">{children}</main>
+          <main id="main-content" className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+          <InstallPrompt />
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />

@@ -1,7 +1,6 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { DayScheduleView } from '@/components/appointments/DayScheduleView'
 import { WeekScheduleView } from '@/components/appointments/WeekScheduleView'
@@ -11,27 +10,29 @@ export default function AppointmentsPage() {
   const { viewMode, setViewMode } = useAppointmentStore()
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-6">
+    <div className="flex flex-col gap-4">
       {/* Day / Week toggle */}
-      <div className="flex justify-end px-6 pb-4">
-        <div className="flex overflow-hidden rounded-xl ring-[0.65px] ring-border/50">
-          <Button
-            variant={viewMode === 'day' ? 'primary' : 'secondary'}
+      <div className="flex justify-end">
+        <div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+          <button
             onClick={() => setViewMode('day')}
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              viewMode === 'day' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
             {t('dayView')}
-          </Button>
-          <Button
-            variant={viewMode === 'week' ? 'primary' : 'secondary'}
+          </button>
+          <button
             onClick={() => setViewMode('week')}
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
+              viewMode === 'week' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
             {t('weekView')}
-          </Button>
+          </button>
         </div>
       </div>
-      <div className="px-6 pb-6">
-        {viewMode === 'day' ? <DayScheduleView /> : <WeekScheduleView />}
-      </div>
+      {viewMode === 'day' ? <DayScheduleView /> : <WeekScheduleView />}
     </div>
   )
 }
