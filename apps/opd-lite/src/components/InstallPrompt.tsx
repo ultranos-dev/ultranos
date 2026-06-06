@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import { useSidebar } from '@/components/ui/sidebar'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -10,6 +12,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPrompt() {
+  const t = useTranslations('install')
+  const { state: sidebarState } = useSidebar()
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null)
   const [showBanner, setShowBanner] = useState(false)
 
@@ -52,30 +56,32 @@ export function InstallPrompt() {
 
   if (!showBanner) return null
 
+  const sidebarOffset =
+    sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)'
+
   return (
     <div
       role="banner"
       aria-label="Install application"
-      className="fixed bottom-0 inset-x-0 z-50 flex items-center justify-between gap-4 bg-primary-700 text-white px-4 py-3 shadow-lg"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card p-4 shadow-lg transition-[margin] duration-200"
+      style={{ marginInlineStart: sidebarOffset }}
     >
-      <p className="text-sm font-medium">Install OPD Lite for offline access</p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          className="bg-background text-primary-700 hover:bg-primary-50"
-          onClick={handleInstall}
-        >
-          Install
-        </Button>
-        <Button
-          variant="icon"
-          type="button"
-          className="text-white/80 hover:text-white p-1"
-          onClick={handleDismiss}
-          aria-label="Dismiss install banner"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-foreground">{t('prompt')}</p>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleInstall}>
+            {t('install')}
+          </Button>
+          <Button
+            variant="icon"
+            type="button"
+            className="p-1"
+            onClick={handleDismiss}
+            aria-label={t('dismiss')}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
     </div>
   )
