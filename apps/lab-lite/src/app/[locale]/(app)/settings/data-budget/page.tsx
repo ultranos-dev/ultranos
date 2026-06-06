@@ -11,7 +11,7 @@ export default function DataBudgetPage() {
 
   return (
     <div className="mx-auto max-w-3xl flex flex-col gap-4">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2">
         <Link
           href="/settings"
           className="text-muted-foreground hover:text-foreground"

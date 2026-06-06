@@ -169,7 +169,7 @@ export default function EmployeeHealthPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl flex flex-col gap-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-48 rounded bg-card" />
           <div className="h-40 rounded bg-card" />
@@ -180,7 +180,7 @@ export default function EmployeeHealthPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
         {/* Back link */}
         <Button
           variant="link"
@@ -208,7 +208,7 @@ export default function EmployeeHealthPage() {
         {reminders && <ScreeningBanner reminders={reminders} />}
 
         {/* Hepatitis B */}
-        <section className="mb-8 rounded-lg border border-border bg-card p-6">
+        <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">{t('healthHepB')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
@@ -236,7 +236,7 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* Tetanus */}
-        <section className="mb-8 rounded-lg border border-border bg-card p-6">
+        <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">{t('healthTetanus')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
@@ -264,7 +264,7 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* COVID-19 */}
-        <section className="mb-8 rounded-lg border border-border bg-card p-6">
+        <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">{t('healthCovid')}</h2>
           <div className="grid grid-cols-3 gap-4">
             <label className="block">
@@ -302,7 +302,7 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* TB Screening */}
-        <section className="mb-8 rounded-lg border border-border bg-card p-6">
+        <section className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-text">{t('healthTbScreening')}</h2>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
@@ -330,7 +330,7 @@ export default function EmployeeHealthPage() {
         </section>
 
         {/* Exposure History */}
-        <section className="mb-8 rounded-lg border border-border bg-card p-6">
+        <section className="rounded-lg border border-border bg-card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text">{t('healthExposureHistory')}</h2>
             <Button

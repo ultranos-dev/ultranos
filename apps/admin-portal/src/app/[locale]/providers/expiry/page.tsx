@@ -82,7 +82,7 @@ export default function LicenseExpiryPage() {
 
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ExportButton exportFn={() => trpc.admin.exportExpiringProviders.query()} filters={{}} />
             <input

@@ -61,43 +61,10 @@ export default function LoginPage() {
       }
 
       reportAuthEvent('LOGIN_SUCCESS', { actorId: data.user?.id })
-
-      // Clear credentials from state after successful auth
       setPassword('')
 
-      // Check if MFA is required
-      const { data: factors, error: factorsError } =
-        await supabase.auth.mfa.listFactors()
-
-      if (factorsError) {
-        await supabase.auth.signOut()
-        setError(t('mfaFactorsError'))
-        setLoading(false)
-        return
-      }
-
-      const totpFactor = factors.totp?.[0]
-      if (!totpFactor) {
-        await supabase.auth.signOut()
-        setError(t('mfaRequired'))
-        setLoading(false)
-        return
-      }
-
-      // Create MFA challenge
-      const { data: challenge, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
-
-      if (challengeError) {
-        await supabase.auth.signOut()
-        setError(t('mfaChallengeError'))
-        setLoading(false)
-        return
-      }
-
-      setFactorId(totpFactor.id)
-      setChallengeId(challenge.id)
-      setStep('mfa')
+      // TODO: MFA temporarily disabled — re-enable before production
+      await populateSessionAndRedirect()
     } catch {
       setError(t('unexpectedError'))
     } finally {
@@ -126,7 +93,7 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search)
     const returnUrl = params.get('returnUrl') ?? '/'
     const safeUrl = returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
-    window.location.href = safeUrl
+    router.push(safeUrl)
   }
 
   async function handleMfaSubmit(e: React.FormEvent) {

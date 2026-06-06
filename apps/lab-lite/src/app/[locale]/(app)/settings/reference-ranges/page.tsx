@@ -8,8 +8,8 @@ export default function ReferenceRangesPage() {
   const t = useTranslations('settings')
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-4">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+      <div>
         <Link
           href="/settings"
           className="text-sm text-blue-600 hover:underline"
@@ -18,7 +18,7 @@ export default function ReferenceRangesPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-foreground mb-6">
+      <h1 className="text-2xl font-bold text-foreground">
         {t('referenceRanges')}
       </h1>
 

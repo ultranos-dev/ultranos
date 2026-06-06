@@ -12,7 +12,7 @@ export default function ProcurementPage() {
 
   if (showForm) {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <ResupplyRequestForm
           onSuccess={() => setShowForm(false)}
           onCancel={() => setShowForm(false)}
@@ -22,8 +22,8 @@ export default function ProcurementPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">{t('form.title')}</h1>
         <button
           type="button"
