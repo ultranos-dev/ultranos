@@ -258,7 +258,7 @@ export function InstrumentQueueView() {
   // -------------------------------------------------------------------------
 
   return (
-    <div className="space-y-4" data-testid="instrument-queue-view">
+    <div className="flex flex-col gap-4" data-testid="instrument-queue-view">
       {/* P8: cancel reason modal */}
       {cancelTarget && (
         <CancelBatchModal
@@ -372,9 +372,7 @@ export function InstrumentQueueView() {
           </svg>
         </div>
       ) : queue.length === 0 ? (
-        <p className="py-6 text-center text-sm text-gray-500" data-testid="empty-queue-message">
-          {t('emptyQueue') ?? 'No batches in queue.'}
-        </p>
+        <EmptyState title={t('emptyQueue') ?? 'No batches in queue.'} data-testid="empty-queue-message" />
       ) : (
         <div className="space-y-2" data-testid="queue-list">
           {/* Countdown banner for current running batch */}

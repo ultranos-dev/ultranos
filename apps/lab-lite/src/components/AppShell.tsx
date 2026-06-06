@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/AppSidebar'
 import { PageHeader } from '@/components/PageHeader'
 import { InstallPrompt } from '@/components/InstallPrompt'
+import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
 import { AchievementNotification } from '@/components/achievements/AchievementNotification'
 import { useAchievementScheduler } from '@/hooks/useAchievementScheduler'
 import type { SchedulerRunResult } from '@/lib/achievement-scheduler'
@@ -99,6 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
+          <SyncAwareStaleDataBanner />
           <PageHeader />
           <main className="flex flex-1 flex-col gap-4 p-4" id="main-content">
             {children}

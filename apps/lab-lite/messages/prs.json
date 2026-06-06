@@ -3345,5 +3345,30 @@
     "fastEntrySubmissionFailed": "ارسال ناموفق شد.",
     "bannerDeactivateAriaLabel": "غیرفعال کردن حالت اپدمیک",
     "bannerDeactivateButton": "غیرفعال کردن"
+  },
+  "syncDashboard": {
+    "title": "وضعیت بارگذاری",
+    "ariaLabel": "داشبورد بارگذاری",
+    "closeAriaLabel": "بستن داشبورد بارگذاری",
+    "pending": "در انتظار",
+    "failed": "ناموفق",
+    "expired": "منقضی شده",
+    "lastSync": "آخرین بارگذاری: {time}",
+    "syncNow": "همگام‌سازی اکنون",
+    "syncing": "در حال همگام‌سازی...",
+    "retryAllFailed": "تلاش مجدد برای همه ناموفق‌ها",
+    "allSynced": "هیچ بارگذاری در انتظاری وجود ندارد",
+    "retry": "تلاش مجدد",
+    "confirm": "تأیید",
+    "cancel": "لغو",
+    "discard": "نادیده گرفتن",
+    "syncingPhase": "در حال بارگذاری فایل‌های نتایج به هاب...",
+    "syncComplete": "بارگذاری کامل شد",
+    "syncFailedRetry": "بارگذاری ناموفق — تلاش مجدد خواهد شد",
+    "noNetworkConnection": "اتصال شبکه وجود ندارد",
+    "statusPending": "در انتظار",
+    "statusFailed": "ناموفق",
+    "statusUploading": "در حال بارگذاری",
+    "statusExpired": "منقضی شده"
   }
 }

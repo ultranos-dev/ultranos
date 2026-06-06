@@ -3344,5 +3344,30 @@
     "fastEntrySubmissionFailed": "Submission failed.",
     "bannerDeactivateAriaLabel": "Deactivate Outbreak Mode",
     "bannerDeactivateButton": "Deactivate"
+  },
+  "syncDashboard": {
+    "title": "Upload Status",
+    "ariaLabel": "Upload Dashboard",
+    "closeAriaLabel": "Close upload dashboard",
+    "pending": "pending",
+    "failed": "failed",
+    "expired": "expired",
+    "lastSync": "Last upload: {time}",
+    "syncNow": "Sync Now",
+    "syncing": "Syncing...",
+    "retryAllFailed": "Retry All Failed",
+    "allSynced": "No pending uploads",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "discard": "Discard",
+    "syncingPhase": "Uploading result files to Hub...",
+    "syncComplete": "Upload complete",
+    "syncFailedRetry": "Upload failed — will retry",
+    "noNetworkConnection": "No network connection",
+    "statusPending": "Pending",
+    "statusFailed": "Failed",
+    "statusUploading": "Uploading",
+    "statusExpired": "Expired"
   }
 }

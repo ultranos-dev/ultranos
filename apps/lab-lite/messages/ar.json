@@ -3345,5 +3345,30 @@
     "fastEntrySubmissionFailed": "فشل الإرسال.",
     "bannerDeactivateAriaLabel": "إلغاء تفعيل وضع تفشي الوباء",
     "bannerDeactivateButton": "إلغاء التفعيل"
+  },
+  "syncDashboard": {
+    "title": "حالة الرفع",
+    "ariaLabel": "لوحة الرفع",
+    "closeAriaLabel": "إغلاق لوحة الرفع",
+    "pending": "معلّق",
+    "failed": "فاشل",
+    "expired": "منتهي الصلاحية",
+    "lastSync": "آخر رفع: {time}",
+    "syncNow": "مزامنة الآن",
+    "syncing": "جارٍ المزامنة...",
+    "retryAllFailed": "إعادة محاولة الكل الفاشل",
+    "allSynced": "لا توجد رفوعات معلّقة",
+    "retry": "إعادة المحاولة",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "discard": "تجاهل",
+    "syncingPhase": "جارٍ رفع ملفات النتائج إلى المحور...",
+    "syncComplete": "اكتمل الرفع",
+    "syncFailedRetry": "فشل الرفع — ستتم إعادة المحاولة",
+    "noNetworkConnection": "لا يوجد اتصال بالشبكة",
+    "statusPending": "معلّق",
+    "statusFailed": "فاشل",
+    "statusUploading": "جارٍ الرفع",
+    "statusExpired": "منتهي الصلاحية"
   }
 }

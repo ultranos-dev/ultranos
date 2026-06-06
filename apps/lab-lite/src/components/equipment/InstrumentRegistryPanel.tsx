@@ -243,7 +243,7 @@ export function InstrumentRegistryPanel() {
 
   if (view === 'list') {
     return (
-      <div className="space-y-3" data-testid="instrument-registry-panel">
+      <div className="flex flex-col gap-4" data-testid="instrument-registry-panel">
         {/* P8: out-of-service reason modal */}
         {oosTarget && (
           <OutOfServiceModal
@@ -261,9 +261,7 @@ export function InstrumentRegistryPanel() {
         </div>
 
         {instruments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic" data-testid="no-instruments-message">
-            {t('noInstruments') ?? 'No instruments registered yet.'}
-          </p>
+          <EmptyState title={t('noInstruments') ?? 'No instruments registered yet.'} data-testid="no-instruments-message" />
         ) : (
           <ul className="space-y-2" data-testid="instrument-list">
             {instruments.map((inst) => (
@@ -332,7 +330,7 @@ export function InstrumentRegistryPanel() {
 
   // Add / Edit form
   return (
-    <div className="space-y-4" data-testid="instrument-form">
+    <div className="flex flex-col gap-4" data-testid="instrument-form">
       <div className="flex items-center gap-2">
         {/* P9: RTL-safe back arrow using DirectionalIcon */}
         <button

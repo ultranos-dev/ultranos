@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useSyncStore } from '@/stores/sync-store'
 import { getDb } from '@/lib/db'
 
@@ -20,11 +19,10 @@ function formatSyncTime(iso: string): string {
  *
  * Polls db.uploadQueue every 10s for pending/failed counts.
  * Shows pulsing dot: green (all clear), amber (pending), red (failed).
- * Clicking navigates to /upload to view queue detail.
+ * Clicking opens the SyncDashboard modal.
  */
 export function SyncPulse() {
-  const router = useRouter()
-  const { pendingCount, failedCount, lastSyncedAt, updateSyncStatus } = useSyncStore()
+  const { pendingCount, failedCount, lastSyncedAt, updateSyncStatus, isDashboardOpen, setDashboardOpen } = useSyncStore()
   const [, setTick] = useState(0)
   // Track previous total to detect when queue clears (drain completed)
   const prevTotalRef = useRef<number | null>(null)
@@ -83,7 +81,7 @@ export function SyncPulse() {
     <button
       type="button"
       className="relative flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-accent transition-colors"
-      onClick={() => router.push('/upload')}
+      onClick={() => setDashboardOpen(!isDashboardOpen)}
       aria-label={`Sync status: ${ariaStatus}`}
       data-testid="sync-pulse"
     >

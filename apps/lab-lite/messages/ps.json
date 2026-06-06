@@ -3345,5 +3345,30 @@
     "fastEntrySubmissionFailed": "لیۚلول بریابلې.",
     "bannerDeactivateAriaLabel": "د وبا حالت غیرفعال کول",
     "bannerDeactivateButton": "غیرفعال کول"
+  },
+  "syncDashboard": {
+    "title": "د اپلوډ حالت",
+    "ariaLabel": "د اپلوډ ډشبورډ",
+    "closeAriaLabel": "د اپلوډ ډشبورډ وتړئ",
+    "pending": "انتظار",
+    "failed": "ناکام",
+    "expired": "پای ته رسیدلی",
+    "lastSync": "وروستی اپلوډ: {time}",
+    "syncNow": "اوس همغږي کړئ",
+    "syncing": "همغږي کیږي...",
+    "retryAllFailed": "ټول ناکام بیا هڅه وکړئ",
+    "allSynced": "هیڅ معلق اپلوډ نشته",
+    "retry": "بیا هڅه وکړئ",
+    "confirm": "تایید",
+    "cancel": "لغوه",
+    "discard": "پریکوئ",
+    "syncingPhase": "د نتایجو فایلونه هب ته اپلوډ کیږي...",
+    "syncComplete": "اپلوډ بشپړ شو",
+    "syncFailedRetry": "اپلوډ ناکام شو — بیا هڅه کیږي",
+    "noNetworkConnection": "د شبکې اتصال نشته",
+    "statusPending": "انتظار",
+    "statusFailed": "ناکام",
+    "statusUploading": "اپلوډ کیږي",
+    "statusExpired": "پای ته رسیدلی"
   }
 }
