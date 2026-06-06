@@ -33,7 +33,6 @@ import {
   getActiveItems,
   getCompletedItems,
   getFailedItems,
-  type QueueItem,
 } from '@/lib/queue-data'
 import { auditPhiAccess } from '@/lib/audit'
 
