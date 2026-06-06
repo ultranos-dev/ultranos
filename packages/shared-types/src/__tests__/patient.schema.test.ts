@@ -209,6 +209,19 @@ describe('CreatePatientMpiInputSchema — HMIS demographic fields', () => {
       expect(result.success).toBe(true)
     }
   })
+
+  it('accepts birthYear without birthDate when birthYearOnly is not set', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      nameLocal: 'Ahmad Karimi',
+      nameGiven: 'Ahmad',
+      gender: 'male',
+      birthYear: 1985,
+      isNomadic: false,
+      addressOrigin: { province: 'Kabul', district: 'Kabul' },
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    })
+    expect(result.success).toBe(true)
+  })
 })
 
 describe('CreatePatientMpiInputSchema — Pashto language support', () => {

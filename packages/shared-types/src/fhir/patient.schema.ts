@@ -46,28 +46,28 @@ const PatientIdentifierInputSchema = z.object({
   shumara: z.string().optional(),
 })
 
-const MaritalStatusSchema = z.enum(['M', 'S', 'D', 'W', 'UNK'])
+export const MaritalStatusSchema = z.enum(['M', 'S', 'D', 'W', 'UNK'])
 
-const ContactRelationshipSchema = z.enum([
+export const ContactRelationshipSchema = z.enum([
   'SPOUSE', 'PARENT', 'SIBLING', 'CHILD', 'GUARDIAN', 'FRIEND', 'OTHER',
 ])
 
-const PatientContactSchema = z.object({
+export const PatientContactSchema = z.object({
   relationship: ContactRelationshipSchema,
   name: z.string().min(1).max(200),
   phone: z.string().max(50).optional(),
   gender: z.nativeEnum(AdministrativeGender).optional(),
 })
 
-const DisplacementCategorySchema = z.enum([
+export const DisplacementCategorySchema = z.enum([
   'IDP', 'RETURNEE', 'REFUGEE', 'HOST_COMMUNITY',
 ])
 
-const EducationLevelSchema = z.enum([
+export const EducationLevelSchema = z.enum([
   'NONE', 'PRIMARY', 'SECONDARY', 'TERTIARY', 'UNKNOWN',
 ])
 
-const PatientLanguageSchema = z.enum(['en', 'ar', 'prs', 'ps'])
+export const PatientLanguageSchema = z.enum(['en', 'ar', 'prs', 'ps'])
 
 const PatientUltranosExtSchema = z.object({
   nameLocal: z.string(),
@@ -77,7 +77,7 @@ const PatientUltranosExtSchema = z.object({
   guardianId: z.string().uuid().optional(),
   consentVersion: z.string().optional(),
   patient_tier: PatientTierSchema,
-  preferredLanguage: z.string().optional(),
+  preferredLanguage: PatientLanguageSchema.optional(),
   isActive: z.boolean(),
   createdBy: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -205,9 +205,9 @@ export const CreatePatientMpiInputSchema = z
     if (val.consent.method === 'VERBAL_WITNESSED' && !val.consent.witnessedBy) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consent', 'witnessedBy'], message: 'witnessedBy is required for VERBAL_WITNESSED consent' })
     }
-    // birthYearOnly=false means caller is claiming full DOB — require birthDate
-    if (!val.birthYearOnly && !val.birthDate) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate is required when birthYearOnly is false' })
+    // birthYearOnly=false with no birthDate AND no birthYear is invalid
+    if (!val.birthYearOnly && !val.birthDate && !val.birthYear) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate is required when birthYearOnly is false and no birthYear is provided' })
     }
   })
 
