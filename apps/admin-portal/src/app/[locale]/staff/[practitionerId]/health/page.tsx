@@ -52,7 +52,7 @@ function ScreeningBanner({ reminders }: { reminders: { tbScreening: { status: st
   }
 
   return (
-    <div className={`rounded-lg border-s-4 p-4 mb-6 ${colorMap[status] ?? ''}`} role="alert">
+    <div className={`rounded-lg border-s-4 p-4 ${colorMap[status] ?? ''}`} role="alert">
       <p className="font-medium">{message}</p>
     </div>
   )
