@@ -5,12 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { z } from 'zod'
 import { AdministrativeGender } from '@ultranos/shared-types'
-import type { AfghanProvince } from '@ultranos/shared-types'
+import type {
+  AfghanProvince,
+  MaritalStatus,
+  DisplacementCategory,
+  EducationLevel,
+  PatientContact,
+  PatientLanguage,
+} from '@ultranos/shared-types'
 import { Button } from '@/components/ui/Button'
 import { NameInputSection } from './NameInputSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
+import { SocialInfoSection } from './SocialInfoSection'
+import { EmergencyContactSection } from './EmergencyContactSection'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Card } from '@/components/Card'
 import { db } from '@/lib/db'
@@ -18,8 +27,6 @@ import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import type { FhirPatient } from '@ultranos/shared-types'
 
 // ── Hub API helpers ──────────────────────────────────────────────────────────
-// Raw fetch wrappers matching the existing pattern in @/lib/trpc.ts.
-// These call the hub-api tRPC endpoints directly.
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
@@ -85,7 +92,7 @@ async function createPatient(input: Record<string, unknown>): Promise<CreatePati
   return body.result.data.json
 }
 
-// ── Local validation schema (client-side, mirrors server CreatePatientMpiInputSchema) ──
+// ── Validation schema ────────────────────────────────────────────────────────
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -98,19 +105,26 @@ const ClientRegistrationSchema = z.object({
   birthYear: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
   birthDate: z.string().optional(),
   phone: z.string().max(50).optional(),
+  phoneUse: z.enum(['home', 'work', 'mobile']).optional(),
   nationalId: z.string().max(200).optional(),
-  preferredLanguage: z.enum(['en', 'ar', 'prs']).optional(),
+  preferredLanguage: z.enum(['en', 'ar', 'prs', 'ps']).optional(),
   isNomadic: z.boolean().optional(),
   bloodGroup: z.string().optional(),
+  maritalStatus: z.enum(['M', 'S', 'D', 'W', 'UNK']).optional(),
   addressOriginProvince: z.string().min(1, 'required'),
   addressOriginDistrict: z.string().min(1, 'required'),
   addressOriginVillage: z.string().max(200).optional(),
   addressCurrentProvince: z.string().optional(),
   addressCurrentDistrict: z.string().optional(),
   addressCurrentVillage: z.string().max(200).optional(),
+  displacementCategory: z.enum(['IDP', 'RETURNEE', 'REFUGEE', 'HOST_COMMUNITY']).optional(),
+  nationality: z.string().length(2).optional(),
+  occupation: z.string().max(200).optional(),
+  educationLevel: z.enum(['NONE', 'PRIMARY', 'SECONDARY', 'TERTIARY', 'UNKNOWN']).optional(),
+  disability: z.boolean().optional(),
   consentMethod: z.enum(['WRITTEN', 'VERBAL_WITNESSED'], { required_error: 'required' }),
   consentWitnessedBy: z.string().optional(),
-  consentLanguage: z.enum(['en', 'ar', 'prs']),
+  consentLanguage: z.enum(['en', 'ar', 'prs', 'ps']),
 }).superRefine((val, ctx) => {
   if (val.birthYearOnly && !val.birthYear) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthYear'], message: 'required' })
@@ -148,7 +162,7 @@ export function PatientRegistrationForm({
 }: PatientRegistrationFormProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
+  const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
   const router = useRouter()
 
   // ── Form state ──
@@ -160,23 +174,35 @@ export function PatientRegistrationForm({
   const [birthYear, setBirthYear] = useState<string>('')
   const [birthDate, setBirthDate] = useState('')
   const [phone, setPhone] = useState('')
+  const [phoneUse, setPhoneUse] = useState<'home' | 'work' | 'mobile' | ''>('')
   const [nationalId, setNationalId] = useState('')
-  const [preferredLanguage, setPreferredLanguage] = useState<'en' | 'ar' | 'prs'>(
-    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : 'en',
+  const [preferredLanguage, setPreferredLanguage] = useState<PatientLanguage>(
+    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : locale === 'ps' ? 'ps' : 'en',
   )
   const [isNomadic, setIsNomadic] = useState(false)
   const [bloodGroup, setBloodGroup] = useState<string>('Unknown')
+  const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | ''>('')
 
   // Address
   const [addressOrigin, setAddressOrigin] = useState<AddressFields>(EMPTY_ADDRESS)
   const [addressCurrent, setAddressCurrent] = useState<AddressFields>(EMPTY_ADDRESS)
   const [sameAsOrigin, setSameAsOrigin] = useState(false)
 
+  // Social / HMIS fields
+  const [displacementCategory, setDisplacementCategory] = useState<DisplacementCategory | ''>('')
+  const [nationality, setNationality] = useState('')
+  const [occupation, setOccupation] = useState('')
+  const [educationLevel, setEducationLevel] = useState<EducationLevel | ''>('')
+  const [disability, setDisability] = useState(false)
+
+  // Emergency contacts
+  const [emergencyContacts, setEmergencyContacts] = useState<PatientContact[]>([])
+
   // Consent
   const [consentMethod, setConsentMethod] = useState<'WRITTEN' | 'VERBAL_WITNESSED' | ''>('')
   const [consentWitnessedBy, setConsentWitnessedBy] = useState('')
-  const [consentLanguage, setConsentLanguage] = useState<'en' | 'ar' | 'prs'>(
-    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : 'en',
+  const [consentLanguage, setConsentLanguage] = useState<PatientLanguage>(
+    locale === 'prs' ? 'prs' : locale === 'ar' ? 'ar' : locale === 'ps' ? 'ps' : 'en',
   )
 
   // UI state
@@ -208,10 +234,12 @@ export function PatientRegistrationForm({
         birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
         birthDate: birthDate || undefined,
         phone: phone || undefined,
+        phoneUse: phoneUse || undefined,
         nationalId: nationalId || undefined,
         isNomadic,
         preferredLanguage: preferredLanguage || undefined,
         bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
+        maritalStatus: maritalStatus || undefined,
         addressOrigin: addressOrigin.province
           ? {
               province: addressOrigin.province,
@@ -234,6 +262,12 @@ export function PatientRegistrationForm({
                   village: addressCurrent.village || undefined,
                 }
               : undefined),
+        displacementCategory: displacementCategory || undefined,
+        nationality: nationality || undefined,
+        occupation: occupation || undefined,
+        educationLevel: educationLevel || undefined,
+        disability: disability || undefined,
+        contacts: emergencyContacts.length > 0 ? emergencyContacts : undefined,
         consent: {
           method: consentMethod,
           witnessedBy: consentMethod === 'VERBAL_WITNESSED' ? consentWitnessedBy : undefined,
@@ -250,8 +284,11 @@ export function PatientRegistrationForm({
     },
     [
       nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
-      birthYear, birthDate, phone, nationalId, preferredLanguage, isNomadic, bloodGroup,
-      addressOrigin, addressCurrent, sameAsOrigin, consentMethod, consentWitnessedBy, consentLanguage,
+      birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
+      isNomadic, bloodGroup, maritalStatus,
+      addressOrigin, addressCurrent, sameAsOrigin,
+      displacementCategory, nationality, occupation, educationLevel, disability,
+      emergencyContacts, consentMethod, consentWitnessedBy, consentLanguage,
     ],
   )
 
@@ -267,16 +304,23 @@ export function PatientRegistrationForm({
       birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
       birthDate: birthDate || undefined,
       phone: phone || undefined,
+      phoneUse: phoneUse || undefined,
       nationalId: nationalId || undefined,
       preferredLanguage: preferredLanguage || undefined,
       isNomadic,
       bloodGroup: bloodGroup || undefined,
+      maritalStatus: maritalStatus || undefined,
       addressOriginProvince: addressOrigin.province,
       addressOriginDistrict: addressOrigin.district,
       addressOriginVillage: addressOrigin.village || undefined,
       addressCurrentProvince: addressCurrent.province || undefined,
       addressCurrentDistrict: addressCurrent.district || undefined,
       addressCurrentVillage: addressCurrent.village || undefined,
+      displacementCategory: displacementCategory || undefined,
+      nationality: nationality || undefined,
+      occupation: occupation || undefined,
+      educationLevel: educationLevel || undefined,
+      disability: disability || undefined,
       consentMethod: consentMethod || undefined,
       consentWitnessedBy: consentWitnessedBy || undefined,
       consentLanguage,
@@ -298,11 +342,14 @@ export function PatientRegistrationForm({
     return true
   }, [
     nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
-    birthYear, birthDate, phone, nationalId, preferredLanguage, isNomadic, bloodGroup,
-    addressOrigin, addressCurrent, consentMethod, consentWitnessedBy, consentLanguage, t,
+    birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
+    isNomadic, bloodGroup, maritalStatus,
+    addressOrigin, addressCurrent,
+    displacementCategory, nationality, occupation, educationLevel, disability,
+    consentMethod, consentWitnessedBy, consentLanguage, t,
   ])
 
-  // ── Persist to local IndexedDB so PatientChartPage can load immediately ──
+  // ── Persist to local IndexedDB ──
 
   const savePatientLocally = useCallback(
     async (id: string, now: string) => {
@@ -317,7 +364,11 @@ export function PatientRegistrationForm({
         gender: (gender as AdministrativeGender) || AdministrativeGender.UNKNOWN,
         birthDate: birthDate || (birthYear ? birthYear : undefined) as string | undefined,
         birthYearOnly,
-        telecom: phone ? [{ system: 'phone', value: phone }] : [],
+        maritalStatus: (maritalStatus as MaritalStatus) || undefined,
+        telecom: phone
+          ? [{ system: 'phone', value: phone, use: phoneUse || undefined }]
+          : [],
+        contact: emergencyContacts.length > 0 ? emergencyContacts : undefined,
         _ultranos: {
           nameLocal,
           nameGiven: nameGiven || undefined,
@@ -337,10 +388,15 @@ export function PatientRegistrationForm({
           isNomadic,
           bloodGroup: bloodGroup !== 'Unknown' ? bloodGroup : undefined,
           preferredLanguage: preferredLanguage || undefined,
-          nationalIdHash: undefined, // Hash computed server-side; not available locally
+          nationalIdHash: undefined,
           isActive: true,
           patient_tier: 'FREE',
           createdAt: now,
+          displacementCategory: (displacementCategory as DisplacementCategory) || undefined,
+          nationality: nationality || undefined,
+          occupation: occupation || undefined,
+          educationLevel: (educationLevel as EducationLevel) || undefined,
+          disability: disability || undefined,
         },
         meta: { lastUpdated: now },
       }
@@ -349,14 +405,17 @@ export function PatientRegistrationForm({
         await db.patients.put(patient)
       } catch (err) {
         if (err instanceof EncryptionKeyNotAvailableError) {
-          // Re-throw — caller must handle this so the user isn't
-          // redirected to a page that can't load the patient.
           throw err
         }
-        // Other IndexedDB errors — patient exists on Hub, will sync later.
       }
     },
-    [nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear, birthYearOnly, phone, nationalId, preferredLanguage, isNomadic, bloodGroup, addressOrigin, addressCurrent, sameAsOrigin],
+    [
+      nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear,
+      birthYearOnly, phone, phoneUse, preferredLanguage, isNomadic, bloodGroup,
+      maritalStatus, addressOrigin, addressCurrent, sameAsOrigin,
+      displacementCategory, nationality, occupation, educationLevel, disability,
+      emergencyContacts,
+    ],
   )
 
   // ── Submit handler ──
@@ -372,7 +431,6 @@ export function PatientRegistrationForm({
       try {
         const payload = buildPayload()
 
-        // Step 1: Check for duplicates — map form fields to the flat shape the API expects
         const dupeCheckInput: Record<string, unknown> = {
           nameGiven: payload.nameGiven,
           nameFather: payload.nameFather,
@@ -387,14 +445,11 @@ export function PatientRegistrationForm({
         const dupeResult = await checkDuplicates(dupeCheckInput)
 
         if (dupeResult.decision === 'ALLOW') {
-          // Step 2a: No duplicates — create patient
           const created = await createPatient(payload)
           try {
             await savePatientLocally(created.id, new Date().toISOString())
           } catch (saveErr) {
             if (saveErr instanceof EncryptionKeyNotAvailableError) {
-              // Patient was created on Hub but can't be cached locally.
-              // Redirect to login so the encryption key is initialized.
               const returnUrl = encodeURIComponent(`/${locale}/patient/${created.id}`)
               window.location.href = `/${locale}/login?returnUrl=${returnUrl}`
               return
@@ -402,8 +457,6 @@ export function PatientRegistrationForm({
           }
           router.push(`/${locale}/patient/${created.id}`)
         } else {
-          // Step 2b: Possible duplicates — always treat as WARN until scoring algorithm is refined
-          // TODO: Restore BLOCK handling once MPI scoring is production-ready
           setMpiDecision('WARN')
           setMpiCandidates(dupeResult.candidates)
           setMpiProceedToken(dupeResult.proceedToken)
@@ -466,7 +519,7 @@ export function PatientRegistrationForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Name section */}
         <NameInputSection
           nameGiven={nameGiven}
@@ -484,7 +537,7 @@ export function PatientRegistrationForm({
 
         {/* Demographics section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-foreground mb-4">
+          <legend className="text-base font-bold text-foreground">
             {t('demographicsSection')}
           </legend>
 
@@ -524,9 +577,7 @@ export function PatientRegistrationForm({
               <select
                 id="gender"
                 value={gender}
-                onChange={(e) =>
-                  setGender(e.target.value as AdministrativeGender)
-                }
+                onChange={(e) => setGender(e.target.value as AdministrativeGender)}
                 aria-invalid={!!fieldErrors.gender}
                 className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                   fieldErrors.gender
@@ -545,6 +596,32 @@ export function PatientRegistrationForm({
                   {fieldErrors.gender}
                 </p>
               )}
+            </div>
+
+            {/* Marital status */}
+            <div>
+              <label
+                htmlFor="marital-status"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('maritalStatus')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <select
+                id="marital-status"
+                value={maritalStatus}
+                onChange={(e) => setMaritalStatus(e.target.value as MaritalStatus | '')}
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">{t('maritalStatusPlaceholder')}</option>
+                <option value="M">{t('maritalMarried')}</option>
+                <option value="S">{t('maritalSingle')}</option>
+                <option value="D">{t('maritalDivorced')}</option>
+                <option value="W">{t('maritalWidowed')}</option>
+                <option value="UNK">{t('maritalUnknown')}</option>
+              </select>
             </div>
 
             {/* Birth year or full date toggle */}
@@ -626,7 +703,7 @@ export function PatientRegistrationForm({
               )}
             </div>
 
-            {/* Phone */}
+            {/* Phone + phone use type */}
             <div>
               <label
                 htmlFor="phone"
@@ -637,16 +714,30 @@ export function PatientRegistrationForm({
                   ({t('optional')})
                 </span>
               </label>
-              <input
-                id="phone"
-                type="tel"
-                dir="ltr"
-                inputMode="tel"
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder={t('phonePlaceholder')}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <select
+                  id="phone-use"
+                  value={phoneUse}
+                  onChange={(e) => setPhoneUse(e.target.value as 'home' | 'work' | 'mobile' | '')}
+                  aria-label={t('phoneUse')}
+                  className="min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">{t('phoneUsePlaceholder')}</option>
+                  <option value="mobile">{t('phoneUseMobile')}</option>
+                  <option value="home">{t('phoneUseHome')}</option>
+                  <option value="work">{t('phoneUseWork')}</option>
+                </select>
+                <input
+                  id="phone"
+                  type="tel"
+                  dir="ltr"
+                  inputMode="tel"
+                  className="flex-1 min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder={t('phonePlaceholder')}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Preferred Language */}
@@ -663,14 +754,13 @@ export function PatientRegistrationForm({
               <select
                 id="preferred-language"
                 value={preferredLanguage}
-                onChange={(e) =>
-                  setPreferredLanguage(e.target.value as 'en' | 'ar' | 'prs')
-                }
+                onChange={(e) => setPreferredLanguage(e.target.value as PatientLanguage)}
                 className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="en">English</option>
-                <option value="ar">{isRtl ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'Arabic'}</option>
-                <option value="prs">{isRtl ? '\u062F\u0631\u06CC' : 'Dari'}</option>
+                <option value="en">{t('languageEnglish')}</option>
+                <option value="ar">{t('languageArabic')}</option>
+                <option value="prs">{t('languageDari')}</option>
+                <option value="ps">{t('languagePashto')}</option>
               </select>
             </div>
           </div>
@@ -696,7 +786,7 @@ export function PatientRegistrationForm({
 
         {/* Clinical section */}
         <Card as="fieldset">
-          <legend className="text-base font-bold text-foreground mb-4">
+          <legend className="text-base font-bold text-foreground">
             {t('clinicalSection')}
           </legend>
 
@@ -724,6 +814,26 @@ export function PatientRegistrationForm({
             </select>
           </div>
         </Card>
+
+        {/* Social / HMIS section */}
+        <SocialInfoSection
+          displacementCategory={displacementCategory}
+          nationality={nationality}
+          occupation={occupation}
+          educationLevel={educationLevel}
+          disability={disability}
+          onDisplacementCategoryChange={setDisplacementCategory}
+          onNationalityChange={setNationality}
+          onOccupationChange={setOccupation}
+          onEducationLevelChange={setEducationLevel}
+          onDisabilityChange={setDisability}
+        />
+
+        {/* Emergency contact section */}
+        <EmergencyContactSection
+          contacts={emergencyContacts}
+          onContactsChange={setEmergencyContacts}
+        />
 
         {/* Consent section */}
         <ConsentSection
@@ -756,7 +866,6 @@ export function PatientRegistrationForm({
         </Button>
       </form>
 
-      {/* MPI duplicate result modal */}
       <MpiResultModal
         open={mpiModalOpen}
         decision={mpiDecision}

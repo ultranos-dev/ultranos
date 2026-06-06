@@ -8,7 +8,7 @@ import { ConsentTextModal } from './ConsentTextModal'
 import { Card } from '@/components/Card'
 
 type ConsentMethod = 'WRITTEN' | 'VERBAL_WITNESSED'
-type ConsentLanguage = 'en' | 'ar' | 'prs'
+type ConsentLanguage = 'en' | 'ar' | 'prs' | 'ps'
 
 interface ConsentSectionProps {
   method: ConsentMethod | ''
@@ -25,9 +25,10 @@ interface ConsentSectionProps {
 }
 
 const CONSENT_LANGUAGES: { value: ConsentLanguage; labelKey: string }[] = [
-  { value: 'en', labelKey: 'languageEnglish' },
-  { value: 'ar', labelKey: 'languageArabic' },
+  { value: 'en',  labelKey: 'languageEnglish' },
+  { value: 'ar',  labelKey: 'languageArabic' },
   { value: 'prs', labelKey: 'languageDari' },
+  { value: 'ps',  labelKey: 'languagePashto' },
 ]
 
 export function ConsentSection({
