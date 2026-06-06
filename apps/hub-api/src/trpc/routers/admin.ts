@@ -2164,7 +2164,8 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         email: z.string().email(),
-        name: z.string().min(1).max(200),
+        givenName: z.string().min(1).max(200),
+        familyName: z.string().max(200).default(''),
         role: z.string().min(1),
         password: z.string().min(8).max(128),
       }),
@@ -2213,11 +2214,6 @@ export const adminRouter = createTRPCRouter({
         }
       }
 
-      // Split name into given_name / family_name
-      const nameParts = input.name.trim().split(/\s+/)
-      const familyName = nameParts.length > 1 ? nameParts.pop()! : ''
-      const givenName = nameParts.join(' ')
-
       // Create Supabase Auth user with admin-provided password
       const { data: authResult, error: authError } = await ctx.supabase.auth.admin.createUser({
         email: input.email,
@@ -2226,8 +2222,8 @@ export const adminRouter = createTRPCRouter({
         user_metadata: {
           role: input.role,
           org_id: ctx.user.orgId,
-          given_name: givenName,
-          family_name: familyName,
+          given_name: input.givenName,
+          family_name: input.familyName,
         },
       })
 
@@ -2260,8 +2256,8 @@ export const adminRouter = createTRPCRouter({
         .from('practitioners')
         .insert({
           auth_user_id: authUserId,
-          given_name: givenName,
-          family_name: familyName,
+          given_name: input.givenName,
+          family_name: input.familyName,
           telecom_email: input.email,
           role: input.role,
           org_id: ctx.user.orgId,
@@ -2324,7 +2320,9 @@ export const adminRouter = createTRPCRouter({
 
       return {
         userId: practitioner.id as string,
-        name: input.name,
+        name: [input.givenName, input.familyName].filter(Boolean).join(' '),
+        givenName: input.givenName,
+        familyName: input.familyName,
         email: input.email,
         role: input.role,
         status: 'PENDING_INVITE',
@@ -6859,7 +6857,8 @@ export const adminRouter = createTRPCRouter({
   enrollChw: adminProcedure
     .input(
       z.object({
-        fullName: z.string().min(1).max(255),
+        givenName: z.string().min(1).max(200),
+        familyName: z.string().max(200).default(''),
         phone: z.string().min(7).max(20).regex(/^\+?[0-9\s\-()]+$/, 'Invalid phone format'),
         assignedLabId: z.string().uuid(),
       }),
@@ -6878,13 +6877,16 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Lab not found in organization' })
       }
 
-      // Encrypt full_name (PHI) before storage
-      let encryptedName: string
+      // Encrypt given_name and family_name (PHI) before storage
+      let encryptedGivenName: string
+      let encryptedFamilyName: string
       try {
         const key = await getCachedEncryptionKey()
-        encryptedName = encryptField(input.fullName, key)
+        encryptedGivenName = encryptField(input.givenName, key)
+        encryptedFamilyName = input.familyName ? encryptField(input.familyName, key) : ''
       } catch {
-        encryptedName = input.fullName
+        encryptedGivenName = input.givenName
+        encryptedFamilyName = input.familyName
       }
 
       const chwId = crypto.randomUUID()
@@ -6893,8 +6895,8 @@ export const adminRouter = createTRPCRouter({
         .insert({
           id: chwId,
           org_id: orgId,
-          given_name: encryptedName,
-          family_name: '',
+          given_name: encryptedGivenName,
+          family_name: encryptedFamilyName,
           role: 'CHW',
           status: 'ACTIVE',
           telecom_phone: input.phone,

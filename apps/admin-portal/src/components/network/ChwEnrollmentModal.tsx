@@ -26,7 +26,8 @@ interface ChwEnrollmentModalProps {
 }
 
 export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwEnrollmentModalProps) {
-  const [fullName, setFullName] = useState('')
+  const [givenName, setGivenName] = useState('')
+  const [familyName, setFamilyName] = useState('')
   const [phone, setPhone] = useState('')
   const [assignedLabId, setAssignedLabId] = useState(labs[0]?.labId ?? '')
   const [submitting, setSubmitting] = useState(false)
@@ -34,14 +35,15 @@ export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwE
   const [createdId, setCreatedId] = useState<string | null>(null)
 
   const phoneValid = /^\+?[0-9\s\-()]{7,20}$/.test(phone)
-  const isValid = fullName.trim().length > 0 && phoneValid && assignedLabId
+  const isValid = givenName.trim().length > 0 && phoneValid && assignedLabId
 
   async function handleSubmit() {
     try {
       setSubmitting(true)
       setError(null)
       const result = await trpc.admin.enrollChw.mutate({
-        fullName: fullName.trim(),
+        givenName: givenName.trim(),
+        familyName: familyName.trim(),
         phone: phone.trim(),
         assignedLabId,
       })
@@ -77,7 +79,8 @@ export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwE
               <Button
                 onClick={() => {
                   setCreatedId(null)
-                  setFullName('')
+                  setGivenName('')
+                  setFamilyName('')
                   setPhone('')
                   setError(null)
                 }}
@@ -91,16 +94,30 @@ export function ChwEnrollmentModal({ labs, open, onOpenChange, onSuccess }: ChwE
           </div>
         ) : (
           <>
-            {/* Full Name */}
+            {/* Given Name */}
             <div>
-              <label htmlFor="chw-name" className="block text-sm font-medium text-foreground">
-                Full Name <span className="text-destructive">*</span>
+              <label htmlFor="chw-given-name" className="block text-sm font-medium text-foreground">
+                Given Name <span className="text-destructive">*</span>
               </label>
               <Input
-                id="chw-name"
+                id="chw-given-name"
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={givenName}
+                onChange={(e) => setGivenName(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Family Name */}
+            <div>
+              <label htmlFor="chw-family-name" className="block text-sm font-medium text-foreground">
+                Family Name / Last Name
+              </label>
+              <Input
+                id="chw-family-name"
+                type="text"
+                value={familyName}
+                onChange={(e) => setFamilyName(e.target.value)}
                 className="mt-1"
               />
             </div>

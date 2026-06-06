@@ -279,6 +279,14 @@ When writing sync logic, use the correct tier:
 - Audit: every API endpoint that touches PHI must have a test asserting an audit event was emitted
 - Offline: integration tests that simulate network disconnection mid-operation and verify queue persistence
 
+## ⛔ Git — No Autonomous Commits
+
+**Agents must never stage files or create commits without an explicit user instruction to do so.** This applies in all contexts: after completing a task, at the end of a workflow, or when a skill or tool suggests it. The user controls all git operations.
+
+- Do NOT run `git add`, `git commit`, or any variant automatically.
+- Do NOT stage files as a "convenience" step after edits.
+- Only commit when the user explicitly says "commit" or equivalent.
+
 ## Decision Points
 
 When you encounter a decision point (ambiguous design choice, multiple valid approaches, or a tradeoff that requires human judgment), always:

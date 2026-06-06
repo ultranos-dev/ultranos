@@ -146,6 +146,7 @@ export interface FhirPatient {
     nameGiven?: string
     nameFather?: string
     nameGrandfather?: string
+    nameFamily?: string       // optional family/last name (FHIR name[0].family)
     birthYear?: number
     addressOrigin?: PatientAddress
     addressCurrent?: PatientAddress
@@ -200,6 +201,7 @@ export interface CreatePatientInput {
   nameGiven?: string
   nameFather?: string
   nameGrandfather?: string
+  nameFamily?: string
   birthYear?: number
   addressOrigin?: PatientAddress
   addressCurrent?: PatientAddress

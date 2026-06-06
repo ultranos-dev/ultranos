@@ -20,7 +20,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }))
 
-const { default: CreateUserPage } = await import('../app/users/create/page')
+const { default: CreateUserPage } = await import('../app/[locale]/users/create/page')
 
 const mockAvailableRoles = {
   availableRoles: [
@@ -42,9 +42,12 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
   it('calls createUser with correct args and shows success with setup link', async () => {
     mockCreateUser.mockResolvedValue({
       userId: 'user-123',
-      name: 'Dr. Fatima Al-Rashid',
+      name: 'Fatima Al-Rashid',
+      givenName: 'Fatima',
+      familyName: 'Al-Rashid',
       email: 'fatima@clinic.org',
       role: 'CLINICIAN',
+      status: 'PENDING_INVITE',
       setupLink: 'https://admin.ultranos.com/setup?token=abc123',
       emailSent: false,
     })
@@ -56,8 +59,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     })
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Full Name'), 'Dr. Fatima Al-Rashid')
+    await user.type(screen.getByLabelText('Given Name'), 'Fatima')
+    await user.type(screen.getByLabelText('Family Name / Last Name'), 'Al-Rashid')
     await user.type(screen.getByLabelText('Email'), 'fatima@clinic.org')
+    await user.type(screen.getByLabelText('Password'), 'Password123!')
+    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('CLINICIAN'))
 
     await user.click(screen.getByRole('button', { name: /Create User/i }))
@@ -66,15 +72,17 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
       expect(screen.getByText('User created successfully')).toBeInTheDocument()
     })
 
-    // Verify createUser was called with correct args
+    // Verify createUser was called with correct args (split-name API)
     expect(mockCreateUser).toHaveBeenCalledWith({
-      name: 'Dr. Fatima Al-Rashid',
+      givenName: 'Fatima',
+      familyName: 'Al-Rashid',
       email: 'fatima@clinic.org',
       role: 'CLINICIAN',
+      password: expect.any(String),
     })
 
     // Verify user details shown in confirmation
-    expect(screen.getByText('Dr. Fatima Al-Rashid')).toBeInTheDocument()
+    expect(screen.getByText(/Fatima Al-Rashid/)).toBeInTheDocument()
     expect(screen.getByText('fatima@clinic.org')).toBeInTheDocument()
     // Role appears in both the radio list and the success summary — confirm at least one is present
     expect(screen.getAllByText('CLINICIAN').length).toBeGreaterThanOrEqual(1)
@@ -88,8 +96,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     mockCreateUser.mockResolvedValue({
       userId: 'user-456',
       name: 'Ali Hassan',
+      givenName: 'Ali',
+      familyName: 'Hassan',
       email: 'ali@clinic.org',
       role: 'ADMIN',
+      status: 'PENDING_INVITE',
       setupLink: null,
       emailSent: true,
     })
@@ -101,8 +112,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     })
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Full Name'), 'Ali Hassan')
+    await user.type(screen.getByLabelText('Given Name'), 'Ali')
+    await user.type(screen.getByLabelText('Family Name / Last Name'), 'Hassan')
     await user.type(screen.getByLabelText('Email'), 'ali@clinic.org')
+    await user.type(screen.getByLabelText('Password'), 'Password123!')
+    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('ADMIN'))
 
     await user.click(screen.getByRole('button', { name: /Create User/i }))
@@ -118,9 +132,12 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
   it('shows "Create Another User" and "View All Users" CTAs on success', async () => {
     mockCreateUser.mockResolvedValue({
       userId: 'user-789',
-      name: 'Nurse Amira',
+      name: 'Amira Nurse',
+      givenName: 'Amira',
+      familyName: 'Nurse',
       email: 'amira@clinic.org',
       role: 'CLINICIAN',
+      status: 'PENDING_INVITE',
       setupLink: 'https://admin.ultranos.com/setup?token=xyz',
       emailSent: false,
     })
@@ -132,8 +149,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     })
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Full Name'), 'Nurse Amira')
+    await user.type(screen.getByLabelText('Given Name'), 'Amira')
+    await user.type(screen.getByLabelText('Family Name / Last Name'), 'Nurse')
     await user.type(screen.getByLabelText('Email'), 'amira@clinic.org')
+    await user.type(screen.getByLabelText('Password'), 'Password123!')
+    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('CLINICIAN'))
     await user.click(screen.getByRole('button', { name: /Create User/i }))
 
@@ -149,8 +169,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     mockCreateUser.mockResolvedValue({
       userId: 'user-001',
       name: 'Test User',
+      givenName: 'Test',
+      familyName: 'User',
       email: 'test@clinic.org',
       role: 'ADMIN',
+      status: 'PENDING_INVITE',
       setupLink: null,
       emailSent: true,
     })
@@ -162,8 +185,11 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     })
 
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('Full Name'), 'Test User')
+    await user.type(screen.getByLabelText('Given Name'), 'Test')
+    await user.type(screen.getByLabelText('Family Name / Last Name'), 'User')
     await user.type(screen.getByLabelText('Email'), 'test@clinic.org')
+    await user.type(screen.getByLabelText('Password'), 'Password123!')
+    await user.type(screen.getByLabelText('Confirm Password'), 'Password123!')
     await user.click(screen.getByText('ADMIN'))
     await user.click(screen.getByRole('button', { name: /Create User/i }))
 
@@ -174,8 +200,10 @@ describe('Task 7 — User Creation Submit Handler Wired', () => {
     await user.click(screen.getByRole('button', { name: 'Create Another User' }))
 
     // Form should be visible again with empty fields
-    expect(screen.getByLabelText('Full Name')).toHaveValue('')
+    expect(screen.getByLabelText('Given Name')).toHaveValue('')
+    expect(screen.getByLabelText('Family Name / Last Name')).toHaveValue('')
     expect(screen.getByLabelText('Email')).toHaveValue('')
+    expect(screen.getByLabelText('Password')).toHaveValue('')
     expect(screen.getByRole('button', { name: /Create User/i })).toBeInTheDocument()
     expect(screen.queryByText('User created successfully')).not.toBeInTheDocument()
   })

@@ -141,3 +141,162 @@ describe('Admin Router — ADMIN guard', () => {
     )
   })
 })
+
+describe('Admin Router — createUser split name', () => {
+  it('rejects input with legacy `name` field', async () => {
+    const caller = createCallerFactory(adminRouter)(
+      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1' }),
+    )
+    // @ts-expect-error intentionally passing old shape
+    await expect(caller.createUser({ name: 'Ahmad Shah', email: 'a@b.com', role: 'DOCTOR', password: 'pass1234' }))
+      .rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('accepts givenName + familyName and calls supabase.auth.admin.createUser', async () => {
+    const createUserMock = vi.fn().mockResolvedValue({
+      data: { user: { id: 'auth-uuid-1' } },
+      error: null,
+    })
+    const generateLinkMock = vi.fn().mockResolvedValue({ data: { properties: { action_link: null } }, error: null })
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const single = vi.fn()
+      .mockResolvedValueOnce({ data: null, error: null })  // adminPractitioner lookup
+      .mockResolvedValueOnce({ data: { id: 'pract-uuid-1' }, error: null })  // insert practitioner
+
+    const maybeSingleSub = vi.fn().mockResolvedValue({ data: { id: 'sub-1' }, error: null })
+    const eqLeaf = { maybeSingle, single }
+    const eqChain: any = { maybeSingle, single, eq: vi.fn().mockReturnValue(eqLeaf) }
+    const selectChain = { eq: vi.fn().mockReturnValue(eqChain) }
+    const insertChain = { select: vi.fn().mockReturnValue({ single }) }
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'practitioners') return { select: vi.fn().mockReturnValue(selectChain), insert: vi.fn().mockReturnValue(insertChain) }
+      if (table === 'org_subscriptions') return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: vi.fn().mockReturnValue({ maybeSingle: maybeSingleSub }) }) }) }) }
+      return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle }) }) }
+    })
+
+    const ctx = {
+      supabase: {
+        from: fromMock,
+        auth: { admin: { createUser: createUserMock, generateLink: generateLinkMock } },
+      } as never,
+      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      headers: new Headers(),
+    }
+
+    const caller = createCallerFactory(adminRouter)(ctx)
+    const result = await caller.createUser({
+      givenName: 'Ahmad',
+      familyName: 'Shah',
+      email: 'ahmad@clinic.af',
+      role: 'DOCTOR',
+      password: 'securePass1',
+    })
+
+    expect(createUserMock).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ given_name: 'Ahmad', family_name: 'Shah' }),
+    }))
+    expect(result.name).toBe('Ahmad Shah')
+  })
+})
+
+describe('Admin Router — enrollChw split name', () => {
+  it('rejects input with legacy `fullName` field', async () => {
+    const caller = createCallerFactory(adminRouter)(
+      makeCtx({ sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1' }),
+    )
+    // @ts-expect-error intentionally passing old shape
+    await expect(caller.enrollChw({ fullName: 'Fatima Noori', phone: '+93700000001', assignedLabId: '00000000-0000-0000-0000-000000000001' }))
+      .rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('accepts givenName + familyName and stores both columns separately', async () => {
+    const labSingle = vi.fn().mockResolvedValue({ data: { id: 'lab-1' }, error: null })
+    let capturedInsertRow: Record<string, unknown> | null = null
+    const insertMock = vi.fn().mockImplementation((row: Record<string, unknown>) => {
+      capturedInsertRow = row
+      return { error: null }
+    })
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({ single: labSingle }),
+            }),
+          }),
+        }
+      }
+      if (table === 'practitioners') {
+        return { insert: insertMock }
+      }
+      return { select: vi.fn() }
+    })
+
+    const ctx = {
+      supabase: { from: fromMock } as never,
+      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      headers: new Headers(),
+    }
+
+    const caller = createCallerFactory(adminRouter)(ctx)
+    const result = await caller.enrollChw({
+      givenName: 'Fatima',
+      familyName: 'Noori',
+      phone: '+93700000001',
+      assignedLabId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(result.success).toBe(true)
+    expect(capturedInsertRow).not.toBeNull()
+    // Both name columns must be non-empty strings (encrypted or plain)
+    expect(typeof capturedInsertRow!.given_name).toBe('string')
+    expect((capturedInsertRow!.given_name as string).length).toBeGreaterThan(0)
+    // given_name must not be raw plaintext (encryption applied)
+    expect(capturedInsertRow!.given_name).not.toBe('Fatima')
+    expect(typeof capturedInsertRow!.family_name).toBe('string')
+    expect((capturedInsertRow!.family_name as string).length).toBeGreaterThan(0)
+    // family_name must be stored separately and not equal given_name
+    expect(capturedInsertRow!.family_name).not.toBe(capturedInsertRow!.given_name)
+    // value must not be raw plaintext (encryption applied)
+    expect(capturedInsertRow!.family_name).not.toBe('Noori')
+  })
+
+  it('stores empty string for family_name when familyName is omitted', async () => {
+    const labSingle = vi.fn().mockResolvedValue({ data: { id: 'lab-1' }, error: null })
+    let capturedInsertRow: Record<string, unknown> | null = null
+    const insertMock = vi.fn().mockImplementation((row: Record<string, unknown>) => {
+      capturedInsertRow = row
+      return { error: null }
+    })
+    const fromMock = vi.fn((table: string) => {
+      if (table === 'labs') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({ single: labSingle }),
+            }),
+          }),
+        }
+      }
+      if (table === 'practitioners') return { insert: insertMock }
+      return { select: vi.fn() }
+    })
+
+    const ctx = {
+      supabase: { from: fromMock } as never,
+      user: { sub: 'admin-1', role: 'ADMIN', sessionId: 's1', orgId: 'org-1', status: null },
+      headers: new Headers(),
+    }
+
+    const caller = createCallerFactory(adminRouter)(ctx)
+    // Pass no familyName — uses default ''
+    await caller.enrollChw({
+      givenName: 'Ahmad',
+      phone: '+93700000001',
+      assignedLabId: '00000000-0000-0000-0000-000000000001',
+    })
+
+    expect(capturedInsertRow).not.toBeNull()
+    expect(capturedInsertRow!.family_name).toBe('')
+  })
+})

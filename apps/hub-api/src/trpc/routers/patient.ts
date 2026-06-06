@@ -49,7 +49,7 @@ export const patientRouter = createTRPCRouter({
         .select(
           'id, gender, birth_date, birth_year_only, birth_year, ' +
           'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
-          'name_given, name_father, name_grandfather, ' +
+          'name_given, name_father, name_grandfather, name_family, ' +
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
@@ -123,6 +123,7 @@ export const patientRouter = createTRPCRouter({
             nameGiven:           row.name_given,
             nameFather:          row.name_father,
             nameGrandfather:     row.name_grandfather,
+            nameFamily:          row.name_family ?? undefined,
             birthYear:           row.birth_year,
             addressOrigin: row.address_province_origin
               ? {
@@ -197,7 +198,7 @@ export const patientRouter = createTRPCRouter({
         .select(
           'id, gender, birth_date, birth_year_only, birth_year, ' +
           'name_local, name_latin, national_id_hash, is_active, created_at, updated_at, ' +
-          'name_given, name_father, name_grandfather, ' +
+          'name_given, name_father, name_grandfather, name_family, ' +
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
@@ -263,6 +264,7 @@ export const patientRouter = createTRPCRouter({
             nameGiven:           row.name_given,
             nameFather:          row.name_father,
             nameGrandfather:     row.name_grandfather,
+            nameFamily:          row.name_family ?? undefined,
             birthYear:           row.birth_year,
             addressOrigin: row.address_province_origin
               ? {
@@ -408,6 +410,7 @@ export const patientRouter = createTRPCRouter({
       const nameGiven = input.nameGiven ?? null
       const nameFather = input.nameFather ?? null
       const nameGrandfather = input.nameGrandfather ?? null
+      const nameFamily = input.nameFamily ?? null
 
       const phoneticGiven       = nameGiven       ? computePhoneticTokens(normalizeNameComponent(nameGiven))       : []
       const phoneticFather      = nameFather      ? computePhoneticTokens(normalizeNameComponent(nameFather))      : []
@@ -502,6 +505,8 @@ export const patientRouter = createTRPCRouter({
         name_given_enc:         nameGiven   ?? null,
         name_father_enc:        nameFather  ?? null,
         name_grandfather_enc:   nameGrandfather ?? null,
+        name_family:            nameFamily,
+        name_family_enc:        nameFamily ?? null,
         name_phonetic_given:       phoneticGiven,
         name_phonetic_father:      phoneticFather,
         name_phonetic_grandfather: phoneticGrandfather,
@@ -622,6 +627,7 @@ export const patientRouter = createTRPCRouter({
       const nameGiven = input.nameGiven ?? null
       const nameFather = input.nameFather ?? null
       const nameGrandfather = input.nameGrandfather ?? null
+      const nameFamily = input.nameFamily ?? null
 
       const phoneticGiven       = nameGiven       ? computePhoneticTokens(normalizeNameComponent(nameGiven))       : []
       const phoneticFather      = nameFather      ? computePhoneticTokens(normalizeNameComponent(nameFather))      : []
@@ -648,6 +654,8 @@ export const patientRouter = createTRPCRouter({
         name_given_enc:         nameGiven   ?? null,
         name_father_enc:        nameFather  ?? null,
         name_grandfather_enc:   nameGrandfather ?? null,
+        name_family:            nameFamily,
+        name_family_enc:        nameFamily ?? null,
         name_phonetic_given:       phoneticGiven,
         name_phonetic_father:      phoneticFather,
         name_phonetic_grandfather: phoneticGrandfather,
@@ -775,6 +783,7 @@ export const patientRouter = createTRPCRouter({
           'name_local, name_local_enc, name_latin, name_latin_enc, ' +
           'name_given, name_given_enc, name_father, name_father_enc, ' +
           'name_grandfather, name_grandfather_enc, ' +
+          'name_family, name_family_enc, ' +
           'name_phonetic, name_phonetic_enc, ' +
           'national_id_hash, is_active, created_at, created_by, updated_at, updated_by, ' +
           'address_province_origin, address_district_origin, address_village_origin, ' +
@@ -813,6 +822,7 @@ export const patientRouter = createTRPCRouter({
             'name_local, name_local_enc, name_latin, name_latin_enc, ' +
             'name_given, name_given_enc, name_father, name_father_enc, ' +
             'name_grandfather, name_grandfather_enc, ' +
+            'name_family, name_family_enc, ' +
             'name_phonetic, name_phonetic_enc, ' +
             'national_id_hash, is_active, created_at, created_by, updated_at, updated_by, ' +
             'address_province_origin, address_district_origin, address_village_origin, ' +
@@ -885,6 +895,7 @@ export const patientRouter = createTRPCRouter({
       const nameGiven = (patient.nameGivenEnc as string) ?? (patient.nameGiven as string | null)
       const nameFather = (patient.nameFatherEnc as string) ?? (patient.nameFather as string | null)
       const nameGrandfather = (patient.nameGrandfatherEnc as string) ?? (patient.nameGrandfather as string | null)
+      const nameFamily = (patient.nameFamilyEnc as string) ?? (patient.nameFamily as string | null)
       const phone = patient.telecomPhone as string | null
 
       return {
@@ -920,6 +931,7 @@ export const patientRouter = createTRPCRouter({
           nameGiven: nameGiven ?? undefined,
           nameFather: nameFather ?? undefined,
           nameGrandfather: nameGrandfather ?? undefined,
+          nameFamily: nameFamily ?? undefined,
           birthYear: (patient.birthYear as number) ?? undefined,
           addressOrigin: patient.addressProvinceOrigin
             ? {
@@ -1080,6 +1092,7 @@ export const patientRouter = createTRPCRouter({
         nameGiven: z.string().max(200).optional(),
         nameFather: z.string().max(200).optional(),
         nameGrandfather: z.string().max(200).optional(),
+        nameFamily: z.string().max(200).optional(),
         birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
         addressProvinceOrigin: z.string().optional(),
         addressDistrictOrigin: z.string().optional(),
@@ -1178,6 +1191,11 @@ export const patientRouter = createTRPCRouter({
         updates.nameGrandfather = input.nameGrandfather
         updates.nameGrandfatherEnc = input.nameGrandfather
         fieldsUpdated.push('nameGrandfather')
+      }
+      if (input.nameFamily !== undefined) {
+        updates.nameFamily = input.nameFamily
+        updates.nameFamilyEnc = input.nameFamily
+        fieldsUpdated.push('nameFamily')
       }
       if (input.birthYear !== undefined) {
         updates.birthYear = input.birthYear

@@ -61,6 +61,7 @@ const PatientEditSchema = z.object({
   nameGiven: z.string().min(1, 'required').max(200),
   nameFather: z.string().max(200).optional(),
   nameGrandfather: z.string().max(200).optional(),
+  nameFamily: z.string().max(200).optional(),
   gender: z.nativeEnum(AdministrativeGender, { required_error: 'required' }),
   birthYearOnly: z.boolean(),
   birthYear: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
@@ -101,6 +102,7 @@ export function PatientEditModal({
   const [nameGiven, setNameGiven] = useState('')
   const [nameFather, setNameFather] = useState('')
   const [nameGrandfather, setNameGrandfather] = useState('')
+  const [nameFamily, setNameFamily] = useState('')
   const [gender, setGender] = useState<AdministrativeGender | ''>('')
   const [birthYearOnly, setBirthYearOnly] = useState(true)
   const [birthYear, setBirthYear] = useState<string>('')
@@ -139,6 +141,7 @@ export function PatientEditModal({
     setNameGiven(ext.nameGiven ?? patient.name?.[0]?.given?.[0] ?? '')
     setNameFather(ext.nameFather ?? '')
     setNameGrandfather(ext.nameGrandfather ?? '')
+    setNameFamily(ext.nameFamily ?? '')
     setGender(patient.gender || '')
     setBirthYearOnly(patient.birthYearOnly)
 
@@ -209,6 +212,7 @@ export function PatientEditModal({
       nameGiven,
       nameFather: nameFather || undefined,
       nameGrandfather: nameGrandfather || undefined,
+      nameFamily: nameFamily || undefined,
       gender: gender || undefined,
       birthYearOnly,
       birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
@@ -240,7 +244,7 @@ export function PatientEditModal({
     setFieldErrors({})
     return true
   }, [
-    nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
+    nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
     birthYear, birthDate, phone, preferredLanguage, addressOrigin,
     addressCurrent, isNomadic, bloodGroup, t,
   ])
@@ -255,7 +259,7 @@ export function PatientEditModal({
 
     try {
       // Compute nameLocal from patronymic chain
-      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+      const nameLocal = [nameGiven, nameFather, nameGrandfather, nameFamily]
         .filter(Boolean)
         .join(' ')
 
@@ -272,6 +276,7 @@ export function PatientEditModal({
         nameGiven,
         nameFather: nameFather || undefined,
         nameGrandfather: nameGrandfather || undefined,
+        nameFamily: nameFamily || undefined,
         gender: gender || undefined,
         birthYearOnly,
         birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
@@ -383,7 +388,7 @@ export function PatientEditModal({
       setSubmitting(false)
     }
   }, [
-    validate, patientId, patient, nameGiven, nameFather, nameGrandfather,
+    validate, patientId, patient, nameGiven, nameFather, nameGrandfather, nameFamily,
     gender, birthYearOnly, birthYear, birthDate, phone, nationalId, preferredLanguage,
     addressOrigin, addressCurrent, sameAsOrigin, isNomadic, bloodGroup,
     bloodGroupLocked, onSaved, onClose, t,
@@ -393,7 +398,7 @@ export function PatientEditModal({
 
   const buildUpdatedPatient = useCallback(
     (now: string): FhirPatient => {
-      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+      const nameLocal = [nameGiven, nameFather, nameGrandfather, nameFamily]
         .filter(Boolean)
         .join(' ')
 
@@ -407,7 +412,7 @@ export function PatientEditModal({
 
       return {
         ...patient,
-        name: [{ given: nameGiven ? [nameGiven] : [], text: nameLocal }],
+        name: [{ given: nameGiven ? [nameGiven] : [], family: nameFamily || undefined, text: nameLocal }],
         gender: (gender as AdministrativeGender) || AdministrativeGender.UNKNOWN,
         birthDate: birthDate || (birthYear ? birthYear : undefined) as string | undefined,
         birthYearOnly,
@@ -418,6 +423,7 @@ export function PatientEditModal({
           nameGiven: nameGiven || undefined,
           nameFather: nameFather || undefined,
           nameGrandfather: nameGrandfather || undefined,
+          nameFamily: nameFamily || undefined,
           birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
           preferredLanguage,
           addressOrigin: addressOrigin.province
@@ -431,7 +437,7 @@ export function PatientEditModal({
       }
     },
     [
-      patient, nameGiven, nameFather, nameGrandfather, gender,
+      patient, nameGiven, nameFather, nameGrandfather, nameFamily, gender,
       birthYearOnly, birthYear, birthDate, phone, preferredLanguage,
       addressOrigin, addressCurrent, sameAsOrigin, isNomadic,
       bloodGroup, bloodGroupLocked,
@@ -490,13 +496,16 @@ export function PatientEditModal({
             nameGiven={nameGiven}
             nameFather={nameFather}
             nameGrandfather={nameGrandfather}
+            nameFamily={nameFamily}
             onNameGivenChange={setNameGiven}
             onNameFatherChange={setNameFather}
             onNameGrandfatherChange={setNameGrandfather}
+            onNameFamilyChange={setNameFamily}
             errors={{
               nameGiven: fieldErrors.nameGiven,
               nameFather: fieldErrors.nameFather,
               nameGrandfather: fieldErrors.nameGrandfather,
+              nameFamily: fieldErrors.nameFamily,
             }}
           />
 

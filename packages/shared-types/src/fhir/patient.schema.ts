@@ -85,6 +85,7 @@ const PatientUltranosExtSchema = z.object({
   nameGiven: z.string().optional(),
   nameFather: z.string().optional(),
   nameGrandfather: z.string().optional(),
+  nameFamily: z.string().max(200).optional(),
   birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
   addressOrigin: PatientAddressSchema.optional(),
   addressCurrent: PatientAddressSchema.optional(),
@@ -131,6 +132,7 @@ export type FhirPatientZod = z.infer<typeof FhirPatientSchema>
 export const CreatePatientInputSchema = z.object({
   nameLocal: z.string().min(1),
   nameLatin: z.string().optional(),
+  nameFamily: z.string().max(200).optional(),
   gender: z.nativeEnum(AdministrativeGender),
   birthDate: FhirDateSchema.optional(),
   birthYearOnly: z.boolean().default(false),
@@ -161,6 +163,7 @@ export const CreatePatientMpiInputSchema = z
     nameGiven:         z.string().min(1).max(200).optional(),
     nameFather:        z.string().min(1).max(200).optional(),
     nameGrandfather:   z.string().min(1).max(200).optional(),
+    nameFamily:        z.string().max(200).optional(),
     gender:            z.nativeEnum(AdministrativeGender).optional(),
     birthDate:         FhirDateSchema.optional(),
     birthYearOnly:     z.boolean().default(false),

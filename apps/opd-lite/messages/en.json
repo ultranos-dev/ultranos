@@ -657,6 +657,8 @@
     "nameFatherPlaceholder": "e.g. Mohammad / محمد",
     "nameGrandfather": "Grandfather's Name (optional)",
     "nameGrandfatherPlaceholder": "e.g. Ali / علي",
+    "nameFamily": "Family Name / Last Name",
+    "nameFamilyPlaceholder": "Optional family name",
     "demographicsSection": "Demographics",
     "genderPlaceholder": "Select gender...",
     "birthYearPlaceholder": "e.g. 1990",

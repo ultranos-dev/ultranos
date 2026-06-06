@@ -26,7 +26,8 @@ export default function CreateUserPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
+  const [givenName, setGivenName] = useState('')
+  const [familyName, setFamilyName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
@@ -34,7 +35,7 @@ export default function CreateUserPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [createdUser, setCreatedUser] = useState<{
-    userId: string; name: string; email: string; role: string; setupLink: string | null; emailSent: boolean
+    userId: string; givenName: string; familyName: string; email: string; role: string; setupLink: string | null; emailSent: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function CreateUserPage() {
         return
       }
 
-      const result = await trpc.admin.createUser.mutate({ name, email, role: selectedRole, password })
+      const result = await trpc.admin.createUser.mutate({ givenName, familyName, email, role: selectedRole, password })
       setCreatedUser(result)
       setSubmitSuccess(true)
     } catch (err: unknown) {
@@ -103,25 +104,39 @@ export default function CreateUserPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl flex flex-col gap-4">
       <h1 className="text-4xl font-bold tracking-tight">Create Staff User</h1>
-      <p className="mt-4 text-muted-foreground">
+      <p className="text-muted-foreground">
         Assign roles based on your organization&apos;s active module subscriptions.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-6">
+      <form onSubmit={handleSubmit}>
         <div className="rounded-3xl bg-popover p-5 border border-border space-y-4">
-          {/* Name Field */}
+          {/* Given Name Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
-              Full Name
+            <label htmlFor="givenName" className="block text-sm font-medium text-muted-foreground">
+              Given Name
             </label>
             <Input
-              id="name"
+              id="givenName"
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={givenName}
+              onChange={(e) => setGivenName(e.target.value)}
+              className="mt-1.5"
+            />
+          </div>
+
+          {/* Family Name Field */}
+          <div>
+            <label htmlFor="familyName" className="block text-sm font-medium text-muted-foreground">
+              Family Name / Last Name
+            </label>
+            <Input
+              id="familyName"
+              type="text"
+              value={familyName}
+              onChange={(e) => setFamilyName(e.target.value)}
               className="mt-1.5"
             />
           </div>
@@ -235,15 +250,15 @@ export default function CreateUserPage() {
 
         {/* Submission feedback */}
         {submitError && (
-          <div className="mt-4 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {submitError}
           </div>
         )}
 
         {submitSuccess && createdUser && (
-          <div className="mt-4 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          <div className="rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
             <p className="font-semibold text-base mb-2">User created successfully</p>
-            <p><span className="font-medium">Name:</span> {createdUser.name}</p>
+            <p><span className="font-medium">Name:</span> {createdUser.givenName} {createdUser.familyName}</p>
             <p><span className="font-medium">Email:</span> {createdUser.email}</p>
             <p><span className="font-medium">Role:</span> {createdUser.role}</p>
             {createdUser.emailSent && (
@@ -263,7 +278,8 @@ export default function CreateUserPage() {
                 onClick={() => {
                   setCreatedUser(null)
                   setSubmitSuccess(false)
-                  setName('')
+                  setGivenName('')
+                  setFamilyName('')
                   setEmail('')
                   setPassword('')
                   setConfirmPassword('')
@@ -281,10 +297,10 @@ export default function CreateUserPage() {
         )}
 
         {!submitSuccess && (
-          <div className="mt-6 flex gap-3">
+          <div className="flex gap-3">
             <Button
               type="submit"
-              disabled={submitting || !selectedRole || !name || !email || !password || password !== confirmPassword}
+              disabled={submitting || !selectedRole || !givenName || !email || !password || password !== confirmPassword}
             >
               {submitting ? 'Creating...' : 'Create User'}
             </Button>

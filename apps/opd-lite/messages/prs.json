@@ -657,6 +657,8 @@
     "nameFatherPlaceholder": "مثلاً محمد / Mohammad",
     "nameGrandfather": "نام پدرکلان (اختیاری)",
     "nameGrandfatherPlaceholder": "مثلاً علی / Ali",
+    "nameFamily": "نام فامیل",
+    "nameFamilyPlaceholder": "نام فامیل (اختیاری)",
     "demographicsSection": "معلومات دموگرافیک",
     "genderPlaceholder": "جنسیت را انتخاب کنید...",
     "birthYearPlaceholder": "مثلاً 1990",

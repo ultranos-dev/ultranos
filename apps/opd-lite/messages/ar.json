@@ -657,6 +657,8 @@
     "nameFatherPlaceholder": "مثال: محمد / Mohammad",
     "nameGrandfather": "اسم الجد (اختياري)",
     "nameGrandfatherPlaceholder": "مثال: علي / Ali",
+    "nameFamily": "اسم العائلة",
+    "nameFamilyPlaceholder": "اسم العائلة (اختياري)",
     "demographicsSection": "البيانات الديموغرافية",
     "genderPlaceholder": "اختر الجنس...",
     "birthYearPlaceholder": "مثال: 1990",

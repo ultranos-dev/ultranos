@@ -7,13 +7,16 @@ interface NameInputSectionProps {
   nameGiven: string
   nameFather: string
   nameGrandfather: string
+  nameFamily: string
   onNameGivenChange: (value: string) => void
   onNameFatherChange: (value: string) => void
   onNameGrandfatherChange: (value: string) => void
+  onNameFamilyChange: (value: string) => void
   errors?: {
     nameGiven?: string
     nameFather?: string
     nameGrandfather?: string
+    nameFamily?: string
   }
 }
 
@@ -21,17 +24,19 @@ export function NameInputSection({
   nameGiven,
   nameFather,
   nameGrandfather,
+  nameFamily,
   onNameGivenChange,
   onNameFatherChange,
   onNameGrandfatherChange,
+  onNameFamilyChange,
   errors,
 }: NameInputSectionProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
   const isRtl = locale === 'ar' || locale === 'prs'
 
-  // Compose the full local name preview (given + father + grandfather)
-  const nameParts = [nameGiven, nameFather, nameGrandfather].filter(Boolean)
+  // Compose the full local name preview (given + father + grandfather + family)
+  const nameParts = [nameGiven, nameFather, nameGrandfather, nameFamily].filter(Boolean)
   const nameLocalPreview = nameParts.length > 0 ? nameParts.join(' ') : ''
 
   return (
@@ -130,6 +135,36 @@ export function NameInputSection({
           {errors?.nameGrandfather && (
             <p id="name-grandfather-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGrandfather}
+            </p>
+          )}
+        </div>
+
+        {/* Family Name (Last Name) */}
+        <div>
+          <label
+            htmlFor="name-family"
+            className="mb-1 block text-sm font-semibold text-foreground"
+          >
+            {t('nameFamily')}
+          </label>
+          <input
+            id="name-family"
+            type="text"
+            dir={isRtl ? 'rtl' : 'ltr'}
+            aria-invalid={!!errors?.nameFamily}
+            aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
+            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              errors?.nameFamily
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
+            }`}
+            placeholder={t('nameFamilyPlaceholder')}
+            value={nameFamily}
+            onChange={(e) => onNameFamilyChange(e.target.value)}
+          />
+          {errors?.nameFamily && (
+            <p id="name-family-error" className="mt-1 text-sm text-destructive" role="alert">
+              {errors.nameFamily}
             </p>
           )}
         </div>

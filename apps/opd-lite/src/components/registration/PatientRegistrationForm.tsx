@@ -100,6 +100,7 @@ const ClientRegistrationSchema = z.object({
   nameGiven: z.string().min(1, 'required').max(200),
   nameFather: z.string().max(200).optional(),
   nameGrandfather: z.string().max(200).optional(),
+  nameFamily: z.string().max(200).optional(),
   gender: z.nativeEnum(AdministrativeGender, { required_error: 'required' }),
   birthYearOnly: z.boolean(),
   birthYear: z.number().int().min(1900).max(CURRENT_YEAR).optional(),
@@ -169,6 +170,7 @@ export function PatientRegistrationForm({
   const [nameGiven, setNameGiven] = useState(prefilledNameGiven)
   const [nameFather, setNameFather] = useState('')
   const [nameGrandfather, setNameGrandfather] = useState('')
+  const [nameFamily, setNameFamily] = useState('')
   const [gender, setGender] = useState<AdministrativeGender | ''>('')
   const [birthYearOnly, setBirthYearOnly] = useState(true)
   const [birthYear, setBirthYear] = useState<string>('')
@@ -220,7 +222,7 @@ export function PatientRegistrationForm({
 
   const buildPayload = useCallback(
     (proceedToken?: string) => {
-      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+      const nameLocal = [nameGiven, nameFather, nameGrandfather, nameFamily]
         .filter(Boolean)
         .join(' ')
 
@@ -229,6 +231,7 @@ export function PatientRegistrationForm({
         nameGiven,
         nameFather: nameFather || undefined,
         nameGrandfather: nameGrandfather || undefined,
+        nameFamily: nameFamily || undefined,
         gender: gender || undefined,
         birthYearOnly,
         birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
@@ -283,7 +286,7 @@ export function PatientRegistrationForm({
       return payload
     },
     [
-      nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
+      nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
       birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
       isNomadic, bloodGroup, maritalStatus,
       addressOrigin, addressCurrent, sameAsOrigin,
@@ -299,6 +302,7 @@ export function PatientRegistrationForm({
       nameGiven,
       nameFather: nameFather || undefined,
       nameGrandfather: nameGrandfather || undefined,
+      nameFamily: nameFamily || undefined,
       gender: gender || undefined,
       birthYearOnly,
       birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
@@ -341,7 +345,7 @@ export function PatientRegistrationForm({
     setFieldErrors({})
     return true
   }, [
-    nameGiven, nameFather, nameGrandfather, gender, birthYearOnly,
+    nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthYearOnly,
     birthYear, birthDate, phone, phoneUse, nationalId, preferredLanguage,
     isNomadic, bloodGroup, maritalStatus,
     addressOrigin, addressCurrent,
@@ -353,14 +357,14 @@ export function PatientRegistrationForm({
 
   const savePatientLocally = useCallback(
     async (id: string, now: string) => {
-      const nameLocal = [nameGiven, nameFather, nameGrandfather]
+      const nameLocal = [nameGiven, nameFather, nameGrandfather, nameFamily]
         .filter(Boolean)
         .join(' ')
 
       const patient: FhirPatient = {
         id,
         resourceType: 'Patient',
-        name: [{ given: nameGiven ? [nameGiven] : [], text: nameLocal }],
+        name: [{ given: nameGiven ? [nameGiven] : [], family: nameFamily || undefined, text: nameLocal }],
         gender: (gender as AdministrativeGender) || AdministrativeGender.UNKNOWN,
         birthDate: birthDate || (birthYear ? birthYear : undefined) as string | undefined,
         birthYearOnly,
@@ -374,6 +378,7 @@ export function PatientRegistrationForm({
           nameGiven: nameGiven || undefined,
           nameFather: nameFather || undefined,
           nameGrandfather: nameGrandfather || undefined,
+          nameFamily: nameFamily || undefined,
           birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
           addressOrigin: addressOrigin.province
             ? { province: addressOrigin.province, district: addressOrigin.district, village: addressOrigin.village || undefined }
@@ -410,7 +415,7 @@ export function PatientRegistrationForm({
       }
     },
     [
-      nameGiven, nameFather, nameGrandfather, gender, birthDate, birthYear,
+      nameGiven, nameFather, nameGrandfather, nameFamily, gender, birthDate, birthYear,
       birthYearOnly, phone, phoneUse, preferredLanguage, isNomadic, bloodGroup,
       maritalStatus, addressOrigin, addressCurrent, sameAsOrigin,
       displacementCategory, nationality, occupation, educationLevel, disability,
@@ -525,13 +530,16 @@ export function PatientRegistrationForm({
           nameGiven={nameGiven}
           nameFather={nameFather}
           nameGrandfather={nameGrandfather}
+          nameFamily={nameFamily}
           onNameGivenChange={setNameGiven}
           onNameFatherChange={setNameFather}
           onNameGrandfatherChange={setNameGrandfather}
+          onNameFamilyChange={setNameFamily}
           errors={{
             nameGiven: fieldErrors.nameGiven,
             nameFather: fieldErrors.nameFather,
             nameGrandfather: fieldErrors.nameGrandfather,
+            nameFamily: fieldErrors.nameFamily,
           }}
         />
 

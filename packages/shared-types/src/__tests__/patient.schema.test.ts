@@ -126,6 +126,31 @@ describe('CreatePatientInputSchema', () => {
     })
     expect(result.birthYearOnly).toBe(false)
   })
+
+  it('accepts nameFamily as optional string', () => {
+    const base = {
+      nameLocal: 'Ahmad',
+      gender: 'male',
+      birthDate: '1990-01-01',
+      birthYearOnly: false,
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    }
+    expect(CreatePatientInputSchema.safeParse({ ...base, nameFamily: 'Ahmadzai' }).success).toBe(true)
+    expect(CreatePatientInputSchema.safeParse({ ...base, nameFamily: '' }).success).toBe(true)
+    expect(CreatePatientInputSchema.safeParse(base).success).toBe(true)
+  })
+
+  it('rejects nameFamily longer than 200 chars', () => {
+    const base = {
+      nameLocal: 'Ahmad',
+      gender: 'male',
+      birthDate: '1990-01-01',
+      birthYearOnly: false,
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    }
+    const result = CreatePatientInputSchema.safeParse({ ...base, nameFamily: 'A'.repeat(201) })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('CreatePatientMpiInputSchema — HMIS demographic fields', () => {
