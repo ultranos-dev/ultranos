@@ -1,0 +1,164 @@
+<h2>Current Content Area State — 4 Apps</h2>
+<p class="subtitle">What each app's page layout actually looks like today. Inconsistencies highlighted in orange.</p>
+
+<style>
+  .audit-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
+  .app-col { display: flex; flex-direction: column; gap: 8px; }
+  .app-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-foreground); margin-bottom: 4px; }
+  .shell { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card); }
+  .shell-header { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); padding: 0 10px; background: var(--background); font-size: 10px; font-weight: 600; color: var(--foreground); }
+  .shell-header.h12 { height: 36px; } /* scaled down: h-12 = 48px → 36px */
+  .shell-header.h14 { height: 42px; } /* scaled down: h-14 = 56px → 42px */
+  .trigger { width: 12px; height: 12px; border: 1px solid var(--border); border-radius: 3px; flex-shrink: 0; }
+  .breadcrumb-pill { font-size: 9px; background: var(--muted); border-radius: 4px; padding: 1px 5px; color: var(--muted-foreground); }
+  .header-badge { font-size: 8px; padding: 1px 5px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted-foreground); margin-left: auto; }
+  .shell-main { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .page-block { border-radius: 6px; background: var(--muted); padding: 6px 8px; font-size: 9px; color: var(--muted-foreground); }
+  .page-block.warn { background: oklch(0.97 0.05 60); border: 1px dashed oklch(0.7 0.12 60); color: oklch(0.45 0.12 60); }
+  .page-block.ok { background: oklch(0.97 0.07 155); border: 1px dashed oklch(0.7 0.12 155); color: oklch(0.4 0.1 155); }
+  .issue-tag { display: inline-block; font-size: 8px; font-weight: 600; background: oklch(0.95 0.07 60); color: oklch(0.45 0.12 60); border: 1px solid oklch(0.85 0.1 60); border-radius: 4px; padding: 1px 5px; margin-top: 3px; }
+  .ok-tag { display: inline-block; font-size: 8px; font-weight: 600; background: oklch(0.95 0.07 155); color: oklch(0.4 0.1 155); border: 1px solid oklch(0.8 0.1 155); border-radius: 4px; padding: 1px 5px; margin-top: 3px; }
+  .legend { display: flex; gap: 12px; margin-top: 14px; font-size: 10px; align-items: center; color: var(--muted-foreground); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  .issues-table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 11px; }
+  .issues-table th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-foreground); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .issues-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .issues-table tr:last-child td { border-bottom: none; }
+  .app-tag { display: inline-block; font-size: 9px; font-weight: 600; background: var(--muted); border-radius: 4px; padding: 1px 5px; }
+  .miss { color: oklch(0.45 0.15 25); font-weight: 600; }
+  .match { color: oklch(0.4 0.1 155); }
+</style>
+
+<!-- App layout diagrams -->
+<div class="audit-grid">
+
+  <!-- Admin Portal -->
+  <div class="app-col">
+    <div class="app-name">Admin Portal</div>
+    <div class="shell">
+      <div class="shell-header h12">
+        <div class="trigger"></div>
+        <span class="breadcrumb-pill">Dashboard / Staff</span>
+        <span class="header-badge">h-12 · 48px</span>
+      </div>
+      <div class="shell-main">
+        <div class="page-block ok">main: p-4 ✓</div>
+        <div class="page-block warn">No id="main-content"<br><span class="issue-tag">accessibility gap</span></div>
+        <div class="page-block warn">Pages: gap-4 or gap-6<br>mixed inconsistently<br><span class="issue-tag">varies per page</span></div>
+        <div class="page-block ok">No extra page padding ✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPD Lite -->
+  <div class="app-col">
+    <div class="app-name">OPD Lite</div>
+    <div class="shell">
+      <div class="shell-header h14">
+        <div class="trigger"></div>
+        <span class="breadcrumb-pill">Appointments</span>
+        <span class="header-badge" style="background:oklch(0.95 0.07 60);color:oklch(0.45 0.12 60);border-color:oklch(0.85 0.1 60)">h-14 · 56px ⚠</span>
+      </div>
+      <div class="shell-main">
+        <div class="page-block ok">main: p-4 ✓</div>
+        <div class="page-block ok">id="main-content" ✓</div>
+        <div class="page-block warn">Appointments page:<br>adds px-6 pb-6 inside<br><span class="issue-tag">double-padding</span></div>
+        <div class="page-block ok">Most pages clean ✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pharmacy Lite -->
+  <div class="app-col">
+    <div class="app-name">Pharmacy Lite</div>
+    <div class="shell">
+      <div class="shell-header h14">
+        <div class="trigger"></div>
+        <span class="breadcrumb-pill">Prescriptions</span>
+        <span class="header-badge" style="background:oklch(0.95 0.07 60);color:oklch(0.45 0.12 60);border-color:oklch(0.85 0.1 60)">h-14 · 56px ⚠</span>
+      </div>
+      <div class="shell-main">
+        <div class="page-block ok">main: p-4 ✓</div>
+        <div class="page-block ok">id="main-content" ✓</div>
+        <div class="page-block ok">Pages are thin wrappers ✓</div>
+        <div class="page-block ok">No extra padding ✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lab Lite -->
+  <div class="app-col">
+    <div class="app-name">Lab Lite</div>
+    <div class="shell">
+      <div class="shell-header h12">
+        <div class="trigger"></div>
+        <span class="breadcrumb-pill">Results</span>
+        <span class="header-badge">h-12 · 48px</span>
+      </div>
+      <div class="shell-main">
+        <div class="page-block ok">main: p-4 ✓</div>
+        <div class="page-block ok">id="main-content" ✓</div>
+        <div class="page-block warn">Achievements page:<br>own border-b header bar<br>+ max-w-4xl + px-6 py-6<br><span class="issue-tag">bespoke layout</span></div>
+        <div class="page-block warn">PageHeader ≠ BreadcrumbHeader<br><span class="issue-tag">naming diverged</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="legend-dot" style="background:oklch(0.92 0.06 155);border:1px solid oklch(0.8 0.1 155)"></div> Consistent / correct
+  <div class="legend-dot" style="background:oklch(0.95 0.07 60);border:1px dashed oklch(0.7 0.12 60)"></div> Inconsistency / issue
+</div>
+
+<!-- Issues summary table -->
+<h3 style="margin-top:22px;font-size:13px;">Issues found (4 categories)</h3>
+<table class="issues-table">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Admin</th>
+      <th>OPD</th>
+      <th>Pharmacy</th>
+      <th>Lab</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sticky header height</td>
+      <td class="match">h-12 (48px)</td>
+      <td class="miss">h-14 (56px) ✗</td>
+      <td class="miss">h-14 (56px) ✗</td>
+      <td class="match">h-12 (48px)</td>
+    </tr>
+    <tr>
+      <td>Header component name</td>
+      <td class="match">BreadcrumbHeader</td>
+      <td class="match">BreadcrumbHeader</td>
+      <td class="match">BreadcrumbHeader</td>
+      <td class="miss">PageHeader ✗</td>
+    </tr>
+    <tr>
+      <td>id="main-content" on &lt;main&gt;</td>
+      <td class="miss">missing ✗</td>
+      <td class="match">present ✓</td>
+      <td class="match">present ✓</td>
+      <td class="match">present ✓</td>
+    </tr>
+    <tr>
+      <td>Rogue page-level padding</td>
+      <td class="match">none ✓</td>
+      <td class="miss">Appointments: px-6 pb-6 ✗</td>
+      <td class="match">none ✓</td>
+      <td class="miss">Achievements: px-6 py-6 + max-w ✗</td>
+    </tr>
+    <tr>
+      <td>Bespoke page header bars</td>
+      <td class="match">none ✓</td>
+      <td class="match">none ✓</td>
+      <td class="match">none ✓</td>
+      <td class="miss">Achievements has its own border-b header ✗</td>
+    </tr>
+  </tbody>
+</table>

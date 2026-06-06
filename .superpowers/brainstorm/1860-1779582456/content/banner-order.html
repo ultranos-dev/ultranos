@@ -1,0 +1,38 @@
+<h2>Banner Stacking Order</h2>
+<p class="subtitle">Safety-critical banners sit at the top of the page, uncollapsible. Which priority order feels right?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Safety-First (Recommended)</h3>
+      <p>Follows CLAUDE.md Rule #4 strictly — life-threatening info first, operational info last.</p>
+      <div style="margin-top:12px; font-family:monospace; font-size:13px; line-height:2; color:#444;">
+        <div style="background:#fee2e2; border-left:4px solid #dc2626; padding:6px 12px; margin-bottom:4px;">🔴 Allergy Banner <span style="color:#999; font-size:11px;">— always visible, never collapsed</span></div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px; margin-bottom:4px;">🟡 Sync Conflict Banner <span style="color:#999; font-size:11px;">— Tier 1 safety conflicts block prescriptions</span></div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px; margin-bottom:4px;">🟡 MPI Duplicate Warning <span style="color:#999; font-size:11px;">— wrong-patient risk</span></div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px; margin-bottom:4px;">🟡 Consent Expiry Alert <span style="color:#999; font-size:11px;">— data access at risk</span></div>
+        <div style="background:#dbeafe; border-left:4px solid #2563eb; padding:6px 12px;">🔵 Biometric Stale <span style="color:#999; font-size:11px;">— informational, non-urgent</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Clinical-Then-Operational</h3>
+      <p>Groups clinical safety together, then operational/identity concerns.</p>
+      <div style="margin-top:12px; font-family:monospace; font-size:13px; line-height:2; color:#444;">
+        <div style="background:#fee2e2; border-left:4px solid #dc2626; padding:6px 12px; margin-bottom:4px;">🔴 Allergy Banner</div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px; margin-bottom:4px;">🟡 Sync Conflict Banner</div>
+        <div style="background:#dbeafe; border-left:4px solid #2563eb; padding:6px 12px; margin-bottom:12px;">🔵 Biometric Stale</div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px; margin-bottom:4px;">🟡 MPI Duplicate Warning</div>
+        <div style="background:#fef3c7; border-left:4px solid #d97706; padding:6px 12px;">🟡 Consent Expiry Alert</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <p class="subtitle"><strong>Note:</strong> Most patients will show zero banners. The stack only appears when something needs attention. Allergy "No Known Allergies" always shows (gray, not red).</p>
+</div>

@@ -1,0 +1,94 @@
+<h2>Design — Section 2: globals.css + Tailwind Config</h2>
+<p class="subtitle">Three files change: globals.css · tailwind.config.ts · layout.tsx (fonts)</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
+
+  <!-- globals.css -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">globals.css — new structure</h3>
+    <div style="background:#1e1e2e;color:#cdd6f4;border-radius:0.625rem;padding:1rem;font-family:monospace;font-size:0.72rem;line-height:1.6">
+      <span style="color:#6c7086">/* raw L C H channels — enables /opacity modifiers */</span><br>
+      <span style="color:#cba6f7">:root</span> {<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--background</span>: <span style="color:#a6e3a1">1 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--foreground</span>: <span style="color:#a6e3a1">0.145 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--card</span>: <span style="color:#a6e3a1">1 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--card-foreground</span>: <span style="color:#a6e3a1">0.145 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--popover</span>: <span style="color:#a6e3a1">1 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--popover-foreground</span>: <span style="color:#a6e3a1">0.145 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--primary</span>: <span style="color:#fab387">0.527 0.154 150.069</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--primary-foreground</span>: <span style="color:#a6e3a1">0.985 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--secondary</span>: <span style="color:#a6e3a1">0.967 0.001 286.375</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--muted</span>: <span style="color:#a6e3a1">0.97 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--muted-foreground</span>: <span style="color:#a6e3a1">0.556 0.005 17.567</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--accent</span>: <span style="color:#a6e3a1">0.97 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--destructive</span>: <span style="color:#f38ba8">0.577 0.245 27.325</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--border</span>: <span style="color:#a6e3a1">0.922 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--input</span>: <span style="color:#a6e3a1">0.922 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--ring</span>: <span style="color:#fab387">0.527 0.154 150.069</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--radius</span>: <span style="color:#a6e3a1">0.625rem</span>;<br>
+      &nbsp;&nbsp;<span style="color:#6c7086">/* sidebar */</span><br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--sidebar</span>: <span style="color:#a6e3a1">0.18 0.01 150</span>; <span style="color:#6c7086">/* dark green — kept from original */</span><br>
+      &nbsp;&nbsp;<span style="color:#6c7086">/* custom extensions */</span><br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--warning</span>: <span style="color:#f9e2af">0.75 0.15 70</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--success</span>: <span style="color:#a6e3a1">0.72 0.17 145</span>;<br>
+      }<br><br>
+      <span style="color:#cba6f7">[data-theme="dark"]</span> {<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--background</span>: <span style="color:#a6e3a1">0.145 0 0</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--primary</span>: <span style="color:#fab387">0.448 0.119 151.328</span>;<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">--destructive</span>: <span style="color:#f38ba8">0.704 0.191 22.216</span>;<br>
+      &nbsp;&nbsp;<span style="color:#6c7086">/* … all other dark values … */</span><br>
+      }
+    </div>
+    <div style="margin-top:0.75rem;padding:0.6rem 0.75rem;background:oklch(0.97 0.005 60);border:1px solid oklch(0.88 0.02 60);border-radius:0.5rem;font-size:0.75rem">
+      <strong>Key change:</strong> Raw <code>L C H</code> channels stored (not full <code>oklch(…)</code> function). This enables Tailwind opacity modifiers like <code>bg-primary/10</code>.
+    </div>
+  </div>
+
+  <!-- tailwind.config.ts + fonts -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">tailwind.config.ts — new shape</h3>
+    <div style="background:#1e1e2e;color:#cdd6f4;border-radius:0.625rem;padding:1rem;font-family:monospace;font-size:0.72rem;line-height:1.6;margin-bottom:0.75rem">
+      <span style="color:#cba6f7">darkMode</span>: [<span style="color:#a6e3a1">'selector'</span>, <span style="color:#a6e3a1">'[data-theme="dark"]'</span>],<br>
+      <span style="color:#cba6f7">theme.extend</span>: {<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">fontFamily</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;sans: [<span style="color:#a6e3a1">'var(--font-manrope)'</span>, <span style="color:#a6e3a1">'system-ui'</span>],<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;heading: [<span style="color:#a6e3a1">'var(--font-public-sans)'</span>, <span style="color:#a6e3a1">'system-ui'</span>],<br>
+      &nbsp;&nbsp;},<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">colors</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;background: <span style="color:#a6e3a1">'oklch(var(--background) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;foreground: <span style="color:#a6e3a1">'oklch(var(--foreground) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;primary: { DEFAULT: <span style="color:#a6e3a1">'oklch(var(--primary) / &lt;alpha-value&gt;)'</span>, foreground: <span style="color:#a6e3a1">'…'</span> },<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;card: { DEFAULT: <span style="color:#a6e3a1">'oklch(var(--card) / &lt;alpha-value&gt;)'</span>, foreground: <span style="color:#a6e3a1">'…'</span> },<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;popover: { DEFAULT: <span style="color:#a6e3a1">'oklch(var(--popover) / &lt;alpha-value&gt;)'</span>, foreground: <span style="color:#a6e3a1">'…'</span> },<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;muted: { DEFAULT: <span style="color:#a6e3a1">'…'</span>, foreground: <span style="color:#a6e3a1">'…'</span> },<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;destructive: <span style="color:#a6e3a1">'oklch(var(--destructive) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;border: <span style="color:#a6e3a1">'oklch(var(--border) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;sidebar: <span style="color:#a6e3a1">'oklch(var(--sidebar) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;warning: <span style="color:#a6e3a1">'oklch(var(--warning) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;success: <span style="color:#a6e3a1">'oklch(var(--success) / &lt;alpha-value&gt;)'</span>,<br>
+      &nbsp;&nbsp;},<br>
+      &nbsp;&nbsp;<span style="color:#89dceb">borderRadius</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;lg: <span style="color:#a6e3a1">'var(--radius)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;md: <span style="color:#a6e3a1">'calc(var(--radius) - 2px)'</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;sm: <span style="color:#a6e3a1">'calc(var(--radius) - 4px)'</span>,<br>
+      &nbsp;&nbsp;},<br>
+      }
+    </div>
+
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem">Font Loading — layout.tsx</h3>
+    <div style="background:#1e1e2e;color:#cdd6f4;border-radius:0.625rem;padding:0.875rem;font-family:monospace;font-size:0.72rem;line-height:1.6">
+      <span style="color:#cba6f7">import</span> { Manrope, Public_Sans } <span style="color:#cba6f7">from</span> <span style="color:#a6e3a1">'next/font/google'</span><br><br>
+      <span style="color:#89dceb">const manrope</span> = Manrope({ subsets: [<span style="color:#a6e3a1">'latin'</span>], variable: <span style="color:#a6e3a1">'--font-manrope'</span> })<br>
+      <span style="color:#89dceb">const publicSans</span> = Public_Sans({ subsets: [<span style="color:#a6e3a1">'latin'</span>], variable: <span style="color:#a6e3a1">'--font-public-sans'</span> })<br><br>
+      <span style="color:#6c7086">// &lt;html&gt; tag gets both CSS variables:</span><br>
+      &lt;<span style="color:#f38ba8">html</span> className={<span style="color:#a6e3a1">`${manrope.variable} ${publicSans.variable}`</span>}&gt;
+    </div>
+    <div style="margin-top:0.75rem;padding:0.6rem 0.75rem;background:oklch(0.96 0.01 150 / 0.15);border:1px solid oklch(0.527 0.154 150.069 / 0.25);border-radius:0.5rem;font-size:0.75rem">
+      <strong>Heading font usage:</strong> Add <code>font-heading</code> class to <code>h1</code>/<code>h2</code> elements in components that want the Public Sans weight distinction. Not mandatory — <code>font-sans</code> (Manrope) is the default everywhere.
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.25rem;padding:0.875rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.625rem;font-size:0.82rem">
+  <strong>One decision here:</strong> The original sidebar was a deep dark green (<code>--color-sidebar: oklch(0.18 0.01 150)</code>). The Rhea theme's sidebar token is meant to be light. <strong>Should we keep the dark green sidebar</strong> (just rename the token) or switch to Rhea's native light sidebar style? Let me know.
+</div>

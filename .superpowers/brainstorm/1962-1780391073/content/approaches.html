@@ -1,0 +1,114 @@
+<h2>Radix Rhea Migration — 3 Approaches</h2>
+<p class="subtitle">Theme: teal-green primary · Manrope + Public Sans · 0.625rem radius · OKLCH palette<br>
+Decision: adopt ShadCN token naming convention across the codebase</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-top:1.5rem">
+
+  <!-- Approach A -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)" style="flex-direction:column;align-items:flex-start;padding:1.25rem">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+      <div class="letter" style="width:28px;height:28px;font-size:0.75rem;flex-shrink:0">A</div>
+      <h3 style="margin:0;font-size:1rem">Manual Rename</h3>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-secondary,#666);margin:0 0 1rem">Update globals.css + tailwind.config.ts, then hand-edit each component file.</p>
+    <div style="font-size:0.78rem;margin-bottom:0.75rem">
+      <div style="margin-bottom:0.4rem"><strong>Scope:</strong> ~90 component files</div>
+      <div style="margin-bottom:0.4rem"><strong>Risk:</strong> Medium — easy to miss references</div>
+      <div style="margin-bottom:0.4rem"><strong>Reversible:</strong> Yes, via git</div>
+    </div>
+    <div class="pros-cons" style="width:100%;margin:0">
+      <div class="pros" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Pros</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Full visual review of each change</li>
+          <li>No tooling needed</li>
+        </ul>
+      </div>
+      <div class="cons" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Cons</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Slow, tedious</li>
+          <li>Risk of missed references</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approach B -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)" style="flex-direction:column;align-items:flex-start;padding:1.25rem;position:relative">
+    <div style="position:absolute;top:0.75rem;right:0.75rem;background:#16a34a;color:#fff;font-size:0.65rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:999px">RECOMMENDED</div>
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+      <div class="letter" style="width:28px;height:28px;font-size:0.75rem;flex-shrink:0">B</div>
+      <h3 style="margin:0;font-size:1rem">Automated Codemod</h3>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-secondary,#666);margin:0 0 1rem">Write a deterministic token-map, run a find/replace script across all TSX files, review via git diff.</p>
+    <div style="font-size:0.78rem;margin-bottom:0.75rem">
+      <div style="margin-bottom:0.4rem"><strong>Scope:</strong> ~90 component files (automated)</div>
+      <div style="margin-bottom:0.4rem"><strong>Risk:</strong> Low — deterministic mapping, diff review</div>
+      <div style="margin-bottom:0.4rem"><strong>Reversible:</strong> Yes, via git</div>
+    </div>
+    <div class="pros-cons" style="width:100%;margin:0">
+      <div class="pros" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Pros</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Comprehensive, no missed refs</li>
+          <li>Fast — single pass</li>
+          <li>Clean git diff for review</li>
+          <li>Full ShadCN compatibility</li>
+        </ul>
+      </div>
+      <div class="cons" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Cons</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Requires mapping validation</li>
+          <li>Some tokens need custom additions (warning, success)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approach C -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)" style="flex-direction:column;align-items:flex-start;padding:1.25rem">
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem">
+      <div class="letter" style="width:28px;height:28px;font-size:0.75rem;flex-shrink:0">C</div>
+      <h3 style="margin:0;font-size:1rem">Dual-Layer Aliases</h3>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-secondary,#666);margin:0 0 1rem">Keep existing token names, add ShadCN aliases that point to them (e.g. <code>--background: var(--color-canvas)</code>).</p>
+    <div style="font-size:0.78rem;margin-bottom:0.75rem">
+      <div style="margin-bottom:0.4rem"><strong>Scope:</strong> globals.css + tailwind.config.ts only</div>
+      <div style="margin-bottom:0.4rem"><strong>Risk:</strong> Very low — no component changes</div>
+      <div style="margin-bottom:0.4rem"><strong>Reversible:</strong> Yes, trivially</div>
+    </div>
+    <div class="pros-cons" style="width:100%;margin:0">
+      <div class="pros" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Pros</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Zero breakage risk</li>
+          <li>Minimal diff</li>
+        </ul>
+      </div>
+      <div class="cons" style="padding:0.5rem">
+        <h4 style="font-size:0.72rem;margin:0 0 0.3rem">Cons</h4>
+        <ul style="font-size:0.72rem;margin:0;padding-left:1rem">
+          <li>Two parallel token systems</li>
+          <li>ShadCN components still need manual adaptation</li>
+          <li>Doesn't fully deliver on Option B decision</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.25rem;padding:0.875rem 1rem;background:oklch(0.96 0.01 150 / 0.15);border:1px solid oklch(0.527 0.154 150.069 / 0.25);border-radius:0.625rem;font-size:0.82rem">
+  <strong>Token mapping snapshot (current → ShadCN):</strong>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem 1.5rem;margin-top:0.5rem;font-family:monospace;font-size:0.75rem">
+    <span>bg-canvas → bg-background</span><span>text-text-primary → text-foreground</span>
+    <span>bg-surface → bg-card</span><span>text-text-secondary → text-muted-foreground</span>
+    <span>bg-surface-raised → bg-card</span><span>bg-accent → bg-primary</span>
+    <span>bg-sidebar → bg-sidebar</span><span>text-accent → text-primary</span>
+    <span>border-border → border-border</span><span>text-danger → text-destructive</span>
+    <span>bg-accent-subtle → bg-primary/10</span><span>bg-danger-subtle → bg-destructive/10</span>
+    <span style="color:#b45309">text-warning → custom (no ShadCN equiv)</span>
+    <span style="color:#15803d">text-success → custom (no ShadCN equiv)</span>
+  </div>
+</div>

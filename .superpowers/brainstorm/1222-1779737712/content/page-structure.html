@@ -1,0 +1,179 @@
+<h2>Page Structure & Navigation</h2>
+<p class="subtitle">New pages added to pharmacy-lite sidebar — grouped by module</p>
+
+<div class="section">
+  <h3>Updated Sidebar Navigation</h3>
+  <div style="display: grid; grid-template-columns: 280px 1fr; gap: 24px; margin-top: 12px;">
+
+    <!-- Sidebar mockup -->
+    <div style="border: 1px solid #e8ebe6; border-radius: 12px; overflow: hidden; background: white;">
+      <div style="padding: 16px; border-bottom: 1px solid #e8ebe6;">
+        <div style="font-weight: 700; font-size: 14px; color: #0e0f0c;">Pharmacy Lite</div>
+        <div style="font-size: 11px; color: #868685; margin-top: 2px;">Al-Shifa Pharmacy</div>
+      </div>
+
+      <!-- Primary group -->
+      <div style="padding: 8px;">
+        <div style="font-size: 10px; font-weight: 600; color: #868685; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.5px;">Dispensing</div>
+        <div style="padding: 8px 12px; border-radius: 6px; background: #9fe870; color: #163300; font-size: 13px; font-weight: 600;">Dashboard</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Scan Rx</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Paper Rx</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Queue <span style="background: #9fe870; color: #163300; font-size: 10px; padding: 1px 6px; border-radius: 9999px; margin-left: 4px;">3</span></div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">History</div>
+      </div>
+
+      <!-- Inventory group (NEW) -->
+      <div style="padding: 8px; border-top: 1px solid #e8ebe6;">
+        <div style="font-size: 10px; font-weight: 600; color: #868685; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.5px;">Inventory</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #9fe870;">●</span> Stock Overview
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #9fe870;">●</span> Receive Stock
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #9fe870;">●</span> Catalog
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #9fe870;">●</span> Suppliers
+          <span style="font-size: 10px; color: #868685; margin-left: 4px;">(PO)</span>
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #9fe870;">●</span> Transfers
+          <span style="font-size: 10px; color: #868685; margin-left: 4px;">(net)</span>
+        </div>
+      </div>
+
+      <!-- Financial group (NEW) -->
+      <div style="padding: 8px; border-top: 1px solid #e8ebe6;">
+        <div style="font-size: 10px; font-weight: 600; color: #868685; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.5px;">Financial</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #ffd11a;">●</span> Point of Sale
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #ffd11a;">●</span> Patient Accounts
+          <span style="font-size: 10px; color: #868685; margin-left: 4px;">(credit)</span>
+        </div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">
+          <span style="color: #ffd11a;">●</span> Cash Drawer
+        </div>
+      </div>
+
+      <!-- Clinical group -->
+      <div style="padding: 8px; border-top: 1px solid #e8ebe6;">
+        <div style="font-size: 10px; font-weight: 600; color: #868685; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clinical</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Controlled Substances</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Unverified Dispenses</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Stock Counts</div>
+      </div>
+
+      <!-- System group -->
+      <div style="padding: 8px; border-top: 1px solid #e8ebe6;">
+        <div style="font-size: 10px; font-weight: 600; color: #868685; padding: 8px 12px; text-transform: uppercase; letter-spacing: 0.5px;">System</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Sync Queue</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Reports</div>
+        <div style="padding: 8px 12px; font-size: 13px; color: #454745;">Settings</div>
+      </div>
+    </div>
+
+    <!-- Page descriptions -->
+    <div style="font-size: 13px; color: #454745; line-height: 1.8;">
+      <div style="margin-bottom: 20px;">
+        <div style="font-weight: 700; color: #0e0f0c; font-size: 14px; margin-bottom: 4px;">New Pages (10)</div>
+        <div style="color: #868685; font-size: 12px;">Green dots = Inventory module, Yellow dots = Financial module</div>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory</strong> — Stock Overview<br>
+        <span style="color: #868685;">Searchable/filterable stock table. Columns: product, batch, qty on hand, expiry, status, zone. Alerts panel: low stock + near-expiry + quarantined. Stock value summary at top.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory/receive</strong> — Receive Stock<br>
+        <span style="color: #868685;">Barcode scan or catalog search → add items with batch, expiry, qty, cost, selling price. Creates GoodsReceipt. If PO mode: select PO first, auto-fills expected items.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory/catalog</strong> — Medication Catalog<br>
+        <span style="color: #868685;">Browse/search the Hub formulary cache. View product details, stock levels across batches, reorder point config. Read-only catalog; "Request Addition" button for missing items.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory/suppliers</strong> — Supplier Management<br>
+        <span style="color: #868685;">CRUD supplier contacts. Links to their POs and receipts. Only visible when PO mode enabled OR when any supplier exists.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory/transfers</strong> — Inter-Pharmacy Transfers<br>
+        <span style="color: #868685;">Request stock from network pharmacies, view incoming requests, ship/receive flow. Shows network stock availability. Only visible when transfers enabled.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/pos</strong> — Point of Sale<br>
+        <span style="color: #868685;">Active invoice view after dispensing. Payment collection (cash/card/credit split). Receipt generation. Links to current cash drawer session.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/pos/accounts</strong> — Patient Accounts (Credit)<br>
+        <span style="color: #868685;">Patient credit ledgers. Outstanding balances, payment history, aging report (30/60/90 day buckets). Record credit payments. Only visible when credit enabled.</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/pos/cash-drawer</strong> — Cash Drawer<br>
+        <span style="color: #868685;">Open/close drawer sessions. View current session totals. End-of-day reconciliation (count cash → compare to expected → record discrepancy).</span>
+      </div>
+
+      <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e8ebe6;">
+        <strong>/inventory/count</strong> — Stock Counts<br>
+        <span style="color: #868685;">Start full/spot/controlled-only counts. Scan or search items, enter actual quantities. View expected vs actual, auto-generate adjustments on complete. Under Clinical group because controlled counts are compliance-driven.</span>
+      </div>
+
+      <div style="margin-bottom: 0;">
+        <strong>/reports</strong> — Reports Dashboard<br>
+        <span style="color: #868685;">Consumption trends, fast/slow movers, wastage rate, stock valuation, daily sales summary, margin analysis, controlled substance discrepancy history, receivables aging.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Page Visibility Rules (Settings-Gated)</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; font-size: 12px;">
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 12px; background: white;">
+      <div style="font-weight: 700; margin-bottom: 6px;">Always Visible</div>
+      <div style="color: #454745; line-height: 1.7;">
+        /inventory (Stock Overview)<br>
+        /inventory/receive (Receive Stock)<br>
+        /inventory/catalog (Catalog)<br>
+        /inventory/count (Stock Counts)<br>
+        /pos (Point of Sale)<br>
+        /pos/cash-drawer (Cash Drawer)<br>
+        /reports (Reports)
+      </div>
+    </div>
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 12px; background: white;">
+      <div style="font-weight: 700; margin-bottom: 6px;">Settings-Gated</div>
+      <div style="color: #454745; line-height: 1.7;">
+        /inventory/suppliers → <code>enablePurchaseOrders</code><br>
+        /inventory/transfers → <code>enableTransfers</code><br>
+        /pos/accounts → <code>enablePatientCredit</code><br>
+        <br>
+        <span style="color: #868685;">Zone column in stock views → <code>enableZones</code></span><br>
+        <span style="color: #868685;">PO selection in Receive → <code>enablePurchaseOrders</code></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Integration Points with Existing Flow</h3>
+  <div style="background: #f4f5f2; border-radius: 8px; padding: 16px; font-size: 12px; line-height: 2;">
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px;">
+      <strong>Dispensing → Stock:</strong> <span>FulfillmentChecklist.confirmDispense() → deducts from FEFO batch → creates StockMovement('dispensed')</span>
+      <strong>Dispensing → POS:</strong> <span>After dispense confirm → auto-creates Invoice(draft) → navigates to /pos for payment collection</span>
+      <strong>Dashboard:</strong> <span>Adds inventory widgets: low-stock count, near-expiry count, today's revenue, open cash drawer indicator</span>
+      <strong>Controlled:</strong> <span>ControlledSubstancesView now reads real schedule from CatalogItem + shows running balance from StockMovements</span>
+      <strong>Catalog Sync:</strong> <span>On Hub connect → sync CatalogItem table → used by dispense flow for FEFO batch selection + pricing</span>
+    </div>
+  </div>
+</div>

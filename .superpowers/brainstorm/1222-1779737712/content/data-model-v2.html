@@ -1,0 +1,374 @@
+<h2>Data Model v2: Inventory & POS (Revised)</h2>
+<p class="subtitle">With all 7 recommended adjustments applied</p>
+
+<div class="section">
+  <h3>Core Inventory Entities</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">CatalogItem</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        name: string<br>
+        nameLocal?: string (Arabic/Dari)<br>
+        form: 'tablet' | 'capsule' | 'syrup' | 'injection' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'cream' | 'drops' | 'inhaler' | 'other'<br>
+        strength: string (e.g. "500mg")<br>
+        strengthUnit: string<br>
+        packSize: number<br>
+        barcode?: string (EAN-13)<br>
+        category: string<br>
+        controlledSchedule?: 'II' | 'III' | 'IV' | 'V'<br>
+        <span style="color: #9fe870; font-weight: 600;">defaultSellingPrice: number (minor units)</span><br>
+        reorderPoint: number<br>
+        minStock?: number<br>
+        maxStock?: number<br>
+        isActive: boolean<br>
+        lastSyncedAt: string<br>
+        <span style="color: #868685;">// Source: Hub formulary, cached locally</span><br>
+        <span style="color: #868685;">// Indexed: id, barcode, name, category, controlledSchedule</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockBatch</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        catalogItemId: string (FK → CatalogItem)<br>
+        batchNumber: string<br>
+        lotNumber?: string<br>
+        expiryDate: string (ISO date)<br>
+        quantityOnHand: number <span style="color: #868685;">// derived, cached</span><br>
+        costPrice: number <span style="color: #9fe870; font-weight: 600;">(minor units, per unit)</span><br>
+        <span style="color: #9fe870; font-weight: 600;">sellingPrice: number (minor units, per unit)</span><br>
+        zoneId?: string (FK → Zone, nullable)<br>
+        supplierId?: string (FK → Supplier)<br>
+        goodsReceiptId?: string (FK → GoodsReceipt)<br>
+        receivedAt: string (ISO timestamp)<br>
+        status: 'active' | 'quarantined' | 'depleted'<br>
+        locationId: string (this pharmacy's ID)<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Indexed: catalogItemId, expiryDate, status, locationId</span><br>
+        <span style="color: #868685;">// FEFO: ORDER BY expiryDate ASC WHERE status='active'</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockMovement <span style="font-size: 10px; color: #d03238;">APPEND-ONLY</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        stockBatchId: string (FK → StockBatch)<br>
+        catalogItemId: string (FK → CatalogItem)<br>
+        type: 'received' | 'dispensed' | 'adjusted' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'transferred_out' | 'transferred_in' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'quarantined' | 'disposed' | 'returned' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'void_reversal'<br>
+        quantity: number <span style="color: #868685;">(+in, −out)</span><br>
+        reason?: string<br>
+        referenceId?: string<br>
+        referenceType?: 'dispense' | 'purchase_order' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'transfer' | 'count' | 'goods_receipt' | 'void'<br>
+        performedBy: string (practitioner ID)<br>
+        timestamp: string (ISO)<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// NEVER updated, NEVER deleted — Tier 1 sync</span><br>
+        <span style="color: #868685;">// Indexed: stockBatchId, catalogItemId, type, timestamp</span>
+      </div>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 8px; padding: 16px; background: rgba(159,232,112,0.04);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">GoodsReceipt <span style="font-size: 10px; color: #054d28;">NEW</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        supplierId?: string (FK → Supplier)<br>
+        purchaseOrderId?: string (FK → PurchaseOrder)<br>
+        receivedBy: string (practitioner ID)<br>
+        items: GoodsReceiptItem[]<br>
+        totalCost: number (minor units)<br>
+        notes?: string<br>
+        receivedAt: string (ISO timestamp)<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Business document — "what came in the door"</span><br>
+        <span style="color: #868685;">// Creates StockBatch + StockMovement entries</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        GoodsReceiptItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;batchNumber: string<br>
+        &nbsp;&nbsp;lotNumber?: string<br>
+        &nbsp;&nbsp;expiryDate: string<br>
+        &nbsp;&nbsp;quantity: number<br>
+        &nbsp;&nbsp;costPrice: number (minor units)<br>
+        &nbsp;&nbsp;sellingPrice: number (minor units)<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 8px; padding: 16px; background: rgba(159,232,112,0.04);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockCount <span style="font-size: 10px; color: #054d28;">NEW</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        type: 'full' | 'spot' | 'controlled_only'<br>
+        status: 'in_progress' | 'completed'<br>
+        countedBy: string (practitioner ID)<br>
+        items: StockCountItem[]<br>
+        totalVarianceItems: number <span style="color: #868685;">// items with discrepancy</span><br>
+        startedAt: string<br>
+        completedAt?: string<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// On complete: generates 'adjusted' StockMovements</span><br>
+        <span style="color: #868685;">// for all items with variance ≠ 0</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        StockCountItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;stockBatchId: string<br>
+        &nbsp;&nbsp;expectedQty: number<br>
+        &nbsp;&nbsp;actualQty: number<br>
+        &nbsp;&nbsp;variance: number <span style="color: #868685;">// actual - expected</span><br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Supplier</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        name: string<br>
+        contactName?: string<br>
+        phone?: string<br>
+        email?: string<br>
+        address?: string<br>
+        leadTimeDays?: number<br>
+        paymentTerms?: string<br>
+        isActive: boolean<br>
+        createdAt: string<br>
+        <span style="color: #868685;">// Local to pharmacy, synced to Hub for org visibility</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">PurchaseOrder <span style="font-size: 10px; color: #868685;">(PO mode only)</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        supplierId: string (FK → Supplier)<br>
+        status: 'draft' | 'sent' | 'partially_received' | 'closed' | 'cancelled'<br>
+        items: PurchaseOrderItem[]<br>
+        totalCost: number (minor units)<br>
+        notes?: string<br>
+        createdBy: string<br>
+        createdAt: string<br>
+        sentAt?: string<br>
+        closedAt?: string<br>
+        hlcTimestamp: string
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        PurchaseOrderItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;quantityOrdered: number<br>
+        &nbsp;&nbsp;quantityReceived: number<br>
+        &nbsp;&nbsp;unitCost: number (minor units)<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockTransfer <span style="font-size: 10px; color: #868685;">(transfers mode only)</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        fromLocationId: string<br>
+        toLocationId: string<br>
+        status: 'requested' | 'approved' | 'shipped' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'received' | 'cancelled'<br>
+        items: TransferItem[]<br>
+        requestedBy: string<br>
+        requestedAt: string<br>
+        approvedBy?: string<br>
+        shippedAt?: string<br>
+        receivedAt?: string<br>
+        receivedBy?: string<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Syncs through Hub — both locations see it</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        TransferItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;stockBatchId: string<br>
+        &nbsp;&nbsp;quantity: number<br>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>POS Entities</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Invoice</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        invoiceNumber: string (sequential)<br>
+        patientId?: string (FK → Patient)<br>
+        dispenseIds: string[]<br>
+        items: InvoiceLineItem[]<br>
+        subtotal: number <span style="color: #9fe870; font-weight: 600;">(minor units)</span><br>
+        taxRate: number <span style="color: #868685;">(percentage, e.g. 5)</span><br>
+        taxAmount: number <span style="color: #9fe870; font-weight: 600;">(minor units)</span><br>
+        total: number <span style="color: #9fe870; font-weight: 600;">(minor units)</span><br>
+        amountPaid: number<br>
+        amountDue: number <span style="color: #868685;">(total − amountPaid)</span><br>
+        status: 'draft' | 'finalized' | 'paid' | 'partial' | 'voided'<br>
+        createdBy: string<br>
+        createdAt: string<br>
+        <span style="color: #9fe870; font-weight: 600;">voidedBy?: string</span><br>
+        <span style="color: #9fe870; font-weight: 600;">voidedAt?: string</span><br>
+        <span style="color: #9fe870; font-weight: 600;">voidReason?: string</span><br>
+        hlcTimestamp: string
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        InvoiceLineItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;stockBatchId: string<br>
+        &nbsp;&nbsp;description: string<br>
+        &nbsp;&nbsp;quantity: number<br>
+        &nbsp;&nbsp;unitPrice: number (minor units)<br>
+        &nbsp;&nbsp;lineTotal: number (minor units)<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Payment</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        invoiceId: string (FK → Invoice)<br>
+        method: 'cash' | 'card' | 'credit'<br>
+        amount: number <span style="color: #9fe870; font-weight: 600;">(minor units)</span><br>
+        reference?: string (card auth code)<br>
+        cashDrawerId?: string (FK, if cash)<br>
+        receivedBy: string (practitioner ID)<br>
+        timestamp: string<br>
+        <span style="color: #868685;">// credit → creates LedgerEntry</span><br>
+        <span style="color: #868685;">// cash → increments CashDrawer.cashIn</span>
+      </div>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 8px; padding: 16px; background: rgba(159,232,112,0.04);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">LedgerEntry <span style="font-size: 10px; color: #054d28;">OWN TABLE</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        patientId: string (FK → Patient)<br>
+        type: 'charge' | 'payment' | 'adjustment'<br>
+        amount: number <span style="color: #9fe870; font-weight: 600;">(minor units, +charge/−payment)</span><br>
+        invoiceId?: string<br>
+        note?: string<br>
+        createdBy: string<br>
+        timestamp: string<br>
+        <span style="color: #868685;">// APPEND-ONLY — balance derived as SUM(amount)</span><br>
+        <span style="color: #868685;">// Indexed: patientId, timestamp, type</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">PatientAccount</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (= patientId)<br>
+        patientId: string (FK → Patient)<br>
+        balance: number <span style="color: #868685;">(cached, derived from LedgerEntries)</span><br>
+        creditLimit?: number (minor units)<br>
+        lastActivityAt: string<br>
+        <span style="color: #868685;">// Lightweight account record</span><br>
+        <span style="color: #868685;">// balance = SUM(ledgerEntries WHERE patientId)</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">CashDrawer</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        openedBy: string<br>
+        openedAt: string<br>
+        openingBalance: number (minor units)<br>
+        closedAt?: string<br>
+        closingBalance?: number (counted)<br>
+        expectedBalance?: number (computed)<br>
+        discrepancy?: number<br>
+        status: 'open' | 'closed'<br>
+        cashIn: number<br>
+        cashOut: number<br>
+        notes?: string
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Settings & Configuration</h3>
+  <div style="border: 1px dashed #868685; border-radius: 8px; padding: 16px; background: #f4f5f2;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <div style="font-weight: 700; color: #454745; margin-bottom: 8px; font-size: 14px;">PharmacySettings</div>
+        <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+          <span style="color: #868685;">// Feature toggles</span><br>
+          enablePurchaseOrders: boolean (default: false)<br>
+          enableZones: boolean (default: false)<br>
+          enablePatientCredit: boolean (default: false)<br>
+          enableTransfers: boolean (default: false)<br>
+          <br>
+          <span style="color: #868685;">// Operational config</span><br>
+          expiryAlertDays: number (default: 90)<br>
+          lowStockAlertEnabled: boolean (default: true)<br>
+          fefoEnforcement: 'suggest' | 'enforce' (default: 'enforce')<br>
+          <br>
+          <span style="color: #868685;">// Financial config</span><br>
+          currency: string (default: 'AFN')<br>
+          currencyMinorUnits: number (default: 2)<br>
+          taxRate: number (default: 0, percentage)<br>
+          invoicePrefix: string (default: 'INV-')<br>
+          <br>
+          <span style="color: #868685;">// Location identity</span><br>
+          locationId: string<br>
+          locationName: string<br>
+          organizationId?: string
+        </div>
+      </div>
+      <div>
+        <div style="font-weight: 700; color: #454745; margin-bottom: 8px; font-size: 14px;">Zone <span style="font-size: 10px; color: #868685;">(opt-in)</span></div>
+        <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+          id: string<br>
+          name: string<br>
+          locationId: string<br>
+          isDefault: boolean
+        </div>
+        <div style="margin-top: 16px; font-weight: 700; color: #454745; margin-bottom: 8px; font-size: 14px;">Sync Tiers</div>
+        <div style="font-size: 11px; line-height: 1.8; color: #454745;">
+          <span style="background: #d03238; color: white; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T1</span> StockMovement — append-only<br>
+          <span style="background: #d03238; color: white; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T1</span> LedgerEntry — append-only<br>
+          <span style="background: #ffd11a; color: #163300; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T2</span> StockBatch.quantityOnHand — timestamp merge<br>
+          <span style="background: #ffd11a; color: #163300; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T2</span> Invoice, Payment — timestamp merge<br>
+          <span style="background: #e8ebe6; color: #454745; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T3</span> CatalogItem, Supplier, Settings — LWW<br>
+          <span style="background: #e8ebe6; color: #454745; padding: 1px 6px; border-radius: 3px; font-size: 10px;">T3</span> PurchaseOrder, GoodsReceipt — LWW
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px; background: #f4f5f2; border-radius: 8px; padding: 16px;">
+  <h3 style="margin-top: 0;">Summary of Changes from v1</h3>
+  <div style="font-size: 12px; line-height: 1.8; color: #454745;">
+    <span style="color: #9fe870; font-weight: 700;">✓</span> sellingPrice moved from CatalogItem → StockBatch (per-batch pricing)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> CatalogItem retains defaultSellingPrice (used when no batch override)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> LedgerEntry promoted to own table (no embedded array bloat)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> PatientLedger → PatientAccount (lightweight, balance is cached/derived)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> GoodsReceipt added (auditable "what came in" business document)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> StockCount added (physical reconciliation with variance → auto-adjust)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> quantityQuarantined removed (status='quarantined' + qtyOnHand is sufficient)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> Invoice void fields added (voidedBy, voidedAt, voidReason, void_reversal movement)<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> All amounts stored as integers (minor currency units) — no floating point<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> CashDrawer linked to Payment via cashDrawerId<br>
+    <span style="color: #9fe870; font-weight: 700;">✓</span> StockMovement gains 'void_reversal' type for invoice voids
+  </div>
+</div>

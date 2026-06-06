@@ -1,0 +1,140 @@
+<h2>Header height — pick the standard</h2>
+<p class="subtitle">Admin Portal + Lab Lite use h-12. OPD Lite + Pharmacy Lite use h-14. Which becomes the standard for all 4?</p>
+
+<style>
+  .app-row { display: grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:6px; }
+  .app-label { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-foreground);margin-bottom:4px;text-align:center; }
+  .shell { border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card); }
+  .trigger { width:10px;height:10px;border:1px solid var(--border);border-radius:2px;flex-shrink:0; }
+  .sep { width:1px;background:var(--border);height:14px;flex-shrink:0; }
+  .breadcrumb-pill { font-size:8px;background:var(--muted);border-radius:3px;padding:1px 4px;color:var(--muted-foreground); }
+  .shell-body { padding:8px;display:flex;flex-direction:column;gap:5px; }
+  .content-stripe { height:8px;background:var(--muted);border-radius:3px; }
+  .content-stripe.short { width:60%; }
+  .content-grid { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
+  .content-card { height:28px;background:var(--background);border:1px solid var(--border);border-radius:5px; }
+</style>
+
+<div class="options" style="margin-top:12px;">
+
+  <div class="option" data-choice="h12" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>h-12 &nbsp;·&nbsp; 48px &nbsp;·&nbsp; compact</h3>
+      <p>More screen space for content. Used by Admin Portal and Lab Lite today. Matches ShadCN sidebar-07 reference block exactly.</p>
+      <div class="app-row" style="margin-top:10px;">
+        <div>
+          <div class="app-label">Admin Portal</div>
+          <div class="shell">
+            <div style="height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Dashboard</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-grid"><div class="content-card"></div><div class="content-card"></div></div>
+              <div class="content-stripe"></div><div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">OPD Lite</div>
+          <div class="shell">
+            <div style="height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Patients</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-stripe"></div>
+              <div class="content-card" style="height:40px;"></div>
+              <div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">Pharmacy Lite</div>
+          <div class="shell">
+            <div style="height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Queue</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-stripe"></div>
+              <div class="content-card" style="height:40px;"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">Lab Lite</div>
+          <div class="shell">
+            <div style="height:36px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Results</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-grid"><div class="content-card"></div><div class="content-card"></div></div>
+              <div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="h14" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>h-14 &nbsp;·&nbsp; 56px &nbsp;·&nbsp; standard</h3>
+      <p>More breathing room in the header — fits better when the header carries widgets (SyncPulse, DataBudgetIndicator, language selector). Used by OPD Lite and Pharmacy Lite today.</p>
+      <div class="app-row" style="margin-top:10px;">
+        <div>
+          <div class="app-label">Admin Portal</div>
+          <div class="shell">
+            <div style="height:42px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Dashboard</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-grid"><div class="content-card"></div><div class="content-card"></div></div>
+              <div class="content-stripe"></div><div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">OPD Lite</div>
+          <div class="shell">
+            <div style="height:42px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Patients</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-stripe"></div>
+              <div class="content-card" style="height:40px;"></div>
+              <div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">Pharmacy Lite</div>
+          <div class="shell">
+            <div style="height:42px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Queue</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-stripe"></div>
+              <div class="content-card" style="height:40px;"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="app-label">Lab Lite</div>
+          <div class="shell">
+            <div style="height:42px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background);">
+              <div class="trigger"></div><div class="sep"></div><div class="breadcrumb-pill">Results</div>
+            </div>
+            <div class="shell-body">
+              <div class="content-grid"><div class="content-card"></div><div class="content-card"></div></div>
+              <div class="content-stripe short"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:16px;font-size:11px;color:var(--muted-foreground);">My recommendation: <strong>h-14</strong> — the spoke apps (OPD, Pharmacy) carry more widgets in the header so the extra height prevents crowding. Admin Portal already has fewer header items so it could go either way.</p>

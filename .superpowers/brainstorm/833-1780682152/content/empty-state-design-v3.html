@@ -1,0 +1,149 @@
+<h2>EmptyState — Standardized Components</h2>
+<p class="subtitle">Action button uses the ui-kit Button: <code>variant="outline"</code>, pill-shaped, correct sizes.</p>
+
+<style>
+  .es-wrap { background:var(--card);border:1px solid var(--border);border-radius:10px; }
+  .es-icon-circle { border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:oklch(0.92 0.005 240);color:oklch(0.45 0.01 240); }
+  .es-icon-circle.default-size { width:44px;height:44px; }
+  .es-icon-circle.sm-size      { width:28px;height:28px; }
+  /* Button: matches ui-kit buttonVariants exactly */
+  .es-btn {
+    display:inline-flex;align-items:center;justify-content:center;
+    border-radius:9999px; /* rounded-full */
+    border:1px solid var(--border);
+    background:var(--background);
+    color:var(--foreground);
+    font-size:0.875rem; /* text-sm */
+    font-weight:500;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:background 150ms,color 150ms;
+    outline:none;
+    flex-shrink:0;
+  }
+  .es-btn:hover { background:var(--muted); }
+  .es-btn.size-sm  { height:2rem; padding:0 0.75rem; gap:0.25rem; }   /* h-8 px-3 */
+  .es-btn.size-xs  { height:1.5rem; padding:0 0.625rem; font-size:0.75rem; gap:0.25rem; } /* h-6 px-2.5 text-xs */
+  .row-label { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-foreground);margin-bottom:10px;margin-top:24px; }
+  .prop-tag { display:inline-block;font-size:10px;font-family:monospace;background:var(--muted);padding:1px 6px;border-radius:4px;color:var(--foreground);margin:0 2px; }
+</style>
+
+<svg style="display:none">
+  <symbol id="ic-users"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="ic-flask"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M9 3v7l-5 9h14l-5-9V3"/></symbol>
+  <symbol id="ic-pill"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+  <symbol id="ic-inbox"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  <symbol id="ic-search"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></symbol>
+  <symbol id="ic-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></symbol>
+</svg>
+
+<!-- DEFAULT SIZE -->
+<p class="row-label">Default size</p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+  <div>
+    <div class="es-wrap" style="padding:32px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+      <div class="es-icon-circle default-size"><svg width="20" height="20"><use href="#ic-inbox"/></svg></div>
+      <div style="font-size:0.875rem;font-weight:600;color:var(--foreground);">No records yet</div>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">title</span> only — Inbox fallback</p>
+  </div>
+
+  <div>
+    <div class="es-wrap" style="padding:32px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+      <div class="es-icon-circle default-size"><svg width="20" height="20"><use href="#ic-flask"/></svg></div>
+      <div style="font-size:0.875rem;font-weight:600;color:var(--foreground);">No lab results</div>
+      <div style="font-size:0.75rem;color:var(--muted-foreground);max-width:180px;">Results will appear here once the lab processes this order.</div>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">icon</span> + <span class="prop-tag">title</span> + <span class="prop-tag">description</span></p>
+  </div>
+
+  <div>
+    <div class="es-wrap" style="padding:32px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+      <div class="es-icon-circle default-size"><svg width="20" height="20"><use href="#ic-users"/></svg></div>
+      <div style="font-size:0.875rem;font-weight:600;color:var(--foreground);">No patients found</div>
+      <div style="font-size:0.75rem;color:var(--muted-foreground);max-width:180px;">Try adjusting your search or filters.</div>
+      <button class="es-btn size-sm" style="margin-top:4px;">Clear filters</button>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">+ action</span> → <code style="font-size:10px;">variant="outline" size="sm"</code></p>
+  </div>
+</div>
+
+<!-- SM SIZE -->
+<p class="row-label">Compact size — size="sm"</p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+  <div>
+    <div class="es-wrap" style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+      <div class="es-icon-circle sm-size"><svg width="13" height="13"><use href="#ic-inbox"/></svg></div>
+      <div style="font-size:0.75rem;font-weight:600;color:var(--foreground);">No uploads yet</div>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">size="sm"</span> title only</p>
+  </div>
+
+  <div>
+    <div class="es-wrap" style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+      <div class="es-icon-circle sm-size"><svg width="13" height="13"><use href="#ic-pill"/></svg></div>
+      <div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--foreground);">No prescriptions</div>
+        <div style="font-size:0.75rem;color:var(--muted-foreground);">Nothing dispensed today.</div>
+      </div>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">size="sm"</span> + description</p>
+  </div>
+
+  <div>
+    <div class="es-wrap" style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+      <div class="es-icon-circle sm-size"><svg width="13" height="13"><use href="#ic-search"/></svg></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--foreground);">No results</div>
+        <div style="font-size:0.75rem;color:var(--muted-foreground);">Try a different term.</div>
+      </div>
+      <button class="es-btn size-xs">Clear</button>
+    </div>
+    <p style="font-size:10px;color:var(--muted-foreground);text-align:center;margin-top:6px;"><span class="prop-tag">action</span> → <code style="font-size:10px;">variant="outline" size="xs"</code></p>
+  </div>
+</div>
+
+<!-- In context -->
+<p class="row-label">In context</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+  <div class="es-wrap" style="overflow:hidden;">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:0.875rem;font-weight:600;color:var(--foreground);">Patient Queue</div>
+    <div style="padding:32px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+      <div class="es-icon-circle default-size"><svg width="20" height="20"><use href="#ic-users"/></svg></div>
+      <div style="font-size:0.875rem;font-weight:600;color:var(--foreground);">Queue is empty</div>
+      <div style="font-size:0.75rem;color:var(--muted-foreground);max-width:200px;">No patients waiting. New arrivals will appear here.</div>
+    </div>
+  </div>
+
+  <div class="es-wrap" style="overflow:hidden;">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:0.875rem;font-weight:600;color:var(--foreground);">Recent Uploads</div>
+    <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">
+      <div class="es-icon-circle sm-size"><svg width="13" height="13"><use href="#ic-inbox"/></svg></div>
+      <div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--foreground);">No uploads yet</div>
+        <div style="font-size:0.75rem;color:var(--muted-foreground);">Synced files will appear here.</div>
+      </div>
+    </div>
+    <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="es-icon-circle sm-size"><svg width="13" height="13"><use href="#ic-clipboard"/></svg></div>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--foreground);">No recent orders</div>
+      </div>
+      <button class="es-btn size-xs">New order</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Token summary -->
+<div style="margin-top:20px;padding:14px 16px;background:oklch(0.95 0.005 240);border:1px solid oklch(0.88 0.005 240);border-radius:10px;font-size:11px;color:var(--foreground);line-height:2;">
+  <strong>Component tokens:</strong><br>
+  Icon circle &nbsp;→&nbsp; <code>bg-muted</code> &nbsp;<code>text-muted-foreground</code> &nbsp;·&nbsp; size <code>w-11 h-11</code> default / <code>w-7 h-7</code> sm<br>
+  Title &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; <code>text-sm font-semibold text-foreground</code><br>
+  Description &nbsp;→&nbsp; <code>text-xs text-muted-foreground max-w-xs</code><br>
+  Action btn &nbsp;→&nbsp; <code>Button variant="outline" size="sm"</code> (default) &nbsp;/&nbsp; <code>size="xs"</code> (sm)<br>
+  Padding &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp; <code>py-8 px-4</code> default &nbsp;/&nbsp; <code>p-4</code> sm
+</div>
