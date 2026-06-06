@@ -61,7 +61,7 @@ export function SocialInfoSection({
 
   return (
     <Card as="fieldset">
-      <legend className="text-base font-bold text-foreground mb-4">
+      <legend className="text-base font-bold text-foreground">
         {t('socialInfoSection')}
       </legend>
 

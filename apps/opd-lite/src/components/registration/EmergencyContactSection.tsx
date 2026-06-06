@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Trash2 } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
@@ -30,15 +31,20 @@ export function EmergencyContactSection({
   onContactsChange,
 }: EmergencyContactSectionProps) {
   const t = useTranslations('registration')
+  const [keys, setKeys] = useState<string[]>(() =>
+    contacts.map(() => crypto.randomUUID())
+  )
 
   function addContact() {
     if (contacts.length < 2) {
       onContactsChange([...contacts, emptyContact()])
+      setKeys(prev => [...prev, crypto.randomUUID()])
     }
   }
 
   function removeContact(index: number) {
     onContactsChange(contacts.filter((_, i) => i !== index))
+    setKeys(prev => prev.filter((_, i) => i !== index))
   }
 
   function updateContact(index: number, patch: Partial<PatientContact>) {
@@ -47,7 +53,7 @@ export function EmergencyContactSection({
 
   return (
     <Card as="fieldset">
-      <legend className="text-base font-bold text-foreground mb-4">
+      <legend className="text-base font-bold text-foreground">
         {t('emergencyContactSection')}
         <span className="ms-1 text-xs font-normal text-muted-foreground">
           ({t('optional')})
@@ -57,7 +63,7 @@ export function EmergencyContactSection({
       <div className="space-y-4">
         {contacts.map((contact, index) => (
           <div
-            key={index}
+            key={keys[index] ?? index}
             className="rounded-lg border border-border p-4 space-y-3"
           >
             <div className="flex items-center justify-between">
