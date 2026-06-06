@@ -50,6 +50,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               role: payload.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
+              name: (() => {
+                const m = data.session.user?.user_metadata
+                return m?.full_name ?? m?.name ??
+                  ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+              })(),
               kycStatus: payload.kyc_status ?? payload.app_metadata?.kyc_status,
             })
           } catch {

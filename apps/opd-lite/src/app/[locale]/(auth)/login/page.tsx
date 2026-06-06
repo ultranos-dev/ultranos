@@ -56,34 +56,8 @@ export default function LoginPage() {
       reportAuthEvent('LOGIN_SUCCESS', { actorId: data.user?.id })
       setPassword('')
 
-      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
-
-      if (factorsError) {
-        await supabase.auth.signOut()
-        setError(t('errorMfaFactors'))
-        setLoading(false)
-        return
-      }
-
-      const totpFactor = factors.totp?.[0]
-      if (!totpFactor) {
-        await populateSessionAndRedirect()
-        return
-      }
-
-      const { data: challenge, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: totpFactor.id })
-
-      if (challengeError) {
-        await supabase.auth.signOut()
-        setError(t('errorMfaChallenge'))
-        setLoading(false)
-        return
-      }
-
-      setFactorId(totpFactor.id)
-      setChallengeId(challenge.id)
-      setStep('mfa')
+      // TODO: MFA temporarily disabled — re-enable before production
+      await populateSessionAndRedirect()
     } catch {
       setError(t('errorUnexpected'))
     } finally {
@@ -108,10 +82,11 @@ export default function LoginPage() {
       role: payload.role ?? '',
       sessionId: payload.session_id ?? '',
       email: sessionData.session?.user?.email ?? '',
-      name:
-        sessionData.session?.user?.user_metadata?.full_name ??
-        sessionData.session?.user?.user_metadata?.name ??
-        '',
+      name: (() => {
+        const m = sessionData.session?.user?.user_metadata
+        return m?.full_name ?? m?.name ??
+          ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+      })(),
       kycStatus: payload.kyc_status ?? payload.app_metadata?.kyc_status,
     })
 
@@ -124,7 +99,7 @@ export default function LoginPage() {
     const returnUrl = params.get('returnUrl') ?? '/'
     const safeUrl =
       returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/'
-    window.location.href = safeUrl
+    router.push(safeUrl)
   }
 
   async function handleMfaSubmit(e: React.FormEvent) {

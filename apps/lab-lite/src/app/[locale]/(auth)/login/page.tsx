@@ -86,7 +86,11 @@ export default function LoginPage() {
       role: 'LAB_TECH',
       sessionId: crypto.randomUUID(),
       email: user.email,
-      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+      name: (() => {
+        const m = user.user_metadata
+        return m?.full_name ?? m?.name ??
+          ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+      })(),
       labRole: user.user_metadata?.lab_role ?? null,
     })
 

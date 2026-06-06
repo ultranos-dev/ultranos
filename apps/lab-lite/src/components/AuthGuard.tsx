@@ -13,9 +13,17 @@ import { HandoverAcknowledgment } from '@/components/shift/HandoverAcknowledgmen
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [pendingHandover, setPendingHandover] = useState<HandoverReport | null>(null)
+  const [pathname, setPathname] = useState('')
   const session = useAuthSessionStore((s) => s.session)
 
   useEffect(() => {
+    setPathname(window.location.pathname)
+  }, [])
+
+  const isLoginPage = pathname === '/login'
+
+  useEffect(() => {
+    if (!pathname || isLoginPage) return
 
     let cancelled = false
 
@@ -66,7 +74,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             role: 'LAB_TECH',
             sessionId,
             email: user.email ?? '',
-            name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+            name: (() => {
+              const m = user.user_metadata
+              return m?.full_name ?? m?.name ??
+                ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+            })(),
             labRole,
           })
         }
@@ -94,7 +106,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [pathname, isLoginPage])
 
   useEntitlementCheck('LAB_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -108,6 +120,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
     window.location.href = '/login'
   }
+
+  if (isLoginPage) return <>{children}</>
 
   if (!ready) {
     return (

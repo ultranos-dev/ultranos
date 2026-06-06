@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
@@ -25,7 +26,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
         if (cancelled) return
 
-        if (!data.session) {
+        if (!data.session || !encryptionKeyStore.isReady()) {
           const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
           window.location.href = `/login?returnUrl=${returnUrl}`
           return
@@ -42,6 +43,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
               role: payload.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
+              name: (() => {
+                const m = data.session.user?.user_metadata
+                return m?.full_name ?? m?.name ??
+                  ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+              })(),
             })
           } catch {
             const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)

@@ -87,10 +87,11 @@ export default function LoginPage() {
       role: payload.role ?? '',
       sessionId: payload.session_id ?? '',
       email: sessionData.session?.user?.email ?? '',
-      name:
-        sessionData.session?.user?.user_metadata?.full_name ??
-        sessionData.session?.user?.user_metadata?.name ??
-        '',
+      name: (() => {
+        const m = sessionData.session?.user?.user_metadata
+        return m?.full_name ?? m?.name ??
+          ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+      })(),
     })
 
     const params = new URLSearchParams(window.location.search)
