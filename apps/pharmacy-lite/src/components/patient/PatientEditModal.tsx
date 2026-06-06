@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { z } from 'zod'
 import { AdministrativeGender } from '@ultranos/shared-types'
 import type { FhirPatient, AfghanProvince } from '@ultranos/shared-types'
 import { NameInputSection } from '@/components/registration/NameInputSection'
 import { GeographySection } from '@/components/registration/GeographySection'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
-import { db } from '@/lib/db'
+import { db, type LocalPatient } from '@/lib/db'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/Card'
@@ -94,8 +95,7 @@ export function PatientEditModal({
   onSaved,
 }: PatientEditModalProps) {
   const t = useTranslations('registration')
-  const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
+  const actorId = useAuthSessionStore((s) => s.session?.userId ?? 'unknown')
 
   // ── Form state ──
   const [nameGiven, setNameGiven] = useState('')
@@ -307,9 +307,10 @@ export function PatientEditModal({
         // Offline fallback: if fetch failed AND we are offline, do optimistic save
         if (!navigator.onLine) {
           const updatedPatient = buildUpdatedPatient(now)
-          await db.patients.put(updatedPatient)
+          await db.patients.put(updatedPatient as unknown as LocalPatient)
 
           auditPhiAccess(
+            actorId,
             AuditAction.UPDATE,
             AuditResourceType.PATIENT,
             patientId,
@@ -336,13 +337,14 @@ export function PatientEditModal({
 
       // Update local Dexie cache with the full patient object
       try {
-        await db.patients.put(updatedPatient)
+        await db.patients.put(updatedPatient as unknown as LocalPatient)
       } catch {
         // Non-critical — state is updated in memory regardless
       }
 
       // Emit audit event
       auditPhiAccess(
+        actorId,
         AuditAction.UPDATE,
         AuditResourceType.PATIENT,
         patientId,
@@ -358,9 +360,10 @@ export function PatientEditModal({
         try {
           const now = new Date().toISOString()
           const updatedPatient = buildUpdatedPatient(now)
-          await db.patients.put(updatedPatient)
+          await db.patients.put(updatedPatient as unknown as LocalPatient)
 
           auditPhiAccess(
+            actorId,
             AuditAction.UPDATE,
             AuditResourceType.PATIENT,
             patientId,

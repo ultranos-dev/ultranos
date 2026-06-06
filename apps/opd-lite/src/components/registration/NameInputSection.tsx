@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/Card'
 
 interface NameInputSectionProps {
@@ -32,8 +32,6 @@ export function NameInputSection({
   errors,
 }: NameInputSectionProps) {
   const t = useTranslations('registration')
-  const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
 
   // Compose the full local name preview (given + father + grandfather + family)
   const nameParts = [nameGiven, nameFather, nameGrandfather, nameFamily].filter(Boolean)
@@ -58,7 +56,7 @@ export function NameInputSection({
           <input
             id="name-given"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             required
             aria-required="true"
             aria-invalid={!!errors?.nameGiven}
@@ -90,7 +88,7 @@ export function NameInputSection({
           <input
             id="name-father"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             aria-invalid={!!errors?.nameFather}
             aria-describedby={errors?.nameFather ? 'name-father-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
@@ -120,7 +118,7 @@ export function NameInputSection({
           <input
             id="name-grandfather"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             aria-invalid={!!errors?.nameGrandfather}
             aria-describedby={errors?.nameGrandfather ? 'name-grandfather-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
@@ -150,7 +148,7 @@ export function NameInputSection({
           <input
             id="name-family"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             aria-invalid={!!errors?.nameFamily}
             aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
@@ -180,7 +178,7 @@ export function NameInputSection({
             </p>
             <p
               className="text-lg font-bold text-foreground"
-              dir={isRtl ? 'rtl' : 'ltr'}
+              dir="auto"
             >
               {nameLocalPreview}
             </p>

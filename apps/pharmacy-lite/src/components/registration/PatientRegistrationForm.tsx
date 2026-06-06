@@ -13,7 +13,7 @@ import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { Card } from '@/components/Card'
-import { db } from '@/lib/db'
+import { db, type LocalPatient } from '@/lib/db'
 import { EncryptionKeyNotAvailableError } from '@/lib/encryption-key-store'
 import type { FhirPatient } from '@ultranos/shared-types'
 
@@ -148,7 +148,6 @@ export function PatientRegistrationForm({
 }: PatientRegistrationFormProps) {
   const t = useTranslations('registration')
   const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
   const router = useRouter()
 
   // ── Form state ──
@@ -346,7 +345,7 @@ export function PatientRegistrationForm({
       }
 
       try {
-        await db.patients.put(patient)
+        await db.patients.put(patient as unknown as LocalPatient)
       } catch (err) {
         if (err instanceof EncryptionKeyNotAvailableError) {
           // Re-throw — caller must handle this so the user isn't

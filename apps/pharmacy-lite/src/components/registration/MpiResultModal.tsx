@@ -43,7 +43,7 @@ export function MpiResultModal({
   // Auto-expand first candidate when modal opens
   useEffect(() => {
     if (open && candidates.length > 0) {
-      setExpandedId(candidates[0].id)
+      setExpandedId(candidates[0]?.id ?? null)
     } else {
       setExpandedId(null)
     }
@@ -68,6 +68,7 @@ export function MpiResultModal({
       if (focusable.length === 0) return
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
+      if (!first || !last) return
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault()
         last.focus()
