@@ -47,7 +47,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             useAuthSessionStore.getState().setSession({
               userId: payload.sub,
               practitionerId: payload.practitioner_id ?? payload.sub,
-              role: payload.role ?? data.session.user?.user_metadata?.role ?? '',
+              role: (payload.role !== 'authenticated' ? payload.role : null) ?? data.session.user?.user_metadata?.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
               name: (() => {
