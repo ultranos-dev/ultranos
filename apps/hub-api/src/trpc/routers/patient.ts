@@ -770,7 +770,22 @@ export const patientRouter = createTRPCRouter({
       // First fetch: allow inactive patients so we can follow merged_into links
       let { data, error } = await ctx.supabase
         .from('patients')
-        .select('*')
+        .select(
+          'id, gender, birth_date, birth_year_only, birth_year, ' +
+          'name_local, name_local_enc, name_latin, name_latin_enc, ' +
+          'name_given, name_given_enc, name_father, name_father_enc, ' +
+          'name_grandfather, name_grandfather_enc, ' +
+          'name_phonetic, name_phonetic_enc, ' +
+          'national_id_hash, is_active, created_at, created_by, updated_at, updated_by, ' +
+          'address_province_origin, address_district_origin, address_village_origin, ' +
+          'address_province_current, address_district_current, address_village_current, ' +
+          'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+          'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
+          'biometric_fingerprint_hash, biometric_algorithm_version, ' +
+          'birth_date_enc, meta_version_id, merged_into, ' +
+          'marital_status, displacement_category, nationality, occupation, ' +
+          'education_level, disability, telecom_phone_use, emergency_contacts'
+        )
         .eq('id', input.patientId)
         .single()
 
@@ -793,7 +808,22 @@ export const patientRouter = createTRPCRouter({
       if (data.merged_into) {
         const { data: survivorData, error: survivorErr } = await ctx.supabase
           .from('patients')
-          .select('*')
+          .select(
+            'id, gender, birth_date, birth_year_only, birth_year, ' +
+            'name_local, name_local_enc, name_latin, name_latin_enc, ' +
+            'name_given, name_given_enc, name_father, name_father_enc, ' +
+            'name_grandfather, name_grandfather_enc, ' +
+            'name_phonetic, name_phonetic_enc, ' +
+            'national_id_hash, is_active, created_at, created_by, updated_at, updated_by, ' +
+            'address_province_origin, address_district_origin, address_village_origin, ' +
+            'address_province_current, address_district_current, address_village_current, ' +
+            'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
+            'mpi_score, mpi_warn, guardian_id, consent_version, patient_tier, ' +
+            'biometric_fingerprint_hash, biometric_algorithm_version, ' +
+            'birth_date_enc, meta_version_id, merged_into, ' +
+            'marital_status, displacement_category, nationality, occupation, ' +
+            'education_level, disability, telecom_phone_use, emergency_contacts'
+          )
           .eq('id', data.merged_into)
           .eq('is_active', true)
           .single()
@@ -869,7 +899,12 @@ export const patientRouter = createTRPCRouter({
         gender: patient.gender as string | null,
         birthDate: (patient.birthDateEnc as string) ?? (patient.birthDate as string | null),
         birthYearOnly: (patient.birthYearOnly as boolean) ?? true,
-        telecom: phone ? [{ system: 'phone' as const, value: phone }] : [],
+        maritalStatus: (patient.maritalStatus as string) ?? undefined,
+        contact: (() => {
+          const parsed = PatientContactSchema.array().safeParse(patient.emergencyContacts)
+          return parsed.success && parsed.data.length > 0 ? parsed.data : undefined
+        })(),
+        telecom: phone ? [{ system: 'phone' as const, value: phone, use: (patient.telecomPhoneUse as 'home' | 'work' | 'mobile') ?? undefined }] : [],
         _ultranos: {
           nameLocal,
           nameLatin: (patient.nameLatinEnc as string) ?? (patient.nameLatin as string | null) ?? undefined,
@@ -906,6 +941,11 @@ export const patientRouter = createTRPCRouter({
           mpiScore: (patient.mpiScore as number) ?? undefined,
           photoUrl: (patient.photoUrl as string) ?? undefined,
           bloodGroup: (patient.bloodGroup as string) ?? undefined,
+          displacementCategory: (patient.displacementCategory as string) ?? undefined,
+          nationality: (patient.nationality as string)?.toUpperCase() ?? undefined,
+          occupation: (patient.occupation as string) ?? undefined,
+          educationLevel: (patient.educationLevel as string) ?? undefined,
+          disability: (patient.disability as boolean) ?? undefined,
           updatedByName,
           updatedByRole,
         },
@@ -1048,7 +1088,7 @@ export const patientRouter = createTRPCRouter({
         addressDistrictCurrent: z.string().optional(),
         addressVillageCurrent: z.string().max(200).optional(),
         isNomadic: z.boolean().optional(),
-        preferredLanguage: z.enum(['en', 'ar', 'prs']).optional(),
+        preferredLanguage: z.enum(['en', 'ar', 'prs', 'ps']).optional(),
         // Profile page additions
         photoUrl: z.string().max(500).optional(),
         bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']).optional(),
