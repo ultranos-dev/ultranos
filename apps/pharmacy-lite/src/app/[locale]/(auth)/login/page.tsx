@@ -283,9 +283,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground">
-          {t('secureHealthcare')}
-        </p>
+        <p className="text-center text-xs text-muted-foreground">Ultranos Healthcare Platform</p>
       </div>
 
       {/* ── Right: brand panel ── */}

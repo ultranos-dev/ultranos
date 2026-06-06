@@ -6,6 +6,7 @@ import {
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { SyncDashboard } from '@/components/pharmacy/SyncDashboard'
+import { SwUpdateNotification } from '@/components/SwUpdateNotification'
 import { InstallPrompt } from '@/components/InstallPrompt'
 import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
 
@@ -28,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarInset>
       </SidebarProvider>
       <SyncDashboard />
+      <SwUpdateNotification />
     </TooltipProvider>
   )
 }

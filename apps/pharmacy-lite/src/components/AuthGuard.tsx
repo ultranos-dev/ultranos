@@ -12,10 +12,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
 
   const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
+  const isPublicPage = pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password'
 
   useEffect(() => {
-    if (isLoginPage) return
+    if (isPublicPage) return
 
     let cancelled = false
 
@@ -70,7 +70,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isLoginPage])
+  }, [isPublicPage])
 
   useEntitlementCheck('PHARMACY_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -81,7 +81,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }
 
-  if (isLoginPage) return <>{children}</>
+  if (isPublicPage) return <>{children}</>
   if (!ready) return null
 
   return (

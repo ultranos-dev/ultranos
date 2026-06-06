@@ -20,10 +20,10 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     setPathname(window.location.pathname)
   }, [])
 
-  const isLoginPage = pathname === '/login'
+  const isPublicPage = pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password'
 
   useEffect(() => {
-    if (!pathname || isLoginPage) return
+    if (!pathname || isPublicPage) return
 
     let cancelled = false
 
@@ -106,7 +106,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [pathname, isLoginPage])
+  }, [pathname, isPublicPage])
 
   useEntitlementCheck('LAB_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -121,7 +121,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }
 
-  if (isLoginPage) return <>{children}</>
+  if (isPublicPage) return <>{children}</>
 
   if (!ready) {
     return (

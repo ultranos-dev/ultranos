@@ -158,7 +158,7 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground">Secure healthcare platform</p>
+        <p className="text-center text-xs text-muted-foreground">Ultranos Healthcare Platform</p>
       </div>
 
       <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:items-center lg:justify-center">

@@ -272,9 +272,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground">
-          Secure clinical laboratory diagnostics platform
-        </p>
+        <p className="text-center text-xs text-muted-foreground">Ultranos Healthcare Platform</p>
       </div>
 
       {/* Right panel — brand */}
