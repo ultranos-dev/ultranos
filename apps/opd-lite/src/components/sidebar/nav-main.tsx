@@ -10,10 +10,13 @@ import { type NavGroup, type NavBadgeKey } from './nav-config'
 import { Collapsible } from 'radix-ui'
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 
 interface NavMainProps {
@@ -21,37 +24,38 @@ interface NavMainProps {
   badges?: Partial<Record<NavBadgeKey, number>>
 }
 
-function findActiveGroup(groups: NavGroup[], pathname: string): string | null {
-  return (
-    groups.find((g) =>
-      g.items.some((item) =>
-        item.url === '/'
-          ? pathname === '/' || pathname === ''
-          : pathname === item.url || pathname.startsWith(`${item.url}/`),
-      ),
-    )?.title ?? null
-  )
+function findActiveItem(groups: NavGroup[], pathname: string): string | null {
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (!item.children?.length) continue
+      const isActive =
+        pathname === item.url ||
+        item.children.some(
+          (c) => pathname === c.url || pathname.startsWith(`${c.url}/`),
+        )
+      if (isActive) return item.url
+    }
+  }
+  return null
 }
 
 export function NavMain({ groups, badges = {} }: NavMainProps) {
   const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const { state: sidebarState } = useSidebar()
 
-  const [openGroup, setOpenGroup] = useState<string | null>(() =>
-    findActiveGroup(groups, pathname),
+  const [openItem, setOpenItem] = useState<string | null>(() =>
+    findActiveItem(groups, pathname),
   )
 
-  // Sync open group when navigating to a different section
   useEffect(() => {
-    const active = findActiveGroup(groups, pathname)
-    if (active) setOpenGroup(active)
+    const active = findActiveItem(groups, pathname)
+    if (active) setOpenItem(active)
   }, [pathname, groups])
 
   return (
     <>
       {groups.map((group) => {
-        // Singleton group (Dashboard, Admin, System) — always visible, no collapsible
+        // Singleton group (Dashboard, Admin, System) — no label, no collapsible
         if (group.items.length === 1) {
           const item = group.items[0]!
           const isActive =
@@ -81,66 +85,97 @@ export function NavMain({ groups, badges = {} }: NavMainProps) {
           )
         }
 
-        // In icon/collapsed mode all groups are forced open so item icons remain visible
-        const isOpen = sidebarState === 'collapsed' || openGroup === group.title
-
+        // Multi-item group — always-visible label + item-level collapsible for parents with children
         return (
-          <Collapsible.Root
-            key={group.title}
-            open={isOpen}
-            onOpenChange={(open) => {
-              if (sidebarState !== 'collapsed') {
-                setOpenGroup(open ? group.title : null)
-              }
-            }}
-            className="group/collapsible"
-          >
-            <SidebarGroup>
-              {/* Collapsible group header — title + chevron (opd-lite groups have no icon) */}
-              <Collapsible.Trigger className="flex h-8 w-full cursor-pointer select-none items-center gap-1.5 rounded-xl border-0 bg-transparent px-3 text-xs font-medium text-sidebar-foreground/70 outline-hidden ring-sidebar-ring transition-[margin,opacity] duration-200 ease-linear hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-3 group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 [&>svg]:size-4 [&>svg]:shrink-0">
-                <span>{group.title}</span>
-                <DirectionalIcon category="navigation">
-                  <ChevronRight className="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </DirectionalIcon>
-              </Collapsible.Trigger>
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item) => {
+                const isActive =
+                  item.url === '/'
+                    ? pathname === '/' || pathname === ''
+                    : pathname === item.url || pathname.startsWith(`${item.url}/`)
+                const badgeCount = item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
 
-              <Collapsible.Content>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const hasChildItem = group.items.some(
-                      (other) =>
-                        other.url !== item.url &&
-                        other.url.startsWith(`${item.url}/`),
-                    )
-                    const isActive =
-                      item.url === '/'
-                        ? pathname === '/' || pathname === ''
-                        : hasChildItem
-                          ? pathname === item.url
-                          : pathname === item.url || pathname.startsWith(`${item.url}/`)
-                    const badgeCount =
-                      item.badgeKey !== undefined ? (badges[item.badgeKey] ?? 0) : 0
-
-                    return (
-                      <SidebarMenuItem key={item.url}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.titleKey)}>
-                          <Link href={item.url}>
+                // Item with explicit children → collapsible parent
+                if (item.children && item.children.length > 0) {
+                  return (
+                    <Collapsible.Root
+                      key={item.url}
+                      asChild
+                      open={openItem === item.url}
+                      onOpenChange={(open) => setOpenItem(open ? item.url : null)}
+                    >
+                      <SidebarMenuItem>
+                        <Collapsible.Trigger asChild>
+                          <SidebarMenuButton
+                            tooltip={t(item.titleKey)}
+                            isActive={pathname === item.url}
+                          >
                             <item.icon />
                             <span>{t(item.titleKey)}</span>
-                            {badgeCount > 0 && (
-                              <span className="ms-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                                {badgeCount > 99 ? '99+' : badgeCount}
-                              </span>
-                            )}
-                          </Link>
-                        </SidebarMenuButton>
+                            <DirectionalIcon category="navigation">
+                              <ChevronRight className="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                            </DirectionalIcon>
+                          </SidebarMenuButton>
+                        </Collapsible.Trigger>
+                        <Collapsible.Content>
+                          <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton asChild isActive={pathname === item.url}>
+                                <Link href={item.url}>Overview</Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            {item.children.map((child) => {
+                              const childBadge =
+                                child.badgeKey !== undefined ? (badges[child.badgeKey] ?? 0) : 0
+                              return (
+                                <SidebarMenuSubItem key={child.url}>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={
+                                      pathname === child.url ||
+                                      pathname.startsWith(`${child.url}/`)
+                                    }
+                                  >
+                                    <Link href={child.url}>
+                                      {t(child.titleKey)}
+                                      {childBadge > 0 && (
+                                        <span className="ms-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                                          {childBadge > 99 ? '99+' : childBadge}
+                                        </span>
+                                      )}
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              )
+                            })}
+                          </SidebarMenuSub>
+                        </Collapsible.Content>
                       </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </Collapsible.Content>
-            </SidebarGroup>
-          </Collapsible.Root>
+                    </Collapsible.Root>
+                  )
+                }
+
+                // Standalone item
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.titleKey)}>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{t(item.titleKey)}</span>
+                        {badgeCount > 0 && (
+                          <span className="ms-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroup>
         )
       })}
     </>

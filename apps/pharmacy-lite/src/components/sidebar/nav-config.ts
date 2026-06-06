@@ -6,14 +6,7 @@ import {
   List,
   Clock,
   Package,
-  PackageCheck,
-  BookOpen,
-  UserPlus,
-  ClipboardCheck,
-  Share2,
   Receipt,
-  Banknote,
-  Users,
   ShieldAlert,
   AlertTriangle,
   BarChart3,
@@ -28,7 +21,12 @@ export interface NavItem {
    */
   titleKey: string
   url: string
-  icon: LucideIcon
+  /**
+   * Present on parent/standalone items. Absent on sub-items (items whose URL
+   * starts with a sibling parent's URL). Nav-main uses the presence/absence of
+   * icon to distinguish parents from sub-items.
+   */
+  icon?: LucideIcon
   /**
    * If set, renders a numeric badge driven by the matching key in the `badges` prop.
    * Values: 'pending' | 'failed'
@@ -37,54 +35,52 @@ export interface NavItem {
 }
 
 export interface NavGroup {
-  /** Displayed as the sidebar group label. English, not i18n. */
+  /** Displayed as the sidebar group label. Empty string for unlabelled singleton groups. */
   title: string
-  icon: LucideIcon
   items: NavItem[]
 }
 
 export const navGroups: NavGroup[] = [
   {
     title: '',
-    icon: Home,
     items: [
       { titleKey: 'dashboard', url: '/', icon: Home },
     ],
   },
   {
     title: 'Dispensing',
-    icon: Scan,
     items: [
-      { titleKey: 'scanRx',   url: '/scan',      icon: Scan },
-      { titleKey: 'paperRx',  url: '/paper-rx',  icon: FileText },
-      { titleKey: 'queue',    url: '/queue',     icon: List,     badgeKey: 'pending' },
-      { titleKey: 'history',  url: '/history',   icon: Clock },
+      { titleKey: 'scanRx',  url: '/scan',     icon: Scan },
+      { titleKey: 'paperRx', url: '/paper-rx', icon: FileText },
+      { titleKey: 'queue',   url: '/queue',    icon: List, badgeKey: 'pending' },
+      { titleKey: 'history', url: '/history',  icon: Clock },
     ],
   },
   {
     title: 'Inventory',
-    icon: Package,
     items: [
+      // Stock Overview is the parent — its URL prefix is /inventory
       { titleKey: 'stockOverview', url: '/inventory',           icon: Package },
-      { titleKey: 'receiveStock',  url: '/inventory/receive',   icon: PackageCheck },
-      { titleKey: 'catalog',       url: '/inventory/catalog',   icon: BookOpen },
-      { titleKey: 'suppliers',     url: '/inventory/suppliers', icon: UserPlus },
-      { titleKey: 'stockCount',    url: '/inventory/count',     icon: ClipboardCheck },
-      { titleKey: 'transfers',     url: '/inventory/transfers', icon: Share2 },
+      // Sub-items: no icon, URLs start with /inventory/
+      { titleKey: 'receiveStock',  url: '/inventory/receive' },
+      { titleKey: 'catalog',       url: '/inventory/catalog' },
+      { titleKey: 'suppliers',     url: '/inventory/suppliers' },
+      { titleKey: 'stockCount',    url: '/inventory/count' },
+      { titleKey: 'transfers',     url: '/inventory/transfers' },
     ],
   },
   {
     title: 'Financial',
-    icon: Receipt,
     items: [
-      { titleKey: 'pos',             url: '/pos',             icon: Receipt },
-      { titleKey: 'cashDrawer',      url: '/pos/cash-drawer', icon: Banknote },
-      { titleKey: 'patientAccounts', url: '/pos/accounts',    icon: Users },
+      // POS is the parent — its URL prefix is /pos
+      { titleKey: 'pos', url: '/pos', icon: Receipt },
+      // Sub-items: no icon, URLs start with /pos/
+      { titleKey: 'cashDrawer',      url: '/pos/cash-drawer' },
+      { titleKey: 'patientAccounts', url: '/pos/accounts' },
     ],
   },
   {
     title: 'Clinical',
-    icon: ShieldAlert,
     items: [
       { titleKey: 'controlled', url: '/controlled', icon: ShieldAlert },
       { titleKey: 'unverified', url: '/unverified', icon: AlertTriangle },
@@ -92,7 +88,6 @@ export const navGroups: NavGroup[] = [
   },
   {
     title: 'System',
-    icon: Settings,
     items: [
       { titleKey: 'reports',   url: '/reports',  icon: BarChart3 },
       { titleKey: 'syncQueue', url: '/sync',     icon: RefreshCw, badgeKey: 'failed' },

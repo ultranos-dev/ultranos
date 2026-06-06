@@ -18,7 +18,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const side = (['ar', 'prs', 'ps'].includes(locale) ? 'right' : 'left') as 'left' | 'right'
 
   return (
-    <Sidebar collapsible="icon" variant="inset" side={side} {...props}>
+    <Sidebar collapsible="icon" side={side} {...props}>
       <SidebarHeader>
         <LocationSwitcher />
       </SidebarHeader>

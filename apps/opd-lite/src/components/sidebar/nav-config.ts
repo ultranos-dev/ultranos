@@ -3,7 +3,6 @@ import {
   Home,
   Calendar,
   Users,
-  UserPlus,
   Bell,
   AlertTriangle,
   UserSearch,
@@ -19,6 +18,12 @@ export type NavBadgeKey =
   | 'duplicateReviews'
   | 'expiringConsents'
 
+export interface NavChildItem {
+  titleKey: string
+  url: string
+  badgeKey?: NavBadgeKey
+}
+
 export interface NavItem {
   /**
    * Translation key within the 'sidebar' namespace.
@@ -31,10 +36,15 @@ export interface NavItem {
    * If set, renders a numeric badge driven by the matching key in the `badges` prop.
    */
   badgeKey?: NavBadgeKey
+  /**
+   * Explicit sub-items rendered inside a collapsible. An auto "Overview" link
+   * pointing to `url` is always prepended when children are present.
+   */
+  children?: NavChildItem[]
 }
 
 export interface NavGroup {
-  /** Displayed as the sidebar group label. English, not i18n. */
+  /** Displayed as the sidebar group label. Empty string for unlabelled singleton groups. */
   title: string
   items: NavItem[]
 }
@@ -50,8 +60,14 @@ export const navGroups: NavGroup[] = [
     title: 'Core',
     items: [
       { titleKey: 'appointments', url: '/appointments', icon: Calendar, badgeKey: 'todayAppointments' },
-      { titleKey: 'patients', url: '/patients', icon: Users },
-      { titleKey: 'registerPatient', url: '/register-patient', icon: UserPlus },
+      {
+        titleKey: 'patients',
+        url: '/patients',
+        icon: Users,
+        children: [
+          { titleKey: 'registerPatient', url: '/register-patient' },
+        ],
+      },
     ],
   },
   {

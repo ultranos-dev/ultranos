@@ -30,7 +30,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar collapsible="icon" variant="inset" side={side} {...props}>
+    <Sidebar collapsible="icon" side={side} {...props}>
       <SidebarHeader>
         <OpdHeader />
       </SidebarHeader>
