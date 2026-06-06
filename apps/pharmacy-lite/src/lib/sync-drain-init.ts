@@ -11,7 +11,7 @@
  * Pauses on auth-expired (401) and triggers re-auth.
  */
 
-import { DrainWorker, createSyncQueue, type CapacityWarningInfo } from '@ultranos/sync-engine'
+import { DrainWorker, createSyncQueue } from '@ultranos/sync-engine'
 import { dexieSyncAdapter } from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
 import { useSyncStore } from '@/stores/sync-store'
@@ -27,13 +27,7 @@ let drainWorker: DrainWorker | null = null
 export function startSyncDrain(): void {
   stopSyncDrain()
 
-  const queue = createSyncQueue(dexieSyncAdapter, {
-    onCapacityWarning: (info: CapacityWarningInfo) => {
-      window.dispatchEvent(
-        new CustomEvent('ultranos:sync-capacity-warning', { detail: info }),
-      )
-    },
-  })
+  const queue = createSyncQueue(dexieSyncAdapter)
 
   drainWorker = new DrainWorker({
     queue,

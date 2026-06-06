@@ -85,7 +85,7 @@ export async function revalidateKey(
     if (data.status === 'active' && data.practitionerId) {
       const existing = await db.practitionerKeys.get(pubKeyBase64)
       const name =
-        ((data as Record<string, unknown>).practitionerName as string | undefined) ??
+        ((data as unknown as Record<string, unknown>).practitionerName as string | undefined) ??
         existing?.practitionerName ??
         ''
       await db.practitionerKeys.put({

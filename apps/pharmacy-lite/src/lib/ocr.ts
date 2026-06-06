@@ -21,27 +21,27 @@ export interface PrescriptionOcrResult {
 /** Known prescription field patterns for extraction from handwritten Rx */
 const FIELD_PATTERNS: Record<string, RegExp[]> = {
   medicationName: [
-    /(?:rx|medication|drug|med|\u062f\u0648\u0627\u0621)\s*[:\-]?\s*(.+)/i,
+    /(?:rx|medication|drug|med|\u062f\u0648\u0627\u0621)\s*[:-]?\s*(.+)/i,
     /(?:tab(?:let)?s?|cap(?:sule)?s?|inj(?:ection)?|syrup)\s+(.+)/i,
     /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+\d+\s*(?:mg|ml|mcg|g|iu)/im,
   ],
   dosage: [
-    /(?:dose|dosage|\u062c\u0631\u0639\u0629)\s*[:\-]?\s*(.+)/i,
+    /(?:dose|dosage|\u062c\u0631\u0639\u0629)\s*[:-]?\s*(.+)/i,
     /(\d+\s*(?:mg|ml|mcg|g|iu)(?:\s*\/\s*\d+\s*(?:mg|ml|mcg|g|iu))?)/i,
   ],
   frequency: [
-    /(?:freq(?:uency)?|sig|directions?|\u062a\u0639\u0644\u064a\u0645\u0627\u062a)\s*[:\-]?\s*(.+)/i,
+    /(?:freq(?:uency)?|sig|directions?|\u062a\u0639\u0644\u064a\u0645\u0627\u062a)\s*[:-]?\s*(.+)/i,
     /((?:once|twice|thrice|\d+\s*(?:times?|x))\s*(?:daily|a\s*day|per\s*day|weekly))/i,
     /((?:b\.?i\.?d|t\.?i\.?d|q\.?i\.?d|o\.?d|q\.?d|prn|stat|h\.?s|a\.?c|p\.?c)\.?)/i,
   ],
   prescriberName: [
-    /(?:dr\.?|doctor|prescriber|physician|\u0627\u0644\u0637\u0628\u064a\u0628)\s*[:\-]?\s*(.+)/i,
-    /(?:signed?\s*(?:by)?|\u0627\u0644\u0645\u064f\u0648\u0642\u0651\u0639)\s*[:\-]?\s*(.+)/i,
+    /(?:dr\.?|doctor|prescriber|physician|\u0627\u0644\u0637\u0628\u064a\u0628)\s*[:-]?\s*(.+)/i,
+    /(?:signed?\s*(?:by)?|\u0627\u0644\u0645\u064f\u0648\u0642\u0651\u0639)\s*[:-]?\s*(.+)/i,
   ],
   prescriptionDate: [
-    /(?:date|\u062a\u0627\u0631\u064a\u062e)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
-    /(\d{4}[\-\/]\d{2}[\-\/]\d{2})/,
-    /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/,
+    /(?:date|\u062a\u0627\u0631\u064a\u062e)\s*[:-]?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
+    /(\d{4}[-/]\d{2}[-/]\d{2})/,
+    /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/,
   ],
 }
 
@@ -150,7 +150,9 @@ export function extractFieldsFromText(
 
     for (const line of lines) {
       for (let i = 0; i < patterns.length; i++) {
-        const match = line.match(patterns[i])
+        const pattern = patterns[i]
+        if (!pattern) continue
+        const match = line.match(pattern)
         if (match) {
           const value = (match[1] ?? match[0]).trim()
 

@@ -112,7 +112,7 @@ async function syncKrl(
       auditPhiAccess(
         actorId,
         AuditAction.SYNC,
-        AuditResourceType.PRACTITIONER_KEY,
+        AuditResourceType.PRACTITIONER,
         'krl',
         undefined,
         { outcome: 'failure', reason: 'Hub unreachable or auth expired' },
@@ -137,7 +137,7 @@ async function syncKrl(
     auditPhiAccess(
       actorId,
       AuditAction.SYNC,
-      AuditResourceType.PRACTITIONER_KEY,
+      AuditResourceType.PRACTITIONER,
       'krl',
       undefined,
       {
@@ -152,7 +152,7 @@ async function syncKrl(
     auditPhiAccess(
       actorId,
       AuditAction.SYNC,
-      AuditResourceType.PRACTITIONER_KEY,
+      AuditResourceType.PRACTITIONER,
       'krl',
       undefined,
       { outcome: 'failure', reason: 'Unexpected error during KRL sync' },

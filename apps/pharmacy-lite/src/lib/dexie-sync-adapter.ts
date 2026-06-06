@@ -42,11 +42,10 @@ export const dexieSyncAdapter: SyncQueueStorage = {
     await db.syncQueue.put(toDbEntry(entry))
   },
 
-  async getByResourceId(resourceId: string, resourceType: string, status: string): Promise<SyncQueueEntry | null> {
+  async getByResourceId(resourceId: string, status: string): Promise<SyncQueueEntry | null> {
     const dbStatus = toDbStatus(status)
     const entry = await db.syncQueue
       .where({ resourceId, status: dbStatus })
-      .filter((e) => e.resourceType === resourceType)
       .first()
     return entry ? fromDbEntry(entry) : null
   },
@@ -81,15 +80,8 @@ export const dexieSyncAdapter: SyncQueueStorage = {
       const bTime = b.lastAttemptAt ? new Date(b.lastAttemptAt).getTime() : 0
       return bTime - aTime
     })
-    return fromDbEntry(synced[0])
+    const first = synced[0]
+    return first ? fromDbEntry(first) : null
   },
 
-  async totalCount(): Promise<number> {
-    return db.syncQueue.count()
-  },
-
-  async estimateSizeBytes(): Promise<number> {
-    const entries = await db.syncQueue.toArray()
-    return entries.reduce((sum, e) => sum + e.payload.length * 2, 0)
-  },
 }
