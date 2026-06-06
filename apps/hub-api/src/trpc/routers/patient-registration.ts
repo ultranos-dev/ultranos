@@ -16,7 +16,7 @@ import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 const OTP_RATE_LIMIT = { limit: 3, windowSec: 600 } as const
 
 /** Supported locales for patient registration. */
-const SUPPORTED_LOCALES = ['en', 'ar', 'prs'] as const
+const SUPPORTED_LOCALES = ['en', 'ar', 'prs', 'ps'] as const
 
 /** Hash phone for per-phone rate limiting without storing raw phone in Redis. */
 function hashPhone(phone: string): string {

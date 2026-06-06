@@ -11,7 +11,7 @@ import { db } from '@/lib/supabase'
 import { normalizeNameComponent, computePhoneticTokens, computeMpiResult } from '@ultranos/mpi-engine'
 import { signProceedToken, verifyProceedToken, consumeProceedToken } from '@/lib/mpi-proceed-token'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
-import { CreatePatientMpiInputSchema } from '@ultranos/shared-types'
+import { CreatePatientMpiInputSchema, PatientContactSchema } from '@ultranos/shared-types'
 
 function sanitizeFilterValue(value: string): string {
   // Strip dangerous chars, then escape SQL ILIKE wildcards
@@ -53,7 +53,9 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
-          'mpi_score, mpi_warn'
+          'mpi_score, mpi_warn, ' +
+          'marital_status, displacement_category, nationality, occupation, ' +
+          'education_level, disability, telecom_phone_use, emergency_contacts'
         )
         .eq('is_active', true)
         .order('created_at', { ascending: true })
@@ -104,8 +106,13 @@ export const patientRouter = createTRPCRouter({
           gender: row.gender,
           birthDate: row.birth_date,
           birthYearOnly: row.birth_year_only,
+          maritalStatus: (row.marital_status as string) ?? undefined,
+          contact: (() => {
+            const parsed = PatientContactSchema.array().safeParse(row.emergency_contacts)
+            return parsed.success && parsed.data.length > 0 ? parsed.data : undefined
+          })(),
           telecom: row.telecom_phone
-            ? [{ system: 'phone' as const, value: row.telecom_phone as string }]
+            ? [{ system: 'phone' as const, value: row.telecom_phone as string, use: (row.telecom_phone_use as 'home' | 'work' | 'mobile') ?? undefined }]
             : [],
           _ultranos: {
             nameLocal:    row.name_local,
@@ -137,6 +144,11 @@ export const patientRouter = createTRPCRouter({
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
+            displacementCategory: (row.displacement_category as string) ?? undefined,
+            nationality: (row.nationality as string)?.toUpperCase() ?? undefined,
+            occupation:  (row.occupation as string) ?? undefined,
+            educationLevel: (row.education_level as string) ?? undefined,
+            disability:  (row.disability as boolean) ?? undefined,
           },
           meta: {
             lastUpdated: (row.updated_at as string) ?? (row.created_at as string),
@@ -189,7 +201,9 @@ export const patientRouter = createTRPCRouter({
           'address_province_origin, address_district_origin, address_village_origin, ' +
           'address_province_current, address_district_current, address_village_current, ' +
           'is_nomadic, telecom_phone, blood_group, photo_url, preferred_language, ' +
-          'mpi_score, mpi_warn'
+          'mpi_score, mpi_warn, ' +
+          'marital_status, displacement_category, nationality, occupation, ' +
+          'education_level, disability, telecom_phone_use, emergency_contacts'
         )
         .or(orFilter)
         .eq('is_active', true)
@@ -232,8 +246,13 @@ export const patientRouter = createTRPCRouter({
           gender: row.gender,
           birthDate: row.birth_date,
           birthYearOnly: row.birth_year_only,
+          maritalStatus: (row.marital_status as string) ?? undefined,
+          contact: (() => {
+            const parsed = PatientContactSchema.array().safeParse(row.emergency_contacts)
+            return parsed.success && parsed.data.length > 0 ? parsed.data : undefined
+          })(),
           telecom: row.telecom_phone
-            ? [{ system: 'phone' as const, value: row.telecom_phone as string }]
+            ? [{ system: 'phone' as const, value: row.telecom_phone as string, use: (row.telecom_phone_use as 'home' | 'work' | 'mobile') ?? undefined }]
             : [],
           _ultranos: {
             nameLocal:    row.name_local,
@@ -265,6 +284,11 @@ export const patientRouter = createTRPCRouter({
             preferredLanguage: (row.preferred_language as string) ?? undefined,
             mpiScore:    row.mpi_score,
             mpiWarn:     (row.mpi_warn as boolean) ?? false,
+            displacementCategory: (row.displacement_category as string) ?? undefined,
+            nationality: (row.nationality as string)?.toUpperCase() ?? undefined,
+            occupation:  (row.occupation as string) ?? undefined,
+            educationLevel: (row.education_level as string) ?? undefined,
+            disability:  (row.disability as boolean) ?? undefined,
           },
           meta: {
             lastUpdated: (row.updated_at as string) ?? (row.created_at as string),
@@ -503,11 +527,19 @@ export const patientRouter = createTRPCRouter({
         mpi_score: mpiResult.topScore,
         is_active:              true,
         patient_tier:           'FREE',
-        preferred_language:     null,
+        preferred_language:     input.preferredLanguage ?? null,
         created_by:             ctx.user.sub,
         created_at:             now,
         updated_at:             now,
         guardian_id:            input.guardianId ?? null,
+        marital_status:        input.maritalStatus ?? null,
+        displacement_category: input.displacementCategory ?? null,
+        nationality:           input.nationality?.toUpperCase() ?? null,
+        occupation:            input.occupation ?? null,
+        education_level:       input.educationLevel ?? null,
+        disability:            input.disability ?? null,
+        telecom_phone_use:     input.phoneUse ?? null,
+        emergency_contacts:    input.contacts ? JSON.stringify(input.contacts) : JSON.stringify([]),
       })
 
       const consentRow = {
@@ -642,11 +674,19 @@ export const patientRouter = createTRPCRouter({
         mpi_score: null,
         is_active:              true,
         patient_tier:           'FREE',
-        preferred_language:     null,
+        preferred_language:     input.preferredLanguage ?? null,
         created_by:             ctx.user.sub,
         created_at:             input.offlineCreatedAt,
         updated_at:             now,
         guardian_id:            input.guardianId ?? null,
+        marital_status:        input.maritalStatus ?? null,
+        displacement_category: input.displacementCategory ?? null,
+        nationality:           input.nationality?.toUpperCase() ?? null,
+        occupation:            input.occupation ?? null,
+        education_level:       input.educationLevel ?? null,
+        disability:            input.disability ?? null,
+        telecom_phone_use:     input.phoneUse ?? null,
+        emergency_contacts:    input.contacts ? JSON.stringify(input.contacts) : JSON.stringify([]),
       })
 
       const consentRow = {
