@@ -33,11 +33,12 @@ export interface PatientIdentifier {
 // ── Extended demographics ─────────────────────────────────────────────
 
 /**
- * FHIR R4 marital status value set (v2-0002).
- * Polygamous excluded for this deployment context.
- * M=Married, S=Single/Never Married, D=Divorced, W=Widowed, U=Unknown
+ * FHIR R4 marital status value set (v2-0002) — deployment subset.
+ * Polygamous ('P') excluded for this deployment context.
+ * M=Married, S=Single/Never Married, D=Divorced, W=Widowed
+ * UNK=Unknown/Not Disclosed (FHIR NullFlavor — use when status is not known or not shared)
  */
-export type MaritalStatus = 'M' | 'S' | 'D' | 'W' | 'U'
+export type MaritalStatus = 'M' | 'S' | 'D' | 'W' | 'UNK'
 
 /** Relationship of an emergency contact to the patient */
 export type ContactRelationship =
