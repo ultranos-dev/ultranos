@@ -84,7 +84,7 @@ export default function LoginPage() {
     useAuthSessionStore.getState().setSession({
       userId: payload.sub,
       practitionerId: payload.practitioner_id ?? payload.sub,
-      role: payload.role ?? '',
+      role: payload.role ?? sessionData.session?.user?.user_metadata?.role ?? '',
       sessionId: payload.session_id ?? '',
       email: sessionData.session?.user?.email ?? '',
       name: (() => {
