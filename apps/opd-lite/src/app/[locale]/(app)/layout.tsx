@@ -2,6 +2,7 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { SyncDashboard } from '@/components/SyncDashboard'
 import { InstallPrompt } from '@/components/InstallPrompt'
+import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
 import {
   SidebarInset,
   SidebarProvider,
@@ -14,6 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
+          <SyncAwareStaleDataBanner />
           <BreadcrumbHeader />
           <a
             href="#main-content"

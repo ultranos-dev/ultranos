@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { AlertTriangle, CircleX, RefreshCw, X, User, HeartPulse, Pill, FileText, Stethoscope, ClipboardList, ShieldAlert, FlaskConical } from '@ultranos/ui-kit/icons'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@ultranos/ui-kit/components/ui/button'
 import { useSyncStore } from '@/stores/sync-store'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { triggerDrain } from '@/lib/sync-worker'
@@ -101,7 +101,7 @@ function StatusBadge({ status, conflictFlag }: { status: string; conflictFlag?: 
       )
     case 'syncing':
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary" data-testid="badge-syncing">
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary" data-testid="badge-syncing">
           <svg className="h-3.5 w-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
@@ -172,7 +172,7 @@ export function SyncDashboard() {
   const { isDashboardOpen, setDashboardOpen, lastSyncedAt, isDraining, setIsDraining } = useSyncStore()
   const [queueItems, setQueueItems] = useState<SyncQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<string | null>(null)
-  const [syncPhase, setSyncPhase] = useState<string | null>(null)
+  const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
 
   // Load queue items from Dexie and subscribe to changes
   const loadItems = useCallback(async () => {
@@ -242,19 +242,15 @@ export function SyncDashboard() {
   const activePatientId = useSyncStore((s) => s.activePatientId)
 
   const handleSyncNow = useCallback(async () => {
-    if (!navigator.onLine) {
-      return
-    }
+    if (!navigator.onLine || isDraining) return
     setIsDraining(true)
+    setPhase('syncing')
     try {
       // Phase 1: Push pending local changes to Hub
-      const pendingCount = queueItems.filter(e => e.status === 'pending' || e.status === 'syncing').length
-      setSyncPhase(pendingCount > 0 ? `Pushing ${pendingCount} pending change${pendingCount !== 1 ? 's' : ''} to Hub...` : 'Checking for pending changes...')
       await triggerDrain()
 
       // Phase 2: Pull remote changes for the active patient (if a chart is open)
       if (activePatientId) {
-        setSyncPhase('Pulling latest patient data from Hub...')
         const { getSupabaseBrowserClient } = await import('@/lib/supabase')
         const { data } = await getSupabaseBrowserClient().auth.getSession()
         const token = data.session?.access_token ?? ''
@@ -263,7 +259,7 @@ export function SyncDashboard() {
         }
       }
 
-      setSyncPhase('Sync complete')
+      setPhase('complete')
 
       // Always update lastSyncedAt — even if nothing was pushed/pulled,
       // a successful sync check should clear the "never synced" state
@@ -277,20 +273,28 @@ export function SyncDashboard() {
       })
     } catch (err) {
       console.error('[SyncDashboard] Sync failed — see audit log for details')
-      setSyncPhase('Sync failed — will retry')
+      setPhase('error')
     } finally {
       // Brief delay so final phase is visible
       await new Promise(r => setTimeout(r, 600))
-      setSyncPhase(null)
+      setPhase('idle')
       setIsDraining(false)
       loadItems()
     }
-  }, [setIsDraining, loadItems, activePatientId, queueItems, isDraining])
+  }, [setIsDraining, loadItems, activePatientId, isDraining])
 
   if (!isDashboardOpen) return null
 
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
-  const hasFailedItems = summary.totalFailed > 0 || summary.totalConflicts > 0
+  const hasMultipleFailed = summary.totalFailed >= 2 || summary.totalConflicts >= 2
+  const phaseLabel =
+    phase === 'syncing'
+      ? 'Syncing changes to Hub...'
+      : phase === 'complete'
+        ? 'Sync complete'
+        : phase === 'error'
+          ? 'Sync failed — will retry'
+          : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" data-testid="sync-dashboard">
@@ -326,14 +330,14 @@ export function SyncDashboard() {
         <div className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Sync Status</h2>
-            <Button
-              variant="icon"
+            <button
               type="button"
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               onClick={() => setDashboardOpen(false)}
               aria-label="Close sync dashboard"
             >
               <X className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
 
           {/* Summary (AC: 6) */}
@@ -355,17 +359,17 @@ export function SyncDashboard() {
           </div>
 
           {/* Sync progress bar — visible only during active sync */}
-          {isDraining && syncPhase && (
+          {phase !== 'idle' && phaseLabel && (
             <div className="mt-3" data-testid="sync-progress">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    syncPhase === 'Sync complete' ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                    phase === 'complete' ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
                   }`}
-                  style={syncPhase !== 'Sync complete' ? { width: '70%' } : undefined}
+                  style={phase !== 'complete' ? { width: '70%' } : undefined}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-muted-foreground">{syncPhase}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground" aria-live="polite">{phaseLabel}</p>
             </div>
           )}
 
@@ -373,7 +377,7 @@ export function SyncDashboard() {
           <div className="mt-3 flex gap-2">
             {/* Sync Now (AC: 7) */}
             <Button
-              variant="primary"
+              size="sm"
               className="gap-1.5"
               type="button"
               onClick={handleSyncNow}
@@ -393,10 +397,10 @@ export function SyncDashboard() {
             </Button>
 
             {/* Retry All Failed */}
-            {hasFailedItems && (
+            {hasMultipleFailed && (
               <Button
-                variant="secondary"
-                className="gap-1.5"
+                size="sm"
+                variant="outline"
                 type="button"
                 onClick={handleRetryAllFailed}
                 data-testid="retry-all-btn"
@@ -415,10 +419,10 @@ export function SyncDashboard() {
             groups.map((group) => (
               <div key={group.resourceType} className="border-b border-border last:border-b-0">
                 {/* Group header */}
-                <div className="flex items-center gap-2 bg-muted px-5 py-2">
+                <div className="flex items-center gap-2 bg-muted/50 px-5 py-2">
                   <ResourceIcon resourceType={group.resourceType} />
                   <span className="text-xs font-semibold text-foreground">{group.label}</span>
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {group.items.length}
                   </span>
                 </div>
@@ -449,8 +453,8 @@ export function SyncDashboard() {
                       {/* Retry (AC: 4) */}
                       {item.status === 'failed' && (
                         <Button
+                          size="sm"
                           variant="outline"
-                          className="bg-primary/10 text-primary hover:bg-primary"
                           type="button"
                           onClick={() => handleRetry(item.id)}
                           data-testid="retry-btn"
@@ -486,7 +490,8 @@ export function SyncDashboard() {
                           {discardingId === item.id ? (
                             <div className="flex gap-1">
                               <Button
-                                variant="danger"
+                                size="sm"
+                                variant="destructive"
                                 type="button"
                                 onClick={() => handleDiscard(item.id)}
                                 data-testid="confirm-discard-btn"
@@ -494,7 +499,8 @@ export function SyncDashboard() {
                                 Confirm
                               </Button>
                               <Button
-                                variant="secondary"
+                                size="sm"
+                                variant="outline"
                                 type="button"
                                 onClick={() => setDiscardingId(null)}
                               >
@@ -503,7 +509,8 @@ export function SyncDashboard() {
                             </div>
                           ) : (
                             <Button
-                              variant="secondary"
+                              size="sm"
+                              variant="ghost"
                               type="button"
                               onClick={() => setDiscardingId(item.id)}
                               data-testid="discard-btn"
