@@ -266,7 +266,7 @@ export function PatientRegistrationForm({
         nationality: nationality || undefined,
         occupation: occupation || undefined,
         educationLevel: educationLevel || undefined,
-        disability: disability || undefined,
+        disability: disability,
         contacts: emergencyContacts.length > 0 ? emergencyContacts : undefined,
         consent: {
           method: consentMethod,
@@ -320,7 +320,7 @@ export function PatientRegistrationForm({
       nationality: nationality || undefined,
       occupation: occupation || undefined,
       educationLevel: educationLevel || undefined,
-      disability: disability || undefined,
+      disability: disability,
       consentMethod: consentMethod || undefined,
       consentWitnessedBy: consentWitnessedBy || undefined,
       consentLanguage,
@@ -396,7 +396,7 @@ export function PatientRegistrationForm({
           nationality: nationality || undefined,
           occupation: occupation || undefined,
           educationLevel: (educationLevel as EducationLevel) || undefined,
-          disability: disability || undefined,
+          disability: disability,
         },
         meta: { lastUpdated: now },
       }
@@ -457,7 +457,7 @@ export function PatientRegistrationForm({
           }
           router.push(`/${locale}/patient/${created.id}`)
         } else {
-          setMpiDecision('WARN')
+          setMpiDecision(dupeResult.decision as 'WARN' | 'BLOCK')
           setMpiCandidates(dupeResult.candidates)
           setMpiProceedToken(dupeResult.proceedToken)
           setMpiModalOpen(true)
