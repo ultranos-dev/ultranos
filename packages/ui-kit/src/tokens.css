@@ -9,11 +9,15 @@
 :root {
   /* ── Typography ── */
   /* --font-manrope / --font-public-sans are injected by Next.js localFont() or next/font/google */
-  --font-family-sans: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  /* Tailwind-facing variables consumed by tailwind.preset.ts font-sans / font-heading */
-  --font-sans: var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-heading: var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Tailwind-facing variables consumed by tailwind.preset.ts font-sans / font-heading.
+     Arabic fonts are listed FIRST. Their @font-face unicode-range (U+0600-06FF) means
+     the browser skips them for Latin — Manrope/PublicSans still render for English.
+     For Arabic characters, the browser hits Noto Kufi Arabic before the OS font-linking
+     layer can substitute Segoe UI. This fixes Arabic rendering in LTR (EN) locale. */
+  --font-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Font sizes — modular scale (1.25 ratio) */
   --font-size-xs: 0.75rem;    /* 12px */
