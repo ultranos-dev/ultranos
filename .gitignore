@@ -12,3 +12,6 @@ Thumbs.db
 coverage/
 *.tsbuildinfo
 .next/
+
+# Claude Code agent worktrees — ephemeral, contain nested .git repos
+.claude/worktrees/
