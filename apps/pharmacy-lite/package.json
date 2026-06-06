@@ -21,6 +21,7 @@
     "@ultranos/sync-engine": "workspace:^",
     "@ultranos/ui-kit": "workspace:*",
     "dexie": "^4.0.0",
+    "radix-ui": "^1.4.3",
     "html5-qrcode": "2.3.8",
     "immer": "^11.1.4",
     "next": "^15.0.0",
