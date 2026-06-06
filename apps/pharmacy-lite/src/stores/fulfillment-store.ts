@@ -10,6 +10,7 @@ import { selectFefoBatch } from '@/lib/inventory/fefo'
 import { deductStock } from '@/lib/inventory/stock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { createInvoiceFromDispense } from '@/lib/pos/invoice-service'
+import { hlc, serializeHlc } from '@/lib/hlc'
 import { usePosStore } from '@/stores/pos-store'
 import type { InvoiceLineItem } from '@/lib/pos/types'
 
@@ -217,7 +218,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
 
         for (let i = 0; i < selectedItems.length; i++) {
           const item = selectedItems[i]!
-          const dispense = createMedicationDispense(item, pharmacistRef, {
+          const dispense = createMedicationDispense(item, pharmacistRef as `Practitioner/${string}`, {
             fulfilledCount: i + 1,
             totalCount: selectedItems.length,
           })
@@ -278,7 +279,8 @@ export const useFulfillmentStore = create<FulfillmentState>()(
           items: lineItems,
           taxRate: 0,
           createdBy: practitionerId,
-          invoicePrefix: 'INV-',
+          hlcTimestamp: serializeHlc(hlc.now()),
+          prefix: 'INV-',
         })
         usePosStore.getState().setActiveInvoice(invoice)
       } catch {

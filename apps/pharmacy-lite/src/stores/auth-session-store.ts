@@ -7,6 +7,10 @@ export interface AuthSession {
   role: string
   sessionId: string
   email: string
+  name?: string
+  pharmacyName?: string
+  licenseRef?: string
+  loginAt?: string
 }
 
 export type EntitlementStatus = 'active' | 'trial' | 'inactive' | 'checking'

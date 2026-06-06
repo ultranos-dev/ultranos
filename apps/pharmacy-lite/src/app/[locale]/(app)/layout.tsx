@@ -7,6 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
 import { SyncDashboard } from '@/components/pharmacy/SyncDashboard'
 import { InstallPrompt } from '@/components/InstallPrompt'
+import { SyncAwareStaleDataBanner } from '@/components/SyncAwareStaleDataBanner'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
+          <SyncAwareStaleDataBanner />
           <BreadcrumbHeader />
           <a
             href="#main-content"
