@@ -129,7 +129,7 @@ export function PrescriptionQueueView() {
   }
 
   return (
-    <div data-testid="prescription-queue-view" className="space-y-4">
+    <div data-testid="prescription-queue-view" className="flex flex-col gap-4">
       {error && (
         <div role="alert" className="rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {error}

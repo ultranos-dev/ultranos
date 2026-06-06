@@ -181,7 +181,7 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       {showConfirmModal && (
         <DispensingConfirmationModal
           items={items.filter((i) => i.selected)}
-          patientName={activePatient?.nameGiven ?? patientName}
+          patientName={activePatient?.nameGiven ?? patientName ?? undefined}
           patientAllergies={activePatient?.allergies}
           onConfirm={() => {
             setShowConfirmModal(false)

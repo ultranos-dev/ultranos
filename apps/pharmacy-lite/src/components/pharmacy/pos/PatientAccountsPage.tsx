@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
-import type { LocalPatient } from '@/lib/db'
 import {
   getAccountsWithBalance,
   getPatientLedger,
@@ -124,7 +123,7 @@ export function PatientAccountsPage() {
     const account = accounts.find((a) => a.patientId === selectedPatientId)
 
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
             {t('patientAccount', { name: account?.patientName ?? 'Patient' })}
@@ -222,13 +221,11 @@ export function PatientAccountsPage() {
 
   // Account list view
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground">{t('patientAccounts')}</h1>
 
       {accounts.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">{t('noOutstandingAccounts')}</p>
-        </div>
+        <EmptyState title={t('noOutstandingAccounts')} />
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {accounts.map((account) => (

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import type { CapacityWarningInfo } from '@ultranos/sync-engine'
+
+interface CapacityWarningInfo {
+  count: number
+}
 
 export function SyncCapacityBanner() {
   const [warning, setWarning] = useState<CapacityWarningInfo | null>(null)

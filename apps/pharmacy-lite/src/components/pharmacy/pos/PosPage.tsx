@@ -66,7 +66,7 @@ export function PosPage() {
     const isPaidInFull = activeInvoice.amountDue <= 0
 
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">{t('pointOfSale')}</h1>
           <Button
@@ -112,7 +112,7 @@ export function PosPage() {
 
   // Invoice list mode
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground">{t('pointOfSale')}</h1>
 
       {/* No cash drawer warning */}
@@ -126,9 +126,7 @@ export function PosPage() {
 
       {/* Pending invoices */}
       {pendingInvoices.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">{t('noPendingInvoices')}</p>
-        </div>
+        <EmptyState title={t('noPendingInvoices')} />
       ) : (
         <div className="space-y-2">
           <h2 className="text-sm font-medium text-muted-foreground">{t('pendingInvoices')}</h2>

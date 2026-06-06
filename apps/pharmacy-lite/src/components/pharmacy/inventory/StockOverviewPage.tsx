@@ -23,7 +23,7 @@ export function StockOverviewPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('stockOverview')}</h1>

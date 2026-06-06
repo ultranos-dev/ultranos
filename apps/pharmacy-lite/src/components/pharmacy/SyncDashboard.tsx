@@ -61,7 +61,7 @@ export function SyncDashboard() {
   const [entries, setEntries] = useState<SyncQueueEntry[]>([])
   const [discardingId, setDiscardingId] = useState<string | null>(null)
   const [isDraining, setIsDraining] = useState(false)
-  const [syncPhase, setSyncPhase] = useState<string | null>(null)
+  const [phase, setPhase] = useState<'idle' | 'syncing' | 'complete' | 'error'>('idle')
 
   const loadEntries = useCallback(async () => {
     const all = await db.syncQueue.orderBy('createdAt').reverse().toArray()
@@ -116,12 +116,12 @@ export function SyncDashboard() {
   const handleSyncNow = useCallback(async () => {
     if (!navigator.onLine || isDraining) return
     setIsDraining(true)
-    setSyncPhase(t('pushingPhase'))
+    setPhase('syncing')
     try {
       triggerDrain()
       // Allow drain worker time to pick up the signal
       await new Promise((r) => setTimeout(r, 800))
-      setSyncPhase(t('syncComplete'))
+      setPhase('complete')
       const state = useSyncStore.getState()
       state.updateSyncStatus({
         isPending: state.isPending,
@@ -131,20 +131,28 @@ export function SyncDashboard() {
         failedCount: state.failedCount,
       })
     } catch {
-      setSyncPhase(t('syncFailedRetry'))
+      setPhase('error')
     } finally {
       await new Promise((r) => setTimeout(r, 600))
-      setSyncPhase(null)
+      setPhase('idle')
       setIsDraining(false)
       void loadEntries()
     }
-  }, [isDraining, loadEntries, t])
+  }, [isDraining, loadEntries])
 
   if (!isDashboardOpen) return null
 
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
   const visibleEntries = entries.filter((e) => e.status !== 'synced')
   const syncedEntries = entries.filter((e) => e.status === 'synced')
+  const phaseLabel =
+    phase === 'syncing'
+      ? t('pushingPhase')
+      : phase === 'complete'
+        ? t('syncComplete')
+        : phase === 'error'
+          ? t('syncFailedRetry')
+          : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16" data-testid="sync-dashboard">
@@ -173,7 +181,7 @@ export function SyncDashboard() {
             <h2 className="text-base font-semibold text-foreground">{t('title')}</h2>
             <button
               type="button"
-              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               onClick={() => setDashboardOpen(false)}
               aria-label={t('closeAriaLabel')}
             >
@@ -197,17 +205,17 @@ export function SyncDashboard() {
           </div>
 
           {/* Sync progress */}
-          {isDraining && syncPhase && (
+          {phase !== 'idle' && phaseLabel && (
             <div className="mt-3">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ease-out ${
-                    syncPhase === t('syncComplete') ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
+                    phase === 'complete' ? 'w-full bg-success' : 'bg-primary animate-[syncProgress_1.5s_ease-in-out_infinite]'
                   }`}
-                  style={syncPhase !== t('syncComplete') ? { width: '70%' } : undefined}
+                  style={phase !== 'complete' ? { width: '70%' } : undefined}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-muted-foreground">{syncPhase}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground" aria-live="polite">{phaseLabel}</p>
             </div>
           )}
 
@@ -232,7 +240,7 @@ export function SyncDashboard() {
               )}
               {isDraining ? t('syncing') : t('syncNow')}
             </Button>
-            {summary.totalFailed > 1 && (
+            {summary.totalFailed >= 2 && (
               <Button
                 size="sm"
                 variant="outline"

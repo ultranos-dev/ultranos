@@ -58,6 +58,7 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
     setItems((prev) => {
       const updated = [...prev]
       const item = updated[index]
+      if (!item) return prev
       updated[index] = {
         ...item,
         actualQty: qty,
@@ -67,6 +68,7 @@ export function StockCountForm({ count, onCompleted }: StockCountFormProps) {
     })
 
     const item = items[index]
+    if (!item) return
     const updatedItem: StockCountItem = {
       ...item,
       actualQty: qty,

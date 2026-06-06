@@ -104,17 +104,15 @@ export function TransfersPage() {
 
   if (transfers.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
-        <div className="rounded-lg border border-dashed border-border bg-muted py-12 text-center text-sm text-muted-foreground">
-          {t('noTransfers')}
-        </div>
+        <EmptyState title={t('noTransfers')} />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
 
       {/* Active */}

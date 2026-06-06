@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
@@ -212,9 +213,7 @@ export function ControlledSubstancesView() {
 
       {/* Empty state */}
       {!loading && !error && dispenses.length === 0 && (
-        <div className="rounded-lg border border-border px-4 py-12 text-center text-sm text-muted-foreground">
-          {t('noRecords')}
-        </div>
+        <EmptyState title={t('noRecords')} />
       )}
 
       {/* Table */}

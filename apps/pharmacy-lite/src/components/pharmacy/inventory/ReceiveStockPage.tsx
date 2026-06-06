@@ -14,7 +14,7 @@ export function ReceiveStockPage() {
 
   if (showSuccess) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div className="rounded-lg border-2 border-success bg-success/5 p-6 text-center" data-testid="receipt-success">
           <p className="text-lg font-bold text-success">{t('stockReceivedSuccess')}</p>
           <p className="text-sm text-success mt-1">{t('itemsAddedToInventory')}</p>
@@ -28,7 +28,7 @@ export function ReceiveStockPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-bold text-foreground">{t('receiveStock')}</h1>
       <p className="text-sm text-muted-foreground">{t('searchOrScanProduct')}</p>
       <ReceiveStockForm locationId={locationId} currencyMinorUnits={currencyMinorUnits} onComplete={() => setShowSuccess(true)} />

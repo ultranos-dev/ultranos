@@ -53,7 +53,7 @@ export function SuppliersPage() {
 
   if (view === 'create') {
     return (
-      <div className="mx-auto max-w-2xl p-6">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <SupplierForm onSaved={handleSaved} onCancel={handleCancel} />
       </div>
     )
@@ -61,26 +61,23 @@ export function SuppliersPage() {
 
   if (view === 'edit' && editingSupplier) {
     return (
-      <div className="mx-auto max-w-2xl p-6">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <SupplierForm supplier={editingSupplier} onSaved={handleSaved} onCancel={handleCancel} />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">{t('suppliersTitle')}</h1>
         <Button onClick={() => setView('create')}>{t('addSupplier')}</Button>
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">{t('loadingSuppliers')}</div>
+        <EmptyState title={t('loadingSuppliers')} />
       ) : suppliers.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border py-16 text-center">
-          <p className="text-muted-foreground">{t('noSuppliers')}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t('addFirstSupplier')}</p>
-        </div>
+        <EmptyState title={t('noSuppliers')} description={t('addFirstSupplier')} />
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">

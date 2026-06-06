@@ -9,7 +9,6 @@ import { getHubApiUrl } from '@/lib/trpc'
 import {
   extractPrescriptionFields,
   fileToBase64,
-  type PrescriptionOcrField,
 } from '@/lib/ocr'
 
 type Phase =
@@ -43,7 +42,7 @@ export default function PaperRxPage() {
   const [fields, setFields] = useState<FormFields>(EMPTY_FIELDS)
   const [confidenceScores, setConfidenceScores] = useState<Record<string, number>>({})
   const [capturedImage, setCapturedImage] = useState<File | null>(null)
-  const [imageBase64, setImageBase64] = useState<string | null>(null)
+  const [_imageBase64, setImageBase64] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [isManualMode, setIsManualMode] = useState(false)
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null)

@@ -29,7 +29,7 @@ function parseAmount(value: string, minorUnits: number): number {
 
 export function PaymentForm({
   invoice,
-  cashDrawerId,
+  cashDrawerId: _cashDrawerId,
   currencyMinorUnits,
   enableCredit,
   onPaymentRecorded,

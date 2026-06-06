@@ -97,7 +97,7 @@ export function CashDrawerPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-foreground">{t('cashDrawer')}</h1>
 
       {/* Active drawer or open form */}

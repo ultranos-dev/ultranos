@@ -64,7 +64,6 @@ export function DistrictAutocomplete({
         onChange('')
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [province])
 
   // Close dropdown on outside click
@@ -112,7 +111,8 @@ export function DistrictAutocomplete({
       case 'Enter':
         e.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          handleSelect(filtered[highlightedIndex])
+          const selected = filtered[highlightedIndex]
+          if (selected) handleSelect(selected)
         }
         break
       case 'Escape':

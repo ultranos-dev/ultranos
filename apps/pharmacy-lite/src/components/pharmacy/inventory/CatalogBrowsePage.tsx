@@ -7,6 +7,7 @@ import { useCatalogSync } from '@/hooks/useCatalogSync'
 import { useInventoryStore } from '@/stores/inventory-store'
 import { getTotalStockOnHand } from '@/lib/inventory/fefo'
 import type { CatalogItem } from '@/lib/inventory/types'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 interface CatalogRowData {
   item: CatalogItem
@@ -48,7 +49,7 @@ export function CatalogBrowsePage() {
   }, [rows, search])
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('catalog')}</h1>
@@ -70,9 +71,7 @@ export function CatalogBrowsePage() {
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-border px-4 py-12 text-center text-muted-foreground">
-          {t('noCatalogItems')}
-        </div>
+        <EmptyState title={t('noCatalogItems')} />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">

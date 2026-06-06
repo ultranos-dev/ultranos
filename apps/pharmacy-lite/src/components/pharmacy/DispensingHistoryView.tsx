@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { Button } from '@/components/ui/button'
 import { getHistoryPage, type HistoryFilters, type HistoryPage } from '@/lib/history-data'
 import { HistoryFilterBar } from './HistoryFilterBar'
@@ -41,7 +42,7 @@ export function DispensingHistoryView() {
   }
 
   return (
-    <div data-testid="dispensing-history-view" className="space-y-4">
+    <div data-testid="dispensing-history-view" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <HistoryFilterBar filters={filters} onFiltersChange={handleFiltersChange} />
         <Button
@@ -77,9 +78,7 @@ export function DispensingHistoryView() {
           <Pagination page={data.page} totalPages={data.totalPages} onPageChange={setPage} />
         </>
       ) : (
-        <div data-testid="history-empty" className="py-8 text-center text-sm text-muted-foreground">
-          {t('noRecords')}
-        </div>
+        <EmptyState title={t('noRecords')} data-testid="history-empty" />
       )}
 
       {showShiftSummary && (

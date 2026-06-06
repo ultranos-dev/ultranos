@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useTranslations } from 'next-intl'
 import { getHubApiUrl } from '@/lib/trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -160,14 +161,14 @@ export function UnverifiedDispensesView() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
       {/* Tab switcher */}
       <div
-        className="mt-4 flex gap-1 rounded-lg bg-muted p-1"
+        className="flex gap-1 rounded-lg bg-muted p-1"
         role="tablist"
       >
         <button
@@ -202,28 +203,26 @@ export function UnverifiedDispensesView() {
 
       {/* Loading */}
       {loading && (
-        <div className="mt-6 py-12 text-center text-sm text-muted-foreground">
+        <div className="py-12 text-center text-sm text-muted-foreground">
           {t('loading')}
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="mt-6 py-12 text-center text-sm text-destructive">
+        <div className="py-12 text-center text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !error && reviews.length === 0 && (
-        <div className="mt-6 rounded-lg border border-border px-4 py-12 text-center text-sm text-muted-foreground">
-          {t('noRecords')}
-        </div>
+        <EmptyState title={t('noRecords')} />
       )}
 
       {/* Pending reviews table */}
       {!loading && !error && reviews.length > 0 && activeTab === 'pending' && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted">
               <tr>
@@ -309,7 +308,7 @@ export function UnverifiedDispensesView() {
 
       {/* Resolved reviews table */}
       {!loading && !error && reviews.length > 0 && activeTab === 'resolved' && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted">
               <tr>

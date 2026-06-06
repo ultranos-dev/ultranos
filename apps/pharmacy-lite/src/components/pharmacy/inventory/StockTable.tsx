@@ -42,7 +42,7 @@ export function StockTable({
   const expiryThreshold = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + expiryAlertDays)
-    return d.toISOString().split('T')[0]
+    return d.toISOString().split('T')[0] ?? ''
   }, [expiryAlertDays])
 
   const filtered = useMemo(() => {

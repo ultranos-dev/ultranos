@@ -18,7 +18,7 @@ function getInitials(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w[0].toUpperCase())
+    .map((w) => w[0]?.toUpperCase() ?? '')
     .slice(0, 2)
     .join('')
 }
@@ -267,7 +267,7 @@ function DataBudgetCard() {
 // --- Main Settings View ---
 export function PharmacySettingsView() {
   return (
-    <div className="space-y-6" data-testid="pharmacy-settings-view">
+    <div className="flex flex-col gap-4" data-testid="pharmacy-settings-view">
       <ProfileCard />
       <PharmacyInfoCard />
       <SessionInfoCard />

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { OfflineGraceForm } from './OfflineGraceForm'
+import { getHubApiUrl } from '@/lib/trpc'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 interface ManualRxEntryProps {
   onPrescriptionFound: (prescription: {
@@ -23,6 +25,7 @@ export function ManualRxEntry({
   isOnline,
 }: ManualRxEntryProps) {
   const t = useTranslations('manualRx')
+  const getAccessToken = useAuthSessionStore((s) => s.getAccessToken)
   const [rxId, setRxId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,11 +39,20 @@ export function ManualRxEntry({
     setIsLoading(true)
 
     try {
-      // Dynamic import to avoid bundling trpc client when offline
-      const { trpc } = await import('@/lib/trpc')
-      const result = await trpc.medication.getPrescription.query({
-        prescriptionId: trimmedId,
+      const token = await getAccessToken()
+      const url = new URL(getHubApiUrl())
+      url.pathname = url.pathname.replace(/\/$/, '') + '/medication.getPrescription'
+      const res = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ json: { prescriptionId: trimmedId } }),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const body = await res.json() as { result?: { data?: { json?: { id: string; medications: string[] } } } }
+      const result = body.result?.data?.json
 
       if (result) {
         onPrescriptionFound({

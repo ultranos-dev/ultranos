@@ -68,7 +68,7 @@ export function StockCountPage() {
   }
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-bold text-foreground">{t('stockCountTitle')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('startNewCount')}</p>

@@ -9,7 +9,7 @@ import { ControlledDiscrepancyCard } from './ControlledDiscrepancyCard'
 export function ReportsPage() {
   const t = useTranslations('reports')
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
 
       {/* Financial + Wastage side by side */}
