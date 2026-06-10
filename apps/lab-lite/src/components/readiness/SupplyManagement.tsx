@@ -169,11 +169,13 @@ function SupplyForm({
   onSubmit,
   onCancel,
   isEdit,
+  saveError,
 }: {
   initialValues: SupplyFormValues
   onSubmit: (values: SupplyFormValues) => void
   onCancel: () => void
   isEdit: boolean
+  saveError?: string | null
 }) {
   const t = useTranslations()
   const [form, setForm] = useState<SupplyFormValues>(initialValues)
@@ -219,12 +221,21 @@ function SupplyForm({
         {isEdit ? t('rag.supply.editTitle') : t('rag.supply.addTitle')}
       </h3>
 
+      {/* Save error banner */}
+      {saveError && (
+        <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-xs text-red-700" role="alert">
+          <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>{saveError}</span>
+        </div>
+      )}
+
       {/* Name */}
       <div>
-        <label className="block text-xs font-medium text-foreground mb-1">
+        <label htmlFor="supply-name" className="block text-xs font-medium text-foreground mb-1">
           {t('rag.supply.fieldName')} <span aria-hidden="true">*</span>
         </label>
         <input
+          id="supply-name"
           type="text"
           value={form.name}
           onChange={(e) => handleChange('name', e.target.value)}
@@ -237,10 +248,11 @@ function SupplyForm({
 
       {/* Category */}
       <div>
-        <label className="block text-xs font-medium text-foreground mb-1">
+        <label htmlFor="supply-category" className="block text-xs font-medium text-foreground mb-1">
           {t('rag.supply.fieldCategory')}
         </label>
         <select
+          id="supply-category"
           value={form.category}
           onChange={(e) => handleChange('category', e.target.value)}
           className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
@@ -256,10 +268,11 @@ function SupplyForm({
       {/* Stock + Unit (side by side) */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-foreground mb-1">
+          <label htmlFor="supply-current-stock" className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldCurrentStock')} <span aria-hidden="true">*</span>
           </label>
           <input
+            id="supply-current-stock"
             type="number"
             min="0"
             step="any"
@@ -274,10 +287,11 @@ function SupplyForm({
           )}
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-medium text-foreground mb-1">
+          <label htmlFor="supply-unit" className="block text-xs font-medium text-foreground mb-1">
             {t('rag.supply.fieldUnit')} <span aria-hidden="true">*</span>
           </label>
           <input
+            id="supply-unit"
             type="text"
             value={form.unit}
             onChange={(e) => handleChange('unit', e.target.value)}
@@ -518,6 +532,7 @@ export function SupplyManagement() {
         onSubmit={handleAdd}
         onCancel={() => setFormMode('none')}
         isEdit={false}
+        saveError={error}
       />
     )
   }
@@ -532,6 +547,7 @@ export function SupplyManagement() {
           setEditingItem(null)
         }}
         isEdit={true}
+        saveError={error}
       />
     )
   }

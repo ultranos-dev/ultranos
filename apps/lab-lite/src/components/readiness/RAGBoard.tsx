@@ -372,6 +372,7 @@ function RAGDrillDownPanel({
     <>
       {/* Backdrop */}
       <div
+        data-testid="drill-down-backdrop"
         className="fixed inset-0 z-40 bg-black/30"
         aria-hidden="true"
         onClick={onClose}

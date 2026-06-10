@@ -197,6 +197,70 @@ describe('calculateEquipmentRAG', () => {
     expect(result.summary).toContain('No instruments configured')
   })
 
+  it('returns AMBER when maintenance is due within 7 days', async () => {
+    const inSixDays = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+    mockGetDb.mockReturnValue(makeDb({
+      instruments: {
+        toArray: vi.fn().mockResolvedValue([
+          { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: inSixDays, lastMaintenanceDate: null, updatedAt: '' },
+        ]),
+      },
+    }) as ReturnType<typeof getDb>)
+
+    const result = await calculateEquipmentRAG()
+    expect(result.status).toBe('AMBER')
+  })
+
+  it('returns GREEN when maintenance is more than 7 days away', async () => {
+    const inTenDays = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+    mockGetDb.mockReturnValue(makeDb({
+      instruments: {
+        toArray: vi.fn().mockResolvedValue([
+          { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: inTenDays, lastMaintenanceDate: null, updatedAt: '' },
+        ]),
+      },
+    }) as ReturnType<typeof getDb>)
+
+    const result = await calculateEquipmentRAG()
+    expect(result.status).toBe('GREEN')
+  })
+
+  it('OOS status takes precedence over maintenance due soon', async () => {
+    const inThreeDays = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+    mockGetDb.mockReturnValue(makeDb({
+      instruments: {
+        toArray: vi.fn().mockResolvedValue([
+          { id: 'inst-1', name: 'Analyzer', status: 'OUT_OF_SERVICE', outOfServiceReason: 'Broken', nextMaintenanceDue: inThreeDays, lastMaintenanceDate: null, updatedAt: '' },
+        ]),
+      },
+    }) as ReturnType<typeof getDb>)
+
+    const result = await calculateEquipmentRAG()
+    expect(result.status).toBe('RED')
+  })
+
+  it('returns updatedAt as ISO string in the success path', async () => {
+    // Regression for shadowed `const now` bug — ensure updatedAt is a string, not Date
+    mockGetDb.mockReturnValue(makeDb({
+      instruments: {
+        toArray: vi.fn().mockResolvedValue([
+          { id: 'inst-1', name: 'Analyzer', status: 'IN_SERVICE', outOfServiceReason: null, nextMaintenanceDue: null, lastMaintenanceDate: null, updatedAt: '' },
+        ]),
+      },
+    }) as ReturnType<typeof getDb>)
+
+    const result = await calculateEquipmentRAG()
+    expect(typeof result.updatedAt).toBe('string')
+    // Must be parseable as ISO — a Date.toString() would not pass toISOString()
+    expect(() => new Date(result.updatedAt).toISOString()).not.toThrow()
+  })
+
   it('returns AMBER on db error', async () => {
     mockGetDb.mockReturnValue(makeDb({
       instruments: { toArray: vi.fn().mockRejectedValue(new Error('db fail')) },
@@ -233,8 +297,10 @@ describe('calculateSupplyRAG', () => {
   })
 
   it('returns RED when stock at or below critical threshold', async () => {
+    // dailyUsageEstimate: 0 forces the numeric-threshold fallback path;
+    // currentStock(5) <= criticalThreshold(5) → RED
     mockGetAllSupplyItems.mockResolvedValue([
-      { id: '1', name: 'Control Material X', category: 'Control Material', currentStock: 5, unit: 'vials', reorderThreshold: 20, criticalThreshold: 5, dailyUsageEstimate: 2, lastUpdated: '', updatedBy: '' },
+      { id: '1', name: 'Control Material X', category: 'Control Material', currentStock: 5, unit: 'vials', reorderThreshold: 20, criticalThreshold: 5, dailyUsageEstimate: 0, lastUpdated: '', updatedBy: '' },
     ])
 
     const result = await calculateSupplyRAG()
@@ -271,7 +337,8 @@ describe('calculateSupplyRAG', () => {
   it('overall status is worst of all individual supply statuses', async () => {
     mockGetAllSupplyItems.mockResolvedValue([
       { id: '1', name: 'Good Stock', category: 'Reagent', currentStock: 100, unit: 'mL', reorderThreshold: 10, criticalThreshold: 2, dailyUsageEstimate: 5, lastUpdated: '', updatedBy: '' },
-      { id: '2', name: 'Critical Stock', category: 'Control Material', currentStock: 1, unit: 'vials', reorderThreshold: 10, criticalThreshold: 2, dailyUsageEstimate: 1, lastUpdated: '', updatedBy: '' },
+      // currentStock: 0 → floor(0/1) = 0 days remaining → RED via time-based path
+      { id: '2', name: 'Critical Stock', category: 'Control Material', currentStock: 0, unit: 'vials', reorderThreshold: 10, criticalThreshold: 2, dailyUsageEstimate: 1, lastUpdated: '', updatedBy: '' },
     ])
 
     const result = await calculateSupplyRAG()
@@ -398,6 +465,51 @@ describe('calculateQCRAG', () => {
     const result = await calculateQCRAG()
     // newer run is PASSING — older rejected run should be ignored
     expect(result.status).toBe('GREEN')
+  })
+
+  it('returns DRIFT_WARNING when targetSd is 0 (misconfigured QC target)', async () => {
+    // Regression — SD=0 must never silently pass as GREEN
+    const db = makeDb({
+      qcRuns: {
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([
+          makeQcRun({ observedValue: 5.0, targetMean: 5.0, targetSd: 0 }),
+        ]),
+      },
+      driftAlerts: {
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([]),
+      },
+    })
+    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+
+    const result = await calculateQCRAG()
+    expect(result.status).toBe('AMBER')
+    const details = result.details as import('@/lib/rag-service').QcDetail[]
+    expect(details[0].status).toBe('DRIFT_WARNING')
+    expect(details[0].westgardViolations).toContain('SD=0: QC target misconfigured')
+  })
+
+  it('does NOT reject when z-score is exactly 3.0 (boundary: > 3, not >= 3)', async () => {
+    // |observed - mean| / sd = |10 + 3*1 - 10| / 1 = 3.0 — should NOT reject
+    const db = makeDb({
+      qcRuns: {
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([
+          makeQcRun({ observedValue: 5.0 + 3.0 * 0.2, targetMean: 5.0, targetSd: 0.2 }),
+        ]),
+      },
+      driftAlerts: {
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([]),
+      },
+    })
+    mockGetDb.mockReturnValue(db as ReturnType<typeof getDb>)
+
+    const result = await calculateQCRAG()
+    expect(result.status).toBe('GREEN')
+    const details = result.details as import('@/lib/rag-service').QcDetail[]
+    expect(details[0].status).toBe('PASSING')
   })
 
   it('returns AMBER on db error', async () => {

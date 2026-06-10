@@ -1,6 +1,6 @@
 # Story 51.5: RAG Readiness Board
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

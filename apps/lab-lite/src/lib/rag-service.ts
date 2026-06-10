@@ -164,8 +164,8 @@ export async function calculateEquipmentRAG(): Promise<RAGDimensionResult> {
       }
     }
 
-    const now = new Date()
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const nowDate = new Date()
+    const sevenDaysFromNow = new Date(nowDate.getTime() + 7 * 24 * 60 * 60 * 1000)
     const sevenDayThreshold = sevenDaysFromNow.toISOString().slice(0, 10)
 
     const details: EquipmentDetail[] = instruments.map((inst) => ({

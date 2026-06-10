@@ -244,10 +244,12 @@ describe('RAGBoard wall display', () => {
 describe('RAGBoard auto-refresh', () => {
   it('calls getFullRAGStatus on mount when no initialBoardState', async () => {
     mockGetFullRAGStatus.mockResolvedValue(makeGreenBoard())
-    render(<RAGBoard />)
-    await waitFor(() => {
-      expect(mockGetFullRAGStatus).toHaveBeenCalledTimes(1)
+    // Wrap in act so useEffect + the async fetchBoard promise both resolve before we assert.
+    // waitFor uses setInterval internally which doesn't fire with vi.useFakeTimers().
+    await act(async () => {
+      render(<RAGBoard />)
     })
+    expect(mockGetFullRAGStatus).toHaveBeenCalledTimes(1)
   })
 
   it('does not call getFullRAGStatus on mount when initialBoardState provided', () => {
@@ -265,5 +267,72 @@ describe('RAGBoard auto-refresh', () => {
     expect(mockGetFullRAGStatus).toHaveBeenCalledTimes(1)
     await act(async () => { vi.advanceTimersByTime(60_000) })
     expect(mockGetFullRAGStatus).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not auto-refresh while a drill-down panel is open', async () => {
+    mockGetFullRAGStatus.mockResolvedValue(makeGreenBoard())
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    // Open a drill-down panel
+    await act(async () => { fireEvent.click(screen.getByTestId('card-PERSONNEL')) })
+    expect(screen.getByTestId('personnel-drill-down')).toBeDefined()
+    // Advance 60 s — interval fires but should skip fetch
+    await act(async () => { vi.advanceTimersByTime(60_000) })
+    expect(mockGetFullRAGStatus).not.toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Drill-down navigation
+// ---------------------------------------------------------------------------
+
+describe('RAGBoard drill-down navigation', () => {
+  it('opens PersonnelDrillDown when PERSONNEL card is clicked', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-PERSONNEL')) })
+    expect(screen.getByTestId('personnel-drill-down')).toBeDefined()
+  })
+
+  it('opens EquipmentDrillDown when EQUIPMENT card is clicked', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-EQUIPMENT')) })
+    expect(screen.getByTestId('equipment-drill-down')).toBeDefined()
+  })
+
+  it('opens SupplyDrillDown when SUPPLIES card is clicked', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-SUPPLIES')) })
+    expect(screen.getByTestId('supply-drill-down')).toBeDefined()
+  })
+
+  it('opens QCDrillDown when QC card is clicked', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-QC')) })
+    expect(screen.getByTestId('qc-drill-down')).toBeDefined()
+  })
+
+  it('closes drill-down when the back button is pressed', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-PERSONNEL')) })
+    expect(screen.getByTestId('personnel-drill-down')).toBeDefined()
+    await act(async () => { fireEvent.click(screen.getByTestId('drill-back')) })
+    expect(screen.queryByTestId('personnel-drill-down')).toBeNull()
+  })
+
+  it('closes drill-down when backdrop is clicked', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-PERSONNEL')) })
+    expect(screen.getByTestId('personnel-drill-down')).toBeDefined()
+    // Use data-testid to unambiguously target the backdrop overlay
+    const backdrop = screen.getByTestId('drill-down-backdrop')
+    await act(async () => { fireEvent.click(backdrop) })
+    expect(screen.queryByTestId('personnel-drill-down')).toBeNull()
+  })
+
+  it('closes drill-down when ESC key is pressed', async () => {
+    render(<RAGBoard initialBoardState={makeGreenBoard()} />)
+    await act(async () => { fireEvent.click(screen.getByTestId('card-PERSONNEL')) })
+    expect(screen.getByTestId('personnel-drill-down')).toBeDefined()
+    await act(async () => { fireEvent.keyDown(document, { key: 'Escape' }) })
+    expect(screen.queryByTestId('personnel-drill-down')).toBeNull()
   })
 })

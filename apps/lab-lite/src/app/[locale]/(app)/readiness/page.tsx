@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 
 export default function ReadinessPage() {
   return (
-    <main className="p-4 md:p-6">
+    <div className="flex flex-col gap-4">
       <Suspense>
         <RAGBoard />
       </Suspense>
-    </main>
+    </div>
   )
 }
