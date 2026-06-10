@@ -808,15 +808,30 @@ export const labRouter = createTRPCRouter({
   /**
    * Story 42.1 AC 3: Get the caller's own lab role.
    * Used by Lab-Lite AuthGuard to populate the session store.
+   *
+   * Uses protectedProcedure (auth only) — any authenticated lab-lite user may call
+   * this regardless of role. Returns null if no lab affiliation exists rather than
+   * throwing 403, avoiding the chicken-and-egg problem of needing a role to fetch
+   * your role.
    */
-  getMyRole: labRestrictedProcedure
-    .use(enforceLabActive())
+  getMyRole: protectedProcedure
     .query(async ({ ctx }) => {
-      // ADMIN callers have no lab context — return null (roles managed via Admin Portal)
-      if (!ctx.lab) {
+      const { data } = await ctx.supabase
+        .from('lab_technicians')
+        .select('lab_role, labs!inner(status)')
+        .eq('practitioner_id', ctx.user.sub)
+        .maybeSingle()
+
+      if (!data) {
         return { labRole: null }
       }
-      return { labRole: ctx.lab.labRole }
+
+      const lab = data.labs as unknown as { status: string }
+      if (lab.status !== 'ACTIVE') {
+        return { labRole: null }
+      }
+
+      return { labRole: (data.lab_role ?? null) as import('@ultranos/shared-types').LabRole | null }
     }),
 
   /**

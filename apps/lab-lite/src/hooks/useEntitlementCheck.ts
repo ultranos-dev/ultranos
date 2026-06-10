@@ -27,7 +27,13 @@ export function useEntitlementCheck(moduleCode: string) {
 
     let cancelled = false
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), ENTITLEMENT_TIMEOUT_MS)
+    const timeout = setTimeout(() => {
+      controller.abort()
+      if (!cancelled) {
+        cancelled = true
+        setEntitlementStatus('active')
+      }
+    }, ENTITLEMENT_TIMEOUT_MS)
 
     setEntitlementStatus('checking')
 
