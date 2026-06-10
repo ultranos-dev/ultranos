@@ -907,3 +907,8 @@
 ## Deferred from: code review of 51-6-technician-performance-portfolio (2026-06-05)
 
 - **D-51.6-W1: StaffPortfolioList shows truncated opaque IDs instead of tech names.** `displayName: id.slice(0, 8) + '…'` — supervisors can't identify who they're selecting. Requires deciding where offline-available staff display names are stored (practitioner_keys table, a separate staff registry, or derived from session data). Data model decision outside this story's scope. [StaffPortfolioList.tsx:588]
+
+## Deferred from: code review of 51-7-gamified-team-quality-engagement (2026-06-09)
+
+- **D-51.7-W1: Dead code block in `evaluateMonthlyAchievements`.** First `qcRateByTech` loop has an empty `if (current === undefined)` body and populates nothing. The map is correctly populated in the second pass through `qcStatsByTech`. No correctness impact, but confusing to future readers. [achievement-service.ts:192-199]
+- **D-51.7-W2: `enteredAt` string comparison assumes ISO 8601 UTC (`Z`-suffix).** In `calcTurnaroundTime`, `r.enteredAt <= end + 'T23:59:59Z'` silently mis-classifies results stored without timezone suffix (lexicographic sort fails at boundary). Depends on data write conventions established in earlier stories (how `enteredAt` is written to Dexie). [quality-metrics-calculator.ts:117]

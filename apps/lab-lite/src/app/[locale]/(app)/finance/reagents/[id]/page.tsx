@@ -30,20 +30,20 @@ export default function ReagentDetailPage() {
 
   if (loading) {
     return (
-      <main className="p-4" aria-busy="true">
+      <div className="flex flex-col gap-4" aria-busy="true">
         <p className="text-sm text-gray-500">{t('loading')}</p>
-      </main>
+      </div>
     )
   }
 
   if (!reagent) {
     return (
-      <main className="p-4">
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-red-700">{t('notFound')}</p>
         <Button variant="secondary" onClick={() => router.push('/finance/reagents')}>
           {t('backToList')}
         </Button>
-      </main>
+      </div>
     )
   }
 
