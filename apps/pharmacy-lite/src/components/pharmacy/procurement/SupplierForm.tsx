@@ -64,7 +64,7 @@ export function SupplierForm({ supplier, onSaved, onCancel }: SupplierFormProps)
     'focus-visible:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300'
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-lg font-semibold text-foreground">
         {isEdit ? t('editSupplier') : t('addSupplier')}
       </h2>

@@ -243,7 +243,7 @@ export function SupplierConfigPanel() {
   }
 
   return (
-    <section className="flex flex-col gap-6" data-testid="supplier-config-panel">
+    <section className="flex flex-col gap-4" data-testid="supplier-config-panel">
       {/* Supplier list */}
       <div>
         <div className="flex items-center justify-between mb-3">

@@ -71,7 +71,7 @@ export function ThresholdSettings() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* KYC Review SLA */}
       <div>
         <label className="block">

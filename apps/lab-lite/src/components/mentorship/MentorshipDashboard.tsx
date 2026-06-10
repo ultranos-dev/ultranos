@@ -292,7 +292,7 @@ export function MentorshipDashboard({ currentUserId }: MentorshipDashboardProps)
   // ---------------------------------------------------------------------------
 
   return (
-    <section aria-label={t('dashboardSectionLabel')} className="flex flex-col gap-5">
+    <section aria-label={t('dashboardSectionLabel')} className="flex flex-col gap-4">
       {/* Page title */}
       <h1 className="text-lg font-semibold text-foreground">{t('dashboardTitle')}</h1>
 

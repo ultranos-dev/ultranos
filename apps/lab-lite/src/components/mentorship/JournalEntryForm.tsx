@@ -193,7 +193,7 @@ export function JournalEntryForm({
   // ---------------------------------------------------------------------------
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
 
       {/* Title */}
       <div className="flex flex-col gap-1">

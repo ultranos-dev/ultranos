@@ -4,8 +4,8 @@ import { WasteDashboardView } from '@/components/finance/WasteDashboardView'
 
 export default function ReagentsPage() {
   return (
-    <main className="p-4 max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto flex flex-col gap-4">
       <WasteDashboardView />
-    </main>
+    </div>
   )
 }

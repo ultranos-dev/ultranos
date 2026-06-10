@@ -142,15 +142,15 @@ export default function SuppliersPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">Loading suppliers...</div>
+          <div className="text-muted-foreground">Loading suppliers...</div>
         ) : suppliers.length === 0 ? (
-          <EmptyState className="mt-6" title={t('noSuppliers')} />
+          <EmptyState title={t('noSuppliers')} />
         ) : (
-          <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+          <div className="overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-card">

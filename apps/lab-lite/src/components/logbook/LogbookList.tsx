@@ -68,7 +68,7 @@ export function LogbookList({
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
         <div className="rounded-lg border border-border bg-card p-6">
           <p className="text-sm text-muted-foreground">{t('loadingMore')}</p>
@@ -78,7 +78,7 @@ export function LogbookList({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
         <button

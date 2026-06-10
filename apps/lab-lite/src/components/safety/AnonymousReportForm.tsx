@@ -65,7 +65,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
 
   if (submitted && reportId) {
     return (
-      <div className="mx-auto max-w-lg space-y-6 p-6">
+      <div className="mx-auto max-w-lg flex flex-col gap-4">
         <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
           <div className="mb-3 text-3xl">✅</div>
           <h2 className="mb-2 text-lg font-semibold text-green-800">
@@ -86,7 +86,7 @@ export function AnonymousReportForm({ onSubmitted }: AnonymousReportFormProps) {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 p-6">
+    <div className="mx-auto max-w-lg flex flex-col gap-4">
       {/* Privacy notice */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-start gap-3">

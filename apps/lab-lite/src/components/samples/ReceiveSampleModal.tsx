@@ -268,7 +268,7 @@ export function ReceiveSampleModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* Sample Type */}
           <div className="space-y-1">
             <label htmlFor="sample-type" className="text-sm font-medium text-foreground">

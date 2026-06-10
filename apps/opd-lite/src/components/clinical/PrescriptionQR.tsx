@@ -53,7 +53,7 @@ export function PrescriptionQR({
     const qrData = JSON.stringify(bundle)
 
     return (
-      <div className="flex flex-col items-center gap-6 py-6">
+      <div className="flex flex-col items-center gap-4 py-6">
         <h3 className="text-xl font-bold text-success">
           Prescription Finalized
         </h3>

@@ -29,9 +29,9 @@ function SafetyReportingContent() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <AnonymousReportForm onSubmitted={() => {}} />
-      <div className="mt-4 text-center">
+      <div className="text-center">
         <button
           type="button"
           onClick={() => setView('manage')}

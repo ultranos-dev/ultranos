@@ -148,7 +148,7 @@ export function EscalationContactsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">{t('title')}</h2>
       </div>

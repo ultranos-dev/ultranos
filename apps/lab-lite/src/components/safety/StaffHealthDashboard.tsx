@@ -142,7 +142,7 @@ export function StaffHealthDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">{t('staffDashboard')}</h2>
 
       {/* Summary Statistics */}

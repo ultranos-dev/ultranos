@@ -127,7 +127,7 @@ export function CheckInForm({
   // ---------------------------------------------------------------------------
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Notes */}
       <div className="flex flex-col gap-1">
         <label

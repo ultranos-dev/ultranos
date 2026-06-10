@@ -281,16 +281,16 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
   // Loading state
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <p className="font-semibold text-muted-foreground">{tPatient('loadingChart')}</p>
-      </main>
+      </div>
     )
   }
 
   // Error states
   if (!patient) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         {needsReauth ? (
           <>
             <p className="font-semibold text-muted-foreground">
@@ -315,12 +315,12 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
             </Button>
           </>
         )}
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8 space-y-4">
+    <div className="mx-auto max-w-2xl flex flex-col gap-4">
       {/* Back navigation */}
       <Button variant="ghost" onClick={() => router.push('/')} aria-label={tNav('backToSearch')}>
         {tNav('backToSearch')}
@@ -378,6 +378,6 @@ export function PatientChartPage({ patientId }: PatientChartPageProps) {
         onClose={() => setEditModalOpen(false)}
         onSaved={handlePatientUpdated}
       />
-    </main>
+    </div>
   )
 }

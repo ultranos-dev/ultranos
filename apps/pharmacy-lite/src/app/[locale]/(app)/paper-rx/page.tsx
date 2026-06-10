@@ -283,7 +283,7 @@ export default function PaperRxPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* AC #9: Non-dismissible Manual Verification Required banner */}
       <div
         className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"

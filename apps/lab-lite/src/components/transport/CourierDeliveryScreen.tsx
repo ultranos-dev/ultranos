@@ -100,7 +100,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
     const sampleCount = deliveredSession.sampleCount
 
     return (
-      <div className="flex flex-col gap-6 p-4" data-testid="courier-delivery-screen">
+      <div className="flex flex-col gap-4 p-4" data-testid="courier-delivery-screen">
         <div className="flex flex-col items-center gap-4">
           <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
             <CheckCircle size={48} className="text-green-700" aria-hidden />
@@ -127,7 +127,7 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
   // ------------ Delivery form ------------
 
   return (
-    <div className="flex flex-col gap-5 p-4" data-testid="courier-delivery-screen">
+    <div className="flex flex-col gap-4 p-4" data-testid="courier-delivery-screen">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">

@@ -21,7 +21,7 @@ const LOINC_HEIGHT = '8302-2'
 const LOINC_WEIGHT = '29463-7'
 
 const HUB_API_URL =
-  process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 
 /** Calculate age from birthDate (ISO) or birthYear. */
 function computeAge(patient: FhirPatient): string {

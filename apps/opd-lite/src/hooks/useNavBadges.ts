@@ -91,7 +91,7 @@ export function useNavBadges(): NavBadges {
  */
 async function fetchTrpcCount(path: string): Promise<number> {
   const hubUrl =
-    process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 
   // Dynamic import to reuse Supabase auth token (same pattern as notification-api)
   const { getSupabaseBrowserClient } = await import('@/lib/supabase')

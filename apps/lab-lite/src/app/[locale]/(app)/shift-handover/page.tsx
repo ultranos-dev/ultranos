@@ -24,7 +24,7 @@ function ShiftHandoverContent() {
 export default function ShiftHandoverPage() {
   return (
     <AuthGuard>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl flex flex-col gap-4">
         <ShiftHandoverContent />
       </div>
     </AuthGuard>

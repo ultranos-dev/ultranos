@@ -136,7 +136,7 @@ export function WasteDashboardView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* Period selector */}
       <div className="flex gap-2 flex-wrap">
         {(['this-month', 'last-month', '3-months', '6-months'] as Period[]).map((p) => (

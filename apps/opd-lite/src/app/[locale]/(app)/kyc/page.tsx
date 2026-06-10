@@ -240,11 +240,11 @@ export default function KycPage() {
 
   if (!session || loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-muted-foreground" role="status" aria-label="Loading">
           Loading...
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -305,7 +305,7 @@ export default function KycPage() {
 
       {/* Step 1: Document Upload */}
       {step === 'upload' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <DocumentUploadZone
             label="Medical License"
             docType="MEDICAL_LICENSE"
@@ -328,7 +328,7 @@ export default function KycPage() {
 
       {/* Step 2: Review Extracted Fields */}
       {step === 'review' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">
             Review Extracted Information
           </h2>
@@ -398,7 +398,7 @@ export default function KycPage() {
 
       {/* Step 3: Confirm and Submit */}
       {step === 'confirm' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">
             Confirm Submission
           </h2>

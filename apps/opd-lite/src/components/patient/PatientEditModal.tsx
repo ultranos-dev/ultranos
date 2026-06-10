@@ -490,7 +490,7 @@ export function PatientEditModal({
         </div>
 
         {/* ── Scrollable body ── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* Name section */}
           <NameInputSection
             nameGiven={nameGiven}

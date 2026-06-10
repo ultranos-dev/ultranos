@@ -86,7 +86,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-5">
+        <div className="px-5 py-4 space-y-4">
           {/* Pipeline visualizer */}
           <div>
             <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide font-medium">{t('statusPipelineLabel')}</p>

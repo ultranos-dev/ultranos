@@ -319,7 +319,7 @@ export function CourierPickupScreen({
   // ------------ Success screen ------------
 
   return (
-    <div className="flex flex-col gap-6 p-4" data-testid="courier-pickup-screen">
+    <div className="flex flex-col gap-4 p-4" data-testid="courier-pickup-screen">
       <div className="flex flex-col items-center gap-4">
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
           <CheckCircle size={48} className="text-green-700" aria-hidden />

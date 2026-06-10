@@ -244,7 +244,7 @@ export function CostSettingsForm() {
   }
 
   return (
-    <div className="max-w-4xl space-y-8 p-6">
+    <div className="max-w-4xl mx-auto flex flex-col gap-4">
       <h1 className="text-xl font-semibold">{t('title')}</h1>
 
       {/* Section 1 — Overhead & Labor */}

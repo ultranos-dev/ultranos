@@ -154,7 +154,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
       aria-modal="true"
       aria-label={t('flow.title')}
     >
-      <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-6">
+      <div className="max-w-lg mx-auto px-4 py-8 flex flex-col gap-4">
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Activate ─────────────────────────────────────────── */}
         {step === 'activate' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {!isManager && (
               <div className="rounded-lg bg-amber-50 border border-amber-300 p-4 text-amber-800 text-sm">
                 {t('flow.notManagerWarning')}
@@ -212,7 +212,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Encrypt ──────────────────────────────────────────── */}
         {step === 'encrypt' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <p className="text-foreground">{t('flow.encryptDescription')}</p>
 
             {!encryptionKey && (
@@ -298,7 +298,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Backup ───────────────────────────────────────────── */}
         {step === 'backup' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <p className="text-foreground">{t('flow.backupDescription')}</p>
             <button
               type="button"
@@ -316,7 +316,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Checklist ────────────────────────────────────────── */}
         {step === 'checklist' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <p className="text-foreground">{t('flow.checklistDescription')}</p>
             <ShutdownChecklist onComplete={() => setStep('wipe')} />
           </div>
@@ -324,7 +324,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Wipe (optional) ──────────────────────────────────── */}
         {step === 'wipe' && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="rounded-lg bg-red-50 border-2 border-red-400 p-4">
               <h2 className="text-lg font-bold text-red-800 mb-2">
                 {t('wipe.optionalTitle')}
@@ -388,7 +388,7 @@ export function SecurityAlertFlow({ onClose }: SecurityAlertFlowProps) {
 
         {/* ── Step: Done ─────────────────────────────────────────────── */}
         {step === 'done' && (
-          <div className="flex flex-col items-center gap-6 py-6 text-center">
+          <div className="flex flex-col items-center gap-4 py-6 text-center">
             <div className="text-6xl">🔒</div>
             <h2 className="text-2xl font-bold text-foreground">{t('flow.doneTitle')}</h2>
             <p className="text-muted-foreground">{t('flow.doneDescription')}</p>

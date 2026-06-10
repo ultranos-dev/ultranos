@@ -6,9 +6,9 @@ import { WorkloadDashboard } from '@/components/workload/WorkloadDashboard'
 export default function WorkloadPage() {
   return (
     <AuthGuard>
-      <main className="p-4 sm:p-6">
+      <div className="flex flex-col gap-4">
         <WorkloadDashboard />
-      </main>
+      </div>
     </AuthGuard>
   )
 }

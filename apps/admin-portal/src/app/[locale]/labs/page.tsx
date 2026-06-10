@@ -113,17 +113,17 @@ export default function LabsPage() {
         </div>
 
         {error && (
-          <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
         )}
 
         {loading ? (
-          <div className="mt-6 text-muted-foreground">{t('loadingLabs')}</div>
+          <div className="text-muted-foreground">{t('loadingLabs')}</div>
         ) : labs.length === 0 ? (
-          <EmptyState className="mt-6" title={t('noLabs')} />
+          <EmptyState title={t('noLabs')} />
         ) : (
           <>
             {/* Lab queue table — AC #1, #2 */}
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+            <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="bg-card">
                   <tr>
@@ -156,7 +156,7 @@ export default function LabsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   Showing {cursor + 1}–{Math.min(cursor + PAGE_SIZE, total)} of {total}
                 </span>

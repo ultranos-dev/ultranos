@@ -187,7 +187,7 @@ export function ResupplyRequestForm({
 
   // ---- Main form ----
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">{t('form.title')}</h2>
 
       {/* Urgency selector */}

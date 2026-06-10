@@ -101,11 +101,11 @@ export function HmisReportGenerator() {
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1)
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
+    <div className="max-w-2xl mx-auto flex flex-col gap-4">
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
 
       {state === 'error' && (
-        <div role="alert" className="mb-4 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
           {errorMsg || t('generateError')}
         </div>
       )}
@@ -171,6 +171,6 @@ export function HmisReportGenerator() {
           />
         )}
       </div>
-    </main>
+    </div>
   )
 }

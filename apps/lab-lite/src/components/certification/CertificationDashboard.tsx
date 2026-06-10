@@ -99,7 +99,7 @@ export function CertificationDashboard({ technicianId, technicianName }: Certifi
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {pathways.map((pathway) => {
         const progress = progressMap.get(pathway.id)
         return (

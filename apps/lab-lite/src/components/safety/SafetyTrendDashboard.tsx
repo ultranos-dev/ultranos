@@ -111,7 +111,7 @@ export function SafetyTrendDashboard({ onBack }: SafetyTrendDashboardProps) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       {onBack && (
         <button
           type="button"

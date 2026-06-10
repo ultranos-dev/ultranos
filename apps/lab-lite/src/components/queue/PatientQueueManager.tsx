@@ -155,7 +155,7 @@ export function PatientQueueManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header actions */}
       <div className="flex flex-wrap items-center gap-3">
         <button

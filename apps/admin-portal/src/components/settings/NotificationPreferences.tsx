@@ -87,7 +87,7 @@ export function NotificationPreferences({ email }: { email?: string }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* KYC SLA breach alerts */}
       <div className="flex items-center justify-between">
         <div>

@@ -153,7 +153,7 @@ export default function ConsentPage() {
       <h1 className="text-xl font-semibold">{t('title')}</h1>
       <StepIndicatorBar currentStep={step} />
 
-      <div className="mt-8">
+      <div>
         {/* Step 1: Select Patient */}
         {step === 'patient' && (
           <div className="space-y-4">
@@ -221,7 +221,7 @@ export default function ConsentPage() {
 
         {/* Step 3: Capture Consent */}
         {step === 'capture' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h2 className="text-lg font-medium">{t('steps.captureConsent')}</h2>
 
             {/* Method selector */}

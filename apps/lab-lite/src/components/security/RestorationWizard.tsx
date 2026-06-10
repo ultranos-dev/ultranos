@@ -62,7 +62,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
 
   if (step === 'done') {
     return (
-      <div className="flex flex-col items-center gap-6 py-8 text-center">
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
         <div className="text-5xl">✅</div>
         <h2 className="text-2xl font-bold text-green-700">{t('restoration.done')}</h2>
         <p className="text-muted-foreground">{t('restoration.doneDescription')}</p>
@@ -99,7 +99,7 @@ export function RestorationWizard({ onComplete }: RestorationWizardProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <h2 className="text-xl font-bold text-foreground">{t('restoration.title')}</h2>
 
       {step === 'source' && (

@@ -69,7 +69,7 @@ export function InspectionReadinessView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <h2 className="text-lg font-semibold">{t('inspectionReadinessTitle')}</h2>
 

@@ -741,7 +741,7 @@ export default function SettingsPage() {
         {/* ═══ Section 6: Alert Config ═══ */}
         <section id="alert-config" className="scroll-mt-24 mb-12">
           <h2 className="text-lg font-semibold text-foreground mb-4">{t('alertConfigTitle')}</h2>
-          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-8">
+          <div className="max-w-2xl rounded-3xl bg-card p-5 border border-border space-y-4">
             <SurveillanceConfigForm />
             <div className="border-t border-border pt-6">
               <SurveillanceAlertHistory />

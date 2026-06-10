@@ -111,7 +111,7 @@ export function HealthRecordEditModal({
       aria-modal="true"
       aria-label={isNew ? t('createRecord') : t('editRecord')}
     >
-      <div className="bg-card dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-6">
+      <div className="bg-card dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">
             {isNew ? t('createRecord') : t('editRecord')}

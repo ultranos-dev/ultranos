@@ -88,7 +88,7 @@ export function WestgardHistoryView({ runs, alerts }: WestgardHistoryViewProps) 
   const trend = detectTrend(allValues)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Trend indicator */}
       {trend && (
         <div

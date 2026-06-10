@@ -128,7 +128,7 @@ export function CostAnalysisView() {
 
   if (analyses.length === 0) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold">{t('title')}</h1>
         <p className="text-sm text-gray-500">{t('emptyState')}</p>
       </div>
@@ -145,7 +145,7 @@ export function CostAnalysisView() {
   }
 
   return (
-    <div className="max-w-6xl space-y-6 p-6 print:p-0">
+    <div className="max-w-6xl mx-auto flex flex-col gap-4 print:p-0">
       <h1 className="text-xl font-semibold print:text-2xl">{t('title')}</h1>
 
       {/* Stale data warning */}

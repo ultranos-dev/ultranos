@@ -22,7 +22,7 @@ export function EquipmentPage() {
   const [activeTab, setActiveTab] = useState<Tab>('queue')
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 space-y-4">
+    <div className="mx-auto max-w-2xl flex flex-col gap-4">
       <h1 className="text-xl font-bold text-gray-900">{t('equipmentTitle') ?? 'Equipment'}</h1>
 
       {/* Tab bar */}

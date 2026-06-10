@@ -150,7 +150,7 @@ export function AuditChecklistView({
   const previewScore = calculateComplianceScore(audit)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

@@ -31,7 +31,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="max-w-2xl space-y-4">
+      <div className="max-w-2xl flex flex-col gap-4">
         <ProfileCard />
         <SessionInfoCard />
         <MfaManagementCard />

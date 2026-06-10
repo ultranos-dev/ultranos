@@ -38,73 +38,71 @@ export default function CreateLabPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <Button variant="outline" onClick={() => router.push('/labs')}>
           {t('backToLabs')}
         </Button>
 
-        <div className="mt-6 rounded-2xl border border-border bg-popover p-6">
-          <div className="space-y-5">
-            <div>
-              <label
-                htmlFor="lab-name"
-                className="block text-sm font-medium text-muted-foreground mb-1"
-              >
-                {t('labName')} <span className="text-destructive">*</span>
-              </label>
-              <Input
-                id="lab-name"
-                aria-label={t('labName')}
-                type="text"
-                value={labName}
-                onChange={(e) => setLabName(e.target.value)}
-                placeholder={t('labNamePlaceholder')}
-              />
-            </div>
+        <div className="rounded-2xl border border-border bg-popover p-6 flex flex-col gap-4">
+          <div>
+            <label
+              htmlFor="lab-name"
+              className="block text-sm font-medium text-muted-foreground mb-1"
+            >
+              {t('labName')} <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="lab-name"
+              aria-label={t('labName')}
+              type="text"
+              value={labName}
+              onChange={(e) => setLabName(e.target.value)}
+              placeholder={t('labNamePlaceholder')}
+            />
+          </div>
 
-            <div>
-              <label
-                htmlFor="license-ref"
-                className="block text-sm font-medium text-muted-foreground mb-1"
-              >
-                {t('licenseRef')} <span className="text-destructive">*</span>
-              </label>
-              <Input
-                id="license-ref"
-                aria-label={t('licenseRef')}
-                type="text"
-                value={licenseRef}
-                onChange={(e) => setLicenseRef(e.target.value)}
-                placeholder={t('licenseRefPlaceholder')}
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="license-ref"
+              className="block text-sm font-medium text-muted-foreground mb-1"
+            >
+              {t('licenseRef')} <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="license-ref"
+              aria-label={t('licenseRef')}
+              type="text"
+              value={licenseRef}
+              onChange={(e) => setLicenseRef(e.target.value)}
+              placeholder={t('licenseRefPlaceholder')}
+            />
+          </div>
 
-            <div>
-              <label
-                htmlFor="accreditation-ref"
-                className="block text-sm font-medium text-muted-foreground mb-1"
-              >
-                {t('accreditationRef')}{' '}
-                <span className="text-muted-foreground text-xs font-normal">(optional)</span>
-              </label>
-              <Input
-                id="accreditation-ref"
-                aria-label={t('accreditationRef')}
-                type="text"
-                value={accreditationRef}
-                onChange={(e) => setAccreditationRef(e.target.value)}
-                placeholder="e.g. ACCR-ISO15189-001"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="accreditation-ref"
+              className="block text-sm font-medium text-muted-foreground mb-1"
+            >
+              {t('accreditationRef')}{' '}
+              <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+            </label>
+            <Input
+              id="accreditation-ref"
+              aria-label={t('accreditationRef')}
+              type="text"
+              value={accreditationRef}
+              onChange={(e) => setAccreditationRef(e.target.value)}
+              placeholder="e.g. ACCR-ISO15189-001"
+            />
           </div>
 
           {error && (
-            <div role="alert" className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
+            <div role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => router.push('/labs')}>
               {tCommon('cancel')}
             </Button>

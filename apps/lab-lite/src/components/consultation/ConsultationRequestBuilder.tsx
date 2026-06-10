@@ -232,7 +232,7 @@ export function ConsultationRequestBuilder({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Step indicator */}
       <StepIndicator step={step} t={t} />
 

@@ -173,7 +173,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {error && (
         <div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
       )}

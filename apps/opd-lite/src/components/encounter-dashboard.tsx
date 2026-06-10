@@ -466,7 +466,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <svg className="h-5 w-5 animate-spin text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -474,13 +474,13 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           </svg>
           <p className="font-semibold text-muted-foreground">{tEncounter('loadingPatient')}</p>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (!patient) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <p className="font-semibold text-muted-foreground">{tPatient('notFound')}</p>
         <Button
           variant="ghost"
@@ -489,7 +489,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         >
           {tNav('returnToSearch')}
         </Button>
-      </main>
+      </div>
     )
   }
 
@@ -507,7 +507,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           }
         `}</style>
       )}
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
 
@@ -830,7 +830,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         </Card>
       )}
 
-    </main>
+    </div>
     </>
   )
 }

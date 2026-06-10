@@ -6,7 +6,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 export function DashboardHeader() {
   const t = useTranslations('dashboard')
   const session = useAuthSessionStore((s) => s.session)
-  const displayName = session?.email?.split('@')[0] ?? t('defaultTechName')
+  const displayName = session?.name || session?.email?.split('@')[0] || t('defaultTechName')
 
   return (
     <div className="flex items-center justify-between">

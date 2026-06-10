@@ -162,7 +162,7 @@ export function ChecklistTemplateEditor() {
   ]
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-lg font-semibold">{t('templateEditorTitle')}</h2>
@@ -319,7 +319,7 @@ export function ChecklistTemplateEditor() {
       ) : templates.length === 0 ? (
         <p className="text-sm text-gray-500">{t('noTemplates')}</p>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {allCategories.map((category) => (
             <section key={category} aria-labelledby={`cat-heading-${category}`}>
               <h3

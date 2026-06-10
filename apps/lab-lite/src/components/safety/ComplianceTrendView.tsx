@@ -79,7 +79,7 @@ export function ComplianceTrendView({
   }, [hasLatestCompleted, latestAudit, trends, templateMap])
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       {/* ── Large score display ─────────────────────────────────────────────── */}
       {hasLatestCompleted && latestAudit ? (
         <div className="rounded-xl border border-border p-6 text-center">

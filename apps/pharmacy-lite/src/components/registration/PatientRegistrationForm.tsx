@@ -23,9 +23,9 @@ import type { FhirPatient } from '@ultranos/shared-types'
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -465,7 +465,7 @@ export function PatientRegistrationForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Name section */}
         <NameInputSection
           nameGiven={nameGiven}

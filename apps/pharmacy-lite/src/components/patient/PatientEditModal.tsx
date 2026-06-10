@@ -40,7 +40,7 @@ const BLOOD_GROUPS = [
 // ── Hub API helpers ─────────────────────────────────────────────────────────
 
 function getHubApiUrl(): string {
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -487,7 +487,7 @@ export function PatientEditModal({
         </div>
 
         {/* ── Scrollable body ── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* Name section */}
           <NameInputSection
             nameGiven={nameGiven}

@@ -108,7 +108,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
   // Detail view
   if (selectedReport) {
     return (
-      <div className="mx-auto max-w-2xl space-y-6 p-6">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <button
           type="button"
           onClick={() => setSelectedReport(null)}
@@ -228,7 +228,7 @@ export function SafetyReportManagement({ onViewTrends }: SafetyReportManagementP
 
   // List view
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-6">
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{t('managementTitle')}</h1>
         {onViewTrends && (

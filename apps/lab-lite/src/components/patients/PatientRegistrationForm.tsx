@@ -181,7 +181,7 @@ export function PatientRegistrationForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Errors */}
         {errors.length > 0 && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3">

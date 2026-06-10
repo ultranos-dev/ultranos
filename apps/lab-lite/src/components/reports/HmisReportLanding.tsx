@@ -26,8 +26,8 @@ export function HmisReportLanding() {
   ]
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
+    <div className="mx-auto max-w-2xl flex flex-col gap-4">
+      <h1 className="text-2xl font-bold flex items-center gap-2">
         <FileText size={24} aria-hidden="true" />
         {t('reportsTitle')}
       </h1>
@@ -48,6 +48,6 @@ export function HmisReportLanding() {
           </Link>
         ))}
       </div>
-    </main>
+    </div>
   )
 }

@@ -251,7 +251,7 @@ export function SOAPNoteEntry({
 
   // === Normal SOAP Entry View ===
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* AI Assist / Template Assist button */}
       <div className="flex items-center gap-3">
         {isOnline ? (

@@ -253,9 +253,9 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
   const period = formatReportingPeriod(localReport.reportYear, localReport.reportMonth)
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('reviewTitle')}</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -745,7 +745,7 @@ export function HmisReportReview({ report, onUpdate, onBack }: HmisReportReviewP
           </p>
         </div>
       )}
-    </main>
+    </div>
   )
 }
 

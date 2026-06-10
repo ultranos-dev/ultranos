@@ -133,7 +133,7 @@ export function DonorReportGenerator() {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="flex flex-col gap-4">
       <h1 className="text-lg font-semibold text-gray-800">{t('title')}</h1>
 
       {/* Program selector */}

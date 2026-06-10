@@ -128,7 +128,7 @@ export function WorkloadPatternsView({ techLabels = {} }: WorkloadPatternsProps)
     : 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Range selector */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">{t('dateRange')}:</span>

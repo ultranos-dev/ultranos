@@ -147,7 +147,7 @@ export function SampleDetailView({
   }
 
   return (
-    <div className="space-y-6" data-testid="sample-detail-view">
+    <div className="space-y-4" data-testid="sample-detail-view">
       {/* AC 2: Lock blocker dialog — shown when another tech holds an active lock */}
       {lockBlocker && (
         <SampleLockBlocker
