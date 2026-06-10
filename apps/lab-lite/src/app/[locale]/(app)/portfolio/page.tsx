@@ -52,12 +52,12 @@ export default function PortfolioPage() {
         )}
 
         {/* Main content: portfolio dashboard */}
-        <main className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
           <PortfolioDashboard
             targetTechId={selectedTechId ?? undefined}
             targetTechName={selectedTechName ?? undefined}
           />
-        </main>
+        </div>
       </div>
     </AuthGuard>
   )

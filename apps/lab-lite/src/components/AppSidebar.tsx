@@ -193,6 +193,7 @@ export function AppSidebar() {
       title: 'Team',
       items: [
         { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
+        { title: t('portfolio'), url: '/portfolio', icon: BarChart3 },
         { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
         { title: t('certification'), url: '/certification', icon: Award },
         { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
