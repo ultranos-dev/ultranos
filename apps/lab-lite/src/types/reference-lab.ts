@@ -14,7 +14,11 @@ export type SendOutStatus =
   | 'results-available'
   | 'cancelled'
 
-/** Legal forward-only transitions. Cancelled is allowed from any state. */
+/**
+ * Legal forward-only transitions. Cancelled is allowed from in-flight states only.
+ * results-available is a terminal state — cancelling after results would orphan
+ * the linked lab_results record (Decision DN18, 2026-06-10).
+ */
 export const SENDOUT_ALLOWED_TRANSITIONS: Record<
   SendOutStatus,
   SendOutStatus[]
@@ -22,7 +26,7 @@ export const SENDOUT_ALLOWED_TRANSITIONS: Record<
   sent: ['received', 'cancelled'],
   received: ['processing', 'cancelled'],
   processing: ['results-available', 'cancelled'],
-  'results-available': ['cancelled'],
+  'results-available': [],
   cancelled: [],
 }
 
@@ -97,7 +101,7 @@ export interface SendOut {
   processingStartedAt: string | null
   resultsAvailableAt: string | null
   cancelledAt: string | null
-  shippingManifestId: string | null
+  /** Populated once generateReferralForm is called. */
   referralFormId: string | null
   /** FK to lab_results entry once result is imported */
   resultId: string | null

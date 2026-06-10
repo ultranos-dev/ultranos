@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { X, Upload, FileText } from '@ultranos/ui-kit/icons'
 import { importSendOutResult } from '@/lib/sendout-service'
@@ -29,12 +29,14 @@ export function ResultImportModal({ sendOut, onClose, onSuccess }: ResultImportM
   const [error, setError] = useState<string | null>(null)
   const [labName, setLabName] = useState<string>('')
 
-  // Load lab name for attribution display
-  useState(() => {
+  // Load lab name for attribution display (H10 — proper useEffect with cleanup)
+  useEffect(() => {
+    let mounted = true
     getDb().reference_labs.get(sendOut.referenceLabId).then((lab) => {
-      if (lab) setLabName(`${lab.name}, Accreditation #${lab.accreditationNumber}`)
+      if (lab && mounted) setLabName(`${lab.name}, Accreditation #${lab.accreditationNumber}`)
     }).catch(() => {})
-  })
+    return () => { mounted = false }
+  }, [sendOut.referenceLabId])
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

@@ -10,14 +10,22 @@
 import { getDb } from './db'
 import type { SendOut, SendOutTATStatus } from '@/types/reference-lab'
 
-/** Parse an HLC-serialized or ISO timestamp and return a Date. */
+/**
+ * Parse an HLC-serialized or ISO timestamp and return a Date.
+ * HLC format: "wallMs:counter:nodeId" — first segment is Unix timestamp in ms.
+ * ISO format: "2024-01-15T10:30:00.000Z" — passed through directly.
+ */
 function parseTimestamp(ts: string): Date {
-  // HLC format: "timestamp|counter|nodeId" — extract wall-clock prefix
-  const wallPart = ts.includes('|') ? ts.split('|')[0] : ts
-  return new Date(Number(wallPart) || wallPart)
+  const firstSegment = ts.split(':')[0]
+  const asNumber = Number(firstSegment)
+  // HLC timestamps have a 13-digit epoch-ms value as the first segment
+  if (!isNaN(asNumber) && asNumber > 1_000_000_000_000) {
+    return new Date(asNumber)
+  }
+  return new Date(ts)
 }
 
-/** Elapsed days since sentAt. */
+/** Elapsed days since sentAt relative to now. */
 function elapsedDaysSince(sentAt: string): number {
   const ms = Date.now() - parseTimestamp(sentAt).getTime()
   return Math.max(0, ms / (1000 * 60 * 60 * 24))
@@ -45,13 +53,17 @@ export async function calculatePendingTAT(sendOutId: string): Promise<SendOutTAT
 }
 
 /**
- * Return all pending send-outs exceeding their expected TAT by the given multiplier.
- * Default threshold: 1.5x average TAT. Results sorted by most overdue first.
+ * Return all pending send-outs exceeding their expected TAT.
+ * Threshold multiplier is read from the lab_config table (key: "tatOverdueMultiplier"),
+ * falling back to 1.5x if not configured. Results sorted by most overdue first.
  */
-export async function getOverdueSendOuts(
-  thresholdMultiplier = 1.5,
-): Promise<SendOut[]> {
+export async function getOverdueSendOuts(): Promise<SendOut[]> {
   const db = getDb()
+
+  // Read configurable threshold from lab_config (H12)
+  const configEntry = await db.lab_config.get('tatOverdueMultiplier')
+  const thresholdMultiplier = configEntry ? Number(configEntry.value) : 1.5
+
   const pending = await db.send_outs
     .where('status')
     .anyOf(['sent', 'received', 'processing'])
@@ -82,6 +94,7 @@ export async function getOverdueSendOuts(
 
 /**
  * Calculate actual average TAT per test type from completed send-outs for a lab.
+ * Uses the actual elapsed time from sentAt to resultsAvailableAt (not sentAt to now).
  * Returns a map of LOINC code → average completed TAT in days.
  */
 export async function getAverageTATByLab(
@@ -98,10 +111,14 @@ export async function getAverageTATByLab(
 
   for (const sendOut of completed) {
     if (!sendOut.resultsAvailableAt) continue
-    const elapsed = elapsedDaysSince(sendOut.sentAt)
+    // Measure actual TAT: sentAt → resultsAvailableAt (not sentAt → now) (H8)
+    const tatMs =
+      parseTimestamp(sendOut.resultsAvailableAt).getTime() -
+      parseTimestamp(sendOut.sentAt).getTime()
+    const elapsedDays = Math.max(0, tatMs / (1000 * 60 * 60 * 24))
     const code = sendOut.testRequested.loincCode
     if (!grouped[code]) grouped[code] = []
-    grouped[code].push(elapsed)
+    grouped[code].push(elapsedDays)
   }
 
   const result: Record<string, number> = {}

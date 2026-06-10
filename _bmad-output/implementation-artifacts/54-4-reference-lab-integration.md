@@ -152,6 +152,42 @@ Modified files:
 - `apps/lab-lite/src/lib/audit-client.ts` (send-out audit event types)
 - `apps/lab-lite/src/components/AppSidebar.tsx` (add Send-Outs nav item)
 
+## Review Findings
+
+> Code review conducted 2026-06-10. Sources: Blind Hunter, Edge Case Hunter, Acceptance Auditor.
+> **2 decision-needed · 16 patch · 1 deferred · 1 dismissed**
+
+### Decision-Needed
+
+_(All resolved — converted to patches below.)_
+
+### Patch
+
+- [x] [Review][Patch] **C1: Missing Dexie schema migration + helper functions (Task 2)** [`apps/lab-lite/src/lib/db.ts`] — `reference_labs`, `send_outs`, `send_out_transitions` tables not added to any `version().stores()` call; `putReferenceLab`, `getActiveReferenceLabs`, `createSendOut`, `getSendOutsByStatus`, `getSendOutsForSample`, `addSendOutTransition` not exported. Feature is entirely non-functional until a new Dexie version (v36) is added.
+- [x] [Review][Patch] **C2: `reportSendOutAuditEvent` not exported from `audit-client.ts` (Task 13)** [`apps/lab-lite/src/lib/audit-client.ts`] — All service mutation calls import and invoke this function, but it does not exist. Every `initiateSendOut`, `updateSendOutStatus`, `importSendOutResult`, `addReferenceLab`, `updateReferenceLab` call will crash at runtime with a TypeError.
+- [x] [Review][Patch] **C3: `importSendOutResult` writes incompatible object to `db.lab_results`** [`sendout-service.ts` L171–182] — `status: 'final'` is not in the `LabResult` union (`'draft'|'completed'`); required fields `sampleId`, `templateId`, `templateVersion`, `updatedAt` are omitted; `as any` bypasses TypeScript. Records with `status: 'final'` will never appear in queries filtering by valid statuses.
+- [x] [Review][Patch] **C4: `importSendOutResult` spreads untrusted `resultData` without validation** [`sendout-service.ts` L171–182] — CSV/JSON file content from `ResultImportModal` is spread directly into the persisted record, allowing a malicious or malformed import file to overwrite `id`, `attribution`, `loincCode`, `sampleId`, `sendOutId`. Fix: whitelist the fields to accept from `resultData` before the spread.
+- [x] [Review][Patch] **C5: `importSendOutResult` has no transaction — partial failure leaves inconsistent state** [`sendout-service.ts` L171–208] — Three sequential non-transactional writes (`lab_results.put`, `send_outs.put`, `updateSendOutStatus`). A crash between writes leaves a result with no `resultId` link or a send-out stuck in `processing`. Wrap in a Dexie transaction.
+- [x] [Review][Patch] **H6: `importSendOutResult` double-emits audit event** [`sendout-service.ts` L197–208] — Calls `updateSendOutStatus(..., 'import', ...)` which emits `SENDOUT_STATUS_UPDATED`, then also emits `SENDOUT_RESULT_IMPORTED`. Two audit events for one user action; the status event fires before `resultId` is linked. Pass a `suppressAudit` flag to the internal `updateSendOutStatus` call or inline the status update.
+- [x] [Review][Patch] **H7: `parseTimestamp` checks for `|` separator but HLC format uses `:`** [`sendout-tat.ts` L16] — `ts.includes('|')` never matches; the full HLC string (e.g. `"1750000000000:00000:node-id"`) is passed to `new Date()` → Invalid Date → NaN elapsed days → TAT overdue system never fires for any send-out. Fix: check `ts.includes(':')` and split on `:` to extract `parts[0]` as the wall-clock ms.
+- [x] [Review][Patch] **H8: `getAverageTATByLab` measures elapsed to `Date.now()`, not `resultsAvailableAt`** [`sendout-tat.ts` L99–105] — Historical TAT averages grow monotonically over time (a 3-day TAT becomes 33 days after a month). Fix: `parseTimestamp(sendOut.resultsAvailableAt!).getTime() - parseTimestamp(sendOut.sentAt).getTime()`.
+- [x] [Review][Patch] **H9: `renderReferralFormPDF` passes HLC-serialized `sentAt` to `new Date()`** [`sendout-pdf.ts` L46, `sendout-service.ts` L241] — `dateSent: sendOut.sentAt` where `sentAt` is `serializeHlc(hlc.now())`. `new Date("1750000000000:00000:node-id").toLocaleDateString()` → "Invalid Date" on the printed referral form. Fix: store/pass a separate ISO `sentAt` field or extract the wall-ms from the HLC before constructing the Date.
+- [x] [Review][Patch] **H10: `useState` misuse for async lab name load in `ResultImportModal`** [`ResultImportModal.tsx` L33–37] — `useState(() => { asyncCall().then(setLabName) })` does not work; the initializer runs once synchronously and the `.then` fires after render without stable cleanup. Attribution banner always shows "…". Fix: replace with `useEffect(() => { getDb().reference_labs.get(...).then(lab => { if (lab) setLabName(...) }) }, [sendOut.referenceLabId])`.
+- [x] [Review][Patch] **H11: Referral form preview shows i18n placeholder, not patient data** [`SendOutModal.tsx` L155] — `{t('sendOutPreviewPatientValue')}` renders a static string; `SendOutModalProps` has no `patientFirstName`/`patientAge` props. Tech cannot verify patient identity before dispatching. Add `patientFirstName: string` and `patientAge: number` props and render them in the preview.
+- [x] [Review][Patch] **H12: TAT overdue threshold hardcoded at 1.5x — not configurable** [`sendout-tat.ts` L52] — AC #8 requires a configurable threshold. Add a `lab_config` entry (e.g. key `tatOverdueMultiplier`) readable by `getOverdueSendOuts` and `calculatePendingTAT`, consistent with existing `getLockTimeoutHours` pattern.
+- [x] [Review][Patch] **H13: `types/index.ts` missing `reference-lab` re-export (Task 1.2)** [`apps/lab-lite/src/types/index.ts`] — The new `reference-lab.ts` types are not exported from the types index. Add `export * from './reference-lab'`.
+- [x] [Review][Patch] **M14: `importSendOutResult` double versionId increment** [`sendout-service.ts` L189, L198] — The outer function increments `versionId` before calling `updateSendOutStatus`, which increments again. Final `versionId` = `original + 2` for one logical action — creates a gap in sync history. Fix: skip the first `db.send_outs.put(updated)` if `updateSendOutStatus` will handle the put, or inline the resultId assignment inside `updateSendOutStatus`.
+- [x] [Review][Patch] **M15: `reportSendOutAuditEvent` calls not marked `void`** [`reference-lab-config.ts` L36, L53, L74; `sendout-service.ts` L24, L65, L137, L201] — If the audit function throws (e.g. Dexie unavailable), the exception propagates and crashes the mutation. All audit calls in `audit-client.ts` are fire-and-forget by convention. Prefix each call with `void` and wrap in try/catch if needed.
+- [x] [Review][Patch] **M16: `confirm()` dialog for deactivation** [`ReferenceLabConfigPanel.tsx` L360] — `window.confirm()` is blocked in PWA standalone mode and many Android WebViews (primary deployment target). Replace with a ShadCN `Dialog` confirmation modal.
+- [x] [Review][Patch] **DN17→P17: Remove `shippingManifestId` from `SendOut` type** [`types/reference-lab.ts`, `sendout-service.ts`] — Decision: manifest owns send-out IDs, not the reverse. Remove `shippingManifestId: string | null` from the `SendOut` interface; remove `shippingManifestId: uuidv4()` from `initiateSendOut`; update `generateShippingManifest` to generate its own UUID rather than reading from `sendOuts[0]`.
+- [x] [Review][Patch] **DN18→P18: Block cancel transition from `results-available`** [`types/reference-lab.ts`, `StatusUpdateModal.tsx`] — Decision: results-available is a terminal state; cancellation after results creates orphaned `lab_results` records. Remove `'cancelled'` from `SENDOUT_ALLOWED_TRANSITIONS['results-available']`; disable the cancel button in `StatusUpdateModal` when `sendOut.status === 'results-available'`.
+
+### Deferred
+
+- [x] [Review][Defer] **D19: `sendout-pdf.ts` returns HTML Blob, not PDF** [`sendout-pdf.ts` L78, L137] — deferred, acknowledged design choice. Code comment states "A dedicated PDF library (jsPDF, react-pdf) can be substituted later without API changes." The function name `renderReferralFormPDF` and the file name `sendout-pdf.ts` are misleading but intentional. Track for resolution when a PDF library is evaluated.
+
+---
+
 ## References
 
 - Epic 54 definition: `_bmad-output/planning-artifacts/epics.md` (line 6623)

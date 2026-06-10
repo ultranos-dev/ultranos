@@ -3,6 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Plus, Edit, X, CheckCircle } from '@ultranos/ui-kit/icons'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import { getActiveReferenceLabs, addReferenceLab, updateReferenceLab, deactivateReferenceLab } from '@/lib/reference-lab-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { LabRole } from '@ultranos/shared-types'
@@ -38,6 +45,8 @@ export function ReferenceLabConfigPanel() {
   const [form, setForm] = useState<LabFormState>(EMPTY_FORM)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** Id of the lab pending deactivation confirmation; null = dialog closed. */
+  const [deactivateTarget, setDeactivateTarget] = useState<string | null>(null)
 
   const canEdit = session?.labRole && ALLOWED_ROLES.includes(session.labRole as LabRole)
 
@@ -106,16 +115,19 @@ export function ReferenceLabConfigPanel() {
     }
   }
 
-  async function handleDeactivate(id: string) {
-    if (!session?.userId || !canEdit) return
-    if (!confirm(t('refLabDeactivateConfirm'))) return
+  async function confirmDeactivate() {
+    if (!deactivateTarget || !session?.userId || !canEdit) return
     try {
-      await deactivateReferenceLab(id, session.userId)
+      await deactivateReferenceLab(deactivateTarget, session.userId)
       await loadLabs()
     } catch {
       setError(t('refLabDeactivateError'))
+    } finally {
+      setDeactivateTarget(null)
     }
   }
+
+  const deactivateTargetName = labs.find((l) => l.id === deactivateTarget)?.name ?? ''
 
   if (!canEdit) {
     return (
@@ -217,7 +229,7 @@ export function ReferenceLabConfigPanel() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeactivate(lab.id)}
+                    onClick={() => setDeactivateTarget(lab.id)}
                     aria-label={t('refLabDeactivateAriaLabel', { name: lab.name })}
                     className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-red-600"
                   >
@@ -229,6 +241,34 @@ export function ReferenceLabConfigPanel() {
           ))}
         </ul>
       )}
+
+      {/* Deactivation confirmation dialog — replaces browser confirm() (M16) */}
+      <Dialog open={deactivateTarget !== null} onOpenChange={(open) => { if (!open) setDeactivateTarget(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('refLabDeactivateDialogTitle')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-foreground">
+            {t('refLabDeactivateConfirm', { name: deactivateTargetName })}
+          </p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setDeactivateTarget(null)}
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/30"
+            >
+              {t('refLabDeactivateCancelButton')}
+            </button>
+            <button
+              type="button"
+              onClick={() => void confirmDeactivate()}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              {t('refLabDeactivateConfirmButton')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

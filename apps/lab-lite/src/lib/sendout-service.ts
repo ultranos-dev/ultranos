@@ -6,7 +6,7 @@
  *
  * Data minimization: referral forms contain ONLY patient first name + age (CLAUDE.md Rule #7).
  * Status pipeline: sent → received → processing → results-available (forward-only).
- * Cancelled is allowed from any status.
+ * Cancelled is allowed from any in-flight state only (results-available is terminal).
  *
  * All mutations emit audit events via reportSendOutAuditEvent.
  */
@@ -33,7 +33,14 @@ import type { ReferenceLab } from '@/types/reference-lab'
 import { SENDOUT_ALLOWED_TRANSITIONS } from '@/types/reference-lab'
 import type { FhirSpecimen } from '@ultranos/shared-types'
 
-/** Create a new send-out record and generate referral form + shipping manifest IDs. */
+/** Parse an HLC timestamp string ("wallMs:counter:nodeId") to an ISO 8601 date string. */
+function hlcToIso(hlcTimestamp: string): string {
+  const parts = hlcTimestamp.split(':')
+  const wallMs = Number(parts[0])
+  return isNaN(wallMs) ? new Date().toISOString() : new Date(wallMs).toISOString()
+}
+
+/** Create a new send-out record. */
 export async function initiateSendOut(
   input: CreateSendOutInput,
   actorId: string,
@@ -53,7 +60,6 @@ export async function initiateSendOut(
     processingStartedAt: null,
     resultsAvailableAt: null,
     cancelledAt: null,
-    shippingManifestId: uuidv4(),
     referralFormId: uuidv4(),
     resultId: null,
     meta: { lastUpdated: now, versionId: '1' },
@@ -62,7 +68,7 @@ export async function initiateSendOut(
 
   await createSendOut(sendOut)
 
-  reportSendOutAuditEvent({
+  void reportSendOutAuditEvent({
     action: 'SENDOUT_CREATED',
     sendOutId: id,
     referenceLabId: input.referenceLabId,
@@ -75,8 +81,11 @@ export async function initiateSendOut(
 
 /**
  * Update a send-out's status through the pipeline.
- * Only forward transitions are allowed; cancelled is always allowed.
+ * Only forward transitions are allowed; cancelled is allowed from in-flight states only.
  * Throws if the requested transition is invalid.
+ *
+ * @param options.resultId   If provided, written to the send-out in the same put (avoids double increment).
+ * @param options.suppressAudit  If true, skips the SENDOUT_STATUS_UPDATED audit event (for importSendOutResult which emits its own).
  */
 export async function updateSendOutStatus(
   sendOutId: string,
@@ -84,6 +93,7 @@ export async function updateSendOutStatus(
   source: 'manual' | 'import',
   actorId: string,
   notes?: string,
+  options?: { resultId?: string; suppressAudit?: boolean },
 ): Promise<SendOut> {
   const db = getDb()
   const existing = await db.send_outs.get(sendOutId)
@@ -108,6 +118,7 @@ export async function updateSendOutStatus(
   const updated: SendOut = {
     ...existing,
     ...timestampField,
+    ...(options?.resultId !== undefined ? { resultId: options.resultId } : {}),
     status: newStatus,
     meta: {
       lastUpdated: now,
@@ -134,14 +145,16 @@ export async function updateSendOutStatus(
 
   await addSendOutTransition(transition)
 
-  reportSendOutAuditEvent({
-    action: 'SENDOUT_STATUS_UPDATED',
-    sendOutId,
-    referenceLabId: existing.referenceLabId,
-    actorId,
-    timestamp: now,
-    details: { fromStatus: existing.status, toStatus: newStatus, source },
-  })
+  if (!options?.suppressAudit) {
+    void reportSendOutAuditEvent({
+      action: 'SENDOUT_STATUS_UPDATED',
+      sendOutId,
+      referenceLabId: existing.referenceLabId,
+      actorId,
+      timestamp: now,
+      details: { fromStatus: existing.status, toStatus: newStatus, source },
+    })
+  }
 
   return updated
 }
@@ -149,7 +162,7 @@ export async function updateSendOutStatus(
 /**
  * Import a result for a send-out.
  * Automatically attributes the result to the reference lab and transitions status to results-available.
- * resultData is persisted to lab_results with attribution metadata.
+ * All three writes (lab_results, send_outs, send_out_transitions) are wrapped in a Dexie transaction.
  */
 export async function importSendOutResult(
   sendOutId: string,
@@ -167,38 +180,58 @@ export async function importSendOutResult(
   const resultId = uuidv4()
   const attribution = `Performed at: ${referenceLab.name}, Accreditation #${referenceLab.accreditationNumber}`
 
-  // Persist the attributed result to lab_results
-  await db.lab_results.put({
-    id: resultId,
-    loincCode: sendOut.testRequested.loincCode,
-    enteredBy: actorId,
-    enteredAt: now,
-    status: 'final',
-    attribution,
-    sourceType: 'reference-lab',
-    sendOutId,
-    referenceLabId: sendOut.referenceLabId,
-    ...resultData,
-  } as any)
+  // Whitelist safe fields from resultData — never spread untrusted external data (C4)
+  const safeResultData: Record<string, unknown> = {}
+  if (resultData.observations !== undefined) safeResultData.observations = resultData.observations
+  if (resultData.notes !== undefined) safeResultData.notes = resultData.notes
+  if (resultData.interpretations !== undefined) safeResultData.interpretations = resultData.interpretations
 
-  // Link result to send-out
-  const updated: SendOut = {
-    ...sendOut,
-    resultId,
-    meta: {
-      lastUpdated: now,
-      versionId: String(Number(sendOut.meta.versionId) + 1),
-    },
-    _ultranos: { ...sendOut._ultranos, hlcTimestamp: serializeHlc(hlc.now()) },
-  }
-  await db.send_outs.put(updated)
+  // Wrap all writes in a single Dexie transaction (C5)
+  await db.transaction('rw', [db.lab_results, db.send_outs, db.send_out_transitions], async () => {
+    // Persist the attributed result to lab_results with required schema fields (C3)
+    await db.lab_results.put({
+      id: resultId,
+      sampleId: sendOut.sampleId,
+      templateId: 'reference-lab-import',
+      templateVersion: '1',
+      loincCode: sendOut.testRequested.loincCode,
+      enteredBy: actorId,
+      enteredAt: now,
+      updatedAt: now,
+      status: 'completed',
+      attribution,
+      sourceType: 'reference-lab',
+      sendOutId,
+      referenceLabId: sendOut.referenceLabId,
+      ...safeResultData,
+    })
 
-  // Transition to results-available if not already there
-  if (sendOut.status !== 'results-available') {
-    await updateSendOutStatus(sendOutId, 'results-available', 'import', actorId)
-  }
+    // Transition status and link resultId in a single write — no double versionId increment (M14)
+    if (sendOut.status !== 'results-available') {
+      await updateSendOutStatus(
+        sendOutId,
+        'results-available',
+        'import',
+        actorId,
+        undefined,
+        { resultId, suppressAudit: true },
+      )
+    } else {
+      // Already at terminal state; just patch the resultId
+      const hlcNow = serializeHlc(hlc.now())
+      await db.send_outs.put({
+        ...sendOut,
+        resultId,
+        meta: {
+          lastUpdated: now,
+          versionId: String(Number(sendOut.meta.versionId) + 1),
+        },
+        _ultranos: { ...sendOut._ultranos, hlcTimestamp: hlcNow },
+      })
+    }
+  })
 
-  reportSendOutAuditEvent({
+  void reportSendOutAuditEvent({
     action: 'SENDOUT_RESULT_IMPORTED',
     sendOutId,
     referenceLabId: sendOut.referenceLabId,
@@ -226,6 +259,9 @@ export function generateReferralForm(
     sample.type?.coding?.[0]?.display ??
     'Unknown'
 
+  // sentAt is an HLC string; parse to ISO 8601 so PDF renderers can format it (H9)
+  const dateSent = hlcToIso(sendOut.sentAt)
+
   return {
     id: sendOut.referralFormId ?? uuidv4(),
     sendOutId: sendOut.id,
@@ -238,19 +274,20 @@ export function generateReferralForm(
     originatingLabName,
     referenceLabName: referenceLab.name,
     referenceLabAccreditationNumber: referenceLab.accreditationNumber,
-    dateSent: sendOut.sentAt,
+    dateSent,
   }
 }
 
 /**
  * Generate a shipping manifest for multiple send-outs going to the same reference lab.
+ * The manifest owns its own ID — send-outs do not carry a manifest back-reference.
  */
 export function generateShippingManifest(
   sendOuts: SendOut[],
   referenceLab: ReferenceLab,
 ): ShippingManifest {
   return {
-    id: sendOuts[0]?.shippingManifestId ?? uuidv4(),
+    id: uuidv4(),
     referenceLabId: referenceLab.id,
     referenceLabName: referenceLab.name,
     sendOutIds: sendOuts.map((s) => s.id),

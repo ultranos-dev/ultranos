@@ -140,7 +140,7 @@ export function StatusUpdateModal({ sendOut, onClose, onSuccess }: StatusUpdateM
             <button
               type="button"
               onClick={handleCancel}
-              disabled={loading || sendOut.status === 'cancelled'}
+              disabled={loading || sendOut.status === 'cancelled' || sendOut.status === 'results-available'}
               className="text-sm text-red-600 underline disabled:opacity-40"
             >
               {t('statusCancelSendOut')}

@@ -13,6 +13,9 @@ interface SendOutModalProps {
   loincCode: string
   loincDisplay: string
   sampleType: string
+  /** Data-minimized patient info — first name + age ONLY (CLAUDE.md Rule #7) */
+  patientFirstName: string
+  patientAge: number
   onClose: () => void
   onSuccess: (sendOutId: string) => void
 }
@@ -22,6 +25,8 @@ export function SendOutModal({
   loincCode,
   loincDisplay,
   sampleType,
+  patientFirstName,
+  patientAge,
   onClose,
   onSuccess,
 }: SendOutModalProps) {
@@ -152,7 +157,7 @@ export function SendOutModal({
           {showPreview && selectedLab && (
             <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm space-y-1">
               <p className="font-medium text-blue-900">{t('sendOutPreviewTitle')}</p>
-              <p><span className="text-blue-700">{t('sendOutPreviewPatient')}</span> {t('sendOutPreviewPatientValue')}</p>
+              <p><span className="text-blue-700">{t('sendOutPreviewPatient')}</span> {patientFirstName}, {patientAge}y</p>
               <p><span className="text-blue-700">{t('sendOutPreviewSampleType')}</span> {sampleType}</p>
               <p><span className="text-blue-700">{t('sendOutPreviewTest')}</span> {loincDisplay} ({loincCode})</p>
               <p><span className="text-blue-700">{t('sendOutPreviewContext')}</span> {clinicalContext || '—'}</p>
