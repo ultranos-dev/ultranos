@@ -1,6 +1,6 @@
 # Story 54.3: Courier & Sample Transport Tracking
 
-Status: review
+Status: done
 
 ## Story
 
@@ -196,3 +196,47 @@ Key implementation decisions:
 ## Change Log
 
 - 2026-05-31: Story 54.3 implemented — courier transport tracking, stability monitoring, manifest generation, courier UI screens, pre-analytical flag display, chain-of-custody integration, offline sync, audit events. 110 new tests added.
+
+---
+
+### Review Findings
+
+Code review conducted 2026-06-10. 3 layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor) across 4 file chunks.
+
+#### Decision-Needed
+
+- [x] [Review][Decision] **D1: Stability UI warning thresholds hardcoded to blood window (4h amber / 6h red)** — Decision: **A** (keep as heuristic). Add a code comment documenting that these are generic blood-window indicators; per-sample safety gate runs in stability-monitor.ts at delivery. → converted to patch P16.
+- [x] [Review][Decision] **D2: CustodyEvent fromActorId/toActorId both set to courierId on pickup and delivery** — Decision: **A** (accept simplified model). Add a code comment documenting the limitation and the reason lab-actor IDs aren't available in the courier-initiated transport context. → converted to patch P17.
+- [x] [Review][Decision] **D3: Transport flag acknowledgement is ephemeral local state — resets on component re-mount** — Decision: **B** (emit audit event on acknowledge; keep ephemeral state). Add `reportTransportAuditEvent({ action: 'TRANSPORT_FLAG_ACKNOWLEDGED' })` on acknowledge button click. Full Dexie-persistence deferred as W8. → converted to patch P18.
+
+#### Patches
+
+- [ ] [Review][Patch] **P1 (CRITICAL-SAFETY): HLC timestamp breaks all stability checks — flags never fire in production** [`stability-monitor.ts:119`, `transport-service.ts:47`, `ActiveTransportCard.tsx:467`, `CourierDeliveryScreen.tsx:614`] — `serializeHlc(hlc.now())` writes HLC strings (e.g. `"1748123456789-0-abc123"`) as `pickupTimestamp`. Both `Date.parse()` in stability-monitor and `new Date().getTime()` in the UI components return NaN on HLC format. All stability flags silently suppressed; UI warnings never show. All 51 stability tests pass because they use ISO strings — the bug is invisible to the test suite.
+- [ ] [Review][Patch] **P2 (CRITICAL-SAFETY): "Begin Processing" button not gated on flag acknowledgement** [`SampleDetailView.tsx:298-308`] — Button is only disabled when `isTransitioning`. `transportFlagsAcknowledged` is checked to hide the banner but NOT to block the "Begin Processing" button. A technician can start processing a flagged sample without acknowledging the pre-analytical concern.
+- [ ] [Review][Patch] **P3: `pre-analytical-flag.test.tsx` missing `getActiveLock` mock — tests produce false results** [`src/__tests__/pre-analytical-flag.test.tsx:199-218`] — `SampleDetailView` calls `getActiveLock` from `@/lib/db` in a useEffect, but the test only mocks `getCustodyEventsForSample` and `getVerificationBySampleId`. `getActiveLock` hits real Dexie/IndexedDB (unavailable in jsdom) and the tests pass unreliably.
+- [ ] [Review][Patch] **P4: Missing barrel exports — `transport.ts` and `custody-event.ts` not re-exported from `types/index.ts`** [`apps/lab-lite/src/types/index.ts`] — Dev notes claim `export * from './transport'` was added, but the file in the diff contains 5 other exports and omits both `./transport` and `./custody-event`. All consumers importing from `@/types` barrel will fail to resolve these types.
+- [ ] [Review][Patch] **P5: `conditionAtDelivery: 'damaged'` generates no `TransportFlag`** [`transport-service.ts:154-167`] — `conditionFlags` are only generated for `'temperature-excursion'`. Damaged samples get `status: 'delivered'` with no flag attached to the specimen record — the receiving technician sees no pre-analytical warning.
+- [ ] [Review][Patch] **P6: `recordDelivery` has no idempotency guard — double delivery duplicates flags and audit events** [`transport-service.ts:118`] — No check that `existing.status === 'in-transit'` before proceeding. In offline-first with retry, a second call re-runs all stability checks, re-appends flags to specimens, and emits duplicate audit events.
+- [ ] [Review][Patch] **P7: No Dexie transaction in `startTransport`/`recordDelivery` — partial state on IndexedDB failure** [`transport-service.ts:75, 118`] — Session is persisted before custody events are written. If any `custody_events.put()` or `attachPreAnalyticalFlag()` throws (e.g. quota exceeded), the session exists in a partial state with no timeline entries.
+- [ ] [Review][Patch] **P8: `actorId` absent from all audit event payloads — violates Task 11** [`audit-client.ts`, `transport-service.ts`] — Task 11 specifies `actorId` as a required audit payload field. All four event types (`TRANSPORT_STARTED`, `TRANSPORT_DELIVERED`, `TRANSPORT_STABILITY_FLAG`, `TRANSPORT_MANIFEST_GENERATED`) emit without it.
+- [ ] [Review][Patch] **P9: `reportManifestGenerated()` not called inside `generateManifest()` — callers can silently skip audit** [`transport-manifest.ts:25`] — The audit function is exported separately and must be called manually. `CourierPickupScreen` does call it correctly, but any future caller of `generateManifest()` alone produces an unaudited manifest.
+- [ ] [Review][Patch] **P10: `getToken()` return value not passed to `syncFn` in `drainTransportSessions`** [`upload-queue-worker.ts`] — Token is fetched (`await deps.getToken()`) but the result is discarded. `syncFn` receives no auth credential.
+- [ ] [Review][Patch] **P11: All-or-nothing batch sync — one failure marks all pending sessions as failed** [`upload-queue-worker.ts`] — `deps.syncFn(pending)` is called once for the entire array. A rejection marks every session as `'failed'` regardless of which one caused the error.
+- [ ] [Review][Patch] **P12: `versionId` increment skips '1' when current versionId is '0'** [`transport-service.ts:139`] — `parseInt('0', 10) || 1` evaluates to `1` (because `0` is falsy), then `+1` gives `'2'`. Version '0' → '2' is produced instead of '0' → '1'.
+- [ ] [Review][Patch] **P13: Missing specimen silently excluded from stability check — no flag generated** [`transport-service.ts:147`] — `bulkGet` returns `undefined` slots for IDs not in IndexedDB. These are silently filtered out; no flag is generated for that sample even though it's in the session. A specimen missing from Dexie (not yet accessioned, evicted) produces no pre-analytical warning.
+- [ ] [Review][Patch] **P14: `generateManifest()` called with empty `samples` array in `CourierPickupScreen`** [`CourierPickupScreen.tsx:1129`] — `generateManifest(session, [], ...)` always produces a manifest with an empty per-sample list. The sample count is shown but no individual label entries appear, defeating the purpose of a chain-of-custody manifest.
+- [ ] [Review][Patch] **P15: `drainTransportSessions` swallows error with no logging or audit** [`upload-queue-worker.ts`] — `catch {}` block has no bound variable and emits no log or audit event. Failure reason is permanently lost; there is no observable signal for debugging or monitoring.
+- [ ] [Review][Patch] **P16: Document stability UI thresholds as heuristic** [`CourierDeliveryScreen.tsx:657`, `ActiveTransportCard.tsx:482`] — Add comment: these are generic blood-window indicators (4h amber / 6h red). Per-sample stability gate runs in stability-monitor.ts at delivery time.
+- [ ] [Review][Patch] **P17: Document simplified custody actor model** [`transport-service.ts:74-91`, `transport-service.ts:198-211`] — Add comment: fromActorId/toActorId are both set to courierId because lab-actor IDs are not available in a courier-initiated transport. Full actor-handoff tracking deferred pending Epic 54 auth model.
+- [ ] [Review][Patch] **P18: Emit audit event on transport flag acknowledgement** [`SampleDetailView.tsx:194`] — Add `reportTransportAuditEvent({ action: 'TRANSPORT_FLAG_ACKNOWLEDGED', transportSessionId, courierId, actorId })` in the acknowledge button `onClick` handler.
+
+#### Deferred
+
+- [x] [Review][Defer] **W1: i18n strings hardcoded English in all three transport UI components** — deferred, documented as TODO comments in all files; tracked separately
+- [x] [Review][Defer] **W2: `mapSampleTypeToCategory` conservative fallback undocumented** — deferred, pre-existing design choice; comment in code describes intent
+- [x] [Review][Defer] **W3: `SampleStabilityWindow` typed as `Record<string, number>` instead of narrowed key union** — deferred, pre-existing; minor type safety improvement
+- [x] [Review][Defer] **W4: `getTransportsByCourier` helper added outside Task 2 spec** — deferred, functional and used by service layer
+- [x] [Review][Defer] **W5: Location IDs shown as raw strings in courier UI** — deferred, requires location resolver not in story scope
+- [x] [Review][Defer] **W6: `⚠` Unicode character instead of Lucide icon in transport flag banner** [`SampleDetailView.tsx:179`] — deferred, cosmetic; allergy display uses similar pattern
+- [x] [Review][Defer] **W7: `labSampleId` PHI traceability concern in manifest** — deferred, labSampleId is lab-assigned label number by definition, not patient-derived
+- [x] [Review][Defer] **W8: Full Dexie-backed acknowledgement persistence for transport flags** — deferred from D3 resolution. Write `acknowledgedAt` to `_ultranos.transportFlags[*]` + schema migration. Implement when multi-lab auth model (Epic 54) is more complete.

@@ -6,6 +6,7 @@ import type { FhirSpecimen, PatientVerificationRecord } from '@ultranos/shared-t
 import type { CustodyEvent } from '@/types/custody-event'
 import { transitionSampleStatus } from '@/lib/sample-service'
 import { getCustodyEventsForSample, getVerificationBySampleId, getActiveLock } from '@/lib/db'
+import { reportTransportAuditEvent } from '@/lib/audit-client'
 import type { SampleLock } from '@/lib/db'
 import { acquireLock, releaseLock } from '@/lib/sample-lock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -185,7 +186,16 @@ export function SampleDetailView({
           </div>
           <button
             type="button"
-            onClick={() => setTransportFlagsAcknowledged(true)}
+            onClick={() => {
+              setTransportFlagsAcknowledged(true)
+              // P18: emit audit event on flag acknowledgment (CLAUDE.md Rule #6)
+              reportTransportAuditEvent({
+                action: 'TRANSPORT_FLAG_ACKNOWLEDGED',
+                transportSessionId: specimen.id,
+                courierId: actorId,
+                sampleCount: specimen._ultranos.transportFlags?.length ?? 0,
+              })
+            }}
             className="w-full rounded-lg border border-red-300 bg-card px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
             data-testid="acknowledge-transport-flag-button"
           >
@@ -293,7 +303,7 @@ export function SampleDetailView({
               <button
                 type="button"
                 onClick={handleBeginProcessing}
-                disabled={isTransitioning}
+                disabled={isTransitioning || (!transportFlagsAcknowledged && !!(specimen._ultranos.transportFlags?.length))}
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 data-testid="begin-processing-button"
               >

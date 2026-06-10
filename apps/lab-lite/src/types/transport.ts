@@ -15,8 +15,8 @@ export interface TransportSession {
   originLocationId: string       // FK to lab_locations
   destinationLocationId: string  // FK to lab_locations
   status: 'in-transit' | 'delivered' | 'flagged'
-  pickupTimestamp: string        // HLC serialized
-  deliveryTimestamp: string | null // HLC serialized, null until delivered
+  pickupTimestamp: string        // ISO 8601 wall-clock (used for stability window calculations)
+  deliveryTimestamp: string | null // ISO 8601 wall-clock, null until delivered
   pickupTemperature: number | null  // Celsius, optional
   deliveryTemperature: number | null // Celsius, optional
   sampleIds: string[]            // array of FhirSpecimen IDs

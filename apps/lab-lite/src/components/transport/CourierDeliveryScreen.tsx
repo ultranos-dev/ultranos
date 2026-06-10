@@ -67,8 +67,9 @@ export function CourierDeliveryScreen({ session, onDelivered }: CourierDeliveryS
   // Truncate session ID for display — no PHI, just cosmetic shortening
   const shortSessionId = session.id.length > 12 ? `${session.id.slice(0, 8)}…` : session.id
 
-  // Stability warning level based on elapsed hours
-  // Heuristic per task spec: > 4h → amber, > 6h → red
+  // P16: Stability warning level — conservative heuristic based on the blood stability window (6h,
+  // the tightest common window). Amber at 4h gives staff a 2-hour warning before blood exceeds its
+  // window. Per-specimen checks run in recordDelivery() using DEFAULT_STABILITY_WINDOWS.
   const stabilityWarningLevel: 'none' | 'amber' | 'red' =
     elapsedHours > 6 ? 'red' : elapsedHours > 4 ? 'amber' : 'none'
 

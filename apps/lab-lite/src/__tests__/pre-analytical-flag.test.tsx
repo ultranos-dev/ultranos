@@ -15,6 +15,27 @@ import { SampleDetailView } from '../components/samples/SampleDetailView'
 vi.mock('@/lib/db', () => ({
   getCustodyEventsForSample: vi.fn(() => Promise.resolve([])),
   getVerificationBySampleId: vi.fn(() => Promise.resolve(null)),
+  getActiveLock: vi.fn(() => Promise.resolve(null)),
+}))
+
+// Mock sample-lock-service (SampleDetailView acquires/releases locks)
+vi.mock('@/lib/sample-lock-service', () => ({
+  acquireLock: vi.fn(() => Promise.resolve({ success: true })),
+  releaseLock: vi.fn(() => Promise.resolve()),
+  requestRelease: vi.fn(() => Promise.resolve()),
+}))
+
+// Mock LockIndicator and SampleLockBlocker — visual components not under test here
+vi.mock('@/components/samples/LockIndicator', () => ({
+  LockIndicator: () => React.createElement('span', { 'data-testid': 'lock-indicator' }),
+}))
+vi.mock('@/components/samples/SampleLockBlocker', () => ({
+  SampleLockBlocker: () => React.createElement('div', { 'data-testid': 'lock-blocker' }),
+}))
+
+// Mock audit client — prevent real audit emissions during tests
+vi.mock('@/lib/audit-client', () => ({
+  reportTransportAuditEvent: vi.fn(),
 }))
 
 // Mock next-intl
@@ -152,5 +173,21 @@ describe('SampleDetailView — pre-analytical transport flag banner', () => {
     render(<SampleDetailView specimen={makeSpecimenNoFlags(false)} />)
 
     expect(screen.queryByTestId('pre-analytical-flag-banner')).not.toBeInTheDocument()
+  })
+
+  it('Begin Processing button is disabled while transport flags are unacknowledged', () => {
+    render(<SampleDetailView specimen={makeSpecimenWithFlags()} />)
+
+    const btn = screen.getByTestId('begin-processing-button')
+    expect(btn).toBeDisabled()
+  })
+
+  it('Begin Processing button is enabled after transport flags are acknowledged', () => {
+    render(<SampleDetailView specimen={makeSpecimenWithFlags()} />)
+
+    fireEvent.click(screen.getByTestId('acknowledge-transport-flag-button'))
+
+    const btn = screen.getByTestId('begin-processing-button')
+    expect(btn).not.toBeDisabled()
   })
 })

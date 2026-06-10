@@ -41,7 +41,7 @@ export function generateManifest(
     sampleType: specimen.type?.coding?.[0]?.display ?? 'Unknown',
   }))
 
-  return {
+  const manifest: TransportManifest = {
     sessionId: session.id,
     courierId: session.courierId,
     originName: locations.origin.name,
@@ -51,6 +51,11 @@ export function generateManifest(
     samples: manifestSamples,
     sampleCount: session.sampleCount,
   }
+
+  // P9: Emit audit inside generateManifest so callers can't forget it.
+  reportManifestGenerated(session.id, session.courierId, session.sampleCount)
+
+  return manifest
 }
 
 /**

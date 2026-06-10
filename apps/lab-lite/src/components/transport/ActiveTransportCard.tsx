@@ -37,14 +37,21 @@ function formatElapsed(elapsedHours: number): string {
   return `${hours}h ${minutes}m`
 }
 
-/** Determine the stability color based on elapsed hours and session status. */
+/**
+ * Determine the stability color based on elapsed hours and session status.
+ *
+ * P16: Thresholds are a conservative heuristic based on the blood stability window (6h).
+ * Blood is the most common and most time-sensitive specimen type. The amber threshold
+ * (4h) gives lab staff a 2-hour warning before the blood window closes.
+ * Per-specimen stability checks run in recordDelivery() using DEFAULT_STABILITY_WINDOWS.
+ */
 function getStabilityColor(
   elapsedHours: number,
   status: TransportSession['status'],
 ): 'green' | 'amber' | 'red' {
   if (status === 'flagged') return 'red'
-  if (elapsedHours > 6) return 'red'
-  if (elapsedHours >= 4) return 'amber'
+  if (elapsedHours > 6) return 'red'   // beyond blood window
+  if (elapsedHours >= 4) return 'amber' // 2h warning before blood window closes
   return 'green'
 }
 

@@ -16,8 +16,9 @@
 import { useState } from 'react'
 import { Truck, Scan, Thermometer, CheckCircle, AlertCircle, Package, ClipboardList } from '@ultranos/ui-kit/icons'
 import { startTransport } from '@/lib/transport-service'
-import { generateManifest, renderManifestText, reportManifestGenerated } from '@/lib/transport-manifest'
+import { generateManifest, renderManifestText } from '@/lib/transport-manifest'
 import type { StartTransportInput } from '@/types/transport'
+import type { FhirSpecimen } from '@ultranos/shared-types'
 
 type Step = 'courier-id' | 'destination' | 'scan-samples' | 'temperature' | 'summary' | 'success'
 
@@ -260,14 +261,20 @@ export function CourierPickupScreen({
       }
       const session = await startTransport(input)
 
-      // Build manifest with stub location names (real names would require DB lookup)
+      // P14: Build stub specimens so generateManifest can produce manifest entries.
+      // Full specimen records aren't available at pickup time (offline scenario);
+      // sampleIds are the label numbers scanned by the courier.
       // TODO: resolve actual location names via getLocationById()
-      const manifest = generateManifest(session, [], {
+      const stubSamples = session.sampleIds.map((labelId) => ({
+        _ultranos: { labSampleId: labelId },
+        type: undefined,
+      } as unknown as FhirSpecimen))
+      // P9: reportManifestGenerated is called inside generateManifest — no manual call needed.
+      const manifest = generateManifest(session, stubSamples, {
         origin: { id: originLocationId, name: originLocationId } as never,
         destination: { id: selectedDestination, name: selectedDestination } as never,
       })
       const text = renderManifestText(manifest)
-      reportManifestGenerated(session.id, session.courierId, session.sampleCount)
 
       setManifestText(text)
       setStep('success')

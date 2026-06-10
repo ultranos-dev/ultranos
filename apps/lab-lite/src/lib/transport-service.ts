@@ -45,7 +45,10 @@ import type { CustodyEvent } from '@/types/custody-event'
  */
 export async function startTransport(input: StartTransportInput): Promise<TransportSession> {
   const sessionId = uuidv4()
-  const now = serializeHlc(hlc.now())
+  // P1: Use ISO 8601 wall-clock timestamps for pickup/delivery — these are used for
+  // stability window calculations (Date.parse). HLC is used for CustodyEvent.timestamp
+  // (causal ordering for sync). Mixing them caused Date.parse to return NaN on HLC strings.
+  const pickupTimestamp = new Date().toISOString()
 
   const session: TransportSession = {
     id: sessionId,
@@ -53,7 +56,7 @@ export async function startTransport(input: StartTransportInput): Promise<Transp
     originLocationId: input.originLocationId,
     destinationLocationId: input.destinationLocationId,
     status: 'in-transit',
-    pickupTimestamp: now,
+    pickupTimestamp,
     deliveryTimestamp: null,
     pickupTemperature: input.pickupTemperature ?? null,
     deliveryTemperature: null,
@@ -72,24 +75,31 @@ export async function startTransport(input: StartTransportInput): Promise<Transp
     },
   }
 
-  await createTransportSession(session)
-
-  // Create a custody pickup event for each sample (Story 42.3 timeline integration)
+  // P7: Wrap session creation and custody events in a transaction to prevent partial state.
+  // If any custody_events.put fails (e.g. quota exceeded), the whole operation rolls back.
   const db = getDb()
-  for (const sampleId of input.sampleIds) {
-    const custodyEvent: CustodyEvent = {
-      id: uuidv4(),
-      sampleId,
-      eventType: 'transport-pickup',
-      fromActorId: input.courierId,
-      toActorId: input.courierId, // courier takes custody from origin
-      timestamp: serializeHlc(hlc.now()),
-      location: input.originLocationId,
-      transportSessionId: sessionId,
-      temperature: input.pickupTemperature ?? undefined,
+  await db.transaction('rw', [db.transport_sessions, db.custody_events], async () => {
+    await db.transport_sessions.add(session)
+
+    // Create a custody pickup event for each sample (Story 42.3 timeline integration)
+    for (const sampleId of input.sampleIds) {
+      const custodyEvent: CustodyEvent = {
+        id: uuidv4(),
+        sampleId,
+        eventType: 'transport-pickup',
+        // P17: Both actor fields set to courierId — simplified model for courier-initiated transport.
+        // Lab-actor handoff tracking (origin lab actor → courier) deferred pending Epic 54 auth model
+        // where the sending lab's practitioner ID will be available in the transport context.
+        fromActorId: input.courierId,
+        toActorId: input.courierId,
+        timestamp: serializeHlc(hlc.now()), // HLC for causal ordering in the timeline
+        location: input.originLocationId,
+        transportSessionId: sessionId,
+        temperature: input.pickupTemperature ?? undefined,
+      }
+      await db.custody_events.put(custodyEvent)
     }
-    await db.custody_events.put(custodyEvent)
-  }
+  })
 
   // Emit audit — CLAUDE.md Rule #6: every access to sample data emits an audit event
   reportTransportAuditEvent({
@@ -125,7 +135,17 @@ export async function recordDelivery(
     throw new Error('Transport session not found')
   }
 
-  const deliveryTimestamp = serializeHlc(hlc.now())
+  // P6: Idempotency guard — if already delivered or flagged, return without side effects.
+  // In offline-first with retry, this function may be called more than once for the same session.
+  if (existing.status !== 'in-transit') {
+    return existing
+  }
+
+  // P1: ISO 8601 wall-clock timestamp for stability calculations (not HLC — see startTransport)
+  const deliveryTimestamp = new Date().toISOString()
+
+  // P12: versionId increment — move || 1 outside addition so '0' → '1', not '0' → '2'.
+  const nextVersionId = String((parseInt(existing.meta.versionId, 10) + 1) || 1)
 
   // Build the updated session state for stability checking
   const updatedSession: TransportSession = {
@@ -136,39 +156,45 @@ export async function recordDelivery(
     conditionAtDelivery: input.conditionAtDelivery,
     meta: {
       lastUpdated: new Date().toISOString(),
-      versionId: String((parseInt(existing.meta.versionId, 10) || 1) + 1),
+      versionId: nextVersionId,
     },
   }
 
-  // Load specimens for stability check
+  // Load specimens for stability check — read BEFORE the write transaction
   const db = getDb()
   const specimensRaw = await db.samples.bulkGet(existing.sampleIds)
-  // bulkGet may return undefined slots for missing specimens — filter those out
+  // bulkGet may return undefined slots for missing specimens — filter those out.
+  // P13: Missing specimens are excluded from stability checks (offline tolerance — specimen
+  // may not yet be accessioned at this location). The missing count is included in the audit
+  // event so the receiving tech can investigate.
   const specimens = specimensRaw.filter((s): s is NonNullable<typeof s> => s != null)
+  const missingSpecimenCount = existing.sampleIds.length - specimens.length
 
-  // Run stability window check using the real stability-monitor (not mocked in tests)
+  // Run stability window check
   const stabilityFlags = checkStabilityWindows(updatedSession, specimens)
 
-  // If conditionAtDelivery signals temperature excursion, generate a flag for each sample
-  // (in addition to any stability-exceeded flags from checkStabilityWindows)
+  // P5: Generate condition flags for both 'temperature-excursion' AND 'damaged' conditions.
+  // Previously only 'temperature-excursion' was handled; damaged samples passed through silently.
   const conditionFlags: TransportFlag[] =
-    input.conditionAtDelivery === 'temperature-excursion'
+    (input.conditionAtDelivery === 'temperature-excursion' || input.conditionAtDelivery === 'damaged')
       ? existing.sampleIds.map((sampleId) => {
           const specimen = specimens.find((s) => s.id === sampleId)
           const labSampleId = specimen?._ultranos.labSampleId ?? sampleId
+          const message = input.conditionAtDelivery === 'damaged'
+            ? `Sample ${labSampleId} flagged: damaged condition reported at delivery.`
+            : `Sample ${labSampleId} flagged: temperature excursion reported at delivery.`
           return {
             sampleId,
             labSampleId,
-            flagType: 'temperature-excursion' as const,
-            message: `Sample ${labSampleId} flagged: temperature excursion reported at delivery.`,
+            flagType: input.conditionAtDelivery as 'temperature-excursion' | 'damaged',
+            message,
             timestamp: new Date().toISOString(),
           }
         })
       : []
 
-  // Merge flags (stability-exceeded first, then temperature-excursion from condition)
-  // De-duplicate by sampleId+flagType to avoid double-flagging a sample that
-  // independently triggered both checks
+  // Merge flags (stability-exceeded first, then condition flags)
+  // De-duplicate by sampleId+flagType to avoid double-flagging
   const allFlagsMap = new Map<string, TransportFlag>()
   for (const flag of [...stabilityFlags, ...conditionFlags]) {
     const key = `${flag.sampleId}:${flag.flagType}`
@@ -184,36 +210,40 @@ export async function recordDelivery(
     updatedSession.flags = allFlags
   }
 
-  // Persist the updated session
-  await updateTransportSession(sessionId, {
-    status: updatedSession.status,
-    deliveryTimestamp: updatedSession.deliveryTimestamp,
-    deliveryTemperature: updatedSession.deliveryTemperature,
-    conditionAtDelivery: updatedSession.conditionAtDelivery,
-    flags: updatedSession.flags,
-    meta: updatedSession.meta,
-  })
+  // P7: Wrap all writes in a transaction to prevent partial state on IndexedDB failure.
+  // Session update, custody events, and flag attachments are atomic.
+  await db.transaction('rw', [db.transport_sessions, db.custody_events, db.samples], async () => {
+    await updateTransportSession(sessionId, {
+      status: updatedSession.status,
+      deliveryTimestamp: updatedSession.deliveryTimestamp,
+      deliveryTemperature: updatedSession.deliveryTemperature,
+      conditionAtDelivery: updatedSession.conditionAtDelivery,
+      flags: updatedSession.flags,
+      meta: updatedSession.meta,
+    })
 
-  // Create custody delivery events for each sample (Story 42.3 timeline integration)
-  for (const sampleId of existing.sampleIds) {
-    const custodyEvent: CustodyEvent = {
-      id: uuidv4(),
-      sampleId,
-      eventType: 'transport-delivery',
-      fromActorId: existing.courierId,
-      toActorId: existing.courierId, // courier delivers — receiving tech records separately
-      timestamp: serializeHlc(hlc.now()),
-      location: existing.destinationLocationId,
-      transportSessionId: sessionId,
-      temperature: input.deliveryTemperature ?? undefined,
+    // Create custody delivery events for each sample (Story 42.3 timeline integration)
+    for (const sampleId of existing.sampleIds) {
+      const custodyEvent: CustodyEvent = {
+        id: uuidv4(),
+        sampleId,
+        eventType: 'transport-delivery',
+        // P17: See startTransport for actor model explanation.
+        fromActorId: existing.courierId,
+        toActorId: existing.courierId,
+        timestamp: serializeHlc(hlc.now()), // HLC for causal ordering
+        location: existing.destinationLocationId,
+        transportSessionId: sessionId,
+        temperature: input.deliveryTemperature ?? undefined,
+      }
+      await db.custody_events.put(custodyEvent)
     }
-    await db.custody_events.put(custodyEvent)
-  }
 
-  // Attach pre-analytical flags to individual sample records
-  for (const flag of allFlags) {
-    await attachPreAnalyticalFlag(flag.sampleId, flag)
-  }
+    // Attach pre-analytical flags to individual sample records
+    for (const flag of allFlags) {
+      await attachPreAnalyticalFlag(flag.sampleId, flag)
+    }
+  })
 
   // Emit audit events — CLAUDE.md Rule #6
   if (allFlags.length > 0) {
@@ -224,6 +254,7 @@ export async function recordDelivery(
       sampleCount: existing.sampleCount,
       flagCount: allFlags.length,
       flagTypes: [...new Set(allFlags.map((f) => f.flagType))],
+      ...(missingSpecimenCount > 0 ? { missingSpecimenCount } : {}),
     })
   }
 
@@ -232,6 +263,7 @@ export async function recordDelivery(
     transportSessionId: sessionId,
     courierId: existing.courierId,
     sampleCount: existing.sampleCount,
+    ...(missingSpecimenCount > 0 ? { missingSpecimenCount } : {}),
   })
 
   return updatedSession
