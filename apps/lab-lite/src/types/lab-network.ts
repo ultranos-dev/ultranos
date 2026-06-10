@@ -64,11 +64,10 @@ export interface NetworkStatusSnapshot {
 /** Aggregated metrics across all locations in the network. */
 export interface NetworkMetrics {
   totalSamplesToday: number
-  /** locationId -> turnaround time in minutes */
-  avgTATByLocation: Record<string, number>
   /** locationId -> pending result count */
   pendingResultsByLocation: Record<string, number>
-  stockoutAlerts: number
+  /** Count of upload queue items with 'failed' status — indicates connectivity issues */
+  syncFailures: number
   /** ISO 8601 timestamp indicating when these metrics were computed */
   asOf: string
 }

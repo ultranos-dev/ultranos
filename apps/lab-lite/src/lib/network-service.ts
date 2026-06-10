@@ -86,8 +86,8 @@ export async function updateLocation(id: string, updates: Partial<LabLocation>):
     ...updates,
     id: existing.id, // id is immutable
     meta: {
-      ...existing.meta,
       lastUpdated: now,
+      versionId: String((parseInt(existing.meta.versionId, 10) || 1) + 1),
     },
     _ultranos: {
       ...existing._ultranos,
@@ -126,8 +126,8 @@ export async function deactivateLocation(id: string, actorId: string): Promise<v
     ...existing,
     status: 'inactive',
     meta: {
-      ...existing.meta,
       lastUpdated: now,
+      versionId: String((parseInt(existing.meta.versionId, 10) || 1) + 1),
     },
     _ultranos: {
       ...existing._ultranos,
@@ -168,8 +168,8 @@ export async function setLocationMode(
     ...existing,
     mode,
     meta: {
-      ...existing.meta,
       lastUpdated: now,
+      versionId: String((parseInt(existing.meta.versionId, 10) || 1) + 1),
     },
     _ultranos: {
       ...existing._ultranos,

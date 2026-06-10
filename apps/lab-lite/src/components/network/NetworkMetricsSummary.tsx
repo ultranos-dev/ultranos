@@ -55,23 +55,13 @@ export function NetworkMetricsSummary({ metrics }: NetworkMetricsSummaryProps) {
   // Sum pending results across all locations
   const totalPending = Object.values(metrics.pendingResultsByLocation).reduce((a, b) => a + b, 0)
 
-  // Average TAT across all locations (show "—" if no data)
-  const tatValues = Object.values(metrics.avgTATByLocation)
-  const avgTAT =
-    tatValues.length > 0
-      ? Math.round(tatValues.reduce((a, b) => a + b, 0) / tatValues.length)
-      : null
-
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" role="region" aria-label={t('networkMetrics')}>
+    // D2→P: TAT card removed (avgTATByLocation removed from type; proxy was unreliable)
+    // 3 cards in a 3-col grid
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="region" aria-label={t('networkMetrics')}>
       <MetricCard
         label={t('totalSamplesToday')}
         value={metrics.totalSamplesToday}
-        asOf={metrics.asOf}
-      />
-      <MetricCard
-        label={t('networkAvgTAT')}
-        value={avgTAT != null ? `${avgTAT} min` : '—'}
         asOf={metrics.asOf}
       />
       <MetricCard
@@ -81,10 +71,11 @@ export function NetworkMetricsSummary({ metrics }: NetworkMetricsSummaryProps) {
         warnThreshold={10}
         asOf={metrics.asOf}
       />
+      {/* D1→P: Renamed from stockoutAlerts → syncFailures */}
       <MetricCard
-        label={t('stockoutAlerts')}
-        value={metrics.stockoutAlerts}
-        numericValue={metrics.stockoutAlerts}
+        label={t('syncFailures')}
+        value={metrics.syncFailures}
+        numericValue={metrics.syncFailures}
         warnThreshold={0}
         asOf={metrics.asOf}
       />

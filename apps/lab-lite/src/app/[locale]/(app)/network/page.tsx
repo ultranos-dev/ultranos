@@ -7,6 +7,9 @@ import { aggregateNetworkMetrics, getLocationsWithStatus } from '@/lib/network-m
 import { NetworkMetricsSummary } from '@/components/network/NetworkMetricsSummary'
 import { LocationCard } from '@/components/network/LocationCard'
 import { LocationManagementModal } from '@/components/network/LocationManagementModal'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Skeleton } from '@ultranos/ui-kit/components/ui/skeleton'
+import { MapPin } from '@ultranos/ui-kit/icons'
 import type { NetworkMetrics, LabLocation, NetworkStatusSnapshot } from '@/types/lab-network'
 import { LabRole } from '@ultranos/shared-types'
 
@@ -67,7 +70,28 @@ export default function NetworkDashboardPage() {
     }
   }, [hasAccess, loadData])
 
-  if (!session) return null
+  // P11: Show skeleton while session is hydrating (session null = not yet loaded)
+  if (!session) {
+    return (
+      <div className="flex flex-col gap-4" aria-busy="true">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-28" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-40" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   if (!hasAccess) return <AccessDenied t={t} />
 
   return (
@@ -78,7 +102,7 @@ export default function NetworkDashboardPage() {
         <button
           type="button"
           onClick={() => setModal({ open: true })}
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+          className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
         >
           {t('addLocation')}
         </button>
@@ -86,7 +110,7 @@ export default function NetworkDashboardPage() {
 
       {/* Error banner */}
       {error && (
-        <div role="alert" className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+        <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
           <button type="button" onClick={() => void loadData()} className="ms-2 underline">
             {t('retry')}
@@ -98,7 +122,7 @@ export default function NetworkDashboardPage() {
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-busy="true">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg border border-border bg-card" />
+            <Skeleton key={i} className="h-24" />
           ))}
         </div>
       ) : metrics ? (
@@ -107,26 +131,24 @@ export default function NetworkDashboardPage() {
 
       {/* Location cards */}
       <section aria-label={t('locations')}>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {/* P13: removed mb-3 — flex gap-4 handles spacing */}
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {t('locations')}
         </h2>
         {loading ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 animate-pulse rounded-lg border border-border bg-card" />
+              <Skeleton key={i} className="h-40" />
             ))}
           </div>
         ) : locations.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border py-12 text-center">
-            <p className="text-sm text-muted-foreground">{t('noLocations')}</p>
-            <button
-              type="button"
-              onClick={() => setModal({ open: true })}
-              className="mt-3 text-sm text-blue-600 underline"
-            >
-              {t('addFirstLocation')}
-            </button>
-          </div>
+          // P12: EmptyState instead of ad-hoc markup
+          <EmptyState
+            icon={MapPin}
+            title={t('noLocations')}
+            description={t('noLocationsDesc')}
+            action={{ label: t('addFirstLocation'), onClick: () => setModal({ open: true }) }}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {locations.map((loc) => {
@@ -145,6 +167,7 @@ export default function NetworkDashboardPage() {
                   key={loc.locationId}
                   location={labLocation}
                   snapshot={loc.snapshot}
+                  onEdit={(location) => setModal({ open: true, location })}
                 />
               )
             })}

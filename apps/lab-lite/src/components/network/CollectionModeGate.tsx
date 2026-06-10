@@ -34,8 +34,8 @@ export function CollectionModeGate({ children, fallback = null }: CollectionMode
     }
   }, [])
 
-  // While checking, render children (optimistic — avoids flash of hidden content)
-  if (isCollectionOnly === null) return <>{children}</>
+  // While checking, render fallback (safe default — avoids exposing restricted features during load)
+  if (isCollectionOnly === null) return <>{fallback}</>
 
   // Collection-only mode: show fallback instead of restricted content
   if (isCollectionOnly) return <>{fallback}</>

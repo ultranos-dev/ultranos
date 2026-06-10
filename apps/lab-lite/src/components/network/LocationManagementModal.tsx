@@ -1,12 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { X } from '@ultranos/ui-kit/icons'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@ultranos/ui-kit/components/ui/dialog'
 import type { LabLocation, CreateLocationInput } from '@/types/lab-network'
 import {
   addSatelliteLocation,
   updateLocation,
+  setLocationMode,
   deactivateLocation,
 } from '@/lib/network-service'
 import { getActiveLocations } from '@/lib/db'
@@ -51,6 +58,12 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
 
   const isEdit = editLocation != null
 
+  // P10: Load parent lab options on mount for existing satellites (type select is disabled)
+  useEffect(() => {
+    if (isEdit && editLocation?.type === 'satellite') void loadMainLabs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   async function loadMainLabs() {
     if (mainLabsLoaded) return
     try {
@@ -84,13 +97,24 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
     setSaving(true)
     try {
       if (isEdit) {
+        // P7: Route mode changes through setLocationMode to emit NETWORK_MODE_CHANGED
+        const modeChanged = form.mode !== editLocation.mode
         const updates: Partial<LabLocation> = {
           name: form.name,
-          mode: form.mode,
           address: form.address || undefined,
           parentLabId: form.parentLabId || undefined,
         }
-        await updateLocation(editLocation.id, updates)
+        // Only call updateLocation if non-mode fields changed
+        const nonModeChanged =
+          form.name !== editLocation.name ||
+          (form.address || undefined) !== (editLocation.address ?? undefined) ||
+          (form.parentLabId || undefined) !== (editLocation.parentLabId ?? undefined)
+        if (nonModeChanged) {
+          await updateLocation(editLocation.id, updates)
+        }
+        if (modeChanged) {
+          await setLocationMode(editLocation.id, form.mode, actorId)
+        }
       } else {
         const input: CreateLocationInput = {
           name: form.name,
@@ -124,32 +148,18 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="location-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-    >
-      <div className="w-full max-w-md rounded-xl bg-card shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id="location-modal-title" className="text-base font-semibold text-foreground">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
             {isEdit ? t('editLocation') : t('addLocation')}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('close')}
-            className="rounded p-1 text-muted-foreground hover:text-muted-foreground"
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Form */}
-        <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4 px-5 py-5">
+        <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">
           {error && (
-            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -165,7 +175,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -179,7 +189,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               value={form.type}
               disabled={isEdit}
               onChange={(e) => handleTypeChange(e.target.value as FormState['type'])}
-              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-muted/30"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-muted/30"
             >
               <option value="main">{t('typeMain')}</option>
               <option value="satellite">{t('typeSatellite')}</option>
@@ -195,7 +205,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               id="loc-mode"
               value={form.mode}
               onChange={(e) => setForm((f) => ({ ...f, mode: e.target.value as FormState['mode'] }))}
-              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="full">{t('modeFull')}</option>
               <option value="collection-only">{t('modeCollectionOnly')}</option>
@@ -212,7 +222,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
               type="text"
               value={form.address}
               onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -227,7 +237,7 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
                 value={form.parentLabId}
                 required
                 onChange={(e) => setForm((f) => ({ ...f, parentLabId: e.target.value }))}
-                className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('selectParentLab')}</option>
                 {mainLabOptions.map((lab) => (
@@ -244,21 +254,21 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="mt-2 rounded-md border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="mt-2 rounded-md border border-destructive/50 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
             >
               {t('deactivateLocation')}
             </button>
           )}
 
           {confirming && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3">
-              <p className="text-sm text-red-700">{t('deactivateConfirm')}</p>
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3">
+              <p className="text-sm text-destructive">{t('deactivateConfirm')}</p>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
                   onClick={() => void handleDeactivate()}
                   disabled={saving}
-                  className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-md bg-destructive px-3 py-1.5 text-sm text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
                 >
                   {saving ? t('saving') : t('confirmDeactivate')}
                 </button>
@@ -285,13 +295,13 @@ export function LocationManagementModal({ editLocation, onClose, onSaved }: Prop
             <button
               type="submit"
               disabled={saving}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {saving ? t('saving') : t('save')}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -21,57 +21,36 @@ import { getDb, getActiveLocations, getNetworkSnapshot } from '@/lib/db'
 export async function aggregateNetworkMetrics(): Promise<NetworkMetrics> {
   const db = getDb()
   const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
 
-  // Total samples collected today (orders received today across all locations)
-  const allOrders = await db.orders
-    .where('receivedAt')
-    .aboveOrEqual(todayStart)
-    .toArray()
-  const totalSamplesToday = allOrders.length
+  // P6: receivedAt is not indexed in Dexie schema — use full table scan with
+  // client-side filter rather than the broken where('receivedAt').aboveOrEqual()
+  const allOrders = await db.orders.toArray()
+  const todayOrders = allOrders.filter(
+    (o) => o.receivedAt && new Date(o.receivedAt).getTime() >= todayStart,
+  )
+  const totalSamplesToday = todayOrders.length
 
-  // Average TAT per location — computed from COMPLETED orders that have both
-  // receivedAt and a completedAt equivalent. We proxy TAT as time from
-  // receivedAt to syncedAt for COMPLETED orders (best available offline metric).
-  const completedOrders = allOrders.filter((o) => o.status === 'COMPLETED')
-  const tatByLocation: Record<string, number[]> = {}
-  for (const order of completedOrders) {
-    if (order.syncedAt && order.receivedAt) {
-      const tat = (new Date(order.syncedAt).getTime() - new Date(order.receivedAt).getTime()) / 60_000
-      const locId = 'main' // Lab-Lite doesn't tag orders by location yet — default to main
-      if (!tatByLocation[locId]) tatByLocation[locId] = []
-      tatByLocation[locId].push(tat)
-    }
-  }
-  const avgTATByLocation: Record<string, number> = {}
-  for (const [locId, tats] of Object.entries(tatByLocation)) {
-    avgTATByLocation[locId] = Math.round(tats.reduce((a, b) => a + b, 0) / tats.length)
-  }
+  // D2→P: avgTATByLocation computation removed — TAT proxy via syncedAt is
+  // unreliable (HLC drift on backfill produces negative values; syncedAt ≠ completedAt).
+  // Replaced with empty stub; TAT card is removed from NetworkMetricsSummary.
 
-  // Pending results per location — IN_PROGRESS orders keyed by location
-  const pendingOrders = await db.orders
-    .where('status')
-    .equals('IN_PROGRESS')
-    .toArray()
+  // Pending results per location — IN_PROGRESS orders (status IS indexed)
+  const pendingOrders = await db.orders.where('status').equals('IN_PROGRESS').toArray()
   const pendingResultsByLocation: Record<string, number> = {}
   for (const order of pendingOrders) {
     const locId = 'main'
     pendingResultsByLocation[locId] = (pendingResultsByLocation[locId] ?? 0) + 1
   }
 
-  // Stockout alerts — count active locations with no upload queue capacity
-  // (proxy: upload queue items with status 'failed' indicate connectivity issues)
-  const failedUploads = await db.uploadQueue
-    .where('status')
-    .equals('failed')
-    .count()
-  const stockoutAlerts = failedUploads > 0 ? 1 : 0
+  // D1→P: Renamed from stockoutAlerts → syncFailures.
+  // Counts upload queue items with 'failed' status to surface connectivity issues.
+  const syncFailures = await db.uploadQueue.where('status').equals('failed').count()
 
   return {
     totalSamplesToday,
-    avgTATByLocation,
     pendingResultsByLocation,
-    stockoutAlerts,
+    syncFailures,
     asOf: now.toISOString(),
   }
 }
@@ -89,17 +68,12 @@ export async function getLocationStatus(locationId: string): Promise<NetworkStat
   const stored = await getNetworkSnapshot(locationId)
   const db = getDb()
 
-  // Count pending samples for this location from upload queue
-  const pendingSamples = await db.uploadQueue
-    .where('status')
-    .anyOf(['pending', 'uploading'])
-    .count()
-
-  // Count upload failures as stock alerts
-  const failedCount = await db.uploadQueue
-    .where('status')
-    .equals('failed')
-    .count()
+  // Count pending/failed samples for this location — locationId is indexed (v38)
+  const locationEntries = await db.uploadQueue.where('locationId').equals(locationId).toArray()
+  const pendingSamples = locationEntries.filter(
+    (e) => e.status === 'pending' || e.status === 'uploading',
+  ).length
+  const failedCount = locationEntries.filter((e) => e.status === 'failed').length
 
   // If we have a stored snapshot, merge live counts; otherwise return degraded
   if (stored) {

@@ -1,6 +1,6 @@
 # Story 54.1: Multi-Branch Lab Network Management
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -190,3 +190,40 @@ Modified files:
 - Dexie database: `apps/lab-lite/src/lib/db.ts`
 - Audit client: `apps/lab-lite/src/lib/audit-client.ts`
 - Sidebar: `apps/lab-lite/src/components/AppSidebar.tsx`
+
+## Review Findings
+
+> Code review run 2026-06-10. 8 decision-needed, 15 patch, 1 deferred, 1 dismissed.
+
+### Decision-Needed (resolved)
+
+- [x] [Review][Decision→Patch] D1: `stockoutAlerts` renamed to "Sync Failures" — rename i18n keys and rethreshold styling. [`network-metrics.ts:62-68`, `NetworkMetricsSummary.tsx`]
+- [x] [Review][Decision→Patch] D2: TAT metric removed — replace with `—` placeholder until `completedAt`/`locationId` fields exist on `LabOrderEntry`. [`network-metrics.ts:38-43`]
+- [x] [Review][Decision→Patch] D3: Add `locationId` to upload queue Dexie schema — so `getLocationStatus` can filter per-location. [`network-metrics.ts:93-100`, `db.ts`]
+- [x] [Review][Decision→Defer] D4: AC4 (In Transit worklist) — deferred to follow-up story. Dev note confirms transit is a sync engine integration point; Task 10 scope was premature. [AC4, Task 10]
+- [x] [Review][Decision→Defer] D5: AC5 (result routing notification) — deferred to follow-up story. Same rationale as D4; satellite notification delivery is a sync engine concern. [AC5]
+- [x] [Review][Decision→Dismiss] D6: `localStorage` for location UUID — intentionally kept; opaque UUID is not PHI; complexity of Dexie round-trip on every gate mount not justified. [`collection-mode.ts`]
+- [x] [Review][Decision→Patch] D7: Sidebar collection-only mode filtering — implement now. Core AC3 requirement; `isCollectionOnlyMode()` hook already exists. [`AppSidebar.tsx`]
+- [x] [Review][Decision→Defer] D8: Per-location order breakdown — deferred with D2; requires `locationId` on `LabOrderEntry`, a broader schema migration. [`network-metrics.ts:41,58`]
+
+### Patch
+
+- [x] [Review][Patch] P1: `CollectionModeGate` returns `children` (full mode) while loading — restricted features flash briefly before gate resolves. Fix: return `<>{fallback}</>` (or null/skeleton) when `isCollectionOnly === null`. [`CollectionModeGate.tsx:21`]
+- [x] [Review][Patch] P2: `LocationManagementModal` uses a raw `<div role="dialog">` instead of ShadCN `Dialog` from `@ultranos/ui-kit` — no focus trap, no Escape key, no scroll lock; violates CLAUDE.md ui-kit rule. [`LocationManagementModal.tsx:129`]
+- [x] [Review][Patch] P3: User-visible strings in `LocationCard` not passed through `useTranslations` — `'Full'`, `'Collection Only'`, `'Inactive'`, `'Just now'`, `'Never synced'`, `'min ago'`, `'h ago'`, `'d ago'` are hardcoded English. Breaks Arabic/Dari localization. [`LocationCard.tsx:11,31-37`]
+- [x] [Review][Patch] P4: `LocationCard` and `LocationManagementModal` use raw Tailwind palette classes (`bg-green-500`, `bg-amber-500`, `bg-blue-600`, `bg-red-50`, etc.) instead of semantic oklch tokens — violates CLAUDE.md color token rule. [`LocationCard.tsx`, `LocationManagementModal.tsx`]
+- [x] [Review][Patch] P5: Page root div uses `gap-6` — CLAUDE.md layout rules require `gap-4` only. [`network/page.tsx:50`]
+- [x] [Review][Patch] P6: `db.orders.where('receivedAt')` queries an unindexed field — Dexie will throw at runtime (confirmed: `receivedAt` absent from all orders index definitions in `db.ts`). Dashboard will always show load error in production. Fix: add `receivedAt` to orders index in next schema version, or switch to `.toArray()` with client-side filter. [`network-metrics.ts:27`]
+- [x] [Review][Patch] P7: Mode changes submitted via `LocationManagementModal` call `updateLocation()` which emits `NETWORK_LOCATION_UPDATED` — not `NETWORK_MODE_CHANGED`. `setLocationMode()` exists but is never called from the modal. Audit log will have no `NETWORK_MODE_CHANGED` events from UI operations. Fix: detect `form.mode !== editLocation.mode` in `handleSave` and call `setLocationMode()`. [`LocationManagementModal.tsx:handleSave`]
+- [x] [Review][Patch] P8: `updateLocation` and `deactivateLocation` spread `...existing.meta` without incrementing `versionId` — always stays `'1'`. Sync engine cannot detect multi-edit conflicts. Apply same pattern as other services: `versionId: String((parseInt(existing.meta.versionId, 10) || 1) + 1)`. [`network-service.ts:updateLocation`, `network-service.ts:deactivateLocation`]
+- [x] [Review][Patch] P9: `LocationCard.handleClick` navigates to `/${locale}/network/${location.id}` — no `[id]` route exists under `network/`. All card clicks result in a 404. Fix: either create a stub `[id]/page.tsx`, open `LocationManagementModal` in edit mode on click, or remove `onClick` until the route exists. [`LocationCard.tsx:handleClick`]
+- [x] [Review][Patch] P10: `LocationManagementModal` in edit mode for an existing satellite never calls `loadMainLabs()` — the parent-lab dropdown is empty and required, making the form unsavable. Fix: add `useEffect(() => { if (isEdit && editLocation?.type === 'satellite') void loadMainLabs() }, [])`. [`LocationManagementModal.tsx:loadMainLabs`]
+- [x] [Review][Patch] P11: `if (!session) return null` causes a blank page during session hydration. Replace with a loading skeleton consistent with the page's existing skeleton treatment. [`network/page.tsx:70`]
+- [x] [Review][Patch] P12: Zero-locations empty state uses ad-hoc inline markup instead of `EmptyState` from `@ultranos/ui-kit/components/ui/empty-state` — violates CLAUDE.md EmptyState rule. [`network/page.tsx:119-129`]
+- [x] [Review][Patch] P13: `<h2 className="mb-3 ...">` inside a flex-column parent — CLAUDE.md prohibits `mb-*` on direct flex children; `gap-4` handles spacing. [`network/page.tsx:111`]
+- [x] [Review][Patch] P14: No RTL snapshot tests for `LocationCard`, `NetworkMetricsSummary`, `LocationManagementModal`, or `CollectionModeGate` — CLAUDE.md requires RTL snapshots for every patient-facing component. [Task 13.4, CLAUDE.md]
+- [x] [Review][Patch] P15: TAT calculation can produce negative values when `syncedAt < receivedAt` (HLC drift or offline backfill). Add `if (tat < 0) continue` guard. [`network-metrics.ts:43`]
+
+### Deferred
+
+- [x] [Review][Defer] W1: `patientFirstName: 'Ahmad'` hardcoded in test fixture — PHI hygiene concern. [`network-metrics.test.ts:62`] — deferred, pre-existing pattern; CLAUDE.md rule covers logs/comments, not test fixtures explicitly
