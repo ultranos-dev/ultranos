@@ -33,9 +33,11 @@ export function NameInputSection({
 }: NameInputSectionProps) {
   const t = useTranslations('registration')
 
-  // Compose the full local name preview (given + father + grandfather + family)
-  const nameParts = [nameGiven, nameFather, nameGrandfather, nameFamily].filter(Boolean)
-  const nameLocalPreview = nameParts.length > 0 ? nameParts.join(' ') : ''
+  // Name groups in entry order: patient's name (given + family), father, grandfather
+  const patientName = [nameGiven, nameFamily].filter(Boolean).join(' ')
+  const fatherName = nameFather.trim()
+  const grandfatherName = nameGrandfather.trim()
+  const hasAnyName = !!(patientName || fatherName || grandfatherName)
 
   return (
     <Card as="fieldset">
@@ -73,6 +75,36 @@ export function NameInputSection({
           {errors?.nameGiven && (
             <p id="name-given-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGiven}
+            </p>
+          )}
+        </div>
+
+        {/* Family Name */}
+        <div>
+          <label
+            htmlFor="name-family"
+            className="mb-1 block text-sm font-semibold text-foreground"
+          >
+            {t('nameFamily')}
+          </label>
+          <input
+            id="name-family"
+            type="text"
+            dir="auto"
+            aria-invalid={!!errors?.nameFamily}
+            aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
+            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              errors?.nameFamily
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
+            }`}
+            placeholder={t('nameFamilyPlaceholder')}
+            value={nameFamily}
+            onChange={(e) => onNameFamilyChange(e.target.value)}
+          />
+          {errors?.nameFamily && (
+            <p id="name-family-error" className="mt-1 text-sm text-destructive" role="alert">
+              {errors.nameFamily}
             </p>
           )}
         </div>
@@ -137,50 +169,26 @@ export function NameInputSection({
           )}
         </div>
 
-        {/* Family Name (Last Name) */}
-        <div>
-          <label
-            htmlFor="name-family"
-            className="mb-1 block text-sm font-semibold text-foreground"
-          >
-            {t('nameFamily')}
-          </label>
-          <input
-            id="name-family"
-            type="text"
-            dir="auto"
-            aria-invalid={!!errors?.nameFamily}
-            aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
-            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
-              errors?.nameFamily
-                ? 'border-destructive focus:border-destructive focus:ring-destructive'
-                : 'border-border focus:border-primary focus:ring-ring'
-            }`}
-            placeholder={t('nameFamilyPlaceholder')}
-            value={nameFamily}
-            onChange={(e) => onNameFamilyChange(e.target.value)}
-          />
-          {errors?.nameFamily && (
-            <p id="name-family-error" className="mt-1 text-sm text-destructive" role="alert">
-              {errors.nameFamily}
-            </p>
-          )}
-        </div>
-
-        {/* Composed nameLocal preview */}
-        {nameLocalPreview && (
+        {/* Display Name preview — grouped with dividers */}
+        {hasAnyName && (
           <div
             className="mt-3 rounded-xl ring-[0.65px] ring-border/50 bg-muted px-4 py-3"
             aria-live="polite"
           >
-            <p className="text-xs font-semibold text-muted-foreground mb-1">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">
               {t('namePreview')}
             </p>
-            <p
-              className="text-lg font-bold text-foreground"
-              dir="auto"
-            >
-              {nameLocalPreview}
+            <p className="text-lg font-bold text-foreground leading-snug" dir="auto">
+              {[patientName, fatherName, grandfatherName]
+                .filter(Boolean)
+                .map((name, i) => (
+                  <span key={i}>
+                    {i > 0 && (
+                      <span className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none" aria-hidden="true" />
+                    )}
+                    {name}
+                  </span>
+                ))}
             </p>
           </div>
         )}

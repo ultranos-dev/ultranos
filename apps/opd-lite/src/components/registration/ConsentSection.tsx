@@ -172,7 +172,7 @@ export function ConsentSection({
         <Button
           variant="outline"
           onClick={() => setConsentModalOpen(true)}
-          className="gap-1.5 border-primary/20 bg-primary/10 text-primary hover:bg-primary"
+          className="gap-1.5 border-primary/20 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
         >
           <FileText className="h-4 w-4" />
           {t('viewFullConsent')}

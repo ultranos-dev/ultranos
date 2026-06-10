@@ -162,6 +162,8 @@ export {
   Share2,
   Filter,
   SlidersHorizontal,
+  ZoomIn,
+  ZoomOut,
   SortAsc,
   SortDesc,
   MoreHorizontal,

@@ -15,6 +15,7 @@ import type {
 } from '@ultranos/shared-types'
 import { Button } from '@/components/ui/Button'
 import { NameInputSection } from './NameInputSection'
+import { PatientPhotoSection } from './PatientPhotoSection'
 import { GeographySection } from './GeographySection'
 import { ConsentSection } from './ConsentSection'
 import { MpiResultModal } from './MpiResultModal'
@@ -30,9 +31,9 @@ import type { FhirPatient } from '@ultranos/shared-types'
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -196,6 +197,9 @@ export function PatientRegistrationForm({
   const [occupation, setOccupation] = useState('')
   const [educationLevel, setEducationLevel] = useState<EducationLevel | ''>('')
   const [disability, setDisability] = useState(false)
+
+  // Patient photo
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
 
   // Emergency contacts
   const [emergencyContacts, setEmergencyContacts] = useState<PatientContact[]>([])
@@ -525,7 +529,13 @@ export function PatientRegistrationForm({
   return (
     <>
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        {/* Name section */}
+        {/* 1. Patient photo */}
+        <PatientPhotoSection
+          photoDataUrl={photoDataUrl}
+          onPhotoChange={setPhotoDataUrl}
+        />
+
+        {/* 2. Name section */}
         <NameInputSection
           nameGiven={nameGiven}
           nameFather={nameFather}
@@ -543,36 +553,13 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* Demographics section */}
+        {/* 3. Demographics — Gender, DOB, Marital Status, Blood Group */}
         <Card as="fieldset">
           <legend className="text-base font-bold text-foreground">
             {t('demographicsSection')}
           </legend>
 
           <div className="space-y-4">
-            {/* National ID */}
-            <div>
-              <label
-                htmlFor="national-id"
-                className="mb-1 block text-sm font-semibold text-foreground"
-              >
-                {t('nationalIdLabel')}
-                <span className="ms-1 text-xs font-normal text-muted-foreground">
-                  ({t('optional')})
-                </span>
-              </label>
-              <input
-                id="national-id"
-                type="text"
-                inputMode="text"
-                maxLength={200}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-                placeholder={t('nationalIdPlaceholder')}
-                value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
-              />
-            </div>
-
             {/* Gender */}
             <div>
               <label
@@ -604,32 +591,6 @@ export function PatientRegistrationForm({
                   {fieldErrors.gender}
                 </p>
               )}
-            </div>
-
-            {/* Marital status */}
-            <div>
-              <label
-                htmlFor="marital-status"
-                className="mb-1 block text-sm font-semibold text-foreground"
-              >
-                {t('maritalStatus')}
-                <span className="ms-1 text-xs font-normal text-muted-foreground">
-                  ({t('optional')})
-                </span>
-              </label>
-              <select
-                id="marital-status"
-                value={maritalStatus}
-                onChange={(e) => setMaritalStatus(e.target.value as MaritalStatus | '')}
-                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">{t('maritalStatusPlaceholder')}</option>
-                <option value="M">{t('maritalMarried')}</option>
-                <option value="S">{t('maritalSingle')}</option>
-                <option value="D">{t('maritalDivorced')}</option>
-                <option value="W">{t('maritalWidowed')}</option>
-                <option value="UNK">{t('maritalUnknown')}</option>
-              </select>
             </div>
 
             {/* Birth year or full date toggle */}
@@ -711,6 +672,89 @@ export function PatientRegistrationForm({
               )}
             </div>
 
+            {/* Marital status */}
+            <div>
+              <label
+                htmlFor="marital-status"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('maritalStatus')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <select
+                id="marital-status"
+                value={maritalStatus}
+                onChange={(e) => setMaritalStatus(e.target.value as MaritalStatus | '')}
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">{t('maritalStatusPlaceholder')}</option>
+                <option value="M">{t('maritalMarried')}</option>
+                <option value="S">{t('maritalSingle')}</option>
+                <option value="D">{t('maritalDivorced')}</option>
+                <option value="W">{t('maritalWidowed')}</option>
+                <option value="UNK">{t('maritalUnknown')}</option>
+              </select>
+            </div>
+
+            {/* Blood group */}
+            <div>
+              <label
+                htmlFor="blood-group"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('bloodGroup')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <select
+                id="blood-group"
+                value={bloodGroup}
+                onChange={(e) => setBloodGroup(e.target.value)}
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {BLOOD_GROUPS.map((bg) => (
+                  <option key={bg} value={bg}>
+                    {bg}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Card>
+
+        {/* 4. Contact & Identification — National ID, Phone, Preferred Language */}
+        <Card as="fieldset">
+          <legend className="text-base font-bold text-foreground">
+            {t('contactSection')}
+          </legend>
+
+          <div className="space-y-4">
+            {/* National ID */}
+            <div>
+              <label
+                htmlFor="national-id"
+                className="mb-1 block text-sm font-semibold text-foreground"
+              >
+                {t('nationalIdLabel')}
+                <span className="ms-1 text-xs font-normal text-muted-foreground">
+                  ({t('optional')})
+                </span>
+              </label>
+              <input
+                id="national-id"
+                type="text"
+                inputMode="text"
+                maxLength={200}
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                placeholder={t('nationalIdPlaceholder')}
+                value={nationalId}
+                onChange={(e) => setNationalId(e.target.value)}
+              />
+            </div>
+
             {/* Phone + phone use type */}
             <div>
               <label
@@ -774,7 +818,7 @@ export function PatientRegistrationForm({
           </div>
         </Card>
 
-        {/* Geography section */}
+        {/* 5. Geography section */}
         <GeographySection
           origin={addressOrigin}
           current={addressCurrent}
@@ -792,38 +836,7 @@ export function PatientRegistrationForm({
           }}
         />
 
-        {/* Clinical section */}
-        <Card as="fieldset">
-          <legend className="text-base font-bold text-foreground">
-            {t('clinicalSection')}
-          </legend>
-
-          <div>
-            <label
-              htmlFor="blood-group"
-              className="mb-1 block text-sm font-semibold text-foreground"
-            >
-              {t('bloodGroup')}
-              <span className="ms-1 text-xs font-normal text-muted-foreground">
-                ({t('optional')})
-              </span>
-            </label>
-            <select
-              id="blood-group"
-              value={bloodGroup}
-              onChange={(e) => setBloodGroup(e.target.value)}
-              className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              {BLOOD_GROUPS.map((bg) => (
-                <option key={bg} value={bg}>
-                  {bg}
-                </option>
-              ))}
-            </select>
-          </div>
-        </Card>
-
-        {/* Social / HMIS section */}
+        {/* 6. Social / HMIS section */}
         <SocialInfoSection
           displacementCategory={displacementCategory}
           nationality={nationality}
@@ -837,13 +850,13 @@ export function PatientRegistrationForm({
           onDisabilityChange={setDisability}
         />
 
-        {/* Emergency contact section */}
+        {/* 7. Emergency contact section */}
         <EmergencyContactSection
           contacts={emergencyContacts}
           onContactsChange={setEmergencyContacts}
         />
 
-        {/* Consent section */}
+        {/* 8. Consent section */}
         <ConsentSection
           method={consentMethod}
           witnessedBy={consentWitnessedBy}
