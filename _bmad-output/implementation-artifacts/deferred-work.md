@@ -1,5 +1,16 @@
 # Deferred Work
 
+## Deferred from: code review of 54-1-multi-branch-lab-network (2026-06-10)
+
+- **W1: `patientFirstName: 'Ahmad'` hardcoded in test fixture** [`apps/lab-lite/src/__tests__/network-metrics.test.ts:62`] — PHI hygiene: test fixture uses a real-looking patient first name. CLAUDE.md Rule 1 covers logs/comments rather than test fixtures explicitly, but consider replacing with a generic placeholder (e.g. `'[TEST]'`) across all lab-lite test fixtures for consistency.
+- **D4: AC4 not met — satellite samples not shown as "In Transit" on worklist** — `originLocationId`/`transitStatus` fields absent from `LabOrderEntry`; worklist has no "In Transit" rendering path. Task 10 was marked complete prematurely. Requires schema migration + worklist integration (Story 42.2 scope) wired to the sync engine transit events.
+- **D5: AC5 not met — result routing to satellite unimplemented** — `routeResultToSatellite` is audit-event-only; no patient pickup notification or delivery mechanism exists. Requires notification queue + satellite sync routing in the sync engine (Hub API scope).
+- **D8: Per-location order breakdown missing** — `aggregateNetworkMetrics` and `getLocationStatus` cannot provide per-satellite metrics until `locationId` is added to `LabOrderEntry` schema. Defer alongside any `LabOrderEntry` schema migration work.
+
+## Deferred from: code review of 54-4-reference-lab-integration (2026-06-10)
+
+- **D19: `sendout-pdf.ts` returns HTML Blob, not PDF** [`apps/lab-lite/src/lib/sendout-pdf.ts`] — `renderReferralFormPDF` and `renderShippingManifestPDF` return `new Blob([html], { type: 'text/html' })`. The function names and file name imply PDF output. Code comment acknowledges this as a deliberate placeholder pending a PDF library decision (jsPDF, react-pdf). Track for resolution when a PDF library is evaluated for lab-lite.
+
 > **Status: All items tracked in Epics 28-36** (2026-05-18)
 > All ~172 deferred items below have been assigned to stories in Epics 28-36.
 > See `_bmad-output/planning-artifacts/epics.md` (Addendum 5) for full story details.
@@ -912,3 +923,13 @@
 
 - **D-51.7-W1: Dead code block in `evaluateMonthlyAchievements`.** First `qcRateByTech` loop has an empty `if (current === undefined)` body and populates nothing. The map is correctly populated in the second pass through `qcStatsByTech`. No correctness impact, but confusing to future readers. [achievement-service.ts:192-199]
 - **D-51.7-W2: `enteredAt` string comparison assumes ISO 8601 UTC (`Z`-suffix).** In `calcTurnaroundTime`, `r.enteredAt <= end + 'T23:59:59Z'` silently mis-classifies results stored without timezone suffix (lexicographic sort fails at boundary). Depends on data write conventions established in earlier stories (how `enteredAt` is written to Dexie). [quality-metrics-calculator.ts:117]
+
+## Deferred from: code review of 54-3-courier-transport-tracking (2026-06-10)
+
+- **D-54.3-W1: i18n strings hardcoded English in transport UI components.** All transport components (CourierPickupScreen, CourierDeliveryScreen, ActiveTransportCard) use hardcoded English with TODO comments. Track in Epic 11 i18n stories.
+- **D-54.3-W2: `mapSampleTypeToCategory` conservative fallback to 'blood' undocumented behavior.** Unknown specimen types silently get the blood stability window (6h). The conservative fallback is intentional but not surfaced to the caller. Low risk but could confuse future maintainers. [stability-monitor.ts]
+- **D-54.3-W3: `SampleStabilityWindow` typed as `Record<string, number>` instead of a narrowed key union.** Could be `Record<'blood'|'urine'|'swab'|'csf'|'stool', number>` for compile-time safety. Minor type improvement, no functional impact. [types/transport.ts]
+- **D-54.3-W4: `getTransportsByCourier` CRUD helper added outside Task 2 spec.** Unreviewed additional query surface over transport data. Functional and used by the service layer but not explicitly scoped in the story.
+- **D-54.3-W5: Location IDs shown as raw strings in courier UI.** `ActiveTransportCard` and `CourierDeliveryScreen` display raw UUID-format location IDs to couriers rather than resolved human-readable names. Requires a location resolver service outside this story's scope.
+- **D-54.3-W6: `⚠` Unicode character used instead of Lucide icon in transport flag banner.** `SampleDetailView.tsx:179` renders a Unicode warning symbol rather than a Lucide icon from `@ultranos/ui-kit/icons`. Cosmetic inconsistency; allergy display uses a similar pattern.
+- **D-54.3-W7: `labSampleId` PHI traceability unverified in manifest tests.** PHI exclusion tests check for patient name absence but do not verify that labSampleId is not derived from or traceable to patient identity. Low risk by definition (labSampleId is a lab-assigned sequential number) but worth a documented assertion.
