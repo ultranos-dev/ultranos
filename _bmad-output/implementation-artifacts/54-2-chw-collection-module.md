@@ -1,6 +1,6 @@
 # Story 54.2: Community Health Worker Collection Module
 
-Status: review
+Status: done
 
 ## Story
 
@@ -223,6 +223,35 @@ Modified files:
 - apps/lab-lite/messages/prs.json (added chw namespace — Dari)
 - apps/lab-lite/messages/ps.json (added chw namespace — Pashto)
 
+## Review Findings
+
+> Code review run: 2026-06-10. Layers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. 1 decision-needed · 15 patch · 0 defer · 2 dismissed (merged duplicates).
+
+### Decision-Needed
+
+- [x] [Review][Decision] **F8 — 'other' sample type: selector UI vs. type union mismatch** — `CHWSampleType` includes `'other'`, `SamplesCollectedLog` renders it as `'?'`, and `CHWCollectPage` uses `sampleType ?? 'other'` as a fallback, but `SampleTypeSelector` has no 'other' card. **Option A**: Add a 5th "Other" pictogram card. **Option B**: Remove 'other' from the selector fallback (confirm button prevents empty selection) and treat it as programmatic-only. [`SampleTypeSelector.tsx`, `chw-mode.ts:3`, `collect/page.tsx:87`]
+
+### Patch
+
+- [x] [Review][Patch] **F1 — Dexie v36 schema and all 5 CHW db helpers are missing** — `db.ts` tops out at `version(35)`. `addCHWSample`, `getTodayCHWSamples`, `addCourierHandoff`, `getCHWSamplesByIds`, `getPendingSyncItems` are imported but do not exist. The feature is completely non-functional at runtime; tests pass only because they mock `./db`. [`apps/lab-lite/src/lib/db.ts`]
+- [x] [Review][Patch] **F2 — CHW audit functions missing from audit-client.ts** — `chw-service.ts` imports `reportCHWSampleCollectedEvent` and `reportCHWHandoffEvent` which do not exist in `audit-client.ts`. Module load will fail; `CHW_SAMPLE_COLLECTED` and `CHW_COURIER_HANDOFF` events are never emitted. [`apps/lab-lite/src/lib/audit-client.ts`]
+- [x] [Review][Patch] **F3 — CHW_PATIENT_IDENTIFIED never emitted** — Neither `identifyPatientByQR` nor `identifyPatientByName` emits an audit event despite being PHI access operations. Required by AC9 and CLAUDE.md. [`chw-service.ts:44–112`]
+- [x] [Review][Patch] **F4 — CHW_LABEL_PRINTED never emitted** — `printLabel()` and `LabelDisplay.handlePrint()` never emit the required `CHW_LABEL_PRINTED` audit event. [`chw-label-generator.ts:91–121`, `LabelDisplay.tsx:27–29`]
+- [x] [Review][Patch] **F5 — XSS via unsanitized `labelNumber`/`patientAge` in `printLabel` `document.write`** — Both values are interpolated directly into HTML without escaping. A QR-injected age value containing `<script>` executes in the print popup which has WebUSB access. [`chw-label-generator.ts:113–115`]
+- [x] [Review][Patch] **F6 — Courier handoff audit permanently records `'unknown'` when `collectedBy` is absent** — `collectedBy` is optional in `CourierHandoffInput`; the fallback `?? 'unknown'` writes an unattributable record to the append-only audit chain. Should be required or throw. [`chw-service.ts:205`]
+- [x] [Review][Patch] **F7 — Race condition: `generateLabelNumber` reads then returns without reserving** — Two concurrent calls see the same existing samples and return the same sequence number, producing two tubes with identical labels. Fix: wrap sequence-read + sample-write in a single Dexie `transaction('rw', db.chw_samples, ...)`. [`chw-label-generator.ts:29–48`]
+- [x] [Review][Patch] **F9 — `identifyPatientByName` ignores `fatherName` — wrong patient returned on duplicate first names** — The filter uses only `firstName`; `fatherName` is accepted but never referenced. `matches[0]` is returned when multiple patients share a first name, a common scenario in Afghan naming contexts. [`chw-service.ts:96–111`]
+- [x] [Review][Patch] **F10 — `collectSample()` swallows storage errors silently** — `try/finally` with no `catch`: on Dexie write failure the spinner clears but the step never advances, leaving the CHW with no feedback and a physically-labelled tube with no backing record. [`collect/page.tsx:41–54`]
+- [x] [Review][Patch] **F11 — Courier handoff allows cross-day samples** — `getCHWSamplesByIds` has no date filter; a barcode from a previous day passes validation, enabling duplicate handoff records for the same physical sample. [`chw-service.ts:180–185`]
+- [x] [Review][Patch] **F12 — QR `sig` field never validated** — `identifyPatientByQR` parses but ignores the `sig` field and never checks `v` (version). A forged QR can inject arbitrary `pid`, `firstName`, and `age`. CLAUDE.md and spec task 4.2 both require signature validation when present. [`chw-service.ts:57–73`]
+- [x] [Review][Patch] **F13 — `isCHWMode()` returns `false` during Zustand rehydration** — Synchronous Zustand `getState()` returns `null` session before persist middleware rehydrates, causing CHW users to see the standard lab dashboard on cold start. [`chw-mode.ts:18–22`]
+- [x] [Review][Patch] **F14 — `BackButton` in `PatientIdentifyScreen` missing 48×48px touch target** — `className="mt-2 text-lg text-gray-500 underline"` with no `min-h-[48px]`. All other CHW buttons use `min-h-[56px]`. Violates AC1 and WCAG 2.5.5 AA. [`PatientIdentifyScreen.tsx:284`]
+- [x] [Review][Patch] **F15 — CHW sync records enqueued without Tier 2 priority** — `collectSample()` and `recordCourierHandoff()` write to Dexie but never call `enqueueSyncEvent()` with a Tier 2 priority tag. Spec requires Tier 2 (lower than lab results, higher than metadata). [`chw-service.ts:125–208`]
+- [x] [Review][Patch] **F16 — `handleContinueWithoutMatch` stores `age: 0` indistinguishable from infant age** — Unlinked patient fallback uses `age: 0` with no warning shown to CHW; `0` passes the `< 0 || > 120` validation gate. Persisted permanently in append-only audit chain. [`PatientIdentifyScreen.tsx:73–84`]
+- [x] [Review][Patch] **F17 — No test asserting `CHW_PATIENT_IDENTIFIED` audit event is emitted** — `identifyPatientByQR` and `identifyPatientByName` test blocks contain no audit assertion, violating CLAUDE.md testing requirement for all PHI-access operations. [`chw-service.test.ts:98–150`]
+
 ## Change Log
 
 - 2026-06-01: Story 54.2 implemented — CHW Collection Module (all 14 tasks, 56 tests pass). Status → review.
+- 2026-06-10: Code review — 1 decision-needed, 15 patch items raised. Status → in-progress.
+- 2026-06-10: All 16 review findings patched. Decision F8 resolved (Option B — 'other' is programmatic-only; selector fallback removed). Status → done.

@@ -88,6 +88,16 @@ export function hasPrinterDetected(): boolean {
  * @param patientAge  - numeric age (displayed for sample-to-patient matching)
  * @param sampleType  - e.g. "blood"
  */
+/** Escape a string for safe insertion into an HTML context. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 export function printLabel(
   labelNumber: string,
   patientAge: number,
@@ -98,6 +108,11 @@ export function printLabel(
   // Open a tiny print window with just the label
   const win = window.open('', '_blank', 'width=300,height=200')
   if (!win) return
+
+  // Escape all user-controlled values before injecting into HTML (F5 — XSS fix)
+  const safeLabel = escapeHtml(labelNumber)
+  const safeAge = escapeHtml(String(patientAge))
+  const safeType = escapeHtml(sampleType.toUpperCase())
 
   win.document.write(`
     <!DOCTYPE html>
@@ -111,8 +126,8 @@ export function printLabel(
         </style>
       </head>
       <body>
-        <div class="label">${labelNumber}</div>
-        <div class="meta">Age: ${patientAge} | ${sampleType.toUpperCase()}</div>
+        <div class="label">${safeLabel}</div>
+        <div class="meta">Age: ${safeAge} | ${safeType}</div>
         <script>window.onload = function() { window.print(); window.close(); }</script>
       </body>
     </html>

@@ -62,5 +62,5 @@ export interface CourierHandoffInput {
   sampleIds: string[]
   temperatureAtPickup?: number
   notes?: string
-  collectedBy?: string  // CHW practitioner ID for audit trail
+  collectedBy: string  // CHW practitioner ID for audit trail — required for audit chain
 }

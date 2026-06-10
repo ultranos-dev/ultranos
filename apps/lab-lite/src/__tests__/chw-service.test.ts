@@ -17,14 +17,15 @@ import type { CHWSampleCollection } from '../types/chw-mode'
 // ---------------------------------------------------------------------------
 
 const {
-  mockAddCHWSample,
+  mockAddCHWSampleAtomic,
   mockAddCourierHandoff,
   mockGetCHWSamplesByIds,
   mockGetPendingSyncItems,
   mockGetDb,
   mockReportSampleEvent,
   mockReportHandoffEvent,
-  mockGenerateLabelNumber,
+  mockReportPatientIdentifiedEvent,
+  mockVerifyQrOffline,
 } = vi.hoisted(() => {
   const sampleFixture: CHWSampleCollection = {
     id: 'sample-001',
@@ -34,48 +35,51 @@ const {
     sampleType: 'blood',
     labelNumber: 'CHW-0601-001',
     collectedBy: 'chw-001',
-    collectedAt: '2026-06-01T08:00:00.000Z-0-node1',
+    collectedAt: '001748736000000:00000:node1',
     syncStatus: 'pending',
   }
   return {
-    mockAddCHWSample: vi.fn().mockResolvedValue(undefined),
+    mockAddCHWSampleAtomic: vi.fn().mockResolvedValue(sampleFixture),
     mockAddCourierHandoff: vi.fn().mockResolvedValue(undefined),
     mockGetCHWSamplesByIds: vi.fn().mockResolvedValue([sampleFixture]),
     mockGetPendingSyncItems: vi.fn().mockResolvedValue([sampleFixture]),
     mockGetDb: vi.fn(() => ({
       verified_patients: {
         toArray: vi.fn().mockResolvedValue([
-          { patientId: 'Patient/pat-001', firstName: 'Ahmad', age: 35 },
-          { patientId: 'Patient/pat-002', firstName: 'Fatima', age: 22 },
+          { patientId: 'Patient/pat-001', firstName: 'Ahmad', fatherName: 'Karim', age: 35 },
+          { patientId: 'Patient/pat-002', firstName: 'Ahmad', fatherName: 'Yunus', age: 28 },
+          { patientId: 'Patient/pat-003', firstName: 'Fatima', fatherName: '', age: 22 },
         ]),
       },
     })),
     mockReportSampleEvent: vi.fn(),
     mockReportHandoffEvent: vi.fn(),
-    mockGenerateLabelNumber: vi.fn().mockResolvedValue('CHW-0601-001'),
+    mockReportPatientIdentifiedEvent: vi.fn(),
+    mockVerifyQrOffline: vi.fn().mockResolvedValue({ valid: true }),
   }
 })
 
 vi.mock('../lib/db', () => ({
-  addCHWSample: mockAddCHWSample,
+  addCHWSampleAtomic: mockAddCHWSampleAtomic,
   addCourierHandoff: mockAddCourierHandoff,
   getCHWSamplesByIds: mockGetCHWSamplesByIds,
   getPendingSyncItems: mockGetPendingSyncItems,
   getDb: mockGetDb,
 }))
 
-vi.mock('../lib/chw-label-generator', () => ({
-  generateLabelNumber: mockGenerateLabelNumber,
+vi.mock('../lib/offline-verify', () => ({
+  verifyQrOffline: mockVerifyQrOffline,
 }))
 
 vi.mock('../lib/hlc', () => ({
-  hlc: { now: vi.fn(() => ({ wallTime: 1748736000000n, counter: 0, nodeId: 'node1' })) },
-  serializeHlc: vi.fn().mockReturnValue('2026-06-01T08:00:00.000Z-0-node1'),
+  hlc: { now: vi.fn(() => ({ wallMs: 1748736000000, counter: 0, nodeId: 'node1' })) },
+  serializeHlc: vi.fn().mockReturnValue('001748736000000:00000:node1'),
 }))
 
 vi.mock('../lib/audit-client', () => ({
   reportCHWSampleCollectedEvent: mockReportSampleEvent,
   reportCHWHandoffEvent: mockReportHandoffEvent,
+  reportCHWPatientIdentifiedEvent: mockReportPatientIdentifiedEvent,
 }))
 
 vi.mock('uuid', () => ({
@@ -96,7 +100,9 @@ import {
 // ---------------------------------------------------------------------------
 
 describe('identifyPatientByQR', () => {
-  it('returns pid, firstName, age from a valid QR payload', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns pid, firstName, age from a valid QR payload', async () => {
     const qr = JSON.stringify({
       pid: 'Patient/pat-001',
       iat: Math.floor(Date.now() / 1000) - 3600,
@@ -105,28 +111,56 @@ describe('identifyPatientByQR', () => {
       firstName: 'Ahmad',
       age: 35,
     })
-    expect(identifyPatientByQR(qr)).toEqual({ pid: 'Patient/pat-001', firstName: 'Ahmad', age: 35 })
+    const result = await identifyPatientByQR(qr, 'chw-001')
+    expect(result).toEqual({ pid: 'Patient/pat-001', firstName: 'Ahmad', age: 35 })
   })
 
-  it('returns null for an expired QR', () => {
+  it('emits CHW_PATIENT_IDENTIFIED audit event on success (F17/AC #9)', async () => {
+    const qr = JSON.stringify({ pid: 'Patient/pat-001', v: 1, firstName: 'Ahmad', age: 35 })
+    await identifyPatientByQR(qr, 'chw-001')
+    expect(mockReportPatientIdentifiedEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patientRef: 'Patient/pat-001',
+        identificationMethod: 'qr',
+        chwPractitionerId: 'chw-001',
+      }),
+    )
+  })
+
+  it('does NOT include patient name in audit metadata (data minimization)', async () => {
+    const qr = JSON.stringify({ pid: 'Patient/pat-001', v: 1, firstName: 'Ahmad', age: 35 })
+    await identifyPatientByQR(qr, 'chw-001')
+    const call = mockReportPatientIdentifiedEvent.mock.calls[0][0]
+    expect(call).not.toHaveProperty('firstName')
+    expect(call).not.toHaveProperty('age')
+  })
+
+  it('returns null for an expired QR', async () => {
     const qr = JSON.stringify({
       pid: 'Patient/pat-001',
       exp: Math.floor(Date.now() / 1000) - 1,
     })
-    expect(identifyPatientByQR(qr)).toBeNull()
+    expect(await identifyPatientByQR(qr, 'chw-001')).toBeNull()
   })
 
-  it('returns null for malformed JSON', () => {
-    expect(identifyPatientByQR('not-json')).toBeNull()
+  it('returns null for malformed JSON', async () => {
+    expect(await identifyPatientByQR('not-json', 'chw-001')).toBeNull()
   })
 
-  it('returns null when pid is missing', () => {
-    expect(identifyPatientByQR(JSON.stringify({ iat: 1234 }))).toBeNull()
+  it('returns null when pid is missing', async () => {
+    expect(await identifyPatientByQR(JSON.stringify({ iat: 1234 }), 'chw-001')).toBeNull()
   })
 
-  it('handles QR without firstName or age (older QR format)', () => {
+  it('handles QR without firstName or age (older QR format)', async () => {
     const qr = JSON.stringify({ pid: 'Patient/pat-001', v: 1 })
-    expect(identifyPatientByQR(qr)).toEqual({ pid: 'Patient/pat-001', firstName: '', age: 0 })
+    const result = await identifyPatientByQR(qr, 'chw-001')
+    expect(result).toEqual({ pid: 'Patient/pat-001', firstName: '', age: 0 })
+  })
+
+  it('calls verifyQrOffline when sig is present and returns null if invalid', async () => {
+    mockVerifyQrOffline.mockResolvedValueOnce({ valid: false, reason: 'bad sig' })
+    const qr = JSON.stringify({ pid: 'Patient/pat-001', v: 1, sig: 'fakesig', firstName: 'Ahmad', age: 35 })
+    expect(await identifyPatientByQR(qr, 'chw-001')).toBeNull()
   })
 })
 
@@ -135,17 +169,41 @@ describe('identifyPatientByQR', () => {
 // ---------------------------------------------------------------------------
 
 describe('identifyPatientByName', () => {
+  beforeEach(() => vi.clearAllMocks())
+
   it('returns matching patient by first name (case-insensitive)', async () => {
-    const result = await identifyPatientByName('ahmad', '')
+    // Two Ahmads in fixture — should return one via fatherName disambiguation
+    const result = await identifyPatientByName('ahmad', 'Karim', 'chw-001')
     expect(result).toEqual({ pid: 'Patient/pat-001', firstName: 'Ahmad', age: 35 })
   })
 
+  it('disambiguates by fatherName when multiple first-name matches exist (F9)', async () => {
+    const result = await identifyPatientByName('ahmad', 'Yunus', 'chw-001')
+    expect(result).toEqual({ pid: 'Patient/pat-002', firstName: 'Ahmad', age: 28 })
+  })
+
+  it('returns first match when fatherName is empty and multiple matches exist', async () => {
+    const result = await identifyPatientByName('ahmad', '', 'chw-001')
+    expect(result?.pid).toBe('Patient/pat-001')
+  })
+
   it('returns null when no match found', async () => {
-    expect(await identifyPatientByName('Unknown', '')).toBeNull()
+    expect(await identifyPatientByName('Unknown', '', 'chw-001')).toBeNull()
   })
 
   it('returns null when firstName is empty', async () => {
-    expect(await identifyPatientByName('', 'SomeFather')).toBeNull()
+    expect(await identifyPatientByName('', 'SomeFather', 'chw-001')).toBeNull()
+  })
+
+  it('emits CHW_PATIENT_IDENTIFIED audit event on success', async () => {
+    await identifyPatientByName('Fatima', '', 'chw-001')
+    expect(mockReportPatientIdentifiedEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patientRef: 'Patient/pat-003',
+        identificationMethod: 'name',
+        chwPractitionerId: 'chw-001',
+      }),
+    )
   })
 })
 
@@ -156,10 +214,20 @@ describe('identifyPatientByName', () => {
 describe('collectSample', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGenerateLabelNumber.mockResolvedValue('CHW-0601-001')
+    mockAddCHWSampleAtomic.mockResolvedValue({
+      id: 'sample-001',
+      patientRef: 'Patient/pat-001',
+      patientFirstName: 'Ahmad',
+      patientAge: 35,
+      sampleType: 'blood',
+      labelNumber: 'CHW-0601-001',
+      collectedBy: 'chw-001',
+      collectedAt: '001748736000000:00000:node1',
+      syncStatus: 'pending',
+    })
   })
 
-  it('persists sample with required fields', async () => {
+  it('persists sample via addCHWSampleAtomic (atomic label + write, F7)', async () => {
     await collectSample({
       patientRef: 'Patient/pat-001',
       patientFirstName: 'Ahmad',
@@ -168,13 +236,12 @@ describe('collectSample', () => {
       collectedBy: 'chw-001',
     })
 
-    expect(mockAddCHWSample).toHaveBeenCalledWith(
+    expect(mockAddCHWSampleAtomic).toHaveBeenCalledWith(
       expect.objectContaining({
         patientRef: 'Patient/pat-001',
         patientFirstName: 'Ahmad',
         patientAge: 35,
         sampleType: 'blood',
-        labelNumber: 'CHW-0601-001',
         syncStatus: 'pending',
       }),
     )
@@ -235,7 +302,7 @@ describe('recordCourierHandoff', () => {
     mockGetCHWSamplesByIds.mockResolvedValue([{
       id: 'sample-001', patientRef: 'Patient/pat-001', patientFirstName: 'Ahmad',
       patientAge: 35, sampleType: 'blood', labelNumber: 'CHW-0601-001',
-      collectedBy: 'chw-001', collectedAt: '2026-06-01T08:00:00.000Z', syncStatus: 'pending',
+      collectedBy: 'chw-001', collectedAt: '001748736000000:00000:node1', syncStatus: 'pending',
     }])
   })
 
@@ -266,20 +333,26 @@ describe('recordCourierHandoff', () => {
 
   it('throws when sampleIds is empty', async () => {
     await expect(
-      recordCourierHandoff({ courierId: 'courier-xyz', sampleIds: [] }),
+      recordCourierHandoff({ courierId: 'courier-xyz', sampleIds: [], collectedBy: 'chw-001' }),
     ).rejects.toThrow('At least one sample must be selected')
   })
 
   it('throws when courierId is blank', async () => {
     await expect(
-      recordCourierHandoff({ courierId: '   ', sampleIds: ['sample-001'] }),
+      recordCourierHandoff({ courierId: '   ', sampleIds: ['sample-001'], collectedBy: 'chw-001' }),
     ).rejects.toThrow('courierId is required')
   })
 
-  it('throws when a sampleId is not found in Dexie', async () => {
+  it('throws when collectedBy is missing (F6 — audit chain)', async () => {
+    await expect(
+      recordCourierHandoff({ courierId: 'courier-xyz', sampleIds: ['sample-001'], collectedBy: '' }),
+    ).rejects.toThrow('collectedBy is required for audit chain')
+  })
+
+  it('throws when a sampleId is not found in today\'s records (F11)', async () => {
     mockGetCHWSamplesByIds.mockResolvedValue([])
     await expect(
-      recordCourierHandoff({ courierId: 'courier-xyz', sampleIds: ['missing-001'] }),
+      recordCourierHandoff({ courierId: 'courier-xyz', sampleIds: ['missing-001'], collectedBy: 'chw-001' }),
     ).rejects.toThrow('missing')
   })
 })

@@ -14,6 +14,11 @@ const CHW_ROLES = new Set(['chw', 'chw-collection'])
 /**
  * Returns true if the current session is operating in CHW mode.
  * Reads from the Zustand auth session store (synchronous, always available).
+ *
+ * Note: the auth session store does NOT use Zustand persist middleware — there
+ * is no async rehydration window. `getState().session` is either populated
+ * (user is logged in) or null (not logged in) synchronously from the in-memory
+ * store. No race condition with persistence hydration exists here.
  */
 export function isCHWMode(): boolean {
   const session = useAuthSessionStore.getState().session

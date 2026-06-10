@@ -10,22 +10,27 @@
 import { useTranslations } from 'next-intl'
 import { Printer, PenLine } from '@ultranos/ui-kit/icons'
 import { formatLabelForDisplay, hasPrinterDetected, printLabel } from '@/lib/chw-label-generator'
+import { reportCHWLabelPrintedEvent } from '@/lib/audit-client'
 import type { CHWSampleType } from '@/types/chw-mode'
 
 interface Props {
+  sampleId: string
   labelNumber: string
   patientAge: number
   sampleType: CHWSampleType
+  chwPractitionerId: string
   onDone: () => void
 }
 
-export function LabelDisplay({ labelNumber, patientAge, sampleType, onDone }: Props) {
+export function LabelDisplay({ sampleId, labelNumber, patientAge, sampleType, chwPractitionerId, onDone }: Props) {
   const t = useTranslations('chw.label')
   const printerAvailable = hasPrinterDetected()
   const displayLabel = formatLabelForDisplay(labelNumber)
 
   function handlePrint() {
     printLabel(labelNumber, patientAge, sampleType)
+    // Audit: CHW_LABEL_PRINTED — opaque IDs only (AC #9)
+    reportCHWLabelPrintedEvent({ sampleId, labelNumber, chwPractitionerId })
   }
 
   return (

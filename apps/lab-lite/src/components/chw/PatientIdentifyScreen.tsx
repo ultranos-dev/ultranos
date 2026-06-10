@@ -10,11 +10,12 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { QrCode, Keyboard, User, AlertCircle } from '@ultranos/ui-kit/icons'
 import { identifyPatientByQR, identifyPatientByName } from '@/lib/chw-service'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 export interface IdentifiedPatient {
   pid: string
   firstName: string
-  age: number
+  age: number | null // null = age unknown (unlinked temp patient); 0 = newborn (< 1 yr)
   identifiedBy: 'qr' | 'name'
 }
 
@@ -26,6 +27,9 @@ type Mode = 'choose' | 'qr' | 'name' | 'confirmed'
 
 export function PatientIdentifyScreen({ onIdentified }: Props) {
   const t = useTranslations('chw.identify')
+  const session = useAuthSessionStore((s) => s.session)
+  const chwPractitionerId = session?.userId ?? ''
+
   const [mode, setMode] = useState<Mode>('choose')
   const [patient, setPatient] = useState<IdentifiedPatient | null>(null)
   const [firstName, setFirstName] = useState('')
@@ -34,18 +38,28 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
   const [notFound, setNotFound] = useState(false)
   const [qrInput, setQrInput] = useState('')
   const [qrError, setQrError] = useState(false)
+  const [qrScanning, setQrScanning] = useState(false)
 
-  // ------------ QR path ------------
+  // ------------ QR path (F12: now async — verifies Ed25519 sig when present) ------------
 
-  function handleQRScan() {
+  async function handleQRScan() {
     setQrError(false)
-    const result = identifyPatientByQR(qrInput.trim())
-    if (result) {
-      const identified: IdentifiedPatient = { ...result, identifiedBy: 'qr' }
-      setPatient(identified)
-      setMode('confirmed')
-    } else {
-      setQrError(true)
+    setQrScanning(true)
+    try {
+      const result = await identifyPatientByQR(qrInput.trim(), chwPractitionerId)
+      if (result) {
+        const identified: IdentifiedPatient = {
+          ...result,
+          age: result.age,
+          identifiedBy: 'qr',
+        }
+        setPatient(identified)
+        setMode('confirmed')
+      } else {
+        setQrError(true)
+      }
+    } finally {
+      setQrScanning(false)
     }
   }
 
@@ -56,7 +70,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
     setSearching(true)
     setNotFound(false)
     try {
-      const result = await identifyPatientByName(firstName, fatherName)
+      const result = await identifyPatientByName(firstName, fatherName, chwPractitionerId)
       if (result) {
         const identified: IdentifiedPatient = { ...result, identifiedBy: 'name' }
         setPatient(identified)
@@ -71,12 +85,14 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
   }
 
   function handleContinueWithoutMatch() {
-    // Use a temp reference that links on sync
+    // Use a temp reference that links on sync.
+    // age: null explicitly marks the patient as unlinked with unknown age (F16).
+    // This is distinguishable from age: 0 which means a confirmed newborn.
     const tempPid = `temp-${crypto.randomUUID()}`
     const identified: IdentifiedPatient = {
       pid: tempPid,
       firstName: firstName.trim(),
-      age: 0, // unknown — will be linked on sync
+      age: null,
       identifiedBy: 'name',
     }
     setPatient(identified)
@@ -133,8 +149,11 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
             <AlertCircle size={16} aria-hidden /> Invalid or expired QR code
           </p>
         )}
-        <LargeButton onClick={handleQRScan} disabled={!qrInput.trim()}>
-          {t('continue')}
+        <LargeButton
+          onClick={() => void handleQRScan()}
+          disabled={!qrInput.trim() || qrScanning}
+        >
+          {qrScanning ? '…' : t('continue')}
         </LargeButton>
         <BackButton onClick={() => setMode('choose')} />
       </div>
@@ -159,7 +178,7 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
           value={fatherName}
           onChange={setFatherName}
         />
-        <LargeButton onClick={handleNameSearch} disabled={!firstName.trim() || searching}>
+        <LargeButton onClick={() => void handleNameSearch()} disabled={!firstName.trim() || searching}>
           {searching ? '…' : t('searchButton')}
         </LargeButton>
         {notFound && (
@@ -189,7 +208,11 @@ export function PatientIdentifyScreen({ onIdentified }: Props) {
       {patient && (
         <div className="rounded-2xl bg-gray-50 px-8 py-6 text-center">
           <p className="text-4xl font-bold text-gray-900">{patient.firstName}</p>
-          {patient.age > 0 && (
+          {patient.age === null ? (
+            <p className="mt-2 text-xl text-gray-400">{t('ageUnknown')}</p>
+          ) : patient.age === 0 ? (
+            <p className="mt-2 text-xl text-gray-600">&lt; 1 yr</p>
+          ) : (
             <p className="mt-2 text-xl text-gray-600">{patient.age} yrs</p>
           )}
         </div>
@@ -276,12 +299,13 @@ function LargeButton({
   )
 }
 
+// F14: min-h-[48px] min-w-[48px] ensures 48×48px touch target on mobile devices
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="mt-2 text-lg text-gray-500 underline"
+      className="mt-2 min-h-[48px] min-w-[48px] text-lg text-gray-500 underline"
     >
       ← Back
     </button>
