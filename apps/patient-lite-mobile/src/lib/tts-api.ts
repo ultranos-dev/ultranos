@@ -9,7 +9,7 @@
 import { hubFetch } from '@/lib/hub-fetch'
 
 function getHubApiUrl(): string {
-  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 export interface GenerateAudioResult {

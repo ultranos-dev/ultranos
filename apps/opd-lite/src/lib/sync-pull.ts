@@ -17,7 +17,7 @@ import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
 import type { FhirPatient, PatientAddress, PatientTier } from '@ultranos/shared-types'
 
-const HUB_BASE_URL = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+const HUB_BASE_URL = process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 
 /**
  * Transform a flat camelCase patient row from the Hub into the nested

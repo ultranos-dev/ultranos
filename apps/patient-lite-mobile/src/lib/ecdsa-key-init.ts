@@ -26,7 +26,7 @@ const STORE_OPTIONS = {
 function getHubApiUrl(): string {
   // EXPO_PUBLIC_ vars are inlined at build time by Metro/Babel.
   // In production, this must be set. In dev/test, falls back to localhost.
-  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 export interface KeyInitResult {

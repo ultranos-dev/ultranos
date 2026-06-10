@@ -27,7 +27,7 @@ export default function ExpiringConsentsPage() {
     setLoading(true)
     try {
       const hubUrl =
-        process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+        process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
       const input = JSON.stringify({ json: { limit, offset } })
       const res = await fetch(
         `${hubUrl}/consent.expiringSoon?input=${encodeURIComponent(input)}`,

@@ -10,7 +10,7 @@
  */
 import { hubFetch } from '@/lib/hub-fetch'
 
-const HUB_API_URL = process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+const HUB_API_URL = process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 
 export interface RegistrationInput {
   phone: string

@@ -9,7 +9,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { db } from '@/lib/db'
 import type { SyncQueueEntry, ConflictResolution } from '@ultranos/sync-engine'
 
-const HUB_BASE_URL = (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000').replace(/\/api\/trpc\/?$/, '')
+const HUB_BASE_URL = (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004').replace(/\/api\/trpc\/?$/, '')
 
 /** Background pull interval — 2 minutes */
 const BACKGROUND_PULL_INTERVAL_MS = 2 * 60 * 1000

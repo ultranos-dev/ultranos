@@ -36,7 +36,7 @@ export interface NotificationItem {
 
 function getHubApiUrl(): string {
   // React Native: use env var or default
-  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 async function trpcQuery<T>(path: string, input?: object, token?: string): Promise<T> {

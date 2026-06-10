@@ -1,8 +1,8 @@
 export function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 type AuthEventType =
