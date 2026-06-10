@@ -2399,7 +2399,14 @@
     "enableGamification": "Enable Team Quality Achievements",
     "showOnDashboard": "Show my achievements on team dashboard",
     "aTeamMember": "A team member",
-    "congratulations": "Congratulations!"
+    "congratulations": "Congratulations!",
+    "subtitle": "Quality milestones celebrated together — not surveillance, but recognition.",
+    "activeStreaks": "Active Streaks",
+    "myAchievementsThisMonth": "Your Achievements This Month",
+    "recentTeamAchievements": "Recent Team Achievements",
+    "teamMilestones": "Team Milestones",
+    "youEarned": "You earned",
+    "noAchievementsYet": "No achievements yet this period. Keep up the quality work — the first milestone is coming!"
   },
   "quality": {
     "loading": "Loading your quality data...",

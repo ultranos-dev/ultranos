@@ -2400,7 +2400,14 @@
     "enableGamification": "فعال‌سازی دستاوردهای کیفیت تیم",
     "showOnDashboard": "نمایش دستاوردهای من در داشبورد تیم",
     "aTeamMember": "یک عضو تیم",
-    "congratulations": "تبریک!"
+    "congratulations": "تبریک!",
+    "subtitle": "نقاط عطف کیفیت با هم جشن گرفته می‌شود — نه نظارت، بلکه قدردانی.",
+    "activeStreaks": "رشته‌های فعال",
+    "myAchievementsThisMonth": "دستاوردهای شما این ماه",
+    "recentTeamAchievements": "دستاوردهای اخیر تیم",
+    "teamMilestones": "نقاط عطف تیم",
+    "youEarned": "شما کسب کردید",
+    "noAchievementsYet": "در این دوره هنوز دستاوردی نیست. به کار با کیفیت ادامه دهید — اولین مایلستون در راه است!"
   },
   "quality": {
     "loading": "در حال بارگذاری داده‌های کیفیت...",

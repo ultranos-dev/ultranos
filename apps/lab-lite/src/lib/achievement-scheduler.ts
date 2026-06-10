@@ -18,6 +18,7 @@ import {
 import {
   evaluateMonthlyAchievements,
   evaluateWeeklyAchievements,
+  evaluateMentorshipBadge,
   checkTeamMilestones,
   getIsoWeekString,
 } from './achievement-service'
@@ -33,8 +34,10 @@ export interface SchedulerRunResult {
  * Run all due achievement evaluations.
  * Called on app startup and periodically (see useAchievementScheduler).
  * Returns all newly awarded achievements in this run.
+ *
+ * @param techId — optional practitioner ID for per-tech evaluations (mentorship badge).
  */
-export async function runDueEvaluations(): Promise<SchedulerRunResult> {
+export async function runDueEvaluations(techId?: string): Promise<SchedulerRunResult> {
   const result: SchedulerRunResult = {
     monthlyAchievements: [],
     weeklyAchievements: [],
@@ -50,17 +53,31 @@ export async function runDueEvaluations(): Promise<SchedulerRunResult> {
   // -------------------------------------------------------------------------
   // Monthly evaluation: run on 1st of month if not already run for prev month
   // Late evaluation: if the scheduler missed the 1st, it runs on next app load
+  // Config write is inside the try so a failed evaluation is retried next run.
   // -------------------------------------------------------------------------
   const prevMonth = getPreviousMonthString(today)
   if (config.lastMonthlyEvaluation !== prevMonth) {
     try {
       const awards = await evaluateMonthlyAchievements(prevMonth)
       result.monthlyAchievements.push(...awards)
+      config = { ...config, lastMonthlyEvaluation: prevMonth }
+      await putAchievementSchedulerConfig(config)
     } catch {
-      // Non-fatal: evaluation failure doesn't block app
+      // Non-fatal: evaluation failure doesn't block app; period will retry next run
     }
-    config = { ...config, lastMonthlyEvaluation: prevMonth }
-    await putAchievementSchedulerConfig(config)
+  }
+
+  // -------------------------------------------------------------------------
+  // Mentorship badge: idempotent (has lifetime-period guard), safe every run.
+  // Requires a logged-in tech ID to check their supervised entry count.
+  // -------------------------------------------------------------------------
+  if (techId) {
+    try {
+      const award = await evaluateMentorshipBadge(techId)
+      if (award) result.monthlyAchievements.push(award)
+    } catch {
+      // Non-fatal
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -71,11 +88,11 @@ export async function runDueEvaluations(): Promise<SchedulerRunResult> {
     try {
       const awards = await evaluateWeeklyAchievements(prevWeek)
       result.weeklyAchievements.push(...awards)
+      config = { ...config, lastWeeklyEvaluation: prevWeek }
+      await putAchievementSchedulerConfig(config)
     } catch {
-      // Non-fatal
+      // Non-fatal: will retry next run
     }
-    config = { ...config, lastWeeklyEvaluation: prevWeek }
-    await putAchievementSchedulerConfig(config)
   }
 
   // -------------------------------------------------------------------------
@@ -85,11 +102,11 @@ export async function runDueEvaluations(): Promise<SchedulerRunResult> {
     try {
       const awards = await checkTeamMilestones()
       result.milestoneAchievements.push(...awards)
+      config = { ...config, lastMilestoneCheck: todayStr }
+      await putAchievementSchedulerConfig(config)
     } catch {
-      // Non-fatal
+      // Non-fatal: will retry next run
     }
-    config = { ...config, lastMilestoneCheck: todayStr }
-    await putAchievementSchedulerConfig(config)
   }
 
   return result

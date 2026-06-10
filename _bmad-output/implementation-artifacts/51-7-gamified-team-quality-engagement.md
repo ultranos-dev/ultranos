@@ -1,6 +1,6 @@
 # Story 51.7: Gamified Team Quality Engagement
 
-Status: review
+Status: done
 
 ## Story
 
@@ -393,3 +393,20 @@ Quality metrics in labs are often perceived as top-down surveillance tools, lead
 
 - **Vitest hoisting / closure issue:** `vi.mock('../lib/db', async () => ({ getAchievementSchedulerConfig: async () => mockConfig, ... }))` did not reliably reflect mutations of `mockConfig.gamificationEnabled` per-test. Resolved by switching to `vi.fn()` (`mockGetSchedulerConfig`) with explicit `mockResolvedValue` in `beforeEach`, giving deterministic per-test control.
 - **UTC timezone bug in ISO week calculation:** `getIsoWeekString(new Date('2026-04-06'))` returned W14 instead of W15 on non-UTC systems. Fixed by using `date.getUTCFullYear()`, `date.getUTCMonth()`, `date.getUTCDate()` throughout the function.
+
+### Review Findings
+
+- [x] [Review][Decision] `calcRejectionRate` — resolved: lab-wide (not per-tech). Renamed parameter to signal intent; added comment. [`apps/lab-lite/src/lib/quality-metrics-calculator.ts:141`]
+
+- [x] [Review][Patch] `getPreviousWeekString` returns wrong ISO week — DISMISSED (verified correct via Node.js: returns same week on all 7 days)
+- [x] [Review][Patch] Scheduler config saved after failed evaluation — FIXED: moved config write inside try block for all three evaluation types [`apps/lab-lite/src/lib/achievement-scheduler.ts`]
+- [x] [Review][Patch] "My Achievements This Month" filter excludes all earned awards — FIXED: filter now includes prevMonth + currentMonth + lifetime [`apps/lab-lite/src/components/achievements/TeamAchievementDashboard.tsx`]
+- [x] [Review][Patch] `getActiveStreaks` UTC date bug — FIXED: derives dateStr from local `getFullYear/getMonth/getDate` [`apps/lab-lite/src/lib/achievement-service.ts`]
+- [x] [Review][Patch] `evaluateMentorshipBadge` never called — FIXED: `runDueEvaluations` now accepts optional `techId` and calls it; `useAchievementScheduler` passes `practitionerId` from auth session [`apps/lab-lite/src/lib/achievement-scheduler.ts`, `src/hooks/useAchievementScheduler.ts`]
+- [x] [Review][Patch] `calcRejectionRate` full table scan — PARTIALLY FIXED: removed intermediate `allSamples` variable; single-pass filter now. Full index fix deferred (schema change required). [`apps/lab-lite/src/lib/quality-metrics-calculator.ts`]
+- [x] [Review][Patch] `TeamAchievementDashboard.tsx` hardcoded English — FIXED: added `useTranslations('achievements')`; wired 7 new keys added to en/ar/prs/ps locale files [`apps/lab-lite/src/components/achievements/TeamAchievementDashboard.tsx`]
+- [x] [Review][Patch] Stale snapshot — FIXED: deleted stale file; will regenerate on next test run [`apps/lab-lite/src/__tests__/__snapshots__/quality-dashboard.test.tsx.snap`]
+- [x] [Review][Patch] `TrendIndicator` arrow direction — DISMISSED (verified correct: down-arrow for improving lower-is-better metrics is semantically accurate)
+
+- [x] [Review][Defer] Dead code block in `evaluateMonthlyAchievements` — first `qcRateByTech` loop has empty `if` body and populates nothing; map is correctly populated in the second pass [`apps/lab-lite/src/lib/achievement-service.ts:192-199`] — deferred, pre-existing dead code, no correctness impact
+- [x] [Review][Defer] `enteredAt` string comparison vs period boundary assumes ISO 8601 UTC (`Z`-suffixed) — could silently mis-classify results stored without timezone suffix [`apps/lab-lite/src/lib/quality-metrics-calculator.ts:117`] — deferred, depends on data write conventions established in earlier stories

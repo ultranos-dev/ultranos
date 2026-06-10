@@ -493,7 +493,11 @@ export async function getActiveStreaks(): Promise<Streak[]> {
     let startDate = ''
 
     for (let i = 0; i < 30; i++) {
-      const dateStr = currentDate.toISOString().slice(0, 10)
+      // Use local calendar date to avoid UTC midnight off-by-one for UTC+N users
+      const y = currentDate.getFullYear()
+      const m = String(currentDate.getMonth() + 1).padStart(2, '0')
+      const d = String(currentDate.getDate()).padStart(2, '0')
+      const dateStr = `${y}-${m}-${d}`
       const dayStart = dateStr + 'T00:00:00.000Z'
       const dayEnd = dateStr + 'T23:59:59.999Z'
 

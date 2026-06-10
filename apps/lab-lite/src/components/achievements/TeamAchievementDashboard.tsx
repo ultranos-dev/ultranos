@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getDb, AchievementType } from '@/lib/db'
 import type { Achievement, TeamAchievement, AchievementPreferences } from '@/lib/db'
 import {
@@ -80,6 +81,7 @@ function MilestoneProgressBar({
 // ---------------------------------------------------------------------------
 
 export function TeamAchievementDashboard() {
+  const t = useTranslations('achievements')
   const session = useAuthSessionStore((s) => s.session)
   const [gamificationEnabled, setGamificationEnabled] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -167,27 +169,37 @@ export function TeamAchievementDashboard() {
     return null
   }
 
+  // Monthly awards are stamped with the previous month by the scheduler.
+  // Show achievements from the last two months and lifetime badges.
   const currentMonth = new Date().toISOString().slice(0, 7)
+  const prevMonthDate = new Date()
+  prevMonthDate.setDate(1)
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1)
+  const prevMonth = prevMonthDate.toISOString().slice(0, 7)
+
   const thisMonthAchievements = myAchievements.filter(
-    (a) => a.evaluationPeriod === currentMonth || a.evaluationPeriod === 'lifetime',
+    (a) =>
+      a.evaluationPeriod === currentMonth ||
+      a.evaluationPeriod === prevMonth ||
+      a.evaluationPeriod === 'lifetime',
   )
   const recentTeamAchievements = teamAchievements.slice(0, 10)
   const hideMyName = myPrefs?.showOnTeamDashboard === false
 
   return (
-    <div className="space-y-6" data-testid="team-achievement-dashboard">
+    <div className="space-y-4" data-testid="team-achievement-dashboard">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Team Achievements</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t('teamAchievements')}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Quality milestones celebrated together — not surveillance, but recognition.
+          {t('subtitle')}
         </p>
       </div>
 
       {/* Active Streaks */}
       {streaks.length > 0 && (
-        <section aria-label="Active streaks">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Active Streaks</h3>
+        <section aria-label={t('activeStreaks')}>
+          <h3 className="text-sm font-semibold text-foreground mb-3">{t('activeStreaks')}</h3>
           <div className="space-y-3">
             {streaks.map((streak) => (
               <StreakProgress key={streak.type} streak={streak} />
@@ -198,9 +210,9 @@ export function TeamAchievementDashboard() {
 
       {/* My Achievements This Month */}
       {thisMonthAchievements.length > 0 && (
-        <section aria-label="My achievements this month">
+        <section aria-label={t('myAchievementsThisMonth')}>
           <h3 className="text-sm font-semibold text-foreground mb-3">
-            Your Achievements This Month
+            {t('myAchievementsThisMonth')}
           </h3>
           <div className="space-y-2">
             {thisMonthAchievements.map((a) => (
@@ -208,7 +220,7 @@ export function TeamAchievementDashboard() {
                 key={a.id}
                 achievement={a}
                 hideIdentity={hideMyName}
-                messagePrefix="You earned"
+                messagePrefix={t('youEarned')}
               />
             ))}
           </div>
@@ -217,9 +229,9 @@ export function TeamAchievementDashboard() {
 
       {/* Recent Team Achievements */}
       {recentTeamAchievements.length > 0 && (
-        <section aria-label="Recent team achievements">
+        <section aria-label={t('recentTeamAchievements')}>
           <h3 className="text-sm font-semibold text-foreground mb-3">
-            Recent Team Achievements
+            {t('recentTeamAchievements')}
           </h3>
           <div className="space-y-2">
             {recentTeamAchievements.map((a) => (
@@ -230,8 +242,8 @@ export function TeamAchievementDashboard() {
       )}
 
       {/* Team Milestones Progress */}
-      <section aria-label="Team milestones">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Team Milestones</h3>
+      <section aria-label={t('teamMilestones')}>
+        <h3 className="text-sm font-semibold text-foreground mb-3">{t('teamMilestones')}</h3>
         <div className="space-y-4">
           {MILESTONE_THRESHOLDS.map((m) => (
             <MilestoneProgressBar
@@ -251,8 +263,7 @@ export function TeamAchievementDashboard() {
         streaks.length === 0 && (
           <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              No achievements yet this period. Keep up the quality work — the first milestone
-              is coming!
+              {t('noAchievementsYet')}
             </p>
           </div>
         )}

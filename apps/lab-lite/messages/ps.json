@@ -2400,7 +2400,14 @@
     "enableGamification": "د ټیم کیفیت لاسته راوړنې فعالول",
     "showOnDashboard": "زما لاسته راوړنې د ټیم ډیشبورډ کې وښایه",
     "aTeamMember": "د ټیم یو غړی",
-    "congratulations": "مبارک!"
+    "congratulations": "مبارک!",
+    "subtitle": "د کیفیت مایلسټونونه سره یوځای ولمانځئ — نه نظارت، بلکې قدردانی.",
+    "activeStreaks": "فعال سلسلې",
+    "myAchievementsThisMonth": "ستاسو د دې میاشتې لاسته راوړنې",
+    "recentTeamAchievements": "د ټیم وروستي لاسته راوړنې",
+    "teamMilestones": "د ټیم مایلسټونونه",
+    "youEarned": "تاسو ترلاسه کول",
+    "noAchievementsYet": "پدې موده کې لاهم هیڅ لاسته راوړنې نشته. د کیفیت کار ته دوام ورکړئ — لومړی مایلسټون راځي!"
   },
   "quality": {
     "loading": "د کیفیت معلومات ډکیږي...",

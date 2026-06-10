@@ -10,18 +10,21 @@
 
 import { useEffect } from 'react'
 import { runDueEvaluations, type SchedulerRunResult } from '@/lib/achievement-scheduler'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000 // re-check every hour (milestone checks are daily-gated internally)
 
 export function useAchievementScheduler(
   onNewAchievements?: (result: SchedulerRunResult) => void,
 ): void {
+  const practitionerId = useAuthSessionStore((s) => s.session?.practitionerId)
+
   useEffect(() => {
     let cancelled = false
 
     async function runCheck() {
       try {
-        const result = await runDueEvaluations()
+        const result = await runDueEvaluations(practitionerId ?? undefined)
         const hasNew =
           result.monthlyAchievements.length > 0 ||
           result.weeklyAchievements.length > 0 ||
@@ -50,5 +53,5 @@ export function useAchievementScheduler(
       clearTimeout(mountTimer)
       clearInterval(interval)
     }
-  }, [onNewAchievements])
+  }, [onNewAchievements, practitionerId])
 }

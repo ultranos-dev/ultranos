@@ -2400,7 +2400,14 @@
     "enableGamification": "تفعيل إنجازات جودة الفريق",
     "showOnDashboard": "عرض إنجازاتي في لوحة الفريق",
     "aTeamMember": "أحد أفراد الفريق",
-    "congratulations": "تهانينا!"
+    "congratulations": "تهانينا!",
+    "subtitle": "معالم الجودة نحتفل بها معًا — ليست مراقبة، بل تقدير.",
+    "activeStreaks": "السلاسل النشطة",
+    "myAchievementsThisMonth": "إنجازاتك هذا الشهر",
+    "recentTeamAchievements": "إنجازات الفريق الأخيرة",
+    "teamMilestones": "معالم الفريق",
+    "youEarned": "حصلت على",
+    "noAchievementsYet": "لا توجد إنجازات في هذه الفترة بعد. واصل عملك الجيد — أول إنجاز في الطريق!"
   },
   "quality": {
     "loading": "جاري تحميل بيانات الجودة...",

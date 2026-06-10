@@ -145,15 +145,18 @@ async function calcRejectionRate(
   const db = getDb()
   const { start, end } = periodBounds(period)
 
-  // Total samples received this period (use meta.lastUpdated as proxy for received date)
-  const allSamples = await db.samples.toArray()
-  const periodSamples = allSamples.filter((s) => {
-    const date =
-      (s as any).receivedTime?.slice(0, 10) ??
-      (s as any)._ultranos?.receivedAt?.slice(0, 10) ??
-      (s as any).meta?.lastUpdated?.slice(0, 10)
-    return date && date >= start && date <= end
-  })
+  // Rejection rate is lab-wide (not per-tech): reflects the lab environment's sample quality.
+  // Note: db.samples has no indexed date field — this is a full table scan. A schema index
+  // on receivedDateTime would eliminate the scan; tracked in deferred-work.md D-51.7-W2.
+  const periodSamples = await db.samples
+    .filter((s) => {
+      const date =
+        (s as any).receivedTime?.slice(0, 10) ??
+        (s as any)._ultranos?.receivedAt?.slice(0, 10) ??
+        (s as any).meta?.lastUpdated?.slice(0, 10)
+      return !!date && date >= start && date <= end
+    })
+    .toArray()
 
   if (periodSamples.length === 0) return 0
 
