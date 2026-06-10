@@ -51,6 +51,7 @@ import { LabRole } from '@ultranos/shared-types'
 import { canAccessAuthorizationQueue } from '@/lib/permissions'
 import { getPendingAuthorizationCount } from '@/lib/db'
 import { usePendingHandovers } from '@/hooks/usePendingHandovers'
+import { isCollectionOnlyMode } from '@/lib/collection-mode'
 
 // ── Badge hooks ───────────────────────────────────────────────────────────────
 
@@ -140,6 +141,16 @@ export function AppSidebar() {
   const { pendingHandovers } = usePendingHandovers()
   const handoverBadge = pendingHandovers.length > 0 ? pendingHandovers.length : null
 
+  // D7→P: collection-only mode hides restricted workflow sections
+  const [isCollectionOnly, setIsCollectionOnly] = useState<boolean>(false)
+  useEffect(() => {
+    let cancelled = false
+    isCollectionOnlyMode()
+      .then((v) => { if (!cancelled) setIsCollectionOnly(v) })
+      .catch(() => { /* default: full mode */ })
+    return () => { cancelled = true }
+  }, [])
+
   const handleSignOut = useCallback(async () => {
     useAuthSessionStore.getState().clearSession()
     await getSupabaseBrowserClient().auth.signOut()
@@ -153,86 +164,110 @@ export function AppSidebar() {
     ? canAccessAuthorizationQueue(session.labRole as LabRole)
     : false
 
-  const navGroups: LabNavGroup[] = [
-    {
-      title: '',
-      items: [
-        { title: t('dashboard'), url: '/', icon: Home },
-      ],
-    },
-    {
-      title: 'Lab Workflow',
-      items: [
-        { title: t('orders'), url: '/orders', icon: ClipboardList, badge: ordersBadge },
-        { title: t('worklist'), url: '/worklist', icon: ClipboardList },
-        { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
-        { title: t('reports'), url: '/reports', icon: FileText },
-        { title: t('dailyLog'), url: '/reports/daily' },
-      ],
-    },
-    {
-      title: 'Patients',
-      items: [
-        { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
-        { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
-        { title: t('history'), url: '/history', icon: History },
-        { title: t('consent'), url: '/consent', icon: ShieldCheck },
-      ],
-    },
-    {
-      title: 'Quality',
-      items: [
-        { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
-        { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
-        { title: t('equipment'), url: '/equipment', icon: Wrench },
-        { title: t('sops'), url: '/sops', icon: BookOpen },
-        { title: t('visualAtlas'), url: '/atlas', icon: Microscope },
-      ],
-    },
-    {
-      title: 'Team',
-      items: [
-        { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
-        { title: t('portfolio'), url: '/portfolio', icon: BarChart3 },
-        { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
-        { title: t('certification'), url: '/certification', icon: Award },
-        { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
-        { title: t('peerNetwork'), url: '/peer-network', icon: MessageCircle },
-        ...(canAccessAuth
-          ? [{ title: t('authorizationQueue'), url: '/authorization', icon: ClipboardCheck, badge: authQueueBadge }]
-          : []),
-      ],
-    },
-    {
-      title: 'Finance',
-      items: [
-        { title: t('newPayment'), url: '/finance/payment', icon: Banknote },
-        { title: t('receipts'), url: '/finance/receipts', icon: Receipt },
-        { title: t('reconciliation'), url: '/finance/reconciliation', icon: Scale },
-        { title: t('reagents'), url: '/finance/reagents', icon: FlaskConical },
-        ...(canAccessCostAnalysis
-          ? [
-              { title: t('costAnalysis'), url: '/finance/cost-analysis', icon: BarChart3 },
-              { title: t('costSettings'), url: '/finance/cost-settings', icon: Calculator },
-            ]
-          : []),
-      ],
-    },
-    {
-      title: 'Administration',
-      items: [
-        { title: t('notifications'), url: '/notifications', icon: Bell },
-        ...(canAccessNetwork
-          ? [
-              { title: t('readinessBoard'), url: '/readiness', icon: BarChart3 },
-              { title: t('network'), url: '/network', icon: Globe },
-              { title: t('networkInventory'), url: '/inventory/network', icon: Network },
-            ]
-          : []),
-        { title: t('settings'), url: '/settings', icon: Settings },
-      ],
-    },
-  ]
+  // D7→P: In collection-only mode only Dashboard, Patients, and Upload Queue are accessible.
+  // All result-entry, QC, inventory, team, finance, and admin sections are restricted.
+  const navGroups: LabNavGroup[] = isCollectionOnly
+    ? [
+        {
+          title: '',
+          items: [{ title: t('dashboard'), url: '/', icon: Home }],
+        },
+        {
+          title: 'Patients',
+          items: [
+            { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
+            { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
+            { title: t('history'), url: '/history', icon: History },
+            { title: t('consent'), url: '/consent', icon: ShieldCheck },
+          ],
+        },
+        {
+          title: 'Lab Workflow',
+          items: [
+            { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+          ],
+        },
+      ]
+    : [
+        {
+          title: '',
+          items: [
+            { title: t('dashboard'), url: '/', icon: Home },
+          ],
+        },
+        {
+          title: 'Lab Workflow',
+          items: [
+            { title: t('orders'), url: '/orders', icon: ClipboardList, badge: ordersBadge },
+            { title: t('worklist'), url: '/worklist', icon: ClipboardList },
+            { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+            { title: t('reports'), url: '/reports', icon: FileText },
+            { title: t('dailyLog'), url: '/reports/daily' },
+          ],
+        },
+        {
+          title: 'Patients',
+          items: [
+            { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
+            { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
+            { title: t('history'), url: '/history', icon: History },
+            { title: t('consent'), url: '/consent', icon: ShieldCheck },
+          ],
+        },
+        {
+          title: 'Quality',
+          items: [
+            { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
+            { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
+            { title: t('equipment'), url: '/equipment', icon: Wrench },
+            { title: t('sops'), url: '/sops', icon: BookOpen },
+            { title: t('visualAtlas'), url: '/atlas', icon: Microscope },
+          ],
+        },
+        {
+          title: 'Team',
+          items: [
+            { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
+            { title: t('portfolio'), url: '/portfolio', icon: BarChart3 },
+            { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
+            { title: t('certification'), url: '/certification', icon: Award },
+            { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
+            { title: t('peerNetwork'), url: '/peer-network', icon: MessageCircle },
+            ...(canAccessAuth
+              ? [{ title: t('authorizationQueue'), url: '/authorization', icon: ClipboardCheck, badge: authQueueBadge }]
+              : []),
+          ],
+        },
+        {
+          title: 'Finance',
+          items: [
+            { title: t('newPayment'), url: '/finance/payment', icon: Banknote },
+            { title: t('receipts'), url: '/finance/receipts', icon: Receipt },
+            { title: t('reconciliation'), url: '/finance/reconciliation', icon: Scale },
+            { title: t('reagents'), url: '/finance/reagents', icon: FlaskConical },
+            ...(canAccessCostAnalysis
+              ? [
+                  { title: t('costAnalysis'), url: '/finance/cost-analysis', icon: BarChart3 },
+                  { title: t('costSettings'), url: '/finance/cost-settings', icon: Calculator },
+                ]
+              : []),
+          ],
+        },
+        {
+          title: 'Administration',
+          items: [
+            { title: t('notifications'), url: '/notifications', icon: Bell },
+            ...(canAccessNetwork
+              ? [
+                  { title: t('readinessBoard'), url: '/readiness', icon: BarChart3 },
+                  { title: t('network'), url: '/network', icon: Globe },
+                  { title: t('networkInventory'), url: '/inventory/network', icon: Network },
+                ]
+              : []),
+            { title: t('settings'), url: '/settings', icon: Settings },
+          ],
+        },
+      ]
 
   const displayName = session?.name || session?.email?.split('@')[0] || 'Technician'
   const initials = displayName

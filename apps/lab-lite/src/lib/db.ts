@@ -24,7 +24,7 @@ import type { WasteContainer, WasteDisposalRecord } from '@/types/waste-tracking
 import type { PatientCulturalPreferences, CulturalFlag } from '@/lib/cultural-flags'
 import type { PeerPost, PeerResponse, ModerationFlag } from '@/lib/peer-network-types'
 import type { SafetyReport } from '@/types/safety-reporting'
-import type { LabLocation } from '@/types/lab-network'
+import type { LabLocation, NetworkStatusSnapshot } from '@/types/lab-network'
 import type { TransportSession } from '@/types/transport'
 import type { TemperatureReading, TemperatureLocation, TemperatureExcursion } from '@/types/temperature-monitoring'
 import type { EncryptedHealthRecord } from '@/types/employee-health'
@@ -35,6 +35,8 @@ import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/qua
 import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
 import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
 import type { SmsQueueEntry, SmsGatewayConfig, SmsEscalationScheduleEntry } from '@/lib/sms/sms-gateway'
+import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
+import type { ReferenceLab, SendOut, SendOutStatusTransition } from '@/types/reference-lab'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -179,6 +181,8 @@ export interface UploadQueueEntry {
   status: UploadQueueStatus
   retryCount: number
   lastAttemptAt: string | null
+  /** Originating location — set when entry is created from a satellite lab. */
+  locationId?: string
 }
 
 export interface PractitionerKeyCache {
@@ -190,6 +194,7 @@ export interface PractitionerKeyCache {
 export interface VerifiedPatientCache {
   patientId: string
   firstName: string // ONLY first name — CLAUDE.md Rule #7 (data minimization)
+  fatherName?: string // Afghan standard: father's name used for disambiguation only, never stored as PHI
   age: number // computed age, NOT DOB
   verifiedAt: string
   verificationSource?: 'qr' | 'national_id' | 'manual'
@@ -656,6 +661,17 @@ class LabLiteDatabase extends Dexie {
   // v35 — Power-Aware Workload Scheduler (Story 48.1)
   power_schedules!: Dexie.Table<PowerScheduleEntry, string>
   test_time_estimates!: Dexie.Table<TestTimeEstimate, string>
+  // v36 — CHW Collection Module (Story 54.2)
+  chw_samples!: Dexie.Table<CHWSampleCollection, string>
+  courier_handoffs!: Dexie.Table<CourierHandoff, string>
+  // v37 — External Reference Lab Integration (Story 54.4)
+  reference_labs!: Dexie.Table<ReferenceLab, string>
+  send_outs!: Dexie.Table<SendOut, string>
+  send_out_transitions!: Dexie.Table<SendOutStatusTransition, string>
+  // v38 — Multi-Branch Lab Network (Story 54.1)
+  // network_snapshots: per-location connectivity/operational snapshot set during sync.
+  // No PHI — locationId is an opaque UUID; snapshot contains counts and connectivity state only.
+  network_snapshots!: Dexie.Table<NetworkStatusSnapshot, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1477,6 +1493,34 @@ class LabLiteDatabase extends Dexie {
     this.version(35).stores({
       power_schedules: '&id, dayOfWeek, isActive',
       test_time_estimates: '&loincCode, requiresPower',
+    })
+    // v36 — CHW Collection Module (Story 54.2)
+    // chw_samples: one record per collected sample; syncStatus index for pending-drain queries.
+    // courier_handoffs: one record per courier pickup; syncStatus index for pending-drain queries.
+    // No PHI beyond firstName + age (CLAUDE.md Rule #7 compliance enforced at service layer).
+    this.version(36).stores({
+      chw_samples: '&id, patientRef, sampleType, labelNumber, collectedAt, syncStatus',
+      courier_handoffs: '&id, courierId, pickupTimestamp, syncStatus',
+    })
+    // v37 — External Reference Lab Integration (Story 54.4)
+    // reference_labs: configurable registry of external labs; isActive index for active-only queries.
+    // send_outs: full lifecycle of samples sent externally; status + referenceLabId indexes for TAT queries.
+    // send_out_transitions: append-only status audit trail per send-out.
+    // No PHI beyond sampleId (opaque UUID) — patient identity never stored here (CLAUDE.md Rule #7).
+    this.version(37).stores({
+      reference_labs: '&id, name, isActive',
+      send_outs: '&id, sampleId, referenceLabId, status, sentAt',
+      send_out_transitions: '&id, sendOutId, timestamp',
+    })
+    // v38 — Multi-Branch Lab Network index fixes (Story 54.1 code review)
+    // - uploadQueue: adds locationId index for per-location pending/failed count queries.
+    // - orders: adds receivedAt index so today's sample queries can use Dexie index instead of full scan.
+    // - network_snapshots: new table for per-location connectivity/operational snapshots set during sync.
+    // No PHI — locationId is opaque UUID; orders index is on a timestamp field only.
+    this.version(38).stores({
+      uploadQueue: '++id, status, queuedAt, locationId',
+      orders: '&orderId, status, urgency, patientRef, authoredOn, receivedAt',
+      network_snapshots: '&locationId',
     })
   }
 }
@@ -2453,6 +2497,18 @@ export async function getActiveLocations(): Promise<LabLocation[]> {
 export async function getLocationById(id: string): Promise<LabLocation | undefined> {
   const db = getDb()
   return db.lab_locations.get(id)
+}
+
+/** Return the stored network snapshot for a location, or undefined if none exists yet. */
+export async function getNetworkSnapshot(locationId: string): Promise<NetworkStatusSnapshot | undefined> {
+  const db = getDb()
+  return db.network_snapshots.get(locationId)
+}
+
+/** Upsert a network snapshot for a location (called during sync). */
+export async function putNetworkSnapshot(snapshot: NetworkStatusSnapshot): Promise<void> {
+  const db = getDb()
+  await db.network_snapshots.put(snapshot)
 }
 
 // ---------------------------------------------------------------------------
@@ -3443,4 +3499,159 @@ export async function getTestTimeEstimate(
 ): Promise<TestTimeEstimate | undefined> {
   const db = getDb()
   return db.test_time_estimates.get(loincCode)
+}
+
+// ---------------------------------------------------------------------------
+// CHW Collection Module helpers (v36) — Story 54.2
+// collectedAt is a serialized HLC string: wallMs_padded:counter:nodeId
+// "Today" filtering parses the numeric wallMs from the prefix.
+// No PHI exposed here — callers enforce CLAUDE.md Rule #7 at the service layer.
+// ---------------------------------------------------------------------------
+
+/** Return today's epoch ms bounds [start, end] for HLC wallMs filtering. */
+function todayEpochBounds(): { start: number; end: number } {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  const start = d.getTime()
+  d.setHours(23, 59, 59, 999)
+  const end = d.getTime()
+  return { start, end }
+}
+
+/** Return all CHW samples collected today (filtered by HLC wallMs). */
+export async function getTodayCHWSamples(): Promise<CHWSampleCollection[]> {
+  const db = getDb()
+  const { start, end } = todayEpochBounds()
+  return db.chw_samples
+    .filter((s) => {
+      const wallMs = parseInt(s.collectedAt.split(':')[0]!, 10)
+      return wallMs >= start && wallMs <= end
+    })
+    .toArray()
+}
+
+/**
+ * Atomically assign the next today's label number and persist the new sample.
+ * Reading existing labels and writing the new record happen inside a single
+ * Dexie transaction — prevents duplicate labels under concurrent collection (F7).
+ */
+export async function addCHWSampleAtomic(
+  partialSample: Omit<CHWSampleCollection, 'labelNumber'>,
+): Promise<CHWSampleCollection> {
+  const db = getDb()
+
+  const now = new Date()
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  const monthDay = `${mm}${dd}`
+  const prefix = `CHW-${monthDay}-`
+
+  return db.transaction('rw', db.chw_samples, async () => {
+    const { start, end } = todayEpochBounds()
+    const todaySamples = await db.chw_samples
+      .filter((s) => {
+        const wallMs = parseInt(s.collectedAt.split(':')[0]!, 10)
+        return wallMs >= start && wallMs <= end
+      })
+      .toArray()
+
+    const usedNumbers = new Set(
+      todaySamples.map((s) => s.labelNumber).filter((n) => n.startsWith(prefix)),
+    )
+
+    let seq = 1
+    while (usedNumbers.has(`CHW-${monthDay}-${String(seq).padStart(3, '0')}`)) {
+      seq++
+      if (seq > 999) {
+        throw new Error('CHW label sequence exhausted for today (>999 samples). Contact lab support.')
+      }
+    }
+    const labelNumber = `CHW-${monthDay}-${String(seq).padStart(3, '0')}`
+
+    const sample: CHWSampleCollection = { ...partialSample, labelNumber }
+    await db.chw_samples.add(sample)
+    return sample
+  })
+}
+
+/** Add a pre-built CHW sample record directly (no label generation). */
+export async function addCHWSample(sample: CHWSampleCollection): Promise<void> {
+  const db = getDb()
+  await db.chw_samples.add(sample)
+}
+
+/** Persist a courier handoff record. */
+export async function addCourierHandoff(handoff: CourierHandoff): Promise<void> {
+  const db = getDb()
+  await db.courier_handoffs.add(handoff)
+}
+
+/**
+ * Retrieve CHW samples by IDs, restricted to today's records only (F11).
+ * Samples from previous days are excluded — prevents cross-day handoff forgery.
+ */
+export async function getCHWSamplesByIds(ids: string[]): Promise<CHWSampleCollection[]> {
+  if (ids.length === 0) return []
+  const db = getDb()
+  const { start, end } = todayEpochBounds()
+  const results = await db.chw_samples.bulkGet(ids)
+  return results.filter((s): s is CHWSampleCollection => {
+    if (!s) return false
+    const wallMs = parseInt(s.collectedAt.split(':')[0]!, 10)
+    return wallMs >= start && wallMs <= end
+  })
+}
+
+/**
+ * Return all CHW samples and courier handoffs with syncStatus 'pending'.
+ * Used by the upload worker to drain offline-collected CHW data to the Hub.
+ */
+export async function getPendingSyncItems(): Promise<Array<CHWSampleCollection | CourierHandoff>> {
+  const db = getDb()
+  const [samples, handoffs] = await Promise.all([
+    db.chw_samples.where('syncStatus').equals('pending').toArray(),
+    db.courier_handoffs.where('syncStatus').equals('pending').toArray(),
+  ])
+  return [...samples, ...handoffs]
+}
+
+// ---------------------------------------------------------------------------
+// Reference Lab helpers (v37) — Story 54.4: External Reference Lab Integration
+// No PHI — reference labs are institutional records only.
+// ---------------------------------------------------------------------------
+
+/** Upsert a reference lab record. */
+export async function putReferenceLab(lab: ReferenceLab): Promise<void> {
+  const db = getDb()
+  await db.reference_labs.put(lab)
+}
+
+/** Return all active (isActive = true) reference labs. */
+export async function getActiveReferenceLabs(): Promise<ReferenceLab[]> {
+  const db = getDb()
+  return db.reference_labs.where('isActive').equals(1).toArray()
+}
+
+/** Create a new send-out record. */
+export async function createSendOut(sendOut: SendOut): Promise<void> {
+  const db = getDb()
+  await db.send_outs.put(sendOut)
+}
+
+/** Return send-outs by status. */
+export async function getSendOutsByStatus(status: SendOut['status']): Promise<SendOut[]> {
+  const db = getDb()
+  return db.send_outs.where('status').equals(status).toArray()
+}
+
+/** Return all send-outs for a given sample (by sampleId). */
+export async function getSendOutsForSample(sampleId: string): Promise<SendOut[]> {
+  const db = getDb()
+  return db.send_outs.where('sampleId').equals(sampleId).toArray()
+}
+
+/** Append a status transition record. */
+export async function addSendOutTransition(transition: SendOutStatusTransition): Promise<void> {
+  const db = getDb()
+  await db.send_out_transitions.put(transition)
 }

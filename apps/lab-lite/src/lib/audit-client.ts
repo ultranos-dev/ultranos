@@ -1505,12 +1505,13 @@ export function reportAmendmentEvent(payload: {
  * Only opaque IDs, counts, and flag type enums are logged.
  */
 export function reportTransportAuditEvent(payload: {
-  action: 'TRANSPORT_STARTED' | 'TRANSPORT_DELIVERED' | 'TRANSPORT_STABILITY_FLAG' | 'TRANSPORT_MANIFEST_GENERATED'
+  action: 'TRANSPORT_STARTED' | 'TRANSPORT_DELIVERED' | 'TRANSPORT_STABILITY_FLAG' | 'TRANSPORT_MANIFEST_GENERATED' | 'TRANSPORT_FLAG_ACKNOWLEDGED'
   transportSessionId: string
   courierId: string
   sampleCount?: number
   flagCount?: number
   flagTypes?: string[]
+  missingSpecimenCount?: number
 }): void {
   const session = useAuthSessionStore.getState().session
 
@@ -1519,6 +1520,7 @@ export function reportTransportAuditEvent(payload: {
     TRANSPORT_DELIVERED: AuditAction.UPDATE,
     TRANSPORT_STABILITY_FLAG: AuditAction.CREATE,
     TRANSPORT_MANIFEST_GENERATED: AuditAction.READ,
+    TRANSPORT_FLAG_ACKNOWLEDGED: AuditAction.UPDATE,
   }
 
   const input: ClientAuditEventInput = {
@@ -1536,6 +1538,7 @@ export function reportTransportAuditEvent(payload: {
       ...(payload.sampleCount != null ? { sampleCount: payload.sampleCount } : {}),
       ...(payload.flagCount != null ? { flagCount: payload.flagCount } : {}),
       ...(payload.flagTypes ? { flagTypes: payload.flagTypes } : {}),
+      ...(payload.missingSpecimenCount != null ? { missingSpecimenCount: payload.missingSpecimenCount } : {}),
       source: 'lab-lite',
     },
   }
@@ -1854,6 +1857,159 @@ export function reportWorkloadAuditEvent(payload: {
     }
 
     void emitClientAudit(input)
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CHW Collection Module audit events (Story 54.2) — AC #9
+// All metadata uses opaque IDs only — no patient name, no diagnosis (Rule #6).
+// ---------------------------------------------------------------------------
+
+/** Emit CHW_PATIENT_IDENTIFIED when a CHW successfully identifies a patient. */
+export function reportCHWPatientIdentifiedEvent(payload: {
+  patientRef: string
+  identificationMethod: 'qr' | 'name'
+  chwPractitionerId: string
+}): void {
+  try {
+    void emitClientAudit({
+      action: AuditAction.READ,
+      resourceType: AuditResourceType.LAB_SAMPLE,
+      resourceId: payload.patientRef,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        chwEvent: 'CHW_PATIENT_IDENTIFIED',
+        identificationMethod: payload.identificationMethod,
+        chwPractitionerId: payload.chwPractitionerId,
+        source: 'lab-lite-chw',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+/** Emit CHW_SAMPLE_COLLECTED when a CHW persists a new sample to Dexie. */
+export function reportCHWSampleCollectedEvent(payload: {
+  sampleId: string
+  sampleType: string
+  labelNumber: string
+  chwPractitionerId: string
+}): void {
+  try {
+    void emitClientAudit({
+      action: AuditAction.CREATE,
+      resourceType: AuditResourceType.LAB_SAMPLE,
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        chwEvent: 'CHW_SAMPLE_COLLECTED',
+        sampleType: payload.sampleType,
+        labelNumber: payload.labelNumber,
+        chwPractitionerId: payload.chwPractitionerId,
+        source: 'lab-lite-chw',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+/** Emit CHW_LABEL_PRINTED when a CHW prints or displays a sample label. */
+export function reportCHWLabelPrintedEvent(payload: {
+  sampleId: string
+  labelNumber: string
+  chwPractitionerId: string
+}): void {
+  try {
+    void emitClientAudit({
+      action: AuditAction.READ,
+      resourceType: AuditResourceType.LAB_SAMPLE,
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        chwEvent: 'CHW_LABEL_PRINTED',
+        labelNumber: payload.labelNumber,
+        chwPractitionerId: payload.chwPractitionerId,
+        source: 'lab-lite-chw',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+/** Emit CHW_COURIER_HANDOFF when a CHW records a courier pickup. */
+export function reportCHWHandoffEvent(payload: {
+  handoffId: string
+  sampleCount: number
+  courierId: string
+  chwPractitionerId: string
+}): void {
+  try {
+    void emitClientAudit({
+      action: AuditAction.CREATE,
+      resourceType: AuditResourceType.LAB_SAMPLE,
+      resourceId: payload.handoffId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        chwEvent: 'CHW_COURIER_HANDOFF',
+        sampleCount: payload.sampleCount,
+        courierId: payload.courierId,
+        chwPractitionerId: payload.chwPractitionerId,
+        source: 'lab-lite-chw',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Send-Out Audit Events (Story 54.4 / Task 13)
+// All send-out mutations emit structured audit events.
+// No PHI — only sendOutId, referenceLabId, actorId, and status codes.
+// ---------------------------------------------------------------------------
+
+type SendOutAuditAction =
+  | 'SENDOUT_CREATED'
+  | 'SENDOUT_STATUS_UPDATED'
+  | 'SENDOUT_RESULT_IMPORTED'
+  | 'SENDOUT_REFERRAL_GENERATED'
+  | 'REFERENCE_LAB_CONFIGURED'
+
+interface SendOutAuditPayload {
+  action: SendOutAuditAction
+  sendOutId?: string
+  referenceLabId?: string
+  actorId: string
+  timestamp: string
+  details?: Record<string, unknown>
+}
+
+/**
+ * Emit a send-out lifecycle audit event.
+ * Fire-and-forget — never throws, never blocks callers.
+ * All fields are operational identifiers only — no PHI.
+ */
+export function reportSendOutAuditEvent(payload: SendOutAuditPayload): void {
+  try {
+    void emitClientAudit({
+      action: AuditAction.UPDATE,
+      resourceType: AuditResourceType.LAB_SAMPLE,
+      resourceId: payload.sendOutId ?? payload.referenceLabId ?? 'unknown',
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        sendOutEvent: payload.action,
+        sendOutId: payload.sendOutId,
+        referenceLabId: payload.referenceLabId,
+        actorId: payload.actorId,
+        timestamp: payload.timestamp,
+        ...payload.details,
+      },
+    })
   } catch {
     // Never throws — audit failures must not surface as UI errors
   }

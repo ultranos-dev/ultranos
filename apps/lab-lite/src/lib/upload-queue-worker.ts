@@ -239,7 +239,8 @@ export async function drainCHWQueue(deps: CHWSyncDependencies): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export interface TransportSyncDependencies {
-  syncFn: (sessions: import('@/types/transport').TransportSession[]) => Promise<void>
+  // P10: token passed into syncFn so callers can use it per-request (avoids single-token stale risk)
+  syncFn: (sessions: import('@/types/transport').TransportSession[], token: string) => Promise<void>
   getToken: () => Promise<string>
 }
 
@@ -260,17 +261,25 @@ export async function drainTransportSessions(deps: TransportSyncDependencies): P
 
   if (pending.length === 0) return
 
+  // P10: get token once; passed into syncFn per the updated interface
+  let token: string
   try {
-    await deps.getToken()
-    await deps.syncFn(pending)
+    token = await deps.getToken()
+  } catch {
+    // Cannot obtain token — leave all sessions as 'pending' for next cycle
+    return
+  }
 
-    for (const session of pending) {
+  // P11: per-session sync so one failure doesn't block the rest
+  for (const session of pending) {
+    try {
+      await deps.syncFn([session], token)
       await updateTransportSession(session.id, {
         _ultranos: { ...session._ultranos, syncStatus: 'synced' },
       })
-    }
-  } catch {
-    for (const session of pending) {
+    } catch (err) {
+      // P15: log error.message so failures are visible without swallowing context
+      console.error('[transport-sync] session sync failed:', err instanceof Error ? err.message : 'unknown error')
       await updateTransportSession(session.id, {
         _ultranos: { ...session._ultranos, syncStatus: 'failed' },
       })
