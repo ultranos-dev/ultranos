@@ -10,6 +10,10 @@ import { reportTransportAuditEvent } from '@/lib/audit-client'
 import type { SampleLock } from '@/lib/db'
 import { acquireLock, releaseLock } from '@/lib/sample-lock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { MessageSquare } from '@ultranos/ui-kit/icons'
+import type { ConsultationRequest, ConsultationResponse } from '@/lib/consultation'
+import { getConsultationsForSample, getResponseForRequest } from '@/lib/consultation-sync'
 import { SampleStatusBadge } from './SampleStatusBadge'
 import { CustodyTimeline } from './CustodyTimeline'
 import { RecordHandoffModal } from './RecordHandoffModal'
@@ -54,6 +58,10 @@ export function SampleDetailView({
   const [activeLock, setActiveLock] = useState<SampleLock | null>(null)
   const [lockBlocker, setLockBlocker] = useState<{ lockedByName: string; lockedAt: string } | null>(null)
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false)
+  const [consultationNotes, setConsultationNotes] = useState<Array<{
+    request: ConsultationRequest
+    response: ConsultationResponse
+  }>>([]);
 
   const pipelineStatus = specimen._ultranos.pipelineStatus
 
@@ -77,6 +85,21 @@ export function SampleDetailView({
     getActiveLock(specimen.id)
       .then((lock) => setActiveLock(lock ?? null))
       .catch(() => setActiveLock(null))
+  }, [specimen.id])
+
+  // Load consultation responses for this sample (AC 7, Story 53.4)
+  useEffect(() => {
+    getConsultationsForSample(specimen.id)
+      .then(async (requests) => {
+        const notes = await Promise.all(
+          requests.map(async (req) => {
+            const resp = await getResponseForRequest(req.id)
+            return resp ? { request: req, response: resp } : null
+          })
+        )
+        setConsultationNotes(notes.filter((n): n is { request: ConsultationRequest; response: ConsultationResponse } => n !== null))
+      })
+      .catch(() => {}) // non-critical
   }, [specimen.id])
 
   async function handleBeginProcessing() {
@@ -420,6 +443,44 @@ export function SampleDetailView({
           events={custodyEvents}
           practitionerNames={practitionerNames}
         />
+      </div>
+
+      {/* Consultation Notes (AC 7, Story 53.4) */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-muted-foreground">
+          {t('detail.consultationNotes')}
+        </h3>
+        {consultationNotes.length === 0 ? (
+          <EmptyState
+            size="sm"
+            icon={MessageSquare}
+            title={t('detail.noConsultationNotes')}
+          />
+        ) : (
+          <ul className="space-y-4">
+            {consultationNotes.map(({ request, response }) => (
+              <li key={response.id} className="rounded-lg border border-border p-3 space-y-1">
+                <p className="text-xs font-semibold text-foreground">
+                  {response.respondentName}
+                  {response.respondentCredentials && (
+                    <span className="ms-1 text-muted-foreground font-normal">
+                      {response.respondentCredentials}
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {response.responseText}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(response.receivedAt).toLocaleDateString()}
+                  <span className="ms-2 font-mono text-xs opacity-60">
+                    {request.recipientType === 'pathologist' ? t('detail.consultPathologist') : t('detail.consultReferenceLab')}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Handoff modal */}

@@ -27,7 +27,7 @@ const STEP_ICONS: Record<string, string> = {
   calendar: '📅',
   doctor:   '🩺',
   noShare:  '🚫',
-  noAlcohol:'🚭',
+  noAlcohol:'🚫',
   food:     '🥦',
   rest:     '💤',
   confidential: '🔒',

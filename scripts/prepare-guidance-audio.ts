@@ -120,8 +120,17 @@ async function prepareGuidanceAudio(): Promise<void> {
         `${conditionCode}-${locale}.m4a`,
       ]
 
+      // PHI safety: only accept filenames that match the strict pattern
+      // {CONDITION_CODE}-{locale}.{ext} — no patient names or IDs in filenames.
+      const SAFE_FILENAME_RE = /^[A-Z0-9_]+-[a-z]{2,4}\.(mp3|ogg|wav|m4a)$/
+
       let found = false
       for (const candidate of candidates) {
+        if (!SAFE_FILENAME_RE.test(candidate)) {
+          warnings.push(`⚠️  Skipping file with unsafe filename pattern: ${candidate}`)
+          continue
+        }
+
         const filePath = path.join(AUDIO_INPUT_DIR, candidate)
         if (!fs.existsSync(filePath)) continue
 
@@ -131,7 +140,7 @@ async function prepareGuidanceAudio(): Promise<void> {
           warnings.push(
             `⚠️  ${candidate}: source too large (${(raw.byteLength / 1024).toFixed(0)} KB > 5 MB). Skipping.`,
           )
-          break
+          continue  // try next format variant, not break
         }
 
         const base64 = raw.toString('base64')

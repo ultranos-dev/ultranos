@@ -458,6 +458,19 @@ export const GUIDANCE_SEED: GuidanceContent[] = [
 // Index by conditionCode for O(1) lookup by the trigger engine
 // ---------------------------------------------------------------------------
 
+// Runtime guard: assert no duplicate conditionCodes (would silently overwrite
+// entries in the Map and cause guidance suppression for the earlier condition).
+const _seenConditionCodes = new Set<string>()
+for (const _entry of GUIDANCE_SEED) {
+  if (_seenConditionCodes.has(_entry.conditionCode)) {
+    throw new Error(
+      `[guidance-seed-data] Duplicate conditionCode in GUIDANCE_SEED: "${_entry.conditionCode}". ` +
+      'Each condition must appear exactly once.',
+    )
+  }
+  _seenConditionCodes.add(_entry.conditionCode)
+}
+
 export const GUIDANCE_BY_CONDITION_CODE: Map<string, GuidanceContent> = new Map(
   GUIDANCE_SEED.map((g) => [g.conditionCode, g]),
 )

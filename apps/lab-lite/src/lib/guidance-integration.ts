@@ -20,6 +20,7 @@
 
 import { evaluateGuidanceTriggers, getMatchingGuidanceRuleIds } from '@/lib/guidance-trigger'
 import { reportGuidanceEvent } from '@/lib/audit-client'
+import { hlc, serializeHlc } from '@/lib/hlc'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,7 +31,7 @@ export interface GuidanceAttachment {
   guidanceContentIds: string[]
   /** Condition codes that triggered guidance — for distribution metadata */
   conditionCodes: string[]
-  /** ISO timestamp when guidance was evaluated */
+  /** HLC timestamp when guidance was evaluated */
   evaluatedAt: string
 }
 
@@ -46,14 +47,12 @@ export interface GuidanceAttachment {
  *
  * @param resultValues      - Map of field code → numeric/string/null value
  * @param templateLoincCode - LOINC code identifying the result template
- * @param resultId          - Opaque result UUID (for audit events — no PHI)
  * @param language          - Patient's preferred language (for audit metadata)
  * @returns                 GuidanceAttachment with guidance IDs, or null if none triggered
  */
 export function evaluateAndAttachGuidance(
   resultValues: Record<string, number | string | null>,
   templateLoincCode: string,
-  resultId: string,
   language: string = 'en',
 ): GuidanceAttachment | null {
   const matchedContent = evaluateGuidanceTriggers(resultValues, templateLoincCode)
@@ -66,10 +65,12 @@ export function evaluateAndAttachGuidance(
   const attachment: GuidanceAttachment = {
     guidanceContentIds,
     conditionCodes,
-    evaluatedAt: new Date().toISOString(),
+    evaluatedAt: serializeHlc(hlc.now()),
   }
 
   // Emit audit events — one per condition (never throws; fire-and-forget)
+  // AC: 9 — metadata contains only guidanceId, conditionCode, language, deliveryChannel.
+  // No resultId, no patient identifiers, no test values.
   for (const content of matchedContent) {
     const ruleIds = getMatchingGuidanceRuleIds(
       content.conditionCode,
@@ -83,7 +84,6 @@ export function evaluateAndAttachGuidance(
       conditionCode: content.conditionCode,
       language,
       deliveryChannel: 'lab-result',
-      resultId,
       ruleIds,
     })
 
@@ -93,7 +93,6 @@ export function evaluateAndAttachGuidance(
       conditionCode: content.conditionCode,
       language,
       deliveryChannel: 'lab-result',
-      resultId,
     })
   }
 
@@ -104,22 +103,28 @@ export function evaluateAndAttachGuidance(
  * Emit a GUIDANCE_DELIVERED event when guidance is included in a distribution payload.
  * Called from dispatchResultRelease or equivalent (Story 42.6 integration).
  * Never throws — delivery must not be blocked by audit failures.
+ *
+ * @param guidanceIds      - Guidance content IDs (must be parallel with conditionCodes)
+ * @param conditionCodes   - Condition codes matching guidanceIds (same length)
+ * @param language         - Patient's preferred language
+ * @param deliveryChannel  - Channel through which guidance is delivered
  */
 export function reportGuidanceDelivery(
   guidanceIds: string[],
   conditionCodes: string[],
-  resultId: string,
   language: string,
   deliveryChannel: 'patient-lite' | 'delegate' | 'lab-result',
 ): void {
-  for (let i = 0; i < guidanceIds.length; i++) {
+  // Guard: both arrays must be parallel. Iterate only over the shorter length to
+  // avoid silent misalignment if the caller provides mismatched arrays.
+  const len = Math.min(guidanceIds.length, conditionCodes.length)
+  for (let i = 0; i < len; i++) {
     reportGuidanceEvent({
       action: 'GUIDANCE_DELIVERED',
       guidanceId: guidanceIds[i],
-      conditionCode: conditionCodes[i] ?? 'unknown',
+      conditionCode: conditionCodes[i],
       language,
       deliveryChannel,
-      resultId,
     })
   }
 }

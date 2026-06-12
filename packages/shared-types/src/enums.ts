@@ -59,6 +59,8 @@ export enum AuditAction {
   RESULT_DELIVERED = 'RESULT_DELIVERED',
   // Story 49.3 — P2P Sync audit events
   P2P_SYNC = 'P2P_SYNC',
+  // Story 53.5 — AI Confidence Inversion Principle
+  AI_AUTO_ESCALATION = 'AI_AUTO_ESCALATION',
 }
 
 export enum AuditResourceType {
@@ -94,6 +96,10 @@ export enum AuditResourceType {
   PAYMENT = 'PAYMENT',
   // Story 51.1 — Shift Handover Protocol
   SHIFT_HANDOVER = 'SHIFT_HANDOVER',
+  // Story 54.4 — Consultation lifecycle
+  CONSULTATION = 'CONSULTATION',
+  // Story 53.6 — AI Provenance Trail
+  AI_PROVENANCE = 'AI_PROVENANCE',
 }
 
 export enum AuditOutcome {

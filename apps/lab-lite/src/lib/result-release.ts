@@ -24,6 +24,8 @@ export interface ResultReleaseNotificationPayload {
     diagnosticReportId: string   // references the result ID for lookup
     resultStatus: 'FINAL'
     labName: string
+    /** Optional guidance content IDs — patient-lite looks up content locally (AC: 8). No PHI. */
+    guidanceContentIds?: string[]
   }
 }
 
@@ -33,11 +35,16 @@ export interface ResultReleaseNotificationPayload {
  * If the device is online, POSTs directly to Hub via tRPC.
  * If offline, enqueues in Dexie syncQueue for dispatch on reconnect.
  *
+ * @param guidanceContentIds - Optional: public health guidance IDs to include in the
+ *   notification payload. Patient-lite looks these up locally — no guidance content
+ *   or PHI is transferred here (AC: 8). Omit when no guidance triggered.
+ *
  * Never throws — authorization flow must not be blocked by notification failures.
  */
 export async function dispatchResultRelease(
   result: LabResultForAuthorization,
   labName = 'Lab Lite',
+  guidanceContentIds?: string[],
 ): Promise<void> {
   const notificationPayload: ResultReleaseNotificationPayload = {
     type: 'LAB_RESULT_AVAILABLE',
@@ -47,6 +54,7 @@ export async function dispatchResultRelease(
       diagnosticReportId: result.id,  // opaque reference — no values
       resultStatus: 'FINAL',
       labName,
+      ...(guidanceContentIds && guidanceContentIds.length > 0 ? { guidanceContentIds } : {}),
     },
   }
 

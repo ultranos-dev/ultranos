@@ -388,7 +388,10 @@ describe('GUIDANCE_SEED — content model validation', () => {
 
   it('no guidance item has aiGenerated set to true — CRITICAL: content must be physician-authored', () => {
     for (const item of GUIDANCE_SEED) {
-      expect((item as { aiGenerated?: boolean }).aiGenerated).not.toBe(true)
+      // Use .not.toBeTruthy() rather than .not.toBe(true) so the test catches any
+      // truthy value, not just the literal boolean true. .not.toBe(true) would pass
+      // vacuously for undefined since undefined !== true.
+      expect((item as { aiGenerated?: unknown }).aiGenerated).not.toBeTruthy()
     }
   })
 
@@ -437,5 +440,64 @@ describe('PHI guard — guidance metadata contains no patient identifiers', () =
       // but actual result values (e.g. "6.2") should not appear in static content
       expect(item.text.en).not.toMatch(/\d+\.\d+ g\/dL/)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Audit payload PHI exclusion tests — AC: 9
+// ---------------------------------------------------------------------------
+
+describe('evaluateAndAttachGuidance — audit payload excludes PHI', () => {
+  it('evaluateGuidanceTriggers output contains no patient identifiers', () => {
+    const content = evaluateGuidanceTriggers(
+      { malaria_result: 'positive' },
+      '5028-2',
+    )
+    for (const item of content) {
+      const json = JSON.stringify(item)
+      // No patient identifiers in the static guidance content
+      expect(json).not.toContain('patientId')
+      expect(json).not.toContain('patientRef')
+      expect(json).not.toContain('firstName')
+      expect(json).not.toContain('dateOfBirth')
+    }
+  })
+
+  it('GuidanceContent returned by trigger engine contains no resultId field', () => {
+    const content = evaluateGuidanceTriggers(
+      { hgb: 6.5 },
+      '58410-2',
+    )
+    for (const item of content) {
+      // resultId is NOT permitted in guidance content or audit metadata (AC: 9)
+      expect(Object.keys(item)).not.toContain('resultId')
+    }
+  })
+
+  it('GuidanceContent id fields are opaque PHG-* identifiers, not patient-derived', () => {
+    const content = evaluateGuidanceTriggers(
+      { hiv_result: 'positive' },
+      '75622-1',
+    )
+    for (const item of content) {
+      // IDs must match the PHG-CONDITION-NNN pattern — never contain UUIDs or names
+      expect(item.id).toMatch(/^PHG-[A-Z_]+-\d{3}$/)
+    }
+  })
+
+  it('isPositiveValue handles numeric 1 correctly (numeric field value, not just string)', () => {
+    // Ensure that numeric 1 (not just string '1') triggers guidance correctly
+    const content = evaluateGuidanceTriggers(
+      { malaria_result: 1 as unknown as string },
+      '5028-2',
+    )
+    expect(content).toHaveLength(1)
+    expect(content[0].id).toBe('PHG-MALARIA-001')
+  })
+
+  it('GUIDANCE_SEED conditionCodes are all unique — no duplicate triggers', () => {
+    const codes = GUIDANCE_SEED.map((g) => g.conditionCode)
+    const unique = new Set(codes)
+    expect(codes.length).toBe(unique.size)
   })
 })

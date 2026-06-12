@@ -1,6 +1,6 @@
 # Story 53.7: Patient-Facing Public Health Guidance
 
-Status: pending
+Status: done
 
 ## Story
 
@@ -177,6 +177,40 @@ This story spans two apps:
 - **Data minimization.** Guidance content contains no PHI. The trigger engine receives structured result values (same as Story 53.1 knowledge cards) — no patient identifiers. The distribution payload includes guidance content IDs, not the guidance text itself (both apps have the content bundled locally).
 - **Versioned content updates.** When a physician updates a guidance message (e.g., new WHO malaria guidelines), the new version is bundled in the next app update. Old versions are retained in Dexie for historical reference — if a patient received guidance v1.0.0, that version is preserved in the delivery record.
 - **Placeholder translations.** Initial seed data includes full English text. Dari, Pashto, and Arabic translations are marked with `[TRANSLATE]` prefix and will be filled by clinical translation partners. Audio is initially empty — placeholder until recordings are provided.
+
+### Review Findings
+
+**Sources:** Blind Hunter · Edge Case Hunter · Acceptance Auditor | **Date:** 2026-06-10
+
+#### Patch Findings
+
+- [x] [Review][Patch] `reportGuidanceEvent` not defined in `audit-client.ts` — compilation blocker; all guidance audit events dead at runtime [apps/lab-lite/src/lib/guidance-integration.ts:22]
+- [x] [Review][Patch] Dexie schema not updated — `guidance_content` and `guidance_triggers` tables missing; no migration, no `seedGuidance()`, no version-check logic [apps/lab-lite/src/lib/db.ts — not modified]
+- [x] [Review][Patch] `evaluateAndAttachGuidance()` never called from result authorization flow — guidance trigger is unreachable dead code in production [apps/lab-lite/src/lib/guidance-integration.ts — not wired into result-release.ts or equivalent]
+- [x] [Review][Patch] `GuidanceDisplay` not wired into any Patient-Lite notification or result screen — component is never rendered [apps/patient-lite-mobile — no existing screen modified]
+- [x] [Review][Patch] Missing `lt` operator — anemia rule uses hardcoded `rule.id` string check; `switch` falls through (returns false) for any `lt`/`eq` rules; add `lt` to `GuidanceTriggerOperator` and handle in switch [apps/lab-lite/src/lib/guidance-trigger.ts:1269-1336]
+- [x] [Review][Patch] `resultId` in audit payload violates AC9 — AC9 enumerates exactly `guidanceId`, `conditionCode`, `deliveryStatus`; `resultId` is not permitted [apps/lab-lite/src/lib/guidance-integration.ts:626]
+- [x] [Review][Patch] `evaluatedAt` uses `new Date().toISOString()` instead of project-standard HLC timestamp — breaks causal ordering in offline sync [apps/lab-lite/src/lib/guidance-integration.ts:612]
+- [x] [Review][Patch] `reportGuidanceDelivery` parallel array indexing — `guidanceIds` and `conditionCodes` arrays have no enforced length parity; misaligned input emits wrong or `'unknown'` condition codes in audit events [apps/lab-lite/src/lib/guidance-integration.ts:658]
+- [x] [Review][Patch] No audio auto-play option — AC10 explicitly requires it; only a manual play button exists [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx]
+- [x] [Review][Patch] Duplicate type declarations in `GuidanceDisplay.tsx` — `GuidanceLocalizedText`, `GuidanceStep`, `GuidanceAuthor` redeclared locally instead of imported from `public-health-guidance.ts`; will silently diverge on type updates [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1552-1583]
+- [x] [Review][Patch] `GUIDANCE_BY_CONDITION_CODE` Map silently drops duplicate `conditionCode` entries — no guard or assertion; second entry overwrites first with no error [apps/lab-lite/src/lib/guidance-seed-data.ts:1136]
+- [x] [Review][Patch] `isPositiveValue` false negative — numeric `1` (number type) not matched; only string `'1'` is in the synonym set; machine interfaces returning integer `1` will not trigger guidance [apps/lab-lite/src/lib/guidance-trigger.ts:1287]
+- [x] [Review][Patch] `noAlcohol` icon mapped to `🚭` (no-smoking symbol) — incorrect for alcohol-avoidance instruction; clinical miscommunication for low-literacy patients [apps/patient-lite-mobile/src/components/guidance/GuidanceStepCard.tsx:1921]
+- [x] [Review][Patch] Hardcoded hex `#DBEAFE`/`#1D4ED8` in `GuidanceDisplay` header — bypasses `useTheme()` token system; breaks dark mode and high-contrast accessibility [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1664]
+- [x] [Review][Patch] `[TRANSLATE]` fallback renders English silently — no `console.warn` or visual indicator; Dari/Pashto/Arabic patients receive English with no notice [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1618]
+- [x] [Review][Patch] `hasAudio` check ignores English audio fallback — audio button hidden even when `content.audio.en` exists and locale audio is empty [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1638]
+- [x] [Review][Patch] `toSupportedLocale` doesn't map `'fa'` (Farsi locale tag) to `'prs'` (Dari) — Farsi-locale patients receive English guidance [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1606]
+- [x] [Review][Patch] `audioPlaying` state never reset on natural audio end — "Stop" label persists permanently after first play; button broken for replay [apps/patient-lite-mobile/src/components/guidance/GuidanceDisplay.tsx:1643]
+- [x] [Review][Patch] `aiGenerated` guard test passes vacuously — `expect(...).not.toBe(true)` only catches boolean `true`; truthy non-boolean values (`'yes'`, `1`) bypass the guard silently [apps/lab-lite/src/__tests__/guidance-trigger.test.ts:448]
+- [x] [Review][Patch] PHI filename validation claimed in commit message but absent from audio script — only file-size check present; PHI-named files pass silently [scripts/prepare-guidance-audio.ts]
+- [x] [Review][Patch] Oversized audio file uses `break` instead of `continue` — logs spurious "no recording found" line after skip warning for the same file [scripts/prepare-guidance-audio.ts:2143]
+- [x] [Review][Patch] No tests for audit payload PHI exclusion — Task 9 requires PHI guard tests; `resultId` exclusion and audit event field constraints not verified [apps/lab-lite/src/__tests__/guidance-trigger.test.ts]
+
+#### Deferred Findings
+
+- [x] [Review][Defer] Audio build pipeline hook absent — `prepare-guidance-audio.ts` not hooked into build or CI; intentional placeholder until native-speaker recordings are available — deferred, pre-existing
+- [x] [Review][Defer] Runtime localization key guard for seed data — TypeScript interface enforces all four locale fields at compile time; runtime validation of static typed seed data is low value — deferred, pre-existing
 
 ### References
 

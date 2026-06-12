@@ -22,48 +22,14 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  I18nManager,
 } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/theme/ThemeProvider'
 import { GuidanceStepCard } from './GuidanceStepCard'
+import type { GuidanceContentBundle, GuidanceLocalizedText } from '@/types/guidance'
 
-// ---------------------------------------------------------------------------
-// Types — local to this component; mirrors GuidanceContent from lab-lite
-// ---------------------------------------------------------------------------
-
-export interface GuidanceLocalizedText {
-  en: string
-  ar: string
-  prs: string
-  ps: string
-}
-
-export interface GuidanceStep {
-  order: number
-  icon: string
-  text: GuidanceLocalizedText
-}
-
-export interface GuidanceAuthor {
-  name: string
-  credentials: string
-  institution: string
-}
-
-/** Bundled guidance content for offline display. Matches GuidanceContent shape. */
-export interface GuidanceContentBundle {
-  id: string
-  conditionCode: string
-  conditionDisplay: string
-  text: GuidanceLocalizedText
-  audio: GuidanceLocalizedText
-  steps: GuidanceStep[]
-  author: GuidanceAuthor
-  version: string
-  lastReviewedAt: string
-  approvedBy: string
-}
+// Re-export types so callers that previously imported from here still compile.
+export type { GuidanceLocalizedText, GuidanceStep, GuidanceAuthor, GuidanceContentBundle } from '@/types/guidance'
 
 type SupportedLocale = 'en' | 'ar' | 'prs' | 'ps'
 
@@ -76,6 +42,12 @@ interface GuidanceDisplayProps {
   content: GuidanceContentBundle
   /** Patient's preferred locale. Defaults to 'en'. */
   locale?: string
+  /**
+   * If true, audio playback begins automatically when the component mounts
+   * (only if audio is available for the locale). Respects device audio settings.
+   * AC: 10 — auto-play option.
+   */
+  autoPlay?: boolean
   /** Called when the patient taps "I understand" (for GUIDANCE_ACKNOWLEDGED audit). */
   onAcknowledge?: (guidanceId: string) => void
   /** Whether the guidance has already been acknowledged in this session. */
@@ -87,6 +59,8 @@ interface GuidanceDisplayProps {
 // ---------------------------------------------------------------------------
 
 function toSupportedLocale(locale: string): SupportedLocale {
+  // Map BCP-47 'fa' (Farsi/Dari in some systems) to our internal 'prs' code.
+  if (locale === 'fa') return 'prs'
   if (locale === 'ar' || locale === 'prs' || locale === 'ps') return locale as SupportedLocale
   return 'en'
 }
@@ -97,8 +71,14 @@ function isRTLLocale(locale: SupportedLocale): boolean {
 
 function getLocalizedText(text: GuidanceLocalizedText, locale: SupportedLocale): string {
   const raw = text[locale] || text.en
-  // Strip [TRANSLATE] prefix from placeholder translations — show English fallback
-  if (raw.startsWith('[TRANSLATE]')) return text.en
+  if (raw.startsWith('[TRANSLATE]')) {
+    if (__DEV__) {
+      console.warn(
+        `[GuidanceDisplay] Missing translation for locale "${locale}" — falling back to English.`,
+      )
+    }
+    return text.en
+  }
   return raw
 }
 
@@ -109,6 +89,7 @@ function getLocalizedText(text: GuidanceLocalizedText, locale: SupportedLocale):
 export function GuidanceDisplay({
   content,
   locale = 'en',
+  autoPlay = false,
   onAcknowledge,
   isAcknowledged = false,
 }: GuidanceDisplayProps) {
@@ -117,8 +98,24 @@ export function GuidanceDisplay({
   const supportedLocale = toSupportedLocale(locale)
   const isRTL = isRTLLocale(supportedLocale)
 
+  // hasAudio: true if the locale has audio, OR if English fallback has audio
+  const hasAudio = Boolean(
+    content.audio[supportedLocale] || content.audio.en,
+  )
+
   const [audioPlaying, setAudioPlaying] = useState(false)
-  const hasAudio = Boolean(content.audio[supportedLocale])
+
+  // P9: auto-play support — start playing when mounted if autoPlay=true and audio available.
+  // P18: reset audio state when content changes (new guidance card rendered).
+  useEffect(() => {
+    setAudioPlaying(false)
+  }, [content.id])
+
+  useEffect(() => {
+    if (autoPlay && hasAudio) {
+      setAudioPlaying(true)
+    }
+  }, [autoPlay, hasAudio, content.id])
 
   const guidanceText = getLocalizedText(content.text, supportedLocale)
   const sortedSteps = [...content.steps].sort((a, b) => a.order - b.order)
@@ -144,10 +141,10 @@ export function GuidanceDisplay({
       testID="guidance-display"
     >
       {/* ── Header / Title ────────────────────────────────────────────── */}
-      <View style={[styles.header, { backgroundColor: '#DBEAFE' }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary[50] ?? colors.surfaceElevated }]}>
         <Text style={styles.headerIcon}>🏥</Text>
         <Text
-          style={[styles.headerTitle, { color: '#1D4ED8' }]}
+          style={[styles.headerTitle, { color: colors.primary[700] ?? colors.primary[600] }]}
           writingDirection={isRTL ? 'rtl' : 'ltr'}
           testID="guidance-title"
         >

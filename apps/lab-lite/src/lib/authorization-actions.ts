@@ -11,11 +11,12 @@
  * Critical value approval requires criticalValueAcknowledged=true.
  * Rejection requires non-empty rejectionComments.
  */
-import { getDb, addCompletedChecklist, getCompletedChecklistForResult } from './db'
+import { getDb, addCompletedChecklist, getCompletedChecklistForResult, getObservationsForResult } from './db'
 import { hlc, serializeHlc } from './hlc'
 import { reportAuthorizationAuditEvent, reportChecklistEvent } from './audit-client'
 import { dispatchResultRelease } from './result-release'
 import { checkAndInitiateEscalation } from './escalation-integration'
+import { evaluateAndAttachGuidance } from './guidance-integration'
 import {
   AuthorizationStatus,
   AuthorizationActionType,
@@ -151,8 +152,23 @@ export async function approveResult(options: ApproveOptions): Promise<void> {
     })
   }
 
-  // 4. Dispatch notification to ordering physician (queues offline if needed)
-  void dispatchResultRelease(result)
+  // 4. Evaluate public health guidance triggers and dispatch notification (Story 53.7 + 42.5).
+  // Observations are fetched to build the resultValues map for the trigger engine.
+  // Guidance evaluation is non-critical — a failure must never block result release.
+  void (async () => {
+    let guidanceContentIds: string[] | undefined
+    try {
+      const observations = await getObservationsForResult(result.id)
+      const resultValues: Record<string, number | string | null> = Object.fromEntries(
+        observations.map((obs) => [obs.fieldCode, obs.value]),
+      )
+      const attachment = evaluateAndAttachGuidance(resultValues, result.loincCode)
+      guidanceContentIds = attachment?.guidanceContentIds
+    } catch {
+      // Non-critical — guidance evaluation must never block result release
+    }
+    void dispatchResultRelease(result, 'Lab Lite', guidanceContentIds)
+  })()
 
   // 5. Check for critical values and initiate escalation chain if needed (Story 48.4)
   void checkAndInitiateEscalation({

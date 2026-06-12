@@ -127,8 +127,8 @@ export const GUIDANCE_TRIGGER_RULES: GuidanceTrigger[] = [
     triggerType: 'result_value',
     templateLoincCode: '58410-2',
     fieldCode: 'hgb',
-    operator: 'gt',
-    value: 0,  // overridden below — actual check is hgb < 7
+    operator: 'lt',
+    value: 7,
   },
 ]
 
@@ -181,13 +181,11 @@ function evaluateRule(
   const num = typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue))
   if (isNaN(num)) return false
 
-  // Special case: ANEMIA_SEVERE rule stored with placeholder operator/value.
-  // Actual rule: hgb < 7 g/dL.
-  if (rule.id === 'GT-ANEMIA-HGB-001') return num < 7
-
   switch (rule.operator) {
     case 'gt':  return rule.value !== undefined && num > (rule.value as number)
     case 'gte': return rule.value !== undefined && num >= (rule.value as number)
+    case 'lt':  return rule.value !== undefined && num < (rule.value as number)
+    case 'eq':  return rule.value !== undefined && num === (rule.value as number)
     default:    return false
   }
 }

@@ -96,7 +96,7 @@ export interface GuidanceContent {
 // GuidanceTrigger — maps a result condition to a GuidanceContent ID
 // ---------------------------------------------------------------------------
 
-export type GuidanceTriggerOperator = 'eq' | 'gt' | 'gte' | 'positive'
+export type GuidanceTriggerOperator = 'eq' | 'gt' | 'gte' | 'lt' | 'positive'
 
 export interface GuidanceTrigger {
   /** Stable opaque ID, e.g. 'GT-MALARIA-001' */
