@@ -1,6 +1,6 @@
 # Story 55.7: Lab Network & Outbreak Management
 
-Status: review
+Status: done
 
 ## Story
 
@@ -167,3 +167,25 @@ Claude Opus 4.6 (1M context)
 - `apps/hub-api/src/__tests__/network-outbreak.test.ts` — new (15 API tests)
 - `apps/admin-portal/src/__tests__/network.test.tsx` — new (12 component tests)
 - Supabase migration: `create_outbreak_events_table` (outbreak_events table + RLS + index)
+
+### Review Findings
+
+- [x] [Review][Patch] P1 — CRITICAL: `enrollChw` encryption failure falls back to storing plaintext PHI — catch block assigns `encryptedGivenName = input.givenName` and continues to insert; must throw INTERNAL_SERVER_ERROR instead [`apps/hub-api/src/trpc/routers/admin.ts` enrollChw ~line 3387–3394]
+- [x] [Review][Patch] P2 — CRITICAL: `enrollChw` never inserts a `lab_technicians` row — CHW is not associated to the lab in any relational table, so outbreak notification dispatch (which queries `lab_technicians` by `lab_id`) will never reach enrolled CHWs; violates AC 4 + Task 4.2 [`apps/hub-api/src/trpc/routers/admin.ts` enrollChw]
+- [x] [Review][Patch] P3 — CRITICAL: Audit events for `activateOutbreakMode` and `deactivateOutbreakMode` omit `affectedLabIds` — AC 7 explicitly requires lab IDs (not just count) in the audit record; `affectedLabIds` is available at both call sites [`apps/hub-api/src/trpc/routers/admin.ts` activateOutbreakMode metadata line ~3197, deactivateOutbreakMode metadata line ~3283]
+- [x] [Review][Patch] P4 — HIGH: `getNetworkOverview` stock alert query uses `.eq('level', 'RED')` but `lab_inventory_snapshots` has no `level` column (55.6 uses `quantity`); error swallowed by try/catch so `stockAlertCount` silently returns 0 for every lab [`apps/hub-api/src/trpc/routers/admin.ts` getNetworkOverview ~line 3072–3079]
+- [x] [Review][Patch] P5 — HIGH: `deactivateOutbreakMode` TOCTOU race: reads status then updates in two separate queries — two concurrent admins can both pass the ACTIVE check and dispatch duplicate notifications; fix with atomic `.update().eq('status','ACTIVE')` and check row count [`apps/hub-api/src/trpc/routers/admin.ts` deactivateOutbreakMode ~line 3220–3251]
+- [x] [Review][Patch] P6 — HIGH: `activateOutbreakMode` stores `input.affectedLabIds` verbatim including duplicates — duplicate IDs cause duplicate notifications per practitioner on activate and deactivate; fix by storing `[...validLabIds]` (the deduplicated Set) [`apps/hub-api/src/trpc/routers/admin.ts` activateOutbreakMode ~line 3152]
+- [x] [Review][Patch] P7 — HIGH: `listOutbreaks` lab name lookup has no `.eq('org_id', orgId)` — cross-org lab names could leak if stored lab IDs ever resolve outside the org; consistent with pattern used elsewhere [`apps/hub-api/src/trpc/routers/admin.ts` listOutbreaks ~line 3331]
+- [x] [Review][Patch] P8 — HIGH: `getNetworkOverview` N+1 queries — 3 DB round-trips per lab with no upper bound on lab count; 50 labs = 151 queries; apply `Promise.all` batching across labs or aggregate via RPC [`apps/hub-api/src/trpc/routers/admin.ts` getNetworkOverview ~line 3052–3092]
+- [x] [Review][Patch] P9 — MEDIUM: `enrollChw` stores `telecom_phone` in plaintext — phone is PHI; should be encrypted with `encryptField` before insert, same as given_name/family_name [`apps/hub-api/src/trpc/routers/admin.ts` enrollChw ~line 3406]
+- [x] [Review][Patch] P10 — MEDIUM: `activateOutbreakMode` notification failure silently swallowed — no retry, no status flag on outbreak record, admin has no way to detect failed dispatch; at minimum, add `notificationsSent: false` flag to response or record [`apps/hub-api/src/trpc/routers/admin.ts` activateOutbreakMode ~line 3185]
+- [x] [Review][Patch] P11 — MEDIUM: `deactivateOutbreakMode` fetches outbreak without `.eq('org_id', orgId)` — org check done post-fetch in app code; inconsistent with all other endpoints; cross-org record data loaded into memory before rejection [`apps/hub-api/src/trpc/routers/admin.ts` deactivateOutbreakMode ~line 3222]
+- [x] [Review][Patch] P12 — MEDIUM: Tests in `network-outbreak.test.ts` are structurally tautological — no handler is imported or called; mocks are configured but never exercised; all 15 tests assert on inline literals only; `expect(true).toBe(true)` placeholders; none of the P1–P9 bugs would be caught by CI [`apps/hub-api/src/__tests__/network-outbreak.test.ts`]
+- [x] [Review][Patch] P13 — LOW: `enrollChw` returns only `{ success, chwId }` — Task 4.4 specifies returning the created CHW record; UI cannot display confirmation without a follow-up query [`apps/hub-api/src/trpc/routers/admin.ts` enrollChw ~line 3431]
+- [x] [Review][Defer] D1 — `getSurveillanceConfig` and `listSurveillanceAlerts` use `.select('id, name, status')` but `labs` table column is `lab_name` (55.8 code, not in scope for this review) [`apps/hub-api/src/trpc/routers/admin.ts` getSurveillanceConfig ~line 3468] — deferred, pre-existing in 55.8 code
+- [x] [Review][Defer] D2 — `getManagerlessLabs` and `listLabsForFilter` missing `.eq('org_id', ctx.user.orgId)` (55.2 code, story is `done`) [`apps/hub-api/src/trpc/routers/admin.ts`] — deferred, pre-existing in 55.2 code
+- [x] [Review][Defer] D3 — `listAllLabStaff` activity filter applied after cursor-page truncation — wrong page sizes and skipped records (55.2 code, story is `done`) [`apps/hub-api/src/trpc/routers/admin.ts`] — deferred, pre-existing in 55.2 code
+- [x] [Review][Defer] D4 — `getMentorshipStats` `avgPairingDurationDays` mixes elapsed-active vs final-dissolved duration semantics (55.4 code, currently in `review`) [`apps/hub-api/src/trpc/routers/admin.ts`] — deferred, pre-existing in 55.4 code
+- [x] [Review][Defer] D5 — `createCertificationPathway` resolves org_id via a second DB query that could match a different org's practitioner (55.5 code, story is `done`) [`apps/hub-api/src/trpc/routers/admin.ts`] — deferred, pre-existing in 55.5 code
+- [x] [Review][Defer] D6 — `getCachedEncryptionKey` called without `await` in `getEmployeeHealth` and `updateEmployeeHealth` — if async, key is a Promise object passed to encrypt/decrypt (55.3 code, story is `done`) [`apps/hub-api/src/trpc/routers/admin.ts`] — deferred, pre-existing in 55.3 code

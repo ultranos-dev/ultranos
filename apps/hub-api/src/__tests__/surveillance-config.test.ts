@@ -34,9 +34,12 @@ vi.mock('@ultranos/crypto/server', () => ({
   decryptField: (v: string) => v,
 }))
 
+// Hoisted so it's available inside the vi.mock factory (vi.mock is hoisted above imports).
+const { mockEmit } = vi.hoisted(() => ({ mockEmit: vi.fn().mockResolvedValue(undefined) }))
+
 vi.mock('@ultranos/audit-logger', () => ({
   AuditLogger: vi.fn().mockImplementation(() => ({
-    emit: vi.fn().mockResolvedValue(undefined),
+    emit: mockEmit,
   })),
 }))
 
@@ -243,7 +246,7 @@ describe('Surveillance Config CRUD', () => {
       })
     })
 
-    it('upserts config and emits audit event on success', async () => {
+    it('upserts config and emits SURVEILLANCE_CONFIG_UPDATED audit event on success', async () => {
       let callCount = 0
       mockSupabaseClient.from.mockImplementation(() => {
         callCount++
@@ -252,6 +255,10 @@ describe('Surveillance Config CRUD', () => {
           return chainable({ data: [{ id: UUID.lab1 }], error: null })
         }
         if (callCount === 2) {
+          // first-creation check — returns null (no existing config)
+          return chainable({ data: null, error: null })
+        }
+        if (callCount === 3) {
           // upsert returns new config
           return chainable({ data: { id: UUID.config }, error: null })
         }
@@ -266,6 +273,84 @@ describe('Surveillance Config CRUD', () => {
       })
       expect(result.success).toBe(true)
       expect(result.configId).toBe(UUID.config)
+      expect(mockEmit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'SURVEILLANCE_CONFIG_UPDATED' }),
+      )
+    })
+
+    it('merges default thresholds on first config creation', async () => {
+      let callCount = 0
+      let upsertedThresholds: Array<{ test_category: string; threshold_pct: number }> | undefined
+
+      const updateSpy = vi.fn().mockImplementation((data: any) => {
+        upsertedThresholds = data.thresholds
+        return chainable({ data: { id: UUID.config }, error: null })
+      })
+
+      mockSupabaseClient.from.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return chainable({ data: [{ id: UUID.lab1 }], error: null })
+        if (callCount === 2) return chainable({ data: null, error: null }) // no existing config
+        // upsert call — capture payload
+        return { upsert: updateSpy }
+      })
+
+      const caller = createCaller(createAdminContext())
+      await caller.admin.updateSurveillanceConfig({
+        monitoredLabIds: [UUID.lab1],
+        // Caller only provides one category; defaults for TB + Hepatitis B should be merged in
+        thresholds: [{ test_category: 'Malaria RDT', threshold_pct: 20 }],
+        channels: { in_app: true as const },
+      })
+
+      expect(updateSpy).toHaveBeenCalled()
+      const categories = (upsertedThresholds ?? []).map((t) => t.test_category)
+      expect(categories).toContain('Malaria RDT')
+      expect(categories).toContain('TB (Smear)')
+      expect(categories).toContain('Hepatitis B')
+    })
+
+    it('does not re-merge defaults on subsequent updates', async () => {
+      let callCount = 0
+      let upsertedThresholds: Array<{ test_category: string; threshold_pct: number }> | undefined
+
+      const updateSpy = vi.fn().mockImplementation((data: any) => {
+        upsertedThresholds = data.thresholds
+        return chainable({ data: { id: UUID.config }, error: null })
+      })
+
+      mockSupabaseClient.from.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return chainable({ data: [{ id: UUID.lab1 }], error: null })
+        // existing config found — not a first creation
+        if (callCount === 2) return chainable({ data: { id: UUID.config }, error: null })
+        return { upsert: updateSpy }
+      })
+
+      const caller = createCaller(createAdminContext())
+      await caller.admin.updateSurveillanceConfig({
+        monitoredLabIds: [UUID.lab1],
+        thresholds: [{ test_category: 'Custom Category', threshold_pct: 10 }],
+        channels: { in_app: true as const },
+      })
+
+      expect(updateSpy).toHaveBeenCalled()
+      const categories = (upsertedThresholds ?? []).map((t) => t.test_category)
+      expect(categories).toEqual(['Custom Category'])
+    })
+
+    it('rejects duplicate test_category in thresholds', async () => {
+      const caller = createCaller(createAdminContext())
+      await expect(
+        caller.admin.updateSurveillanceConfig({
+          monitoredLabIds: [UUID.lab1],
+          thresholds: [
+            { test_category: 'Malaria RDT', threshold_pct: 15 },
+            { test_category: 'Malaria RDT', threshold_pct: 25 },
+          ],
+          channels: { in_app: true as const },
+        }),
+      ).rejects.toThrow()
     })
   })
 
@@ -301,8 +386,10 @@ describe('Surveillance Config CRUD', () => {
       })
     })
 
-    it('stores notes when provided', async () => {
+    it('stores notes when provided and emits SURVEILLANCE_ALERT_ACKNOWLEDGED audit event', async () => {
+      const updateBodySpy = vi.fn()
       let callCount = 0
+
       mockSupabaseClient.from.mockImplementation(() => {
         callCount++
         if (callCount === 1) {
@@ -316,8 +403,13 @@ describe('Surveillance Config CRUD', () => {
           // Config org check
           return chainable({ data: { org_id: UUID.org }, error: null })
         }
-        // Update + audit
-        return chainable({ error: null })
+        // Update — spy on the update body; return success with updated row
+        return {
+          update: (body: any) => {
+            updateBodySpy(body)
+            return chainable({ data: [{ id: UUID.alert1 }], error: null })
+          },
+        }
       })
 
       const caller = createCaller(createAdminContext())
@@ -326,6 +418,14 @@ describe('Surveillance Config CRUD', () => {
         notes: 'Reviewed — false positive due to batch testing.',
       })
       expect(result.success).toBe(true)
+      // Verify notes were persisted to the DB
+      expect(updateBodySpy).toHaveBeenCalledWith(
+        expect.objectContaining({ notes: 'Reviewed — false positive due to batch testing.' }),
+      )
+      // Verify audit event was emitted
+      expect(mockEmit).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'SURVEILLANCE_ALERT_ACKNOWLEDGED' }),
+      )
     })
   })
 
@@ -339,34 +439,49 @@ describe('Surveillance Config CRUD', () => {
       expect(result.total).toBe(0)
     })
 
-    it('filters by acknowledged status', async () => {
+    it('filters by acknowledged status and applies the correct Supabase filter', async () => {
+      const isSpy = vi.fn()
+
+      // A chainable that additionally spies on `.is()` calls.
+      function filterSpyChainable(finalResult: any) {
+        const chain: any = new Proxy({}, {
+          get(_target, prop: string) {
+            if (prop === 'then') {
+              return (resolve: any, reject: any) => Promise.resolve(finalResult).then(resolve, reject)
+            }
+            if (prop === 'single' || prop === 'maybeSingle') {
+              return () => Promise.resolve(finalResult)
+            }
+            if (prop === 'is') {
+              return (...args: any[]) => { isSpy(...args); return chain }
+            }
+            return () => chain
+          },
+        })
+        return chain
+      }
+
+      const alertRows = [
+        {
+          id: UUID.alert1,
+          config_id: UUID.config,
+          lab_id: UUID.lab1,
+          test_category: 'Malaria RDT',
+          current_rate: 23,
+          threshold: 15,
+          triggered_at: '2026-01-01T00:00:00Z',
+          acknowledged_at: null,
+          acknowledged_by: null,
+          notes: null,
+          labs: { lab_name: 'Lab A' },
+        },
+      ]
+
       let callCount = 0
       mockSupabaseClient.from.mockImplementation(() => {
         callCount++
-        if (callCount === 1) {
-          // Config lookup
-          return chainable({ data: { id: UUID.config }, error: null })
-        }
-        // Alert query — returns chainable with alert data
-        return chainable({
-          data: [
-            {
-              id: UUID.alert1,
-              config_id: UUID.config,
-              lab_id: UUID.lab1,
-              test_category: 'Malaria RDT',
-              current_rate: 23,
-              threshold: 15,
-              triggered_at: '2026-01-01T00:00:00Z',
-              acknowledged_at: null,
-              acknowledged_by: null,
-              notes: null,
-              labs: { name: 'Lab A' },
-            },
-          ],
-          count: 1,
-          error: null,
-        })
+        if (callCount === 1) return chainable({ data: { id: UUID.config }, error: null })
+        return filterSpyChainable({ data: alertRows, count: 1, error: null })
       })
 
       const caller = createCaller(createAdminContext())
@@ -375,6 +490,8 @@ describe('Surveillance Config CRUD', () => {
       expect(result.alerts[0].testCategory).toBe('Malaria RDT')
       expect(result.alerts[0].currentRate).toBe(23)
       expect(result.alerts[0].labName).toBe('Lab A')
+      // Verify the acknowledged=false filter was actually applied to the query
+      expect(isSpy).toHaveBeenCalledWith('acknowledged_at', null)
     })
   })
 

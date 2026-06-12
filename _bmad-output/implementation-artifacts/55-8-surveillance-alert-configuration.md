@@ -1,6 +1,6 @@
 # Story 55.8: Surveillance Alert Configuration
 
-Status: review
+Status: done
 
 ## Story
 
@@ -172,3 +172,66 @@ None — clean implementation.
 
 ### Change Log
 - 2026-05-30: Story 55.8 implemented — all 7 tasks complete, 35 tests passing.
+
+### Review Findings (Group 1: Hub API — 2026-06-12)
+
+> **Scope:** `apps/hub-api/src/trpc/routers/admin.ts` + `apps/hub-api/src/__tests__/surveillance-config.test.ts`
+> All Group 1 patches applied 2026-06-12.
+
+#### Decision Needed
+- [x] [Review][Decision] **Pagination cursor type** — Resolved: keep integer-offset cursor. Admin-only endpoint, low insert frequency from background job, drift risk negligible. Keyset refactor deferred until a general pagination pattern overhaul.
+
+#### Patches
+- [x] [Review][Patch] **[HIGH] `getSurveillanceConfig` joins `labs` with `.select('id, name, status')` — column renamed to `lab_name` in this diff; all monitored lab names return null** [apps/hub-api/src/trpc/routers/admin.ts:getSurveillanceConfig]
+- [x] [Review][Patch] **[HIGH] `listSurveillanceAlerts` joins `labs!inner(name)` — column is `lab_name`; every alert's `labName` returns `'Unknown'`** [apps/hub-api/src/trpc/routers/admin.ts:listSurveillanceAlerts]
+- [x] [Review][Patch] **[HIGH] Default thresholds never injected on first config creation — Task 2.3 unimplemented; upsert always uses caller-supplied thresholds only** [apps/hub-api/src/trpc/routers/admin.ts:updateSurveillanceConfig]
+- [x] [Review][Patch] **[HIGH] `listSurveillanceAlerts`: when caller supplies `configId` directly, no org-ownership check — cross-org alert read possible** [apps/hub-api/src/trpc/routers/admin.ts:listSurveillanceAlerts]
+- [x] [Review][Patch] **[MEDIUM] `acknowledgeSurveillanceAlert` TOCTOU: UPDATE lacks `.is('acknowledged_at', null)` WHERE guard — concurrent requests both succeed** [apps/hub-api/src/trpc/routers/admin.ts:acknowledgeSurveillanceAlert]
+- [x] [Review][Patch] **[MEDIUM] Test "stores notes" asserts only `success: true` — never verifies `notes` field was passed to the DB UPDATE call** [apps/hub-api/src/__tests__/surveillance-config.test.ts:acknowledgeSurveillanceAlert]
+- [x] [Review][Patch] **[MEDIUM] Audit event emission never asserted in tests — Task 7.5 unmet for both `SURVEILLANCE_CONFIG_UPDATED` and `SURVEILLANCE_ALERT_ACKNOWLEDGED`** [apps/hub-api/src/__tests__/surveillance-config.test.ts]
+- [x] [Review][Patch] **[MEDIUM] Duplicate `test_category` values not rejected by Zod — alert engine receives ambiguous config; add `.superRefine()` uniqueness check** [apps/hub-api/src/trpc/routers/admin.ts:updateSurveillanceConfig]
+- [x] [Review][Patch] **[MEDIUM] Invalid lab UUID validation error echoes the submitted IDs verbatim — leaks existence of org lab UUIDs** [apps/hub-api/src/trpc/routers/admin.ts:updateSurveillanceConfig]
+- [x] [Review][Patch] **[MEDIUM] `getSurveillanceAlertSummary` computes `todayStart` from server local time — UTC server produces wrong boundary for UTC+4:30 users (Afghanistan/Central Asia)** [apps/hub-api/src/trpc/routers/admin.ts:getSurveillanceAlertSummary]
+- [x] [Review][Patch] **[LOW] Test: `listSurveillanceAlerts` acknowledged filter not spy-verified — filter can be silently dropped without breaking the test** [apps/hub-api/src/__tests__/surveillance-config.test.ts]
+- [x] [Review][Patch] **[LOW] `acknowledgeSurveillanceAlert` conflates DB errors with `NOT_FOUND`; genuine errors should throw `INTERNAL_SERVER_ERROR`** [apps/hub-api/src/trpc/routers/admin.ts:acknowledgeSurveillanceAlert]
+
+#### Deferred (other stories' code in same admin.ts diff)
+- [x] [Review][Defer] `enrollChw` silently stores plaintext PHI when encryption fails — story 54-2 code [apps/hub-api/src/trpc/routers/admin.ts:enrollChw] — deferred, belongs to story 54-2 review
+- [x] [Review][Defer] `listLabStaff` no org-scoping — any admin can enumerate staff of any lab [apps/hub-api/src/trpc/routers/admin.ts:listLabStaff] — deferred, belongs to story 55-1 review
+- [x] [Review][Defer] `listAllLabStaff` cursor `.or()` injection via raw UUID string interpolation [apps/hub-api/src/trpc/routers/admin.ts:listAllLabStaff] — deferred, belongs to story 55-2 review
+- [x] [Review][Defer] `getMentorshipStats` queries all orgs without `org_id` scope [apps/hub-api/src/trpc/routers/admin.ts:getMentorshipStats] — deferred, belongs to story 55-4 review
+- [x] [Review][Defer] `dissolveMentorshipPairing` / `updateMentorshipCheckin` no org check on pairing [apps/hub-api/src/trpc/routers/admin.ts] — deferred, belongs to story 55-4 review
+- [x] [Review][Defer] `getNetworkOverview` unbounded N+1 Supabase queries per lab [apps/hub-api/src/trpc/routers/admin.ts:getNetworkOverview] — deferred, belongs to story 54-1 review
+
+### Review Findings (Group 2: Admin Portal Components — 2026-06-12)
+
+> **Scope:** `SurveillanceConfigForm.tsx`, `SurveillanceAlertHistory.tsx`, `AcknowledgeAlertModal.tsx`, `[locale]/alerts/configuration/page.tsx`, `Sidebar.tsx`, `__tests__/surveillance-config.test.tsx`
+
+#### Patches
+- [x] [Review][Patch] **[HIGH] `page.tsx` calls `redirect()` instead of rendering `SurveillanceConfigForm` + `SurveillanceAlertHistory` — entire feature unreachable** [apps/admin-portal/src/app/[locale]/alerts/configuration/page.tsx]
+- [x] [Review][Patch] **[HIGH] `nav-config.ts` never updated — "Alert Config" sub-nav missing from sidebar** [apps/admin-portal/src/components/sidebar/nav-config.ts]
+- [x] [Review][Patch] **[HIGH] Table headers use `bg-card` instead of required `bg-black text-white`** [SurveillanceAlertHistory.tsx + SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[HIGH] Save button missing `rounded-full` + brand-lime variant** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[HIGH] `AcknowledgeAlertModal` notes state not reset on re-open — stale note submitted against wrong alert** [apps/admin-portal/src/components/alerts/AcknowledgeAlertModal.tsx]
+- [x] [Review][Patch] **[HIGH] `toggleAll()` always deselects when lab list is empty (`0===0` inversion)** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[HIGH] Test fixture uses `{ name }` but component reads `l.labName` — all lab names undefined in tests** [apps/admin-portal/src/__tests__/surveillance-config.test.tsx]
+- [x] [Review][Patch] **[HIGH] `listLabs` hardcoded `limit: 100` — orgs with 100+ labs silently truncated; existing config monitors stripped on next save** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[HIGH] `threshold_pct` input: `Number('')`→0 and `Number('abc')`→NaN both pass validation and save** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[MEDIUM] `redirect('/settings#alert-config')` strips locale prefix — breaks RTL users on `/ar/` routes** [apps/admin-portal/src/app/[locale]/alerts/configuration/page.tsx]
+- [x] [Review][Patch] **[MEDIUM] Email format not validated client-side — only emptiness checked** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[MEDIUM] `AcknowledgeAlertModal` error state not reset on re-open** [apps/admin-portal/src/components/alerts/AcknowledgeAlertModal.tsx]
+- [x] [Review][Patch] **[MEDIUM] Notes textarea has no `maxLength="2000"` — server limit hit silently** [apps/admin-portal/src/components/alerts/AcknowledgeAlertModal.tsx]
+- [x] [Review][Patch] **[MEDIUM] `setTimeout` success banner not cleaned up on unmount — leaked timer** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[MEDIUM] Modal close while mutation in-flight: no `preventClose` during submit — table stuck in stale unacknowledged state** [apps/admin-portal/src/components/alerts/AcknowledgeAlertModal.tsx]
+- [x] [Review][Patch] **[MEDIUM] Category dedup check is case-sensitive — `'malaria rdt'` ≠ `'Malaria RDT'` creates duplicate alert streams** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[MEDIUM] CONFLICT error on concurrent acknowledge doesn't trigger `fetchAlerts()` — row stays unacknowledged until manual tab-switch** [apps/admin-portal/src/components/alerts/SurveillanceAlertHistory.tsx]
+- [x] [Review][Patch] **[MEDIUM] Success uses inline `setSuccess` div, not `toast()` — inconsistent with rest of admin portal** [apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx]
+- [x] [Review][Patch] **[MEDIUM] Test `.toBeDefined()` on `getByText()` results — no-op assertions** [apps/admin-portal/src/__tests__/surveillance-config.test.tsx]
+- [x] [Review][Patch] **[MEDIUM] No test for `handleSave` failure path in `SurveillanceConfigForm`** [apps/admin-portal/src/__tests__/surveillance-config.test.tsx]
+- [x] [Review][Patch] **[LOW] `formatDateTime` no guard for null/invalid ISO — renders "Invalid Date" in audit-sensitive context** [apps/admin-portal/src/components/alerts/SurveillanceAlertHistory.tsx]
+- [x] [Review][Patch] **[LOW] No test: `listSurveillanceAlerts` tRPC error path** [apps/admin-portal/src/__tests__/surveillance-config.test.tsx]
+
+#### Deferred
+- [x] [Review][Defer] No unsaved-changes navigation guard — not in spec, nice-to-have in future sprint — deferred, pre-existing UX gap
+- [x] [Review][Defer] RTL snapshot tests missing — CLAUDE.md requirement but not in story 55.8 task list — deferred, scope for epic-35
+- [x] [Review][Defer] Top-level `await import()` in test file fragile with `vi.mock` hoisting — deferred, pre-existing test pattern in this codebase

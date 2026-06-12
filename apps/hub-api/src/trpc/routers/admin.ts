@@ -61,6 +61,14 @@ const DEFAULT_THRESHOLDS = {
   licenseExpiryWarningDays: [60, 30, 7],
 }
 
+// Surveillance alert default thresholds (Story 55.8 Task 2.3).
+// Merged into first-time config creation when the caller omits a category.
+const SURVEILLANCE_DEFAULT_THRESHOLDS = [
+  { test_category: 'Malaria RDT', threshold_pct: 15 },
+  { test_category: 'TB (Smear)', threshold_pct: 5 },
+  { test_category: 'Hepatitis B', threshold_pct: 3 },
+] as const
+
 const DEFAULT_MODULE_SETTINGS: Record<string, Record<string, unknown>> = {
   OPD_LITE: { consultationLanguages: ['en'], defaultSoapTemplate: 'Standard', aiAssistedNotes: true },
   PHARMACY_LITE: { requireSignatureOnDispense: true, allowPartialDispense: false, controlledSubstanceDoubleVerify: true },
@@ -6540,52 +6548,52 @@ export const adminRouter = createTRPCRouter({
       .select('id, lab_name, status, last_sync_at, created_at')
       .eq('org_id', orgId)
       .order('lab_name')
+      .limit(200)
 
     if (labsError) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to load labs' })
     }
 
-    const labSummaries = await Promise.all(
-      (labs ?? []).map(async (lab: Record<string, unknown>) => {
-        const labId = lab.id as string
+    const labIds = (labs ?? []).map((l: Record<string, unknown>) => l.id as string)
 
-        const { count: staffCount } = await ctx.supabase
-          .from('lab_technicians')
-          .select('id', { count: 'exact', head: true })
-          .eq('lab_id', labId)
+    // P8: batch all aggregation queries — 4 total instead of 3*N+1
+    const [staffResult, ordersResult] = await Promise.all([
+      ctx.supabase.from('lab_technicians').select('lab_id').in('lab_id', labIds.length > 0 ? labIds : ['__none__']),
+      ctx.supabase.from('lab_orders').select('lab_id').eq('status', 'PENDING').in('lab_id', labIds.length > 0 ? labIds : ['__none__']),
+    ])
 
-        const { count: pendingSamples } = await ctx.supabase
-          .from('lab_orders')
-          .select('id', { count: 'exact', head: true })
-          .eq('lab_id', labId)
-          .eq('status', 'PENDING')
+    // P4: stock alert count uses quantity=0 (RED level); table may not exist yet (55.6 dependency)
+    const stockRes = labIds.length > 0
+      ? await ctx.supabase.from('lab_inventory_snapshots').select('lab_id').eq('quantity', 0).in('lab_id', labIds)
+      : { data: null, error: null }
+    const stockDataAvailable = !stockRes.error && stockRes.data !== null
 
-        let stockAlertCount = 0
-        let stockDataAvailable = false
-        try {
-          const { count } = await ctx.supabase
-            .from('lab_inventory_snapshots')
-            .select('id', { count: 'exact', head: true })
-            .eq('lab_id', labId)
-            .eq('level', 'RED')
-          stockAlertCount = count ?? 0
-          stockDataAvailable = true
-        } catch {
-          // Table may not exist yet (Story 55.6 dependency)
-        }
+    const staffCounts: Record<string, number> = {}
+    for (const row of (staffResult.data ?? []) as Record<string, string>[]) {
+      staffCounts[row.lab_id] = (staffCounts[row.lab_id] ?? 0) + 1
+    }
+    const pendingCounts: Record<string, number> = {}
+    for (const row of (ordersResult.data ?? []) as Record<string, string>[]) {
+      pendingCounts[row.lab_id] = (pendingCounts[row.lab_id] ?? 0) + 1
+    }
+    const stockAlertCounts: Record<string, number> = {}
+    for (const row of (stockRes.data ?? []) as Record<string, string>[]) {
+      stockAlertCounts[row.lab_id] = (stockAlertCounts[row.lab_id] ?? 0) + 1
+    }
 
-        return {
-          labId,
-          labName: lab.lab_name as string,
-          status: lab.status as string,
-          pendingSamples: pendingSamples ?? 0,
-          stockAlertCount,
-          stockDataAvailable,
-          staffCount: staffCount ?? 0,
-          lastSyncAt: (lab.last_sync_at as string) ?? null,
-        }
-      }),
-    )
+    const labSummaries = (labs ?? []).map((lab: Record<string, unknown>) => {
+      const labId = lab.id as string
+      return {
+        labId,
+        labName: lab.lab_name as string,
+        status: lab.status as string,
+        pendingSamples: pendingCounts[labId] ?? 0,
+        stockAlertCount: stockAlertCounts[labId] ?? 0,
+        stockDataAvailable,
+        staffCount: staffCounts[labId] ?? 0,
+        lastSyncAt: (lab.last_sync_at as string) ?? null,
+      }
+    })
 
     const audit = new AuditLogger(ctx.supabase)
     try {
@@ -6645,7 +6653,7 @@ export const adminRouter = createTRPCRouter({
         .insert({
           org_id: orgId,
           pathogen: input.pathogen,
-          affected_lab_ids: input.affectedLabIds,
+          affected_lab_ids: Array.from(validLabIds), // P6: deduplicate before storing
           status: 'ACTIVE',
           activated_by: ctx.user.sub,
           activated_at: new Date().toISOString(),
@@ -6660,12 +6668,15 @@ export const adminRouter = createTRPCRouter({
 
       const outbreakId = (outbreak as Record<string, unknown>).id as string
 
-      // Dispatch notifications to all practitioners at affected labs
+      const deduplicatedLabIds = Array.from(validLabIds)
+
+      // P10: track notification dispatch outcome in response
+      let notificationsSent = false
       try {
         const { data: practitioners } = await ctx.supabase
           .from('lab_technicians')
           .select('practitioner_id')
-          .in('lab_id', input.affectedLabIds)
+          .in('lab_id', deduplicatedLabIds)
 
         if (practitioners && practitioners.length > 0) {
           const notifications = (practitioners as Record<string, unknown>[]).map((p) => ({
@@ -6676,12 +6687,19 @@ export const adminRouter = createTRPCRouter({
             status: 'QUEUED',
             next_retry_at: new Date(Date.now() + 60_000).toISOString(),
           }))
-          await ctx.supabase.from('notifications').insert(notifications)
+          const { error: notifError } = await ctx.supabase.from('notifications').insert(notifications)
+          notificationsSent = !notifError
+          if (notifError) {
+            console.warn('[NOTIFICATION_FAILURE]', { outbreakId, error: notifError.message })
+          }
+        } else {
+          notificationsSent = true // no recipients is not a failure
         }
       } catch {
         console.warn('[NOTIFICATION_FAILURE]', { outbreakId })
       }
 
+      // P3: audit metadata includes affectedLabIds per AC 7
       const audit = new AuditLogger(ctx.supabase)
       try {
         await audit.emit({
@@ -6692,13 +6710,13 @@ export const adminRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { pathogen: input.pathogen, affectedLabCount: input.affectedLabIds.length },
+          metadata: { pathogen: input.pathogen, affectedLabIds: deduplicatedLabIds, affectedLabCount: deduplicatedLabIds.length },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'OUTBREAK_MODE_ACTIVATED', resourceId: outbreakId })
       }
 
-      return { success: true, outbreakId }
+      return { success: true, outbreakId, notificationsSent }
     }),
 
   /**
@@ -6713,10 +6731,12 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // P11: scope fetch to org_id at query level to prevent cross-org data leakage
       const { data: outbreak, error: fetchError } = await ctx.supabase
         .from('outbreak_events')
-        .select('id, status, pathogen, affected_lab_ids, org_id')
+        .select('id, status, pathogen, affected_lab_ids')
         .eq('id', input.outbreakId)
+        .eq('org_id', ctx.user.orgId)
         .single()
 
       if (fetchError || !outbreak) {
@@ -6724,15 +6744,10 @@ export const adminRouter = createTRPCRouter({
       }
 
       const ob = outbreak as Record<string, unknown>
-      if (ob.org_id !== ctx.user.orgId) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Outbreak belongs to a different organization' })
-      }
 
-      if (ob.status !== 'ACTIVE') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Outbreak is already resolved' })
-      }
-
-      const { error: updateError } = await ctx.supabase
+      // P5: atomic conditional update — prevents TOCTOU race where two concurrent requests
+      // both read ACTIVE, both pass the check, and both dispatch duplicate notifications.
+      const { error: updateError, count: updatedCount } = await ctx.supabase
         .from('outbreak_events')
         .update({
           status: 'RESOLVED',
@@ -6741,9 +6756,14 @@ export const adminRouter = createTRPCRouter({
           notes: input.notes ?? ob.notes,
         })
         .eq('id', input.outbreakId)
+        .eq('status', 'ACTIVE') // atomic guard — only succeeds if still ACTIVE
+        .select('id', { count: 'exact', head: true })
 
       if (updateError) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to resolve outbreak' })
+      }
+      if (!updatedCount || updatedCount === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Outbreak is already resolved' })
       }
 
       const affectedLabIds = ob.affected_lab_ids as string[]
@@ -6768,6 +6788,7 @@ export const adminRouter = createTRPCRouter({
         console.warn('[NOTIFICATION_FAILURE]', { outbreakId: input.outbreakId })
       }
 
+      // P3: audit metadata includes affectedLabIds per AC 7
       const audit = new AuditLogger(ctx.supabase)
       try {
         await audit.emit({
@@ -6778,7 +6799,7 @@ export const adminRouter = createTRPCRouter({
           actorRole: ctx.user.role,
           outcome: 'SUCCESS',
           sessionId: ctx.user.sessionId,
-          metadata: { pathogen: ob.pathogen as string },
+          metadata: { pathogen: ob.pathogen as string, affectedLabIds },
         })
       } catch {
         console.warn('[AUDIT_FAILURE]', { action: 'OUTBREAK_MODE_DEACTIVATED', resourceId: input.outbreakId })
@@ -6828,6 +6849,7 @@ export const adminRouter = createTRPCRouter({
         const { data: labs } = await ctx.supabase
           .from('labs')
           .select('id, lab_name')
+          .eq('org_id', orgId) // P7: scope lab name lookup to org
           .in('id', Array.from(allLabIds))
         for (const lab of (labs ?? []) as Record<string, unknown>[]) {
           labNameMap[lab.id as string] = lab.lab_name as string
@@ -6877,16 +6899,20 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Lab not found in organization' })
       }
 
-      // Encrypt given_name and family_name (PHI) before storage
+      // P1: encrypt all PHI fields — throw on failure, never fall back to plaintext
       let encryptedGivenName: string
       let encryptedFamilyName: string
+      let encryptedPhone: string
       try {
         const key = await getCachedEncryptionKey()
         encryptedGivenName = encryptField(input.givenName, key)
         encryptedFamilyName = input.familyName ? encryptField(input.familyName, key) : ''
+        encryptedPhone = encryptField(input.phone, key) // P9: phone is PHI
       } catch {
-        encryptedGivenName = input.givenName
-        encryptedFamilyName = input.familyName
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create CHW record',
+        })
       }
 
       const chwId = crypto.randomUUID()
@@ -6899,12 +6925,25 @@ export const adminRouter = createTRPCRouter({
           family_name: encryptedFamilyName,
           role: 'CHW',
           status: 'ACTIVE',
-          telecom_phone: input.phone,
+          telecom_phone: encryptedPhone,
           created_at: new Date().toISOString(),
         })
 
       if (insertError) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create CHW record' })
+      }
+
+      // P2: link CHW to the assigned lab so they receive outbreak notifications
+      const { error: techInsertError } = await ctx.supabase
+        .from('lab_technicians')
+        .insert({
+          lab_id: input.assignedLabId,
+          practitioner_id: chwId,
+          lab_role: 'CHW',
+        })
+
+      if (techInsertError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to assign CHW to lab' })
       }
 
       // Audit event — log only practitioner_id, never name or phone (CLAUDE.md PHI rule)
@@ -6924,12 +6963,22 @@ export const adminRouter = createTRPCRouter({
         console.warn('[AUDIT_FAILURE]', { action: 'CHW_ENROLLED', resourceId: chwId })
       }
 
-      return { success: true, chwId }
+      // P13: return the full created record per Task 4.4
+      return { success: true, chwId, role: 'CHW', status: 'ACTIVE', assignedLabId: input.assignedLabId }
     }),
 
   // ================================================================
   // Story 55.8: Surveillance Alert Configuration
   // ================================================================
+
+  // ----------------------------------------------------------------
+  // Surveillance Alert Configuration (Story 55.8)
+  // ----------------------------------------------------------------
+
+  // Default thresholds pre-populated on first config creation (Task 2.3).
+  // The UI form renders these values; the API merges any missing defaults
+  // when creating a brand-new config.
+  // ----------------------------------------------------------------
 
   /**
    * Task 2.1: Get surveillance config for the current user (or specified practitioner).
@@ -6957,13 +7006,13 @@ export const adminRouter = createTRPCRouter({
       if (!config) return { config: null }
 
       const labIds = (config as Record<string, unknown>).monitored_lab_ids as string[]
-      let labs: Array<{ id: string; name: string; status: string }> = []
+      let labs: Array<{ id: string; lab_name: string; status: string }> = []
       if (labIds.length > 0) {
         const { data: labRows } = await ctx.supabase
           .from('labs')
-          .select('id, name, status')
+          .select('id, lab_name, status')
           .in('id', labIds)
-        labs = (labRows ?? []) as Array<{ id: string; name: string; status: string }>
+        labs = (labRows ?? []) as Array<{ id: string; lab_name: string; status: string }>
       }
 
       return {
@@ -6995,7 +7044,17 @@ export const adminRouter = createTRPCRouter({
               threshold_pct: z.number().min(0).max(100),
             }),
           )
-          .min(1, 'At least one threshold must be configured'),
+          .min(1, 'At least one threshold must be configured')
+          .superRefine((thresholds, ctx) => {
+            const categories = thresholds.map((t) => t.test_category)
+            const duplicates = categories.filter((c, i) => categories.indexOf(c) !== i)
+            if (duplicates.length > 0) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `Duplicate test categories are not allowed: ${[...new Set(duplicates)].join(', ')}`,
+              })
+            }
+          }),
         channels: z.object({
           in_app: z.literal(true),
           sms_phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'SMS phone must be E.164 format').optional(),
@@ -7018,8 +7077,30 @@ export const adminRouter = createTRPCRouter({
       if (invalidLabs.length > 0) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: `Lab IDs do not belong to your organization: ${invalidLabs.join(', ')}`,
+          message: `${invalidLabs.length} lab ID(s) do not belong to your organization`,
         })
+      }
+
+      // Determine thresholds: on first creation, merge provided thresholds with defaults
+      // so any unspecified default categories are pre-populated (Task 2.3).
+      const { data: existingConfig } = await ctx.supabase
+        .from('surveillance_alert_configs')
+        .select('id')
+        .eq('practitioner_id', ctx.user.sub)
+        .eq('org_id', ctx.user.orgId)
+        .maybeSingle()
+
+      const isFirstCreation = !existingConfig
+      let thresholds = input.thresholds
+      if (isFirstCreation) {
+        const providedCategories = new Set(input.thresholds.map((t) => t.test_category))
+        const merged = [...input.thresholds]
+        for (const def of SURVEILLANCE_DEFAULT_THRESHOLDS) {
+          if (!providedCategories.has(def.test_category)) {
+            merged.push(def)
+          }
+        }
+        thresholds = merged
       }
 
       const { data: upserted, error: upsertError } = await ctx.supabase
@@ -7029,7 +7110,7 @@ export const adminRouter = createTRPCRouter({
             practitioner_id: ctx.user.sub,
             org_id: ctx.user.orgId,
             monitored_lab_ids: input.monitoredLabIds,
-            thresholds: input.thresholds,
+            thresholds,
             channels: input.channels,
           },
           { onConflict: 'practitioner_id,org_id' },
@@ -7089,6 +7170,16 @@ export const adminRouter = createTRPCRouter({
           .eq('org_id', ctx.user.orgId)
           .maybeSingle()
         configId = (config as any)?.id
+      } else {
+        // Caller supplied an explicit configId — verify it belongs to their org.
+        const { data: config } = await ctx.supabase
+          .from('surveillance_alert_configs')
+          .select('org_id')
+          .eq('id', configId)
+          .maybeSingle()
+        if (!config || (config as any).org_id !== ctx.user.orgId) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
+        }
       }
 
       if (!configId) {
@@ -7097,7 +7188,7 @@ export const adminRouter = createTRPCRouter({
 
       let query = ctx.supabase
         .from('surveillance_alerts')
-        .select('*, labs!inner(name)', { count: 'exact' })
+        .select('*, labs!inner(lab_name)', { count: 'exact' })
         .eq('config_id', configId)
         .order('triggered_at', { ascending: false })
         .range(opts.cursor, opts.cursor + opts.limit - 1)
@@ -7118,7 +7209,7 @@ export const adminRouter = createTRPCRouter({
         id: row.id,
         configId: row.config_id,
         labId: row.lab_id,
-        labName: row.labs?.name ?? 'Unknown',
+        labName: row.labs?.lab_name ?? 'Unknown',
         testCategory: row.test_category,
         currentRate: Number(row.current_rate),
         threshold: Number(row.threshold),
@@ -7148,7 +7239,14 @@ export const adminRouter = createTRPCRouter({
         .eq('id', input.alertId)
         .single()
 
-      if (fetchError || !existing) {
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch alert' })
+      }
+
+      if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
       }
 
@@ -7166,7 +7264,7 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
       }
 
-      const { error: updateError } = await ctx.supabase
+      const { data: updated, error: updateError } = await ctx.supabase
         .from('surveillance_alerts')
         .update({
           acknowledged_at: new Date().toISOString(),
@@ -7174,9 +7272,16 @@ export const adminRouter = createTRPCRouter({
           notes: input.notes ?? null,
         })
         .eq('id', input.alertId)
+        .is('acknowledged_at', null)
+        .select('id')
 
       if (updateError) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to acknowledge alert' })
+      }
+
+      if (!updated || updated.length === 0) {
+        // Raced with a concurrent acknowledgement — treat as already acknowledged.
+        throw new TRPCError({ code: 'CONFLICT', message: 'Alert is already acknowledged' })
       }
 
       const audit = new AuditLogger(ctx.supabase)
@@ -7216,7 +7321,8 @@ export const adminRouter = createTRPCRouter({
     const configId = (config as any).id
 
     const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+    // Use UTC midnight to avoid server-timezone drift for users in UTC+4:30 (Afghanistan/Central Asia).
+    const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString()
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
     const [unackResult, todayResult, weekResult] = await Promise.all([
