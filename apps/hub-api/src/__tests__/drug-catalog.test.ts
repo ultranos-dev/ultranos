@@ -368,7 +368,7 @@ describe('drugCatalog.setPrice', () => {
           single: vi.fn().mockResolvedValue({
             data: {
               atc_code: 'J01CA04',
-              facility_id: 'f1',
+              facility_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
               retail_price: 85,
               stock_signal: 'in_stock',
             },
@@ -381,7 +381,7 @@ describe('drugCatalog.setPrice', () => {
     const caller = createCaller(ctx(PHARMACIST_USER))
     const result = await caller.drugCatalog.setPrice({
       atcCode: 'J01CA04',
-      facilityId: 'f1',
+      facilityId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       retailPrice: 85,
       stockSignal: 'in_stock',
     })
@@ -395,7 +395,7 @@ describe('drugCatalog.setPrice', () => {
     await expect(
       caller.drugCatalog.setPrice({
         atcCode: 'J01CA04',
-        facilityId: 'f1',
+        facilityId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         retailPrice: 85,
         stockSignal: 'in_stock',
       })

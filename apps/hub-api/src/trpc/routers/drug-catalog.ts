@@ -275,7 +275,7 @@ export const drugCatalogRouter = createTRPCRouter({
   setPrice: protectedProcedure
     .input(z.object({
       atcCode: z.string().min(1),
-      facilityId: z.string().min(1),
+      facilityId: z.string().uuid(),
       retailPrice: z.number().min(0),
       stockSignal: z.enum(['in_stock', 'low_stock', 'out_of_stock']),
       doseForm: z.string().optional(),
