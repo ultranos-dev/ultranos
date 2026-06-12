@@ -1,5 +1,34 @@
 # Deferred Work
 
+## Deferred from: code review of 55-8-surveillance-alert-configuration (2026-06-12)
+
+- **W1: `enrollChw` silently stores plaintext PHI when encryption fails** — When `getCachedEncryptionKey()` throws, the catch block falls through and inserts raw `givenName`/`familyName` into the DB with no error or audit event. CLAUDE.md Rule 1 + Rule 6 violation. Story 54-2 code; must be fixed before CHW enrollment goes to production. [`apps/hub-api/src/trpc/routers/admin.ts:enrollChw`]
+- **W2: `listLabStaff` missing org-scoping** — Queries `lab_technicians` by `lab_id` with no `.eq('org_id', ctx.user.orgId)` guard; any admin can enumerate staff of any lab in the system. Story 55-1 code (already `done`); requires targeted fix pass. [`apps/hub-api/src/trpc/routers/admin.ts:listLabStaff`]
+- **W3: `listAllLabStaff` cursor injection via raw `.or()` string** — Cursor parts are split on `:` and interpolated directly into a PostgREST filter string without UUID validation; crafted cursor can inject arbitrary filter clauses. Story 55-2 code (already `done`). [`apps/hub-api/src/trpc/routers/admin.ts:listAllLabStaff`]
+- **W4: `getMentorshipStats` queries active/dissolved pairings and `lab_technicians` count without `org_id` scope** — All three internal queries operate on the full table; admins see cross-org aggregate counts. Story 55-4 code (in `review`); address in 55-4 review. [`apps/hub-api/src/trpc/routers/admin.ts:getMentorshipStats`]
+- **W5: `dissolveMentorshipPairing` / `updateMentorshipCheckin` no org check on pairing** — Both mutations accept a `pairingId` without verifying it belongs to `ctx.user.orgId`; cross-org mutation possible. Story 55-4 code (in `review`). [`apps/hub-api/src/trpc/routers/admin.ts`]
+- **W6: `getNetworkOverview` fires 3 unbounded parallel Supabase queries per lab** — `Promise.all(labs.map(...))` with 3 queries per lab; 50 labs = 150 simultaneous DB round-trips; will exhaust connection pool. Story 54-1 code (in `in-progress`). [`apps/hub-api/src/trpc/routers/admin.ts:getNetworkOverview`]
+
+## Deferred from: code review of 55-8-surveillance-alert-configuration Group 2 (2026-06-12)
+
+- **W1: No unsaved-changes guard on `SurveillanceConfigForm` navigation** — Navigating away with unsaved threshold/lab changes silently discards them. Not in story 55.8 spec. Revisit in a UX polish sprint. [`apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx`]
+- **W2: RTL snapshot tests missing for `SurveillanceConfigForm` and `SurveillanceAlertHistory`** — CLAUDE.md requires RTL snapshots for every component. Neither component has RTL test coverage. Defer to Epic 35 (RTL snapshot completion). [`apps/admin-portal/src/__tests__/surveillance-config.test.tsx`]
+- **W3: Top-level `await import()` in test file fragile with `vi.mock` hoisting** — Dynamic imports at module scope alongside `vi.mock` can cause the real module to load before mocks are registered in some Vitest configurations. Pre-existing pattern in this test file. Revisit when migrating to static imports. [`apps/admin-portal/src/__tests__/surveillance-config.test.tsx`]
+
+## Deferred from: code review of 53-7-patient-public-health-guidance (2026-06-10)
+
+- **W1: Audio build pipeline hook absent** — `prepare-guidance-audio.ts` not hooked into build or CI; intentional placeholder until native-speaker recordings are available. Revisit when recordings are delivered.
+- **W2: Runtime localization key guard for seed data** — TypeScript interface enforces all four locale fields at compile time; runtime validation of static typed seed data is low value. Revisit only if dynamic guidance loading is ever introduced.
+
+## Deferred from: code review of 53-5-confidence-inversion-principle (2026-06-10)
+
+- **W1: Escalation POST body wraps in `{ json: { ... } }` (tRPC HTTP format)** [`apps/lab-lite/src/lib/confidence-escalation.ts:82`] — Format depends on whether Hub endpoint is tRPC or REST (see D1 in story review). Defer until the Hub endpoint is created.
+- **W2: Silent `catch {}` on escalation POST — no queuing, retry, or offline fallback** [`apps/lab-lite/src/lib/confidence-escalation.ts:95`] — By-design per spec ("fire-and-forget, never throws"). Revisit if escalation SLA hardens or an offline queue is added in Epic 30.
+- **W3: LOW overlay `dismissed` state is local useState — re-mount resets acknowledgment** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:14`] — React lifecycle limitation: if the parent re-mounts the component, the acknowledged overlay reappears. Low risk in current usage patterns.
+- **W4: `AiOutputWrapper` missing `sourceFeature` prop — escalation audit events lack required metadata field** — Depends on D2 decision (whether `triggerAutoEscalation` is called inside the component or injected by callers). Defer until D2 is resolved.
+- **W5: Stale closure on `onEscalate` in useEffect dependency array** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:19`] — `onEscalate` excluded from deps to avoid re-escalation on parent re-renders; intentional. Low risk while callers use stable function references.
+- **W6: Missing `chainHash` in audit event payload for AI_AUTO_ESCALATION** [`apps/lab-lite/src/lib/confidence-escalation.ts:39-57`] — `chainHash` is optional in `ClientAuditEventInput`. Verify whether Epic 23 audit chain monitoring requires it for all events.
+
 ## Deferred from: code review of 54-1-multi-branch-lab-network (2026-06-10)
 
 - **W1: `patientFirstName: 'Ahmad'` hardcoded in test fixture** [`apps/lab-lite/src/__tests__/network-metrics.test.ts:62`] — PHI hygiene: test fixture uses a real-looking patient first name. CLAUDE.md Rule 1 covers logs/comments rather than test fixtures explicitly, but consider replacing with a generic placeholder (e.g. `'[TEST]'`) across all lab-lite test fixtures for consistency.
@@ -933,3 +962,33 @@
 - **D-54.3-W5: Location IDs shown as raw strings in courier UI.** `ActiveTransportCard` and `CourierDeliveryScreen` display raw UUID-format location IDs to couriers rather than resolved human-readable names. Requires a location resolver service outside this story's scope.
 - **D-54.3-W6: `⚠` Unicode character used instead of Lucide icon in transport flag banner.** `SampleDetailView.tsx:179` renders a Unicode warning symbol rather than a Lucide icon from `@ultranos/ui-kit/icons`. Cosmetic inconsistency; allergy display uses a similar pattern.
 - **D-54.3-W7: `labSampleId` PHI traceability unverified in manifest tests.** PHI exclusion tests check for patient name absence but do not verify that labSampleId is not derived from or traceable to patient identity. Low risk by definition (labSampleId is a lab-assigned sequential number) but worth a documented assertion.
+
+
+## Deferred from: code review of 53-4-tele-consultation-request-builder (2026-06-10)
+
+- **W1: `ai-provenance.ts` / `ai_provenance` Dexie table dependency from Story 53.6** — `consultation-ai-formatter.ts` imports `createProvenanceRecord` from `./ai-provenance`. Story 53.6 (AI Provenance Trail) is a declared dependency but does not appear as `done` in sprint-status. If 53.6 has not been delivered, this import will fail at build time. Verify 53.6 is complete before shipping 53.4. [`apps/lab-lite/src/lib/consultation-ai-formatter.ts`]
+- **W2: No recovery differentiation for photo payload 413 errors during sync** — A request body exceeding Hub payload limits marks `syncStatus: 'failed'` permanently with no differentiation from auth errors or transient failures. Requires Hub-side payload size contract and a retry-without-photos fallback strategy. [`apps/lab-lite/src/lib/consultation-sync.ts:syncPendingRequests`]
+
+## Deferred from: code review of 53-1-contextual-knowledge-cards (2026-06-10)
+
+- **W1: Story 46.2 `learning-trigger-engine.ts` reads `db.lab_results` (PHI) with no audit event** — CLAUDE.md Rule 6 violation; out of scope for Story 53.1; must be addressed in Story 46.2 review. [`apps/lab-lite/src/lib/learning-trigger-engine.ts:1029`]
+- **W2: Story 46.2 `learning-trigger-engine.ts` `evaluateTriggers()` parameters are untyped (implicit `any`)** — TypeScript safety gap in a PHI-adjacent code path; defer to Story 46.2 review. [`apps/lab-lite/src/lib/learning-trigger-engine.ts:1019`]
+
+## Deferred from: code review of 53-3-ai-anomaly-flagging (2026-06-10)
+
+- **W1: `pre-analytical-flag.test.tsx` belongs to Story 54.3, not 53.3** [`apps/lab-lite/src/__tests__/pre-analytical-flag.test.tsx`] — Test was committed in the 53.3 commit but tests transport flag behavior (Story 54.3 scope). Story 54.3 is done; low-risk housekeeping to refile if test infrastructure is reorganized.
+- **W2: `AnomalyFlag.disclaimer` has no runtime enforcement against override** [`apps/lab-lite/src/lib/anomaly-engine.ts`] — `readonly` is TypeScript-only; JSON deserialization bypasses it. Runtime schema validation at every flag consumer is out of scope for this story.
+- **W3: PHI guard test regex only matches Latin-script names** [`apps/lab-lite/src/__tests__/anomaly-engine.test.ts`] — `/\b[A-Z][a-z]+ [A-Z][a-z]+\b/` misses Arabic/Dari names. Low actual risk since the engine input is `Record<string, number|null>` by design; test is defensive but regex is cosmetically incomplete.
+
+## Deferred from: code review of 53-6-ai-provenance-trail (2026-06-10)
+
+- **W1: Dead-letter records with no `failed` status** [`provenance-drain-worker.ts:953–955`] — Permanently-rejected provenance records stay `pending` forever and retry on every online event. Pre-existing pattern from AuditDrainWorker; requires Hub API to return a `failed` record status before this can be fixed client-side. Revisit when /ai-provenance.sync Hub endpoint is implemented.
+
+## Deferred from: code review of 55-7-lab-network-outbreak-management (2026-06-12)
+
+- **D1: `getSurveillanceConfig` / `listSurveillanceAlerts` use `labs.name` instead of `labs.lab_name`** — Column mismatch causes lab names to always return null/Unknown; in 55.8 code bundled in the same diff; review when 55.8 is formally reviewed.
+- **D2: `getManagerlessLabs` / `listLabsForFilter` missing `org_id` scope** — Both 55.2 endpoints query `labs` without filtering by `org_id`, exposing managerless labs from all orgs. Story 55.2 is `done`; requires a targeted fix pass.
+- **D3: `listAllLabStaff` activity filter applied after cursor-page truncation** — Produces wrong page sizes and broken cursor advancement when ACTIVE_7D/INACTIVE filters are active. 55.2 code, story is `done`.
+- **D4: `getMentorshipStats` `avgPairingDurationDays` mixes elapsed-active and final-dissolved duration** — Produces a meaningless average for orgs with mixed active/closed pairings. 55.4 code; review when 55.4 review runs.
+- **D5: `createCertificationPathway` resolves org_id via a secondary practitioner query** — If `ctx.user.sub` matches a practitioner from a different org, the pathway is created in that org. 55.5 code, story is `done`.
+- **D6: `getCachedEncryptionKey` called without `await` in `getEmployeeHealth` / `updateEmployeeHealth`** — If the function is async, the key is a Promise passed to `encryptField`/`decryptField`, producing garbled ciphertext. 55.3 code, story is `done`.
