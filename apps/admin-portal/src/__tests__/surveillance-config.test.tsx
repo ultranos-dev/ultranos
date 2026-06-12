@@ -69,9 +69,9 @@ beforeEach(() => {
 describe('SurveillanceConfigForm', () => {
   const defaultLabs = {
     labs: [
-      { id: 'lab-1', name: 'Central Lab', status: 'ACTIVE' },
-      { id: 'lab-2', name: 'District Lab', status: 'ACTIVE' },
-      { id: 'lab-3', name: 'Mobile Unit', status: 'SUSPENDED' },
+      { id: 'lab-1', labName: 'Central Lab', status: 'ACTIVE' },
+      { id: 'lab-2', labName: 'District Lab', status: 'ACTIVE' },
+      { id: 'lab-3', labName: 'Mobile Unit', status: 'SUSPENDED' },
     ],
     total: 3,
   }
@@ -83,15 +83,15 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('Central Lab')).toBeDefined()
-      expect(screen.getByText('District Lab')).toBeDefined()
-      expect(screen.getByText('Mobile Unit')).toBeDefined()
+      expect(screen.getByText('Central Lab')).toBeTruthy()
+      expect(screen.getByText('District Lab')).toBeTruthy()
+      expect(screen.getByText('Mobile Unit')).toBeTruthy()
     })
 
     // Status badges
     const activeBadges = screen.getAllByText('ACTIVE')
     expect(activeBadges).toHaveLength(2)
-    expect(screen.getByText('SUSPENDED')).toBeDefined()
+    expect(screen.getByText('SUSPENDED')).toBeTruthy()
   })
 
   it('pre-populates default thresholds when no config exists', async () => {
@@ -143,14 +143,14 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('Select All')).toBeDefined()
+      expect(screen.getByText('Select All')).toBeTruthy()
     })
 
     // Click "Select All"
     fireEvent.click(screen.getByText('Select All'))
 
     await waitFor(() => {
-      expect(screen.getByText('Deselect All')).toBeDefined()
+      expect(screen.getByText('Deselect All')).toBeTruthy()
     })
   })
 
@@ -161,8 +161,8 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('In-App Notifications')).toBeDefined()
-      expect(screen.getByText('Always enabled')).toBeDefined()
+      expect(screen.getByText('In-App Notifications')).toBeTruthy()
+      expect(screen.getByText('Always enabled')).toBeTruthy()
     })
   })
 
@@ -173,7 +173,7 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('SMS Notifications')).toBeDefined()
+      expect(screen.getByText('SMS Notifications')).toBeTruthy()
     })
 
     // Enable SMS
@@ -184,7 +184,7 @@ describe('SurveillanceConfigForm', () => {
     fireEvent.click(smsCheckbox!)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('+93701234567')).toBeDefined()
+      expect(screen.getByPlaceholderText('+93701234567')).toBeTruthy()
     })
   })
 
@@ -195,7 +195,7 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('Email Notifications')).toBeDefined()
+      expect(screen.getByText('Email Notifications')).toBeTruthy()
     })
 
     const emailCheckbox = screen.getAllByRole('checkbox').find((cb) => {
@@ -205,7 +205,7 @@ describe('SurveillanceConfigForm', () => {
     fireEvent.click(emailCheckbox!)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('officer@district.gov')).toBeDefined()
+      expect(screen.getByPlaceholderText('officer@district.gov')).toBeTruthy()
     })
   })
 
@@ -217,7 +217,7 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('Central Lab')).toBeDefined()
+      expect(screen.getByText('Central Lab')).toBeTruthy()
     })
 
     // Select a lab
@@ -238,14 +238,14 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByText('Save Configuration')).toBeDefined()
+      expect(screen.getByText('Save Configuration')).toBeTruthy()
     })
 
     // Try to save without selecting any lab
     fireEvent.click(screen.getByText('Save Configuration'))
 
     await waitFor(() => {
-      expect(screen.getByText('At least one lab must be selected')).toBeDefined()
+      expect(screen.getByText('At least one lab must be selected')).toBeTruthy()
     })
   })
 
@@ -256,7 +256,7 @@ describe('SurveillanceConfigForm', () => {
     render(<SurveillanceConfigForm />)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('New test category name')).toBeDefined()
+      expect(screen.getByPlaceholderText('New test category name')).toBeTruthy()
     })
 
     const input = screen.getByPlaceholderText('New test category name')
@@ -267,6 +267,26 @@ describe('SurveillanceConfigForm', () => {
       const textInputs = screen.getAllByRole('textbox')
       const values = textInputs.map((i) => (i as HTMLInputElement).value)
       expect(values).toContain('HIV Rapid Test')
+    })
+  })
+
+  it('shows error banner when save fails', async () => {
+    mockGetSurveillanceConfig.mockResolvedValue({ config: null })
+    mockListLabs.mockResolvedValue(defaultLabs)
+    mockUpdateSurveillanceConfig.mockRejectedValue(new Error('Server error'))
+
+    render(<SurveillanceConfigForm />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Central Lab')).toBeTruthy()
+    })
+
+    // Select all labs so validation passes
+    fireEvent.click(screen.getByText('Select All'))
+    fireEvent.click(screen.getByText('Save Configuration'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Server error')).toBeTruthy()
     })
   })
 })
@@ -280,7 +300,7 @@ describe('SurveillanceAlertHistory', () => {
     render(<SurveillanceAlertHistory />)
 
     await waitFor(() => {
-      expect(screen.getByText(/No surveillance alerts found/)).toBeDefined()
+      expect(screen.getByText(/No surveillance alerts found/)).toBeTruthy()
     })
   })
 
@@ -290,9 +310,9 @@ describe('SurveillanceAlertHistory', () => {
     render(<SurveillanceAlertHistory />)
 
     await waitFor(() => {
-      expect(screen.getByText('All')).toBeDefined()
-      expect(screen.getByText('Unacknowledged')).toBeDefined()
-      expect(screen.getByText('Acknowledged')).toBeDefined()
+      expect(screen.getByText('All')).toBeTruthy()
+      expect(screen.getByText('Unacknowledged')).toBeTruthy()
+      expect(screen.getByText('Acknowledged')).toBeTruthy()
     })
   })
 
@@ -333,10 +353,10 @@ describe('SurveillanceAlertHistory', () => {
     render(<SurveillanceAlertHistory />)
 
     await waitFor(() => {
-      expect(screen.getByText('Central Lab')).toBeDefined()
-      expect(screen.getByText('District Lab')).toBeDefined()
-      expect(screen.getByText('Malaria RDT')).toBeDefined()
-      expect(screen.getByText('TB (Smear)')).toBeDefined()
+      expect(screen.getByText('Central Lab')).toBeTruthy()
+      expect(screen.getByText('District Lab')).toBeTruthy()
+      expect(screen.getByText('Malaria RDT')).toBeTruthy()
+      expect(screen.getByText('TB (Smear)')).toBeTruthy()
     })
   })
 
@@ -368,7 +388,7 @@ describe('SurveillanceAlertHistory', () => {
       const ackButton = actionButtons.find(
         (b) => b.textContent === 'Acknowledge' && b.className.includes('text-xs'),
       )
-      expect(ackButton).toBeDefined()
+      expect(ackButton).toBeTruthy()
     })
 
     // Click the action button specifically
@@ -379,7 +399,7 @@ describe('SurveillanceAlertHistory', () => {
     fireEvent.click(ackButton!)
 
     await waitFor(() => {
-      expect(screen.getByText('Acknowledge Alert')).toBeDefined()
+      expect(screen.getByText('Acknowledge Alert')).toBeTruthy()
     })
   })
 
@@ -392,7 +412,7 @@ describe('SurveillanceAlertHistory', () => {
       // Filter tabs are present — last occurrence is the status column filter
       const allButtons = screen.getAllByRole('button')
       const unackFilter = allButtons.find((b) => b.textContent === 'Unacknowledged')
-      expect(unackFilter).toBeDefined()
+      expect(unackFilter).toBeTruthy()
     })
 
     // Click "Unacknowledged" filter
@@ -404,6 +424,16 @@ describe('SurveillanceAlertHistory', () => {
       expect(mockListSurveillanceAlerts).toHaveBeenCalledWith(
         expect.objectContaining({ acknowledged: false }),
       )
+    })
+  })
+
+  it('shows error state when listSurveillanceAlerts fails', async () => {
+    mockListSurveillanceAlerts.mockRejectedValue(new Error('Fetch failed'))
+
+    render(<SurveillanceAlertHistory />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Fetch failed')).toBeTruthy()
     })
   })
 })
@@ -423,9 +453,9 @@ describe('AcknowledgeAlertModal', () => {
       />,
     )
 
-    expect(screen.getByText('Acknowledge Alert')).toBeDefined()
-    expect(screen.getByText(/Central Lab/)).toBeDefined()
-    expect(screen.getByText(/Malaria RDT/)).toBeDefined()
+    expect(screen.getByText('Acknowledge Alert')).toBeTruthy()
+    expect(screen.getByText(/Central Lab/)).toBeTruthy()
+    expect(screen.getByText(/Malaria RDT/)).toBeTruthy()
   })
 
   it('calls acknowledge API and onSuccess when submitted', async () => {
@@ -496,7 +526,7 @@ describe('AcknowledgeAlertModal', () => {
     fireEvent.click(ackButton!)
 
     await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeDefined()
+      expect(screen.getByText('Network error')).toBeTruthy()
     })
   })
 })

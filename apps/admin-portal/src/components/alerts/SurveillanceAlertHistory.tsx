@@ -25,14 +25,21 @@ interface Alert {
 
 const PAGE_SIZE = 25
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return 'Unknown'
+  try {
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return 'Unknown'
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return 'Unknown'
+  }
 }
 
 export function SurveillanceAlertHistory() {
@@ -116,14 +123,14 @@ export function SurveillanceAlertHistory() {
         <>
           <div className="mt-4 rounded-2xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-card">
+              <thead className="bg-black text-white">
                 <tr>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Date/Time</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Lab</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Test Category</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Positivity Rate</th>
-                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Date/Time</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Lab</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Positivity Rate</th>
+                  <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Status</th>
+                  <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-popover">
@@ -198,7 +205,12 @@ export function SurveillanceAlertHistory() {
         labName={ackAlert?.labName ?? ''}
         testCategory={ackAlert?.testCategory ?? ''}
         open={ackAlert !== null}
-        onOpenChange={(open) => { if (!open) setAckAlert(null) }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAckAlert(null)
+            fetchAlerts()
+          }
+        }}
         onSuccess={handleAckSuccess}
       />
     </div>

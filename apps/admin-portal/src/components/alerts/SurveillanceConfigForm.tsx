@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,6 +52,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
   // New category input
   const [newCategory, setNewCategory] = useState('')
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -59,7 +60,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         setLoading(true)
         const [configResult, labsResult] = await Promise.all([
           trpc.admin.getSurveillanceConfig.query(),
-          trpc.admin.listLabs.query({ cursor: 0, limit: 100 }),
+          trpc.admin.listLabs.query({ cursor: 0, limit: 500 }),
         ])
 
         const labs = labsResult.labs ?? []
@@ -82,6 +83,12 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
     load()
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current)
+    }
+  }, [])
+
   function toggleLab(labId: string) {
     setSelectedLabIds((prev) => {
       const next = new Set(prev)
@@ -92,7 +99,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
   }
 
   function toggleAll() {
-    if (selectedLabIds.size === allLabs.length) {
+    if (allLabs.length > 0 && selectedLabIds.size === allLabs.length) {
       setSelectedLabIds(new Set())
     } else {
       setSelectedLabIds(new Set(allLabs.map((l) => l.id)))
@@ -112,7 +119,7 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
   function addCategory() {
     const cat = newCategory.trim()
     if (!cat) return
-    if (thresholds.some((t) => t.test_category === cat)) return
+    if (thresholds.some((t) => t.test_category.toLowerCase() === cat.toLowerCase())) return
     setThresholds((prev) => [...prev, { test_category: cat, threshold_pct: 10 }])
     setNewCategory('')
   }
@@ -142,8 +149,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       setError('SMS phone number must be in E.164 format (e.g., +93701234567)')
       return
     }
-    if (emailEnabled && !channels.email) {
-      setError('Email address is required when email notifications are enabled')
+    if (emailEnabled && !channels.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setError('A valid email address is required when email notifications are enabled')
       return
     }
 
@@ -160,7 +167,8 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
       })
       setSuccess(true)
       onSaved?.()
-      setTimeout(() => setSuccess(false), 3000)
+      if (successTimerRef.current) clearTimeout(successTimerRef.current)
+      successTimerRef.current = setTimeout(() => setSuccess(false), 3000)
     } catch (err: unknown) {
       setError((err as Error)?.message ?? 'Failed to save configuration')
     } finally {
@@ -224,11 +232,11 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
         <h3 className="text-lg font-semibold text-foreground">Positivity Rate Thresholds</h3>
         <div className="mt-3 rounded-2xl border border-border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-card">
+            <thead className="bg-black text-white">
               <tr>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Test Category</th>
-                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide text-muted-foreground">Threshold (%)</th>
-                <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Test Category</th>
+                <th className="px-4 py-3 text-start font-medium text-xs uppercase tracking-wide">Threshold (%)</th>
+                <th className="px-4 py-3 text-end font-medium text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-popover">
@@ -249,7 +257,10 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
                         min={0}
                         max={100}
                         value={t.threshold_pct}
-                        onChange={(e) => updateThreshold(i, 'threshold_pct', Number(e.target.value))}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value)
+                          if (!isNaN(v)) updateThreshold(i, 'threshold_pct', v)
+                        }}
                         className="w-24"
                       />
                       <span className="text-muted-foreground">%</span>
@@ -371,7 +382,11 @@ export function SurveillanceConfigForm({ onSaved }: SurveillanceConfigFormProps)
 
       {/* Save button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving}>
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="rounded-full bg-lime-400 text-lime-950 hover:bg-lime-300"
+        >
           {saving ? 'Saving...' : 'Save Configuration'}
         </Button>
       </div>

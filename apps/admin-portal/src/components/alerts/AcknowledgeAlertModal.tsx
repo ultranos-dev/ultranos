@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -34,6 +34,13 @@ export function AcknowledgeAlertModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (open) {
+      setNotes('')
+      setError(null)
+    }
+  }, [open])
+
   async function handleSubmit() {
     try {
       setSubmitting(true)
@@ -51,7 +58,7 @@ export function AcknowledgeAlertModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next && submitting) return; onOpenChange(next) }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Acknowledge Alert</DialogTitle>
@@ -73,6 +80,7 @@ export function AcknowledgeAlertModal({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
+            maxLength={2000}
             className="mt-1"
             placeholder="Add any notes about this acknowledgment..."
           />

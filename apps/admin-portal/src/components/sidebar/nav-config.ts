@@ -15,6 +15,7 @@ import {
   Cpu,
   CreditCard,
   Wallet,
+  SlidersHorizontal,
 } from '@ultranos/ui-kit/icons'
 
 export interface NavItem {
@@ -46,6 +47,7 @@ export const navGroups: NavGroup[] = [
       { title: 'Patients', url: '/patients', icon: User },
       { title: 'Merge Tool', url: '/patients/merge' },
       { title: 'Alerts', url: '/alerts', icon: Bell },
+      { title: 'Alert Config', url: '/alerts/configuration', icon: SlidersHorizontal },
     ],
   },
   {
