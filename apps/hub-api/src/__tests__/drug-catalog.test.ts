@@ -149,3 +149,117 @@ describe('drugCatalog.getByAtcCode', () => {
     await expect(caller.drugCatalog.getByAtcCode({ atcCode: 'UNKNOWN' })).rejects.toThrow(/NOT_FOUND/)
   })
 })
+
+describe('drugCatalog.sync', () => {
+  it('returns entries updated since sinceVersion for DOCTOR', async () => {
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        gt: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue({ data: [AMOX_ROW], error: null }),
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx(DOCTOR_USER))
+    const result = await caller.drugCatalog.sync({ sinceVersion: 0 })
+    expect(result.entries).toHaveLength(1)
+    expect(result.entries[0].atcCode).toBe('J01CA04')
+    // Clinical fields present for DOCTOR
+    expect((result.entries[0] as Record<string, unknown>).mechanismOfAction).toBeDefined()
+    // Pharmacist fields absent for DOCTOR
+    expect((result.entries[0] as Record<string, unknown>).formularyStatus).toBeUndefined()
+    expect(result.latestVersion).toBe(1718000000000)
+  })
+
+  it('returns empty array when no entries have been updated', async () => {
+    mockFrom
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnValue({
+          gt: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { version: 500 }, error: null }),
+            }),
+          }),
+        }),
+      })
+
+    const caller = createCaller(ctx(DOCTOR_USER))
+    const result = await caller.drugCatalog.sync({ sinceVersion: 999 })
+    expect(result.entries).toHaveLength(0)
+    expect(result.latestVersion).toBe(500)
+  })
+})
+
+describe('drugCatalog.enrich', () => {
+  it('allows PHARMACIST to set formulary_status', async () => {
+    mockFrom.mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...AMOX_ROW, formulary_status: 'on_formulary' },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx(PHARMACIST_USER))
+    const result = await caller.drugCatalog.enrich({
+      atcCode: 'J01CA04',
+      fields: { formularyStatus: 'on_formulary' },
+    })
+    expect(result.atcCode).toBe('J01CA04')
+  })
+
+  it('rejects DOCTOR attempting to set formulary_status', async () => {
+    const caller = createCaller(ctx(DOCTOR_USER))
+    await expect(
+      caller.drugCatalog.enrich({
+        atcCode: 'J01CA04',
+        fields: { formularyStatus: 'on_formulary' },
+      })
+    ).rejects.toThrow(/FORBIDDEN/)
+  })
+
+  it('allows DOCTOR to set local_names', async () => {
+    mockFrom.mockReturnValue({
+      update: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: { ...AMOX_ROW, local_names: { prs: 'آموکسیسیلین' } },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx(DOCTOR_USER))
+    const result = await caller.drugCatalog.enrich({
+      atcCode: 'J01CA04',
+      fields: { localNames: { prs: 'آموکسیسیلین' } },
+    })
+    expect(result).toBeDefined()
+  })
+
+  it('rejects PATIENT role entirely', async () => {
+    const caller = createCaller(ctx(PATIENT_USER))
+    await expect(
+      caller.drugCatalog.enrich({ atcCode: 'J01CA04', fields: { localNames: {} } })
+    ).rejects.toThrow()
+  })
+})
