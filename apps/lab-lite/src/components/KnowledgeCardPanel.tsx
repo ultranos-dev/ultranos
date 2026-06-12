@@ -32,8 +32,11 @@ export interface KnowledgeCardPanelProps {
 function SeverityBadge({ severity }: { severity: KnowledgeCard['severity'] }) {
   const t = useTranslations('knowledgeCards')
   const styles: Record<KnowledgeCard['severity'], string> = {
+    // Use semantic oklch token for critical (maps to destructive in the shared token system).
+    // Warning/informational use Tailwind scale utilities — no project-level semantic token
+    // exists for these severity levels; amber/blue are the closest standard equivalents.
     critical:
-      'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-300 dark:border-red-700',
+      'bg-destructive/10 text-destructive border border-destructive/30',
     warning:
       'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
     informational:
@@ -127,9 +130,9 @@ function KnowledgeCardItem({
           {t('knowledgeCards.recommendedActions')}
         </p>
         <ol className="list-decimal space-y-1 ps-4">
-          {card.actions.map((actionKey, idx) => (
+          {card.actions.map((actionKey) => (
             <li
-              key={idx}
+              key={actionKey}
               className="text-xs font-medium leading-snug text-foreground dark:text-foreground"
             >
               {t(actionKey)}
@@ -199,7 +202,10 @@ export function KnowledgeCardPanel({
         hasCritical
           ? 'border-red-200 bg-red-50/60 dark:border-red-800 dark:bg-red-950/30'
           : 'border-border bg-muted/30 dark:border-border dark:bg-card/60',
-        collapsed ? 'max-h-12 overflow-hidden' : '',
+        // Collapsed: show only the header row (~44px). Use a min-height on the
+        // header itself rather than max-h on the aside so translated/long labels
+        // can never clip the collapse/dismiss buttons.
+        collapsed ? 'overflow-hidden' : '',
       ].join(' ')}
     >
       {/* Panel header */}

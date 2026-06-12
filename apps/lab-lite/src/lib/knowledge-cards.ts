@@ -227,7 +227,7 @@ export const KNOWLEDGE_CARD_REGISTRY: Map<string, KnowledgeCard> = new Map([
       clinicalContext: 'knowledgeCards.kcCreatRenal001.clinicalContext',
       author: {
         name: 'Dr. Fatima Sultani',
-        credentials: 'MD, Hepatology',
+        credentials: 'MD, Nephrology',
         institution: 'French Medical Institute for Mothers and Children',
       },
       version: '1.0.0',

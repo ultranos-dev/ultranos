@@ -9,7 +9,7 @@
  * All layout uses logical CSS properties for RTL compatibility.
  */
 
-import { useState, useEffect, useCallback, useId } from 'react'
+import { useState, useEffect, useCallback, useId, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { MessageSquare } from '@ultranos/ui-kit/icons'
@@ -21,6 +21,10 @@ import type { LocalizedRangeThresholds } from '@/lib/abnormal-flags'
 import { computeAutoFields } from '@/lib/auto-calc'
 import type { ReferenceRange as LocalizedRange } from '@/lib/reference-ranges/types'
 import type { RangeSnapshot } from '@/lib/reference-ranges/types'
+import { KnowledgeCardPanel } from '@/components/KnowledgeCardPanel'
+import { evaluateKnowledgeCardTriggers, getMatchingRuleIds } from '@/lib/trigger-engine'
+import { reportKnowledgeCardView } from '@/lib/audit-client'
+import type { KnowledgeCard } from '@/lib/knowledge-cards'
 
 export interface ResultEntryFormProps {
   sampleId: string
@@ -124,6 +128,15 @@ export function ResultEntryForm({
   const [savingDraft, setSavingDraft] = useState(false)
 
   // ---------------------------------------------------------------------------
+  // Knowledge card panel state (Story 53.1)
+  // ---------------------------------------------------------------------------
+
+  const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([])
+  const [panelDismissed, setPanelDismissed] = useState(false)
+  const seenCardIds = useRef(new Set<string>())
+  const kcDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ---------------------------------------------------------------------------
   // Auto-calculation: recompute whenever user-entered values change
   // ---------------------------------------------------------------------------
 
@@ -184,6 +197,32 @@ export function ResultEntryForm({
     if (!hasCritical) setCriticalAcknowledged(false)
   }, [hasCritical])
 
+  // Debounced knowledge card evaluation — 500ms after any field change (Story 53.1 AC: 1, 10)
+  useEffect(() => {
+    if (kcDebounceRef.current) clearTimeout(kcDebounceRef.current)
+    kcDebounceRef.current = setTimeout(() => {
+      const matched = evaluateKnowledgeCardTriggers(values, template.loincCode)
+      setKnowledgeCards(matched)
+      // Auto-restore panel if new cards appear after a dismiss
+      if (matched.length === 0) setPanelDismissed(false)
+      // AC10: fire audit for each newly-visible card (once per session)
+      for (const card of matched) {
+        if (!seenCardIds.current.has(card.id)) {
+          seenCardIds.current.add(card.id)
+          const ruleIds = getMatchingRuleIds(card.id, values, template.loincCode)
+          reportKnowledgeCardView({
+            cardId: card.id,
+            triggerRuleId: ruleIds[0] ?? card.id,
+            severity: card.severity,
+          })
+        }
+      }
+    }, 500)
+    return () => {
+      if (kcDebounceRef.current) clearTimeout(kcDebounceRef.current)
+    }
+  }, [values, template.loincCode])
+
   // ---------------------------------------------------------------------------
   // Required field completion check
   // ---------------------------------------------------------------------------
@@ -226,6 +265,10 @@ export function ResultEntryForm({
       }
       return next
     })
+  }, [])
+
+  const handlePinCard = useCallback((_cardId: string) => {
+    // v1: visual affordance only — no persistence yet
   }, [])
 
   function buildObservations(): Omit<LabObservation, 'id'>[] {
@@ -416,9 +459,12 @@ export function ResultEntryForm({
   // ---------------------------------------------------------------------------
 
   const sortedFields = [...template.fields].sort((a, b) => a.sortOrder - b.sortOrder)
+  const visibleCards = panelDismissed ? [] : knowledgeCards
 
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex items-start gap-4">
+    {/* Form column */}
+    <div className="flex min-w-0 flex-1 flex-col gap-0">
       {/* ---- Sticky patient header ---- */}
       <div className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 dark:border-border dark:bg-card">
         <div className="flex items-center justify-between">
@@ -513,5 +559,15 @@ export function ResultEntryForm({
         </button>
       </div>
     </div>
+
+    {/* Knowledge card panel — inline-end, sticky, non-modal (Story 53.1 AC: 1, 5, 6, 9) */}
+    <div className="sticky top-0 self-start shrink-0">
+      <KnowledgeCardPanel
+        cards={visibleCards}
+        onDismiss={() => setPanelDismissed(true)}
+        onPin={handlePinCard}
+      />
+    </div>
+  </div>
   )
 }

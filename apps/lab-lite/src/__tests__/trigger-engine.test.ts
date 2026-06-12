@@ -152,11 +152,10 @@ describe('evaluateKnowledgeCardTriggers — no match', () => {
     expect(cards).toEqual([])
   })
 
-  it('returns empty array when template LOINC does not match and no wildcard', () => {
-    // Create a custom scenario: use a LOINC not in any rule's list (no wildcard coverage)
-    // Since our rules all include '*', this actually should match for normal thresholds.
-    // Verify: template code mismatch should still work via wildcard.
-    // Let's test the normal-values case on an unknown template.
+  it('returns empty array for below-threshold values on an unknown template LOINC (wildcard applies but values are normal)', () => {
+    // All rules include '*' wildcard, so they apply to any template LOINC.
+    // This test verifies that normal values still produce no cards even on an
+    // unknown template — the threshold logic, not template filtering, is the gating factor.
     const cards = evaluateKnowledgeCardTriggers(
       { wbc: 8 },
       'UNKNOWN-LOINC',
@@ -290,9 +289,139 @@ describe('getMatchingRuleIds', () => {
     expect(ruleIds).toEqual([])
   })
 
-  it('returns empty array when template LOINC does not match a non-wildcard rule', () => {
+  it('still returns rule ID for unknown template LOINC because WBC rule includes wildcard', () => {
+    // TR-WBC-BLAST-001 includes '*' in templateLoincCodes, so it applies to all templates.
     const ruleIds = getMatchingRuleIds('KC-WBC-BLAST-001', { wbc: 55 }, 'TOTALLY-WRONG-LOINC')
-    // The WBC rule includes '*', so it should still match
     expect(ruleIds).toContain('TR-WBC-BLAST-001')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// evaluateCondition — 'between' operator
+// ---------------------------------------------------------------------------
+
+import { evaluateKnowledgeCardTriggers as _eval } from '@/lib/trigger-engine'
+import { TRIGGER_RULES, KNOWLEDGE_CARD_REGISTRY, type TriggerRule } from '@/lib/knowledge-cards'
+
+// We test evaluateCondition indirectly by temporarily injecting a 'between' rule.
+// The function is not exported, but its behavior is observable through the public API.
+describe('evaluateCondition — between operator (via injected rule)', () => {
+  const BETWEEN_RULE_ID = 'TEST-BETWEEN-001'
+  const BETWEEN_CARD_ID = 'KC-WBC-BLAST-001'  // reuse an existing card
+
+  // Inject a between rule before each test and remove after
+  let betweenRule: TriggerRule
+
+  beforeEach(() => {
+    betweenRule = {
+      id: BETWEEN_RULE_ID,
+      cardId: BETWEEN_CARD_ID,
+      templateLoincCodes: ['TEST-LOINC'],
+      conditions: [{ fieldCode: 'test_val', operator: 'between', valueRange: { min: 10, max: 20 } }],
+      description: 'test_val between 10 and 20 (inclusive)',
+    }
+    TRIGGER_RULES.push(betweenRule)
+  })
+
+  afterEach(() => {
+    const idx = TRIGGER_RULES.indexOf(betweenRule)
+    if (idx !== -1) TRIGGER_RULES.splice(idx, 1)
+  })
+
+  it('fires when value is strictly inside the range', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: 15 }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).toContain(BETWEEN_CARD_ID)
+  })
+
+  it('fires when value equals the minimum (inclusive)', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: 10 }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).toContain(BETWEEN_CARD_ID)
+  })
+
+  it('fires when value equals the maximum (inclusive)', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: 20 }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).toContain(BETWEEN_CARD_ID)
+  })
+
+  it('does NOT fire when value is below the range', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: 9.99 }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(BETWEEN_CARD_ID)
+  })
+
+  it('does NOT fire when value is above the range', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: 20.01 }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(BETWEEN_CARD_ID)
+  })
+
+  it('does NOT fire when value is null', () => {
+    const cards = evaluateKnowledgeCardTriggers({ test_val: null }, 'TEST-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(BETWEEN_CARD_ID)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// evaluateCondition — 'present' operator (via injected rule)
+// ---------------------------------------------------------------------------
+
+describe('evaluateCondition — present operator (via injected rule)', () => {
+  const PRESENT_RULE_ID = 'TEST-PRESENT-001'
+  const PRESENT_CARD_ID = 'KC-WBC-BLAST-001'
+
+  let presentRule: TriggerRule
+
+  beforeEach(() => {
+    presentRule = {
+      id: PRESENT_RULE_ID,
+      cardId: PRESENT_CARD_ID,
+      templateLoincCodes: ['PRESENT-LOINC'],
+      conditions: [{ fieldCode: 'flag_field', operator: 'present' }],
+      description: 'flag_field is present (any non-empty value)',
+    }
+    TRIGGER_RULES.push(presentRule)
+  })
+
+  afterEach(() => {
+    const idx = TRIGGER_RULES.indexOf(presentRule)
+    if (idx !== -1) TRIGGER_RULES.splice(idx, 1)
+  })
+
+  it('fires when value is a non-zero number', () => {
+    const cards = evaluateKnowledgeCardTriggers({ flag_field: 1 }, 'PRESENT-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).toContain(PRESENT_CARD_ID)
+  })
+
+  it('fires when value is zero (0 is present, not absent)', () => {
+    // Zero is a legitimate clinical value — 'present' means non-null/non-empty, not truthy.
+    const cards = evaluateKnowledgeCardTriggers({ flag_field: 0 }, 'PRESENT-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).toContain(PRESENT_CARD_ID)
+  })
+
+  it('does NOT fire when value is null', () => {
+    const cards = evaluateKnowledgeCardTriggers({ flag_field: null }, 'PRESENT-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(PRESENT_CARD_ID)
+  })
+
+  it('does NOT fire when field is missing from resultValues', () => {
+    const cards = evaluateKnowledgeCardTriggers({}, 'PRESENT-LOINC')
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(PRESENT_CARD_ID)
+  })
+
+  it('does NOT fire when value is empty string', () => {
+    const cards = evaluateKnowledgeCardTriggers(
+      { flag_field: '' as unknown as null },
+      'PRESENT-LOINC',
+    )
+    const ids = cards.map((c) => c.id)
+    expect(ids).not.toContain(PRESENT_CARD_ID)
   })
 })

@@ -37,7 +37,10 @@ function evaluateCondition(
 
   // All remaining operators require a numeric value
   if (fieldValue === null || fieldValue === undefined || fieldValue === '') return false
-  const num = typeof fieldValue === 'number' ? fieldValue : parseFloat(String(fieldValue))
+  // Use Number() rather than parseFloat(): "50abc" → NaN, not 50.
+  // parseFloat stops at the first non-numeric character, so "51k/uL" → 51 and
+  // would silently fire a clinical card on a malformed unit-suffixed string.
+  const num = typeof fieldValue === 'number' ? fieldValue : Number(fieldValue)
   if (isNaN(num)) return false
 
   switch (condition.operator) {

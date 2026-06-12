@@ -57,10 +57,20 @@ export async function evaluateTriggers(
 
   // --- Trigger 2: skill_decay ---
   const decayDays = module.skillDecayDays ?? DEFAULT_DECAY_DAYS
+  // Filter out null/undefined enteredAt values before sorting.
+  // String(null) → "null" sorts lexicographically after ISO dates, so a record
+  // with a null timestamp would become the "latest" entry, making dateDiffInDays
+  // return NaN and silently suppressing the skill_decay trigger.
   const latestEntry = results
     .map((r) => r.enteredAt)
+    .filter((d): d is string => typeof d === 'string' && d.length > 0)
     .sort()
-    .at(-1)!
+    .at(-1)
+
+  if (!latestEntry) {
+    // All records had null timestamps — treat as first_time.
+    return { type: 'first_time', ...base }
+  }
 
   const daysSinceLast = dateDiffInDays(latestEntry, new Date().toISOString())
   if (daysSinceLast > decayDays) {
