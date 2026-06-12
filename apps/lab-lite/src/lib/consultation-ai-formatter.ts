@@ -34,6 +34,7 @@ export interface FormatterOutput {
   formattedText: string                   // AI-structured request text
   suggestedObservations: string[]         // suggestions for additional observations
   confidence: ConfidenceLevel
+  provenanceId: string | null             // null if AI unavailable (offline mode)
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +122,7 @@ export function formatOffline(input: FormatterInput): FormatterOutput {
     formattedText,
     suggestedObservations: suggestions,
     confidence: ConfidenceLevel.HIGH,
+    provenanceId: null,
   }
 }
 
@@ -128,71 +130,57 @@ export function formatOffline(input: FormatterInput): FormatterOutput {
 // Online formatter (OpenAI-compatible API)
 // ---------------------------------------------------------------------------
 
-/**
- * System prompt that strictly limits the AI to communication formatting.
- * Explicitly prohibits diagnosis, clinical interpretation, or treatment suggestions.
+/*
+ * SYSTEM_PROMPT (documentation copy)
+ * The authoritative copy used at runtime lives in the server route:
+ * /api/consultation/format/route.ts — model, temperature, and max_tokens live there too.
+ *
+ * "You are a communication assistant helping lab technicians structure consultation
+ * requests clearly for remote expert review.
+ *
+ * YOUR ROLE IS STRICTLY LIMITED TO:
+ * - Organizing the technician's observations and result data into a clear, structured format
+ * - Suggesting what additional observations the technician might want to include
+ * - Improving the clarity and structure of the written request
+ *
+ * YOU MUST NOT:
+ * - Interpret lab results
+ * - Suggest diagnoses or differential diagnoses
+ * - Recommend treatments or medications
+ * - Provide clinical opinions or impressions
+ * - Speculate about what the results might mean clinically
+ *
+ * Always end your response with a JSON object in this exact format:
+ * {
+ *   "formattedText": "<the structured consultation request text>",
+ *   "suggestedObservations": ["<suggestion 1>", "<suggestion 2>"],
+ *   "confidence": <number between 0 and 1>
+ * }"
  */
-const SYSTEM_PROMPT = `You are a communication assistant helping lab technicians structure consultation requests clearly for remote expert review.
 
-YOUR ROLE IS STRICTLY LIMITED TO:
-- Organizing the technician's observations and result data into a clear, structured format
-- Suggesting what additional observations the technician might want to include
-- Improving the clarity and structure of the written request
-
-YOU MUST NOT:
-- Interpret lab results
-- Suggest diagnoses or differential diagnoses
-- Recommend treatments or medications
-- Provide clinical opinions or impressions
-- Speculate about what the results might mean clinically
-
-Always end your response with a JSON object in this exact format:
-{
-  "formattedText": "<the structured consultation request text>",
-  "suggestedObservations": ["<suggestion 1>", "<suggestion 2>"],
-  "confidence": <number between 0 and 1 representing your confidence in the formatting quality>
-}`
-
+/**
+ * Shape of the response from /api/consultation/format.
+ * Also documented here for reference; the server route returns this shape directly.
+ */
 interface AiApiResponse {
   formattedText: string
   suggestedObservations: string[]
   confidence: number
 }
 
-async function callAiApi(input: FormatterInput): Promise<FormatterOutput> {
-  const apiUrl = process.env.NEXT_PUBLIC_AI_API_URL ?? ''
-  if (!apiUrl) {
-    throw new Error('AI API URL not configured')
-  }
-
-  const userMessage = [
-    `Please format the following consultation request:`,
-    ``,
-    `Test Type: ${input.templateType}`,
-    `Template: ${input.resultSummary.templateName} (LOINC: ${input.resultSummary.templateLoincCode})`,
-    ``,
-    `Results:`,
-    ...input.resultSummary.fields.map(
-      (f) => `  - ${f.name}: ${f.value ?? 'N/A'} ${f.unit}${f.flag ? ` [${f.flag}]` : ''}`,
-    ),
-    ``,
-    `Technician observations: ${input.observationsText || '(none provided)'}`,
-  ].join('\n')
-
-  // PHI guard: user message must not contain patient identifiers
+async function callAiApi(input: FormatterInput): Promise<Omit<FormatterOutput, 'provenanceId'>> {
+  // PHI guard: request must not contain patient identifiers
   // (enforced by the fact we only pass ResultSummaryData + observationsText)
 
-  const res = await fetch(`${apiUrl}/chat/completions`, {
+  const res = await fetch('/api/consultation/format', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: 0.3,
-      max_tokens: 800,
+      templateType: input.templateType,
+      templateName: input.resultSummary.templateName,
+      templateLoincCode: input.resultSummary.templateLoincCode,
+      fields: input.resultSummary.fields,
+      observationsText: input.observationsText,
     }),
   })
 
@@ -200,19 +188,17 @@ async function callAiApi(input: FormatterInput): Promise<FormatterOutput> {
     throw new Error(`AI API error: ${res.status}`)
   }
 
-  const body = (await res.json()) as {
-    choices: Array<{ message: { content: string } }>
+  // The proxy route returns { formattedText, suggestedObservations, confidence } directly.
+  const body = (await res.json()) as AiApiResponse
+
+  // Wrap JSON parse defensively (body is already parsed by res.json(), but guard shape)
+  let parsed: AiApiResponse
+  try {
+    parsed = body
+    if (!parsed.formattedText) throw new Error('Missing formattedText field')
+  } catch (err) {
+    throw new Error(`AI response parse failed: ${err instanceof Error ? err.message : String(err)}`)
   }
-
-  const content = body.choices[0]?.message?.content ?? ''
-
-  // Extract JSON from the response
-  const jsonMatch = content.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    throw new Error('AI response did not contain expected JSON')
-  }
-
-  const parsed = JSON.parse(jsonMatch[0]) as AiApiResponse
 
   return {
     formattedText: parsed.formattedText,
@@ -240,8 +226,11 @@ export async function formatConsultationRequest(
   try {
     const result = await callAiApi(input)
 
-    // Log to AI Provenance Trail (Story 53.6)
-    void createProvenanceRecord({
+    // Log to AI Provenance Trail (Story 53.6).
+    // Await the call so we can capture the generated provenance ID and return it
+    // to the caller — enabling them to later update the record with the tech's
+    // final edited text (AC 9).
+    const provenanceId = await createProvenanceRecord({
       timestamp: new Date().toISOString(),
       hlcTimestamp: serializeHlc(hlc.now()),
       modelVersion: 'gpt-4o-mini',
@@ -255,11 +244,16 @@ export async function formatConsultationRequest(
       confidenceLevel: result.confidence,
       sourceFeature: 'consultation-formatter',
       sampleId: sampleId ?? null,
+    }).catch((err: unknown) => {
+      console.error('[consultation-formatter] Provenance write failed:', err instanceof Error ? err.message.slice(0, 120) : 'unknown error')
+      return null
     })
 
-    return result
-  } catch {
-    // Fallback to offline template — confidence remains HIGH (deterministic)
-    return formatOffline(input)
+    return { ...result, provenanceId }
+  } catch (err) {
+    // AI API unavailable — falling back to offline template.
+    // Log for operator visibility (not shown to user).
+    console.error('[consultation-formatter] AI API call failed, using offline template:', err instanceof Error ? err.message.slice(0, 120) : 'unknown error')
+    return { ...formatOffline(input), provenanceId: null }
   }
 }

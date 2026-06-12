@@ -14,7 +14,7 @@
  * i18n: All labels via useTranslations('consultation').
  */
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { v4 as uuidv4 } from 'uuid'
 import type {
@@ -22,10 +22,10 @@ import type {
   ResultSummaryData,
   PhotoAttachment,
 } from '@/lib/consultation'
-import { createDraftRequest, transitionStatus } from '@/lib/consultation'
+import { createDraftRequest } from '@/lib/consultation'
 import type { ConsultationRecipient } from '@/lib/consultation-recipients'
 import type { FormatterOutput } from '@/lib/consultation-ai-formatter'
-import { formatConsultationRequest } from '@/lib/consultation-ai-formatter'
+import { formatConsultationRequest, formatOffline } from '@/lib/consultation-ai-formatter'
 import { ConfidenceLevel } from '@/lib/confidence'
 import { getDb } from '@/lib/db'
 import { reportConsultationEvent } from '@/lib/audit-client'
@@ -81,11 +81,13 @@ async function compressPhoto(file: File): Promise<PhotoAttachment | null> {
         (blob) => {
           URL.revokeObjectURL(url)
           if (!blob) { resolve(null); return }
+          if (blob.size > MAX_PHOTO_BYTES) { resolve(null); return }
           const reader = new FileReader()
           reader.onloadend = () => {
+            if (typeof reader.result !== 'string') { resolve(null); return }
             resolve({
               id: uuidv4(),
-              data: (reader.result as string).split(',')[1] ?? '',
+              data: reader.result.split(',')[1] ?? '',
               mimeType: 'image/jpeg',
               caption: '',
               capturedAt: new Date().toISOString(),
@@ -124,8 +126,24 @@ export function ConsultationRequestBuilder({
   const [editedText, setEditedText] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [isFormatting, setIsFormatting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    return () => { mountedRef.current = false }
+  }, [])
+
+  // Suggestion chips for observations step — use offline formatter to provide suggestions
+  // before the full AI formatting step runs (which only executes at recipient step).
+  const offlineSuggestions = useMemo(() => {
+    const result = formatOffline({
+      resultSummary,
+      observationsText: '',
+      templateType: resultSummary.templateName,
+    })
+    return result.suggestedObservations
+  }, [resultSummary])
 
   // Group recipients by type
   const pathologists = recipients.filter((r) => r.type === 'pathologist')
@@ -139,7 +157,13 @@ export function ConsultationRequestBuilder({
     const toProcess = files.slice(0, remaining)
 
     const compressed = await Promise.all(toProcess.map(compressPhoto))
+    if (!mountedRef.current) return
     const valid = compressed.filter((p): p is PhotoAttachment => p !== null)
+
+    const dropped = toProcess.length - valid.length
+    if (dropped > 0) {
+      setSubmitError(t('photosDroppedTooLarge', { count: dropped }))
+    }
 
     setPhotos((prev) => [...prev, ...valid].slice(0, MAX_PHOTOS))
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -157,6 +181,7 @@ export function ConsultationRequestBuilder({
 
   const handleRequestFormatting = useCallback(async () => {
     if (!selectedRecipient) return
+    setConfirmed(false)
     setIsFormatting(true)
     setSubmitError(null)
 
@@ -172,6 +197,8 @@ export function ConsultationRequestBuilder({
       setAiOutput(output)
       setEditedText(output.formattedText)
       setStep('ai-preview')
+    } catch {
+      setSubmitError(t('formattingError'))
     } finally {
       setIsFormatting(false)
     }
@@ -180,7 +207,8 @@ export function ConsultationRequestBuilder({
   // ─── Final submission ────────────────────────────────────────────────────────
 
   const handleSubmit = useCallback(async () => {
-    if (!selectedRecipient || !confirmed) return
+    if (!selectedRecipient || !confirmed || isSubmitting) return
+    setIsSubmitting(true)
 
     const draft = createDraftRequest({
       sampleId,
@@ -214,9 +242,11 @@ export function ConsultationRequestBuilder({
       onSubmitted?.(submitted.id)
     } catch {
       setSubmitError(t('submitError'))
+    } finally {
+      setIsSubmitting(false)
     }
   }, [
-    selectedRecipient, confirmed, sampleId, resultSummary, knowledgeCardId,
+    selectedRecipient, confirmed, isSubmitting, sampleId, resultSummary, knowledgeCardId,
     includeKnowledgeCard, observations, aiOutput, editedText, photos, t, onSubmitted,
   ])
 
@@ -234,7 +264,7 @@ export function ConsultationRequestBuilder({
   return (
     <div className="flex flex-col gap-4">
       {/* Step indicator */}
-      <StepIndicator step={step} t={t} />
+      <StepIndicator step={step} knowledgeCardId={knowledgeCardId ?? null} t={t} />
 
       {/* Step 1: Result Summary (read-only) */}
       {step === 'result-summary' && (
@@ -265,10 +295,10 @@ export function ConsultationRequestBuilder({
           />
 
           {/* Suggestion chips (from Story 53.1 integration) */}
-          {aiOutput?.suggestedObservations && aiOutput.suggestedObservations.length > 0 && (
+          {offlineSuggestions.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <span className="text-xs text-gray-500">{t('considerMentioning')}</span>
-              {aiOutput.suggestedObservations.map((s) => (
+              {offlineSuggestions.map((s) => (
                 <button
                   key={s}
                   className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs text-blue-700 hover:bg-blue-100"
@@ -413,7 +443,10 @@ export function ConsultationRequestBuilder({
           ) : (
             <div className="flex flex-col gap-2">
               {pathologists.length > 0 && (
-                <optgroup label={t('pathologists')}>
+                <>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    {t('pathologists')}
+                  </p>
                   {pathologists.map((r) => (
                     <RecipientOption
                       key={r.id}
@@ -423,7 +456,7 @@ export function ConsultationRequestBuilder({
                       t={t}
                     />
                   ))}
-                </optgroup>
+                </>
               )}
               {referenceLabs.length > 0 && (
                 <>
@@ -468,20 +501,17 @@ export function ConsultationRequestBuilder({
           <h2 className="text-base font-semibold">{t('aiPreviewTitle')}</h2>
 
           {/* Confidence inversion warning (Story 53.5) */}
-          <AiOutputWrapper
-            confidence={aiOutput.confidence}
-            context="consultation-formatter"
-          >
-            <p className="text-sm text-gray-600">{t('aiPreviewHint')}</p>
-          </AiOutputWrapper>
+          <p className="text-sm text-gray-600">{t('aiPreviewHint')}</p>
 
           {/* Side-by-side: AI suggestion vs tech edit */}
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
               <p className="mb-1 text-xs font-medium text-gray-500">{t('aiSuggestion')}</p>
-              <pre className="rounded-lg bg-gray-50 p-3 text-sm whitespace-pre-wrap border border-gray-200">
-                {aiOutput.formattedText}
-              </pre>
+              <AiOutputWrapper confidence={aiOutput.confidence} context="consultation-formatter">
+                <pre className="rounded-lg bg-gray-50 p-3 text-sm whitespace-pre-wrap border border-gray-200">
+                  {aiOutput.formattedText}
+                </pre>
+              </AiOutputWrapper>
             </div>
             <div>
               <p className="mb-1 text-xs font-medium text-gray-500">{t('yourVersion')}</p>
@@ -520,7 +550,7 @@ export function ConsultationRequestBuilder({
             </button>
             <button
               className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!confirmed || editedText.trim() === ''}
+              disabled={!confirmed || editedText.trim() === '' || isSubmitting}
               onClick={handleSubmit}
             >
               {t('submit')}
@@ -642,13 +672,18 @@ const STEP_ORDER: Step[] = [
 
 function StepIndicator({
   step,
+  knowledgeCardId,
   t,
 }: {
   step: Step
+  knowledgeCardId: string | null
   t: ReturnType<typeof useTranslations<'consultation'>>
 }) {
-  const currentIdx = STEP_ORDER.indexOf(step)
-  const totalSteps = STEP_ORDER.length
+  const effectiveSteps = knowledgeCardId
+    ? STEP_ORDER
+    : STEP_ORDER.filter((s) => s !== 'knowledge-card')
+  const currentIdx = effectiveSteps.indexOf(step)
+  const totalSteps = effectiveSteps.length
 
   if (step === 'submitted') return null
 
@@ -658,7 +693,7 @@ function StepIndicator({
         {t('stepOf', { current: currentIdx + 1, total: totalSteps })}
       </span>
       <div className="ms-2 flex gap-1">
-        {STEP_ORDER.map((s, i) => (
+        {effectiveSteps.map((s, i) => (
           <div
             key={s}
             className={`h-1.5 w-6 rounded-full ${

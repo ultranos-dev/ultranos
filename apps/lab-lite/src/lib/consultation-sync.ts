@@ -30,6 +30,12 @@ export async function syncPendingRequests(
   const db = getDb()
 
   try {
+    // Recovery: reset any requests stuck in 'syncing' from a prior crash
+    await db.consultation_requests
+      .where('syncStatus')
+      .equals('syncing')
+      .modify({ syncStatus: 'pending' })
+
     const pending = await db.consultation_requests
       .where('syncStatus')
       .equals('pending')
@@ -37,6 +43,15 @@ export async function syncPendingRequests(
       .toArray()
 
     for (const request of pending) {
+      // Atomically claim this request for this sync cycle — prevents duplicate sends on concurrent cycles
+      const claimed = await db.transaction('rw', db.consultation_requests, async () => {
+        const current = await db.consultation_requests.get(request.id)
+        if (!current || current.syncStatus !== 'pending') return false
+        await db.consultation_requests.update(request.id, { syncStatus: 'syncing' })
+        return true
+      })
+      if (!claimed) continue  // another cycle already claimed it
+
       try {
         const res = await fetch(`${hubApiUrl}/consultation/requests`, {
           method: 'POST',
@@ -124,6 +139,18 @@ export async function syncIncomingResponses(
         hlcTimestamp: incoming.hlcTimestamp,
       }
 
+      // Check for orphaned response BEFORE writing anything
+      const request = await db.consultation_requests.get(incoming.requestId)
+
+      if (!request) {
+        // Orphaned response — no matching local request (e.g. after device restore).
+        // Log for operator visibility (no PHI — only opaque requestId).
+        // Cannot notify — no sampleId is recoverable for routing.
+        console.warn('[consultation-sync] Orphaned response for unknown requestId:', incoming.requestId)
+        continue
+      }
+
+      // Parent exists — safe to write
       await db.consultation_responses.add(response)
 
       // Update parent request status
@@ -134,15 +161,12 @@ export async function syncIncomingResponses(
       reportConsultationEvent({
         action: 'CONSULTATION_RESPONSE_RECEIVED',
         consultationId: incoming.requestId,
-        recipientType: 'pathologist', // response came from whoever was contacted
+        recipientType: request.recipientType,
         status: 'response_received',
       })
 
       // Emit in-app notification (no PHI — only sampleId)
-      const request = await db.consultation_requests.get(incoming.requestId)
-      if (request && onNotification) {
-        onNotification(request.sampleId, incoming.requestId)
-      }
+      onNotification?.(request.sampleId, incoming.requestId)
     }
   } catch {
     // Non-critical — responses will be fetched on next sync
@@ -164,12 +188,14 @@ export async function closeConsultation(consultationId: string): Promise<void> {
 
   const request = await db.consultation_requests.get(consultationId)
 
-  reportConsultationEvent({
-    action: 'CONSULTATION_CLOSED',
-    consultationId,
-    recipientType: request?.recipientType ?? 'pathologist',
-    status: 'closed',
-  })
+  if (request) {
+    reportConsultationEvent({
+      action: 'CONSULTATION_CLOSED',
+      consultationId,
+      recipientType: request.recipientType,
+      status: 'closed',
+    })
+  }
 }
 
 // ---------------------------------------------------------------------------

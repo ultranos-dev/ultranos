@@ -65,7 +65,7 @@ export interface ConsultationRequest {
   status: ConsultationStatus
   createdAt: string                        // ISO 8601
   hlcTimestamp: string                     // HLC for sync ordering
-  syncStatus: 'pending' | 'synced' | 'failed'
+  syncStatus: 'pending' | 'syncing' | 'synced' | 'failed'
 }
 
 export interface ConsultationResponse {

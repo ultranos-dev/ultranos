@@ -63,6 +63,8 @@ export async function syncRecipientsFromHub(
     if (!res.ok) return
 
     const data = (await res.json()) as { recipients: ConsultationRecipient[] }
+    if (!Array.isArray(data?.recipients)) return  // malformed response — keep cached data
+
     const db = getDb()
 
     await db.transaction('rw', db.consultation_recipients, async () => {
