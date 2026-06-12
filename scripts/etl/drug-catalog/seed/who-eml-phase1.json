@@ -1,0 +1,12 @@
+[
+  { "atcCode": "J01CA04", "innName": "amoxicillin" },
+  { "atcCode": "N02BE01", "innName": "paracetamol" },
+  { "atcCode": "M01AE01", "innName": "ibuprofen" },
+  { "atcCode": "A10BB01", "innName": "glibenclamide" },
+  { "atcCode": "A02BC01", "innName": "omeprazole" },
+  { "atcCode": "J01FA09", "innName": "clarithromycin" },
+  { "atcCode": "R03AC02", "innName": "salbutamol" },
+  { "atcCode": "N06AB06", "innName": "sertraline" },
+  { "atcCode": "B01AC06", "innName": "acetylsalicylic acid" },
+  { "atcCode": "J01XA01", "innName": "vancomycin" }
+]
