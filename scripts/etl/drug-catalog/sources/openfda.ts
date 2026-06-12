@@ -39,7 +39,14 @@ export async function fetchFromOpenFda(
   try {
     const search = `openfda.generic_name:"${encodeURIComponent(innName)}"`
     const url = `${OPENFDA_BASE}?search=${search}&limit=1`
-    const res = await fetch(url)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 8000)
+    let res: Response
+    try {
+      res = await fetch(url, { signal: controller.signal })
+    } finally {
+      clearTimeout(timeoutId)
+    }
     if (!res.ok) return { source: 'openfda', atcCode }
 
     const json = await res.json() as OpenFdaResponse
@@ -67,11 +74,11 @@ export async function fetchFromOpenFda(
       source: 'openfda',
       atcCode,
       brandNames: brandNames.length > 0 ? brandNames : undefined,
-      therapeuticClass: therapeuticClass || undefined,
+      therapeuticClass: therapeuticClass.length > 0 ? therapeuticClass : undefined,
       adverseEvents: adverseEvents.length > 0 ? adverseEvents : undefined,
       contraindications: contraindications.length > 0 ? contraindications : undefined,
       pregnancyCategory,
-      mechanismOfAction,
+      mechanismOfAction: mechanismOfAction ? mechanismOfAction : undefined,
     }
   } catch {
     return { source: 'openfda', atcCode }
