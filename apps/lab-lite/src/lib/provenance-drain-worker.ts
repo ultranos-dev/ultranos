@@ -1,23 +1,24 @@
 /**
  * Story 53.6 — AI Provenance Trail: Sync Drain Worker
  *
- * Syncs pending AI provenance records to the Hub API using the same
- * store-and-forward pattern as the `AuditDrainWorker` (packages/audit-logger).
+ * Syncs pending AI provenance records to the Hub API following the same
+ * injected-syncFn pattern as `AuditDrainWorker` (packages/audit-logger/src/drain.ts).
  *
  * Design:
- * - Queries Dexie for records with syncStatus: 'pending'.
- * - Sends to Hub API endpoint /ai-provenance.sync.
- * - Updates syncStatus to 'synced' on success.
- * - Uses exponential backoff (1s, 4s, 16s), max 3 retries per batch.
- * - Drains on connectivity restore (PWA online event).
- * - Includes the hash chain — Hub can verify chain integrity on receipt.
+ * - `ProvenanceDrainWorker` is constructed with an injected `store` adapter and
+ *   `syncFn`, keeping auth and transport concerns outside the worker class.
+ * - `DexieProvenanceStore` provides the Dexie-backed store adapter.
+ * - `startProvenanceDrain()` / `stopProvenanceDrain()` mirror `startAuditDrain()`
+ *   in audit-client.ts for a consistent module-level lifecycle.
+ * - Batch size 50, exponential backoff (1s → 4s → 16s), max 3 retries per batch.
+ * - Drains immediately on start if online; re-drains on each `online` event.
  *
  * Note: The Hub API endpoint /ai-provenance.sync is a future Hub API story.
  * This worker implements the client-side sync infrastructure.
  */
 
-import { getDb } from './db'
 import type { AiProvenanceRecord } from './ai-provenance'
+import { getDb } from './db'
 import { getHubApiUrl } from './trpc'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -30,9 +31,37 @@ export interface ProvenanceSyncResult {
   success: boolean
 }
 
+// ---------------------------------------------------------------------------
+// Store adapter interface (mirrors DrainableAuditStore from audit-logger)
+// ---------------------------------------------------------------------------
+
+export interface DrainableProvenanceStore {
+  getPending(limit: number): Promise<AiProvenanceRecord[]>
+  markSynced(ids: string[]): Promise<void>
+  markFailed(ids: string[]): Promise<void>
+}
+
+export type ProvenanceSyncFn = (records: AiProvenanceRecord[]) => Promise<ProvenanceSyncResult[]>
+
+export interface ProvenanceDrainWorkerOptions {
+  store: DrainableProvenanceStore
+  syncFn: ProvenanceSyncFn
+}
+
+// ---------------------------------------------------------------------------
+// Worker class
+// ---------------------------------------------------------------------------
+
 export class ProvenanceDrainWorker {
+  private readonly store: DrainableProvenanceStore
+  private readonly syncFn: ProvenanceSyncFn
   private draining = false
   private removeListeners: (() => void) | null = null
+
+  constructor(options: ProvenanceDrainWorkerOptions) {
+    this.store = options.store
+    this.syncFn = options.syncFn
+  }
 
   /** Start listening for connectivity changes and drain on restore. */
   start(): void {
@@ -60,21 +89,75 @@ export class ProvenanceDrainWorker {
     this.draining = true
 
     try {
-      let batch = await this._getPending(BATCH_SIZE)
+      let batch = await this.store.getPending(BATCH_SIZE)
 
       while (batch.length > 0) {
-        await this._sendBatchWithRetry(batch)
-        batch = await this._getPending(BATCH_SIZE)
+        await this.sendBatchWithRetry(batch)
+        batch = await this.store.getPending(BATCH_SIZE)
       }
     } catch {
-      // Best-effort: don't crash the app if drain fails
       console.warn('[provenance-drain] Drain cycle failed — will retry on next connectivity event')
     } finally {
       this.draining = false
     }
   }
 
-  private async _getPending(limit: number): Promise<AiProvenanceRecord[]> {
+  private async sendBatchWithRetry(batch: AiProvenanceRecord[]): Promise<void> {
+    let attempt = 0
+    let failedIds = batch.map((r) => r.id)
+
+    while (attempt < MAX_RETRIES) {
+      try {
+        const results = await this.syncFn(batch)
+
+        const synced = results.filter((r) => r.success).map((r) => r.id)
+        failedIds = results.filter((r) => !r.success).map((r) => r.id)
+
+        if (synced.length > 0) {
+          try {
+            await this.store.markSynced(synced)
+          } catch {
+            console.warn('[provenance-drain] Failed to mark records as synced — breaking to avoid duplicates')
+            return
+          }
+        }
+
+        if (failedIds.length === 0) return
+
+        attempt++
+        if (attempt >= MAX_RETRIES) {
+          try {
+            await this.store.markFailed(failedIds)
+          } catch {
+            console.warn('[provenance-drain] Failed to mark records as failed')
+          }
+          return
+        }
+
+        await sleep(BASE_DELAY_MS * Math.pow(4, attempt - 1))
+        batch = batch.filter((r) => failedIds.includes(r.id))
+      } catch {
+        attempt++
+        if (attempt >= MAX_RETRIES) {
+          try {
+            await this.store.markFailed(failedIds)
+          } catch {
+            console.warn('[provenance-drain] Failed to mark records as failed')
+          }
+          return
+        }
+        await sleep(BASE_DELAY_MS * Math.pow(4, attempt - 1))
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dexie store adapter
+// ---------------------------------------------------------------------------
+
+export class DexieProvenanceStore implements DrainableProvenanceStore {
+  async getPending(limit: number): Promise<AiProvenanceRecord[]> {
     const db = getDb()
     return db.ai_provenance
       .where('syncStatus')
@@ -83,68 +166,7 @@ export class ProvenanceDrainWorker {
       .toArray() as Promise<AiProvenanceRecord[]>
   }
 
-  private async _sendBatchWithRetry(batch: AiProvenanceRecord[]): Promise<void> {
-    let attempt = 0
-    let failedIds = batch.map((r) => r.id)
-
-    while (attempt < MAX_RETRIES) {
-      try {
-        const results = await this._syncToHub(batch)
-
-        const synced = results.filter((r) => r.success).map((r) => r.id)
-        failedIds = results.filter((r) => !r.success).map((r) => r.id)
-
-        if (synced.length > 0) {
-          await this._markSynced(synced)
-        }
-
-        if (failedIds.length === 0) return
-
-        attempt++
-        if (attempt >= MAX_RETRIES) {
-          // Leave as pending — will retry on next drain cycle
-          return
-        }
-
-        await sleep(BASE_DELAY_MS * Math.pow(4, attempt - 1))
-        batch = batch.filter((r) => failedIds.includes(r.id))
-      } catch {
-        attempt++
-        if (attempt >= MAX_RETRIES) return
-        await sleep(BASE_DELAY_MS * Math.pow(4, attempt - 1))
-      }
-    }
-  }
-
-  private async _syncToHub(records: AiProvenanceRecord[]): Promise<ProvenanceSyncResult[]> {
-    const session = useAuthSessionStore.getState().session
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-
-    if (session) {
-      const supabase = (await import('@/lib/supabase')).getSupabaseBrowserClient()
-      const { data } = await supabase.auth.getSession()
-      if (data.session?.access_token) {
-        headers['Authorization'] = `Bearer ${data.session.access_token}`
-      }
-    }
-
-    const res = await fetch(`${getHubApiUrl()}/ai-provenance.sync`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ json: { records } }),
-    })
-
-    if (!res.ok) throw new Error(`ai-provenance.sync failed: ${res.status}`)
-
-    const body = (await res.json()) as {
-      result: { data: { json: { results: ProvenanceSyncResult[] } } }
-    }
-    return body.result.data.json.results
-  }
-
-  private async _markSynced(ids: string[]): Promise<void> {
+  async markSynced(ids: string[]): Promise<void> {
     const db = getDb()
     await db.transaction('rw', db.ai_provenance, async () => {
       for (const id of ids) {
@@ -155,6 +177,53 @@ export class ProvenanceDrainWorker {
       }
     })
   }
+
+  async markFailed(_ids: string[]): Promise<void> {
+    // Provenance records have no 'failed' syncStatus yet (deferred W1).
+    // Records remain 'pending' and will retry on next drain cycle.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Module-level lifecycle (mirrors startAuditDrain / stopAuditDrain)
+// ---------------------------------------------------------------------------
+
+let drainWorker: ProvenanceDrainWorker | null = null
+
+export function startProvenanceDrain(): void {
+  drainWorker?.stop()
+  drainWorker = new ProvenanceDrainWorker({
+    store: new DexieProvenanceStore(),
+    syncFn: async (records) => {
+      const session = useAuthSessionStore.getState().session
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (session) {
+        const supabase = (await import('@/lib/supabase')).getSupabaseBrowserClient()
+        const { data } = await supabase.auth.getSession()
+        if (data.session?.access_token) {
+          headers['Authorization'] = `Bearer ${data.session.access_token}`
+        }
+      }
+      const res = await fetch(`${getHubApiUrl()}/ai-provenance.sync`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ json: { records } }),
+      })
+      if (!res.ok) throw new Error(`ai-provenance.sync failed: ${res.status}`)
+      const body = (await res.json()) as {
+        result: { data: { json: { results: ProvenanceSyncResult[] } } }
+      }
+      return body.result.data.json.results
+    },
+  })
+  drainWorker.start()
+}
+
+export function stopProvenanceDrain(): void {
+  drainWorker?.stop()
+  drainWorker = null
 }
 
 function sleep(ms: number): Promise<void> {

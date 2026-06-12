@@ -1,6 +1,6 @@
 # Story 53.6: AI Provenance Trail
 
-Status: pending
+Status: in-progress
 
 ## Story
 
@@ -183,3 +183,36 @@ The provenance trail is distinct from the general audit log — it captures AI-s
 - Dexie database: `apps/lab-lite/src/lib/db.ts`
 - CLAUDE.md: "Audit every PHI access", "append-only with SHA-256 hash chaining"
 - CLAUDE.md: "All AI-generated clinical content requires a physician confirmation gate"
+
+---
+
+### Review Findings
+
+**Reviewed:** 2026-06-10 | Commit: `48e4348` | 3 layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor) | 4 dismissed
+
+#### Decision Needed — Resolved
+
+- [x] [Review][Decision] **Chain ordering: switch to `hlcTimestamp`** — Decision: **A** (switch `getLastProvenanceHash` and `verifyProvenanceChain` to order/query by `hlcTimestamp`; add `hlcTimestamp` to Dexie index). → Converted to Patch.
+- [x] [Review][Decision] **`aiOutput` PHI guard** — Decision: **A** (accept spec design; callers responsible). → **Dismissed.**
+- [x] [Review][Decision] **`ProvenanceDrainWorker` architecture** — Decision: **A** (refactor to use `AuditDrainWorker` injected `syncFn` pattern with Hub JWT). → Converted to Patch.
+
+#### Patch
+
+- [x] [Review][Patch] **Missing Dexie `ai_provenance` table and migration — runtime crash on first call** — `db.ts` v42 migration added with `&id, hlcTimestamp, timestamp, syncStatus, sourceFeature, sampleId, [hlcTimestamp+sourceFeature]` indexes
+- [x] [Review][Patch] **`AI_PROVENANCE` not in `AuditResourceType` enum — cast silences compile error** — Added to `packages/shared-types/src/enums.ts`; cast removed from `ai-provenance.ts`
+- [x] [Review][Patch] **`verifyProvenanceChain` seeds `previousHash = null` — mid-range date queries always report broken chain** — Seeded from `records[0].previousHash` instead
+- [x] [Review][Patch] **`.where('timestamp')` called without `timestamp` index in Dexie schema** — Resolved by v42 migration (both `timestamp` and `hlcTimestamp` indexed)
+- [x] [Review][Patch] **Race condition: `getLastProvenanceHash` + `add` not wrapped in a Dexie transaction** — Wrapped in `db.transaction('rw', db.ai_provenance, ...)` in `createProvenanceRecord`
+- [x] [Review][Patch] **`actorRole` hardcoded to `UserRole.LAB_TECH` for all events including physician confirmation** — Derived from `session?.role` with `LAB_TECH` fallback
+- [x] [Review][Patch] **Test mock targets `@/lib/audit-client` but implementation calls `@ultranos/audit-logger/client`** — Mock fixed; `emitClientAudit` assertions added to all event tests
+- [x] [Review][Patch] **PHI guard `/\b\d{4}-\d{2}-\d{2}\b/` causes false positives on valid clinical dates** — Pattern removed; DOB prefix pattern retains targeted coverage; false-positive test added
+- [x] [Review][Patch] **No drain worker tests — AC 9 and test file header both claim coverage that does not exist** — 5 `ProvenanceDrainWorker` tests added (success path, retry exhaustion, offline guard, concurrency guard, partial failure)
+- [x] [Review][Patch] **Skeleton test bodies pass vacuously** — All test bodies confirmed real; audit emission assertions added; `checkedCount` correctness test added
+- [x] [Review][Patch] **`verifyProvenanceChain` `checkedCount` uses `records.indexOf()` — O(n²) and returns wrong count at break point** — Replaced with `checkedCount` counter variable
+- [x] [Review][Patch] **`_sendBatchWithRetry` uses base-4 exponential backoff — consistent with `AuditDrainWorker`; kept as-is after D3 refactor** — base-4 is the project's established pattern (matches `audit-logger/drain.ts`)
+- [x] [Review][Patch] **Use `hlcTimestamp` for chain ordering** [D1] — `orderBy('hlcTimestamp')` in `getLastProvenanceHash`; `sortBy('hlcTimestamp')` in `verifyProvenanceChain`; `hlcTimestamp` indexed in v42
+- [x] [Review][Patch] **Refactor `ProvenanceDrainWorker` to injected-syncFn pattern** [D3] — `DrainableProvenanceStore` + `ProvenanceSyncFn` interfaces; `DexieProvenanceStore` adapter; `startProvenanceDrain`/`stopProvenanceDrain` module-level functions
+
+#### Deferred
+
+- [x] [Review][Defer] **Dead-letter records: permanently-rejected records have no `failed` status and retry on every online event** [`apps/lab-lite/src/lib/provenance-drain-worker.ts:953–955`] — deferred, pre-existing pattern in AuditDrainWorker; requires Hub API `failed` status support not yet implemented

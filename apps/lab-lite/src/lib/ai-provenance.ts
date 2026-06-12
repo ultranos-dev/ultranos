@@ -6,7 +6,7 @@
  * "append-only with SHA-256 hash chaining — never update or delete audit records."
  *
  * Design:
- * - Records are stored in Dexie `ai_provenance` table (v24 migration).
+ * - Records are stored in Dexie `ai_provenance` table (v42 migration).
  * - Hash chain covers the initial AI output; human decisions (tech/physician)
  *   are stored as addenda and tracked by separate audit events.
  * - PHI guard on `inputDescription` is defense-in-depth — callers must
@@ -84,14 +84,18 @@ export interface AiProvenanceRecord {
 // PHI Guard
 // ---------------------------------------------------------------------------
 // Defense-in-depth — callers must already strip PHI. This catches obvious
-// patterns: names (FirstName LastName), dates of birth, MRN patterns.
+// patterns: names (FirstName LastName), explicit DOB labels, MRN patterns.
+//
+// The bare ISO-date pattern (/\b\d{4}-\d{2}-\d{2}\b/) was intentionally
+// removed: it produced false positives on valid clinical identifiers
+// (e.g., assay version codes, collection-date descriptions). The DOB
+// prefix pattern below handles the targeted case.
 
 const PHI_PATTERNS = [
-  /\b[A-Z][a-z]+ [A-Z][a-z]+\b/,        // FirstName LastName
-  /\bDOB\s*[:=]?\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/i, // DOB: 01/15/1990
-  /\b\d{4}-\d{2}-\d{2}\b/,               // ISO date: 1990-01-15 (DOB-like)
-  /\bMRN\s*[:=]?\s*\d{5,10}\b/i,         // MRN: 12345678
-  /\bpatient\s+id\s*[:=]?\s*\w+/i,       // patient id: ...
+  /\b[A-Z][a-z]+ [A-Z][a-z]+\b/,                                   // FirstName LastName
+  /\bDOB\s*[:=]?\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/i,         // DOB: 01/15/1990
+  /\bMRN\s*[:=]?\s*\d{5,10}\b/i,                                    // MRN: 12345678
+  /\bpatient\s+id\s*[:=]?\s*\w+/i,                                  // patient id: ...
 ]
 
 function assertNoPhi(inputDescription: string): void {
@@ -114,7 +118,8 @@ function assertNoPhi(inputDescription: string): void {
  *
  * Auto-generates: id, previousHash, recordHash, syncStatus.
  * Validates inputDescription for PHI patterns.
- * Stores in Dexie ai_provenance table.
+ * Stores in Dexie ai_provenance table inside a transaction to prevent
+ * concurrent creates from forking the hash chain.
  * Emits AI_PROVENANCE_CREATED audit event.
  *
  * @returns The new record's UUID.
@@ -125,25 +130,29 @@ export async function createProvenanceRecord(
   assertNoPhi(input.inputDescription)
 
   const id = crypto.randomUUID()
-  const previousHash = await getLastProvenanceHash()
-
-  const partial: Omit<AiProvenanceRecord, 'recordHash'> = {
-    id,
-    ...input,
-    techDecision: null,
-    physicianConfirmation: null,
-    previousHash,
-    syncStatus: 'pending',
-  }
-
-  const recordHash = await computeRecordHash(partial, previousHash)
-
-  const record: AiProvenanceRecord = { ...partial, recordHash }
-
   const db = getDb()
-  await db.ai_provenance.add(record)
 
-  _emitProvenanceAuditEvent('AI_PROVENANCE_CREATED', id, record.sourceFeature)
+  // Wrap getLastProvenanceHash + computeRecordHash + add in a single rw transaction
+  // to prevent concurrent creates from producing a forked chain.
+  // Dexie 4 supports native Promise (crypto.subtle) within transaction scope.
+  await db.transaction('rw', db.ai_provenance, async () => {
+    const previousHash = await getLastProvenanceHash()
+
+    const partial: Omit<AiProvenanceRecord, 'recordHash'> = {
+      id,
+      ...input,
+      techDecision: null,
+      physicianConfirmation: null,
+      previousHash,
+      syncStatus: 'pending',
+    }
+
+    const recordHash = await computeRecordHash(partial, previousHash)
+    const record: AiProvenanceRecord = { ...partial, recordHash }
+    await db.ai_provenance.add(record)
+  })
+
+  _emitProvenanceAuditEvent('AI_PROVENANCE_CREATED', id, input.sourceFeature)
 
   return id
 }
@@ -227,9 +236,9 @@ function _emitProvenanceAuditEvent(event: ProvenanceAuditEvent, provenanceId: st
 
   const input: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
-    actorRole: UserRole.LAB_TECH,
+    actorRole: (session?.role as UserRole) ?? UserRole.LAB_TECH,
     action: actionMap[event],
-    resourceType: 'AI_PROVENANCE' as AuditResourceType,
+    resourceType: AuditResourceType.AI_PROVENANCE,
     resourceId: provenanceId,
     hlcTimestamp: serializeHlc(hlc.now()),
     metadata: {

@@ -12,6 +12,10 @@
  *   intentionally EXCLUDED from the hash — they are addenda tracked separately.
  * - The chain covers: all fields in AiProvenanceRecord except recordHash,
  *   syncStatus, techDecision, and physicianConfirmation.
+ * - Chain ordering uses hlcTimestamp (Hybrid Logical Clock) for monotonicity
+ *   across offline devices. Date-range queries in verifyProvenanceChain still
+ *   accept ISO 8601 wall-clock dates for the user-facing range, but traverse
+ *   records in HLC order internally.
  */
 
 import { getDb } from './db'
@@ -74,11 +78,14 @@ export async function computeRecordHash(
  * Fetch the recordHash of the most recently created provenance record,
  * for use as the previousHash of the next record.
  *
+ * Uses hlcTimestamp ordering (monotonic HLC) rather than wall-clock timestamp
+ * to ensure correct chain sequencing across offline devices with clock skew.
+ *
  * @returns The hash string, or null if no records exist yet.
  */
 export async function getLastProvenanceHash(): Promise<string | null> {
   const db = getDb()
-  const last = await db.ai_provenance.orderBy('timestamp').last()
+  const last = await db.ai_provenance.orderBy('hlcTimestamp').last()
   return last?.recordHash ?? null
 }
 
@@ -102,8 +109,15 @@ export interface ChainVerificationResult {
  * 1. Each record's recordHash matches the re-computed hash.
  * 2. Each record's previousHash matches the prior record's recordHash.
  *
- * @param startDate - ISO 8601 start (inclusive)
- * @param endDate   - ISO 8601 end (inclusive)
+ * Records are queried by wall-clock timestamp range (for user-facing date
+ * selection) but traversed in hlcTimestamp order (for correct chain linkage).
+ *
+ * previousHash is seeded from the first record in the range — this anchors
+ * verification at the range boundary. For absolute genesis-to-present
+ * verification, call with the full available date range.
+ *
+ * @param startDate - ISO 8601 wall-clock start (inclusive)
+ * @param endDate   - ISO 8601 wall-clock end (inclusive)
  */
 export async function verifyProvenanceChain(
   startDate: string,
@@ -113,7 +127,7 @@ export async function verifyProvenanceChain(
   const records = await db.ai_provenance
     .where('timestamp')
     .between(startDate, endDate, true, true)
-    .sortBy('timestamp') as AiProvenanceRecord[]
+    .sortBy('hlcTimestamp') as AiProvenanceRecord[]
 
   if (records.length === 0) {
     return { valid: true, checkedCount: 0 }
@@ -121,14 +135,19 @@ export async function verifyProvenanceChain(
 
   const first = records[0]!
   const last = records[records.length - 1]!
-  let previousHash: string | null = null
+
+  // Seed previousHash from the first record's own previousHash so that
+  // mid-range verification does not falsely fail due to records outside
+  // the queried window.
+  let previousHash: string | null = first.previousHash
+  let checkedCount = 0
 
   for (const record of records) {
     // Verify previousHash chain linkage
     if (record.previousHash !== previousHash) {
       return {
         valid: false,
-        checkedCount: records.indexOf(record),
+        checkedCount,
         brokenAt: record.id,
         firstRecordTimestamp: first.timestamp,
         lastRecordTimestamp: last.timestamp,
@@ -137,7 +156,7 @@ export async function verifyProvenanceChain(
 
     // Re-compute hash and compare
     const { recordHash: _omit, ...withoutRecordHash } = record as AiProvenanceRecord & { recordHash: string }
-    void _omit // unused
+    void _omit // unused — destructured only to exclude from spread
     const recomputed = await computeRecordHash(
       withoutRecordHash as Omit<AiProvenanceRecord, 'recordHash'>,
       record.previousHash
@@ -146,7 +165,7 @@ export async function verifyProvenanceChain(
     if (recomputed !== record.recordHash) {
       return {
         valid: false,
-        checkedCount: records.indexOf(record),
+        checkedCount,
         brokenAt: record.id,
         firstRecordTimestamp: first.timestamp,
         lastRecordTimestamp: last.timestamp,
@@ -154,11 +173,12 @@ export async function verifyProvenanceChain(
     }
 
     previousHash = record.recordHash
+    checkedCount++
   }
 
   return {
     valid: true,
-    checkedCount: records.length,
+    checkedCount,
     firstRecordTimestamp: first.timestamp,
     lastRecordTimestamp: last.timestamp,
   }
