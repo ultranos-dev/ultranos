@@ -37,6 +37,10 @@ import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thres
 import type { SmsQueueEntry, SmsGatewayConfig, SmsEscalationScheduleEntry } from '@/lib/sms/sms-gateway'
 import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 import type { ReferenceLab, SendOut, SendOutStatusTransition } from '@/types/reference-lab'
+import type { ConsultationRequest, ConsultationResponse } from '@/lib/consultation'
+import type { ConsultationRecipient } from '@/lib/consultation-recipients'
+import type { KnowledgeCard, TriggerRule } from '@/lib/knowledge-cards'
+import type { GuidanceContent, GuidanceTrigger } from '@/lib/public-health-guidance'
 
 // ---------------------------------------------------------------------------
 // Achievement types (v17) — Story 51.7: Gamified Team Quality Engagement
@@ -539,6 +543,8 @@ class LabLiteDatabase extends Dexie {
   patientVerifications!: Dexie.Table<PatientVerificationRecord, string>
   // v7 — Contextual Micro-Learning Modules (Story 46.2)
   lab_results!: Dexie.Table<LabResult, string>
+  // v39 — AI Anomaly Flagging (Story 53.3): structured observation values per result
+  lab_observations!: Dexie.Table<LabObservation, string>
   sops!: Dexie.Table<SOP, string>
   sop_acknowledgments!: Dexie.Table<SOPAcknowledgment, string>
   micro_learning_modules!: Dexie.Table<MicroLearningModule, string>
@@ -672,6 +678,24 @@ class LabLiteDatabase extends Dexie {
   // network_snapshots: per-location connectivity/operational snapshot set during sync.
   // No PHI — locationId is an opaque UUID; snapshot contains counts and connectivity state only.
   network_snapshots!: Dexie.Table<NetworkStatusSnapshot, string>
+  // v39 — Tele-Consultation Request Builder (Story 53.4)
+  // No PHI — sampleId, requestId, and recipientId are opaque UUIDs (CLAUDE.md Rule #7).
+  consultation_requests!: Dexie.Table<ConsultationRequest, string>
+  consultation_responses!: Dexie.Table<ConsultationResponse, string>
+  consultation_recipients!: Dexie.Table<ConsultationRecipient, string>
+  // v41 — Contextual Knowledge Cards (Story 53.1)
+  // No PHI — cards are static physician-authored references; trigger_rules are deterministic
+  // threshold definitions. Neither table stores patient data or result values.
+  knowledge_cards!: Dexie.Table<KnowledgeCard, string>
+  trigger_rules!: Dexie.Table<TriggerRule, string>
+  // v43 — Public Health Guidance (Story 53.7)
+  // No PHI — static physician-authored guidance content and deterministic trigger rules.
+  guidance_content!: Dexie.Table<GuidanceContent, string>
+  guidance_triggers!: Dexie.Table<GuidanceTrigger, string>
+  // v42 — AI Provenance Trail (Story 53.6)
+  // No PHI — inputDescription is structural only; sampleId is an opaque UUID.
+  // hlcTimestamp indexed for chain ordering; timestamp indexed for date-range UI queries.
+  ai_provenance!: Dexie.Table<any, string>
 
   constructor() {
     super('lab-lite-db')
@@ -1522,6 +1546,52 @@ class LabLiteDatabase extends Dexie {
       orders: '&orderId, status, urgency, patientRef, authoredOn, receivedAt',
       network_snapshots: '&locationId',
     })
+    // v39 — Tele-Consultation Request Builder (Story 53.4)
+    // consultation_requests: indexed by sampleId (to query by result), syncStatus (pending drain), status (lifecycle).
+    // consultation_responses: indexed by requestId (join from request to its response).
+    // consultation_recipients: indexed by type ('pathologist' | 'reference_lab') for filtered queries.
+    // No PHI — sampleId, requestId, and recipientId are opaque UUIDs.
+    this.version(39).stores({
+      consultation_requests: '&id, sampleId, syncStatus, status, createdAt',
+      consultation_responses: '&id, requestId, receivedAt',
+      consultation_recipients: '&id, type',
+    })
+    // v40 — AI Anomaly Flagging (Story 53.3 code review patch)
+    // Adds lab_observations table for per-field structured result values (delta detection).
+    // Re-indexes lab_results with patientRef so getPriorResult() can use indexed query.
+    // No PHI — patientRef is opaque Patient/{uuid}; fieldCode and numeric value only.
+    this.version(40).stores({
+      lab_observations: '&id, resultId',
+      lab_results: '&id, loincCode, enteredBy, enteredAt, status, patientRef',
+    })
+    // v41 — Contextual Knowledge Cards (Story 53.1)
+    // knowledge_cards: unique key on id; severity indexed for UI filtering; tags multi-entry index.
+    // trigger_rules: unique key on id; cardId indexed for rule→card join in seedKnowledgeCards.
+    // No PHI — static physician-authored references and deterministic threshold rules only.
+    this.version(41).stores({
+      knowledge_cards: '&id, version, severity, *tags',
+      trigger_rules: '&id, cardId',
+    })
+    // v42 — AI Provenance Trail (Story 53.6)
+    // ai_provenance: append-only hash-chained records for every AI-assisted clinical decision.
+    // - hlcTimestamp indexed for chain ordering (monotonic across offline devices).
+    // - timestamp indexed for user-facing date-range queries.
+    // - syncStatus indexed for pending-record drain queries.
+    // - [hlcTimestamp+sourceFeature] compound index for per-feature chain queries.
+    // No PHI — inputDescription is structural only; sampleId is an opaque UUID.
+    this.version(42).stores({
+      ai_provenance: '&id, hlcTimestamp, timestamp, syncStatus, sourceFeature, sampleId, [hlcTimestamp+sourceFeature]',
+    })
+    // v43 — Public Health Guidance (Story 53.7)
+    // guidance_content: physician-authored guidance per condition; conditionCode indexed for trigger
+    //   engine lookup; version indexed for update-on-upgrade logic in seedGuidance().
+    // guidance_triggers: deterministic trigger rules mapping result field values to condition codes.
+    //   conditionCode + templateLoincCode indexed for filtered lookups.
+    // No PHI — static physician-authored content and threshold rules only.
+    this.version(43).stores({
+      guidance_content: '&id, conditionCode, version',
+      guidance_triggers: '&id, conditionCode, templateLoincCode',
+    })
   }
 }
 
@@ -1877,7 +1947,23 @@ export interface LabResult {
   enteredBy: string       // technician practitioner ID
   enteredAt: string       // ISO timestamp
   updatedAt: string       // ISO timestamp
-  loincCode?: string      // procedure identifier — used by trigger engine
+  loincCode?: string      // procedure identifier — used by trigger engine + anomaly detection
+  patientRef?: string     // opaque Patient/{uuid} — used only for prior-result lookup (Story 53.3)
+  reportComment?: string  // optional free-text comment on the result
+}
+
+/**
+ * Structured observation (field-level) record for a lab result.
+ * One record per analyte per result. Indexed by resultId for fast lookup.
+ * PHI guard: fieldCode is a template code; value is numeric. No patient identifiers stored here.
+ */
+export interface LabObservation {
+  id: string              // UUID
+  resultId: string        // FK to LabResult.id
+  fieldCode: string       // template field code (e.g. 'wbc', 'hgb', 'platelets')
+  value: number | string | null  // observed value (number for quantitative analytes)
+  flag?: 'L' | 'H' | 'LL' | 'HH' | 'A' | null  // reference-range flag
+  unit?: string           // unit of measure (e.g. 'g/dL', '×10³/µL')
 }
 
 
@@ -1971,6 +2057,41 @@ export async function addSOPAcknowledgment(ack: SOPAcknowledgment): Promise<void
 export async function putLabResult(result: LabResult): Promise<void> {
   const db = getDb()
   await db.lab_results.put(result)
+}
+
+/**
+ * Return the most recent draft result for a given sample, or null if none exists.
+ * Used by the result entry page to pre-populate an in-progress entry.
+ */
+export async function getDraftResultForSample(sampleId: string): Promise<LabResult | null> {
+  const db = getDb()
+  const drafts = await db.lab_results
+    .where('sampleId')
+    .equals(sampleId)
+    .filter((r) => r.status === 'draft')
+    .toArray()
+  if (drafts.length === 0) return null
+  // Return most recently entered draft (descending enteredAt)
+  return drafts.sort((a, b) => (b.enteredAt < a.enteredAt ? -1 : 1))[0] ?? null
+}
+
+/**
+ * Return all observations for a given result ID.
+ * PHI guard: returns field codes and numeric values only — no patient identifiers.
+ */
+export async function getObservationsForResult(resultId: string): Promise<LabObservation[]> {
+  const db = getDb()
+  return db.lab_observations.where('resultId').equals(resultId).toArray()
+}
+
+/**
+ * Bulk-upsert observations for a result (replaces any existing observations with the same ID).
+ * Called by the result entry page after saving a result.
+ */
+export async function putLabObservations(observations: LabObservation[]): Promise<void> {
+  if (observations.length === 0) return
+  const db = getDb()
+  await db.lab_observations.bulkPut(observations)
 }
 
 // ---------------------------------------------------------------------------
@@ -3654,4 +3775,70 @@ export async function getSendOutsForSample(sampleId: string): Promise<SendOut[]>
 export async function addSendOutTransition(transition: SendOutStatusTransition): Promise<void> {
   const db = getDb()
   await db.send_out_transitions.put(transition)
+}
+
+// ---------------------------------------------------------------------------
+// Story 53.1 — Knowledge Card seeding
+// ---------------------------------------------------------------------------
+
+/**
+ * Seed (or update) all physician-authored knowledge cards and trigger rules into Dexie.
+ *
+ * Cards are bundled in the app build. On each call we compare the bundled card
+ * version against the stored version: if the bundled version is greater or the
+ * card does not exist yet, we overwrite the stored record.
+ *
+ * Trigger rules are always replaced in bulk — they are deterministic code, not
+ * user-editable data, so full replacement on every seed is safe.
+ *
+ * No PHI: no patient data involved — these are static reference objects.
+ */
+export async function seedKnowledgeCards(): Promise<void> {
+  const { KNOWLEDGE_CARD_REGISTRY, TRIGGER_RULES } = await import('@/lib/knowledge-cards')
+  const db = getDb()
+
+  await db.transaction('rw', [db.knowledge_cards, db.trigger_rules], async () => {
+    for (const [, card] of KNOWLEDGE_CARD_REGISTRY) {
+      const stored = await db.knowledge_cards.get(card.id)
+      if (!stored || isNewerVersion(card.version, stored.version)) {
+        await db.knowledge_cards.put(card)
+      }
+    }
+    await db.trigger_rules.bulkPut(TRIGGER_RULES)
+  })
+}
+
+function isNewerVersion(incoming: string, stored: string): boolean {
+  const parse = (v: string) => v.split('.').map((n) => parseInt(n, 10))
+  const [iMaj, iMin, iPat] = parse(incoming)
+  const [sMaj, sMin, sPat] = parse(stored)
+  if (iMaj !== sMaj) return iMaj > sMaj
+  if (iMin !== sMin) return iMin > sMin
+  return iPat > sPat
+}
+
+/**
+ * Seed (or update) all physician-authored public health guidance content and trigger rules.
+ *
+ * Guidance content is versioned: if the bundled version is greater than the stored version
+ * (or no record exists), the stored record is overwritten.
+ *
+ * Trigger rules are always bulk-replaced — they are deterministic code, not user-editable data.
+ *
+ * No PHI: no patient data involved — these are static physician-authored reference objects.
+ */
+export async function seedGuidance(): Promise<void> {
+  const { GUIDANCE_SEED } = await import('@/lib/guidance-seed-data')
+  const { GUIDANCE_TRIGGER_RULES } = await import('@/lib/guidance-trigger')
+  const db = getDb()
+
+  await db.transaction('rw', [db.guidance_content, db.guidance_triggers], async () => {
+    for (const content of GUIDANCE_SEED) {
+      const stored = await db.guidance_content.get(content.id)
+      if (!stored || isNewerVersion(content.version, stored.version)) {
+        await db.guidance_content.put(content)
+      }
+    }
+    await db.guidance_triggers.bulkPut(GUIDANCE_TRIGGER_RULES)
+  })
 }

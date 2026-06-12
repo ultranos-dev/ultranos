@@ -2014,3 +2014,191 @@ export function reportSendOutAuditEvent(payload: SendOutAuditPayload): void {
     // Never throws — audit failures must not surface as UI errors
   }
 }
+
+/**
+ * Emit a consultation lifecycle audit event.
+ * Fire-and-forget — never throws, never blocks callers.
+ * All metadata uses opaque IDs only — no PHI, no result values, no observation text (CLAUDE.md Rule #6).
+ */
+export function reportConsultationEvent(payload: {
+  action: 'CONSULTATION_CREATED' | 'CONSULTATION_SUBMITTED' | 'CONSULTATION_RESPONSE_RECEIVED' | 'CONSULTATION_CLOSED'
+  consultationId: string
+  recipientType: 'pathologist' | 'reference_lab'
+  status: string
+}): void {
+  const session = useAuthSessionStore.getState().session
+
+  const actionMap: Record<string, AuditAction> = {
+    CONSULTATION_CREATED: AuditAction.CREATE,
+    CONSULTATION_SUBMITTED: AuditAction.UPDATE,
+    CONSULTATION_RESPONSE_RECEIVED: AuditAction.UPDATE,
+    CONSULTATION_CLOSED: AuditAction.UPDATE,
+  }
+
+  try {
+    void emitClientAudit({
+      actorId: session?.userId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
+      action: actionMap[payload.action] ?? AuditAction.UPDATE,
+      resourceType: AuditResourceType.CONSULTATION,
+      resourceId: payload.consultationId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        consultationEvent: payload.action,
+        recipientType: payload.recipientType,
+        status: payload.status,
+        outcome: 'SUCCESS',
+        source: 'lab-lite',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 53.1 — Contextual Knowledge Card Views
+// Tracks every knowledge card display event triggered by result entry.
+// PHI rule: no patient identifiers, no result values — only card and rule IDs.
+// ---------------------------------------------------------------------------
+
+/**
+ * Emit a knowledge card view audit event.
+ * Called whenever a KnowledgeCard is displayed to the technician.
+ *
+ * Never throws — card display must not be blocked by audit failures.
+ * Fire-and-forget via void.
+ */
+export function reportKnowledgeCardView(payload: {
+  cardId: string        // e.g. 'KC-WBC-BLAST-001' — no PHI
+  triggerRuleId: string // e.g. 'TR-WBC-BLAST-001' — no PHI
+  severity: string      // 'critical' | 'warning' | 'informational'
+}): void {
+  const session = useAuthSessionStore.getState().session
+  try {
+    void emitClientAudit({
+      actorId: session?.userId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
+      action: AuditAction.READ,
+      resourceType: 'KNOWLEDGE_CARD' as AuditResourceType,
+      resourceId: payload.cardId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        cardId: payload.cardId,
+        triggerRuleId: payload.triggerRuleId,
+        severity: payload.severity,
+        source: 'lab-lite',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AI Anomaly Detection audit helpers (v40) — Story 53.3
+// PHI guard: input/output descriptions use analyte codes and counts only.
+// ---------------------------------------------------------------------------
+
+/**
+ * Emit an ANOMALY_DETECTED audit event after the rule engine runs.
+ *
+ * Never throws — anomaly audit failures must not block the result entry flow.
+ */
+export function reportAnomalyDetection(payload: {
+  sampleId: string        // opaque sample ID — no patient name
+  modelVersion: string    // e.g. 'rule-engine-v1.0.0'
+  inputDescription: string // e.g. '7 numeric values, template 58410-2' — no PHI
+  flagCount: number
+  highestSeverity: 'urgent' | 'elevated' | 'notable'
+  confidenceScore: string  // ConfidenceLevel enum value
+  technicianId: string
+}): void {
+  const session = useAuthSessionStore.getState().session
+  try {
+    void emitClientAudit({
+      actorId: session?.userId ?? payload.technicianId,
+      actorRole: UserRole.LAB_TECH,
+      action: AuditAction.CREATE,
+      resourceType: 'AI_ANOMALY_FLAG' as AuditResourceType,
+      resourceId: payload.sampleId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        modelVersion: payload.modelVersion,
+        inputDescription: payload.inputDescription,
+        flagCount: payload.flagCount,
+        highestSeverity: payload.highestSeverity,
+        confidenceScore: payload.confidenceScore,
+        source: 'lab-lite',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 53.7 — Public Health Guidance Events
+// Tracks every guidance lifecycle event: triggered, attached, delivered, acknowledged.
+// PHI rule: no patient identifiers, no result values, no resultId (AC: 9).
+// Metadata contains only guidanceId, conditionCode, language, deliveryChannel.
+// ---------------------------------------------------------------------------
+
+type GuidanceAuditAction =
+  | 'GUIDANCE_TRIGGERED'
+  | 'GUIDANCE_ATTACHED'
+  | 'GUIDANCE_DELIVERED'
+  | 'GUIDANCE_ACKNOWLEDGED'
+
+/**
+ * Emit a public health guidance lifecycle audit event.
+ * Called from guidance-integration.ts (lab-lite) and GuidanceDisplay (patient-lite).
+ *
+ * Never throws — guidance display must not be blocked by audit failures.
+ * Fire-and-forget via void.
+ *
+ * AC: 9 — metadata contains only guidanceId, conditionCode, language, deliveryChannel.
+ * No resultId, no patient name, no test values.
+ */
+export function reportGuidanceEvent(payload: {
+  action: GuidanceAuditAction
+  /** e.g. 'PHG-MALARIA-001' — opaque content ID, no PHI */
+  guidanceId: string
+  /** e.g. 'MALARIA_POSITIVE' — condition code, no PHI */
+  conditionCode: string
+  /** e.g. 'ar', 'prs' — language code, no PHI */
+  language: string
+  /** e.g. 'lab-result', 'patient-lite' — no PHI */
+  deliveryChannel: string
+  /** Optional: rule IDs that fired (deterministic rule IDs, no PHI) */
+  ruleIds?: string[]
+}): void {
+  const session = useAuthSessionStore.getState().session
+  const actionMap: Record<GuidanceAuditAction, AuditAction> = {
+    GUIDANCE_TRIGGERED: AuditAction.CREATE,
+    GUIDANCE_ATTACHED: AuditAction.UPDATE,
+    GUIDANCE_DELIVERED: AuditAction.UPDATE,
+    GUIDANCE_ACKNOWLEDGED: AuditAction.UPDATE,
+  }
+  try {
+    void emitClientAudit({
+      actorId: session?.userId ?? 'unknown',
+      actorRole: UserRole.LAB_TECH,
+      action: actionMap[payload.action],
+      resourceType: 'PUBLIC_HEALTH_GUIDANCE' as AuditResourceType,
+      resourceId: payload.guidanceId,
+      hlcTimestamp: serializeHlc(hlc.now()),
+      metadata: {
+        guidanceEvent: payload.action,
+        guidanceId: payload.guidanceId,
+        conditionCode: payload.conditionCode,
+        language: payload.language,
+        deliveryChannel: payload.deliveryChannel,
+        ...(payload.ruleIds ? { ruleIds: payload.ruleIds } : {}),
+        source: 'lab-lite',
+      },
+    })
+  } catch {
+    // Never throws — audit failures must not surface as UI errors
+  }
+}

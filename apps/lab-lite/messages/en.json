@@ -1639,7 +1639,11 @@
       "age": "{age} yrs",
       "orderedTests": "Ordered Tests",
       "actions": "Actions",
-      "chainOfCustody": "Chain of Custody"
+      "chainOfCustody": "Chain of Custody",
+      "consultationNotes": "Consultation Notes",
+      "noConsultationNotes": "No consultation responses yet",
+      "consultPathologist": "Pathologist",
+      "consultReferenceLab": "Reference Lab"
     },
     "actions": {
       "beginProcessing": "Begin Processing",
@@ -3384,5 +3388,86 @@
     "statusFailed": "Failed",
     "statusUploading": "Uploading",
     "statusExpired": "Expired"
+  },
+  "knowledgeCards": {
+    "panelTitle": "Clinical Reference",
+    "panelLabel": "Knowledge card panel",
+    "recommendedActions": "Recommended Actions",
+    "clinicalContext": "Clinical Context",
+    "version": "v{version}",
+    "pinCard": "Pin card: {title}",
+    "collapse": "Collapse panel",
+    "expand": "Expand panel",
+    "dismiss": "Dismiss panel",
+    "severity": {
+      "critical": "Critical",
+      "warning": "Warning",
+      "informational": "Info"
+    },
+    "kcWbcBlast001": {
+      "title": "Possible Leukemia / Blast Pattern",
+      "condition": "WBC > 50,000/µL — possible blast or leukemia pattern",
+      "action1": "Perform manual differential immediately",
+      "action2": "Notify treating physician — IMMEDIATE referral required",
+      "action3": "Do not release result without physician notification",
+      "clinicalContext": "Extreme leukocytosis (WBC > 50,000/µL) with a possible blast pattern may indicate acute leukemia or a leukemoid reaction. In resource-limited settings, early physician notification is critical to guide urgent workup and protect the patient from delayed treatment."
+    },
+    "kcHgbSevere001": {
+      "title": "Severe Anaemia — Transfusion Consideration",
+      "condition": "Haemoglobin < 5 g/dL — life-threatening anaemia",
+      "action1": "Notify treating physician immediately",
+      "action2": "Prepare for possible emergency transfusion",
+      "action3": "Repeat specimen to confirm result before releasing",
+      "clinicalContext": "Haemoglobin below 5 g/dL represents severe, potentially life-threatening anaemia. Common causes in MENA and Central Asia include iron deficiency, haemoglobinopathy, and parasitic infection. Immediate physician notification is mandatory."
+    },
+    "kcPltCritical001": {
+      "title": "Critical Thrombocytopenia — Bleeding Risk",
+      "condition": "Platelets < 20,000/µL — critical bleeding risk",
+      "action1": "Notify treating physician immediately",
+      "action2": "Assess patient for active bleeding signs",
+      "action3": "Hold invasive procedures until physician review",
+      "clinicalContext": "Platelet counts below 20,000/µL carry a high risk of spontaneous bleeding including intracranial haemorrhage. Causes include ITP, dengue, bone marrow failure, and drug toxicity. Immediate physician involvement is required."
+    },
+    "kcKHyperkalemia001": {
+      "title": "Dangerous Hyperkalaemia — Cardiac Risk",
+      "condition": "Potassium > 6.5 mEq/L — risk of fatal arrhythmia",
+      "action1": "Notify treating physician STAT",
+      "action2": "Order ECG immediately if available",
+      "action3": "Do not delay notification to confirm with repeat specimen",
+      "clinicalContext": "Hyperkalaemia above 6.5 mEq/L can cause life-threatening cardiac arrhythmias including ventricular fibrillation. Common in acute kidney injury, diabetic ketoacidosis, and adrenal insufficiency. This is a medical emergency requiring immediate intervention."
+    },
+    "kcNaHyponatremia001": {
+      "title": "Severe Hyponatraemia — Seizure Risk",
+      "condition": "Sodium < 120 mEq/L — risk of cerebral oedema and seizures",
+      "action1": "Notify treating physician immediately",
+      "action2": "Do not correct sodium rapidly — risk of osmotic demyelination",
+      "action3": "Document time of specimen collection precisely",
+      "clinicalContext": "Sodium below 120 mEq/L indicates severe hyponatraemia associated with cerebral oedema, seizures, and coma. Aetiology includes SIADH, heart failure, and diarrhoeal illness. Correction must be slow and physician-directed."
+    },
+    "kcAltHepatic001": {
+      "title": "Acute Hepatic Injury — > 10× ULN",
+      "condition": "ALT > 400 U/L — possible acute hepatic injury",
+      "action1": "Notify treating physician promptly",
+      "action2": "Order hepatitis serology if not already done",
+      "action3": "Advise patient to avoid hepatotoxic drugs",
+      "clinicalContext": "ALT exceeding 10× the upper limit of normal (ULN ~40 U/L) indicates significant hepatic injury. In MENA and Central Asia, common causes include viral hepatitis (A, B, E), drug-induced liver injury, and ischaemic hepatitis. Physician review is essential."
+    },
+    "kcCreatRenal001": {
+      "title": "Possible Dialysis Indication",
+      "condition": "Creatinine > 10 mg/dL — severe renal impairment",
+      "action1": "Notify treating physician immediately",
+      "action2": "Assess fluid balance and urine output",
+      "action3": "Consider referral for renal replacement therapy evaluation",
+      "clinicalContext": "Creatinine above 10 mg/dL suggests severe acute or chronic kidney disease. In resource-limited settings, the aetiology includes dehydration, sepsis, and obstructive uropathy. Urgent physician input is needed to determine the need for renal replacement therapy."
+    },
+    "kcMalariaSevere001": {
+      "title": "Severe Malaria — WHO Protocol Required",
+      "condition": "Parasitaemia ≥ 5% — WHO criteria for severe malaria",
+      "action1": "Notify treating physician STAT — severe malaria protocol",
+      "action2": "Initiate IV artesunate per WHO guidelines",
+      "action3": "Monitor for cerebral malaria, renal failure, and severe anaemia",
+      "action4": "Document species if identifiable (P. falciparum highest risk)",
+      "clinicalContext": "Parasitaemia at or above 5% meets WHO criteria for severe malaria and is associated with high mortality without prompt treatment. IV artesunate is the drug of choice. Complications include cerebral malaria, acute kidney injury, severe anaemia, and metabolic acidosis."
+    }
   }
 }
