@@ -12,7 +12,7 @@ import type { UserRole } from '@ultranos/shared-types'
  */
 export interface TRPCContext {
   supabase: SupabaseClient
-  user: { sub: string; role: string; sessionId: string; orgId: string | null; status: string | null } | null
+  user: { sub: string; role: string; sessionId: string; orgId: string | null; facilityId: string | null; status: string | null } | null
   headers: Headers
 }
 
@@ -43,6 +43,7 @@ export const createTRPCContext = async (opts: {
             role: ((userMeta.role as string) ?? (payload.role as string) ?? '').toUpperCase(),
             sessionId: (payload.session_id as string) ?? '',
             orgId: (userMeta.org_id as string) ?? (payload.org_id as string) ?? null,
+            facilityId: (userMeta.facility_id as string) ?? (payload.facility_id as string) ?? null,
             status: (userMeta.status as string) ?? null,
           }
         }

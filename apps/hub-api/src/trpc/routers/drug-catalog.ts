@@ -9,6 +9,7 @@ import {
 import { haversineDistanceKm, sortPrices } from '@/services/drug-prices.service'
 import { AuditLogger } from '@ultranos/audit-logger'
 import type { DrugSearchResult, PharmacyPrice } from '@ultranos/shared-types'
+import { AuditAction, AuditResourceType } from '@ultranos/shared-types'
 
 const langSchema = z.enum(['en', 'prs', 'ps']).default('en')
 
@@ -190,21 +191,16 @@ export const drugCatalogRouter = createTRPCRouter({
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' })
 
       const audit = new AuditLogger(ctx.supabase)
-      try {
-        await audit.emit({
-          action: 'DRUG_CATALOG_ENRICH',
-          resourceType: 'DrugCatalog',
-          resourceId: input.atcCode,
-          actorId: ctx.user!.sub,
-          actorRole: ctx.user!.role,
-          outcome: 'SUCCESS',
-          sessionId: ctx.user!.sessionId,
-          metadata: { fields: Object.keys(update) },
-        })
-      } catch {
-        // Audit failure is non-fatal — log shape only, no PHI
-        console.warn('[AUDIT_FAILURE]', { action: 'DRUG_CATALOG_ENRICH', resourceType: 'DrugCatalog' })
-      }
+      await audit.emit({
+        action: AuditAction.DRUG_CATALOG_ENRICH,
+        resourceType: AuditResourceType.DRUG_CATALOG,
+        resourceId: input.atcCode,
+        actorId: ctx.user!.sub,
+        actorRole: ctx.user!.role,
+        outcome: 'SUCCESS',
+        sessionId: ctx.user!.sessionId,
+        metadata: { fields: Object.keys(update) },
+      })
 
       return scopeEntryToTier(data, role)
     }),
@@ -287,6 +283,12 @@ export const drugCatalogRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'FORBIDDEN: Only pharmacists can set prices' })
       }
 
+      // Facility-scoped: pharmacist can only set prices for their own facility
+      const jwtFacilityId = ctx.user?.facilityId
+      if (jwtFacilityId && jwtFacilityId !== input.facilityId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'FORBIDDEN: Facility mismatch — can only set prices for your own facility' })
+      }
+
       const { data, error } = await ctx.supabase
         .from('pharmacy_prices')
         .upsert({
@@ -294,7 +296,7 @@ export const drugCatalogRouter = createTRPCRouter({
           facility_id: input.facilityId,
           retail_price: input.retailPrice,
           stock_signal: input.stockSignal,
-          dose_form: input.doseForm ?? null,
+          dose_form: input.doseForm ?? '',
           quantity: input.quantity ?? null,
           updated_by: ctx.user!.sub,
           updated_at: new Date().toISOString(),

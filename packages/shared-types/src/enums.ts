@@ -61,6 +61,7 @@ export enum AuditAction {
   P2P_SYNC = 'P2P_SYNC',
   // Story 53.5 — AI Confidence Inversion Principle
   AI_AUTO_ESCALATION = 'AI_AUTO_ESCALATION',
+  DRUG_CATALOG_ENRICH = 'DRUG_CATALOG_ENRICH',
 }
 
 export enum AuditResourceType {
@@ -100,6 +101,7 @@ export enum AuditResourceType {
   CONSULTATION = 'CONSULTATION',
   // Story 53.6 — AI Provenance Trail
   AI_PROVENANCE = 'AI_PROVENANCE',
+  DRUG_CATALOG = 'DRUG_CATALOG',
 }
 
 export enum AuditOutcome {

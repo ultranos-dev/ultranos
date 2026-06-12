@@ -11,7 +11,8 @@ vi.mock('@/lib/supabase', () => ({
 }))
 
 const mockFrom = vi.fn()
-const mockSupabase = { from: mockFrom }
+const mockRpc = vi.fn().mockResolvedValue({ data: [{ chain_hash: '0'.repeat(64) }], error: null })
+const mockSupabase = { from: mockFrom, rpc: mockRpc }
 
 const { createCallerFactory } = await import('../trpc/init')
 const { appRouter } = await import('../trpc/routers/_app')
@@ -61,6 +62,7 @@ const AMOX_ROW = {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockRpc.mockResolvedValue({ data: [{ chain_hash: '0'.repeat(64) }], error: null })
 })
 
 describe('drugCatalog.search', () => {
