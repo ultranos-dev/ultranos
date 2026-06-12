@@ -87,6 +87,7 @@ export interface NormalizedDrugRow {
   interactions: unknown[]
   pregnancy_category?: string
   administration_notes: Record<string, string>
+  /** JSONB column — stored as-is; typed narrowly in SourceDrugData but widened here for DB storage */
   pharmacokinetics: Record<string, unknown>
   summary_plain: Record<string, string>
   used_for: Record<string, string>[]
