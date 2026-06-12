@@ -38,8 +38,8 @@ export function triggerAutoEscalation(payload: EscalationPayload): void {
   // 1. Emit audit event (fire-and-forget, no PHI)
   const auditInput: ClientAuditEventInput = {
     actorId: session?.userId ?? 'unknown',
-    actorRole: UserRole.LAB_TECH,
-    action: 'AI_AUTO_ESCALATION' as AuditAction,
+    actorRole: (session?.role as UserRole) ?? UserRole.LAB_TECH,
+    action: AuditAction.AI_AUTO_ESCALATION,
     resourceType: AuditResourceType.LAB_RESULT,
     resourceId: payload.sampleId,
     hlcTimestamp: serializeHlc(hlc.now()),
@@ -58,8 +58,10 @@ export function triggerAutoEscalation(payload: EscalationPayload): void {
 
   void emitClientAudit(auditInput)
 
-  // 2. Notify Hub API (best-effort — never blocks UI)
-  void _postEscalationToHub(payload, session?.userId)
+  // 2. Notify Hub API (best-effort — never blocks UI). Skip if no authenticated session.
+  if (session?.userId) {
+    void _postEscalationToHub(payload, session.userId)
+  }
 }
 
 async function _postEscalationToHub(

@@ -4,9 +4,14 @@ export enum ConfidenceLevel {
   LOW = 'LOW',
 }
 
-/** Numeric score ranges for each confidence level */
+/**
+ * Numeric score ranges for each confidence level.
+ * Upper bounds are exclusive — score === 0.8 maps to HIGH, not MEDIUM.
+ * Lower bounds are inclusive.
+ */
 export const CONFIDENCE_THRESHOLDS = {
   HIGH: { min: 0.8, max: 1.0 },
+  /** Upper bound exclusive: [0.5, 0.8) — score of 0.8 is HIGH */
   MEDIUM: { min: 0.5, max: 0.8 },
   LOW: { min: 0.0, max: 0.5 },
 } as const

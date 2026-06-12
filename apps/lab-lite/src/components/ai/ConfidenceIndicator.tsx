@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ConfidenceLevel, shouldAutoEscalate } from '@/lib/confidence'
 
@@ -34,10 +34,40 @@ export function ConfidenceIndicator({
 }: ConfidenceIndicatorProps) {
   const t = useTranslations('confidence')
   const [dismissed, setDismissed] = useState(false)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  // Clamp score to [0, 1] for display — raw AI scores may occasionally exceed bounds
+  const displayScore = score !== undefined ? Math.min(1, Math.max(0, score)) : undefined
 
-  // Auto-escalate on render for LOW confidence when threshold is met
+  // Focus trap for LOW overlay — moves focus to first button on mount, cycles Tab within overlay
   useEffect(() => {
-    if (level === ConfidenceLevel.LOW && shouldAutoEscalate(level) && onEscalate) {
+    if (level !== ConfidenceLevel.LOW || dismissed) return
+    const el = overlayRef.current
+    if (!el) return
+    const firstBtn = el.querySelector<HTMLElement>('button')
+    firstBtn?.focus()
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(el!.querySelectorAll<HTMLElement>('button:not([disabled])'))
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+
+    el.addEventListener('keydown', handleKeyDown)
+    return () => el.removeEventListener('keydown', handleKeyDown)
+  }, [level, dismissed])
+
+  // Auto-escalate on render when confidence is at or below the configured threshold.
+  // Uses shouldAutoEscalate() so raising AUTO_ESCALATION_THRESHOLD to MEDIUM
+  // automatically enables escalation for MEDIUM without changing this component.
+  useEffect(() => {
+    if (shouldAutoEscalate(level) && onEscalate) {
       onEscalate()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- run only on mount / level change
@@ -67,8 +97,8 @@ export function ConfidenceIndicator({
           />
         </svg>
         {t('high.label')}
-        {score !== undefined && (
-          <span className="text-green-500 font-normal">({Math.round(score * 100)}%)</span>
+        {displayScore !== undefined && (
+          <span className="text-green-500 font-normal">({Math.round(displayScore * 100)}%)</span>
         )}
       </span>
     )
@@ -105,9 +135,9 @@ export function ConfidenceIndicator({
           {context && (
             <p className="text-xs text-amber-700 mt-1">{context}</p>
           )}
-          {score !== undefined && (
+          {displayScore !== undefined && (
             <p className="text-xs text-amber-600 mt-0.5">
-              {Math.round(score * 100)}%
+              {Math.round(displayScore * 100)}%
             </p>
           )}
         </div>
@@ -120,6 +150,7 @@ export function ConfidenceIndicator({
 
   return (
     <div
+      ref={overlayRef}
       data-testid="low-overlay"
       role="alertdialog"
       aria-modal="true"
@@ -154,9 +185,9 @@ export function ConfidenceIndicator({
             {context}
           </p>
         )}
-        {score !== undefined && (
+        {displayScore !== undefined && (
           <p className="text-xs text-red-600 font-medium">
-            {Math.round(score * 100)}%
+            {Math.round(displayScore * 100)}%
           </p>
         )}
 

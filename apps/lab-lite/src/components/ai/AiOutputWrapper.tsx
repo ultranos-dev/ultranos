@@ -6,15 +6,22 @@ import { ConfidenceIndicator } from './ConfidenceIndicator'
 
 interface AiOutputWrapperProps {
   /**
-   * The AI confidence level for this output. REQUIRED.
-   * If missing or undefined, the output is blocked and an error is shown.
+   * The AI confidence level for this output.
+   * If undefined, the output is blocked and an error state is rendered.
    *
    * ALL AI-generated clinical content MUST be wrapped in AiOutputWrapper.
    * See Story 53.5, AC #4.
    */
-  confidence: ConfidenceLevel
+  confidence?: ConfidenceLevel
   score?: number
   context: string
+  /**
+   * Escalation callback. MUST be `triggerAutoEscalation(payload)` for AC 3/7
+   * compliance — this wrapper does not call triggerAutoEscalation directly
+   * because callers own the escalation payload (sampleId, sourceFeature,
+   * aiOutputSummary). Passing a no-op means low-confidence outputs will not
+   * trigger Hub API notifications or audit events. Story 53.5, AC 3/7.
+   */
   onEscalate?: () => void
   onAcknowledge?: () => void
   children: React.ReactNode
@@ -28,7 +35,11 @@ interface AiOutputWrapperProps {
  *
  * Usage:
  * ```tsx
- * <AiOutputWrapper confidence={ConfidenceLevel.HIGH} context="CBC anomaly detection">
+ * <AiOutputWrapper
+ *   confidence={ConfidenceLevel.HIGH}
+ *   context="CBC anomaly detection"
+ *   onEscalate={() => triggerAutoEscalation({ sampleId, sourceFeature, ... })}
+ * >
  *   <AnomalyFlagSummary result={result} />
  * </AiOutputWrapper>
  * ```

@@ -1,6 +1,6 @@
 # Story 53.5: Confidence Inversion Principle
 
-Status: review
+Status: done
 
 ## Story
 
@@ -206,3 +206,32 @@ Key decisions:
 ## Change Log
 
 - 2026-05-30: Story 53.5 implemented — Confidence Inversion Principle cross-cutting utility. Created 5 new source files, 4 test files, updated 5 existing files. 49 tests passing, 8 snapshots generated. Status → review.
+
+## Review Findings
+
+### Decision-Needed
+
+- [x] [Review][Decision] **D1: Hub API endpoint `/lab.escalateAiResult` does not exist** — Deferred. Spec explicitly designates Hub call as best-effort; audit event is the primary record. Build the Hub endpoint before Stories 53.3/53.4 ship to production.
+- [x] [Review][Decision] **D2: `triggerAutoEscalation` is never called from `ConfidenceIndicator`** — Deferred. Dependency injection is correct: callers own `sampleId`/`sourceFeature`/`aiOutputSummary`. Contract documented in P4 (JSDoc on `AiOutputWrapper`). Future consumers (53.3, 53.4) must pass `triggerAutoEscalation(payload)` as `onEscalate`.
+
+### Patches
+
+- [x] [Review][Patch] **P1: `AuditAction` enum missing `AI_AUTO_ESCALATION` — unsafe cast** — Added `AI_AUTO_ESCALATION` to `AuditAction` enum in `packages/shared-types/src/enums.ts`. Removed `as AuditAction` cast.
+- [x] [Review][Patch] **P2: No focus trap on LOW confidence overlay** — Added `overlayRef` + `useEffect` focus trap to `ConfidenceIndicator.tsx`. Moves focus to first button on mount; intercepts Tab/Shift+Tab to cycle within overlay buttons.
+- [x] [Review][Patch] **P3: `actorRole` hardcoded to `UserRole.LAB_TECH`** — Now reads `(session?.role as UserRole) ?? UserRole.LAB_TECH` from session object in `confidence-escalation.ts`.
+- [x] [Review][Patch] **P4: No tests for `confidence-escalation.ts`** — Created `src/__tests__/confidence-escalation.test.ts` with 6 tests covering audit action, metadata shape, PHI guard, role from session, null-session Hub skip, and undefined score. Updated `AiOutputWrapper` JSDoc to document `onEscalate` contract.
+- [x] [Review][Patch] **P5: Hub API post fires when session is null** — Added `if (session?.userId)` guard around `_postEscalationToHub` call in `confidence-escalation.ts`.
+- [x] [Review][Patch] **P6: `AiOutputWrapper` confidence typed non-nullable** — Changed `confidence: ConfidenceLevel` to `confidence?: ConfidenceLevel`. Removed `@ts-expect-error` from two test files where it was suppressing now-valid undefined passing.
+- [x] [Review][Patch] **P7: score rendered without bounds validation** — Added `displayScore = Math.min(1, Math.max(0, score))` clamp in `ConfidenceIndicator`. All three render branches use `displayScore` instead of raw `score`.
+- [x] [Review][Patch] **P8: `CONFIDENCE_THRESHOLDS.MEDIUM.max` boundary mismatch** — Added JSDoc clarifying upper bound is exclusive: `[0.5, 0.8) — score of 0.8 is HIGH`.
+- [x] [Review][Patch] **P9: Tooltip RTL alignment bug** — Changed `start-1/2` to `left-1/2` in `ConfidencePrincipleInfo.tsx`. Physical `left-1/2 -translate-x-1/2` consistently centers under the icon in both LTR and RTL.
+- [x] [Review][Patch] **P10: `ConfidenceIndicator` useEffect hardcodes `level === LOW`** — Removed `level === ConfidenceLevel.LOW &&` guard. `shouldAutoEscalate(level)` is now the sole condition, enabling future threshold changes to work without touching the component.
+
+### Deferred
+
+- [x] [Review][Defer] **W1: Escalation POST body wraps in `{ json: { ... } }` (tRPC HTTP format)** [`apps/lab-lite/src/lib/confidence-escalation.ts:82`] — deferred, depends on D1 resolution (endpoint format unknown)
+- [x] [Review][Defer] **W2: Silent `catch {}` on escalation POST — no queuing, retry, or offline fallback** [`apps/lab-lite/src/lib/confidence-escalation.ts:95`] — deferred, by-design per spec ("fire-and-forget, never throws"); revisit if escalation SLA hardens
+- [x] [Review][Defer] **W3: LOW overlay `dismissed` state is local — re-mount resets acknowledgment** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:14`] — deferred, pre-existing React lifecycle limitation; low risk in current usage
+- [x] [Review][Defer] **W4: `AiOutputWrapper` missing `sourceFeature` prop — escalation audit events lack required field** — deferred, depends on D2 resolution
+- [x] [Review][Defer] **W5: Stale closure on `onEscalate` in useEffect dep array** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:19`] — deferred, low risk in typical usage; `onEscalate` should be stable at mount
+- [x] [Review][Defer] **W6: Missing `chainHash` in audit event payload** [`apps/lab-lite/src/lib/confidence-escalation.ts:39-57`] — deferred, `chainHash` is optional in `ClientAuditEventInput`; verify if hash chain integrity requires it

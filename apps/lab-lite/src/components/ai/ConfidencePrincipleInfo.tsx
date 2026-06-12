@@ -61,7 +61,7 @@ export function ConfidencePrincipleInfo({ variant = 'tooltip' }: ConfidencePrinc
           />
           <div
             role="tooltip"
-            className="absolute z-20 start-1/2 -translate-x-1/2 mt-2 w-72 rounded-lg border border-blue-200 bg-card shadow-lg p-4"
+            className="absolute z-20 left-1/2 -translate-x-1/2 mt-2 w-72 rounded-lg border border-blue-200 bg-card shadow-lg p-4"
           >
             <p className="text-xs font-semibold text-blue-900 mb-1">{t('principle.title')}</p>
             <p className="text-xs text-foreground leading-relaxed">{t('principle.body')}</p>

@@ -109,7 +109,6 @@ describe('AiOutputWrapper edge cases', () => {
 
   it('error state snapshot when confidence is undefined', () => {
     const { container } = render(
-      // @ts-expect-error intentionally testing undefined confidence
       <AiOutputWrapper confidence={undefined} context="anomaly detection">
         <p>AI result content</p>
       </AiOutputWrapper>

@@ -229,7 +229,6 @@ describe('AiOutputWrapper', () => {
 
   it('renders error state when confidence is undefined', () => {
     render(
-      // @ts-expect-error intentionally passing undefined to test error state
       <AiOutputWrapper confidence={undefined} context="test">
         <div>AI Output Content</div>
       </AiOutputWrapper>
