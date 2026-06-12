@@ -263,3 +263,142 @@ describe('drugCatalog.enrich', () => {
     ).rejects.toThrow()
   })
 })
+
+describe('drugCatalog.getPrices', () => {
+  const PRICES_ROWS = [
+    {
+      atc_code: 'J01CA04',
+      retail_price: 85,
+      stock_signal: 'in_stock',
+      dose_form: 'capsule',
+      quantity: 20,
+      pharmacy_facilities: {
+        id: 'f1',
+        name: 'Al-Shifa Pharmacy',
+        latitude: 34.527,
+        longitude: 69.179,
+      },
+    },
+    {
+      atc_code: 'J01CA04',
+      retail_price: 120,
+      stock_signal: 'in_stock',
+      dose_form: 'capsule',
+      quantity: 20,
+      pharmacy_facilities: {
+        id: 'f2',
+        name: 'Ibn Sina Drugs',
+        latitude: 34.541,
+        longitude: 69.202,
+      },
+    },
+  ]
+
+  it('returns prices sorted by distance', async () => {
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: PRICES_ROWS, error: null }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx())
+    const result = await caller.drugCatalog.getPrices({
+      atcCode: 'J01CA04',
+      lat: 34.526,
+      lng: 69.176,
+      sort: 'distance',
+    })
+
+    expect(result).toHaveLength(2)
+    // Al-Shifa (34.527, 69.179) is closer to (34.526, 69.176) than Ibn Sina (34.541, 69.202)
+    expect(result[0].pharmacyName).toBe('Al-Shifa Pharmacy')
+    expect(result[0].retailPrice).toBe(85)
+    expect(result[0].distanceKm).toBeGreaterThanOrEqual(0)
+  })
+
+  it('returns prices sorted by price ascending', async () => {
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: PRICES_ROWS, error: null }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx())
+    const result = await caller.drugCatalog.getPrices({
+      atcCode: 'J01CA04',
+      lat: 34.526,
+      lng: 69.176,
+      sort: 'price',
+    })
+
+    expect(result[0].retailPrice).toBe(85)
+    expect(result[1].retailPrice).toBe(120)
+  })
+
+  it('returns empty array when no prices exist', async () => {
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx())
+    const result = await caller.drugCatalog.getPrices({
+      atcCode: 'J01CA04',
+      lat: 34.526,
+      lng: 69.176,
+      sort: 'distance',
+    })
+
+    expect(result).toHaveLength(0)
+  })
+})
+
+describe('drugCatalog.setPrice', () => {
+  it('allows PHARMACIST to set a price', async () => {
+    mockFrom.mockReturnValue({
+      upsert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: {
+              atc_code: 'J01CA04',
+              facility_id: 'f1',
+              retail_price: 85,
+              stock_signal: 'in_stock',
+            },
+            error: null,
+          }),
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx(PHARMACIST_USER))
+    const result = await caller.drugCatalog.setPrice({
+      atcCode: 'J01CA04',
+      facilityId: 'f1',
+      retailPrice: 85,
+      stockSignal: 'in_stock',
+    })
+
+    expect(result.retailPrice).toBe(85)
+    expect(result.stockSignal).toBe('in_stock')
+  })
+
+  it('rejects DOCTOR role from setting prices', async () => {
+    const caller = createCaller(ctx(DOCTOR_USER))
+    await expect(
+      caller.drugCatalog.setPrice({
+        atcCode: 'J01CA04',
+        facilityId: 'f1',
+        retailPrice: 85,
+        stockSignal: 'in_stock',
+      })
+    ).rejects.toThrow(/FORBIDDEN/)
+  })
+})
