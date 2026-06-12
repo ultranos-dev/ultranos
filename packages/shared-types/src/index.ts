@@ -66,3 +66,6 @@ export { AFGHAN_PROVINCES } from './reference/afghanistan-geo.js'
 export type { AfghanProvince } from './reference/afghanistan-geo.js'
 export { AFGHAN_DISTRICTS, getDistrictsByProvince } from './reference/afghanistan-districts.js'
 export type { AfghanDistrict } from './reference/afghanistan-districts.js'
+
+// Drug catalog types
+export * from './fhir/drug-catalog.js'
