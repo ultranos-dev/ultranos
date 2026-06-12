@@ -46,19 +46,17 @@ export async function runEtl(
 
   for (let i = 0; i < entries.length; i += UPSERT_CHUNK_SIZE) {
     const chunk = entries.slice(i, i + UPSERT_CHUNK_SIZE)
-    const rows: NormalizedDrugRow[] = []
-
-    await Promise.all(
-      chunk.map(async (entry) => {
-        try {
-          rows.push(await processOneDrug(entry))
-          processed++
-        } catch (err) {
-          console.error(`Failed ${entry.atcCode}: ${(err as Error).message}`)
-          failed++
-        }
-      })
-    )
+    const results = await Promise.allSettled(chunk.map(processOneDrug))
+    const rows = results
+      .filter((r): r is PromiseFulfilledResult<NormalizedDrugRow> => r.status === 'fulfilled')
+      .map(r => r.value)
+    const chunkFailed = results.filter(r => r.status === 'rejected')
+    chunkFailed.forEach((r) => {
+      const reason = r.status === 'rejected' ? (r.reason as Error).message : 'unknown'
+      console.error(`Failed in chunk starting at index ${i}: ${reason}`)
+    })
+    processed += rows.length
+    failed += chunkFailed.length
 
     await upsertChunk(supabase, rows)
     console.log(`Progress: ${Math.min(i + UPSERT_CHUNK_SIZE, entries.length)}/${entries.length}`)
@@ -70,6 +68,10 @@ export async function runEtl(
 // Entry point — only executed when run directly via `npx tsx run.ts`
 const __filename = fileURLToPath(import.meta.url)
 if (process.argv[1] === __filename) {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars are required')
+    process.exit(1)
+  }
   const __dirname = dirname(__filename)
   const entries: EmlDrugEntry[] = JSON.parse(
     readFileSync(join(__dirname, 'seed/who-eml-phase1.json'), 'utf-8')

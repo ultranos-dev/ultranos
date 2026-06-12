@@ -37,7 +37,7 @@ export async function fetchFromOpenFda(
   innName: string
 ): Promise<SourceDrugData> {
   try {
-    const search = `openfda.generic_name:"${encodeURIComponent(innName)}"`
+    const search = encodeURIComponent(`openfda.generic_name:"${innName}"`)
     const url = `${OPENFDA_BASE}?search=${search}&limit=1`
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 8000)

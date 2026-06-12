@@ -101,4 +101,18 @@ describe('fetchFromOpenFda', () => {
 
     expect(result.brandNames).toBeUndefined()
   })
+
+  it('URL-encodes the drug name and query expression', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => AMOXICILLIN_RESPONSE,
+    } as Response)
+
+    await fetchFromOpenFda('B01AC06', 'acetylsalicylic acid')
+
+    const calledUrl = vi.mocked(fetch).mock.calls[0][0] as string
+    expect(calledUrl).toContain('acetylsalicylic%20acid')
+    expect(calledUrl).toContain('%22') // encoded double-quote
+    expect(calledUrl).not.toContain('"') // no raw double-quotes in URL
+  })
 })
