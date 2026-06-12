@@ -26,14 +26,18 @@ import {
   putLabResult,
   putLabObservations,
   seedTemplates,
+  enqueueSyncEvent,
 } from '@/lib/db'
 import type { LabResult, LabObservation } from '@/lib/db'
 import { resolveTemplate } from '@/lib/result-templates'
 import type { RangeResolutionContext } from '@/lib/result-templates'
 import { ResultEntryForm } from '@/components/ResultEntryForm'
 import { mapResultToFhirBundle } from '@/lib/result-to-fhir'
-import { enqueueSyncEvent } from '@/lib/db'
-import { reportLabResultAuditEvent } from '@/lib/audit-client'
+import { reportLabResultAuditEvent, reportAnomalyDetection } from '@/lib/audit-client'
+import { detectAnomalies, ANOMALY_MODEL_VERSION } from '@/lib/anomaly-engine'
+import type { AnomalyFlag } from '@/lib/anomaly-engine'
+import { getPriorResult } from '@/lib/prior-results'
+import { AnomalyFlagDisplay } from '@/components/AnomalyFlagDisplay'
 import type { FhirSpecimen } from '@ultranos/shared-types'
 import type { ReferenceRange as LocalizedRange, RangeSnapshot } from '@/lib/reference-ranges/types'
 
@@ -57,6 +61,7 @@ export default function ResultEntryPage({ params }: PageProps) {
   const [rangeContext, setRangeContext] = useState<RangeResolutionContext | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [anomalyFlags, setAnomalyFlags] = useState<AnomalyFlag[]>([])
 
   useEffect(() => {
     async function load() {
@@ -240,8 +245,97 @@ export default function ResultEntryPage({ params }: PageProps) {
       resultId,
     })
 
-    // Navigate back to sample detail page
-    router.push(`../${sampleId}`)
+    // AI Anomaly Detection (Story 53.3) — runs after result is persisted, PHI-free
+    const detectedFlags = await runAnomalyDetection(fullObs, loincCode, sample)
+    if (detectedFlags.length > 0) {
+      setAnomalyFlags(detectedFlags)
+      // Don't navigate — let physician review the flags first
+    } else {
+      router.push(`../${sampleId}`)
+    }
+  }
+
+  /**
+   * Run anomaly detection after result save.
+   * PHI guard: passes only numeric field values and LOINC code to the engine.
+   * Returns detected flags, or empty array on any error (non-fatal).
+   */
+  async function runAnomalyDetection(
+    observations: LabObservation[],
+    templateLoincCode: string,
+    specimen: FhirSpecimen,
+  ): Promise<AnomalyFlag[]> {
+    try {
+      // Build PHI-free value map: fieldCode → numeric value
+      const currentValues: Record<string, number | null> = {}
+      for (const obs of observations) {
+        currentValues[obs.fieldCode] = typeof obs.value === 'number' ? obs.value : null
+      }
+
+      // Prior result lookup uses patientRef only for Dexie query — NOT passed to engine
+      const patientRef = specimen.subject?.reference ?? ''
+      const priorValues = patientRef
+        ? await getPriorResult(patientRef, templateLoincCode)
+        : null
+
+      const flags = detectAnomalies({ currentValues, priorValues, templateLoincCode })
+
+      if (flags.length > 0) {
+        // Log to AI Provenance Trail (AC8)
+        reportAnomalyDetection({
+          sampleId,
+          modelVersion: ANOMALY_MODEL_VERSION,
+          inputDescription: `${Object.keys(currentValues).length} numeric values, template ${templateLoincCode}`,
+          flagCount: flags.length,
+          highestSeverity: flags[0]!.severity,
+          confidenceScore: flags[0]!.confidence,
+          technicianId: session?.practitionerId ?? 'unknown',
+        })
+
+        // Enqueue physician notification for urgent flags (Tier 3 sync — operational, LWW)
+        for (const flag of flags.filter((f) => f.severity === 'urgent')) {
+          await enqueueSyncEvent({
+            resourceType: 'Notification',
+            resourceId: crypto.randomUUID(),
+            payload: {
+              type: 'ANOMALY_FLAG',
+              priority: 'critical',
+              title: 'Statistical Pattern Flag',
+              ruleId: flag.ruleId,
+              sampleId,
+              confidence: flag.confidence,
+              disclaimer: flag.disclaimer,
+            },
+            hlcTimestamp: new Date().toISOString(),
+          })
+        }
+      }
+
+      return flags
+    } catch {
+      // Anomaly detection is supplementary — never block result entry on error
+      return []
+    }
+  }
+
+  // Show anomaly flags after save — physician must review before proceeding (CLAUDE.md Rule #2)
+  if (anomalyFlags.length > 0) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <AnomalyFlagDisplay
+          flags={anomalyFlags}
+          onAcknowledge={() => router.push(`../${sampleId}`)}
+          onEscalate={() => router.push(`../${sampleId}`)}
+        />
+        <button
+          type="button"
+          onClick={() => router.push(`../${sampleId}`)}
+          className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        >
+          {t('continueToDashboard')}
+        </button>
+      </div>
+    )
   }
 
   return (

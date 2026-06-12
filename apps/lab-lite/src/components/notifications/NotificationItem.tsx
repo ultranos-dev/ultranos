@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import type { NotificationItem as NotificationItemType } from '@/lib/trpc'
-import { Check, AlertTriangle, ShieldCheck, Settings } from '@ultranos/ui-kit/icons'
+import { Check, AlertTriangle, ShieldCheck, Settings, Activity } from '@ultranos/ui-kit/icons'
 
 /**
  * Maps Hub API notification types to Lab Lite display configuration.
@@ -28,6 +28,12 @@ function getNotificationDisplay(type: string): NotificationDisplay {
         labelKey: 'resultAwaitingReview',
         iconColor: 'text-yellow-600',
         icon: <AlertTriangle size={20} className="h-5 w-5" aria-hidden="true" />,
+      }
+    case 'ANOMALY_FLAG':
+      return {
+        labelKey: 'anomalyFlag',
+        iconColor: 'text-destructive',
+        icon: <Activity size={20} className="h-5 w-5" aria-hidden="true" />,
       }
     case 'LAB_STATUS_CHANGE':
     case 'LAB_STATUS_APPROVED':
@@ -70,6 +76,8 @@ export function NotificationItemRow({
       case 'LAB_STATUS_APPROVED':
       case 'LAB_STATUS_SUSPENDED':
         return t('labStatusMessage', { status: payload.message ?? type.split('_').pop()?.toLowerCase() ?? 'changed' })
+      case 'ANOMALY_FLAG':
+        return t('anomalyFlagMessage', { ruleId: payload.ruleId ?? '' })
       default:
         return payload.message ?? t('systemNotification')
     }

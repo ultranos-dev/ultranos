@@ -1,6 +1,6 @@
 # Story 53.3: AI Anomaly Flagging for Physician Review
 
-Status: review
+Status: done
 
 ## Story
 
@@ -243,6 +243,45 @@ The engine uses rule-based statistical detection (not deep learning) for transpa
 - `apps/lab-lite/messages/ps.json` — Added anomalyFlags i18n namespace (Pashto)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Added epic-53 / 53-3 entries
 
+## Review Findings
+
+### Decision Needed
+
+- [x] [Review][Decision] **Color token strategy — resolved: Option A** — `warning` token confirmed in `packages/ui-kit/src/tailwind.preset.ts`. Applied: `urgent` → `bg-destructive/10 border-destructive/30`, `elevated` → `bg-warning/10 border-warning/30`, `notable` → `bg-muted/50 border-border`. Confidence pills: HIGH → `bg-muted text-muted-foreground`, MEDIUM → `bg-warning/10 text-warning`, LOW → `bg-destructive/10 text-destructive`. [apps/lab-lite/src/components/AnomalyFlagDisplay.tsx]
+
+- [x] [Review][Decision] **"Configurable thresholds" — resolved: Option A** — AC9 "configurable" means rules array is editable, not a runtime config surface. Hardcoded thresholds in `ANOMALY_RULES` satisfy the AC. No Dexie config table needed.
+
+### Patches
+
+- [x] [Review][Patch] **CRITICAL: `lab_observations` table, `LabObservation` interface, `patientRef` field on `LabResult`, and three helper functions absent from `db.ts`** — Added `LabObservation` interface, `lab_observations!` table declaration, `patientRef?`/`reportComment?` to `LabResult`, Dexie v40 schema (`lab_observations: '&id, resultId'` + `lab_results` re-indexed with `patientRef`), and three helpers: `getDraftResultForSample`, `getObservationsForResult`, `putLabObservations`. [apps/lab-lite/src/lib/db.ts]
+
+- [x] [Review][Patch] **CRITICAL: No production code calls `detectAnomalies()`, `AnomalyFlagDisplay`, or `getPriorResult`** — Integrated anomaly detection in `enter/page.tsx`: after result save, calls `runAnomalyDetection()` which builds PHI-free value map, fetches prior results, runs engine, logs to provenance trail, enqueues urgent physician notifications. If flags returned, shows `AnomalyFlagDisplay` before navigating. [apps/lab-lite/src/app/[locale]/(app)/results/[sampleId]/enter/page.tsx]
+
+- [x] [Review][Patch] **CRITICAL: `reportAnomalyDetection()` missing from `audit-client.ts`; `ANOMALY_FLAG` type missing from `NotificationItem.tsx`; `modelVersion` constant absent** — Added `reportAnomalyDetection()` to `audit-client.ts` (emits `AI_ANOMALY_FLAG` resource type). Added `ANOMALY_FLAG` case to `NotificationItem.tsx` switch (Activity icon, destructive color). Added `ANOMALY_MODEL_VERSION = 'rule-engine-v1.0.0'` exported constant to `anomaly-engine.ts`. [apps/lab-lite/src/lib/audit-client.ts, apps/lab-lite/src/components/notifications/NotificationItem.tsx, apps/lab-lite/src/lib/anomaly-engine.ts]
+
+- [x] [Review][Patch] **`deltaPercent === 0` sentinel is an undocumented convention** — Fixed dispatch to also accept `deltaPercent == null` for absolute mode (handles rules that omit `deltaPercent`). Added inline comment documenting the sentinel convention. [apps/lab-lite/src/lib/anomaly-engine.ts]
+
+- [x] [Review][Patch] **ANOM-EXTREME-K-001 and ANOM-DELTA-CREAT-001 erroneously list `58410-2` (CBC)** — Removed `'58410-2'` from both rules' `applicableTemplates`. Each now targets CMP only (`'24323-8'`). [apps/lab-lite/src/lib/anomaly-rules.ts]
+
+- [x] [Review][Patch] **`prior-results.ts` uses `localeCompare` for ISO timestamp sort** — Replaced with `b.enteredAt < a.enteredAt ? -1 : 1` (pure lexicographic, locale-independent). [apps/lab-lite/src/lib/prior-results.ts]
+
+- [x] [Review][Patch] **Confidence pill i18n key casing** — Verified: all four message files (en, ar, prs, ps) use lowercase `high`/`medium`/`low` keys under `anomalyFlags.confidence`. No change required. [apps/lab-lite/messages/]
+
+- [x] [Review][Patch] **Near-zero `prior` value causes astronomically large `pctChange`** — Replaced `prior === 0` guard with `Math.abs(prior) < 0.1` epsilon guard. Added comment explaining the domain rationale. [apps/lab-lite/src/lib/anomaly-engine.ts]
+
+- [x] [Review][Patch] **Equal-severity flags sort non-deterministically** — Added secondary sort by `ruleId` (alphabetical) when severity is tied. [apps/lab-lite/src/lib/anomaly-engine.ts]
+
+- [x] [Review][Patch] **Section root uses `gap-3`** — Changed to `gap-4`. [apps/lab-lite/src/components/AnomalyFlagDisplay.tsx]
+
+- [x] [Review][Patch] **Severity sort test is vacuous** — Replaced test with a CMP-based case that fires both EXTREME-K (urgent) and DELTA-CREAT (elevated), plus added a deterministic secondary-sort test for equal-severity flags. [apps/lab-lite/src/__tests__/anomaly-engine.test.ts]
+
+### Deferred
+
+- [x] [Review][Defer] **`pre-analytical-flag.test.tsx` belongs to Story 54.3, not 53.3** [apps/lab-lite/src/__tests__/pre-analytical-flag.test.tsx] — deferred, content belongs to the already-completed Story 54.3; moving it is low-risk housekeeping
+- [x] [Review][Defer] **`AnomalyFlag.disclaimer` has no runtime enforcement against override** [apps/lab-lite/src/lib/anomaly-engine.ts] — deferred, TypeScript-only constraint; full runtime enforcement would require schema validation at every flag consumer; out of this story's scope
+- [x] [Review][Defer] **PHI guard test regex only matches Latin-script names** [apps/lab-lite/src/__tests__/anomaly-engine.test.ts] — deferred, the engine cannot produce PHI by design (input is `Record<string, number|null>`); the test is defensive but the regex weakness is a cosmetic test quality issue
+
 ## Change Log
 
 - 2026-05-31: Story 53.3 implemented — AI Anomaly Flagging engine, 9 seed rules, AnomalyFlagDisplay UI, prior-result delta lookup, physician notification integration, provenance + audit logging, 23 unit tests (all passing).
+- 2026-06-10: Code review — 3 CRITICAL patches (missing db.ts schema, missing enter/page.tsx integration, missing audit-client/notification wiring); 8 additional patches; 2 decisions needed; 3 deferred. Status → in-progress.

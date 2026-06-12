@@ -17,6 +17,9 @@ import { ANOMALY_RULES } from './anomaly-rules'
 import type { AnomalyRule, AnomalyCondition, AnomalySeverity } from './anomaly-rules'
 import { ConfidenceLevel } from './confidence'
 
+/** Model version for provenance logging and audit trail (AC8). */
+export const ANOMALY_MODEL_VERSION = 'rule-engine-v1.0.0' as const
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -89,7 +92,11 @@ function evaluateCondition(
   if (condition.type === 'delta_change') {
     if (!priorValues) return false
     const prior = priorValues[condition.fieldCode]
-    if (current == null || prior == null || prior === 0) return false
+    if (current == null || prior == null) return false
+    // Guard against divide-by-zero and astronomically large pctChange from near-zero prior.
+    // 0.1 is a safe lower bound for all analytes used in current rules (smallest realistic
+    // value is haptoglobin in g/L; platelet counts are always ≥1 ×10³/µL).
+    if (Math.abs(prior) < 0.1) return false
 
     const { deltaDirection = 'either', deltaPercent, value: absoluteThreshold } = condition
 
@@ -102,8 +109,10 @@ function evaluateCondition(
     const absDelta = Math.abs(delta)
     const pctChange = (absDelta / Math.abs(prior)) * 100
 
-    // Absolute threshold check (e.g. Hgb drop >3 g/dL)
-    if (absoluteThreshold != null && deltaPercent === 0) {
+    // Absolute threshold check (e.g. Hgb drop >3 g/dL).
+    // Convention: set deltaPercent: 0 to select absolute mode; provide value as the threshold.
+    // If deltaPercent is undefined and value is provided, also uses absolute mode.
+    if (absoluteThreshold != null && (deltaPercent === 0 || deltaPercent == null)) {
       return absDelta > absoluteThreshold
     }
 
@@ -172,10 +181,13 @@ export function detectAnomalies(input: AnomalyInput): AnomalyFlag[] {
     }
   }
 
-  // Sort: urgent first, then elevated, then notable
-  return flags.sort(
-    (a, b) => SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity],
-  )
+  // Sort: urgent first, then elevated, then notable.
+  // Secondary sort by ruleId (alphabetical) for deterministic order within a severity tier.
+  return flags.sort((a, b) => {
+    const severityDiff = SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity]
+    if (severityDiff !== 0) return severityDiff
+    return a.ruleId < b.ruleId ? -1 : 1
+  })
 }
 
 /**

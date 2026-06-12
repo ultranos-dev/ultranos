@@ -170,7 +170,7 @@ export const ANOMALY_RULES: AnomalyRule[] = [
     name: 'Creatinine >50% increase from prior result',
     descriptionKey: 'anomalyFlags.patterns.deltaCr001',
     type: 'delta',
-    applicableTemplates: ['24323-8', '58410-2'],  // CMP, CBC
+    applicableTemplates: ['24323-8'],  // CMP only — creatinine is not a CBC analyte
     confidence: ConfidenceLevel.MEDIUM,
     severity: 'elevated',
     conditions: [
@@ -206,7 +206,7 @@ export const ANOMALY_RULES: AnomalyRule[] = [
     name: 'Severe hyperkalemia (K⁺ >7.0 mEq/L)',
     descriptionKey: 'anomalyFlags.patterns.extremeK001',
     type: 'extreme',
-    applicableTemplates: ['24323-8', '58410-2'],
+    applicableTemplates: ['24323-8'],  // CMP only — potassium is not a CBC analyte
     confidence: ConfidenceLevel.HIGH,
     severity: 'urgent',
     conditions: [

@@ -229,18 +229,45 @@ describe('detectAnomalies — multiple simultaneous flags', () => {
 
 describe('detectAnomalies — severity sorting', () => {
   it('sorts results so urgent flags appear before elevated', () => {
-    // Creatinine delta (elevated) + extreme WBC (urgent) on CMP+CBC crossover
+    // ANOM-DELTA-CREAT-001 (elevated) fires on CMP; ANOM-EXTREME-K-001 (urgent) fires on CMP.
+    // Both use the CMP template — mix of urgent + elevated to actually test cross-severity ordering.
     const flags = detectAnomalies({
-      currentValues: { wbc: 120, potassium: 7.5 },
-      templateLoincCode: CBC,
+      currentValues: { potassium: 7.5, creatinine: 3.0 },
+      priorValues:   { creatinine: 1.5 },  // 100% increase → triggers DELTA-CREAT (elevated)
+      templateLoincCode: CMP,
     })
 
-    // All returned flags should be in severity order (urgent first)
+    // Must have at least one urgent and one elevated flag
+    expect(flags.some((f) => f.severity === 'urgent')).toBe(true)
+    expect(flags.some((f) => f.severity === 'elevated')).toBe(true)
+
+    // Verify strict severity ordering: urgent before elevated, elevated before notable
     const severityOrder: Record<string, number> = { urgent: 3, elevated: 2, notable: 1 }
     for (let i = 1; i < flags.length; i++) {
-      expect(severityOrder[flags[i - 1].severity]).toBeGreaterThanOrEqual(
-        severityOrder[flags[i].severity],
+      expect(severityOrder[flags[i - 1]!.severity]).toBeGreaterThanOrEqual(
+        severityOrder[flags[i]!.severity],
       )
+    }
+  })
+
+  it('sorts flags with equal severity deterministically by ruleId', () => {
+    // Both ANOM-EXTREME-K-001 and ANOM-TLS-001 can fire as urgent on CMP
+    const flags = detectAnomalies({
+      currentValues: {
+        potassium: 7.5,   // fires EXTREME-K (urgent)
+        phosphate: 6.0,
+        uric_acid: 9.0,
+        calcium: 7.5,     // fires TLS-001 (urgent)
+      },
+      templateLoincCode: CMP,
+    })
+
+    const urgentFlags = flags.filter((f) => f.severity === 'urgent')
+    if (urgentFlags.length >= 2) {
+      // Secondary sort by ruleId ensures deterministic order
+      for (let i = 1; i < urgentFlags.length; i++) {
+        expect(urgentFlags[i - 1]!.ruleId <= urgentFlags[i]!.ruleId).toBe(true)
+      }
     }
   })
 })

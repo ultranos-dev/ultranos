@@ -56,7 +56,7 @@ export function AnomalyFlagDisplay({
   return (
     <section
       aria-labelledby="anomaly-flags-heading"
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-4"
     >
       <h3
         id="anomaly-flags-heading"
@@ -89,16 +89,20 @@ export function AnomalyFlagDisplay({
 function FlagCard({ flag }: { flag: AnomalyFlag }) {
   const t = useTranslations('anomalyFlags')
 
+  // Semantic token mapping — follows oklch color system (CLAUDE.md).
+  // urgent → destructive (red), elevated → warning (amber), notable → muted (neutral).
   const severityStyle = {
-    urgent:   'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30',
-    elevated: 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30',
-    notable:  'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
+    urgent:   'border-destructive/30 bg-destructive/10',
+    elevated: 'border-warning/30 bg-warning/10',
+    notable:  'border-border bg-muted/50',
   }[flag.severity]
 
+  // Confidence Inversion Principle (Story 53.5):
+  // HIGH confidence → subtle/muted (understated), LOW → destructive (alarming).
   const confidencePillStyle = {
-    [ConfidenceLevel.HIGH]:   'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    [ConfidenceLevel.MEDIUM]: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-    [ConfidenceLevel.LOW]:    'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    [ConfidenceLevel.HIGH]:   'bg-muted text-muted-foreground',
+    [ConfidenceLevel.MEDIUM]: 'bg-warning/10 text-warning',
+    [ConfidenceLevel.LOW]:    'bg-destructive/10 text-destructive',
   }[flag.confidence]
 
   return (

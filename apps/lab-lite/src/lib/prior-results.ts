@@ -35,9 +35,10 @@ export async function getPriorResult(
 
   if (completed.length === 0) return null
 
-  // Take the most recent by enteredAt
+  // Take the most recent by enteredAt — pure lexicographic comparison (locale-independent).
+  // ISO 8601 strings sort correctly with plain comparison regardless of locale.
   const mostRecent = completed.sort((a, b) =>
-    b.enteredAt.localeCompare(a.enteredAt),
+    b.enteredAt < a.enteredAt ? -1 : 1,
   )[0]
 
   // Fetch observations for this result
