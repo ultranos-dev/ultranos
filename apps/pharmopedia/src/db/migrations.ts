@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite'
-import { DB_NAME, SCHEMA_VERSION, CREATE_SCHEMA_SQL } from './schema'
+import { DB_NAME, SCHEMA_VERSION, CREATE_SCHEMA_SQL, CREATE_BOOKMARKS_SQL } from './schema'
 
 let _db: SQLite.SQLiteDatabase | null = null
 
@@ -44,7 +44,13 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     // PRAGMA user_version must be set outside the transaction
     await db.execAsync('PRAGMA user_version = 1')
   }
-  // Future: if (currentVersion < 2) { ... }
+
+  if (currentVersion < 2) {
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      await txn.execAsync(CREATE_BOOKMARKS_SQL)
+    })
+    await db.execAsync('PRAGMA user_version = 2')
+  }
 }
 
 // Re-export for consumers who need it without importing schema directly

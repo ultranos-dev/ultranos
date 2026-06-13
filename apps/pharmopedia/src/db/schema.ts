@@ -1,5 +1,5 @@
 export const DB_NAME = 'pharmopedia.db'
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 /**
  * Full DDL for the Pharmopedia local database.
@@ -45,5 +45,14 @@ export const CREATE_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS sync_meta (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
+  );
+`
+
+export const CREATE_BOOKMARKS_SQL = `
+  CREATE TABLE IF NOT EXISTS bookmarks (
+    atc_code          TEXT PRIMARY KEY,
+    inn_name          TEXT NOT NULL,
+    therapeutic_class TEXT,
+    saved_at          TEXT NOT NULL
   );
 `
