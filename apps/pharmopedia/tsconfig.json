@@ -15,6 +15,7 @@
     "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
+    "types": ["jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
