@@ -32,6 +32,13 @@ export const HUB_API_PINS: CertificatePin[] = [
 export const MIN_TLS_VERSION = 'TLSv1.3' as const
 export const LAST_ROTATED = '2026-06-12'
 
+/**
+ * Validates that all pins have been replaced from placeholders.
+ * No-op in development. Throws immediately in production if any pin
+ * appears to be a placeholder.
+ *
+ * MUST be called at app startup in app/_layout.tsx before any Hub API call.
+ */
 export function validatePins(): void {
   if (__DEV__) return
   const validBase64Pin = /^[A-Za-z0-9+/]{43}=$/

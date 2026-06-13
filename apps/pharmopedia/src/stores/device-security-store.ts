@@ -30,6 +30,7 @@ export const useDeviceSecurityStore = create<DeviceSecurityState>((set) => ({
     set((state) => ({
       checked: true,
       isCompromised: state.isCompromised || result.isCompromised,
+      // Preserve first-detected reasons — once compromised, the original detection context is retained
       reasons: state.isCompromised ? state.reasons : result.reasons,
       checkedAt: new Date().toISOString(),
     })),

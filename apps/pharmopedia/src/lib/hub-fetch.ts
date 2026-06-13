@@ -65,9 +65,9 @@ export async function hubFetch(
     type: 'basic' as ResponseType_,
     url,
     clone: () => { throw new Error('clone() not supported on hubFetch response') },
-    arrayBuffer: async (): Promise<ArrayBuffer> => { throw new Error('arrayBuffer() not supported on hubFetch response') },
+    arrayBuffer: async (): Promise<ArrayBuffer> => { throw new Error('arrayBuffer() not supported on hubFetch response — use .text() or .json() instead') },
     blob: async () => new Blob([bodyText]),
     formData: async () => { throw new Error('formData() not supported') },
-    bytes: async (): Promise<Uint8Array> => { throw new Error('bytes() not supported on hubFetch response') },
+    bytes: async (): Promise<Uint8Array> => { throw new Error('bytes() not supported on hubFetch response — use .text() or .json() instead') },
   } as unknown as Response
 }
