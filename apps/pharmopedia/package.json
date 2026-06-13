@@ -1,0 +1,43 @@
+{
+  "name": "@ultranos/pharmopedia",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "@ultranos/shared-types": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-location": "~18.0.0",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-sqlite": "~14.0.0",
+    "expo-status-bar": "~2.0.0",
+    "i18next": "^26.2.0",
+    "react": "^19.0.0",
+    "react-i18next": "^17.0.8",
+    "react-native": "~0.76.0",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "react-native-ssl-pinning": "^1.6.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@testing-library/react-native": "^12.0.0",
+    "@types/react": "^19.0.0",
+    "babel-plugin-module-resolver": "^5.0.0",
+    "jest": "^29.0.0",
+    "jest-expo": "~52.0.0",
+    "react-test-renderer": "^19.0.0",
+    "typescript": "^5.4.0"
+  }
+}
