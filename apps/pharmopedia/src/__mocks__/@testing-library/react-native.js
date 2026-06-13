@@ -7,6 +7,26 @@
 const React = require('react')
 const ReactTestRenderer = require('react-test-renderer')
 
+// Normalize a react-test-renderer JSON node so that .props.children reflects
+// the text content of the node (mirroring what @testing-library/react-native
+// exposes on its wrapper elements).
+function normalizeNode(node) {
+  if (!node || typeof node !== 'object') return node
+  const children = node.children
+  let propsChildren
+  if (children === null || children === undefined) {
+    propsChildren = undefined
+  } else if (children.length === 1) {
+    propsChildren = children[0]
+  } else {
+    propsChildren = children
+  }
+  return {
+    ...node,
+    props: { ...node.props, children: propsChildren },
+  }
+}
+
 // Minimal query helpers
 function queryByTestId(instance, testID) {
   let found = null
@@ -16,7 +36,7 @@ function queryByTestId(instance, testID) {
     if (node.children) node.children.forEach(search)
   }
   search(instance.toJSON())
-  return found
+  return found ? normalizeNode(found) : null
 }
 
 function queryByText(instance, text) {
