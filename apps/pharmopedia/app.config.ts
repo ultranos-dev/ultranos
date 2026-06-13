@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'pharmopedia',
   version: '0.1.0',
   scheme: 'pharmopedia',
-  web: { bundler: 'metro', output: 'static' },
+  web: { bundler: 'metro', output: 'single' },
   plugins: [
     'expo-router',
     'expo-sqlite',

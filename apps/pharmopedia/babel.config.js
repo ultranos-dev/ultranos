@@ -8,9 +8,11 @@ module.exports = function (api) {
         {
           root: ['.'],
           alias: { '@': './src' },
-          extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
+          extensions: ['.ios.js', '.android.js', '.native.ts', '.native.tsx', '.js', '.ts', '.tsx', '.json'],
         },
       ],
+      // react-native-reanimated/plugin MUST be listed last
+      'react-native-reanimated/plugin',
     ],
   }
 }
