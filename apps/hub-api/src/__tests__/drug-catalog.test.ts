@@ -84,6 +84,25 @@ describe('drugCatalog.search', () => {
     expect((result[0] as Record<string, unknown>).mechanismOfAction).toBeUndefined()
   })
 
+  it('search returns results matching brand name', async () => {
+    // Verify brand_names_text.ilike. is included in the .or() argument
+    let capturedOrArgument = ''
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        or: vi.fn().mockImplementation((orArg: string) => {
+          capturedOrArgument = orArg
+          return {
+            limit: vi.fn().mockResolvedValue({ data: [AMOX_ROW], error: null }),
+          }
+        }),
+      }),
+    })
+
+    const caller = createCaller(ctx())
+    await caller.drugCatalog.search({ q: 'augmentin', lang: 'en' })
+    expect(capturedOrArgument).toContain('brand_names_text.ilike.%augmentin%')
+  })
+
   it('requires authentication', async () => {
     const caller = createCaller({ ...ctx(), user: null as never })
     await expect(caller.drugCatalog.search({ q: 'amox', lang: 'en' })).rejects.toThrow()

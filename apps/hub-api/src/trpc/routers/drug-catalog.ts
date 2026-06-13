@@ -15,8 +15,9 @@ const langSchema = z.enum(['en', 'prs', 'ps']).default('en')
 
 export const drugCatalogRouter = createTRPCRouter({
   /**
-   * Fuzzy search by INN name, ATC code, or local Dari/Pashto name.
-   * Note: brand name search requires a future brand_names_text generated column.
+   * Fuzzy search by INN name, ATC code, local Dari/Pashto name, or brand name.
+   * brand_names_text is a generated column (array_to_string of brand_names[]) with a
+   * GIN trigram index, enabling ILIKE brand-name search via PostgREST.
    * Returns identity fields only — no tier content.
    * Used by OPD-Lite, Pharmacy-Lite, and Pharmopedia.
    */
@@ -30,8 +31,6 @@ export const drugCatalogRouter = createTRPCRouter({
       const { q, lang, limit } = input
       const likeQ = `%${q.toLowerCase()}%`
 
-      // Note: brand_names TEXT[] cannot be searched via PostgREST ILIKE.
-      // Full brand name search requires a separate brand_names_text generated column (future migration).
       const { data, error } = await ctx.supabase
         .from('drug_catalog')
         .select('atc_code, inn_name, brand_names, dose_forms, therapeutic_class, local_names')
@@ -39,6 +38,7 @@ export const drugCatalogRouter = createTRPCRouter({
           `inn_name.ilike.${likeQ}`,
           `atc_code.ilike.${likeQ}`,
           `local_names::text.ilike.${likeQ}`,
+          `brand_names_text.ilike.${likeQ}`,
         ].join(','))
         .limit(limit)
 
