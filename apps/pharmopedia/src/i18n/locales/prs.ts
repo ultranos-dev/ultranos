@@ -1,7 +1,7 @@
 import type { Translations } from './en'
 
 const prs: Translations = {
-  tabs: { search: 'جستجو', profile: 'پروفایل' },
+  tabs: { search: 'جستجو', profile: 'پروفایل', browse: 'مرور', saved: 'ذخیره شده' },
   search: {
     placeholder: 'دارو جستجو کنید\u2026',
     empty: 'به نام دارو، نام تجاری یا کد ATC جستجو کنید',
@@ -64,9 +64,17 @@ const prs: Translations = {
     saveSuccess: 'با موفقیت ذخیره شد',
     save: 'ذخیره',
   },
+  browse: {
+    empty: 'هیچ دسته‌ای موجود نیست — ابتدا کاتالوگ را همگام‌سازی کنید',
+    noDrugs: 'هیچ دارویی در این دسته وجود ندارد',
+  },
+  saved: {
+    empty: 'هیچ داروی ذخیره‌ای ندارید — روی آیکون نشانک در هر دارو ضربه بزنید',
+  },
   common: {
     cancel: 'لغو',
     ok: 'تأیید',
+    back: 'بازگشت',
   },
   profile: {
     role: 'نقش',

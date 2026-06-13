@@ -1,7 +1,7 @@
 import type { Translations } from './en'
 
 const ar: Translations = {
-  tabs: { search: 'بحث', profile: 'الملف الشخصي' },
+  tabs: { search: 'بحث', profile: 'الملف الشخصي', browse: 'تصفح', saved: 'المحفوظة' },
   search: {
     placeholder: 'ابحث عن الدواء\u2026',
     empty: 'ابحث باسم الدواء أو الاسم التجاري أو رمز ATC',
@@ -64,9 +64,17 @@ const ar: Translations = {
     saveSuccess: 'تم الحفظ بنجاح',
     save: 'حفظ',
   },
+  browse: {
+    empty: 'لا توجد فئات متاحة — قم بمزامنة الكتالوج أولاً',
+    noDrugs: 'لا توجد أدوية في هذه الفئة',
+  },
+  saved: {
+    empty: 'لا توجد أدوية محفوظة بعد — اضغط على أيقونة الإشارة المرجعية لأي دواء لحفظه',
+  },
   common: {
     cancel: 'إلغاء',
     ok: 'حسناً',
+    back: 'رجوع',
   },
   profile: {
     role: 'الدور',

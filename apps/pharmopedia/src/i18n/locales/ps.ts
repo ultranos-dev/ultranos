@@ -1,7 +1,7 @@
 import type { Translations } from './en'
 
 const ps: Translations = {
-  tabs: { search: 'لټون', profile: 'پروفایل' },
+  tabs: { search: 'لټون', profile: 'پروفایل', browse: 'ګرځول', saved: 'خوندي شوي' },
   search: {
     placeholder: 'دوا وپلټئ\u2026',
     empty: 'د دوا نوم، د تجارت نوم، یا د ATC کوډ له مخې وپلټئ',
@@ -64,9 +64,17 @@ const ps: Translations = {
     saveSuccess: 'بریالیتوب سره خوندي شو',
     save: 'خوندي کړئ',
   },
+  browse: {
+    empty: 'هیڅ کټګورۍ شتون نلري — لومړی کټالوګ همغږي کړئ',
+    noDrugs: 'پدې کټګورۍ کې هیڅ دارو شتون نلري',
+  },
+  saved: {
+    empty: 'تاسو هیڅ خوندي شوي دارو نلرئ — د هرې درملې د نښانک آیکون باندې فشار ورکړئ',
+  },
   common: {
     cancel: 'لغول',
     ok: 'سمه ده',
+    back: 'شاته',
   },
   profile: {
     role: 'رول',

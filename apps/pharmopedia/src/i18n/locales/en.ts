@@ -2,6 +2,8 @@ const en = {
   tabs: {
     search: 'Search',
     profile: 'Profile',
+    browse: 'Browse',
+    saved: 'Saved',
   },
   search: {
     placeholder: 'Search drugs\u2026',
@@ -70,9 +72,17 @@ const en = {
     saveSuccess: 'Saved successfully',
     save: 'Save',
   },
+  browse: {
+    empty: 'No categories available — sync the catalog first',
+    noDrugs: 'No drugs in this category',
+  },
+  saved: {
+    empty: 'No saved drugs yet — tap the bookmark icon on any drug to save it',
+  },
   common: {
     cancel: 'Cancel',
     ok: 'OK',
+    back: 'Back',
   },
   profile: {
     role: 'Role',
