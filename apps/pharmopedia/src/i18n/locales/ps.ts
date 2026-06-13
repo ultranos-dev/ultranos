@@ -64,6 +64,10 @@ const ps: Translations = {
     saveSuccess: 'بریالیتوب سره خوندي شو',
     save: 'خوندي کړئ',
   },
+  common: {
+    cancel: 'لغول',
+    ok: 'سمه ده',
+  },
   profile: {
     role: 'رول',
     catalogSync: 'د کاتالوګ سنک',

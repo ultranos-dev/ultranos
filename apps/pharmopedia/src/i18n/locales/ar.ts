@@ -64,6 +64,10 @@ const ar: Translations = {
     saveSuccess: 'تم الحفظ بنجاح',
     save: 'حفظ',
   },
+  common: {
+    cancel: 'إلغاء',
+    ok: 'حسناً',
+  },
   profile: {
     role: 'الدور',
     catalogSync: 'مزامنة الكتالوج',

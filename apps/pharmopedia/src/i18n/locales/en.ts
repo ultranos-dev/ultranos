@@ -70,6 +70,10 @@ const en = {
     saveSuccess: 'Saved successfully',
     save: 'Save',
   },
+  common: {
+    cancel: 'Cancel',
+    ok: 'OK',
+  },
   profile: {
     role: 'Role',
     catalogSync: 'Catalog sync',

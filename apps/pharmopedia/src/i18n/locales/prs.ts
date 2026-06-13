@@ -64,6 +64,10 @@ const prs: Translations = {
     saveSuccess: 'با موفقیت ذخیره شد',
     save: 'ذخیره',
   },
+  common: {
+    cancel: 'لغو',
+    ok: 'تأیید',
+  },
   profile: {
     role: 'نقش',
     catalogSync: 'همگام‌سازی کاتالوگ',
