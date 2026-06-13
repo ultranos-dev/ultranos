@@ -6,6 +6,7 @@ import * as Updates from 'expo-updates'
 export type Lang = 'en' | 'prs' | 'ps' | 'ar'
 
 const RTL_LANGS: ReadonlySet<Lang> = new Set(['prs', 'ps', 'ar'])
+const VALID_LANGS: ReadonlySet<string> = new Set(['en', 'prs', 'ps', 'ar'])
 const LANG_KEY = '@pharmopedia/lang'
 
 export function isRtlLang(lang: Lang): boolean {
@@ -24,8 +25,16 @@ export const useLangStore = create<LangState>((set, get) => ({
   initialized: false,
 
   async init() {
-    const saved = await SecureStore.getItemAsync(LANG_KEY)
-    const lang = (saved as Lang | null) ?? 'en'
+    if (get().initialized) return
+    let lang: Lang = 'en'
+    try {
+      const saved = await SecureStore.getItemAsync(LANG_KEY)
+      if (saved && VALID_LANGS.has(saved)) {
+        lang = saved as Lang
+      }
+    } catch {
+      // SecureStore unavailable (keychain reset, first launch, test env) — default to 'en'
+    }
     I18nManager.allowRTL(true)
     I18nManager.forceRTL(isRtlLang(lang))
     set({ lang, initialized: true })

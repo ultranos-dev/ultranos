@@ -27,6 +27,7 @@ describe('isRtlLang', () => {
 
 describe('useLangStore.init', () => {
   beforeEach(async () => {
+    useLangStore.setState({ lang: 'en', initialized: false })
     const { getItemAsync } = await import('expo-secure-store') as { getItemAsync: ReturnType<typeof vi.fn> }
     getItemAsync.mockResolvedValue(null)
   })
@@ -46,6 +47,10 @@ describe('useLangStore.init', () => {
 })
 
 describe('useLangStore.setLang', () => {
+  beforeEach(() => {
+    useLangStore.setState({ lang: 'en', initialized: true })
+  })
+
   it('persists lang to SecureStore', async () => {
     const { setItemAsync } = await import('expo-secure-store') as { setItemAsync: ReturnType<typeof vi.fn> }
     await useLangStore.getState().setLang('prs')
