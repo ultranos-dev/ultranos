@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite'
 import { openDatabase } from '@/db/migrations'
+import { SCHEMA_VERSION } from '@/db/schema'
 
 // expo-sqlite's NativeDatabase is a JSI native class that cannot run in Node.js/Jest.
 // The manual mock at __mocks__/expo-sqlite.js wraps better-sqlite3 with the same
@@ -41,7 +42,7 @@ describe('schema migrations', () => {
 
   it('sets user_version to SCHEMA_VERSION after migration', async () => {
     const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version')
-    expect(result?.user_version).toBe(1)
+    expect(result?.user_version).toBe(SCHEMA_VERSION)
   })
 
   it('FTS5 MATCH query returns matching row after insert', async () => {

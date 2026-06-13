@@ -14,9 +14,16 @@ export async function openDatabase(
   name = DB_NAME,
   existingDb?: SQLite.SQLiteDatabase,
 ): Promise<SQLite.SQLiteDatabase> {
-  const db = existingDb ?? await SQLite.openDatabaseAsync(name)
+  // For test injection — always use the provided db directly
+  if (existingDb) {
+    await runMigrations(existingDb)
+    return existingDb
+  }
+  // Singleton guard — prevent double-open and connection leaks
+  if (_db) return _db
+  const db = await SQLite.openDatabaseAsync(name)
   await runMigrations(db)
-  if (!existingDb) _db = db
+  _db = db
   return db
 }
 
@@ -31,10 +38,13 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   const currentVersion = result?.user_version ?? 0
 
   if (currentVersion < 1) {
-    await db.execAsync(CREATE_SCHEMA_SQL)
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      await txn.execAsync(CREATE_SCHEMA_SQL)
+    })
+    // PRAGMA user_version must be set outside the transaction
     await db.execAsync('PRAGMA user_version = 1')
   }
-  // Future: if (currentVersion < 2) { await db.execAsync(MIGRATION_V2_SQL) ... }
+  // Future: if (currentVersion < 2) { ... }
 }
 
 // Re-export for consumers who need it without importing schema directly

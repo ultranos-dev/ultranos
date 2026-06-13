@@ -63,6 +63,15 @@ class MockSQLiteDatabase {
     const stmt = this._db.prepare(sql)
     return stmt.all(params)
   }
+
+  /**
+   * withExclusiveTransactionAsync wraps a callback in a transaction.
+   * better-sqlite3 transactions are synchronous; we pass `this` as the
+   * transaction object since the mock API is identical to the db API.
+   */
+  async withExclusiveTransactionAsync(callback) {
+    await callback(this)
+  }
 }
 
 /**
