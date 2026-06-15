@@ -1,18 +1,27 @@
-import { View, Text, Pressable, StyleSheet, SafeAreaView, Alert } from 'react-native'
+import { View, Text, Pressable, StyleSheet, Alert } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/auth-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
+import { useThemeStore, type ThemeMode } from '@/store/theme-store'
 import { runSync } from '@/sync/catalog-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
+import { Colors, FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'EN' },
   { value: 'prs', label: 'دری' },
   { value: 'ps', label: 'پښتو' },
   { value: 'ar', label: 'عربي' },
+]
+
+const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
+  { value: 'light', labelKey: 'profile.themeLight' },
+  { value: 'dark', labelKey: 'profile.themeDark' },
+  { value: 'system', labelKey: 'profile.themeSystem' },
 ]
 
 export default function ProfileTab() {
@@ -26,14 +35,18 @@ export default function ProfileTab() {
   const lastVersion = useSyncStore((s) => s.lastVersion)
   const setStatus = useSyncStore((s) => s.setStatus)
   const setLastSync = useSyncStore((s) => s.setLastSync)
+  const setSyncedCount = useSyncStore((s) => s.setSyncedCount)
   const lang = useLangStore((s) => s.lang)
   const setLang = useLangStore((s) => s.setLang)
+  const themeMode = useThemeStore((s) => s.mode)
+  const setThemeMode = useThemeStore((s) => s.setMode)
 
   async function handleSyncNow() {
     if (!token || status === 'syncing') return
     setStatus('syncing')
+    setSyncedCount(0)
     try {
-      const { version } = await runSync(getDatabase(), token)
+      const { version } = await runSync(getDatabase(), token, setSyncedCount)
       setLastSync(version, new Date().toISOString())
     } catch {
       setStatus('error')
@@ -100,6 +113,24 @@ export default function ProfileTab() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.label}>{t('profile.appearance')}</Text>
+        <View style={styles.themeRow}>
+          {THEME_OPTIONS.map((opt) => (
+            <Pressable
+              key={opt.value}
+              testID={`theme-${opt.value}`}
+              style={[styles.themeBtn, themeMode === opt.value && styles.themeBtnActive]}
+              onPress={() => void setThemeMode(opt.value)}
+            >
+              <Text style={[styles.themeText, themeMode === opt.value && styles.themeTextActive]}>
+                {t(opt.labelKey)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.label}>{t('profile.catalogSync')}</Text>
         <Text testID="last-synced-text" style={styles.value}>{formatSyncTime(lastSyncAt)}</Text>
         <Text style={styles.value}>{t('profile.version', { number: lastVersion })}</Text>
@@ -131,21 +162,58 @@ export default function ProfileTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb', padding: 20 },
-  section: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, gap: 8 },
-  label: { fontSize: 13, fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  value: { fontSize: 15, color: '#374151' },
-  facility: { fontSize: 14, color: '#6b7280', marginTop: 4 },
-  syncing: { fontSize: 14, color: '#2563eb' },
-  error: { fontSize: 14, color: '#dc2626' },
-  langRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  langBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#d1d5db' },
-  langBtnActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  langText: { fontSize: 14, color: '#374151' },
-  langTextActive: { color: '#fff', fontWeight: '600' },
-  button: { backgroundColor: '#2563eb', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 8 },
+  container: { flex: 1, backgroundColor: Colors.neutral50, padding: Spacing[5] },
+  section: {
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    padding: Spacing[4],
+    marginBottom: Spacing[4],
+    gap: Spacing[2],
+  },
+  label: {
+    fontSize: 13,
+    fontFamily: FontFamily.sansBold,
+    color: Colors.neutral500,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  value: { fontSize: 15, fontFamily: FontFamily.sans, color: Colors.neutral700 },
+  facility: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.neutral500, marginTop: 4 },
+  syncing: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.primary500 },
+  error: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.danger },
+  themeRow: { flexDirection: 'row', gap: Spacing[2] },
+  themeBtn: {
+    flex: 1,
+    paddingVertical: Spacing[2],
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.neutral200,
+    alignItems: 'center',
+  },
+  themeBtnActive: { backgroundColor: Colors.primary500, borderColor: Colors.primary500 },
+  themeText: { fontSize: 14, fontFamily: FontFamily.sansMedium, color: Colors.neutral700 },
+  themeTextActive: { color: Colors.white },
+  langRow: { flexDirection: 'row', gap: Spacing[2], flexWrap: 'wrap' },
+  langBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.neutral200,
+  },
+  langBtnActive: { backgroundColor: Colors.primary500, borderColor: Colors.primary500 },
+  langText: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.neutral700 },
+  langTextActive: { color: Colors.white, fontFamily: FontFamily.sansSemibold },
+  button: {
+    backgroundColor: Colors.primary500,
+    borderRadius: Radius.md,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: Spacing[2],
+  },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  logoutButton: { backgroundColor: '#fee2e2' },
-  logoutText: { color: '#b91c1c' },
+  buttonText: { color: Colors.white, fontFamily: FontFamily.sansSemibold, fontSize: 15 },
+  logoutButton: { backgroundColor: Colors.dangerLight },
+  logoutText: { color: Colors.dangerDark },
 })

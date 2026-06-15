@@ -90,7 +90,14 @@ const AccessibilityInfo = {
   announceForAccessibility: () => {},
 }
 
+const Appearance = {
+  getColorScheme: () => 'light',
+  addChangeListener: () => ({ remove: () => {} }),
+  setColorScheme: () => {},
+}
+
 module.exports = {
+  Appearance,
   View,
   Text,
   TextInput,
@@ -136,4 +143,7 @@ module.exports = {
   StatusBar: { setBarStyle: () => {}, setBackgroundColor: () => {} },
   useColorScheme: () => 'light',
   useWindowDimensions: () => ({ width: 375, height: 812 }),
+  Share: {
+    share: async (_content, _options) => ({ action: 'sharedAction', activityType: undefined }),
+  },
 }
