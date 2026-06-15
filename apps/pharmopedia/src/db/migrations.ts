@@ -27,6 +27,11 @@ export async function openDatabase(
   return db
 }
 
+/** Returns true if the database has been successfully opened. */
+export function isDatabaseReady(): boolean {
+  return _db !== null
+}
+
 /** Get the already-opened database instance. Throws if openDatabase() was not called. */
 export function getDatabase(): SQLite.SQLiteDatabase {
   if (!_db) throw new Error('Database not initialised — call openDatabase() first')

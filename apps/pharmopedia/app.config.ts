@@ -9,6 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: { bundler: 'metro', output: 'single' },
   plugins: [
     'expo-router',
+    'expo-font',
     'expo-sqlite',
     'expo-secure-store',
     ['expo-location', { locationAlwaysAndWhenInUsePermission: 'Allow Pharmopedia to use your location to find nearby pharmacies.' }],

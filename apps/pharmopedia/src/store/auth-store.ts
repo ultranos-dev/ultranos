@@ -3,6 +3,7 @@ import type * as SQLite from 'expo-sqlite'
 import { clearCatalog } from '@/db/drug-catalog'
 import { clearBookmarks } from '@/db/bookmarks'
 import { useSyncStore } from './sync-store'
+import { useBookmarkStore } from './bookmark-store'
 import { supabase } from '@/lib/supabase'
 
 export interface AuthUser {
@@ -46,6 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async (db) => {
     set({ token: null, user: null, isAuthenticated: false })
     useSyncStore.getState().reset()
+    useBookmarkStore.getState().reset()
     await clearCatalog(db)
     await clearBookmarks(db)
   },

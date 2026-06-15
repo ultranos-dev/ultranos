@@ -29,7 +29,7 @@ export async function pinnedFetch(
   url: string,
   options: PinnedFetchOptions = {},
 ): Promise<PinnedFetchResponse> {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === 'web' || __DEV__) {
     return webFallback(url, options)
   }
   return mobilePinnedFetch(url, options)
