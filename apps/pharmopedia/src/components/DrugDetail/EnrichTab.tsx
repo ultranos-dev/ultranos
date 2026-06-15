@@ -6,6 +6,8 @@ import { upsertDrugBatch } from '@/db/drug-catalog'
 import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { hapticNotification } from '@/lib/haptics'
+import { NotificationFeedbackType } from 'expo-haptics'
 
 const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN'])
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH'])
@@ -56,8 +58,10 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
       const updated = await enrichDrugApi(atcCode, fields, token)
       await upsertDrugBatch(getDatabase(), [updated])
       setSuccess(true)
+      void hapticNotification(NotificationFeedbackType.Success)
     } catch {
       setError(t('enrich.saveError'))
+      void hapticNotification(NotificationFeedbackType.Error)
     }
     setLoading(false)
   }
