@@ -11,8 +11,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@/app': path.resolve(__dirname, 'app'),
       '@': path.resolve(__dirname, 'src'),
       '@ultranos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      '@ultranos/ui-kit/components/ui/empty-state': path.resolve(__dirname, '../../packages/ui-kit/src/components/ui/empty-state.native.tsx'),
+      '@ultranos/ui-kit/tokens.native': path.resolve(__dirname, '../../packages/ui-kit/src/tokens.native.ts'),
       // Alias react-native to a node-compatible mock so vitest can load it.
       // The actual Flow-typed react-native/index.js uses `import typeof` syntax
       // which Node cannot parse. Component tests use vi.mock() for component-level
