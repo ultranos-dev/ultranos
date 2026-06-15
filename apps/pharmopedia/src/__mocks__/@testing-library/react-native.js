@@ -91,6 +91,35 @@ function queryByText(instance, text) {
   return found
 }
 
+function queryByRole(instance, role) {
+  let found = null
+  function search(node) {
+    if (!node) return
+    if (node.props && node.props.accessibilityRole === role) { found = node; return }
+    if (node.children) node.children.forEach(search)
+  }
+  const json = instance.toJSON()
+  // toJSON may return an array for fragments
+  if (Array.isArray(json)) {
+    json.forEach(search)
+  } else {
+    search(json)
+  }
+  return found ? normalizeNode(found) : null
+}
+
+function queryByLabelText(instance, label) {
+  let found = null
+  function search(node) {
+    if (!node) return
+    if (node.props && node.props.accessibilityLabel === label) { found = node; return }
+    if (node.children) node.children.forEach(search)
+  }
+  const json = instance.toJSON()
+  search(json)
+  return found ? normalizeNode(found) : null
+}
+
 function queryByPlaceholderText(instance, placeholder) {
   let found = null
   function search(node) {
@@ -123,6 +152,18 @@ const screen = {
   },
   queryByTestId: (testID) => queryByTestId(_currentInstance, testID),
   queryByText: (text) => queryByText(_currentInstance, text),
+  getByLabelText: (label) => {
+    const result = queryByLabelText(_currentInstance, label)
+    if (!result) throw new Error(`Unable to find an element with accessibilityLabel: ${label}`)
+    return result
+  },
+  queryByLabelText: (label) => queryByLabelText(_currentInstance, label),
+  getByRole: (role) => {
+    const result = queryByRole(_currentInstance, role)
+    if (!result) throw new Error(`Unable to find an element with role: ${role}`)
+    return result
+  },
+  queryByRole: (role) => queryByRole(_currentInstance, role),
 }
 
 function render(element) {
@@ -134,6 +175,7 @@ function render(element) {
   _currentInstance = instance
   return {
     instance,
+    toJSON: () => instance.toJSON(),
     getByTestId: (testID) => {
       const result = queryByTestId(instance, testID)
       if (!result) throw new Error(`Unable to find an element with testID: ${testID}`)
@@ -146,6 +188,18 @@ function render(element) {
       return result
     },
     queryByText: (text) => queryByText(instance, text),
+    getByLabelText: (label) => {
+      const result = queryByLabelText(instance, label)
+      if (!result) throw new Error(`Unable to find an element with accessibilityLabel: ${label}`)
+      return result
+    },
+    queryByLabelText: (label) => queryByLabelText(instance, label),
+    getByRole: (role) => {
+      const result = queryByRole(instance, role)
+      if (!result) throw new Error(`Unable to find an element with role: ${role}`)
+      return result
+    },
+    queryByRole: (role) => queryByRole(instance, role),
   }
 }
 
