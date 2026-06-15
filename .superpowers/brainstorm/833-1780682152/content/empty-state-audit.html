@@ -1,0 +1,81 @@
+<h2>Current Empty State Patterns</h2>
+<p class="subtitle">5 different visual patterns exist today — no standard across apps</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;">
+
+  <!-- Pattern 1 -->
+  <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--muted);padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);">Pattern A · Pharmacy Lite (only reusable component)</div>
+    <div style="padding:16px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:color-mix(in srgb,var(--primary) 12%,transparent);display:flex;align-items:center;justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--foreground);">No dispensing activity</div>
+        <div style="font-size:11px;color:var(--muted-foreground);max-width:200px;">Dispensed prescriptions will appear here.</div>
+        <div style="margin-top:4px;padding:5px 14px;background:var(--primary);color:var(--primary-foreground);border-radius:6px;font-size:11px;font-weight:600;">Add Item</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Icon</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Heading</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Body</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ CTA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern 2 -->
+  <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--muted);padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);">Pattern B · Admin Portal (dashed border)</div>
+    <div style="padding:16px;">
+      <div style="background:var(--card);border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;">
+        <div style="font-size:13px;color:var(--muted-foreground);">No pending KYC submissions</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No icon</span>
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No heading</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Body</span>
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No CTA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern 3 -->
+  <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--muted);padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);">Pattern C · Lab Lite (icon + muted bg)</div>
+    <div style="padding:16px;">
+      <div style="background:color-mix(in srgb,var(--muted) 40%,transparent);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+        <div style="font-size:12px;font-weight:500;color:var(--muted-foreground);">No samples in queue</div>
+        <div style="font-size:11px;color:var(--muted-foreground);opacity:0.7;">Received samples will appear here automatically.</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Icon</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Heading</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Body</span>
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No CTA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern 4 -->
+  <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+    <div style="background:var(--muted);padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);">Pattern D · OPD Lite (text only, no container)</div>
+    <div style="padding:16px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+        <div style="padding:16px 0;text-align:center;font-size:12px;color:var(--muted-foreground);">No lab results available for this patient.</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No icon</span>
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No heading</span>
+        <span style="background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✓ Body</span>
+        <span style="background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">✗ No CTA</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;padding:14px 16px;background:color-mix(in srgb,var(--warning,#f59e0b) 12%,transparent);border:1px solid color-mix(in srgb,var(--warning,#f59e0b) 30%,transparent);border-radius:10px;font-size:12px;color:var(--foreground);">
+  <strong>5 patterns, 0 standards.</strong> No shared component exists in the ui-kit. Only pharmacy-lite has a reusable component — not shared with the other 3 apps. Padding, icons, borders, and text weight are all inconsistent.
+</div>

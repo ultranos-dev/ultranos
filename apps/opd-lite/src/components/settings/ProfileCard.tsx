@@ -1,12 +1,13 @@
 'use client'
 
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Card } from '@/components/Card'
 
 function getInitials(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w[0].toUpperCase())
+    .map((w) => w[0]!.toUpperCase())
     .slice(0, 2)
     .join('')
 }
@@ -21,38 +22,38 @@ export function ProfileCard() {
 
   if (!session) return null
 
-  const displayName = session.name || session.email?.split('@')[0] || 'Unknown'
+  const displayName = session.email?.split('@')[0] || 'Unknown'
   const initials = getInitials(displayName)
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
-      <h2 className="mb-4 text-sm font-semibold text-neutral-900">Profile</h2>
+    <Card>
+      <h2 className="mb-4 text-sm font-semibold text-foreground">Profile</h2>
 
       <div className="flex items-start gap-4">
         {/* Initials avatar */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary">
           {initials}
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
           <div>
-            <p className="text-xs font-medium text-neutral-500">Name</p>
-            <p className="text-sm text-neutral-900">{displayName}</p>
+            <p className="text-xs font-medium text-muted-foreground">Name</p>
+            <p className="text-sm text-foreground">{displayName}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Role</p>
-            <p className="text-sm text-neutral-900">{formatRole(session.role)}</p>
+            <p className="text-xs font-medium text-muted-foreground">Role</p>
+            <p className="text-sm text-foreground">{formatRole(session.role)}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">ID</p>
-            <p className="text-sm font-mono text-neutral-900">{session.practitionerId}</p>
+            <p className="text-xs font-medium text-muted-foreground">ID</p>
+            <p className="text-sm font-mono text-foreground">{session.practitionerId}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">Email</p>
-            <p className="text-sm text-neutral-900">{session.email || '—'}</p>
+            <p className="text-xs font-medium text-muted-foreground">Email</p>
+            <p className="text-sm text-foreground">{session.email || '—'}</p>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

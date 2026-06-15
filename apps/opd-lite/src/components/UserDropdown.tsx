@@ -13,12 +13,13 @@ import { clearSigningKeys } from '@/lib/signing-key-store'
 import { clearPhiTables } from '@/lib/phi-cleanup'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { Button } from '@/components/ui/Button'
 
 function getInitials(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => w[0].toUpperCase())
+    .map((w) => w[0]!.toUpperCase())
     .slice(0, 2)
     .join('')
 }
@@ -72,22 +73,22 @@ export function UserDropdown() {
 
   if (!session) return null
 
-  const displayName = session.name || session.email?.split('@')[0] || 'User'
+  const displayName = session.email?.split('@')[0] || 'User'
   const initials = getInitials(displayName)
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        type="button"
+      <Button
+        variant="icon"
+        className="h-9 w-9 bg-primary text-sm font-bold text-primary hover:bg-primary"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="User menu"
         aria-expanded={isOpen}
         aria-haspopup="menu"
         data-testid="user-dropdown-trigger"
       >
         {initials}
-      </button>
+      </Button>
 
       {isOpen && (
         <>
@@ -109,31 +110,31 @@ export function UserDropdown() {
           `}</style>
           <div
             role="menu"
-            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg"
+            className="dropdown-enter absolute end-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl bg-background/70 backdrop-blur-md ring-[0.65px] ring-border/50 shadow-lg"
             data-testid="user-dropdown-menu"
           >
-            <div className="border-b border-neutral-100 px-4 py-3">
-              <p className="text-sm font-medium text-neutral-900">{displayName}</p>
-              <p className="text-xs text-neutral-500">{session.email}</p>
+            <div className="border-b border-border px-4 py-3">
+              <p className="text-sm font-medium text-foreground">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{session.email}</p>
             </div>
             <div className="py-1">
               <a
                 href="/settings"
                 role="menuitem"
-                className="block px-4 py-2 text-sm text-neutral-700 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                className="block px-4 py-2 text-sm text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted"
                 data-testid="settings-link"
               >
                 Settings
               </a>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 role="menuitem"
                 onClick={handleLogout}
-                className="block w-full px-4 py-2 text-start text-sm text-red-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50"
+                className="w-full justify-start px-4 py-2 text-destructive hover:bg-muted"
                 data-testid="logout-btn"
               >
                 Logout
-              </button>
+              </Button>
             </div>
           </div>
         </>

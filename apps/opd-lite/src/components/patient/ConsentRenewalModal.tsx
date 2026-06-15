@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 
 interface ConsentRenewalModalProps {
   patientId: string
@@ -65,12 +66,12 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div
-        className="rounded-xl bg-white p-6 max-w-md w-full shadow-xl"
+        className="rounded-xl bg-background p-6 max-w-md w-full shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="consent-renewal-title"
       >
-        <h2 id="consent-renewal-title" className="text-lg font-bold text-neutral-900 mb-4">
+        <h2 id="consent-renewal-title" className="text-lg font-bold text-foreground mb-4">
           {/* TODO: t('consent.renewTitle') */}
           Renew Patient Consent
         </h2>
@@ -78,7 +79,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Method */}
           <div>
-            <label htmlFor="consent-method" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-method" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.methodLabel') */}
               Method
             </label>
@@ -86,7 +87,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               id="consent-method"
               value={method}
               onChange={(e) => setMethod(e.target.value as 'WRITTEN' | 'VERBAL_WITNESSED')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
               <option value="WRITTEN">Written</option>
               <option value="VERBAL_WITNESSED">Verbal (Witnessed)</option>
@@ -96,7 +97,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
           {/* Witness (required if verbal) */}
           {method === 'VERBAL_WITNESSED' && (
             <div>
-              <label htmlFor="consent-witness" className="block text-sm font-medium text-neutral-700 mb-1">
+              <label htmlFor="consent-witness" className="block text-sm font-medium text-foreground mb-1">
                 {/* TODO: t('consent.witnessLabel') */}
                 Witness ID
               </label>
@@ -107,14 +108,14 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
                 value={witnessedBy}
                 onChange={(e) => setWitnessedBy(e.target.value)}
                 placeholder="UUID of witnessing practitioner"
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
               />
             </div>
           )}
 
           {/* Language */}
           <div>
-            <label htmlFor="consent-language" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-language" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.languageLabel') */}
               Language
             </label>
@@ -122,7 +123,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               id="consent-language"
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'en' | 'ar' | 'prs')}
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             >
               <option value="en">English</option>
               <option value="ar">Arabic</option>
@@ -132,7 +133,7 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
 
           {/* Version */}
           <div>
-            <label htmlFor="consent-version" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="consent-version" className="block text-sm font-medium text-foreground mb-1">
               {/* TODO: t('consent.versionLabel') */}
               Version
             </label>
@@ -143,33 +144,33 @@ export function ConsentRenewalModal({ patientId, onClose, onRenewed }: ConsentRe
               value={version}
               onChange={(e) => setVersion(e.target.value)}
               placeholder="e.g. 2.0"
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-warning focus:outline-none focus:ring-1 focus:ring-warning"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {error}
             </p>
           )}
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button
+            <Button
+              variant="outline"
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-40"
             >
               {/* TODO: t('consent.cancel') */}
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="warning"
               type="submit"
               disabled={submitting || !version.trim()}
-              className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:opacity-40"
             >
               {submitting ? 'Renewing...' : 'Renew Consent'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

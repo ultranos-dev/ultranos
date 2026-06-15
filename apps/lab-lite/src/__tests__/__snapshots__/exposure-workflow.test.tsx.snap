@@ -1,0 +1,231 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ExposureWorkflow — RTL layout snapshot > renders LTR snapshot of step 1 1`] = `
+<div>
+  <div
+    aria-modal="true"
+    dir="auto"
+    role="dialog"
+    style="position: fixed; inset: 0; z-index: 10000; background-color: rgb(255, 255, 255); display: flex; flex-direction: column; overflow: auto;"
+  >
+    <div
+      style="background-color: rgb(220, 38, 38); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;"
+    >
+      <div>
+        <div
+          style="font-size: 1.125rem; font-weight: 700;"
+        >
+          workflow.title
+           — 
+          Needle-stick / Sharp Injury
+        </div>
+        <div
+          style="font-size: 0.875rem; opacity: 0.9;"
+        >
+          workflow.step(current=1,total=6)
+        </div>
+      </div>
+      <div
+        style="display: flex; gap: 0.25rem;"
+      >
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: white;"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+      </div>
+    </div>
+    <div
+      style="flex: 1 1 0%; padding: 1.5rem; max-width: 40rem; margin: 0px auto; width: 100%;"
+    >
+      <h2
+        style="font-size: 1.5rem; font-weight: 700; color: rgb(17, 24, 39); margin: 0px 0px 1rem 0px;"
+      >
+        workflow.steps.firstAid
+      </h2>
+      <div>
+        <p
+          style="font-size: 1.125rem; color: rgb(220, 38, 38); line-height: 1.6; margin-bottom: 1rem; font-weight: 600;"
+        >
+          firstAid.title
+        </p>
+        <ol
+          style="padding-inline-start: 1.5rem; margin: 0px;"
+        >
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Immediately wash the wound with soap and water for at least 15 seconds
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Do not squeeze or suck the wound
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Allow the wound to bleed freely for a few seconds
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Apply an antiseptic (e.g. iodine solution or 70% alcohol) to the wound
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Cover the wound with a sterile dressing
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Report to your supervisor immediately
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Proceed to source patient identification
+          </li>
+        </ol>
+        <button
+          style="background-color: rgb(22, 163, 74); color: white; border-radius: 0.5rem; padding: 1rem 2rem; font-size: 1.125rem; font-weight: 700; cursor: pointer; min-height: 56px; width: 100%; margin-top: 1.5rem;"
+          type="button"
+        >
+          firstAid.confirm
+           — 
+          workflow.next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ExposureWorkflow — RTL layout snapshot > renders RTL snapshot of step 1 — dir=auto adapts to document direction 1`] = `
+<div>
+  <div
+    aria-modal="true"
+    dir="auto"
+    role="dialog"
+    style="position: fixed; inset: 0; z-index: 10000; background-color: rgb(255, 255, 255); display: flex; flex-direction: column; overflow: auto;"
+  >
+    <div
+      style="background-color: rgb(220, 38, 38); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;"
+    >
+      <div>
+        <div
+          style="font-size: 1.125rem; font-weight: 700;"
+        >
+          workflow.title
+           — 
+          Needle-stick / Sharp Injury
+        </div>
+        <div
+          style="font-size: 0.875rem; opacity: 0.9;"
+        >
+          workflow.step(current=1,total=6)
+        </div>
+      </div>
+      <div
+        style="display: flex; gap: 0.25rem;"
+      >
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: white;"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+        <div
+          style="width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.4);"
+        />
+      </div>
+    </div>
+    <div
+      style="flex: 1 1 0%; padding: 1.5rem; max-width: 40rem; margin: 0px auto; width: 100%;"
+    >
+      <h2
+        style="font-size: 1.5rem; font-weight: 700; color: rgb(17, 24, 39); margin: 0px 0px 1rem 0px;"
+      >
+        workflow.steps.firstAid
+      </h2>
+      <div>
+        <p
+          style="font-size: 1.125rem; color: rgb(220, 38, 38); line-height: 1.6; margin-bottom: 1rem; font-weight: 600;"
+        >
+          firstAid.title
+        </p>
+        <ol
+          style="padding-inline-start: 1.5rem; margin: 0px;"
+        >
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Immediately wash the wound with soap and water for at least 15 seconds
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Do not squeeze or suck the wound
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Allow the wound to bleed freely for a few seconds
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Apply an antiseptic (e.g. iodine solution or 70% alcohol) to the wound
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Cover the wound with a sterile dressing
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Report to your supervisor immediately
+          </li>
+          <li
+            style="font-size: 1.125rem; color: rgb(31, 41, 55); line-height: 1.6; margin-bottom: 0.75rem;"
+          >
+            Proceed to source patient identification
+          </li>
+        </ol>
+        <button
+          style="background-color: rgb(22, 163, 74); color: white; border-radius: 0.5rem; padding: 1rem 2rem; font-size: 1.125rem; font-weight: 700; cursor: pointer; min-height: 56px; width: 100%; margin-top: 1.5rem;"
+          type="button"
+        >
+          firstAid.confirm
+           — 
+          workflow.next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;

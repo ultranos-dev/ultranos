@@ -3,6 +3,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { generateSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
 
@@ -15,11 +17,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     setPathname(window.location.pathname)
   }, [])
 
-  const isLoginPage = pathname === '/login'
+  const isPublicPage = pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password'
   const isKycPage = pathname === '/kyc'
 
   useEffect(() => {
-    if (!pathname || isLoginPage) return
+    if (!pathname || isPublicPage) return
 
     let cancelled = false
 
@@ -40,14 +42,19 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         if (!useAuthSessionStore.getState().isAuthenticated) {
           try {
             const jwt = data.session.access_token
-            const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+            const base64 = jwt.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/')
             const payload = JSON.parse(atob(base64))
             useAuthSessionStore.getState().setSession({
               userId: payload.sub,
               practitionerId: payload.practitioner_id ?? payload.sub,
-              role: payload.role ?? '',
+              role: (payload.role !== 'authenticated' ? payload.role : null) ?? data.session.user?.user_metadata?.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
+              name: (() => {
+                const m = data.session.user?.user_metadata
+                return m?.full_name ?? m?.name ??
+                  ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+              })(),
               kycStatus: payload.kyc_status ?? payload.app_metadata?.kyc_status,
             })
           } catch {
@@ -56,6 +63,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             window.location.href = `/login?returnUrl=${returnUrl}`
             return
           }
+        }
+
+        // Ensure encryption key exists (lost on page refresh since it's memory-only)
+        if (!encryptionKeyStore.isReady()) {
+          const encKey = await generateSessionKey()
+          encryptionKeyStore.setKey(encKey)
         }
 
         // Story 22.5 AC #8: Redirect PENDING_VERIFICATION/REJECTED/REQUEST_MORE_INFO to KYC page
@@ -88,7 +101,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [pathname, isLoginPage])
+  }, [pathname, isPublicPage])
 
   useEntitlementCheck('OPD_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -99,7 +112,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }
 
-  if (isLoginPage) return <>{children}</>
+  if (isPublicPage) return <>{children}</>
   // KYC page: session check still runs (auth verified), but skip entitlement gate
   if (isKycPage && ready) return <>{children}</>
   if (!ready) return null

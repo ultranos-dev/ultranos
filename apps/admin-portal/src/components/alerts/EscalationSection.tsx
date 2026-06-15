@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 
 interface AdminUser {
   id: string
@@ -62,13 +65,13 @@ export function EscalationSection({
     async function loadAdmins() {
       try {
         const result = await trpc.admin.listUsers.query({
-          page: 1,
-          pageSize: 50,
-          roleFilter: 'ADMIN',
-          statusFilter: 'ACTIVE',
+          cursor: 0,
+          limit: 50,
+          role: 'ADMIN',
+          status: 'ACTIVE',
         })
         setAdminUsers(
-          result.users.map((u: any) => ({ id: u.id, name: u.name ?? u.email })),
+          result.users.map((u: { id: string; name?: string; email: string }) => ({ id: u.id, name: u.name ?? u.email })),
         )
       } catch {
         // Non-blocking
@@ -84,8 +87,8 @@ export function EscalationSection({
       await trpc.admin.resolveAnomaly.mutate({ alertId, resolutionNote: resolveNote })
       setShowResolveForm(false)
       onResolve()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to resolve alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to resolve alert')
     } finally {
       setResolving(false)
     }
@@ -98,8 +101,8 @@ export function EscalationSection({
       await trpc.admin.reassignAnomaly.mutate({ alertId, assigneeId: newAssigneeId })
       setShowReassign(false)
       onReassign()
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to reassign alert')
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to reassign alert')
     } finally {
       setReassigning(false)
     }
@@ -107,52 +110,52 @@ export function EscalationSection({
 
   const statusBadge =
     status === 'ESCALATED' ? (
-      <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">Escalated</span>
+      <Badge variant="warning">Escalated</Badge>
     ) : (
-      <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">Resolved</span>
+      <Badge variant="success">Resolved</Badge>
     )
 
   const priorityBadge = escalationPriority === 'URGENT' ? (
-    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">URGENT</span>
+    <Badge variant="destructive">URGENT</Badge>
   ) : (
-    <span className="inline-block rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">NORMAL</span>
+    <Badge variant="secondary">NORMAL</Badge>
   )
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5">
+    <div className="rounded-3xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Escalation Details</h2>
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Escalation Details</h2>
         {statusBadge}
       </div>
 
       {error && (
-        <div className="mt-3 rounded-xl bg-danger-subtle border border-danger/20 p-3 text-sm text-danger">{error}</div>
+        <div className="mt-3 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <dl className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between">
-          <dt className="text-text-secondary">Assigned to</dt>
+          <dt className="text-muted-foreground">Assigned to</dt>
           <dd className="font-medium">{assigneeName ?? 'Unassigned'}</dd>
         </div>
         <div className="flex justify-between items-center">
-          <dt className="text-text-secondary">Priority</dt>
+          <dt className="text-muted-foreground">Priority</dt>
           <dd>{priorityBadge}</dd>
         </div>
         {escalationNote && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Note</dt>
+            <dt className="text-muted-foreground">Note</dt>
             <dd className="font-medium max-w-xs text-end">{escalationNote}</dd>
           </div>
         )}
         {escalatedByName && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Escalated by</dt>
+            <dt className="text-muted-foreground">Escalated by</dt>
             <dd className="font-medium">{escalatedByName}</dd>
           </div>
         )}
         {escalatedAt && (
           <div className="flex justify-between">
-            <dt className="text-text-secondary">Escalated at</dt>
+            <dt className="text-muted-foreground">Escalated at</dt>
             <dd className="font-medium">{formatDateTime(escalatedAt)}</dd>
           </div>
         )}
@@ -163,19 +166,19 @@ export function EscalationSection({
         <dl className="mt-4 space-y-2 text-sm border-t border-border pt-4">
           {resolutionNote && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolution note</dt>
+              <dt className="text-muted-foreground">Resolution note</dt>
               <dd className="font-medium max-w-xs text-end">{resolutionNote}</dd>
             </div>
           )}
           {resolvedByName && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolved by</dt>
+              <dt className="text-muted-foreground">Resolved by</dt>
               <dd className="font-medium">{resolvedByName}</dd>
             </div>
           )}
           {resolvedAt && (
             <div className="flex justify-between">
-              <dt className="text-text-secondary">Resolved at</dt>
+              <dt className="text-muted-foreground">Resolved at</dt>
               <dd className="font-medium">{formatDateTime(resolvedAt)}</dd>
             </div>
           )}
@@ -185,52 +188,43 @@ export function EscalationSection({
       {/* Action buttons for ESCALATED status */}
       {status === 'ESCALATED' && (
         <div className="mt-4 flex gap-3">
-          <button
-            onClick={() => setShowResolveForm(!showResolveForm)}
-            className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
-          >
+          <Button variant="success" onClick={() => setShowResolveForm(!showResolveForm)}>
             Resolve
-          </button>
-          <button
-            onClick={() => setShowReassign(!showReassign)}
-            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-text-primary hover:bg-surface hover:scale-[1.02] transition-transform duration-200"
-          >
+          </Button>
+          <Button variant="outline" onClick={() => setShowReassign(!showReassign)}>
             Re-assign
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Inline resolve form */}
       {showResolveForm && (
         <div className="mt-4 rounded-xl border border-border p-4">
-          <label htmlFor="resolution-note" className="block text-sm font-medium text-text-primary">
-            Resolution Note <span className="text-danger">*</span>
+          <label htmlFor="resolution-note" className="block text-sm font-medium text-foreground">
+            Resolution Note <span className="text-destructive">*</span>
           </label>
-          <textarea
+          <Textarea
             id="resolution-note"
             value={resolveNote}
             onChange={(e) => setResolveNote(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1"
             placeholder="Describe how this was resolved..."
           />
           {resolveNote.length > 0 && resolveNote.trim().length < 10 && (
-            <p className="mt-1 text-xs text-text-secondary">Minimum 10 characters required</p>
+            <p className="mt-1 text-xs text-muted-foreground">Minimum 10 characters required</p>
           )}
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
+              variant="success"
               onClick={handleResolve}
               disabled={resolveNote.trim().length < 10 || resolving}
-              className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-green-700 hover:scale-[1.02] transition-transform duration-200"
             >
               {resolving ? 'Resolving...' : 'Confirm Resolve'}
-            </button>
-            <button
-              onClick={() => setShowResolveForm(false)}
-              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-text-primary hover:bg-surface"
-            >
+            </Button>
+            <Button variant="outline" onClick={() => setShowResolveForm(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -238,7 +232,7 @@ export function EscalationSection({
       {/* Inline reassign dropdown */}
       {showReassign && (
         <div className="mt-4 rounded-xl border border-border p-4">
-          <label htmlFor="reassign-select" className="block text-sm font-medium text-text-primary">
+          <label htmlFor="reassign-select" className="block text-sm font-medium text-foreground">
             Reassign to
           </label>
           <select
@@ -247,19 +241,16 @@ export function EscalationSection({
             onChange={(e) => {
               if (e.target.value) handleReassign(e.target.value)
             }}
-            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+            className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="">Select an admin...</option>
             {adminUsers.map((u) => (
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}
           </select>
-          <button
-            onClick={() => setShowReassign(false)}
-            className="mt-2 text-sm text-text-secondary hover:text-text-primary"
-          >
+          <Button variant="ghost" onClick={() => setShowReassign(false)} className="mt-2">
             Cancel
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { formatFileSize } from '@/lib/format'
+import { X, Upload } from '@ultranos/ui-kit/icons'
 
 const ACCEPTED_TYPES = new Set([
   'application/pdf',
@@ -16,12 +18,6 @@ interface ResultUploadProps {
   uploading?: boolean
   progress?: number
   disabled?: boolean
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 /**
@@ -110,22 +106,16 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
     return (
       <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
         <div className="flex-1">
-          <p className="text-sm font-medium text-neutral-900">{selectedFile.name}</p>
-          <p className="text-xs text-neutral-500">{formatFileSize(selectedFile.size)}</p>
+          <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+          <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
         </div>
         <button
           type="button"
           onClick={handleRemove}
           aria-label="Remove file"
-          className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <X size={20} />
         </button>
       </div>
     )
@@ -141,7 +131,7 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
         className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
           dragOver
             ? 'border-primary-500 bg-primary-50'
-            : 'border-neutral-300 bg-neutral-50 hover:border-primary-400'
+            : 'border-border bg-muted/30 hover:border-primary-400'
         } ${disabled ? 'pointer-events-none opacity-50' : ''}`}
         onClick={() => !disabled && inputRef.current?.click()}
         role="button"
@@ -151,14 +141,12 @@ export function ResultUpload({ onFileSelected, uploading, progress, disabled }: 
           if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <p className="text-sm text-neutral-600">
+        <Upload size={32} className="text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm text-muted-foreground">
           Drag and drop your lab result file here, or{' '}
           <span className="font-semibold text-primary-600">browse files</span>
         </p>
-        <p className="text-xs text-neutral-400">PDF, JPEG, or PNG (max 20 MB)</p>
+        <p className="text-xs text-muted-foreground">PDF, JPEG, or PNG (max 20 MB)</p>
         <input
           ref={inputRef}
           type="file"

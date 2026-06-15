@@ -1,0 +1,279 @@
+<h2>Data Model: Inventory & POS</h2>
+<p class="subtitle">Dexie (local) + Hub API (central) schema design</p>
+
+<div class="section">
+  <h3>Core Entities</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">CatalogItem</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        name: string<br>
+        nameLocal?: string (Arabic/Dari)<br>
+        form: 'tablet' | 'capsule' | 'syrup' | 'injection' | 'cream' | 'drops' | 'inhaler' | 'other'<br>
+        strength: string (e.g. "500mg")<br>
+        strengthUnit: string<br>
+        packSize: number<br>
+        barcode?: string (EAN-13)<br>
+        category: string<br>
+        controlledSchedule?: 'II' | 'III' | 'IV' | 'V'<br>
+        sellingPrice: number<br>
+        reorderPoint: number<br>
+        minStock?: number<br>
+        maxStock?: number<br>
+        isActive: boolean<br>
+        <span style="color: #868685;">// Source: Hub formulary, cached locally</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockBatch</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        catalogItemId: string (FK → CatalogItem)<br>
+        batchNumber: string<br>
+        lotNumber?: string<br>
+        expiryDate: string (ISO date)<br>
+        quantityOnHand: number<br>
+        quantityQuarantined: number<br>
+        costPrice: number (per unit)<br>
+        zoneId?: string (FK → Zone, nullable)<br>
+        supplierId?: string (FK → Supplier)<br>
+        receivedAt: string (ISO timestamp)<br>
+        purchaseOrderId?: string (FK → PurchaseOrder)<br>
+        status: 'active' | 'expired' | 'quarantined' | 'depleted'<br>
+        locationId: string (this pharmacy's ID)<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Indexed: catalogItemId, expiryDate, status, locationId</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockMovement</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        stockBatchId: string (FK → StockBatch)<br>
+        catalogItemId: string (FK → CatalogItem)<br>
+        type: 'received' | 'dispensed' | 'adjusted' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'transferred_out' | 'transferred_in' |<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'quarantined' | 'disposed' | 'returned'<br>
+        quantity: number (positive=in, negative=out)<br>
+        reason?: string (for adjustments)<br>
+        referenceId?: string (dispenseId, PO id, transferId)<br>
+        referenceType?: 'dispense' | 'purchase_order' | 'transfer' | 'count'<br>
+        performedBy: string (practitioner ID)<br>
+        timestamp: string (ISO)<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Append-only ledger — never updated, never deleted</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Supplier</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        name: string<br>
+        contactName?: string<br>
+        phone?: string<br>
+        email?: string<br>
+        address?: string<br>
+        leadTimeDays?: number<br>
+        paymentTerms?: string<br>
+        isActive: boolean<br>
+        createdAt: string<br>
+        <span style="color: #868685;">// Local to pharmacy, synced to Hub for org visibility</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">PurchaseOrder</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        supplierId: string (FK → Supplier)<br>
+        status: 'draft' | 'sent' | 'partially_received' | 'closed' | 'cancelled'<br>
+        items: PurchaseOrderItem[]<br>
+        totalCost: number<br>
+        notes?: string<br>
+        createdBy: string (practitioner ID)<br>
+        createdAt: string<br>
+        sentAt?: string<br>
+        closedAt?: string<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Only created when PO mode enabled</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        PurchaseOrderItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;quantityOrdered: number<br>
+        &nbsp;&nbsp;quantityReceived: number<br>
+        &nbsp;&nbsp;unitCost: number<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #e8ebe6; border-radius: 8px; padding: 16px; background: white;">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">StockTransfer</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        fromLocationId: string<br>
+        toLocationId: string<br>
+        status: 'requested' | 'approved' | 'shipped' | 'received' | 'cancelled'<br>
+        items: TransferItem[]<br>
+        requestedBy: string<br>
+        requestedAt: string<br>
+        shippedAt?: string<br>
+        receivedAt?: string<br>
+        hlcTimestamp: string<br>
+        <span style="color: #868685;">// Syncs through Hub — both locations get the event</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        TransferItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;stockBatchId: string<br>
+        &nbsp;&nbsp;quantity: number<br>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>POS Entities</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Invoice</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        invoiceNumber: string (sequential, per-pharmacy)<br>
+        patientId?: string (FK → Patient)<br>
+        dispenseIds: string[] (linked MedicationDispenses)<br>
+        items: InvoiceLineItem[]<br>
+        subtotal: number<br>
+        taxRate: number<br>
+        taxAmount: number<br>
+        total: number<br>
+        payments: Payment[]<br>
+        amountPaid: number<br>
+        amountDue: number (total - amountPaid)<br>
+        status: 'draft' | 'finalized' | 'paid' | 'partial' | 'voided'<br>
+        createdBy: string<br>
+        createdAt: string<br>
+        hlcTimestamp: string
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        InvoiceLineItem {<br>
+        &nbsp;&nbsp;catalogItemId: string<br>
+        &nbsp;&nbsp;description: string<br>
+        &nbsp;&nbsp;quantity: number<br>
+        &nbsp;&nbsp;unitPrice: number<br>
+        &nbsp;&nbsp;lineTotal: number<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">Payment</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        invoiceId: string (FK → Invoice)<br>
+        method: 'cash' | 'card' | 'credit'<br>
+        amount: number<br>
+        reference?: string (card auth code, etc.)<br>
+        receivedBy: string (practitioner ID)<br>
+        timestamp: string<br>
+        <span style="color: #868685;">// credit payments create/update PatientLedger entry</span>
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">PatientLedger</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        patientId: string (FK → Patient)<br>
+        entries: LedgerEntry[]<br>
+        balance: number (positive = patient owes)<br>
+        creditLimit?: number<br>
+        lastActivityAt: string<br>
+        <span style="color: #868685;">// Append-only entries, derived balance</span>
+      </div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #868685; margin-top: 8px; border-top: 1px solid #e8ebe6; padding-top: 8px;">
+        LedgerEntry {<br>
+        &nbsp;&nbsp;type: 'charge' | 'payment' | 'adjustment'<br>
+        &nbsp;&nbsp;amount: number<br>
+        &nbsp;&nbsp;invoiceId?: string<br>
+        &nbsp;&nbsp;note?: string<br>
+        &nbsp;&nbsp;timestamp: string<br>
+        }
+      </div>
+    </div>
+
+    <div style="border: 1px solid #ffd11a; border-radius: 8px; padding: 16px; background: rgba(255,209,26,0.03);">
+      <div style="font-weight: 700; color: #0e0f0c; margin-bottom: 8px; font-size: 14px;">CashDrawer</div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string (UUID)<br>
+        openedBy: string<br>
+        openedAt: string<br>
+        openingBalance: number<br>
+        closedAt?: string<br>
+        closingBalance?: number<br>
+        expectedBalance?: number (computed)<br>
+        discrepancy?: number<br>
+        status: 'open' | 'closed'<br>
+        cashIn: number (total cash received)<br>
+        cashOut: number (total cash paid out)<br>
+        notes?: string<br>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Optional Entities (settings-gated)</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+    <div style="border: 1px dashed #868685; border-radius: 8px; padding: 16px; background: #f4f5f2;">
+      <div style="font-weight: 700; color: #454745; margin-bottom: 8px; font-size: 14px;">Zone <span style="font-size: 10px; color: #868685;">(opt-in)</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        id: string<br>
+        name: string (e.g. "Dispensary", "Storeroom", "Fridge")<br>
+        locationId: string<br>
+        isDefault: boolean
+      </div>
+    </div>
+    <div style="border: 1px dashed #868685; border-radius: 8px; padding: 16px; background: #f4f5f2;">
+      <div style="font-weight: 700; color: #454745; margin-bottom: 8px; font-size: 14px;">PharmacySettings <span style="font-size: 10px; color: #868685;">(extended)</span></div>
+      <div style="font-family: monospace; font-size: 11px; line-height: 1.7; color: #454745;">
+        enablePurchaseOrders: boolean (default: false)<br>
+        enableZones: boolean (default: false)<br>
+        enablePatientCredit: boolean (default: false)<br>
+        enableTransfers: boolean (default: false)<br>
+        expiryAlertDays: number (default: 90)<br>
+        taxRate: number (default: 0)<br>
+        currency: string (default: 'AFN')<br>
+        invoicePrefix: string (default: 'INV-')<br>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key Design Decisions</h3>
+  <div style="font-size: 13px; color: #454745; line-height: 1.8;">
+    <div style="margin-bottom: 8px;">
+      <strong style="color: #0e0f0c;">StockMovement is append-only</strong> — like the audit log. Every stock change is a ledger entry. quantityOnHand on StockBatch is a derived/cached value that can be rebuilt from movements.
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong style="color: #0e0f0c;">FEFO via expiryDate index</strong> — when dispensing, query StockBatch WHERE catalogItemId = X AND status = 'active' ORDER BY expiryDate ASC. First result is the batch to deduct from.
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong style="color: #0e0f0c;">Controlled substance balance</strong> — sum of StockMovements WHERE catalogItem.controlledSchedule IS NOT NULL, grouped by batch. Discrepancy = sum(movements) vs physical count.
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong style="color: #0e0f0c;">Invoice ↔ Dispense link</strong> — an Invoice references one or more dispenseIds. Created automatically after dispensing confirmation. Pharmacist adds payment before printing receipt.
+    </div>
+    <div>
+      <strong style="color: #0e0f0c;">Offline conflict resolution</strong> — StockBatch.quantityOnHand conflicts use Tier 2 (timestamp merge). StockMovements are Tier 1 (append-only, both kept). Controlled substance discrepancies auto-flag for pharmacist review.
+    </div>
+  </div>
+</div>

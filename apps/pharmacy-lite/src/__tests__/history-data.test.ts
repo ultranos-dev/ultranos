@@ -22,7 +22,7 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
-import { getHistoryPage, getShiftSummary, type HistoryFilters } from '@/lib/history-data'
+import { getHistoryPage, getShiftSummary } from '@/lib/history-data'
 
 function makeDispense(overrides: Record<string, unknown> = {}) {
   return {

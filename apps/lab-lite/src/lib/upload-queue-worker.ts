@@ -1,5 +1,17 @@
-import { getQueueItems, updateQueueItemStatus, removeQueueItem, type UploadQueueEntry } from './db'
+import {
+  getQueueItems,
+  updateQueueItemStatus,
+  removeQueueItem,
+  type UploadQueueEntry,
+  getPendingSyncItems,
+  markCHWSampleSynced,
+  markCourierHandoffSynced,
+  recordDataUsage,
+} from './db'
+import { createMeterFetch } from '@ultranos/sync-engine'
+import { compressBody, isCompressionAvailable } from '@/lib/compress'
 import type { UploadResultInput, UploadResultResponse } from './trpc'
+import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 
 export interface QueueAuditEvent {
   action: 'QUEUE_ENTRY_CREATED' | 'QUEUE_DRAIN_SUCCESS' | 'QUEUE_ITEM_EXPIRED' | 'QUEUE_ITEM_DISCARDED'
@@ -17,6 +29,8 @@ export interface DrainDependencies {
   sleep?: (ms: number) => Promise<void>
   /** Override for testing — defaults to real Blob-to-base64 conversion */
   blobToBase64Fn?: (blob: Blob) => Promise<string>
+  /** When true, compress request bodies before upload */
+  lowDataMode?: boolean
 }
 
 const BACKOFF_BASE_MS = 1000
@@ -122,20 +136,194 @@ async function drainItem(item: UploadQueueEntry, deps: DrainDependencies): Promi
 /**
  * Start listening for online events and drain the queue automatically.
  * Call once on app initialization. Returns a cleanup function.
+ *
+ * When Low Data Mode is active, drains on a 30-minute interval instead of
+ * on-online events to conserve data.
  */
-export function startQueueDrainListener(deps: DrainDependencies): () => void {
-  const handler = () => {
-    drainQueue(deps)
-  }
+export function startQueueDrainListener(
+  deps: DrainDependencies,
+  options?: { lowDataMode?: boolean },
+): () => void {
+  const lowData = options?.lowDataMode ?? false
+  let intervalId: ReturnType<typeof setInterval> | null = null
 
-  window.addEventListener('online', handler)
+  if (lowData) {
+    // Low Data Mode: batch drain every 30 minutes
+    const LOW_DATA_DRAIN_INTERVAL_MS = 30 * 60 * 1000
 
-  // Also attempt drain on startup if already online
-  if (typeof navigator !== 'undefined' && navigator.onLine) {
-    drainQueue(deps)
+    // Also attempt drain on startup if already online (same as normal mode)
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      drainQueue(deps)
+    }
+
+    intervalId = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        drainQueue(deps)
+      }
+    }, LOW_DATA_DRAIN_INTERVAL_MS)
+  } else {
+    // Normal mode: drain on online event
+    const handler = () => {
+      drainQueue(deps)
+    }
+
+    window.addEventListener('online', handler)
+
+    // Also attempt drain on startup if already online
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      drainQueue(deps)
+    }
+
+    return () => {
+      window.removeEventListener('online', handler)
+    }
   }
 
   return () => {
-    window.removeEventListener('online', handler)
+    if (intervalId) clearInterval(intervalId)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.2 — CHW Store-and-Forward Sync (Tier 2 priority)
+// CHW records sync after allergies/consent but before metadata.
+// ---------------------------------------------------------------------------
+
+export interface CHWSyncDependencies {
+  uploadCHWSampleFn: (record: CHWSampleCollection, token: string) => Promise<void>
+  uploadHandoffFn: (record: CourierHandoff, token: string) => Promise<void>
+  getToken: () => Promise<string>
+  sleep?: (ms: number) => Promise<void>
+}
+
+let chwDraining = false
+
+/** Reset CHW drain guard — for testing only. */
+export function _resetCHWDrainGuard(): void {
+  chwDraining = false
+}
+
+/**
+ * Drain CHW pending records (samples + handoffs) in FIFO order.
+ * On success marks each record as 'synced' in Dexie.
+ */
+export async function drainCHWQueue(deps: CHWSyncDependencies): Promise<void> {
+  if (chwDraining) return
+  chwDraining = true
+  try {
+    const pending = await getPendingSyncItems()
+    const token = await deps.getToken()
+
+    for (const item of pending) {
+      try {
+        if ('sampleType' in item) {
+          await deps.uploadCHWSampleFn(item as CHWSampleCollection, token)
+          await markCHWSampleSynced((item as CHWSampleCollection).id)
+        } else {
+          await deps.uploadHandoffFn(item as CourierHandoff, token)
+          await markCourierHandoffSynced((item as CourierHandoff).id)
+        }
+      } catch {
+        // Soft failure — leave as pending, retry on next drain cycle
+      }
+    }
+  } finally {
+    chwDraining = false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Story 54.3 — Transport Session Sync
+// Syncs pending transport_sessions to Hub when connectivity is restored.
+// No PHI in the sync payload — courierId, locationIds, sampleIds are opaque IDs.
+// ---------------------------------------------------------------------------
+
+export interface TransportSyncDependencies {
+  // P10: token passed into syncFn so callers can use it per-request (avoids single-token stale risk)
+  syncFn: (sessions: import('@/types/transport').TransportSession[], token: string) => Promise<void>
+  getToken: () => Promise<string>
+}
+
+/**
+ * Drain pending transport sessions to the Hub.
+ * Transport sessions created while offline have _ultranos.syncStatus = 'pending'.
+ * This function syncs them and marks them as 'synced' on success or 'failed' on error.
+ *
+ * Never throws — sync failures are logged by marking syncStatus as 'failed'.
+ */
+export async function drainTransportSessions(deps: TransportSyncDependencies): Promise<void> {
+  const { getDb, updateTransportSession } = await import('./db')
+  const db = getDb()
+
+  const pending = await db.transport_sessions
+    .filter((s) => s._ultranos.syncStatus === 'pending')
+    .toArray()
+
+  if (pending.length === 0) return
+
+  // P10: get token once; passed into syncFn per the updated interface
+  let token: string
+  try {
+    token = await deps.getToken()
+  } catch {
+    // Cannot obtain token — leave all sessions as 'pending' for next cycle
+    return
+  }
+
+  // P11: per-session sync so one failure doesn't block the rest
+  for (const session of pending) {
+    try {
+      await deps.syncFn([session], token)
+      await updateTransportSession(session.id, {
+        _ultranos: { ...session._ultranos, syncStatus: 'synced' },
+      })
+    } catch (err) {
+      // P15: log error.message so failures are visible without swallowing context
+      console.error('[transport-sync] session sync failed:', err instanceof Error ? err.message : 'unknown error')
+      await updateTransportSession(session.id, {
+        _ultranos: { ...session._ultranos, syncStatus: 'failed' },
+      })
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Metered & Compressed fetch helpers for Low Data Mode
+// ---------------------------------------------------------------------------
+
+/** Create a metered version of the global fetch for use in sync operations. */
+export function createMeteredFetch(): typeof fetch {
+  return createMeterFetch(fetch, recordDataUsage)
+}
+
+/** Wrap fetch to gzip-compress POST/PUT request bodies in Low Data Mode. */
+export function createCompressedFetch(baseFetch: typeof fetch): typeof fetch {
+  return async function compressedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    if (init?.body && typeof init.body === 'string' && isCompressionAvailable()) {
+      const { body, headers } = await compressBody(init.body)
+      return baseFetch(input, {
+        ...init,
+        body,
+        headers: {
+          ...Object.fromEntries(new Headers(init.headers).entries()),
+          ...headers,
+        },
+      })
+    }
+    return baseFetch(input, init)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mode toggle restart support
+// ---------------------------------------------------------------------------
+
+let currentCleanup: (() => void) | null = null
+
+export function restartQueueDrainListener(
+  deps: DrainDependencies,
+  options?: { lowDataMode?: boolean },
+): void {
+  if (currentCleanup) currentCleanup()
+  currentCleanup = startQueueDrainListener(deps, options)
 }

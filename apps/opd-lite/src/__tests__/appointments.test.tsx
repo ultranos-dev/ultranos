@@ -265,8 +265,8 @@ describe('Appointment Scheduling', () => {
     // Urgent badge should display with red styling
     const urgentBadge = screen.getByText('Urgent')
     expect(urgentBadge).toBeDefined()
-    expect(urgentBadge.className).toContain('bg-red-100')
-    expect(urgentBadge.className).toContain('text-red-800')
+    expect(urgentBadge.className).toContain('bg-destructive/20')
+    expect(urgentBadge.className).toContain('text-destructive')
   })
 
   it('Status change updates correctly (nextDay/prevDay)', async () => {

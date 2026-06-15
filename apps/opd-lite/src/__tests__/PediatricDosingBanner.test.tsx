@@ -70,13 +70,13 @@ describe('PediatricDosingBanner', () => {
     expect(closeElements.length).toBe(0)
   })
 
-  it('has yellow warning background styling', () => {
+  it('has warning background styling', () => {
     const { container } = render(
       <PediatricDosingBanner patientBirthDate={birthDateYearsAgo(10)} />,
     )
     const banner = container.querySelector('[data-testid="pediatric-dosing-banner"]')
     expect(banner).not.toBeNull()
-    expect((banner as HTMLElement).style.backgroundColor).toBe('rgb(255, 209, 26)')
+    expect((banner as HTMLElement).className).toContain('bg-warning')
   })
 
   it('boundary: patient born exactly 18 years ago today shows no banner', () => {

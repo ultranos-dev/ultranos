@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
 import { useAppointments } from '@/hooks/useAppointments'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { PatientSummaryPopup } from './PatientSummaryPopup'
@@ -17,11 +18,11 @@ function minutesElapsed(isoTimestamp: string): number {
 }
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
-  booked: 'bg-blue-100 text-blue-800',
-  arrived: 'bg-amber-100 text-amber-800',
-  fulfilled: 'bg-neutral-200 text-neutral-700',
-  cancelled: 'bg-red-100 text-red-800',
-  noshow: 'bg-red-100 text-red-800',
+  booked: 'bg-primary text-primary',
+  arrived: 'bg-warning/20 text-warning',
+  fulfilled: 'bg-secondary text-foreground',
+  cancelled: 'bg-destructive/20 text-destructive',
+  noshow: 'bg-destructive/20 text-destructive',
 }
 
 export function WalkInQueue() {
@@ -68,29 +69,29 @@ export function WalkInQueue() {
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4">
+    <div className="rounded-xl ring-[0.65px] ring-border/50 bg-background p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-base font-bold text-neutral-900">
+        <h3 className="text-base font-bold text-foreground">
           {t('walkInQueue')}
         </h3>
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
         >
           {t('addWalkIn')}
-        </button>
+        </Button>
       </div>
 
       {/* Inline add form */}
       {showAddForm && (
-        <div className="mb-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 space-y-3">
+        <div className="mb-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3 space-y-3">
           <input
             type="text"
             value={patientSearch}
             onChange={(e) => setPatientSearch(e.target.value)}
             placeholder={t('selectPatient')}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
 
           <div className="flex gap-3">
@@ -112,26 +113,26 @@ export function WalkInQueue() {
                 value="urgent"
                 checked={walkInType === 'urgent'}
                 onChange={() => setWalkInType('urgent')}
-                className="text-red-600"
+                className="text-destructive"
               />
               {t('urgent')}
             </label>
           </div>
 
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={handleAddWalkIn}
             disabled={!patientSearch.trim() || submitting}
-            className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('addWalkIn')}
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Walk-in list */}
       {walkIns.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t('noWalkIns')}</p>
+        <p className="text-sm text-muted-foreground">{t('noWalkIns')}</p>
       ) : (
         <div className="space-y-2">
           {walkIns.map((walkIn) => {
@@ -143,21 +144,22 @@ export function WalkInQueue() {
             const status = walkIn.status
 
             return (
-              <button
+              <Button
                 key={walkIn.id}
+                variant="ghost"
                 type="button"
                 onClick={() => setSelectedAppointment(walkIn)}
-                className="w-full rounded-lg border border-purple-200 bg-purple-50 p-3 text-start hover:bg-purple-100 transition-colors"
+                className="w-full rounded-xl border border-border bg-muted/50 p-3 text-start hover:bg-muted"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-purple-200 text-xs font-bold text-purple-800">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
                       {t('queueNumber', {
                         number:
                           walkIn._ultranos.queuePosition ?? 0,
                       })}
                     </span>
-                    <span className="text-sm font-semibold text-neutral-900">
+                    <span className="text-sm font-semibold text-foreground">
                       {walkIn.participant?.[0]?.actor?.display ??
                         '\u2014'}
                     </span>
@@ -165,14 +167,14 @@ export function WalkInQueue() {
 
                   <div className="flex items-center gap-2">
                     {isUrgent && (
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+                      <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-semibold text-destructive">
                         {t('urgent')}
                       </span>
                     )}
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         STATUS_BADGE_COLORS[status] ??
-                        'bg-neutral-100 text-neutral-700'
+                        'bg-muted text-foreground'
                       }`}
                     >
                       {status === 'booked' && t('booked')}
@@ -184,10 +186,10 @@ export function WalkInQueue() {
                   </div>
                 </div>
 
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {t('waitTime', { minutes: waitMinutes })}
                 </p>
-              </button>
+              </Button>
             )
           })}
         </div>

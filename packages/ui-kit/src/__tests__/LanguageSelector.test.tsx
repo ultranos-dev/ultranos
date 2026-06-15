@@ -21,7 +21,7 @@ describe('LanguageSelector', () => {
     expect(button).toBeDefined()
   })
 
-  it('opens dropdown on click showing all three languages', () => {
+  it('opens dropdown on click showing all four languages', () => {
     render(
       <LanguageSelector
         currentLocale="en"
@@ -31,9 +31,11 @@ describe('LanguageSelector', () => {
     const button = screen.getByRole('button', { name: /change language/i })
     fireEvent.click(button)
 
-    expect(screen.getByText('English')).toBeDefined()
+    const listbox = screen.getByRole('listbox')
+    expect(listbox.querySelector('[id="lang-option-en"]')).toBeTruthy()
     expect(screen.getByText('العربية')).toBeDefined()
     expect(screen.getByText('دری')).toBeDefined()
+    expect(screen.getByText('پښتو')).toBeDefined()
   })
 
   it('uses listbox role with option roles for each language', () => {
@@ -47,7 +49,7 @@ describe('LanguageSelector', () => {
 
     expect(screen.getByRole('listbox')).toBeDefined()
     const options = screen.getAllByRole('option')
-    expect(options).toHaveLength(3)
+    expect(options).toHaveLength(4)
   })
 
   it('marks current locale as selected (aria-selected)', () => {
@@ -120,13 +122,17 @@ describe('LanguageSelector', () => {
     fireEvent.keyDown(listbox, { key: 'ArrowDown' })
     expect(document.activeElement).toBe(options[2])
 
+    // ArrowDown again
+    fireEvent.keyDown(listbox, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(options[3])
+
     // ArrowDown wraps around
     fireEvent.keyDown(listbox, { key: 'ArrowDown' })
     expect(document.activeElement).toBe(options[0])
 
     // ArrowUp wraps to last
     fireEvent.keyDown(listbox, { key: 'ArrowUp' })
-    expect(document.activeElement).toBe(options[2])
+    expect(document.activeElement).toBe(options[3])
   })
 
   it('selects language on Enter key', () => {
@@ -197,7 +203,9 @@ describe('LanguageSelector', () => {
       />
     )
     fireEvent.click(screen.getByRole('button', { name: /change language/i }))
-    fireEvent.click(screen.getByText('English'))
+    const listbox = screen.getByRole('listbox')
+    const englishOption = listbox.querySelector('[id="lang-option-en"]') as HTMLElement
+    fireEvent.click(englishOption)
 
     expect(mockOnLocaleChange).not.toHaveBeenCalled()
   })

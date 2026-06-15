@@ -1,6 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { Button } from '@/components/ui/button'
 import { getHistoryPage, type HistoryFilters, type HistoryPage } from '@/lib/history-data'
 import { HistoryFilterBar } from './HistoryFilterBar'
 import { HistoryItemRow } from './HistoryItemRow'
@@ -8,6 +11,7 @@ import { Pagination } from './Pagination'
 import { ShiftSummary } from './ShiftSummary'
 
 export function DispensingHistoryView() {
+  const t = useTranslations('history')
   const [filters, setFilters] = useState<HistoryFilters>({})
   const [page, setPage] = useState(1)
   const [data, setData] = useState<HistoryPage | null>(null)
@@ -22,11 +26,11 @@ export function DispensingHistoryView() {
       const result = await getHistoryPage(filters, page)
       setData(result)
     } catch {
-      setError('Failed to load dispensing history. Please retry.')
+      setError(t('loadError'))
     } finally {
       setLoading(false)
     }
-  }, [filters, page])
+  }, [filters, page, t])
 
   useEffect(() => {
     fetchData()
@@ -38,34 +42,34 @@ export function DispensingHistoryView() {
   }
 
   return (
-    <div data-testid="dispensing-history-view" className="space-y-4">
+    <div data-testid="dispensing-history-view" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <HistoryFilterBar filters={filters} onFiltersChange={handleFiltersChange} />
-        <button
+        <Button
+          variant="secondary"
           data-testid="shift-summary-button"
           onClick={() => setShowShiftSummary(true)}
-          className="px-4 py-2 rounded-md bg-neutral-100 text-neutral-700 hover:bg-neutral-200 text-sm font-medium"
         >
-          Shift Summary
-        </button>
+          {t('shiftSummaryButton')}
+        </Button>
       </div>
 
       {loading ? (
-        <div data-testid="history-loading" className="py-8 text-center text-sm text-neutral-400">
-          Loading...
+        <div data-testid="history-loading" className="py-8 text-center text-sm text-muted-foreground">
+          {t('loading')}
         </div>
       ) : error ? (
-        <div data-testid="history-error" className="py-8 text-center text-sm text-red-600">
+        <div data-testid="history-error" className="py-8 text-center text-sm text-destructive">
           {error}
         </div>
       ) : data && data.items.length > 0 ? (
         <>
-          <div className="text-xs text-neutral-500">
-            {data.totalCount} record{data.totalCount !== 1 ? 's' : ''} found
+          <div className="text-xs text-muted-foreground">
+            {t('recordsFound', { count: data.totalCount })}
           </div>
           <ul
             data-testid="history-list"
-            className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden"
+            className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden"
           >
             {data.items.map((item) => (
               <HistoryItemRow key={item.id} item={item} />
@@ -74,9 +78,7 @@ export function DispensingHistoryView() {
           <Pagination page={data.page} totalPages={data.totalPages} onPageChange={setPage} />
         </>
       ) : (
-        <div data-testid="history-empty" className="py-8 text-center text-sm text-neutral-400">
-          No dispensing records found
-        </div>
+        <EmptyState title={t('noRecords')} data-testid="history-empty" />
       )}
 
       {showShiftSummary && (

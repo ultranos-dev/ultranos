@@ -1,100 +1,155 @@
 'use client'
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { Sidebar, type SidebarNavItem } from '@ultranos/ui-kit'
+import { useCallback, useEffect, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import {
+  Home,
+  Upload,
+  UserPlus,
+  UserCheck,
+  History,
+  ListOrdered,
+  Bell,
+  Settings,
+  ClipboardList,
+  ClipboardCheck,
+  Banknote,
+  Receipt,
+  Scale,
+  ShieldCheck,
+  BookOpen,
+  MessageCircle,
+  AlertTriangle,
+  BarChart3,
+  Calculator,
+  Globe,
+  Network,
+  FileText,
+  FlaskConical,
+  Microscope,
+  RefreshCw,
+  TrendingUp,
+  Award,
+  Wrench,
+  Trophy,
+} from '@ultranos/ui-kit/icons'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+} from '@/components/ui/sidebar'
+import { NavLab } from '@/components/sidebar/NavLab'
+import { NavLabUser } from '@/components/sidebar/NavLabUser'
+import { LabHeader } from '@/components/sidebar/LabHeader'
+import type { LabNavGroup } from '@/components/sidebar/nav-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getDb } from '@/lib/db'
-import { OnlineStatusIndicator } from '@/components/OnlineStatusIndicator'
-import { LanguageSelectorClient } from '@/components/LanguageSelectorClient'
+import { LabRole } from '@ultranos/shared-types'
+import { canAccessAuthorizationQueue } from '@/lib/permissions'
+import { getPendingAuthorizationCount } from '@/lib/db'
+import { usePendingHandovers } from '@/hooks/usePendingHandovers'
+import { isCollectionOnlyMode } from '@/lib/collection-mode'
 
-// Inline SVG icons — no icon library (matches codebase pattern)
-const icons = {
-  dashboard: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" />
-      <rect x="14" y="3" width="7" height="7" />
-      <rect x="3" y="14" width="7" height="7" />
-      <rect x="14" y="14" width="7" height="7" />
-    </svg>
-  ),
-  upload: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-  ),
-  history: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 8v4l3 3" />
-      <circle cx="12" cy="12" r="10" />
-    </svg>
-  ),
-  queue: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="8" y1="6" x2="21" y2="6" />
-      <line x1="8" y1="12" x2="21" y2="12" />
-      <line x1="8" y1="18" x2="21" y2="18" />
-      <line x1="3" y1="6" x2="3.01" y2="6" />
-      <line x1="3" y1="12" x2="3.01" y2="12" />
-      <line x1="3" y1="18" x2="3.01" y2="18" />
-    </svg>
-  ),
-  bell: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  ),
-  settings: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  ),
-} as const
+// ── Badge hooks ───────────────────────────────────────────────────────────────
 
-/** Hook to count pending + failed items in the Dexie upload queue. */
 function useQueueBadge(): number | null {
   const [count, setCount] = useState<number | null>(null)
-
   useEffect(() => {
     let active = true
-
     async function check() {
       try {
         const db = getDb()
-        const c = await db.uploadQueue
-          .where('status')
-          .anyOf(['pending', 'failed'])
-          .count()
+        const c = await db.uploadQueue.where('status').anyOf(['pending', 'failed']).count()
         if (active) setCount(c > 0 ? c : null)
-      } catch {
-        // Dexie unavailable — no badge
-      }
+      } catch { /* Dexie unavailable — no badge */ }
     }
-
     check()
-    // Re-check every 10 seconds
     const interval = setInterval(check, 10_000)
-    return () => {
-      active = false
-      clearInterval(interval)
-    }
+    return () => { active = false; clearInterval(interval) }
   }, [])
-
   return count
 }
 
-export function AppSidebar({ children }: { children: ReactNode }) {
+function usePatientQueueBadge(): number | null {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    let active = true
+    async function check() {
+      try {
+        const db = getDb()
+        const c = await db.table('queueEntries').where('status').equals('waiting').count()
+        if (active) setCount(c > 0 ? c : null)
+      } catch { /* Dexie unavailable — no badge */ }
+    }
+    check()
+    const interval = setInterval(check, 10_000)
+    return () => { active = false; clearInterval(interval) }
+  }, [])
+  return count
+}
+
+function useAuthorizationQueueBadge(labRole: LabRole | null): number | null {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    if (!labRole || !canAccessAuthorizationQueue(labRole)) return
+    let active = true
+    async function check() {
+      try {
+        const c = await getPendingAuthorizationCount()
+        if (active) setCount(c > 0 ? c : null)
+      } catch { /* Dexie unavailable — no badge */ }
+    }
+    check()
+    const interval = setInterval(check, 10_000)
+    return () => { active = false; clearInterval(interval) }
+  }, [labRole])
+  return count
+}
+
+function useOrdersBadge(): number | null {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    let active = true
+    async function check() {
+      try {
+        const db = getDb()
+        const c = await db.orders.where('status').equals('RECEIVED').count()
+        if (active) setCount(c > 0 ? c : null)
+      } catch { /* Dexie unavailable — no badge */ }
+    }
+    check()
+    const interval = setInterval(check, 10_000)
+    return () => { active = false; clearInterval(interval) }
+  }, [])
+  return count
+}
+
+// ── AppSidebar ────────────────────────────────────────────────────────────────
+
+export function AppSidebar() {
   const session = useAuthSessionStore((s) => s.session)
-  const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
-  const pathname = usePathname()
   const t = useTranslations('sidebar')
-  const queueBadge = useQueueBadge()
+  const locale = useLocale()
+  const side = ['ar', 'prs', 'ps'].includes(locale) ? 'right' : 'left'
+  const uploadQueueBadge = useQueueBadge()
+  const ordersBadge = useOrdersBadge()
+  const patientQueueBadge = usePatientQueueBadge()
+  const authQueueBadge = useAuthorizationQueueBadge(session?.labRole as LabRole | null)
+  const { pendingHandovers } = usePendingHandovers()
+  const handoverBadge = pendingHandovers.length > 0 ? pendingHandovers.length : null
+
+  // D7→P: collection-only mode hides restricted workflow sections
+  const [isCollectionOnly, setIsCollectionOnly] = useState<boolean>(false)
+  useEffect(() => {
+    let cancelled = false
+    isCollectionOnlyMode()
+      .then((v) => { if (!cancelled) setIsCollectionOnly(v) })
+      .catch(() => { /* default: full mode */ })
+    return () => { cancelled = true }
+  }, [])
 
   const handleSignOut = useCallback(async () => {
     useAuthSessionStore.getState().clearSession()
@@ -102,29 +157,119 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }, [])
 
-  // Don't render sidebar on login or offline pages
-  if (
-    !isAuthenticated ||
-    !session ||
-    pathname === '/login' ||
-    pathname === '/offline'
-  ) {
-    return <>{children}</>
-  }
+  const canAccessNetwork =
+    session?.labRole === LabRole.LAB_MANAGER || session?.labRole === LabRole.SUPERVISOR
+  const canAccessCostAnalysis = session?.labRole === LabRole.LAB_MANAGER
+  const canAccessAuth = session?.labRole
+    ? canAccessAuthorizationQueue(session.labRole as LabRole)
+    : false
 
-  const navItems: SidebarNavItem[] = [
-    // Primary
-    { label: t('dashboard'), href: '/', icon: icons.dashboard, active: pathname === '/', group: 'primary' },
-    { label: t('upload'), href: '/upload', icon: icons.upload, active: pathname === '/upload', group: 'primary' },
-    // Clinical
-    { label: t('history'), href: '/history', icon: icons.history, active: pathname === '/history', group: 'clinical' },
-    { label: t('queue'), href: '/queue', icon: icons.queue, active: pathname === '/queue', badge: queueBadge, group: 'clinical' },
-    // System
-    { label: t('notifications'), href: '/notifications', icon: icons.bell, active: pathname === '/notifications', group: 'system' },
-    { label: t('settings'), href: '/settings', icon: icons.settings, active: pathname === '/settings', group: 'system' },
-  ]
+  // D7→P: In collection-only mode only Dashboard, Patients, and Upload Queue are accessible.
+  // All result-entry, QC, inventory, team, finance, and admin sections are restricted.
+  const navGroups: LabNavGroup[] = isCollectionOnly
+    ? [
+        {
+          title: '',
+          items: [{ title: t('dashboard'), url: '/', icon: Home }],
+        },
+        {
+          title: 'Patients',
+          items: [
+            { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
+            { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
+            { title: t('history'), url: '/history', icon: History },
+            { title: t('consent'), url: '/consent', icon: ShieldCheck },
+          ],
+        },
+        {
+          title: 'Lab Workflow',
+          items: [
+            { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+          ],
+        },
+      ]
+    : [
+        {
+          title: '',
+          items: [
+            { title: t('dashboard'), url: '/', icon: Home },
+          ],
+        },
+        {
+          title: 'Lab Workflow',
+          items: [
+            { title: t('orders'), url: '/orders', icon: ClipboardList, badge: ordersBadge },
+            { title: t('worklist'), url: '/worklist', icon: ClipboardList },
+            { title: t('upload'), url: '/upload', icon: Upload, badge: uploadQueueBadge },
+            { title: t('reports'), url: '/reports', icon: FileText },
+            { title: t('dailyLog'), url: '/reports/daily' },
+          ],
+        },
+        {
+          title: 'Patients',
+          items: [
+            { title: t('registerPatient'), url: '/patients/register', icon: UserPlus },
+            { title: t('queue'), url: '/queue', icon: ListOrdered, badge: patientQueueBadge },
+            { title: t('history'), url: '/history', icon: History },
+            { title: t('consent'), url: '/consent', icon: ShieldCheck },
+          ],
+        },
+        {
+          title: 'Quality',
+          items: [
+            { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
+            { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
+            { title: t('equipment'), url: '/equipment', icon: Wrench },
+            { title: t('sops'), url: '/sops', icon: BookOpen },
+            { title: t('visualAtlas'), url: '/atlas', icon: Microscope },
+          ],
+        },
+        {
+          title: 'Team',
+          items: [
+            { title: t('shiftHandover'), url: '/shift-handover', icon: RefreshCw, badge: handoverBadge },
+            { title: t('portfolio'), url: '/portfolio', icon: BarChart3 },
+            { title: t('mentorship'), url: '/mentorship', icon: UserCheck },
+            { title: t('certification'), url: '/certification', icon: Award },
+            { title: t('teamAchievements'), url: '/achievements', icon: Trophy },
+            { title: t('peerNetwork'), url: '/peer-network', icon: MessageCircle },
+            ...(canAccessAuth
+              ? [{ title: t('authorizationQueue'), url: '/authorization', icon: ClipboardCheck, badge: authQueueBadge }]
+              : []),
+          ],
+        },
+        {
+          title: 'Finance',
+          items: [
+            { title: t('newPayment'), url: '/finance/payment', icon: Banknote },
+            { title: t('receipts'), url: '/finance/receipts', icon: Receipt },
+            { title: t('reconciliation'), url: '/finance/reconciliation', icon: Scale },
+            { title: t('reagents'), url: '/finance/reagents', icon: FlaskConical },
+            ...(canAccessCostAnalysis
+              ? [
+                  { title: t('costAnalysis'), url: '/finance/cost-analysis', icon: BarChart3 },
+                  { title: t('costSettings'), url: '/finance/cost-settings', icon: Calculator },
+                ]
+              : []),
+          ],
+        },
+        {
+          title: 'Administration',
+          items: [
+            { title: t('notifications'), url: '/notifications', icon: Bell },
+            ...(canAccessNetwork
+              ? [
+                  { title: t('readinessBoard'), url: '/readiness', icon: BarChart3 },
+                  { title: t('network'), url: '/network', icon: Globe },
+                  { title: t('networkInventory'), url: '/inventory/network', icon: Network },
+                ]
+              : []),
+            { title: t('settings'), url: '/settings', icon: Settings },
+          ],
+        },
+      ]
 
-  const displayName = session.email?.split('@')[0] || 'Technician'
+  const displayName = session?.name || session?.email?.split('@')[0] || 'Technician'
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)
@@ -133,21 +278,23 @@ export function AppSidebar({ children }: { children: ReactNode }) {
     .join('')
 
   return (
-    <Sidebar
-      appName="Lab Lite"
-      navItems={navItems}
-      user={{
-        name: displayName,
-        email: session.email,
-        role: session.role,
-        initials,
-      }}
-      onSignOut={handleSignOut}
-      syncIndicator={<OnlineStatusIndicator />}
-      languageSelector={<LanguageSelectorClient />}
-      persistKey="lab-lite-sidebar-collapsed"
-    >
-      {children}
+    <Sidebar collapsible="icon" side={side}>
+      <SidebarHeader>
+        <LabHeader />
+      </SidebarHeader>
+      <SidebarContent>
+        <NavLab groups={navGroups} />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavLabUser
+          name={displayName}
+          email={session?.email}
+          role={session?.labRole ?? session?.role ?? ''}
+          initials={initials}
+          onSignOut={handleSignOut}
+        />
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }

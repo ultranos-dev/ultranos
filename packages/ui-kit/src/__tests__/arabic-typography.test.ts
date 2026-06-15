@@ -8,8 +8,8 @@ describe('Arabic font family tokens', () => {
     expect(typography.fontFamily['sans-ar']).toContain('Noto Sans Arabic')
   })
 
-  it('defines serif-ar font stack with Noto Naskh Arabic', () => {
-    expect(typography.fontFamily['serif-ar']).toContain('Noto Naskh Arabic')
+  it('defines serif-ar font stack with Noto Kufi Arabic', () => {
+    expect(typography.fontFamily['serif-ar']).toContain('Noto Kufi Arabic')
   })
 
   it('sans-ar has proper fallback chain: Arabic → system Arabic → sans-serif', () => {
@@ -18,10 +18,10 @@ describe('Arabic font family tokens', () => {
     expect(stack).toContain('sans-serif')
   })
 
-  it('serif-ar has proper fallback chain: Arabic → system Arabic → serif', () => {
+  it('serif-ar has proper fallback chain: Kufi → Latin (Manrope) → sans-serif', () => {
     const stack = typography.fontFamily['serif-ar']
-    expect(stack).toContain('Traditional Arabic')
-    expect(stack).toContain('serif')
+    expect(stack).toContain('var(--font-manrope)')
+    expect(stack).toContain('sans-serif')
   })
 })
 
@@ -55,9 +55,9 @@ describe('Arabic font files', () => {
     expect(arabicFontFiles).toContain('NotoSansArabic-Bold.woff2')
   })
 
-  it('includes Noto Naskh Arabic in 2 weights (400, 700)', () => {
-    expect(arabicFontFiles).toContain('NotoNaskhArabic-Regular.woff2')
-    expect(arabicFontFiles).toContain('NotoNaskhArabic-Bold.woff2')
+  it('includes Noto Kufi Arabic in 2 weights (400, 700)', () => {
+    expect(arabicFontFiles).toContain('NotoKufiArabic-Regular.woff2')
+    expect(arabicFontFiles).toContain('NotoKufiArabic-Bold.woff2')
   })
 
   it('all font files use WOFF2 format', () => {
@@ -82,8 +82,8 @@ describe('fonts-arabic.css declarations', () => {
     expect(css).toContain("font-family: 'Noto Sans Arabic'")
   })
 
-  it('declares Noto Naskh Arabic @font-face rules', () => {
-    expect(css).toContain("font-family: 'Noto Naskh Arabic'")
+  it('declares Noto Kufi Arabic @font-face rules', () => {
+    expect(css).toContain("font-family: 'Noto Kufi Arabic'")
   })
 
   it('uses font-display: swap for all declarations', () => {
@@ -143,8 +143,25 @@ describe('tokens.css RTL overrides', () => {
   })
 
   it('overrides --font-family-sans in RTL context', () => {
-    // [dir="rtl"] should switch the sans font to Arabic
+    // [dir="rtl"] should switch the sans font to Noto Kufi Arabic
     expect(css).toContain('[dir="rtl"]')
-    expect(css).toContain('--font-family-sans: var(--font-family-sans-ar)')
+    expect(css).toContain('--font-family-sans: var(--font-family-serif-ar)')
+  })
+
+  it('overrides Tailwind-facing --font-sans in RTL context', () => {
+    // --font-sans is consumed by font-sans utility via tailwind.preset.ts
+    expect(css).toContain('--font-sans: var(--font-family-serif-ar)')
+  })
+
+  it('overrides Tailwind-facing --font-heading in RTL context', () => {
+    expect(css).toContain('--font-heading: var(--font-family-serif-ar)')
+  })
+
+  it('defines --font-sans for LTR using --font-manrope', () => {
+    expect(css).toContain('--font-sans: var(--font-manrope)')
+  })
+
+  it('defines --font-heading for LTR using --font-public-sans', () => {
+    expect(css).toContain('--font-heading: var(--font-public-sans)')
   })
 })

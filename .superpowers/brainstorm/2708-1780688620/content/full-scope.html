@@ -1,0 +1,145 @@
+<h2>Full Scope — All 4 Apps</h2>
+<p class="subtitle">Updated after a deeper audit. Admin Portal has the most issues — mt-6/mt-4 are pervasive across its pages.</p>
+
+<style>
+  .app-block { border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px; }
+  .app-header { display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--muted); }
+  .app-name { font-size:11px;font-weight:700;color:var(--foreground); }
+  .app-count { font-size:10px;font-weight:600;color:var(--muted-foreground);background:var(--background);border:1px solid var(--border);border-radius:99px;padding:1px 8px; }
+  .issue-list { padding:8px 12px; display:flex;flex-direction:column;gap:4px; }
+  .issue-row { display:flex;align-items:baseline;gap:8px;font-size:10px;padding:3px 0;border-bottom:1px solid var(--border); }
+  .issue-row:last-child { border-bottom:none; }
+  .tag { display:inline-block;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0; }
+  .tag-shell { background:oklch(0.9 0.08 270);color:oklch(0.3 0.12 270); }
+  .tag-mt { background:oklch(0.95 0.07 60);color:oklch(0.45 0.12 60); }
+  .tag-px { background:oklch(0.95 0.07 20);color:oklch(0.45 0.12 20); }
+  .tag-gap { background:oklch(0.95 0.07 200);color:oklch(0.3 0.12 200); }
+  .tag-custom { background:oklch(0.95 0.06 0);color:oklch(0.4 0.1 0); }
+  .file-name { font-family:monospace;font-size:9px;color:var(--muted-foreground);flex:1; }
+  .fix-text { font-size:9px;color:var(--muted-foreground); }
+  .total-row { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--muted);border-radius:8px;margin-top:12px; }
+  .total-label { font-size:11px;font-weight:700;color:var(--foreground); }
+  .total-count { font-size:18px;font-weight:800;color:var(--foreground); }
+  .rule-box { background:oklch(0.97 0.03 240);border:1px solid oklch(0.88 0.03 240);border-radius:8px;padding:10px 12px;font-size:10px;line-height:1.9;margin-top:10px; }
+</style>
+
+<!-- SHELL -->
+<div class="app-block">
+  <div class="app-header">
+    <span class="app-name">🔧 App Shell &nbsp;·&nbsp; All 4 apps</span>
+    <span class="app-count">3 files</span>
+  </div>
+  <div class="issue-list">
+    <div class="issue-row">
+      <span class="tag tag-shell">SHELL</span>
+      <span class="file-name">admin-portal/BreadcrumbHeader.tsx</span>
+      <span class="fix-text">h-12 → h-14</span>
+    </div>
+    <div class="issue-row">
+      <span class="tag tag-shell">SHELL</span>
+      <span class="file-name">admin-portal/AuthGuard.tsx &lt;main&gt;</span>
+      <span class="fix-text">add id="main-content"</span>
+    </div>
+    <div class="issue-row">
+      <span class="tag tag-shell">SHELL</span>
+      <span class="file-name">lab-lite/PageHeader.tsx</span>
+      <span class="fix-text">h-12 → h-14</span>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PORTAL -->
+<div class="app-block">
+  <div class="app-header">
+    <span class="app-name">Admin Portal</span>
+    <span class="app-count">~20 pages</span>
+  </div>
+  <div class="issue-list">
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">dashboard/page.tsx</span><span class="fix-text">3× mt-6 → remove (rely on gap-4)</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">alerts/page.tsx</span><span class="fix-text">mt-6, mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="tag tag-gap">gap-6</span><span class="file-name">alerts/[alertId]/page.tsx</span><span class="fix-text">6× mt-*, gap-6 → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-6</span><span class="file-name">ai-models/page.tsx</span><span class="fix-text">gap-6 → gap-4 on root div</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">audit/page.tsx</span><span class="fix-text">5× mt-*, mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">inventory/page.tsx</span><span class="fix-text">mt-6 + space-y-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">certifications/page.tsx</span><span class="fix-text">mt-6, mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="tag tag-gap">gap-6</span><span class="file-name">labs/[labId]/page.tsx</span><span class="fix-text">mt-6, gap-6 → remove / gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">labs/[labId]/staff/page.tsx</span><span class="fix-text">mt-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-4</span><span class="file-name">network/page.tsx</span><span class="fix-text">mt-4, mt-8 pt-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-4</span><span class="file-name">patients/page.tsx</span><span class="fix-text">mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="tag tag-gap">gap-6</span><span class="file-name">patients/[patientId]/page.tsx</span><span class="fix-text">mt-6, gap-6 → remove / gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">patients/merge/page.tsx</span><span class="fix-text">3× mt-6 + space-y-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-4</span><span class="file-name">providers/page.tsx</span><span class="fix-text">mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">subscriptions/page.tsx</span><span class="fix-text">mt-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">subscriptions/billing/page.tsx</span><span class="fix-text">mt-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">subscriptions/invoices/page.tsx</span><span class="fix-text">mt-6, mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-mt">mt-6</span><span class="file-name">mentorship/page.tsx</span><span class="fix-text">mt-6, mt-4 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-8</span><span class="file-name">settings/page.tsx</span><span class="fix-text">gap-8 → gap-4 on root</span></div>
+  </div>
+</div>
+
+<!-- OPD LITE -->
+<div class="app-block">
+  <div class="app-header">
+    <span class="app-name">OPD Lite</span>
+    <span class="app-count">~9 pages</span>
+  </div>
+  <div class="issue-list">
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">appointments/page.tsx</span><span class="fix-text">px-6 pb-4 + px-6 pb-6 wrappers → remove</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">conflicts/page.tsx</span><span class="fix-text">px-6 pb-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">duplicate-review/page.tsx</span><span class="fix-text">px-6 pb-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">expiring-consents/page.tsx</span><span class="fix-text">px-6 pb-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">kyc/page.tsx</span><span class="fix-text">px-6 pb-6 → remove (keep max-w-2xl)</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">notifications/page.tsx</span><span class="fix-text">px-6 pb-6 → remove</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">register-patient/page.tsx</span><span class="fix-text">px-6 pb-6 → remove (keep max-w-3xl)</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-6</span><span class="file-name">settings/page.tsx</span><span class="fix-text">px-6 pb-6 → remove (keep max-w-2xl)</span></div>
+  </div>
+</div>
+
+<!-- PHARMACY LITE -->
+<div class="app-block">
+  <div class="app-header">
+    <span class="app-name">Pharmacy Lite</span>
+    <span class="app-count">~3 pages</span>
+  </div>
+  <div class="issue-list">
+    <div class="issue-row"><span class="tag tag-px">max-w</span><span class="file-name">settings/data-budget/page.tsx</span><span class="fix-text">mx-auto max-w-3xl on nested div → move to root</span></div>
+    <div class="issue-row"><span class="tag tag-px">max-w</span><span class="file-name">register-patient/page.tsx</span><span class="fix-text">mx-auto max-w-3xl on nested div → move to root</span></div>
+  </div>
+</div>
+
+<!-- LAB LITE -->
+<div class="app-block">
+  <div class="app-header">
+    <span class="app-name">Lab Lite</span>
+    <span class="app-count">~17 pages</span>
+  </div>
+  <div class="issue-list">
+    <div class="issue-row"><span class="tag tag-custom">custom hdr</span><span class="file-name">achievements/page.tsx</span><span class="fix-text">border-b header bar inside page → remove</span></div>
+    <div class="issue-row"><span class="tag tag-custom">custom hdr</span><span class="file-name">portfolio/page.tsx</span><span class="fix-text">border-b header bar inside page → remove</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-5</span><span class="file-name">page.tsx (home)</span><span class="fix-text">gap-5 → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-6</span><span class="file-name">history/page.tsx</span><span class="fix-text">gap-6 (2×) → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-5</span><span class="file-name">orders/page.tsx</span><span class="fix-text">gap-5 → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-6</span><span class="file-name">sendouts/page.tsx</span><span class="fix-text">gap-6 → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-6</span><span class="file-name">planner/page.tsx</span><span class="fix-text">gap-6 → gap-4, max-w-5xl → keep</span></div>
+    <div class="issue-row"><span class="tag tag-gap">gap-6</span><span class="file-name">network/page.tsx</span><span class="fix-text">gap-6 → gap-4</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-4 py-6</span><span class="file-name">certification/page.tsx</span><span class="fix-text">px-4 py-6 → remove, space-y-6 → space-y-4</span></div>
+    <div class="issue-row"><span class="tag tag-px">px-4 py-6</span><span class="file-name">competency/page.tsx</span><span class="fix-text">px-4 py-6 → remove, space-y-6 → space-y-4</span></div>
+    <div class="issue-row"><span class="tag tag-px">p-6</span><span class="file-name">mentorship/page.tsx</span><span class="fix-text">p-6 → remove from root</span></div>
+    <div class="issue-row"><span class="tag tag-px">max-w</span><span class="file-name">notifications, escalations, queue, consent, register</span><span class="fix-text">max-w nested → move to root div</span></div>
+  </div>
+</div>
+
+<div class="total-row">
+  <span class="total-label">Total affected files</span>
+  <span class="total-count">~49 files</span>
+</div>
+
+<div class="rule-box">
+  <strong>Governing rules (what makes a fix "done"):</strong><br>
+  1. All headers → <code>h-14</code><br>
+  2. <code>&lt;main&gt;</code> stays <code>flex flex-1 flex-col gap-4 p-4</code> — no changes to the shell padding itself<br>
+  3. Page root divs → <code>flex flex-col gap-4</code> — no <code>mt-*</code>, no extra <code>px-*</code>/<code>py-*</code><br>
+  4. Inner grids → <code>gap-4</code> (not gap-5/6/8)<br>
+  5. <code>max-w-*</code> constraints → preserved, just moved to page root if on a nested wrapper<br>
+  6. Custom border-b page headers → removed (BreadcrumbHeader is the one and only header)
+</div>

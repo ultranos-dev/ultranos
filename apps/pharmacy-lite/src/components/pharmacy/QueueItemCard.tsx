@@ -1,6 +1,8 @@
 'use client'
 
 import type { QueueItem, FulfillmentPhaseBadge, SyncStatus } from '@/lib/queue-data'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface QueueItemCardProps {
   item: QueueItem
@@ -12,10 +14,10 @@ interface QueueItemCardProps {
 }
 
 const phaseBadgeClasses: Record<FulfillmentPhaseBadge, string> = {
-  loaded: 'bg-blue-100 text-blue-700',
-  reviewing: 'bg-amber-100 text-amber-700',
-  dispensing: 'bg-amber-100 text-amber-700 animate-pulse',
-  completed: 'bg-green-100 text-green-700',
+  loaded: 'bg-primary/10 text-primary border-primary/20',
+  reviewing: 'bg-warning/10 text-warning border-warning/20',
+  dispensing: 'bg-warning/10 text-warning border-warning/20 animate-pulse motion-reduce:animate-none',
+  completed: 'bg-success/10 text-success border-success/20',
 }
 
 const phaseLabels: Record<FulfillmentPhaseBadge, string> = {
@@ -26,9 +28,9 @@ const phaseLabels: Record<FulfillmentPhaseBadge, string> = {
 }
 
 const syncBadgeClasses: Record<SyncStatus, string> = {
-  synced: 'bg-green-100 text-green-700',
-  pending: 'bg-amber-100 text-amber-700',
-  failed: 'bg-red-100 text-red-700',
+  synced: 'bg-success/10 text-success border-success/20',
+  pending: 'bg-warning/10 text-warning border-warning/20',
+  failed: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
 const syncLabels: Record<SyncStatus, string> = {
@@ -64,7 +66,7 @@ export function QueueItemCard({
     <li
       data-testid={`queue-item-${item.id}`}
       className={`flex items-center justify-between px-4 py-3 transition-colors ${
-        isInteractive ? 'cursor-pointer hover:bg-neutral-50' : ''
+        isInteractive ? 'cursor-pointer hover:bg-accent' : ''
       }`}
       onClick={isInteractive ? () => onSelect(item) : undefined}
       role={isInteractive ? 'button' : undefined}
@@ -81,51 +83,55 @@ export function QueueItemCard({
       }
     >
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-neutral-900 truncate">
+        <div className="text-sm font-medium text-foreground truncate">
           {item.patientFirstName}
         </div>
-        <div className="text-xs text-neutral-500 truncate">
+        <div className="text-xs text-muted-foreground truncate">
           {item.medicationCount} meds &middot; {formatTime(item.timestamp)}
         </div>
       </div>
 
       <div className="flex items-center gap-2 ms-2">
         {isPaperPrescription && (
-          <span
+          <Badge
+            variant="outline"
             data-testid={`paper-badge-${item.id}`}
-            className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700"
+            className="bg-warning/10 text-warning border-warning/20"
           >
             PAPER
-          </span>
+          </Badge>
         )}
         {isPaperPrescription && (
-          <span
+          <Badge
+            variant="outline"
             data-testid={`manual-verify-flag-${item.id}`}
-            className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+            className="bg-destructive/10 text-destructive border-destructive/20"
           >
             Manual Verification Required
-          </span>
+          </Badge>
         )}
-        <span
+        <Badge
+          variant="outline"
           data-testid={`phase-badge-${item.id}`}
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${phaseBadgeClasses[item.phase]}`}
+          className={phaseBadgeClasses[item.phase]}
         >
           {phaseLabels[item.phase]}
-        </span>
+        </Badge>
 
         {showSyncBadge && (
-          <span
+          <Badge
+            variant="outline"
             data-testid={`sync-badge-${item.id}`}
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${syncBadgeClasses[item.syncStatus]}`}
+            className={syncBadgeClasses[item.syncStatus]}
           >
             {syncLabels[item.syncStatus]}
-          </span>
+          </Badge>
         )}
 
         {onRetry && item.syncStatus === 'failed' && (
-          <button
+          <Button
+            variant="destructive"
             data-testid={`retry-btn-${item.id}`}
-            className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
             onClick={(e) => {
               e.stopPropagation()
               onRetry(item)
@@ -133,10 +139,10 @@ export function QueueItemCard({
             disabled={retrying}
           >
             {retrying ? (
-              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-red-300 border-t-red-700 me-1" />
+              <span className="inline-block h-3 w-3 animate-spin motion-reduce:animate-none rounded-full border-2 border-red-300 border-t-red-700 me-1" />
             ) : null}
             Retry Sync
-          </button>
+          </Button>
         )}
       </div>
     </li>

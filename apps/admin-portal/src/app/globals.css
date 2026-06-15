@@ -1,49 +1,19 @@
+@import '@ultranos/ui-kit/tokens.css';
+@import "tw-animate-css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import '@ultranos/ui-kit/tokens.css';
-
-/* ── Light theme (default) ── */
-:root {
-  --color-canvas: oklch(0.97 0.005 100);
-  --color-surface: oklch(0.99 0.003 100);
-  --color-surface-raised: oklch(1.0 0.0 0);
-  --color-sidebar: oklch(0.18 0.01 150);
-  --color-text-primary: oklch(0.15 0.005 100);
-  --color-text-secondary: oklch(0.45 0.005 100);
-  --color-text-on-dark: oklch(0.92 0.005 100);
-  --color-accent: oklch(0.82 0.19 128);
-  --color-accent-hover: oklch(0.87 0.15 128);
-  --color-accent-subtle: oklch(0.82 0.19 128 / 0.1);
-  --color-border: oklch(0.90 0.005 100);
-  --color-danger: oklch(0.63 0.2 25);
-  --color-danger-subtle: oklch(0.63 0.2 25 / 0.1);
-  --color-warning: oklch(0.75 0.15 70);
-  --color-warning-subtle: oklch(0.75 0.15 70 / 0.1);
-  --color-success: oklch(0.72 0.17 145);
-  --color-success-subtle: oklch(0.72 0.17 145 / 0.1);
-  --shadow-card: 0 1px 3px oklch(0.15 0.005 100 / 0.06);
-}
-
-/* ── Dark theme ── */
-[data-theme="dark"] {
-  --color-canvas: oklch(0.14 0.008 150);
-  --color-surface: oklch(0.18 0.01 150);
-  --color-surface-raised: oklch(0.22 0.01 150);
-  --color-sidebar: oklch(0.11 0.01 150);
-  --color-text-primary: oklch(0.92 0.005 100);
-  --color-text-secondary: oklch(0.60 0.005 100);
-  --color-text-on-dark: oklch(0.92 0.005 100);
-  --color-accent: oklch(0.82 0.19 128);
-  --color-accent-hover: oklch(0.87 0.15 128);
-  --color-accent-subtle: oklch(0.82 0.19 128 / 0.1);
-  --color-border: oklch(0.25 0.008 150);
-  --color-danger: oklch(0.63 0.2 25);
-  --color-danger-subtle: oklch(0.63 0.2 25 / 0.1);
-  --color-warning: oklch(0.75 0.15 70);
-  --color-warning-subtle: oklch(0.75 0.15 70 / 0.1);
-  --color-success: oklch(0.72 0.17 145);
-  --color-success-subtle: oklch(0.72 0.17 145 / 0.1);
-  --shadow-card: none;
+/* ── Base resets ── */
+@layer base {
+  * {
+    @apply border-border outline-none;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

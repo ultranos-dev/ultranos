@@ -11,13 +11,14 @@ export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: 'create' | 'update'
+  action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
-  status: 'pending' | 'syncing' | 'failed' | 'synced'
+  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
+  failureReason?: string
 }
 
 export type EnqueueInput = Pick<
@@ -128,7 +129,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
      * Mark a sync attempt as failed. Increments retryCount and applies backoff.
      * If maxRetries is reached, the entry is marked as permanently failed.
      */
-    async markFailed(id: string): Promise<void> {
+    async markFailed(id: string, reason?: string): Promise<void> {
       const pending = await storage.getByStatus('pending')
       const syncing = await storage.getByStatus('syncing')
       const entry = [...pending, ...syncing].find((e) => e.id === id)
@@ -143,6 +144,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
           status: 'failed',
           retryCount: newRetryCount,
           lastAttemptAt: nowIso,
+          failureReason: reason,
         })
       } else {
         await storage.put({
@@ -150,6 +152,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
           status: 'pending',
           retryCount: newRetryCount,
           lastAttemptAt: nowIso,
+          failureReason: reason,
         })
       }
     },

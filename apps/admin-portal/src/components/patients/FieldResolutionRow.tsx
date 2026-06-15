@@ -28,36 +28,36 @@ export function FieldResolutionRow({
   const isDifferent = survivorStr !== duplicateStr
 
   return (
-    <tr className={isDifferent ? 'bg-warning-subtle/30' : ''}>
-      <td className="px-4 py-3 text-sm font-medium text-text-primary">{label}</td>
-      <td className={`px-4 py-3 text-sm ${resolution === 'survivor' ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
+    <tr className={isDifferent ? 'bg-warning/10/30' : ''}>
+      <td className="px-4 py-3 text-sm font-medium text-foreground">{label}</td>
+      <td className={`px-4 py-3 text-sm ${resolution === 'survivor' ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
         {survivorStr}
       </td>
       <td className="px-4 py-3 text-center">
         <div className="flex items-center justify-center gap-4">
-          <label className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
             <input
               type="radio"
               name={`resolve-${field}`}
               checked={resolution === 'survivor'}
               onChange={() => onResolve('survivor')}
-              className="h-4 w-4 border-border text-accent focus:ring-accent/30"
+              className="h-4 w-4 border-border text-primary focus:ring-primary/30"
             />
             Survivor
           </label>
-          <label className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
             <input
               type="radio"
               name={`resolve-${field}`}
               checked={resolution === 'duplicate'}
               onChange={() => onResolve('duplicate')}
-              className="h-4 w-4 border-border text-accent focus:ring-accent/30"
+              className="h-4 w-4 border-border text-primary focus:ring-primary/30"
             />
             Duplicate
           </label>
         </div>
       </td>
-      <td className={`px-4 py-3 text-sm ${resolution === 'duplicate' ? 'font-semibold text-text-primary' : 'text-text-muted'}`}>
+      <td className={`px-4 py-3 text-sm ${resolution === 'duplicate' ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
         {duplicateStr}
       </td>
     </tr>

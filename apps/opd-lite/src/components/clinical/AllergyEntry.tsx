@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import type { FhirAllergyIntolerance } from '@ultranos/shared-types'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -33,9 +34,9 @@ const STATUS_OPTIONS: { value: ClinicalStatus; label: string }[] = [
 ]
 
 const STATUS_BADGE_CLASSES: Record<ClinicalStatus, string> = {
-  active: 'bg-red-100 text-red-700',
-  inactive: 'bg-neutral-100 text-neutral-600',
-  resolved: 'bg-green-100 text-green-700',
+  active: 'bg-destructive/20 text-destructive',
+  inactive: 'bg-muted text-muted-foreground',
+  resolved: 'bg-success/20 text-success',
 }
 
 export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
@@ -123,15 +124,15 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
   )
 
   const inputClasses =
-    'w-full rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-2.5 ' +
-    'text-base text-neutral-900 placeholder:text-neutral-400 ' +
+    'w-full rounded-xl border border-border bg-background ps-4 pe-4 py-2.5 ' +
+    'text-base text-foreground placeholder:text-muted-foreground ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
     'focus:border-primary-400 focus:ring-primary-200 ' +
     'disabled:opacity-50 disabled:cursor-not-allowed'
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+      <h3 className="text-2xl font-black tracking-tight text-foreground">
         Allergies
       </h3>
 
@@ -143,18 +144,18 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
             return (
               <li
                 key={a.id}
-                className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-3"
+                className="flex items-center justify-between rounded-xl ring-[0.65px] ring-border/50 bg-background ps-4 pe-4 py-3"
               >
                 <div>
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-foreground">
                     {a._ultranos.substanceFreeText || a.code.text || 'Unknown substance'}
                   </span>
-                  <span className="ms-2 text-sm text-neutral-500">
+                  <span className="ms-2 text-sm text-muted-foreground">
                     ({a.type} &middot; {a.criticality})
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-400">
+                  <span className="text-xs text-muted-foreground">
                     {a.verificationStatus?.coding[0]?.code === 'confirmed' ? '✓ confirmed' : 'unconfirmed'}
                   </span>
                   <span
@@ -170,9 +171,9 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
       )}
 
       {/* Add allergy form */}
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
         <div>
-          <label htmlFor="allergy-substance" className="mb-1 block text-sm font-semibold text-neutral-700">
+          <label htmlFor="allergy-substance" className="mb-1 block text-sm font-semibold text-foreground">
             Substance
           </label>
           <input
@@ -189,7 +190,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label htmlFor="allergy-type" className="mb-1 block text-sm font-semibold text-neutral-700">
+            <label htmlFor="allergy-type" className="mb-1 block text-sm font-semibold text-foreground">
               Reaction Type
             </label>
             <select
@@ -209,7 +210,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
           </div>
 
           <div>
-            <label htmlFor="allergy-criticality" className="mb-1 block text-sm font-semibold text-neutral-700">
+            <label htmlFor="allergy-criticality" className="mb-1 block text-sm font-semibold text-foreground">
               Criticality
             </label>
             <select
@@ -229,7 +230,7 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
           </div>
 
           <div>
-            <label htmlFor="allergy-clinical-status" className="mb-1 block text-sm font-semibold text-neutral-700">
+            <label htmlFor="allergy-clinical-status" className="mb-1 block text-sm font-semibold text-foreground">
               Clinical Status
             </label>
             <select
@@ -250,19 +251,16 @@ export function AllergyEntry({ patientId, disabled }: AllergyEntryProps) {
         </div>
 
         {error && (
-          <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>
+          <p className="text-sm font-semibold text-destructive" role="alert">{error}</p>
         )}
 
-        <button
+        <Button
+          variant="danger"
           type="submit"
           disabled={disabled || !substance.trim() || isSubmitting}
-          className={
-            'rounded-lg bg-red-600 ps-6 pe-6 py-2.5 text-sm font-bold text-white ' +
-            'transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
-          }
         >
           {isSubmitting ? 'Adding...' : 'Add Allergy'}
-        </button>
+        </Button>
       </form>
     </div>
   )

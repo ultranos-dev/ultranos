@@ -20,6 +20,7 @@ export interface DashboardData {
   loading: boolean
   error: string | null
   retry: () => void
+  lastRefreshedAt: string | null
 }
 
 export interface RecentUploadItem {
@@ -28,6 +29,8 @@ export interface RecentUploadItem {
   timestamp: string
   status: 'completed' | 'pending' | 'uploading' | 'failed' | 'expired'
   source: 'local' | 'remote'
+  patientFirstName?: string
+  localQueueId?: number
 }
 
 const REFRESH_INTERVAL_MS = 60_000
@@ -58,6 +61,8 @@ function mapQueueToRecent(items: UploadQueueEntry[]): RecentUploadItem[] {
     timestamp: item.queuedAt,
     status: item.status,
     source: 'local' as const,
+    patientFirstName: item.patientFirstName,
+    localQueueId: item.id,
   }))
 }
 
@@ -83,6 +88,7 @@ export function useDashboardData(): DashboardData {
   const [recentUploads, setRecentUploads] = useState<RecentUploadItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const cancelledRef = useRef(false)
   const inFlightRef = useRef(false)
@@ -162,6 +168,7 @@ export function useDashboardData(): DashboardData {
       if (!remoteError) {
         setError(null)
       }
+      setLastRefreshedAt(new Date().toISOString())
       setLoading(false)
     } finally {
       inFlightRef.current = false
@@ -184,5 +191,5 @@ export function useDashboardData(): DashboardData {
     fetchData()
   }, [fetchData])
 
-  return { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry }
+  return { queueCounts, todayUploadsCompleted, todayResultsPending, recentUploads, loading, error, retry, lastRefreshedAt }
 }

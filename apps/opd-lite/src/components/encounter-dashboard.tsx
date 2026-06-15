@@ -17,6 +17,7 @@ import { useCommandPalette } from '@/hooks/use-command-palette'
 import { usePrescriptionStore } from '@/stores/prescription-store'
 import { PrescriptionEntry } from '@/components/clinical/PrescriptionEntry'
 import type { PrescriptionFormData } from '@/lib/prescription-config'
+import { useTranslations } from 'next-intl'
 import { checkInteractions, type InteractionCheckSummary, type InteractionResult } from '@/services/interactionService'
 import { InteractionWarningModal } from '@/components/modals/InteractionWarningModal'
 import { logInteractionCheck } from '@/services/interactionAuditService'
@@ -28,13 +29,18 @@ import { getSigningKey, getPublicKey } from '@/lib/signing-key-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { checkAIProcessingConsent } from '@/services/ai-scribe-service'
+import { ConflictBanner } from '@/components/sync/ConflictBanner'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/Card'
+import { usePatientSync } from '@/hooks/usePatientSync'
+import { hasUnresolvedTier1Conflicts } from '@/lib/conflict-check'
 
 interface EncounterDashboardProps {
   patientId: string
 }
 
-function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
-  if (!birthDate) return 'Unknown age'
+function formatAge(birthDate?: string, birthYearOnly?: boolean, unknownLabel = 'Unknown age'): string {
+  if (!birthDate) return unknownLabel
   const birth = new Date(birthDate)
   const now = new Date()
   if (birthYearOnly) {
@@ -49,6 +55,12 @@ function formatAge(birthDate?: string, birthYearOnly?: boolean): string {
 }
 
 export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
+  const tPatient = useTranslations('patient')
+  const tPrescription = useTranslations('prescription')
+  const tEncounter = useTranslations('encounter')
+  const tNav = useTranslations('nav')
+  const tSoap = useTranslations('soap')
+  const tAllergy = useTranslations('allergy')
   const practitionerRef = useAuthSessionStore((s) => s.session?.practitionerId ?? '')
   const isAuthenticated = useAuthSessionStore((s) => s.isAuthenticated)
   const router = useRouter()
@@ -56,6 +68,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
   const selectedPatient = usePatientStore((s) => s.selectedPatient)
   const [dexiePatient, setDexiePatient] = useState<FhirPatient | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const { isSyncing: _isSyncing } = usePatientSync(patientId)
+  const [prescriptionBlocked, setPrescriptionBlocked] = useState(false)
 
   // Shallow selectors to prevent unnecessary re-renders (perf guardrail)
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
@@ -193,6 +208,18 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     }
   }, [])
 
+  // Check for Tier 1 conflicts that block prescriptions
+  useEffect(() => {
+    let cancelled = false
+    async function checkConflicts() {
+      const blocked = await hasUnresolvedTier1Conflicts(patientId)
+      if (!cancelled) setPrescriptionBlocked(blocked)
+    }
+    checkConflicts()
+    const interval = setInterval(checkConflicts, 5_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [patientId])
+
   // Story 24.1: Check AI_PROCESSING consent when encounter loads
   useEffect(() => {
     if (!isActive || !patientId) return
@@ -236,7 +263,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     // P2: Block prescription while allergy store is still loading
     const allergyLoading = useAllergyStore.getState().isLoading
     if (allergyLoading) {
-      setPrescriptionError('⚠ Allergy data still loading — please wait before prescribing')
+      setPrescriptionError(tPrescription('errorAllergyLoading'))
       prescriptionCheckInFlight.current = false
       return
     }
@@ -244,7 +271,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     // P3: Treat allergy load error same as interaction check unavailable (CLAUDE.md Rule #3)
     const allergyLoadError = useAllergyStore.getState().loadError
     if (allergyLoadError) {
-      setPrescriptionError('⚠ Allergy data unavailable — interaction check incomplete. Verify allergies before prescribing.')
+      setPrescriptionError(tPrescription('errorAllergyUnavailable'))
       try {
         const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
           interactionCheckResult: 'UNAVAILABLE',
@@ -263,7 +290,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           // Audit log failure must not block the prescription — log is best-effort locally
         }
       } catch (err) {
-        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
       }
       prescriptionCheckInFlight.current = false
       return
@@ -272,7 +299,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     try {
       // Safety gate: check interactions against active meds
       const activeMedNames = pendingPrescriptions.map(
-        (rx) => rx.medicationCodeableConcept.coding[0]?.display ?? '',
+        (rx) => rx.medicationCodeableConcept.coding?.[0]?.display ?? '',
       ).filter(Boolean)
 
       let checkResult: InteractionCheckSummary
@@ -283,7 +310,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         })
       } catch {
         // CLAUDE.md safety rule #3: never default to "no interactions found" on failure
-        setPrescriptionError('⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.')
+        setPrescriptionError(tPrescription('errorInteractionUnavailable'))
         try {
           const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
             interactionCheckResult: 'UNAVAILABLE',
@@ -298,7 +325,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             practitionerRef: practitionerRef,
           })
         } catch (err) {
-          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+          setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
         }
         return
       }
@@ -317,8 +344,8 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
       if (checkResult.result === 'UNAVAILABLE') {
         // CLAUDE.md safety rule #3: never default to "no interactions found"
         const staleMsg = checkResult.reason === 'DATABASE_STALE'
-          ? '⚠ Interaction check unavailable — drug database outdated'
-          : '⚠ Drug interaction check unavailable — verify prescriptions manually before dispensing.'
+          ? tPrescription('errorDatabaseStale')
+          : tPrescription('errorInteractionUnavailable')
         setPrescriptionError(staleMsg)
         try {
           const rx = await addPrescription(form, activeEncounter.id, patientId, practitionerRef, {
@@ -338,7 +365,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             // Audit log failure must not block the prescription
           }
         } catch (err) {
-          setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+          setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
         }
         prescriptionCheckInFlight.current = false
         return
@@ -364,7 +391,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           // Audit log failure must not block the prescription — log is best-effort locally
         }
       } catch (err) {
-        setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+        setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
       }
     } finally {
       prescriptionCheckInFlight.current = false
@@ -402,7 +429,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
         // Audit log failure must not block the prescription — log is best-effort locally
       }
     } catch (err) {
-      setPrescriptionError(err instanceof Error ? err.message : 'Failed to save prescription')
+      setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorSaveFailed'))
     }
   }, [activeEncounter, addPrescription, patientId, practitionerRef, interactionModal.pendingForm, interactionModal.interactions.length])
 
@@ -415,7 +442,7 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
     try {
       await removePrescription(id)
     } catch (err) {
-      setPrescriptionError(err instanceof Error ? err.message : 'Failed to cancel prescription')
+      setPrescriptionError(err instanceof Error ? err.message : tPrescription('errorCancelFailed'))
     }
   }, [removePrescription])
 
@@ -439,29 +466,30 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <svg className="h-5 w-5 animate-spin text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="h-5 w-5 animate-spin text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
           </svg>
-          <p className="font-semibold text-neutral-500">Loading patient...</p>
+          <p className="font-semibold text-muted-foreground">{tEncounter('loadingPatient')}</p>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (!patient) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <p className="font-semibold text-neutral-500">Patient not found in local session.</p>
-        <button
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
+        <p className="font-semibold text-muted-foreground">{tPatient('notFound')}</p>
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="mt-4 font-semibold text-primary-500 underline"
+          className="mt-4"
         >
-          Return to Patient Search
-        </button>
-      </main>
+          {tNav('returnToSearch')}
+        </Button>
+      </div>
     )
   }
 
@@ -479,111 +507,120 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           }
         `}</style>
       )}
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-2xl flex flex-col gap-4">
       {/* CLAUDE.md Rule #4: Allergy banner renders FIRST, in red, never collapsed */}
       <AllergyBanner patientId={patientId} />
 
+      <ConflictBanner patientId={patientId} />
+
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <header className="mb-8">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/')}
-          className="mb-4 text-sm font-semibold text-primary-500 [@media(hover:hover)and(pointer:fine)]:hover:underline"
-          aria-label="Back to search"
+          className="mb-4"
+          aria-label={tEncounter('backToSearch')}
         >
-          ← Back to Search
-        </button>
-        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
-          Encounter Dashboard
+          {tNav('backToSearch')}
+        </Button>
+        <h1 className="text-3xl font-black tracking-tight text-foreground">
+          {tEncounter('dashboard')}
         </h1>
       </header>
 
-      <section
-        className="rounded-lg border border-neutral-200 bg-white p-6"
-        aria-label="Patient information"
+      <Card
+        as="section"
+        aria-label={tEncounter('patientInfo')}
       >
-        <h2 className="text-xl font-bold text-neutral-900">
+        <h2 className="text-xl font-bold text-foreground">
           {patient._ultranos?.nameLocal}
         </h2>
         {patient._ultranos?.nameLatin && (
-          <p className="text-sm font-semibold text-neutral-500">
+          <p className="text-sm font-semibold text-muted-foreground">
             {patient._ultranos.nameLatin}
           </p>
         )}
-        <div className="mt-3 flex gap-4 text-sm font-semibold text-neutral-600">
+        <div className="mt-3 flex gap-4 text-sm font-semibold text-muted-foreground">
           <span>ID: {patient.id.slice(0, 8)}...</span>
-          <span>{patient.gender ?? 'Unknown'}</span>
-          <span>{formatAge(patient.birthDate, patient.birthYearOnly)}</span>
+          <span>{patient.gender ?? tPatient('unknownGender')}</span>
+          <span>{formatAge(patient.birthDate, patient.birthYearOnly, tPatient('unknownAge'))}</span>
         </div>
-      </section>
+      </Card>
 
       {/* Encounter status + controls */}
-      <section
-        className="mt-6 rounded-lg border border-neutral-200 bg-white p-6"
-        aria-label="Encounter status"
+      <Card
+        as="section"
+        className="mt-6"
+        aria-label={tEncounter('statusAria')}
       >
         {isActive ? (
           <>
             <div className="flex items-center gap-3">
               <span
-                className="inline-block h-3 w-3 rounded-full bg-green-500"
+                className="inline-block h-3 w-3 rounded-full bg-success"
                 aria-hidden="true"
               />
-              <span className="text-lg font-bold text-green-700" role="status">
-                Active Consultation
+              <span className="text-lg font-bold text-success" role="status">
+                {tEncounter('activeConsultation')}
               </span>
             </div>
-            <p className="mt-2 text-sm text-neutral-500">
-              Started: {activeEncounter.period.start
-                ? new Date(activeEncounter.period.start).toLocaleTimeString()
-                : 'Unknown'}
+            <p className="mt-2 text-sm text-muted-foreground">
+              {tEncounter('started', {
+                time: activeEncounter.period.start
+                  ? new Date(activeEncounter.period.start).toLocaleTimeString()
+                  : tEncounter('startedUnknown')
+              })}
             </p>
-            <button
+            <Button
+              variant="secondary"
               onClick={handleEndEncounter}
-              className="mt-4 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
+              className="mt-4"
             >
-              End Encounter
-            </button>
+              {tEncounter('endEncounter')}
+            </Button>
           </>
         ) : (
           <>
-            <p className="mb-4 font-semibold text-neutral-500">
-              No active consultation
+            <p className="mb-4 font-semibold text-muted-foreground">
+              {tEncounter('noActiveConsultation')}
             </p>
-            <button
+            <Button
+              variant="primary"
               onClick={handleStartEncounter}
               disabled={isStarting || !isAuthenticated}
-              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-all duration-150 hover:bg-green-700 active:scale-[0.97] disabled:opacity-50"
             >
-              {isStarting ? 'Starting...' : 'Start Encounter'}
-            </button>
+              {isStarting ? tEncounter('starting') : tEncounter('startEncounter')}
+            </Button>
           </>
         )}
-      </section>
+      </Card>
 
       {/* Allergies — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '0ms' }}
-          aria-label="Allergies"
+          aria-label={tAllergy('title')}
           data-section="allergies"
           tabIndex={-1}
         >
           <AllergyEntry patientId={patientId} />
-        </section>
+        </Card>
       )}
 
       {/* Vital Signs — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '50ms' }}
-          aria-label="Vital signs"
+          aria-label={tEncounter('vitalSigns')}
           data-section="vitals"
           tabIndex={-1}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">Vital Signs</h2>
+            <h2 className="text-lg font-bold text-foreground">{tEncounter('vitalSigns')}</h2>
             <AutosaveIndicator status={vitalsAutosaveStatus} />
           </div>
           <VitalsForm
@@ -600,18 +637,19 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             bmi={getBmi()}
             rangeStatuses={getRangeStatuses()}
           />
-        </section>
+        </Card>
       )}
 
       {/* SOAP Note Entry — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '100ms' }}
-          aria-label="SOAP note entry"
+          aria-label={tEncounter('soapNotes')}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-neutral-900">Clinical Notes</h2>
+            <h2 className="text-lg font-bold text-foreground">{tSoap('clinicalNotes')}</h2>
             <AutosaveIndicator status={autosaveStatus} />
           </div>
           <SOAPNoteEntry
@@ -628,29 +666,30 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             aiConsentGranted={aiConsentGranted}
             isOnline={isOnline}
           />
-        </section>
+        </Card>
       )}
 
       {/* Prescriptions — visible only during active encounter */}
       {isActive && (
-        <section
-          className="encounter-section mt-6 rounded-lg border border-neutral-200 bg-white p-6"
+        <Card
+          as="section"
+          className="encounter-section mt-6"
           style={{ animationDelay: '150ms' }}
-          aria-label="Prescriptions"
+          aria-label={tEncounter('prescriptions')}
           data-section="prescriptions"
           tabIndex={-1}
         >
           {/* Story 10.1 AC 9: Medication history unavailable warning */}
           {!medicationHistoryAvailable && (
             <div
-              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
               role="alert"
             >
-              <p className="text-sm font-bold text-amber-800">
-                Full medication history unavailable — interaction check limited to current encounter
+              <p className="text-sm font-bold text-foreground">
+                {tPrescription('medicationHistoryUnavailable')}
               </p>
-              <p className="text-xs text-amber-700">
-                The patient&apos;s chronic medication history could not be loaded. Cross-encounter interactions may not be detected.
+              <p className="text-xs text-muted-foreground">
+                {tPrescription('medicationHistoryDetail')}
               </p>
             </div>
           )}
@@ -658,26 +697,26 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
           {/* Drug interaction check status */}
           {pendingPrescriptions.some((rx) => rx._ultranos.interactionCheckResult === 'UNAVAILABLE') ? (
             <div
-              className="mb-4 rounded-lg border border-amber-300 bg-amber-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3"
               role="alert"
             >
-              <p className="text-sm font-bold text-amber-800">
-                ⚠ Drug interaction check partially unavailable
+              <p className="text-sm font-bold text-foreground">
+                {tPrescription('interactionCheckPartial')}
               </p>
-              <p className="text-xs text-amber-700">
-                One or more prescriptions could not be checked for interactions. Verify manually before dispensing.
+              <p className="text-xs text-muted-foreground">
+                {tPrescription('interactionCheckPartialDetail')}
               </p>
             </div>
           ) : (
             <div
-              className="mb-4 rounded-lg border border-green-300 bg-green-50 ps-4 pe-4 py-3"
+              className="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3"
               role="status"
             >
-              <p className="text-sm font-bold text-green-800">
-                Drug interaction checking active
+              <p className="text-sm font-bold text-foreground">
+                {tPrescription('interactionCheckActive')}
               </p>
-              <p className="text-xs text-green-700">
-                Checking against {activeMedicationStatements.length} active medication{activeMedicationStatements.length !== 1 ? 's' : ''} and {activeAllergies.length} known allerg{activeAllergies.length !== 1 ? 'ies' : 'y'}.
+              <p className="text-xs text-muted-foreground">
+                {tPrescription('interactionCheckActiveDetail', { medCount: activeMedicationStatements.length, allergyCount: activeAllergies.length })}
               </p>
             </div>
           )}
@@ -689,67 +728,76 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
             onOverride={handleInteractionOverride}
           />
 
+          {prescriptionBlocked && (
+            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 p-3" role="alert">
+              <p className="text-sm font-semibold text-destructive">
+                {tPrescription('prescriptionBlocked')}
+              </p>
+            </div>
+          )}
+
           <PrescriptionEntry onSubmit={handleAddPrescription} />
 
           {prescriptionError && (
-            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 ps-4 pe-4 py-3" role="alert">
-              <p className="text-sm font-semibold text-red-800">{prescriptionError}</p>
+            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
+              <p className="text-sm font-semibold text-destructive">{prescriptionError}</p>
             </div>
           )}
 
           {/* Pending prescriptions list */}
           {pendingPrescriptions.length > 0 && (
             <div className="mt-6 space-y-3">
-              <h4 className="text-sm font-bold text-neutral-700">
-                Pending Prescriptions ({pendingPrescriptions.length})
+              <h4 className="text-sm font-bold text-foreground">
+                {tPrescription('pendingTitle', { count: pendingPrescriptions.length })}
               </h4>
-              <ul className="space-y-2" aria-label="Pending prescriptions list">
+              <ul className="space-y-2" aria-label={tPrescription('pendingTitle', { count: pendingPrescriptions.length })}>
                 {pendingPrescriptions.map((rx) => (
                   <li
                     key={rx.id}
-                    className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-3"
+                    className="flex items-center justify-between rounded-xl ring-[0.65px] ring-border/50 bg-card px-4 py-3"
                   >
                     <div>
-                      <span className="font-semibold text-neutral-900">
+                      <span className="font-semibold text-foreground">
                         {rx.medicationCodeableConcept.text}
                       </span>
-                      <span className="ms-2 me-2 text-neutral-300">|</span>
-                      <span className="text-sm text-neutral-600">
+                      <span className="ms-2 me-2 text-border">|</span>
+                      <span className="text-sm text-muted-foreground">
                         {rx.dosageInstruction?.[0]?.text}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       {rx._ultranos.interactionCheckResult === 'WARNING' && (
-                        <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
-                          Interaction Warning
+                        <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
+                          {tPrescription('interactionWarning')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'BLOCKED' && (
-                        <span className="rounded-full bg-red-100 ps-3 pe-3 py-1 text-xs font-bold text-red-700" title={rx._ultranos.interactionOverrideReason}>
-                          Override
+                        <span className="rounded-full bg-destructive/20 px-3 py-1 text-xs font-bold text-destructive" title={rx._ultranos.interactionOverrideReason}>
+                          {tPrescription('interactionOverride')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'CLEAR' && (
-                        <span className="rounded-full bg-green-100 ps-3 pe-3 py-1 text-xs font-bold text-green-700">
-                          Clear
+                        <span className="rounded-full bg-success/20 px-3 py-1 text-xs font-bold text-success">
+                          {tPrescription('interactionClear')}
                         </span>
                       )}
                       {rx._ultranos.interactionCheckResult === 'UNAVAILABLE' && (
-                        <span className="rounded-full bg-neutral-100 ps-3 pe-3 py-1 text-xs font-bold text-neutral-500">
-                          Unchecked
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
+                          {tPrescription('interactionUnchecked')}
                         </span>
                       )}
-                      <span className="rounded-full bg-amber-100 ps-3 pe-3 py-1 text-xs font-bold text-amber-700">
-                        Pending Fulfillment
+                      <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-bold text-foreground">
+                        {tPrescription('pendingFulfillment')}
                       </span>
-                      <button
+                      <Button
+                        variant="ghost"
                         type="button"
                         onClick={() => handleRemovePrescription(rx.id)}
-                        className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
-                        aria-label={`Cancel prescription for ${rx.medicationCodeableConcept.text}`}
+                        className="!text-destructive"
+                        aria-label={tPrescription('cancelAria', { medication: rx.medicationCodeableConcept.text })}
                       >
-                        Cancel
-                      </button>
+                        {tPrescription('cancel')}
+                      </Button>
                     </div>
                   </li>
                 ))}
@@ -757,9 +805,9 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
 
               {/* QR Code Generation — available when prescriptions exist and key is loaded */}
               {signingKey && signingPublicKey && (
-                <div className="mt-6 border-t border-neutral-200 pt-6">
-                  <h4 className="mb-3 text-sm font-bold text-neutral-700">
-                    Digital Prescription
+                <div className="mt-6 border-t border-border pt-6">
+                  <h4 className="mb-3 text-sm font-bold text-foreground">
+                    {tPrescription('digitalPrescription')}
                   </h4>
                   <PrescriptionQR
                     prescriptions={pendingPrescriptions}
@@ -779,10 +827,10 @@ export function EncounterDashboard({ patientId }: EncounterDashboardProps) {
               )}
             </div>
           )}
-        </section>
+        </Card>
       )}
 
-    </main>
+    </div>
     </>
   )
 }

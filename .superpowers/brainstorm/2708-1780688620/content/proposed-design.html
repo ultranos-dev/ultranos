@@ -1,0 +1,203 @@
+<h2>Proposed Content Area Standardization</h2>
+<p class="subtitle">Two layers of fixes. Review each section — does this match what you want?</p>
+
+<style>
+  .section-label { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-foreground);margin:22px 0 8px; }
+  .shell { border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card); }
+  .split { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+  .split3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px; }
+  .app-label { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-foreground);margin-bottom:4px;text-align:center; }
+  .header-bar { display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--border);background:var(--background); }
+  .h14 { height:42px; }
+  .trigger { width:10px;height:10px;border:1px solid var(--border);border-radius:2px;flex-shrink:0; }
+  .sep { width:1px;background:var(--border);height:12px;flex-shrink:0; }
+  .bp { font-size:8px;background:var(--muted);border-radius:3px;padding:1px 4px;color:var(--muted-foreground); }
+  .body { padding:8px;display:flex;flex-direction:column;gap:4px; }
+  .stripe { height:7px;background:var(--muted);border-radius:3px; }
+  .stripe.short { width:55%; }
+  .cgrid { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
+  .ccard { height:26px;background:var(--background);border:1px solid var(--border);border-radius:5px; }
+  .spacer-bad { height:8px;background:oklch(0.95 0.07 60 / 0.6);border-radius:2px;display:flex;align-items:center;padding:0 4px;font-size:7px;color:oklch(0.45 0.12 60);font-weight:700; }
+  .spacer-ok { height:5px;background:oklch(0.95 0.07 155 / 0.4);border-radius:2px;display:flex;align-items:center;padding:0 4px;font-size:7px;color:oklch(0.4 0.1 155);font-weight:700; }
+  .pad-bad { background:oklch(0.95 0.07 60 / 0.3);border:1px dashed oklch(0.7 0.12 60);padding:4px;border-radius:4px; }
+  .pad-ok { background:var(--card);border:1px solid var(--border);padding:4px;border-radius:4px; }
+  .change-row { display:flex;align-items:center;gap:6px;font-size:10px;padding:5px 0;border-bottom:1px solid var(--border); }
+  .change-row:last-child { border-bottom:none; }
+  .file-tag { font-family:monospace;font-size:9px;background:var(--muted);padding:1px 5px;border-radius:3px;color:var(--foreground);flex-shrink:0; }
+  .arrow { color:var(--muted-foreground);font-size:10px; }
+  .before { color:oklch(0.45 0.12 60);font-size:9px;font-family:monospace; }
+  .after { color:oklch(0.4 0.1 155);font-size:9px;font-family:monospace; }
+  .count-badge { font-size:9px;font-weight:700;background:var(--muted);border-radius:99px;padding:1px 7px;color:var(--muted-foreground);white-space:nowrap; }
+  .rule-box { background:oklch(0.97 0.03 240);border:1px solid oklch(0.88 0.03 240);border-radius:8px;padding:10px 12px;font-size:10px;line-height:1.8; }
+</style>
+
+<!-- LAYER 1: Shell -->
+<div class="section-label">Layer 1 — App Shell &nbsp;<span class="count-badge">3 files</span></div>
+
+<div class="split">
+  <div>
+    <p style="font-size:11px;font-weight:600;margin:0 0 8px;">Before (today)</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <div class="app-label" style="color:oklch(0.45 0.12 60)">Admin — h-12 ✗</div>
+        <div class="shell">
+          <div class="header-bar" style="height:32px;"><div class="trigger"></div><div class="sep"></div><div class="bp">Dashboard</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">OPD — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Patients</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">Pharmacy — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Queue</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.45 0.12 60)">Lab — h-12 ✗</div>
+        <div class="shell">
+          <div class="header-bar" style="height:32px;"><div class="trigger"></div><div class="sep"></div><div class="bp">Results</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <p style="font-size:11px;font-weight:600;margin:0 0 8px;">After (standardized)</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">Admin — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Dashboard</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">OPD — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Patients</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">Pharmacy — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Queue</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="app-label" style="color:oklch(0.4 0.1 155)">Lab — h-14 ✓</div>
+        <div class="shell">
+          <div class="header-bar h14"><div class="trigger"></div><div class="sep"></div><div class="bp">Results</div></div>
+          <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:10px;" class="rule-box">
+  <strong>Shell changes (3 files):</strong><br>
+  <code>apps/admin-portal/src/components/BreadcrumbHeader.tsx</code> → h-12 to h-14, add id="main-content" to AuthGuard &lt;main&gt;<br>
+  <code>apps/lab-lite/src/components/PageHeader.tsx</code> → h-12 to h-14
+</div>
+
+<!-- LAYER 2: Page content -->
+<div class="section-label" style="margin-top:22px;">Layer 2 — Page content &nbsp;<span class="count-badge">~28 files</span></div>
+
+<p style="font-size:11px;color:var(--muted-foreground);margin:0 0 12px;">Four problem patterns, each with a consistent fix rule:</p>
+
+<!-- Pattern A: mt-6 -->
+<div style="margin-bottom:14px;">
+  <p style="font-size:11px;font-weight:600;margin:0 0 6px;">A · <code>mt-6</code> inside <code>gap-4</code> container &nbsp;<span class="count-badge">admin-portal/dashboard: 3×</span></p>
+  <div class="split">
+    <div class="shell">
+      <div style="padding:6px 8px;font-size:8px;font-weight:700;color:oklch(0.45 0.12 60);border-bottom:1px solid var(--border);">BEFORE — dashboard page</div>
+      <div class="body">
+        <div class="cgrid"><div class="ccard"></div><div class="ccard"></div></div>
+        <div class="spacer-bad">mt-6 = 24px gap</div>
+        <div class="ccard" style="height:20px;"></div>
+        <div class="spacer-bad">mt-6 = 24px gap</div>
+        <div class="ccard" style="height:20px;"></div>
+      </div>
+    </div>
+    <div class="shell">
+      <div style="padding:6px 8px;font-size:8px;font-weight:700;color:oklch(0.4 0.1 155);border-bottom:1px solid var(--border);">AFTER — uniform gap-4</div>
+      <div class="body">
+        <div class="cgrid"><div class="ccard"></div><div class="ccard"></div></div>
+        <div class="spacer-ok">gap-4 = 16px (from parent)</div>
+        <div class="ccard" style="height:20px;"></div>
+        <div class="spacer-ok">gap-4 = 16px (from parent)</div>
+        <div class="ccard" style="height:20px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern B: px-6 pb-6 -->
+<div style="margin-bottom:14px;">
+  <p style="font-size:11px;font-weight:600;margin:0 0 6px;">B · Extra <code>px-6 pb-6</code> wrapper &nbsp;<span class="count-badge">opd-lite: 6 pages</span></p>
+  <div class="split">
+    <div class="shell">
+      <div style="padding:6px 8px;font-size:8px;font-weight:700;color:oklch(0.45 0.12 60);border-bottom:1px solid var(--border);">BEFORE — main(p-4) + page(px-6)</div>
+      <div class="body">
+        <div class="pad-bad">
+          <div style="font-size:8px;color:oklch(0.45 0.12 60);margin-bottom:3px;">px-6 pb-6 wrapper</div>
+          <div class="stripe"></div>
+          <div style="margin-top:3px;" class="stripe short"></div>
+        </div>
+      </div>
+    </div>
+    <div class="shell">
+      <div style="padding:6px 8px;font-size:8px;font-weight:700;color:oklch(0.4 0.1 155);border-bottom:1px solid var(--border);">AFTER — main(p-4) only</div>
+      <div class="body">
+        <div class="pad-ok">
+          <div class="stripe"></div>
+          <div style="margin-top:3px;" class="stripe short"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern C: gap-5/gap-6 -->
+<div style="margin-bottom:14px;">
+  <p style="font-size:11px;font-weight:600;margin:0 0 6px;">C · <code>gap-5</code> / <code>gap-6</code> on page root &nbsp;<span class="count-badge">lab-lite: 7 pages</span></p>
+  <div class="rule-box" style="margin-top:0;">
+    Fix: change <code class="before">gap-5</code> → <code class="after">gap-4</code> and <code class="before">gap-6</code> → <code class="after">gap-4</code> on page root divs.<br>
+    Affected: <code>lab-lite/page.tsx</code>, <code>history</code>, <code>orders</code>, <code>sendouts</code>, <code>planner</code>, <code>network</code> — also <code>space-y-6 → space-y-4</code> in <code>certification</code>, <code>competency</code>
+  </div>
+</div>
+
+<!-- Pattern D: Custom header bars -->
+<div style="margin-bottom:14px;">
+  <p style="font-size:11px;font-weight:600;margin:0 0 6px;">D · Custom border-b header bars inside pages &nbsp;<span class="count-badge">lab-lite: 2 pages</span></p>
+  <div class="split">
+    <div class="shell">
+      <div class="header-bar h14" style="background:var(--background);"><div class="trigger"></div><div class="sep"></div><div class="bp">Achievements</div></div>
+      <div style="padding:6px 8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid oklch(0.7 0.12 60);background:var(--background);">
+        <div style="font-size:8px;color:oklch(0.45 0.12 60);font-weight:700;">⚠ DUPLICATE HEADER inside page content</div>
+      </div>
+      <div class="body"><div class="stripe"></div><div class="stripe short"></div></div>
+    </div>
+    <div class="shell">
+      <div class="header-bar h14" style="background:var(--background);"><div class="trigger"></div><div class="sep"></div><div class="bp">Achievements</div></div>
+      <div class="body">
+        <div style="font-size:8px;color:oklch(0.4 0.1 155);font-weight:700;margin-bottom:2px;">✓ Only BreadcrumbHeader — no duplicate bar</div>
+        <div class="stripe"></div><div class="stripe short"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Max-w note -->
+<div class="rule-box" style="margin-top:4px;">
+  <strong>max-w constraints:</strong> Kept as-is — they're intentional for form pages (register, settings, kyc). Only the extra <code>px-*</code>/<code>py-*</code> padding is removed from those wrappers. The constraint itself stays.
+</div>

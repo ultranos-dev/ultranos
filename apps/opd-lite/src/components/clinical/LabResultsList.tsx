@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { Button } from '@/components/ui/Button'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { checkLabsConsent, type ConsentCheckResult } from '@/lib/consent-check'
 
 interface LabResultsListProps {
@@ -16,26 +20,26 @@ function statusBadge(status: string) {
   switch (status) {
     case 'preliminary':
       return (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+        <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-bold text-warning">
           Preliminary
         </span>
       )
     case 'final':
       return (
-        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+        <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-bold text-success">
           Final
         </span>
       )
     case 'amended':
     case 'corrected':
       return (
-        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700">
+        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary">
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
       )
     default:
       return (
-        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-600">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">
           {status}
         </span>
       )
@@ -84,8 +88,8 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
       // Sort by effectiveDateTime descending, fallback to issued
       results.sort((a, b) => {
-        const dateA = new Date(a.effectiveDateTime ?? a.issued).getTime()
-        const dateB = new Date(b.effectiveDateTime ?? b.issued).getTime()
+        const dateA = new Date(a.effectiveDateTime ?? a.issued ?? 0).getTime()
+        const dateB = new Date(b.effectiveDateTime ?? b.issued ?? 0).getTime()
         return dateB - dateA
       })
 
@@ -114,7 +118,7 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
   if (loading) {
     return (
-      <div className="py-4 text-center text-sm text-neutral-500">
+      <div className="py-4 text-center text-sm text-muted-foreground">
         Loading lab results...
       </div>
     )
@@ -124,18 +128,18 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   if (consentResult && !consentResult.granted) {
     if (consentResult.reason === 'expired') {
       return (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-expired">
-          <p className="font-bold text-amber-800">Consent has expired — request renewal</p>
-          <p className="mt-1 text-amber-700">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-expired">
+          <p className="font-bold text-warning">Consent has expired — request renewal</p>
+          <p className="mt-1 text-warning">
             The patient&apos;s consent to view lab results has expired. Please request a renewed consent before accessing lab data.
           </p>
         </div>
       )
     }
     return (
-      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm" data-testid="consent-required">
-        <p className="font-bold text-amber-800">Patient consent required to view lab results</p>
-        <p className="mt-1 text-amber-700">
+      <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm" data-testid="consent-required">
+        <p className="font-bold text-warning">Patient consent required to view lab results</p>
+        <p className="mt-1 text-warning">
           The patient has not granted consent for lab data access. Please obtain consent before viewing lab results.
         </p>
       </div>
@@ -146,24 +150,20 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
   const consentUnverified = consentResult?.granted && consentResult.unverified
 
   if (reports.length === 0) {
-    return (
-      <div className="py-4 text-center text-sm text-neutral-500">
-        No lab results available for this patient.
-      </div>
-    )
+    return <EmptyState title="No lab results available for this patient." size="sm" />
   }
 
   return (
     <div className="space-y-2" data-testid="lab-results-list">
       {consentUnverified && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm" data-testid="consent-unverified">
-          <p className="font-bold text-amber-800">Consent status could not be verified</p>
-          <p className="mt-1 text-amber-700">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm" data-testid="consent-unverified">
+          <p className="font-bold text-warning">Consent status could not be verified</p>
+          <p className="mt-1 text-warning">
             Showing cached results. Consent will be re-checked when connectivity is restored.
           </p>
         </div>
       )}
-      <h3 className="text-lg font-bold text-neutral-900">
+      <h3 className="text-lg font-bold text-foreground">
         Lab Results ({reports.length})
       </h3>
       <ul className="space-y-2" aria-label="Lab results list">
@@ -176,54 +176,43 @@ export function LabResultsList({ patientId, onSelectReport }: LabResultsListProp
 
           return (
             <li key={report.id}>
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => onSelectReport(report)}
-                className={`w-full rounded-lg border px-4 py-3 text-start transition-colors hover:bg-neutral-50 ${
+                className={`w-full rounded-lg border px-4 py-3 text-start hover:bg-muted ${
                   urgent
-                    ? 'border-red-300 bg-red-50'
-                    : 'border-neutral-200 bg-white'
+                    ? 'border-destructive/30 bg-destructive/10'
+                    : 'border-border bg-background'
                 }`}
                 aria-label={`View ${loincDisplay} from ${labName}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-neutral-900">
+                      <span className="font-semibold text-foreground">
                         {loincDisplay}
                       </span>
                       {statusBadge(report.status)}
                       {urgent && (
                         <span
-                          className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
+                          className="rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
                           data-testid="urgent-indicator"
                         >
                           Urgent
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex gap-3 text-xs text-neutral-500">
+                    <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
                       <span>{collectionDate}</span>
                       <span>{labName}</span>
                     </div>
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="h-5 w-5 shrink-0 text-neutral-400 rtl:scale-x-[-1]"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
+                  <DirectionalIcon category="navigation" aria-hidden={true}>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  </DirectionalIcon>
                 </div>
-              </button>
+              </Button>
             </li>
           )
         })}

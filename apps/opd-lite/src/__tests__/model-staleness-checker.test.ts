@@ -17,7 +17,7 @@ vi.mock('../lib/db', () => ({
 
 const {
   checkModelStaleness,
-  checkAllModelsStaleness,
+  checkAllModelsStaleness: _checkAllModelsStaleness,
   isModelAvailable,
   getStalenessBannerMessage,
   isDrugDatabaseStale,

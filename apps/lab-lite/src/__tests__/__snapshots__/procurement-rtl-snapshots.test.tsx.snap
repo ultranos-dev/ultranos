@@ -1,0 +1,1747 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OrderStatusPipeline — LTR snapshot > renders approved status with estimatedDelivery in LTR 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      class="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700"
+    >
+      <svg
+        data-size="16"
+        data-testid="truck"
+      />
+      <span>
+        Arriving in 26907 days
+      </span>
+    </div>
+    <div
+      aria-label="Order status pipeline"
+      class="flex items-center gap-0 overflow-x-auto"
+      dir="auto"
+      role="list"
+    >
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            submitted
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            received
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+          >
+            <svg
+              class="text-blue-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize font-semibold text-blue-700"
+          >
+            approved
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            ordered
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            shipped
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            delivered
+          </span>
+        </div>
+      </div>
+    </div>
+    <details
+      class="rounded-md border"
+    >
+      <summary
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+      >
+        Status history (
+        3
+         events)
+      </summary>
+      <ul
+        class="divide-y divide-gray-100 px-4"
+      >
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                approved
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 3, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                received
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 2, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                submitted
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 1, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              tech-001
+            </p>
+          </div>
+        </li>
+      </ul>
+    </details>
+  </div>
+</div>
+`;
+
+exports[`OrderStatusPipeline — LTR snapshot > renders cancelled status with red X and reason 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      aria-label="Order status pipeline"
+      class="flex items-center gap-0 overflow-x-auto"
+      dir="auto"
+      role="list"
+    >
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            submitted
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            received
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            approved
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            ordered
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            shipped
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            delivered
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3"
+    >
+      <svg
+        class="mt-0.5 shrink-0 text-red-600"
+        data-size="16"
+        data-testid="x-circle"
+      />
+      <div>
+        <p
+          class="text-sm font-medium text-red-800 capitalize"
+        >
+          cancelled
+        </p>
+        <p
+          class="text-xs text-red-600"
+        >
+          Another lab offered transfer
+        </p>
+      </div>
+    </div>
+    <details
+      class="rounded-md border"
+    >
+      <summary
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+      >
+        Status history (
+        4
+         events)
+      </summary>
+      <ul
+        class="divide-y divide-gray-100 px-4"
+      >
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                cancelled
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 4, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-500"
+            >
+              Another lab offered transfer
+            </p>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                approved
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 3, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                received
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 2, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                submitted
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 1, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              tech-001
+            </p>
+          </div>
+        </li>
+      </ul>
+    </details>
+  </div>
+</div>
+`;
+
+exports[`OrderStatusPipeline — LTR snapshot > renders delivered status with all stages completed 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      aria-label="Order status pipeline"
+      class="flex items-center gap-0 overflow-x-auto"
+      dir="auto"
+      role="list"
+    >
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            submitted
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            received
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            approved
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            ordered
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-green-700"
+          >
+            shipped
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+          >
+            <svg
+              class="text-green-600"
+              data-size="20"
+              data-testid="check-circle"
+            />
+          </span>
+          <span
+            class="text-xs capitalize font-semibold text-blue-700"
+          >
+            delivered
+          </span>
+        </div>
+      </div>
+    </div>
+    <details
+      class="rounded-md border"
+    >
+      <summary
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+      >
+        Status history (
+        6
+         events)
+      </summary>
+      <ul
+        class="divide-y divide-gray-100 px-4"
+      >
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                delivered
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 15, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              system
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                shipped
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 5, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                ordered
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 4, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                approved
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 3, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                received
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 2, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              coordinator-001
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                submitted
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 1, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              tech-001
+            </p>
+          </div>
+        </li>
+      </ul>
+    </details>
+  </div>
+</div>
+`;
+
+exports[`OrderStatusPipeline — LTR snapshot > renders submitted status in LTR 1`] = `
+<div>
+  <div
+    class="flex flex-col gap-4"
+  >
+    <div
+      aria-label="Order status pipeline"
+      class="flex items-center gap-0 overflow-x-auto"
+      dir="auto"
+      role="list"
+    >
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+          >
+            <svg
+              class="text-blue-600"
+              data-size="20"
+              data-testid="clock"
+            />
+          </span>
+          <span
+            class="text-xs capitalize font-semibold text-blue-700"
+          >
+            submitted
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            received
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            approved
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            ordered
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            shipped
+          </span>
+        </div>
+        <div
+          class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+        />
+      </div>
+      <div
+        class="flex items-center"
+        role="listitem"
+      >
+        <div
+          class="flex flex-col items-center gap-1"
+        >
+          <span
+            class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+          >
+            <span
+              class="h-2 w-2 rounded-full bg-gray-300"
+            />
+          </span>
+          <span
+            class="text-xs capitalize text-gray-400"
+          >
+            delivered
+          </span>
+        </div>
+      </div>
+    </div>
+    <details
+      class="rounded-md border"
+    >
+      <summary
+        class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+      >
+        Status history (
+        1
+         events)
+      </summary>
+      <ul
+        class="divide-y divide-gray-100 px-4"
+      >
+        <li
+          class="flex items-start gap-3 py-2"
+        >
+          <div
+            class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+          />
+          <div
+            class="flex-1"
+          >
+            <div
+              class="flex items-center gap-2"
+            >
+              <span
+                class="text-sm font-medium capitalize"
+              >
+                submitted
+              </span>
+              <span
+                class="text-xs text-gray-400"
+              >
+                May 1, 2026
+              </span>
+            </div>
+            <p
+              class="text-xs text-gray-400"
+            >
+              by 
+              tech-001
+            </p>
+          </div>
+        </li>
+      </ul>
+    </details>
+  </div>
+</div>
+`;
+
+exports[`OrderStatusPipeline — RTL snapshot > renders approved status RTL with ETA banner 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col gap-4"
+    >
+      <div
+        class="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700"
+      >
+        <svg
+          data-size="16"
+          data-testid="truck"
+        />
+        <span>
+          Arriving in 26907 days
+        </span>
+      </div>
+      <div
+        aria-label="Order status pipeline"
+        class="flex items-center gap-0 overflow-x-auto"
+        dir="auto"
+        role="list"
+      >
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              submitted
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              received
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              approved
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              ordered
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+            >
+              <svg
+                class="text-blue-600"
+                data-size="20"
+                data-testid="truck"
+              />
+            </span>
+            <span
+              class="text-xs capitalize font-semibold text-blue-700"
+            >
+              shipped
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-gray-300"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-gray-400"
+            >
+              delivered
+            </span>
+          </div>
+        </div>
+      </div>
+      <details
+        class="rounded-md border"
+      >
+        <summary
+          class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        >
+          Status history (
+          5
+           events)
+        </summary>
+        <ul
+          class="divide-y divide-gray-100 px-4"
+        >
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  shipped
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 5, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                coordinator-001
+              </p>
+            </div>
+          </li>
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  ordered
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 4, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                coordinator-001
+              </p>
+            </div>
+          </li>
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  approved
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 3, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                coordinator-001
+              </p>
+            </div>
+          </li>
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  received
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 2, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                coordinator-001
+              </p>
+            </div>
+          </li>
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  submitted
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 1, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                tech-001
+              </p>
+            </div>
+          </li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`OrderStatusPipeline — RTL snapshot > renders in RTL direction (dir=auto on pipeline container) 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col gap-4"
+    >
+      <div
+        aria-label="Order status pipeline"
+        class="flex items-center gap-0 overflow-x-auto"
+        dir="auto"
+        role="list"
+      >
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              submitted
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              received
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-green-100"
+            >
+              <svg
+                class="text-green-600"
+                data-size="20"
+                data-testid="check-circle"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-green-700"
+            >
+              approved
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-green-400"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-blue-100 ring-2 ring-blue-500"
+            >
+              <svg
+                class="text-blue-600"
+                data-size="20"
+                data-testid="shopping-bag"
+              />
+            </span>
+            <span
+              class="text-xs capitalize font-semibold text-blue-700"
+            >
+              ordered
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-gray-300"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-gray-400"
+            >
+              shipped
+            </span>
+          </div>
+          <div
+            class="mx-1 h-0.5 w-6 shrink-0 bg-gray-200"
+          />
+        </div>
+        <div
+          class="flex items-center"
+          role="listitem"
+        >
+          <div
+            class="flex flex-col items-center gap-1"
+          >
+            <span
+              class="flex items-center justify-center rounded-full w-8 h-8 bg-gray-100"
+            >
+              <span
+                class="h-2 w-2 rounded-full bg-gray-300"
+              />
+            </span>
+            <span
+              class="text-xs capitalize text-gray-400"
+            >
+              delivered
+            </span>
+          </div>
+        </div>
+      </div>
+      <details
+        class="rounded-md border"
+      >
+        <summary
+          class="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700"
+        >
+          Status history (
+          1
+           events)
+        </summary>
+        <ul
+          class="divide-y divide-gray-100 px-4"
+        >
+          <li
+            class="flex items-start gap-3 py-2"
+          >
+            <div
+              class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-gray-400"
+            />
+            <div
+              class="flex-1"
+            >
+              <div
+                class="flex items-center gap-2"
+              >
+                <span
+                  class="text-sm font-medium capitalize"
+                >
+                  submitted
+                </span>
+                <span
+                  class="text-xs text-gray-400"
+                >
+                  May 1, 2026
+                </span>
+              </div>
+              <p
+                class="text-xs text-gray-400"
+              >
+                by 
+                tech-001
+              </p>
+            </div>
+          </li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</div>
+`;

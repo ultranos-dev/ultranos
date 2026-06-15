@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import { searchVocab, type VocabSearchResult, type Icd10Item } from '@/lib/vocab-search'
 import type { DiagnosisRank } from '@/lib/condition-mapper'
 
@@ -41,7 +42,7 @@ function highlightMatches(
       parts.push(text.slice(lastIndex, clampedStart))
     }
     parts.push(
-      <mark key={start} className="bg-amber-200 text-neutral-900 rounded-sm px-0.5">
+      <mark key={start} className="bg-warning/30 text-foreground rounded-sm px-0.5">
         {text.slice(clampedStart, end + 1)}
       </mark>,
     )
@@ -128,7 +129,7 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
         setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
       } else if (e.key === 'Enter' && activeIndex >= 0) {
         e.preventDefault()
-        handleSelect(results[activeIndex].item)
+        handleSelect(results[activeIndex]!.item)
       } else if (e.key === 'Escape') {
         setIsOpen(false)
         setActiveIndex(-1)
@@ -157,40 +158,28 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+      <h3 className="text-2xl font-black tracking-tight text-foreground">
         Diagnosis
       </h3>
 
       {/* Rank toggle */}
       <div className="flex gap-2" role="radiogroup" aria-label="Diagnosis rank">
-        <button
-          type="button"
+        <Button
+          variant={selectedRank === 'primary' ? 'primary' : 'secondary'}
           role="radio"
           aria-checked={selectedRank === 'primary'}
           onClick={() => setSelectedRank('primary')}
-          className={
-            'rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' +
-            (selectedRank === 'primary'
-              ? 'bg-primary-600 text-white'
-              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200')
-          }
         >
           Primary
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant={selectedRank === 'secondary' ? 'primary' : 'secondary'}
           role="radio"
           aria-checked={selectedRank === 'secondary'}
           onClick={() => setSelectedRank('secondary')}
-          className={
-            'rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' +
-            (selectedRank === 'secondary'
-              ? 'bg-primary-600 text-white'
-              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200')
-          }
         >
           Secondary
-        </button>
+        </Button>
       </div>
 
       {/* Search input */}
@@ -218,8 +207,8 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
           }
           aria-label="Search diagnoses"
           className={
-            'w-full rounded-lg border border-neutral-200 bg-white px-4 py-3 ' +
-            'text-base text-neutral-900 placeholder:text-neutral-400 ' +
+            'w-full rounded-xl border border-border bg-background px-4 py-3 ' +
+            'text-base text-foreground placeholder:text-muted-foreground ' +
             'transition-colors focus:outline-none focus:ring-2 ' +
             'focus:border-primary-400 focus:ring-primary-200 ' +
             'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -234,8 +223,8 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
             role="listbox"
             aria-label="Search results"
             className={
-              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg ' +
-              'border border-neutral-200 bg-white shadow-lg'
+              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
+              'ring-[0.65px] ring-border/50 bg-background shadow-lg'
             }
           >
             {results.map((result, idx) => (
@@ -253,14 +242,14 @@ export function DiagnosisSearch({ onSelect, disabled }: DiagnosisSearchProps) {
                   'cursor-pointer px-4 py-3 transition-colors ' +
                   (idx === activeIndex
                     ? 'bg-primary-50'
-                    : 'hover:bg-neutral-50')
+                    : 'hover:bg-muted')
                 }
               >
                 <span className="font-mono text-sm font-bold text-primary-700">
                   {highlightMatches(result.item.code, getCodeIndices(result))}
                 </span>
-                <span className="mx-2 text-neutral-300">|</span>
-                <span className="text-sm text-neutral-700">
+                <span className="mx-2 text-border">|</span>
+                <span className="text-sm text-foreground">
                   {highlightMatches(
                     result.item.display,
                     getDisplayIndices(result),

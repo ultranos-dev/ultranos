@@ -6,7 +6,13 @@ import { syncDispenseToHub, type DispenseSyncResult } from '@/lib/dispense-sync'
 import { logDispenseEvent } from '@/services/dispenseAuditService'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { db } from '@/lib/db'
+import { selectFefoBatch } from '@/lib/inventory/fefo'
+import { deductStock } from '@/lib/inventory/stock-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { createInvoiceFromDispense } from '@/lib/pos/invoice-service'
+import { hlc, serializeHlc } from '@/lib/hlc'
+import { usePosStore } from '@/stores/pos-store'
+import type { InvoiceLineItem } from '@/lib/pos/types'
 
 export type FulfillmentPhase =
   | 'empty'
@@ -20,6 +26,9 @@ export interface FulfillmentItem {
   selected: boolean
   brandName: string
   batchLot: string
+  fefoBatchId?: string
+  fefoBatchNumber?: string
+  fefoBatchExpiry?: string
 }
 
 export interface DispenseSyncStatus {
@@ -48,7 +57,10 @@ interface FulfillmentState {
   setBrandName: (prescriptionId: string, brandName: string) => void
   setBatchLot: (prescriptionId: string, batchLot: string) => void
   startReview: () => void
+  assignFefoBatches: () => Promise<void>
+  deductStockOnDispense: (practitionerId: string) => Promise<void>
   confirmDispense: () => Promise<void>
+  createInvoiceAfterDispense: (practitionerId: string) => Promise<void>
   reset: () => void
 }
 
@@ -135,6 +147,52 @@ export const useFulfillmentStore = create<FulfillmentState>()(
       }
     },
 
+    assignFefoBatches: async () => {
+      const items = get().items
+      const updatedItems = await Promise.all(
+        items.map(async (item) => {
+          if (!item.selected || item.fefoBatchId) return item
+          const catalogItem = await db.catalogItems
+            .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+            .first()
+          if (!catalogItem) return item
+          const batch = await selectFefoBatch(catalogItem.id, item.prescription.dos.qty)
+          if (!batch) return item
+          return {
+            ...item,
+            fefoBatchId: batch.id,
+            fefoBatchNumber: batch.batchNumber,
+            fefoBatchExpiry: batch.expiryDate,
+          }
+        })
+      )
+      set({ items: updatedItems })
+    },
+
+    deductStockOnDispense: async (practitionerId: string) => {
+      const items = get().items
+      for (const item of items) {
+        if (!item.selected || !item.fefoBatchId) continue
+        try {
+          const catalogItem = await db.catalogItems
+            .filter((c) => c.name === item.prescription.medN || c.barcode === item.prescription.med)
+            .first()
+          if (!catalogItem) continue
+          await deductStock({
+            stockBatchId: item.fefoBatchId,
+            catalogItemId: catalogItem.id,
+            quantity: item.prescription.dos.qty,
+            type: 'dispensed',
+            referenceId: item.prescription.id,
+            referenceType: 'dispense',
+            performedBy: practitionerId,
+          })
+        } catch {
+          // Stock deduction failure should not block dispensing
+        }
+      }
+    },
+
     confirmDispense: async () => {
       // Guard: prevent double-invocation (e.g. double-tap)
       if (get().phase === 'dispensing') return
@@ -160,7 +218,7 @@ export const useFulfillmentStore = create<FulfillmentState>()(
 
         for (let i = 0; i < selectedItems.length; i++) {
           const item = selectedItems[i]!
-          const dispense = createMedicationDispense(item, pharmacistRef, {
+          const dispense = createMedicationDispense(item, pharmacistRef as `Practitioner/${string}`, {
             fulfilledCount: i + 1,
             totalCount: selectedItems.length,
           })
@@ -197,6 +255,36 @@ export const useFulfillmentStore = create<FulfillmentState>()(
         set((state) => {
           state.syncStatus.isPending = false
         })
+      }
+    },
+
+    createInvoiceAfterDispense: async (practitionerId: string) => {
+      const state = get()
+      const selectedItems = state.items.filter((i) => i.selected)
+      if (selectedItems.length === 0) return
+
+      const lineItems: InvoiceLineItem[] = selectedItems.map((item) => ({
+        catalogItemId: item.prescription.med,
+        stockBatchId: item.fefoBatchId ?? '',
+        description: item.prescription.medT || item.prescription.medN,
+        quantity: item.prescription.dos.qty,
+        unitPrice: 0,
+        lineTotal: 0,
+      }))
+
+      try {
+        const invoice = await createInvoiceFromDispense({
+          dispenseIds: selectedItems.map((i) => i.prescription.id),
+          patientId: undefined,
+          items: lineItems,
+          taxRate: 0,
+          createdBy: practitionerId,
+          hlcTimestamp: serializeHlc(hlc.now()),
+          prefix: 'INV-',
+        })
+        usePosStore.getState().setActiveInvoice(invoice)
+      } catch {
+        // Invoice creation failure should not block dispensing
       }
     },
 

@@ -17,9 +17,9 @@ interface CandidateComparisonCardProps {
 }
 
 function getScoreBadgeClasses(score: number): string {
-  if (score >= 90) return 'bg-red-100 text-red-800 border-red-300'
-  if (score >= 60) return 'bg-amber-100 text-amber-800 border-amber-300'
-  return 'bg-green-100 text-green-800 border-green-300'
+  if (score >= 90) return 'bg-destructive/20 text-destructive border-destructive/30'
+  if (score >= 60) return 'bg-warning/20 text-warning border-warning/30'
+  return 'bg-success/20 text-success border-success/30'
 }
 
 function getScoreLabel(score: number): 'high' | 'medium' | 'low' {
@@ -47,9 +47,9 @@ export function CandidateComparisonCard({ candidate }: CandidateComparisonCardPr
   ]
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+    <div className="rounded-xl bg-muted/70 backdrop-blur-md p-4 ring-[0.65px] ring-border/50">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           {t('candidateId', { id: candidate.id.slice(0, 8) })}
         </span>
         <span
@@ -64,9 +64,9 @@ export function CandidateComparisonCard({ candidate }: CandidateComparisonCardPr
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         {fields.map((field) => (
           <div key={field.label}>
-            <dt className="font-medium text-neutral-500">{field.label}</dt>
-            <dd className="mt-0.5 text-neutral-900">
-              {field.value ?? <span className="text-neutral-400">{t('notAvailable')}</span>}
+            <dt className="font-medium text-muted-foreground">{field.label}</dt>
+            <dd className="mt-0.5 text-foreground">
+              {field.value ?? <span className="text-muted-foreground">{t('notAvailable')}</span>}
             </dd>
           </div>
         ))}

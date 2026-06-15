@@ -43,6 +43,25 @@ export enum AuditAction {
   KYC_APPROVED = 'KYC_APPROVED',
   KYC_REJECTED = 'KYC_REJECTED',
   KYC_MORE_INFO_REQUESTED = 'KYC_MORE_INFO_REQUESTED',
+  PHI_CLEANUP = 'PHI_CLEANUP',
+  PATIENT_IDENTITY_VERIFIED = 'PATIENT_IDENTITY_VERIFIED',
+  REFERENCE_RANGE_UPDATED = 'REFERENCE_RANGE_UPDATED',
+  RESULT_AMENDED = 'RESULT_AMENDED',
+  QC_DRIFT_DETECTED = 'QC_DRIFT_DETECTED',
+  QC_DRIFT_ACKNOWLEDGED = 'QC_DRIFT_ACKNOWLEDGED',
+  CRITICAL_VALUE_CHECKLIST_COMPLETED = 'CRITICAL_VALUE_CHECKLIST_COMPLETED',
+  // Story 43.1 — Immutable Result Audit Chain lifecycle events
+  SAMPLE_RECEIVED = 'SAMPLE_RECEIVED',
+  SAMPLE_PROCESSED = 'SAMPLE_PROCESSED',
+  RESULT_ENTERED = 'RESULT_ENTERED',
+  RESULT_AUTHORIZED = 'RESULT_AUTHORIZED',
+  RESULT_RELEASED = 'RESULT_RELEASED',
+  RESULT_DELIVERED = 'RESULT_DELIVERED',
+  // Story 49.3 — P2P Sync audit events
+  P2P_SYNC = 'P2P_SYNC',
+  // Story 53.5 — AI Confidence Inversion Principle
+  AI_AUTO_ESCALATION = 'AI_AUTO_ESCALATION',
+  DRUG_CATALOG_ENRICH = 'DRUG_CATALOG_ENRICH',
 }
 
 export enum AuditResourceType {
@@ -62,6 +81,27 @@ export enum AuditResourceType {
   PRACTITIONER = 'PRACTITIONER',
   LAB_REGISTRATION = 'LAB_REGISTRATION',
   PRESCRIBING_ANOMALY = 'PRESCRIBING_ANOMALY',
+  SYSTEM = 'SYSTEM',
+  WASTE_CONTAINER = 'WASTE_CONTAINER',
+  MENTORSHIP = 'MENTORSHIP',
+  EMPLOYEE_HEALTH = 'EMPLOYEE_HEALTH',
+  TEMPERATURE_MONITORING = 'TEMPERATURE_MONITORING',
+  SPECIMEN = 'SPECIMEN',
+  // Story 43.1 — sample-scoped audit events
+  LAB_SAMPLE = 'LAB_SAMPLE',
+  // Story 50.2 — donor reports
+  DIAGNOSTIC_REPORT = 'DIAGNOSTIC_REPORT',
+  // Story 49.1 — Data Budget Mode
+  DATA_BUDGET = 'DATA_BUDGET',
+  REFERENCE_RANGE = 'REFERENCE_RANGE',
+  PAYMENT = 'PAYMENT',
+  // Story 51.1 — Shift Handover Protocol
+  SHIFT_HANDOVER = 'SHIFT_HANDOVER',
+  // Story 54.4 — Consultation lifecycle
+  CONSULTATION = 'CONSULTATION',
+  // Story 53.6 — AI Provenance Trail
+  AI_PROVENANCE = 'AI_PROVENANCE',
+  DRUG_CATALOG = 'DRUG_CATALOG',
 }
 
 export enum AuditOutcome {
@@ -180,4 +220,56 @@ export enum NotificationStatus {
 export enum RecipientRole {
   CLINICIAN = 'CLINICIAN',
   PATIENT = 'PATIENT',
+}
+
+/**
+ * Lab sub-roles within the LAB_TECH UserRole.
+ * Story 42.1: Four-tier lab role hierarchy.
+ * Ordered by privilege level (lowest → highest).
+ */
+export enum LabRole {
+  LAB_TECH = 'LAB_TECH',
+  SENIOR_TECH = 'SENIOR_TECH',
+  SUPERVISOR = 'SUPERVISOR',
+  LAB_MANAGER = 'LAB_MANAGER',
+}
+
+/**
+ * Lab-specific permissions gated by LabRole.
+ * Story 42.1 AC 2: Permission matrix.
+ */
+export enum LabPermission {
+  ENTER_RESULTS = 'ENTER_RESULTS',
+  RELEASE_ROUTINE_RESULTS = 'RELEASE_ROUTINE_RESULTS',
+  RELEASE_ALL_RESULTS = 'RELEASE_ALL_RESULTS',
+  OVERRIDE_QC_LOCKOUT = 'OVERRIDE_QC_LOCKOUT',
+  VIEW_STAFF = 'VIEW_STAFF',
+  MANAGE_STAFF_ROLES = 'MANAGE_STAFF_ROLES',
+  VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
+}
+
+/**
+ * Methods used to verify patient identity at sample collection.
+ * Story 43.4: Two-identifier minimum (WHO patient identification standard).
+ * IMPORTANT: The record stores the METHOD, never the data value itself (CLAUDE.md Rule #7).
+ */
+export enum PatientVerificationMethod {
+  NATIONAL_ID_SCANNED = 'NATIONAL_ID_SCANNED',     // Physical National ID card scanned or number entered
+  VERBAL_CONFIRMATION = 'VERBAL_CONFIRMATION',       // Verbal confirmation of patient name + father's name
+  QR_CODE = 'QR_CODE',                               // QR code scanned from Health Passport (Patient-Lite app)
+  WRISTBAND_SCANNED = 'WRISTBAND_SCANNED',           // Hospital wristband barcode (future use)
+  OTHER = 'OTHER',                                   // Requires free-text description
+}
+
+/**
+ * Reason codes for lab result amendments.
+ * Story 43.3 AC #3: Mandatory reason classification for amendment audit trail.
+ */
+export enum AmendmentReasonCode {
+  CLERICAL_ERROR = 'CLERICAL_ERROR',
+  INSTRUMENT_MALFUNCTION = 'INSTRUMENT_MALFUNCTION',
+  WRONG_PATIENT = 'WRONG_PATIENT',
+  QC_FAILURE_POST_RELEASE = 'QC_FAILURE_POST_RELEASE',
+  TRANSCRIPTION_ERROR = 'TRANSCRIPTION_ERROR',
+  OTHER = 'OTHER',
 }

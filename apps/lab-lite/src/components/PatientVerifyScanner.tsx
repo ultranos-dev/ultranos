@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import type { VerifyPatientResult } from '@/lib/trpc'
 import { verifyQrOffline, cacheVerifiedPatient, getCachedPatient } from '@/lib/offline-verify'
 import type { QrPayload } from '@/lib/offline-verify'
+import { Button } from '@/components/ui/Button'
 import { OfflineVerificationBadge } from './OfflineVerificationBadge'
 import { OnlineStatusIndicator } from './OnlineStatusIndicator'
 
@@ -191,12 +192,12 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
       <div
         id="qr-scanner-region"
         ref={scannerRef}
-        className="overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100"
+        className="overflow-hidden rounded-lg border border-border bg-muted"
         style={{ minHeight: scanning ? 300 : 0 }}
       />
 
       {loading && (
-        <p className="text-center text-sm text-neutral-500">Verifying patient...</p>
+        <p className="text-center text-sm text-muted-foreground">Verifying patient...</p>
       )}
 
       {/* Verification card — confirm identity before proceeding (AC 5) */}
@@ -207,42 +208,44 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="font-medium text-neutral-600">First Name</dt>
-            <dd className="text-neutral-900">{verifiedResult.firstName}</dd>
-            <dt className="font-medium text-neutral-600">Age</dt>
-            <dd className="text-neutral-900">{verifiedResult.age}</dd>
+            <dt className="font-medium text-muted-foreground">First Name</dt>
+            <dd className="text-foreground">{verifiedResult.firstName}</dd>
+            <dt className="font-medium text-muted-foreground">Age</dt>
+            <dd className="text-foreground">{verifiedResult.age}</dd>
           </dl>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="primary"
+              className="flex-1"
               type="button"
               onClick={handleConfirm}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Confirm Patient
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               type="button"
               onClick={handleReset}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {!scanning && !loading && !verifiedResult && (
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={startScanner}
-          className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           Scan Patient QR Code
-        </button>
+        </Button>
       )}
 
       {scanning && (
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={async () => {
             if (html5QrCodeRef.current) {
@@ -250,10 +253,9 @@ export function PatientVerifyScanner({ onVerified, onError, token }: PatientVeri
             }
             setScanning(false)
           }}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50"
         >
           Cancel Scan
-        </button>
+        </Button>
       )}
     </div>
   )

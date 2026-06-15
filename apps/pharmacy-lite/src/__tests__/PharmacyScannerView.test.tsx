@@ -53,7 +53,7 @@ import { PharmacyScannerView } from '@/components/pharmacy/PharmacyScannerView'
 import type { SignedPrescriptionBundle } from '@ultranos/shared-types'
 
 const mockVerifyQr = vi.mocked(verifyPrescriptionQr)
-const mockFetchKey = vi.mocked(fetchAndCachePractitionerKey)
+const _mockFetchKey = vi.mocked(fetchAndCachePractitionerKey)
 
 function uint8ToBase64(bytes: Uint8Array): string {
   let binary = ''

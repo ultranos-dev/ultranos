@@ -1,0 +1,190 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SendOutsPage — RTL layout (Task 14.9) > renders correctly in RTL layout 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    class="flex flex-col gap-6"
+  >
+    <h1
+      class="text-2xl font-bold text-neutral-900"
+    >
+      Send-Outs
+    </h1>
+    <div
+      class="flex flex-wrap gap-3"
+    >
+      <select
+        aria-label="Filter by status"
+        class="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+      >
+        <option
+          value="all"
+        >
+          All statuses
+        </option>
+        <option
+          value="sent"
+        >
+          Sent
+        </option>
+        <option
+          value="received"
+        >
+          Received
+        </option>
+        <option
+          value="processing"
+        >
+          Processing
+        </option>
+        <option
+          value="results-available"
+        >
+          Results Available
+        </option>
+        <option
+          value="cancelled"
+        >
+          Cancelled
+        </option>
+      </select>
+      <select
+        aria-label="Filter by reference lab"
+        class="rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm"
+      >
+        <option
+          value=""
+        >
+          All labs
+        </option>
+        <option
+          value="lab-001"
+        >
+          Kabul Reference Lab
+        </option>
+      </select>
+    </div>
+    <div
+      class="overflow-x-auto rounded-lg border border-neutral-200"
+    >
+      <table
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-neutral-50 text-xs text-neutral-500 uppercase tracking-wide"
+        >
+          <tr>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Tracking ID
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Reference Lab
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Test Requested
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Date Sent
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Status
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Elapsed
+            </th>
+            <th
+              class="px-4 py-3 text-start font-medium"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-neutral-100"
+        >
+          <tr
+            class=""
+          >
+            <td
+              class="px-4 py-3 font-mono text-xs text-neutral-500 max-w-[120px] truncate"
+            >
+              so-001
+              …
+            </td>
+            <td
+              class="px-4 py-3 text-neutral-900"
+            >
+              Kabul Reference Lab
+            </td>
+            <td
+              class="px-4 py-3 text-neutral-700"
+            >
+              Cholesterol
+            </td>
+            <td
+              class="px-4 py-3 text-neutral-500"
+            >
+              6/2/2026
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <span
+                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                Sent
+              </span>
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <span
+                class="flex items-center gap-1 text-xs text-neutral-500"
+              >
+                2
+                d / 
+                5
+                d
+              </span>
+            </td>
+            <td
+              class="px-4 py-3"
+            >
+              <div
+                class="flex gap-2"
+              >
+                <button
+                  class="text-xs text-blue-600 underline"
+                  type="button"
+                >
+                  Update Status
+                </button>
+                <button
+                  class="text-xs text-green-600 underline"
+                  type="button"
+                >
+                  Import Result
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;

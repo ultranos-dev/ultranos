@@ -1,0 +1,231 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Input } from '@ultranos/ui-kit/components/ui/input'
+import { Label } from '@ultranos/ui-kit/components/ui/label'
+import { Button } from '@ultranos/ui-kit/components/ui/button'
+import { useDataBudgetStore } from '@/stores/data-budget-store'
+
+export function DataBudgetDashboard() {
+  const t = useTranslations('dataBudget')
+  const {
+    planSizeMB,
+    billingCycleDay,
+    lowDataMode,
+    currentCycleUsedMB,
+    projectedExhaustionDate,
+    dailyUsage,
+    categoryBreakdown,
+    thresholdLevel,
+    isLoaded,
+    loadFromDexie,
+    refreshUsageStats,
+    updateConfig,
+  } = useDataBudgetStore()
+
+  const [planInput, setPlanInput] = useState(String(planSizeMB))
+  const [cycleInput, setCycleInput] = useState(String(billingCycleDay))
+  const [lowData, setLowData] = useState(lowDataMode)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (isLoaded) {
+      setPlanInput(String(planSizeMB))
+      setCycleInput(String(billingCycleDay))
+      setLowData(lowDataMode)
+    }
+  }, [isLoaded, planSizeMB, billingCycleDay, lowDataMode])
+
+  async function handleSave() {
+    const newPlan = Math.max(1, parseInt(planInput, 10) || planSizeMB)
+    const newCycle = Math.min(28, Math.max(1, parseInt(cycleInput, 10) || billingCycleDay))
+    await updateConfig({ planSizeMB: newPlan, billingCycleDay: newCycle, lowDataMode: lowData })
+    setPlanInput(String(newPlan))
+    setCycleInput(String(newCycle))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  useEffect(() => {
+    if (!isLoaded) void loadFromDexie()
+  }, [isLoaded, loadFromDexie])
+
+  useEffect(() => {
+    const id = setInterval(() => void refreshUsageStats(), 60_000)
+    return () => clearInterval(id)
+  }, [refreshUsageStats])
+
+  const usedPct = planSizeMB > 0 ? Math.min((currentCycleUsedMB / planSizeMB) * 100, 100) : 0
+  const remainingMB = Math.max(planSizeMB - currentCycleUsedMB, 0)
+
+  const barColor =
+    thresholdLevel === 'critical'
+      ? 'bg-red-500'
+      : thresholdLevel === 'warning'
+        ? 'bg-yellow-500'
+        : 'bg-green-500'
+
+  const maxDailyMB = Math.max(...dailyUsage.map((d) => d.totalMB), 0.01)
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Threshold Banners */}
+      {thresholdLevel === 'warning' && (
+        <div
+          role="alert"
+          className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800"
+          data-testid="data-budget-warning"
+        >
+          {t('warningBanner')}
+        </div>
+      )}
+      {thresholdLevel === 'critical' && (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+          data-testid="data-budget-critical"
+        >
+          {t('criticalBanner')}
+        </div>
+      )}
+
+      {/* Usage Gauge */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('usageTitle')}</h2>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="h-4 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${barColor}`}
+                style={{ width: `${usedPct}%` }}
+                role="progressbar"
+                aria-valuenow={Math.round(usedPct)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={t('usageAriaLabel', {
+                  used: currentCycleUsedMB.toFixed(1),
+                  total: planSizeMB,
+                })}
+              />
+            </div>
+          </div>
+          <span className="text-sm font-medium text-foreground whitespace-nowrap">
+            {currentCycleUsedMB.toFixed(1)} / {planSizeMB} MB
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {usedPct.toFixed(0)}% {t('used')} &middot; {remainingMB.toFixed(1)} MB {t('remaining')}
+        </p>
+      </div>
+
+      {/* Projection Card */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t('projectionTitle')}</h2>
+        <p className="text-sm text-foreground">
+          {projectedExhaustionDate
+            ? t('projectionExhaustion', { date: projectedExhaustionDate })
+            : t('projectionNoData')}
+        </p>
+      </div>
+
+      {/* Daily Usage Chart (CSS bars) */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('dailyUsageTitle')}</h2>
+        <div className="flex items-end gap-1" style={{ height: '120px' }}>
+          {dailyUsage.map((day) => {
+            const heightPct = maxDailyMB > 0 ? (day.totalMB / maxDailyMB) * 100 : 0
+            return (
+              <div
+                key={day.date}
+                className="flex-1 flex flex-col items-center justify-end"
+                style={{ height: '100%' }}
+              >
+                <div
+                  className={`w-full rounded-t ${barColor} min-h-[2px]`}
+                  style={{ height: `${Math.max(heightPct, 2)}%` }}
+                  title={`${day.date}: ${day.totalMB.toFixed(2)} MB`}
+                />
+                <span className="text-[9px] text-muted-foreground mt-1 truncate w-full text-center">
+                  {day.date.slice(5)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Category Breakdown */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">{t('categoryTitle')}</h2>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-muted-foreground text-xs">
+              <th className="text-start pb-1">{t('categoryHeader')}</th>
+              <th className="text-end pb-1">MB</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['upload', 'audit', 'notification', 'other'].map((cat) => (
+              <tr key={cat} className="border-t border-border/50">
+                <td className="py-1 text-foreground">{t(`category.${cat}`)}</td>
+                <td className="py-1 text-end text-foreground font-mono">
+                  {(categoryBreakdown[cat] ?? 0).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Settings */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-4">{t('settingsTitle')}</h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="plan-size">{t('planSize')}</Label>
+            <Input
+              id="plan-size"
+              type="number"
+              min={1}
+              value={planInput}
+              onChange={(e) => setPlanInput(e.target.value)}
+              className="w-36"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="cycle-day">{t('billingCycleDay')}</Label>
+            <Input
+              id="cycle-day"
+              type="number"
+              min={1}
+              max={28}
+              value={cycleInput}
+              onChange={(e) => setCycleInput(e.target.value)}
+              className="w-24"
+            />
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={lowData}
+              onChange={(e) => setLowData(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+            />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium text-foreground">{t('lowDataMode')}</span>
+              <span className="text-xs text-muted-foreground">{t('lowDataModeDesc')}</span>
+            </div>
+          </label>
+
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} size="sm">{t('save')}</Button>
+            {saved && <span className="text-xs text-green-600">{t('saved')}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

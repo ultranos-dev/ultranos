@@ -1,6 +1,8 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { FhirPatient, FhirEncounterZod, FhirObservation, FhirCondition, FhirMedicationRequestZod, FhirAllergyIntolerance, FhirMedicationStatementZod, AIModelType } from '@ultranos/shared-types'
 import type { ClientAuditEvent } from '@ultranos/audit-logger/client'
+import type { DataUsageCategory } from '@ultranos/sync-engine'
+export type { DataUsageCategory }  // re-export for consumers
 import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
@@ -59,15 +61,28 @@ export interface SyncQueueEntry {
   id: string
   resourceType: string
   resourceId: string
-  action: string
+  action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
-  status: 'pending' | 'in-flight' | 'failed'
+  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
   conflictFlag?: boolean
   failureReason?: string
+  /** JSON-stringified remote version data from Hub conflict response */
+  conflictData?: string
+  /** FHIR reference to patient, e.g. "Patient/{uuid}" */
+  patientRef?: string
+  /** Conflict resolution metadata */
+  resolvedAt?: string
+  resolutionType?: string
+}
+
+export interface SyncMetaEntry {
+  patientId: string
+  lastPulledHlc: string
+  lastPulledAt: string
 }
 
 export interface PractitionerKeyEntry {
@@ -103,6 +118,25 @@ export interface VocabInteractionEntry {
   version: number
 }
 
+// Data Budget types — Story 48.x / Data Connectivity
+// ---------------------------------------------------------------------------
+
+export interface DataBudgetConfig {
+  id: 'config'
+  planSizeMB: number
+  billingCycleDay: number   // 1-28: day of month cycle resets
+  lowDataMode: boolean
+  currentCycleStart: string // ISO 8601 date of current cycle start
+}
+
+export interface DataUsageRecord {
+  date: string
+  category: DataUsageCategory
+  bytesOut: number
+  bytesIn: number
+  requestCount: number
+}
+
 // --- AI Model metadata tables (Story 24.4) ---
 
 export interface AIModelMetadataEntry {
@@ -113,6 +147,22 @@ export interface AIModelMetadataEntry {
   fileSize: number
   checksum: string
   isStale: boolean
+}
+
+// Diagnostic report type — used by LabResultsList/LabResultDetail components.
+export interface LocalDiagnosticReport {
+  id: string
+  resourceType: 'DiagnosticReport'
+  status: string
+  code: { coding?: { code?: string; display?: string; system?: string }[]; text?: string }
+  subject: { reference?: string }
+  effectiveDateTime?: string
+  issued?: string
+  conclusion?: string
+  performer?: { display?: string; reference?: string }[]
+  presentedForm?: { contentType?: string; url?: string; title?: string; data?: string }[]
+  acknowledgedAt?: string
+  meta?: { lastUpdated?: string }
 }
 
 export interface ModelDownloadProgress {
@@ -142,8 +192,12 @@ class OpdLiteDatabase extends Dexie {
   vocabularyInteractions!: EntityTable<VocabInteractionEntry, 'id'>
   aiModels!: EntityTable<AIModelMetadataEntry, 'modelId'>
   modelDownloadProgress!: EntityTable<ModelDownloadProgress, 'modelId'>
-  appointments!: EntityTable<any, 'id'>
-  slots!: EntityTable<any, 'id'>
+  appointments!: EntityTable<Record<string, unknown>, 'id'>
+  slots!: EntityTable<Record<string, unknown>, 'id'>
+  diagnosticReports!: EntityTable<LocalDiagnosticReport, 'id'>
+  syncMeta!: EntityTable<SyncMetaEntry, 'patientId'>
+  dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
+  dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
 
   constructor() {
     super('opd-lite')
@@ -508,6 +562,25 @@ class OpdLiteDatabase extends Dexie {
       appointments: 'id, status, start, _ultranos.hlcTimestamp',
       slots: 'id, status, start, _ultranos.hlcTimestamp',
     })
+
+    // v19: Sync metadata table for pull watermarks (Sync Engine Activation)
+    this.version(19).stores({
+      syncMeta: '&patientId',
+    })
+
+    // v20: DiagnosticReport cache for lab results (Story 20.5)
+    // Encrypted — contains clinical content (lab conclusions, performer info).
+    this.version(20).stores({
+      diagnosticReports:
+        'id, status, subject.reference, meta.lastUpdated',
+    })
+
+    // v21: Data Budget tables — track network usage per billing cycle (Story 48.x)
+    // No PHI — contains only byte counts, dates, and category labels.
+    this.version(21).stores({
+      dataBudgetConfig: '&id',
+      dataUsage: '++id, date, category, [date+category]',
+    })
   }
 }
 
@@ -618,3 +691,90 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
 export const db = new OpdLiteDatabase()
 
 applyEncryptionMiddleware(db, PHI_TABLE_CONFIGS)
+
+// ---------------------------------------------------------------------------
+// Data Budget helpers (v21) — Story 48.x
+// No PHI — network usage metrics only.
+// ---------------------------------------------------------------------------
+
+const DATA_BUDGET_CONFIG_ID = 'config' as const
+
+const DEFAULT_DATA_BUDGET_CONFIG: DataBudgetConfig = {
+  id: DATA_BUDGET_CONFIG_ID,
+  planSizeMB: 500,
+  billingCycleDay: 1,
+  lowDataMode: false,
+  currentCycleStart: (() => {
+    const d = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  })(),
+}
+
+export async function getDataBudgetConfig(): Promise<DataBudgetConfig> {
+  const stored = await db.dataBudgetConfig.get(DATA_BUDGET_CONFIG_ID)
+  return stored ?? { ...DEFAULT_DATA_BUDGET_CONFIG }
+}
+
+export async function updateDataBudgetConfig(
+  updates: Partial<Omit<DataBudgetConfig, 'id'>>,
+): Promise<void> {
+  const current = await getDataBudgetConfig()
+  await db.dataBudgetConfig.put({ ...current, ...updates, id: DATA_BUDGET_CONFIG_ID })
+}
+
+export async function recordDataUsage(record: DataUsageRecord): Promise<void> {
+  await db.dataUsage.add(record)
+}
+
+export async function getUsageByDay(startDate: string, endDate: string): Promise<DataUsageRecord[]> {
+  return db.dataUsage
+    .where('date')
+    .between(startDate, endDate, true, true)
+    .toArray()
+}
+
+export async function getUsageForCycle(): Promise<DataUsageRecord[]> {
+  const config = await getDataBudgetConfig()
+  const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return db.dataUsage
+    .where('date')
+    .between(config.currentCycleStart, today, true, true)
+    .toArray()
+}
+
+/** Parse an ISO date string (YYYY-MM-DD) as a local-time Date at midnight. */
+function parseDateLocal(dateStr: string): Date {
+  const parts = dateStr.split('-').map(Number)
+  return new Date(parts[0]!, parts[1]! - 1, parts[2]!)
+}
+
+export async function checkAndRolloverCycle(): Promise<boolean> {
+  return db.transaction('rw', db.dataBudgetConfig, async () => {
+    const stored = await db.dataBudgetConfig.get(DATA_BUDGET_CONFIG_ID)
+    const config = stored ?? { ...DEFAULT_DATA_BUDGET_CONFIG }
+    const today = new Date()
+    const cycleStart = parseDateLocal(config.currentCycleStart)
+    const nextCycleDate = new Date(
+      cycleStart.getFullYear(),
+      cycleStart.getMonth() + 1,
+      Math.min(config.billingCycleDay, 28),
+    )
+    if (today >= nextCycleDate) {
+      const newCycleStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        Math.min(config.billingCycleDay, 28),
+      )
+      if (newCycleStart > today) {
+        newCycleStart.setMonth(newCycleStart.getMonth() - 1)
+      }
+      await db.dataBudgetConfig.put({
+        ...config,
+        currentCycleStart: `${newCycleStart.getFullYear()}-${String(newCycleStart.getMonth() + 1).padStart(2, '0')}-${String(newCycleStart.getDate()).padStart(2, '0')}`,
+      })
+      return true
+    }
+    return false
+  })
+}

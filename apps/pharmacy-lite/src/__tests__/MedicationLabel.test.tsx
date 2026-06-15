@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
 

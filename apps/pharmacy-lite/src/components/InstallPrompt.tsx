@@ -1,6 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { useSidebar } from '@/components/ui/sidebar'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -11,30 +14,37 @@ const DISMISS_KEY = 'pharmacy-lite-install-dismissed'
 const DELAY_MS = 2 * 60 * 1000 // 2 minutes
 
 export function InstallPrompt() {
+  const t = useTranslations('install')
+  const { state: sidebarState } = useSidebar()
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showBanner, setShowBanner] = useState(false)
+  const timerFiredRef = useRef(false)
 
   useEffect(() => {
     if (sessionStorage.getItem(DISMISS_KEY)) return
 
     const handler = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
+      const prompt = e as BeforeInstallPromptEvent
+      setDeferredPrompt(prompt)
+      if (timerFiredRef.current) setShowBanner(true)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
-
-  useEffect(() => {
-    if (!deferredPrompt) return
 
     const timer = setTimeout(() => {
-      setShowBanner(true)
+      timerFiredRef.current = true
+      setDeferredPrompt((p) => {
+        if (p) setShowBanner(true)
+        return p
+      })
     }, DELAY_MS)
 
-    return () => clearTimeout(timer)
-  }, [deferredPrompt])
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler)
+      clearTimeout(timer)
+    }
+  }, [])
 
   if (!showBanner) return null
 
@@ -42,9 +52,7 @@ export function InstallPrompt() {
     if (!deferredPrompt) return
     await deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    if (outcome === 'accepted') {
-      setShowBanner(false)
-    }
+    if (outcome === 'accepted') setShowBanner(false)
     setDeferredPrompt(null)
   }
 
@@ -53,24 +61,25 @@ export function InstallPrompt() {
     setShowBanner(false)
   }
 
+  const sidebarOffset =
+    sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)'
+
   return (
-    <div className="fixed bottom-4 start-4 z-50 rounded-lg border border-primary-200 bg-white p-4 shadow-lg">
-      <p className="text-sm font-medium text-neutral-900">
-        Install Pharmacy Lite for quick access
-      </p>
-      <div className="mt-2 flex gap-2">
-        <button
-          onClick={handleInstall}
-          className="rounded-md bg-primary-600 px-3 py-1 text-sm text-white hover:bg-primary-700"
-        >
-          Install
-        </button>
-        <button
-          onClick={handleDismiss}
-          className="rounded-md border border-neutral-300 px-3 py-1 text-sm text-neutral-600 hover:bg-neutral-50"
-        >
-          Not now
-        </button>
+    <div
+      role="banner"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card p-4 shadow-lg transition-[margin] duration-200"
+      style={{ marginInlineStart: sidebarOffset }}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-foreground">{t('prompt')}</p>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="outline" onClick={handleDismiss}>
+            {t('notNow')}
+          </Button>
+          <Button variant="default" onClick={handleInstall}>
+            {t('install')}
+          </Button>
+        </div>
       </div>
     </div>
   )

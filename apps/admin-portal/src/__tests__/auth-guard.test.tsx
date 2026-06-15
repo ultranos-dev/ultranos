@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
@@ -10,6 +11,9 @@ vi.mock('@/lib/supabase', () => ({
     auth: {
       getSession: mockGetSession,
       signOut: mockSignOut,
+      onAuthStateChange: vi.fn(() => ({
+        data: { subscription: { unsubscribe: vi.fn() } },
+      })),
     },
   }),
 }))
@@ -18,6 +22,13 @@ vi.mock('@/lib/supabase', () => ({
 vi.mock('@/lib/trpc', () => ({
   setAccessToken: vi.fn(),
   getAccessToken: vi.fn(),
+  trpc: {
+    subscription: {
+      getOrgSubscriptions: {
+        query: vi.fn().mockResolvedValue({ organization: { status: 'ACTIVE' } }),
+      },
+    },
+  },
 }))
 
 // Mock zustand store
@@ -49,6 +60,18 @@ vi.mock('@/stores/auth-session-store', () => ({
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+}))
+
+// Mock next-intl (AppSidebar calls useLocale)
+vi.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key: string) => key,
+}))
+
+// Mock AppSidebar to avoid pulling in radix-ui and ui-kit deep dependencies
+vi.mock('@/components/sidebar/app-sidebar', () => ({
+  AppSidebar: () => null,
 }))
 
 const { AuthGuard } = await import('../components/AuthGuard')
@@ -87,7 +110,7 @@ describe('AuthGuard', () => {
   })
 
   it('shows "Access Denied" for non-ADMIN roles', async () => {
-    const jwt = fakeJwt({ sub: 'user-1', role: 'DOCTOR', session_id: 's1' })
+    const jwt = fakeJwt({ sub: 'user-1', user_metadata: { role: 'DOCTOR' }, session_id: 's1', iat: Math.floor(Date.now() / 1000) })
     mockGetSession.mockResolvedValue({
       data: {
         session: {
@@ -110,7 +133,7 @@ describe('AuthGuard', () => {
   })
 
   it('renders children for authenticated ADMIN users', async () => {
-    const jwt = fakeJwt({ sub: 'admin-1', role: 'ADMIN', session_id: 's1', practitioner_id: 'p1' })
+    const jwt = fakeJwt({ sub: 'admin-1', user_metadata: { role: 'ADMIN' }, session_id: 's1', practitioner_id: 'p1', iat: Math.floor(Date.now() / 1000) })
     mockGetSession.mockResolvedValue({
       data: {
         session: {

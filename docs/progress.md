@@ -687,6 +687,529 @@ Branch: `internationalization-01`
 
 ---
 
+## 2026-05-23 — Patient Directory Hub Sync & Search Limit Fix — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+
+**Root cause analysis:** The `/patients` page in OPD Lite was not fetching all patients due to 4 compounding issues:
+1. No bulk patient fetch on page load — PatientDirectory only read from local IndexedDB
+2. Hub API `patient.search` hard-coded `.limit(20)`, capping results
+3. Hub API had no endpoint for listing all patients (only search-by-query)
+4. Sync only triggered during active search, never on directory mount
+
+**Fix — Option C (new list endpoint + search limit raise + frontend sync):**
+
+1. **Hub API `patient.list` endpoint** — new cursor-based paginated listing of all active patients. Uses `created_at` cursor for stable ordering, default page size 50 (max 100), returns identity columns only (no sensitive PHI), audit logged per CLAUDE.md Rule #6, protected by `enforceResourceAccess('Patient')` and rate limiting
+2. **Hub API `patient.search` limit raised** from 20 to 50
+3. **`listPatientsFromHub()` client function** in `trpc.ts` — fetch wrapper with auth header injection and cursor/limit support
+4. **`usePatientListSync` hook** — pages through all Hub patients via `patient.list`, bulk-inserts into IndexedDB via `bulkPut`, offline-safe (catches failures silently), cancellable via AbortController
+5. **PatientDirectory background sync** — on mount, local IndexedDB data renders immediately, then background sync fires automatically, pages through all patients, refreshes table on completion. Subtle pulsing blue dot + "Syncing..." indicator during sync
+6. **i18n** — added "syncing" translation key to all 3 locales (en/ar/prs)
+
+### New Files
+- `apps/opd-lite/src/lib/use-patient-list-sync.ts`
+
+### Files Modified
+- `apps/hub-api/src/trpc/routers/patient.ts` — `patient.list` endpoint added, `patient.search` limit raised to 50
+- `apps/opd-lite/src/lib/trpc.ts` — `listPatientsFromHub()` + `PatientListResult` type
+- `apps/opd-lite/src/components/patients/PatientDirectory.tsx` — background Hub sync on mount, syncing indicator
+- `apps/opd-lite/messages/en.json` — "syncing" key
+- `apps/opd-lite/messages/ar.json` — "syncing" key (Arabic)
+- `apps/opd-lite/messages/prs.json` — "syncing" key (Dari)
+
+### Errors & Resolutions
+- No new TypeScript errors introduced. All pre-existing TS errors are in unrelated test files.
+
+### Tests Run
+- TypeScript compilation check (`tsc --noEmit`) for both `hub-api` and `opd-lite` — no new errors
+
+### Architecture Decisions
+- **Eager sync on every mount** — chosen over first-load-only because clinics with intermittent connectivity benefit from always trying to sync when online. Can optimize to watermark-based delta later.
+- **Cursor-based pagination** on `created_at` — stable ordering, no row skipping, efficient for sequential bulk fetch.
+- **`bulkPut` per page** — patients appear incrementally as pages arrive rather than waiting for full sync completion.
+- **Local-first rendering** — IndexedDB data shows instantly, Hub data merges in background. No loading gate on network.
+
+### PRD Trace
+- **FR36 / Epic 37 / Story 37.3:** Patient Directory & Browsing — was missing Hub API data population, now complete
+- **FR22 / Epic 16:** Hub API Patient CRUD — `patient.list` fills the bulk-listing gap
+- **NFR2:** Offline-first — local data renders immediately, Hub sync is background-only
+- **CLAUDE.md Rule #1:** No PHI in logs — `patient.list` only logs error code and result count
+- **CLAUDE.md Rule #6:** Audit every PHI access — `patient.list` emits `PHI_READ` audit event
+
+---
+
+## 2026-05-23 — Lab Lite Enterprise UX Overhaul — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `ab35ea0` through `e5b9709` (12 commits)
+Plan: `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
+
+**Comprehensive UX critique** of Lab Lite dashboard and workflows using Nielsen's heuristics (scored 18/40 "Poor"), identifying 5 priority issues across patient safety, i18n, visual hierarchy, efficiency, and onboarding. All issues addressed across 6 phases.
+
+**Phase 1 — Harden Critical Flows (P0/P1 fixes):**
+1. **Upload success banner** — `UploadSuccessBanner` component reads `?uploaded=true`, shows green status banner with checkmark and dismiss, cleans URL via `history.replaceState`. Fixes P0 patient safety gap where technicians had no confirmation their result was queued.
+2. **Cancel/recall queued uploads** — RecentUploadsList now shows patient first name prefix, "Cancel" button on pending/failed local items with 2-step confirmation, `QUEUE_ITEM_DISCARDED` audit event on cancel.
+3. **Complete i18n coverage** — All hardcoded English strings in StepIndicator, MetadataForm, ReviewStep, upload page, and offline page now use `useTranslations()`. No remaining hardcoded user-facing strings.
+4. **Date validation** — MetadataForm collection date input has `max` attribute preventing future dates, plus client-side validation with translated error message.
+
+**Phase 2 — Dashboard Redesign:**
+5. **Visual hierarchy overhaul** — LabIdentityCard replaced by DashboardHeader (greeting, not a card). QuickActions CTA elevated to top without card wrapper. QueueStatusCard highlights red when failures exist, with "N failed — tap to review" link. ActivitySummaryCard shows "Updated HH:MM" timestamp. Layout order: success banner → error → greeting → CTA → queue → activity → recent uploads.
+
+**Phase 3 — Patient Infrastructure (following OPD-lite patterns):**
+6. **Dexie v3 schema** — Added `patients` table (indexed on nameLocal, nameLatin, lastUpdated) and `syncQueue` table with helper functions.
+7. **Two-phase patient search hook** — Phase 1: local Dexie filter (immediate). Phase 2: Hub API revalidation (background, non-blocking). Merge by ID with remote precedence. Both phases independently try/caught (offline-safe).
+8. **Recent patients list** — `useRecentPatients` hook reads `verified_patients` cache. RecentPatientsList component renders above verification tabs for one-tap patient selection.
+9. **Patient search autocomplete** — PatientSearchInput component with 250ms debounce, combobox ARIA pattern, outside-click close. Default "Search" tab added before "Manual ID" and "QR Scan".
+10. **Patient registration with MPI** — Full registration form (name, father's name, gender, birth info, phone, consent). Two-step flow: `checkDuplicates` → `createPatient`. MpiResultModal with color-coded score badges (red ≥80, amber ≥60, gray <60), WARN allows "Add Anyway" with proceedToken, BLOCK allows only "Use This Patient". Saves FHIR-structured patient to Dexie. Sidebar nav item added.
+
+**Phase 4 — Onboarding:**
+11. **Contextual tooltips** — Reusable Tooltip component (hover/focus, ARIA-labeled, RTL-safe). Added to MetadataForm for Test Category and Collection Date labels with explanatory help text.
+
+**Phase 5 — Efficiency:**
+12. **Keyboard shortcuts** — Escape key navigates back in upload wizard (unless focused on input/textarea/select).
+
+**Phase 6 — Polish:**
+13. **Unified styling** — Login page inputs changed from `rounded-md`/`ring-1` to `rounded-lg`/`ring-2`. Duplicate `formatFileSize` extracted to shared `lib/format.ts`. Settings page removed Session Info and MFA Status cards (placeholder-only).
+
+### New Files
+- `apps/lab-lite/src/components/dashboard/UploadSuccessBanner.tsx`
+- `apps/lab-lite/src/components/dashboard/DashboardHeader.tsx`
+- `apps/lab-lite/src/hooks/usePatientSearch.ts`
+- `apps/lab-lite/src/hooks/useRecentPatients.ts`
+- `apps/lab-lite/src/components/upload/RecentPatientsList.tsx`
+- `apps/lab-lite/src/components/upload/PatientSearchInput.tsx`
+- `apps/lab-lite/src/components/patients/PatientRegistrationForm.tsx`
+- `apps/lab-lite/src/components/patients/MpiResultModal.tsx`
+- `apps/lab-lite/src/app/[locale]/patients/register/page.tsx`
+- `apps/lab-lite/src/components/ui/Tooltip.tsx`
+- `apps/lab-lite/src/lib/format.ts`
+- `docs/superpowers/plans/2026-05-23-lab-lite-enterprise-ux.md`
+
+### Files Modified
+- `apps/lab-lite/src/app/[locale]/page.tsx` — dashboard redesign (DashboardHeader, elevated CTA, success banner)
+- `apps/lab-lite/src/app/[locale]/upload/page.tsx` — i18n, search/recent patients, keyboard shortcuts, syntax fix
+- `apps/lab-lite/src/app/[locale]/offline/page.tsx` — i18n
+- `apps/lab-lite/src/app/[locale]/login/page.tsx` — unified input styling
+- `apps/lab-lite/src/components/upload/StepIndicator.tsx` — i18n with dynamic keys
+- `apps/lab-lite/src/components/MetadataForm.tsx` — i18n, tooltips, date validation
+- `apps/lab-lite/src/components/upload/ReviewStep.tsx` — i18n, shared formatFileSize
+- `apps/lab-lite/src/components/ResultUpload.tsx` — shared formatFileSize
+- `apps/lab-lite/src/components/dashboard/QueueStatusCard.tsx` — red attention states
+- `apps/lab-lite/src/components/dashboard/ActivitySummaryCard.tsx` — lastRefreshedAt prop
+- `apps/lab-lite/src/components/dashboard/QuickActions.tsx` — card wrapper removed
+- `apps/lab-lite/src/components/dashboard/RecentUploadsList.tsx` — cancel action, patient names
+- `apps/lab-lite/src/components/settings/LabSettingsView.tsx` — removed placeholder cards
+- `apps/lab-lite/src/components/AppSidebar.tsx` — register patient nav item
+- `apps/lab-lite/src/hooks/useDashboardData.ts` — lastRefreshedAt, patientFirstName, localQueueId
+- `apps/lab-lite/src/lib/db.ts` — Dexie v3 (patients + syncQueue tables)
+- `apps/lab-lite/src/lib/trpc.ts` — searchPatients, checkDuplicates, createPatient functions
+- `apps/lab-lite/messages/en.json` — 40+ new translation keys (dashboard, patients, verification, metadata)
+
+### Deleted Files
+- `apps/lab-lite/src/components/dashboard/LabIdentityCard.tsx` — replaced by DashboardHeader
+
+### Errors & Resolutions
+- Pre-existing syntax error in `upload/page.tsx` (double `}}` on line 370) — fixed during Task 8+9
+- Pre-existing TS errors in `audit-client.ts` and test files — unrelated, not introduced by this work
+
+### Tests Run
+- Manual verification of each phase via dev server
+- TypeScript compilation checks on modified files
+
+### PRD Trace
+- **FR38 / Epic 38:** Lab Lite Enterprise Dashboard UX — Stories 38.1–38.5
+- **FR39 / Epic 38:** Lab Lite Patient Infrastructure — Stories 38.6–38.10
+- **FR40 / Epic 38:** Lab Lite Contextual Help & Efficiency — Stories 38.11–38.13
+- **Epic 17:** Lab Lite Complete UI/UX — Story 17.1 implementation notes updated, Story 17.2 AC 10 (success toast) now fulfilled
+- **CLAUDE.md Rule #1:** No PHI in logs — cancel audit uses opaque IDs, no patient data in error messages
+- **CLAUDE.md Rule #6:** Audit every PHI access — cancel action emits QUEUE_ITEM_DISCARDED audit event
+- **CLAUDE.md Rule #7:** Lab Portal data minimization — patient search returns only firstName + age
+
+---
+
+## 2026-05-24 — Pharmacy Lite Enterprise UX Overhaul (Epic 39) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `bd59eff` through `b240b31` (9 commits)
+Plan: `docs/superpowers/plans/2026-05-24-pharmacy-lite-enterprise-ux.md`
+
+**Design critique** of pharmacy-lite using `/impeccable critique` scored it 20/40 on Nielsen's heuristics. Identified 5 priority issues: no patient intake workflow (P0), no dispensing safety gates (P1), cramped content width (P2), dead-end empty states (P3), no keyboard shortcuts (P4). All addressed across 7 phases, 17 tasks.
+
+**Phase 1 — Foundation Fixes (Tasks 1–3):**
+1. Button component: `focus:` → `focus-visible:`, `transition-all` → scoped transitions, `ease-out` → custom cubic-bezier, `motion-reduce:transition-none`
+2. Motion guards: `animate-pulse`/`animate-spin` gated with `motion-reduce:animate-none`, `bg-black` → `bg-neutral-900`, hardcoded `#163300` → `pill-text` token
+3. Responsive width: table pages `max-w-5xl`, form pages `max-w-2xl`; all incomplete `dark:` classes stripped; `alert()` → inline `setError()`
+
+**Phase 2 — Patient Intake Hub (P0, Tasks 4–8):**
+4. Dexie v5 `patients` table with PHI encryption; Zustand `usePatientStore`
+5. Two-phase search: fast local Dexie + background Hub API revalidation, 300ms debounce, deduped merge
+6. PatientSearchBar + PatientSearchResults UI with allergy badges and "Register new" CTA
+7. PatientRegistrationForm: minimal pharmacy fields + red-styled allergy capture (CLAUDE.md rule #4)
+8. DashboardActionHub: multi-entry with search-first, Scan QR, Paper Rx, Walk-in paths — replaces old 2-button quick actions
+
+**Phase 3 — Dispensing Safety Gates (P1, Tasks 9–11):**
+9. AllergyBanner: `role="alert"`, `aria-live="assertive"`, red border-2, never collapsed (CLAUDE.md rule #4)
+10. InteractionCheckBanner: 5 states including explicit "unavailable" warning (CLAUDE.md rule #3)
+11. DispensingConfirmationModal: allergy re-display + medication summary + pharmacist acknowledgement checkbox + integrated into FulfillmentChecklist
+
+**Phase 4 — Empty States (P3, Task 12):**
+12. Reusable EmptyState component with 6 icon variants + CTAs; deployed to queue + recent dispensing views
+
+**Phase 5 — Visual Hierarchy (P4, Tasks 13–14):**
+13. DispensingSummaryCard redesigned: large primary metric, smaller secondary row, red/amber attention states
+14. SessionExpiryBanner: proactive amber warning at 15 minutes remaining
+
+**Phase 6 — Keyboard Shortcuts (P4, Task 15):**
+15. Alt+1–4 navigation shortcuts (Dashboard, Scan, Queue, History); disabled in input fields
+
+**Phase 7 — Polish (Tasks 16–17):**
+16. Login page branding: "Pharmacy Lite / Powered by Ultranos" heading, `focus-visible:` on inputs
+17. Patient names in recent dispensing: enriched from local Dexie instead of showing FHIR UUIDs
+
+### New Files (16)
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchBar.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientSearchResults.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PatientRegistrationForm.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DashboardActionHub.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/AllergyBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/InteractionCheckBanner.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingConfirmationModal.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/EmptyState.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SessionExpiryBanner.tsx`
+- `apps/pharmacy-lite/src/hooks/usePatientSearch.ts`
+- `apps/pharmacy-lite/src/hooks/useKeyboardShortcuts.ts`
+- `apps/pharmacy-lite/src/hooks/useSessionExpiryWarning.ts`
+- `apps/pharmacy-lite/src/lib/patient-search.ts`
+- `apps/pharmacy-lite/src/lib/patient-register.ts`
+- `apps/pharmacy-lite/src/stores/patient-store.ts`
+- `apps/pharmacy-lite/src/__tests__/button-accessibility.test.tsx`
+
+### Files Modified (14)
+- `apps/pharmacy-lite/src/components/ui/Button.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/DispensingSummaryCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/FulfillmentChecklist.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/QueueItemCard.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/SyncPulse.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ShiftSummary.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/PrescriptionQueueView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/RecentDispensingList.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx`
+- `apps/pharmacy-lite/src/components/pharmacy/UnverifiedDispensesView.tsx`
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/login/page.tsx`
+- `apps/pharmacy-lite/src/lib/db.ts`
+
+### Errors & Resolutions
+- None. All tasks completed without blockers.
+
+### Tests Run
+- `button-accessibility.test.tsx` — 4/4 passed (focus-visible, scoped transitions, custom easing, motion-reduce)
+
+### PRD Trace
+- **FR9 / Epic 4 & 26:** Pharmacy fulfillment — patient intake + dispensing safety gates
+- **CLAUDE.md Rule #3:** Drug interaction check never skipped silently — InteractionCheckBanner "unavailable" state
+- **CLAUDE.md Rule #4:** Allergy highest prominence — AllergyBanner (red, never collapsed, renders first)
+- **NFR2:** Offline-first — patient search works offline (local Dexie), registration queues sync
+- **NFR7:** WCAG AA — focus-visible, motion-reduce, keyboard shortcuts, semantic ARIA
+- **Epic 26 extension:** Stories 39.1–39.17 extend pharmacy UX beyond v1 baseline
+
+---
+
+## 2026-05-25 — Patient Profile UX Fixes, National ID, Audit Trail & Shared Package Design — COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `d06bb60` through `b3cde3c` (28 commits)
+
+**Phase 1 — Patient Data Fetch Bug Fixes (6 root causes identified via systematic debugging):**
+1. `fetchPatientFromHub` called non-existent `patient.getById` — fixed to use `patient.read`
+2. Profile page returned immediately from partial Dexie data — now always fetches full record from Hub in background
+3. `normalizeFhirPatient` couldn't find address data from list/search-cached records (flat keys in `_ultranos` not checked) — added fallback chain
+4. `patient.list` and `patient.search` missing 10+ columns (village, current address, phone, blood group, nomadic, etc.) — added to SELECT and response mapping with proper nested address objects
+5. `PatientEditModal` sent nested `addressOrigin`/`addressCurrent` objects but API expected flat field names — fixed to `addressProvinceOrigin`, `telecomPhone`, etc.
+6. After save, modal replaced full patient state with minimal server response `{ id, resourceType, meta }` — fixed to use `buildUpdatedPatient()` with server timestamp
+
+**Phase 2 — National ID# Field & NID Missing Badge (Epic 40, Stories 40.3–40.6):**
+7. National ID# text input added as first field in Demographics section (both registration form and edit modal)
+8. Wired into MPI duplicate check (`patient.checkDuplicates`)
+9. Edit modal: read-only masked display when NID exists, editable when empty
+10. `NidMissingBanner` amber banner on patient profile (PatientBannerStack priority #4)
+11. Amber "NID Missing" pill badge in PatientDirectory name column
+12. Registration form consistency: added Preferred Language, Blood Group, Nomadic toggle
+13. Nomadic toggle relocated into `GeographySection` (shared between registration and edit)
+14. Full i18n (en, ar, prs) for all new fields and badges
+
+**Phase 3 — Audit Trail & Last Updated Display (Epic 41, Stories 41.1–41.7):**
+15. Database migration: `updated_by UUID` column on `patients` table
+16. `patient.update` now writes `updated_by = ctx.user.sub`
+17. `patient.read` resolves `updated_by` to practitioner display name + role via join
+18. New `patient.auditTrail` tRPC endpoint: role-based limits (clinical: 10, admin: paginated 50), batch actor name resolution, cursor pagination, self-auditing
+19. `FhirPatient._ultranos` type extended with `updatedByName` and `updatedByRole`
+20. PatientHeaderCard: "Last updated by Dr. Fatima (DOCTOR), 2h ago" display
+21. PatientDirectory: new sortable "Last Updated" column with relative timestamps
+22. `PatientAuditTrail` collapsible component: lazy-load on expand, timeline layout, humanized field names, "Load more" for admins
+23. `formatRelativeTime` exported from `@ultranos/ui-kit` (was internal, now public)
+24. Full i18n (en, ar, prs) for audit trail and last updated keys
+
+**Phase 4 — Shared Patient Workflows Package Design (Sub-project A):**
+25. Design spec for `packages/patient-workflows/` with adapter pattern
+26. Adapter interface: `checkDuplicates`, `createPatient`, `updatePatient`, `saveLocally`, `getAuthHeaders`
+27. React context provider pattern (`PatientWorkflowProvider`)
+28. i18n export strategy (mergeable message objects)
+29. OPD-Lite migration plan (12 files move, adapter implementation, provider wrapping)
+
+### New Files
+- `apps/opd-lite/src/components/patient/NidMissingBanner.tsx`
+- `apps/opd-lite/src/components/patient/PatientAuditTrail.tsx`
+- `docs/superpowers/specs/2026-05-25-national-id-field-nid-badge-design.md`
+- `docs/superpowers/specs/2026-05-25-audit-trail-last-updated-design.md`
+- `docs/superpowers/specs/2026-05-25-patient-workflows-shared-package-design.md`
+- `docs/superpowers/plans/2026-05-25-national-id-field-nid-badge.md`
+- `docs/superpowers/plans/2026-05-25-audit-trail-last-updated.md`
+
+### Files Modified
+- `packages/shared-types/src/fhir/patient.ts` — `updatedByName`, `updatedByRole` in `_ultranos`
+- `packages/ui-kit/src/index.ts` — export `formatRelativeTime` and format utilities
+- `apps/hub-api/src/trpc/routers/patient.ts` — `patient.list`/`search` expanded SELECT, `patient.update` writes `updated_by`, `patient.read` resolves updater name, new `patient.auditTrail` endpoint
+- `apps/opd-lite/src/components/patient/PatientChartPage.tsx` — Hub fetch fix, normalizeFhirPatient address handling, `updatedByName`/`updatedByRole` fields, PatientAuditTrail wiring
+- `apps/opd-lite/src/components/patient/PatientEditModal.tsx` — flat field names, optimistic save, National ID# field, nomadic relocation
+- `apps/opd-lite/src/components/patient/PatientHeaderCard.tsx` — "Last updated by" display
+- `apps/opd-lite/src/components/patient/PatientBannerStack.tsx` — NidMissingBanner integration
+- `apps/opd-lite/src/components/patient/PatientDetailsAccordion.tsx` — unchanged (audit trail placed after it)
+- `apps/opd-lite/src/components/patients/PatientDirectory.tsx` — NID Missing badge, Last Updated column
+- `apps/opd-lite/src/components/registration/PatientRegistrationForm.tsx` — National ID#, Preferred Language, Blood Group, Nomadic fields
+- `apps/opd-lite/src/components/registration/GeographySection.tsx` — optional `isNomadic`/`onIsNomadicChange` props
+- `apps/opd-lite/messages/en.json` — 25+ new keys (NID, audit trail, last updated)
+- `apps/opd-lite/messages/ar.json` — Arabic translations
+- `apps/opd-lite/messages/prs.json` — Dari translations
+
+### Errors & Resolutions
+- `patient.getById` endpoint didn't exist on `patient` router (was on `patientAdmin`) — root cause of Hub fetch failure
+- Dexie cached partial data from `patient.list`/`patient.search` (missing 10+ columns) — profile page showed blanks
+- `normalizeFhirPatient` only checked `_ultranos.addressOrigin` (nested) and `raw.addressProvinceOrigin` (top-level), missed `_ultranos.addressProvinceOrigin` (flat key from list/search)
+- `formatRelativeTime` was not exported from `@ultranos/ui-kit` main index — Task 9 agent discovered and fixed
+- `bloodGroupLocked` i18n key was missing from en.json (pre-existing) — fixed during NID key additions
+
+### Tests Run
+- TypeScript compilation checks on all modified files — zero errors in modified files
+- Pre-existing TS errors in test files unaffected
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity — National ID# capture + MPI integration
+- **FR17 / Epic 8:** Cryptographic Audit Logging — audit trail UI surfaces existing audit_log data
+- **FR22 / Epic 16:** Hub API Patient CRUD — patient.read fix, patient.list/search expanded, patient.auditTrail new
+- **FR36 / Epic 37:** Patient Directory — NID Missing badge, Last Updated column
+- **Epic 20 — OPD Lite:** Registration form consistency, edit modal fixes, audit trail component
+- **CLAUDE.md Rule #1:** PHI never in UI audit trail — field names only, never values
+- **CLAUDE.md Rule #6:** Audit every PHI access — audit trail read itself emits audit event
+- **CLAUDE.md Rule #4:** Allergy display prominence — NID Missing badge uses amber (not red, reserved for allergies)
+
+---
+
+## 2026-05-25 — Pharmacy Inventory & POS System (Epic 40) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: 29 commits across 4 sub-projects
+Design Spec: `docs/superpowers/specs/2026-05-25-pharmacy-inventory-pos-design.md`
+Plans: `docs/superpowers/plans/2026-05-25-pharmacy-inventory-subproject-{a,b,c,d}.md`
+
+**Full enterprise pharmacy operations system** — inventory management, procurement, inter-pharmacy transfers, point-of-sale (cash/card/credit), and operational reporting. Progressive complexity via settings toggles ensures corner pharmacies stay simple while hospital pharmacies get full capability.
+
+**Sub-project A — Catalog + Stock Core (15 tasks):**
+1. Inventory types (CatalogItem, StockBatch, StockMovement, GoodsReceipt, PharmacySettings)
+2. Dexie v6 schema (catalogItems, stockBatches, stockMovements, goodsReceipts, pharmacySettings)
+3. Inventory Zustand store (alerts, catalog sync state)
+4. Catalog sync from Hub API (paginated, incremental, offline-safe)
+5. Stock service — FEFO batch selection, deduct/add stock, alerts query
+6. Expiry watchdog (hourly auto-quarantine of expired batches)
+7. Goods receipt service (creates batches + movements in single transaction)
+8. Receive Stock page (catalog search, barcode, line items, confirm)
+9. Stock table component (searchable, filterable, expiry highlighting)
+10. Stock Overview page with alert panel (low stock, near-expiry, quarantined)
+11. Catalog Browse page (Hub formulary with stock levels)
+12. Dispensing FEFO integration (batch auto-selection + stock deduction on confirm)
+13. Dashboard inventory alert widget
+14. Inventory sidebar navigation (3 items) + i18n
+15. Catalog sync + expiry watchdog hooks wired into AppShellWrapper
+
+**Sub-project B — POS + Financial (13 tasks):**
+1. POS types (Invoice, Payment, LedgerEntry, PatientAccount, CashDrawer)
+2. Dexie v7 schema (invoices, payments, ledgerEntries, patientAccounts, cashDrawers)
+3. POS Zustand store
+4. Invoice service (create from dispense, payment status, void, today's revenue)
+5. Payment service (split-pay: cash/card/credit, drawer integration, ledger)
+6. Cash drawer service (open/close, reconciliation, discrepancy tracking)
+7. Patient account service (credit ledger, aging buckets, balance queries)
+8. POS page (invoice summary + split-pay form)
+9. Cash Drawer page (open/close sessions, history)
+10. Patient Accounts page (credit ledgers, aging report, payment recording)
+11. Dispensing → invoice auto-creation integration
+12. Dashboard drawer status widget + POS sidebar nav + i18n
+13. "Collect Payment" CTA shown after dispensing confirmation
+
+**Sub-project C — Procurement + Counts (11 tasks):**
+1. Procurement types (Supplier, PurchaseOrder, StockCount)
+2. Dexie v9 schema (suppliers, purchaseOrders, stockCounts)
+3. Supplier service (CRUD with sync queue)
+4. Purchase order service (full lifecycle: create, send, receive, close, cancel)
+5. Stock count service (start, add items, complete with adjustment generation)
+6. Supplier form component
+7. Suppliers page (list, create, edit, deactivate)
+8. Stock count form (scan/search, enter actuals, variance display)
+9. Stock Count page (full/spot/controlled options + history)
+10. Controlled Substances view upgrade (running balance cards)
+11. Procurement sidebar nav items + i18n
+
+**Sub-project D — Network + Reports (10 tasks):**
+1. Transfer types (StockTransfer, TransferItem, NetworkStockItem)
+2. Dexie v10 schema (stockTransfers)
+3. Transfer service (request, approve, ship/deduct, receive/add, cancel)
+4. Network stock query (Hub API for cross-pharmacy visibility)
+5. Consumption + wastage report services
+6. Financial + controlled discrepancy report services
+7. Transfers page (TransferCard with lifecycle actions)
+8. Report cards (consumption chart, financial summary, wastage, controlled discrepancy)
+9. Reports page (composes all report cards)
+10. Transfers + Reports sidebar nav + i18n
+
+**Bug fix during implementation:**
+- Dexie v8: Added `lastSyncedAt` index to `catalogItems` (was missing, caused SchemaError on catalog sync)
+- AppShellWrapper wired into locale layout (sidebar was built but never rendered — missing layout composition)
+
+### New Files (50+)
+```
+apps/pharmacy-lite/src/lib/inventory/types.ts
+apps/pharmacy-lite/src/lib/inventory/catalog-sync.ts
+apps/pharmacy-lite/src/lib/inventory/stock-service.ts
+apps/pharmacy-lite/src/lib/inventory/fefo.ts
+apps/pharmacy-lite/src/lib/inventory/expiry-watchdog.ts
+apps/pharmacy-lite/src/lib/inventory/goods-receipt-service.ts
+apps/pharmacy-lite/src/lib/inventory-db.ts
+apps/pharmacy-lite/src/lib/pos/types.ts
+apps/pharmacy-lite/src/lib/pos/invoice-service.ts
+apps/pharmacy-lite/src/lib/pos/payment-service.ts
+apps/pharmacy-lite/src/lib/pos/cash-drawer-service.ts
+apps/pharmacy-lite/src/lib/pos/patient-account-service.ts
+apps/pharmacy-lite/src/lib/pos-db.ts
+apps/pharmacy-lite/src/lib/procurement/types.ts
+apps/pharmacy-lite/src/lib/procurement/supplier-service.ts
+apps/pharmacy-lite/src/lib/procurement/purchase-order-service.ts
+apps/pharmacy-lite/src/lib/procurement/stock-count-service.ts
+apps/pharmacy-lite/src/lib/transfers/types.ts
+apps/pharmacy-lite/src/lib/transfers/transfer-service.ts
+apps/pharmacy-lite/src/lib/transfers/network-stock-query.ts
+apps/pharmacy-lite/src/lib/reports/consumption-report.ts
+apps/pharmacy-lite/src/lib/reports/wastage-report.ts
+apps/pharmacy-lite/src/lib/reports/financial-report.ts
+apps/pharmacy-lite/src/lib/reports/controlled-discrepancy.ts
+apps/pharmacy-lite/src/stores/inventory-store.ts
+apps/pharmacy-lite/src/stores/pos-store.ts
+apps/pharmacy-lite/src/hooks/useCatalogSync.ts
+apps/pharmacy-lite/src/hooks/useStockAlerts.ts
+apps/pharmacy-lite/src/hooks/useExpiryWatchdog.ts
+apps/pharmacy-lite/src/components/pharmacy/inventory/ (10 components)
+apps/pharmacy-lite/src/components/pharmacy/pos/ (7 components)
+apps/pharmacy-lite/src/components/pharmacy/procurement/ (5 components)
+apps/pharmacy-lite/src/components/pharmacy/transfers/ (2 components)
+apps/pharmacy-lite/src/components/pharmacy/reports/ (5 components)
+apps/pharmacy-lite/src/app/[locale]/inventory/{page,receive/page,catalog/page,suppliers/page,transfers/page,count/page}.tsx
+apps/pharmacy-lite/src/app/[locale]/pos/{page,cash-drawer/page,accounts/page}.tsx
+apps/pharmacy-lite/src/app/[locale]/reports/page.tsx
+```
+
+### Files Modified
+- `apps/pharmacy-lite/src/lib/db.ts` — Dexie v6→v10 (5 version bumps, 10 new tables)
+- `apps/pharmacy-lite/src/stores/fulfillment-store.ts` — FEFO assignment, stock deduction, invoice creation
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` — InventoryAlertCard + DrawerStatusCard widgets
+- `apps/pharmacy-lite/src/components/pharmacy/FulfillmentChecklist.tsx` — "Collect Payment" CTA
+- `apps/pharmacy-lite/src/components/pharmacy/ControlledSubstancesView.tsx` — Running balance cards
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx` — 8 new nav items (inventory, POS, procurement, reports)
+- `apps/pharmacy-lite/src/app/[locale]/layout.tsx` — AppShellWrapper composition fix
+- `apps/pharmacy-lite/messages/{en,ar,prs}.json` — sidebar keys for all new pages
+
+### Architecture Decisions
+- **Immediate local stock deduction** — offline-first, conflicts resolved on Hub sync
+- **FEFO enforcement** — nearest-expiry batch always selected (patient safety)
+- **Auto-quarantine** — expired stock can never be dispensed
+- **Append-only StockMovement ledger** — Tier 1 sync, tamper-evident audit trail
+- **Integer minor units** — all money stored as integers (no floating point)
+- **Configurable POS flow** — `requirePaymentOnDispense` setting
+- **Patient credit/tab** — append-only LedgerEntry, cached balance on PatientAccount
+- **Inter-pharmacy transfers** — full lifecycle via Hub, both sides create StockMovements
+- **Settings toggles** — PO mode, zones, credit, transfers all opt-in
+
+### Errors & Resolutions
+- `lastSyncedAt` not indexed on `catalogItems` — caused Dexie SchemaError on catalog sync. Fixed with v8 migration adding the index.
+- `AppShellWrapper` not in layout tree — sidebar existed but was never rendered. Fixed by composing into locale layout.
+
+### Tests Run
+- `button-accessibility.test.tsx` — 4/4 passed
+- TypeScript compilation checks on all new files
+
+### PRD Trace
+- **FR9 / Epic 4 & 26:** Pharmacy Fulfillment — now includes stock tracking, POS, and reporting
+- **CLAUDE.md Rule #3:** Drug interaction check — InteractionCheckBanner "unavailable" state prevents silent skip
+- **CLAUDE.md Rule #4:** Allergy prominence — AllergyBanner + FulfillmentChecklist integration
+- **NFR2:** Offline-first — all inventory operations work without network, sync on reconnect
+- **Epic 26 extension:** Epic 40 transforms pharmacy-lite into a complete enterprise system
+
+---
+
+## 2026-05-26 — Pharmacy-Lite UX Consistency (Sidebar, Cards, Shared Patient Forms) — ✅ COMPLETE
+
+### What Was Done
+Branch: `ux-v1.0`
+Commits: `1c84553` through `5481241` (6 commits)
+
+**Layout fixes to match OPD-Lite patterns:**
+1. **Root layout cleanup** — removed legacy `<header>` bar and `<main className="mx-auto max-w-2xl">` from root `layout.tsx`. The old pre-sidebar layout was wrapping the entire app (including the sidebar) in a 672px centered column. Now matches OPD-Lite: `<body> → <ClientErrorBoundary> → {children}`.
+2. **Sidebar content area** — `AppShellWrapper` content wrapper changed from `mx-auto max-w-2xl/5xl` to `px-4 py-6 sm:px-6 lg:px-8`. Full-width content, responsive padding.
+3. **Dashboard card placement** — container updated to `mx-auto max-w-3xl px-4 py-8` with `mb-8` section spacing. Summary cards in `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`. Card styling (borders, padding, fonts, colors) preserved unchanged.
+
+**Shared patient registration forms (replacing simplified pharmacy-specific form):**
+4. **Copied 10 OPD-Lite components** — Card.tsx, registration/ (PatientRegistrationForm, NameInputSection, GeographySection, ConsentSection, ConsentTextModal, MpiResultModal), shared/ (ProvinceAutocomplete, DistrictAutocomplete), patient/PatientEditModal.tsx. All `@/` imports resolve correctly.
+5. **Created `/register-patient` route** — same as OPD-Lite. DashboardActionHub Walk-in button now links here instead of rendering inline form. Search "Register new" prefills `?nameGiven=`.
+6. **Registration i18n** — copied full `registration` namespace (116 keys + nested `consentDocument` with consent text in 3 languages) from OPD-Lite to pharmacy-lite's en.json, ar.json, prs.json.
+
+### New Files (11)
+- `apps/pharmacy-lite/src/components/Card.tsx`
+- `apps/pharmacy-lite/src/components/registration/PatientRegistrationForm.tsx`
+- `apps/pharmacy-lite/src/components/registration/NameInputSection.tsx`
+- `apps/pharmacy-lite/src/components/registration/GeographySection.tsx`
+- `apps/pharmacy-lite/src/components/registration/ConsentSection.tsx`
+- `apps/pharmacy-lite/src/components/registration/ConsentTextModal.tsx`
+- `apps/pharmacy-lite/src/components/registration/MpiResultModal.tsx`
+- `apps/pharmacy-lite/src/components/shared/ProvinceAutocomplete.tsx`
+- `apps/pharmacy-lite/src/components/shared/DistrictAutocomplete.tsx`
+- `apps/pharmacy-lite/src/components/patient/PatientEditModal.tsx`
+- `apps/pharmacy-lite/src/app/[locale]/register-patient/page.tsx`
+
+### Files Modified
+- `apps/pharmacy-lite/src/app/layout.tsx` — removed legacy header + max-w-2xl
+- `apps/pharmacy-lite/src/components/AppShellWrapper.tsx` — full-width content, removed wideRoutes
+- `apps/pharmacy-lite/src/components/pharmacy/PharmacyDashboard.tsx` — grid card placement
+- `apps/pharmacy-lite/src/components/pharmacy/DashboardActionHub.tsx` — route-based registration
+- `apps/pharmacy-lite/messages/en.json` — registration namespace (116 keys)
+- `apps/pharmacy-lite/messages/ar.json` — registration namespace (Arabic)
+- `apps/pharmacy-lite/messages/prs.json` — registration namespace (Dari)
+
+### Errors & Resolutions
+- `MISSING_MESSAGE: Could not resolve 'registration'` — entire registration i18n namespace was missing after copying components. Fixed by copying 116 keys from OPD-Lite.
+- Sidebar not visible after login — `AppShellWrapper` was built but never composed into locale layout (fixed in prior session). Root layout's legacy `<header>` + `<main max-w-2xl>` then constrained everything to 672px (fixed this session).
+
+### PRD Trace
+- **FR1 / Epic 1:** Patient Identity — pharmacy now uses same MPI-enabled registration as OPD
+- **Epic 26 / 40:** Pharmacy UI — layout consistency with OPD-Lite sidebar and card patterns
+- **NFR7:** WCAG AA — shared components include ProvinceAutocomplete/DistrictAutocomplete with ARIA combobox, keyboard navigation
+- **Epic 11:** i18n — registration namespace with 116 keys in all 3 locales
+
+---
+
 ## [NEXT SESSION — TBD]
 
 _Entry will be added here when the next work session begins._

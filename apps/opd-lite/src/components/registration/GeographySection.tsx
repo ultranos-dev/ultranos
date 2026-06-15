@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { ProvinceAutocomplete } from '@/components/shared/ProvinceAutocomplete'
 import { DistrictAutocomplete } from '@/components/shared/DistrictAutocomplete'
 import type { AfghanProvince } from '@ultranos/shared-types'
+import { Card } from '@/components/Card'
 
 interface AddressFields {
   province: AfghanProvince | ''
@@ -18,6 +19,8 @@ interface GeographySectionProps {
   onOriginChange: (address: AddressFields) => void
   onCurrentChange: (address: AddressFields) => void
   onSameAsOriginChange: (checked: boolean) => void
+  isNomadic?: boolean
+  onIsNomadicChange?: (checked: boolean) => void
   errors?: {
     originProvince?: string
     originDistrict?: string
@@ -33,21 +36,23 @@ export function GeographySection({
   onOriginChange,
   onCurrentChange,
   onSameAsOriginChange,
+  isNomadic,
+  onIsNomadicChange,
   errors,
 }: GeographySectionProps) {
   const t = useTranslations('registration')
 
   return (
-    <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+    <Card as="fieldset">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('geographySection')}
       </legend>
 
       {/* Origin address (required) */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-neutral-700 mb-3">
+        <h3 className="text-sm font-bold text-foreground mb-3">
           {t('addressOrigin')}
-          <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+          <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
         </h3>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -82,14 +87,14 @@ export function GeographySection({
         <div className="mt-3">
           <label
             htmlFor="origin-village"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('village')}
           </label>
           <input
             id="origin-village"
             type="text"
-            className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder={t('villagePlaceholder')}
             value={origin.village}
             onChange={(e) =>
@@ -100,13 +105,13 @@ export function GeographySection({
       </div>
 
       {/* Divider */}
-      <hr className="border-neutral-200 mb-4" />
+      <hr className="border-border mb-4" />
 
       {/* Current address (optional) */}
       <div>
-        <h3 className="text-sm font-bold text-neutral-700 mb-3">
+        <h3 className="text-sm font-bold text-foreground mb-3">
           {t('addressCurrent')}
-          <span className="ms-1 text-xs font-normal text-neutral-400">
+          <span className="ms-1 text-xs font-normal text-muted-foreground">
             ({t('optional')})
           </span>
         </h3>
@@ -117,9 +122,9 @@ export function GeographySection({
             type="checkbox"
             checked={sameAsOrigin}
             onChange={(e) => onSameAsOriginChange(e.target.checked)}
-            className="h-5 w-5 rounded border-neutral-300 text-blue-600 focus:ring-blue-400"
+            className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
           />
-          <span className="text-sm font-medium text-neutral-700">
+          <span className="text-sm font-medium text-foreground">
             {t('sameAsOrigin')}
           </span>
         </label>
@@ -156,14 +161,14 @@ export function GeographySection({
             <div className="mt-3">
               <label
                 htmlFor="current-village"
-                className="mb-1 block text-sm font-semibold text-neutral-700"
+                className="mb-1 block text-sm font-semibold text-foreground"
               >
                 {t('village')}
               </label>
               <input
                 id="current-village"
                 type="text"
-                className="w-full min-h-[44px] rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-full min-h-[44px] rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 placeholder={t('villagePlaceholder')}
                 value={current.village}
                 onChange={(e) =>
@@ -174,6 +179,24 @@ export function GeographySection({
           </>
         )}
       </div>
-    </fieldset>
+
+      {/* Nomadic toggle — only rendered when parent provides the callback */}
+      {onIsNomadicChange && (
+        <>
+          <hr className="border-border my-4" />
+          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+            <input
+              type="checkbox"
+              checked={isNomadic ?? false}
+              onChange={(e) => onIsNomadicChange(e.target.checked)}
+              className="h-5 w-5 rounded border-border text-primary focus:ring-ring"
+            />
+            <span className="text-sm font-medium text-foreground">
+              {t('isNomadic')}
+            </span>
+          </label>
+        </>
+      )}
+    </Card>
   )
 }

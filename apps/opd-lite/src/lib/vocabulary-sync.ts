@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { db } from './db'
-import type { VocabMedicationEntry, VocabIcd10Entry, VocabInteractionEntry } from './db'
+import type { VocabMedicationEntry, VocabIcd10Entry } from './db'
 import { invalidateInteractionCache } from '@/services/interactionService'
 
 type VocabType = 'medications' | 'icd10' | 'interactions'
@@ -37,9 +37,9 @@ type ValidInteractionEntry = z.infer<typeof InteractionEntrySchema>
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 // P9 — URL construction: normalize base URL and build sync endpoint safely
@@ -244,10 +244,10 @@ export async function syncAllVocabulary(
   const failed: VocabType[] = []
 
   for (let i = 0; i < types.length; i++) {
-    if (results[i].status === 'fulfilled') {
-      succeeded.push(types[i])
+    if (results[i]!.status === 'fulfilled') {
+      succeeded.push(types[i]!)
     } else {
-      failed.push(types[i])
+      failed.push(types[i]!)
     }
   }
 

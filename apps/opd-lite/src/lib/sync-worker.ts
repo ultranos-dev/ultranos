@@ -6,11 +6,19 @@
  * Upgrade to Service Worker deferred per Dev Notes.
  */
 
-import { DrainWorker, type SyncResult, type SyncQueueEntry } from '@ultranos/sync-engine'
+import { DrainWorker, type SyncResult, type SyncQueueEntry, type ConflictResolution, type SyncRecord } from '@ultranos/sync-engine'
+import { createMeterFetch } from '@ultranos/sync-engine'
+import { recordDataUsage } from './db'
 import { syncQueue } from './sync-queue'
-import { auditPhiAccess, AuditAction, AuditResourceType } from './audit'
+import { auditPhiAccess, AuditAction } from './audit'
+import type { AuditResourceType } from './audit'
 
 let worker: DrainWorker | null = null
+
+const meteredFetch = createMeterFetch(
+  fetch,
+  (entry) => recordDataUsage({ date: entry.date, category: entry.category, bytesOut: entry.bytesOut, bytesIn: entry.bytesIn, requestCount: entry.requestCount }).catch(() => {}),
+)
 
 export interface SyncWorkerConfig {
   hubBaseUrl: string
@@ -22,7 +30,7 @@ export interface SyncWorkerConfig {
     pendingCount: number
     failedCount: number
   }) => void
-  onConflict?: (entry: SyncQueueEntry, resolution: import('@ultranos/sync-engine').ConflictResolution) => Promise<void>
+  onConflict?: (entry: SyncQueueEntry, resolution: ConflictResolution) => Promise<void>
 }
 
 export function startSyncWorker(config: SyncWorkerConfig): void {
@@ -34,7 +42,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
 
     syncFn: async (entry: SyncQueueEntry): Promise<SyncResult> => {
       const token = config.getAuthToken()
-      const res = await fetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
+      const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +70,7 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
         result: { data: { json: { results: Array<{
           resourceId: string
           success: boolean
-          conflict?: { remoteVersion: import('@ultranos/sync-engine').SyncRecord }
+          conflict?: { remoteVersion: SyncRecord }
           error?: string
         }> } } }
       }

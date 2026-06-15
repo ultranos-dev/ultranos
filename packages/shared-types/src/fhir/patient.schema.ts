@@ -46,6 +46,29 @@ const PatientIdentifierInputSchema = z.object({
   shumara: z.string().optional(),
 })
 
+export const MaritalStatusSchema = z.enum(['M', 'S', 'D', 'W', 'UNK'])
+
+export const ContactRelationshipSchema = z.enum([
+  'SPOUSE', 'PARENT', 'SIBLING', 'CHILD', 'GUARDIAN', 'FRIEND', 'OTHER',
+])
+
+export const PatientContactSchema = z.object({
+  relationship: ContactRelationshipSchema,
+  name: z.string().min(1).max(200),
+  phone: z.string().max(50).optional(),
+  gender: z.nativeEnum(AdministrativeGender).optional(),
+})
+
+export const DisplacementCategorySchema = z.enum([
+  'IDP', 'RETURNEE', 'REFUGEE', 'HOST_COMMUNITY',
+])
+
+export const EducationLevelSchema = z.enum([
+  'NONE', 'PRIMARY', 'SECONDARY', 'TERTIARY', 'UNKNOWN',
+])
+
+export const PatientLanguageSchema = z.enum(['en', 'ar', 'prs', 'ps'])
+
 const PatientUltranosExtSchema = z.object({
   nameLocal: z.string(),
   nameLatin: z.string().optional(),
@@ -54,7 +77,7 @@ const PatientUltranosExtSchema = z.object({
   guardianId: z.string().uuid().optional(),
   consentVersion: z.string().optional(),
   patient_tier: PatientTierSchema,
-  preferredLanguage: z.string().optional(),
+  preferredLanguage: PatientLanguageSchema.optional(),
   isActive: z.boolean(),
   createdBy: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -62,6 +85,7 @@ const PatientUltranosExtSchema = z.object({
   nameGiven: z.string().optional(),
   nameFather: z.string().optional(),
   nameGrandfather: z.string().optional(),
+  nameFamily: z.string().max(200).optional(),
   birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional(),
   addressOrigin: PatientAddressSchema.optional(),
   addressCurrent: PatientAddressSchema.optional(),
@@ -70,6 +94,12 @@ const PatientUltranosExtSchema = z.object({
   biometricAlgorithmVersion: z.string().optional(),
   mpiScore: z.number().optional(),
   identifiers: z.array(PatientIdentifierInputSchema).optional(),
+  // ── Extended demographics (HMIS Phase) ───────────────
+  displacementCategory: DisplacementCategorySchema.optional(),
+  nationality: z.string().length(2).optional(),
+  occupation: z.string().max(200).optional(),
+  educationLevel: EducationLevelSchema.optional(),
+  disability: z.boolean().optional(),
 })
 
 export const FhirPatientSchema = z.object({
@@ -79,8 +109,16 @@ export const FhirPatientSchema = z.object({
   gender: z.nativeEnum(AdministrativeGender),
   birthDate: FhirDateSchema.optional(),
   birthYearOnly: z.boolean(),
+  maritalStatus: MaritalStatusSchema.optional(),
   telecom: z.array(ContactPointSchema).optional(),
   identifier: z.array(IdentifierSchema).optional(),
+  contact: z.array(PatientContactSchema).max(10).optional(),
+  communication: z.array(z.object({
+    language: PatientLanguageSchema,
+    preferred: z.boolean(),
+  })).optional(),
+  deceasedBoolean: z.boolean().optional(),
+  deceasedDateTime: z.string().datetime().optional(),
   _ultranos: PatientUltranosExtSchema,
   meta: FhirMetaSchema,
 })
@@ -94,6 +132,7 @@ export type FhirPatientZod = z.infer<typeof FhirPatientSchema>
 export const CreatePatientInputSchema = z.object({
   nameLocal: z.string().min(1),
   nameLatin: z.string().optional(),
+  nameFamily: z.string().max(200).optional(),
   gender: z.nativeEnum(AdministrativeGender),
   birthDate: FhirDateSchema.optional(),
   birthYearOnly: z.boolean().default(false),
@@ -108,8 +147,8 @@ export type CreatePatientInputZod = z.infer<typeof CreatePatientInputSchema>
 
 const ConsentInputSchema = z.object({
   method: z.enum(['WRITTEN', 'VERBAL_WITNESSED']),
-  witnessedBy: z.string().uuid().optional(),
-  language: z.enum(['en', 'ar', 'prs']),
+  witnessedBy: z.string().optional(),
+  language: PatientLanguageSchema,
   version: z.string().min(1),
 })
 
@@ -124,6 +163,7 @@ export const CreatePatientMpiInputSchema = z
     nameGiven:         z.string().min(1).max(200).optional(),
     nameFather:        z.string().min(1).max(200).optional(),
     nameGrandfather:   z.string().min(1).max(200).optional(),
+    nameFamily:        z.string().max(200).optional(),
     gender:            z.nativeEnum(AdministrativeGender).optional(),
     birthDate:         FhirDateSchema.optional(),
     birthYearOnly:     z.boolean().default(false),
@@ -138,6 +178,15 @@ export const CreatePatientMpiInputSchema = z
     biometricAlgorithmVersion:  z.string().max(50).optional(),
     identifiers:       z.array(PatientIdentifierInputSchema).optional(),
     mpiProceedToken:   z.string().optional(),
+    maritalStatus:        MaritalStatusSchema.optional(),
+    contacts:             z.array(PatientContactSchema).max(2).optional(),
+    phoneUse:             z.enum(['home', 'work', 'mobile']).optional(),
+    displacementCategory: DisplacementCategorySchema.optional(),
+    nationality:          z.string().length(2).optional(),
+    occupation:           z.string().max(200).optional(),
+    educationLevel:       EducationLevelSchema.optional(),
+    disability:           z.boolean().optional(),
+    preferredLanguage:    PatientLanguageSchema.optional(),
     consent:           ConsentInputSchema,
   })
   // Transform: firstName alias → nameGiven (firstName stripped from output)
@@ -159,9 +208,9 @@ export const CreatePatientMpiInputSchema = z
     if (val.consent.method === 'VERBAL_WITNESSED' && !val.consent.witnessedBy) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['consent', 'witnessedBy'], message: 'witnessedBy is required for VERBAL_WITNESSED consent' })
     }
-    // birthYearOnly=false means caller is claiming full DOB — require birthDate
-    if (!val.birthYearOnly && !val.birthDate) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate is required when birthYearOnly is false' })
+    // birthYearOnly=false with no birthDate AND no birthYear is invalid
+    if (!val.birthYearOnly && !val.birthDate && !val.birthYear) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'birthDate is required when birthYearOnly is false and no birthYear is provided' })
     }
   })
 

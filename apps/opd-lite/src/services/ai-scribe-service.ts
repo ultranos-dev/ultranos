@@ -8,15 +8,16 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
   try {
-    return useAuthSessionStore.getState().session?.token ?? null
+    const session = useAuthSessionStore.getState().session
+    return (session as typeof session & { token?: string })?.token ?? null
   } catch {
     return null
   }

@@ -4,7 +4,7 @@ import {
   ModelUpdateEventType,
   type ModelDegradationType,
 } from '@ultranos/shared-types'
-import { db, type AIModelMetadataEntry } from './db'
+import { db } from './db'
 import { reportEvents } from './model-update-manager'
 
 /**
@@ -154,7 +154,7 @@ export async function isModelAvailable(modelType: AIModelType): Promise<boolean>
   const models = await db.aiModels.where('modelType').equals(modelType).toArray()
   if (models.length === 0) return false
 
-  const model = models[0]
+  const model = models[0]!
   const ageMs = Date.now() - new Date(model.downloadedAt).getTime()
   return ageMs <= MODEL_STALENESS_THRESHOLD_MS
 }
@@ -187,7 +187,7 @@ export async function isDrugDatabaseStale(): Promise<{ stale: boolean; warningMe
     }
   }
 
-  const model = models[0]
+  const model = models[0]!
   const ageMs = Date.now() - new Date(model.downloadedAt).getTime()
 
   if (ageMs > MODEL_STALENESS_THRESHOLD_MS) {

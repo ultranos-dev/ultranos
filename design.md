@@ -1,6 +1,10 @@
 # Ultranos Design System
 
 > Derived from the Healix healthcare platform reference screens. Optimized for a Desktop PWA targeting urban GP doctors in clinic offices, with an Android companion app. Styled with a Wise-inspired green-forward brand palette. Polished with a design-engineering approach where every unseen detail compounds into something that feels right.
+>
+> **Implementation layer:** All visual styles are implemented via **oklch semantic tokens** (`--primary`, `--foreground`, `--card`, etc.) defined in `packages/ui-kit/src/tokens.css` and mapped through `packages/ui-kit/src/tailwind.preset.ts`. The hex values in this document are the visual specification — they map to oklch triplets in code. Components are ShadCN-based from `packages/ui-kit/src/components/ui/`. Never use hardcoded hex values in component code — use semantic Tailwind classes (`bg-primary`, `text-foreground`, `border-border`, etc.).
+>
+> **Source-level changes only:** All changes to shared design system elements (component styling, token values, typography, layout patterns) MUST be made in `packages/ui-kit/src/`. Never override or duplicate shared component styles at the app level. App-level `src/components/ui/` files are thin re-export proxies — do not add styling or logic to them. After editing `packages/ui-kit/src/`, run `pnpm --filter @ultranos/ui-kit build` to rebuild the compiled dist before changes take effect in apps.
 
 ---
 
@@ -8,17 +12,20 @@
 
 The Ultranos interface is a clinical-grade workspace that prioritizes clarity, density, and calm. It operates on a warm off-white canvas (`#f4f5f2` to `#ffffff`) with near-black text (`#0e0f0c`) and a signature **Wise Green** (`#9fe870`) accent that signals interactivity with an optimistic, nature-inspired tone — distinct from the sterile blues of legacy healthcare software.
 
-Typography uses **Inter** as the sole typeface across all surfaces — display, body, and UI. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
+Typography uses **Manrope** as the primary typeface across all apps, with **Public Sans** for headings. The design spec below uses "Inter" as the historical reference — all proportions, weights, and sizes apply equally to Manrope/Public Sans. Headlines use weight 600–700 at moderate sizes (18–26px), never exceeding 30px in the dashboard context. There are no billboard-scale display headlines; the largest text on any screen is a patient name at roughly 22–26px semibold. Labels use weight 400 at 12–14px in a muted gray. This creates a calm two-tier hierarchy: semibold values over regular labels.
 
 The interaction palette is driven by the **Wise Green** (`#9fe870`) with **Dark Green** (`#163300`) text — the same fresh, lime-bright pairing from the original Wise system. Primary buttons, active navigation tabs, icon badges on the anatomy viewer, and chart accent points all use this green system. Hover states shift to **Pastel Green** (`#cdffad`) with a subtle `scale(1.03)` expansion; pressed/`:active` states use `scale(0.97)` compression. Every transition specifies exact properties and uses custom easing curves — never `transition: all`, never default CSS easings. This level of craft is invisible to the user individually, but in aggregate it makes the interface feel alive and intentional.
 
-Cards have generous corner radii (16–20px) with subtle `1px` borders or light box shadows. The overall depth model is flat — elevation is communicated through layering and border contrast, not shadow stacking. The right-side detail panel enters as a slide-in sheet with `ease-out` easing, reinforcing a spatial model where deeper information emerges from the right edge.
+Cards use a **glassmorphic treatment**: 70% opacity background (`bg-card-bg/70`), `backdrop-blur-md` frosted blur, and a thin `0.65px` semi-transparent gray ring border (`ring-gray-400/40`). Corner radii are generous (`rounded-xl`, 16px). The overall depth model is flat — elevation is communicated through translucency, layering, and subtle ring borders, not shadow stacking or opaque borders. The right-side detail panel enters as a slide-in sheet with `ease-out` easing, reinforcing a spatial model where deeper information emerges from the right edge.
 
 **Key Characteristics:**
 - Inter as the sole typeface — weight 600 for values/headings, weight 400 for labels/body
 - Wise Green (`#9fe870`) as the primary interactive color with Dark Green (`#163300`) text
 - Warm off-white canvas with minimal shadows — flat, layered depth model
-- Generous card radii (16–20px) with thin borders
+- Glassmorphic cards: `bg-card-bg/70` + `backdrop-blur-md` + `ring-[0.65px] ring-gray-400/40` — via Card component
+- All buttons via Button component — no raw `<button>` elements
+- Icon buttons are circular (`rounded-full`) via `variant="icon"`
+- `rounded-xl` (16px) as the universal container/input radius
 - Custom easing curves on all transitions — never default CSS easings
 - `scale(1.03)` hover / `scale(0.97)` active on buttons — subtle, physical press feedback
 - Label-above-value typography pattern for all vitals and data points
@@ -60,7 +67,10 @@ Cards have generous corner radii (16–20px) with subtle `1px` borders or light 
 ## 3. Typography Rules
 
 ### Font Family
-- **All surfaces**: `Inter`, fallbacks: `system-ui, -apple-system, Helvetica, Arial, sans-serif`
+- **All apps**: `Manrope` (sans / body), `Public Sans` (heading), fallback: `system-ui, sans-serif`
+- Loaded as local woff2 files in each app's `public/fonts/manrope/` and `public/fonts/public-sans/`
+- CSS variables: `--font-manrope`, `--font-public-sans` injected on `<html>` via Next.js `localFont`
+- Tailwind mapping: `font-sans` → Manrope, `font-heading` → Public Sans (configured in each app's `tailwind.config.ts`)
 - **OpenType features**: `"calt" 1` (contextual alternates) enabled on all text
 
 ### Hierarchy
@@ -169,11 +179,41 @@ The Patients dashboard uses a **three-panel layout** with a fixed top navigation
   8. **Trend chart**: Oxygen level section with current value, this-month/previous comparisons, and a line chart
   9. **Bottom action bar**: "+ Add record" primary green pill button (`#9fe870` fill, `#163300` text) + download + share icon buttons
 
+### App Shell & Content Area (All 4 Spoke Apps)
+
+All four Next.js spoke apps (admin-portal, opd-lite, pharmacy-lite, lab-lite) use the ShadCN sidebar-07 layout. The shell structure is fixed — never alter these classNames:
+
+```
+BreadcrumbHeader / PageHeader   →  h-14, sticky top-0, border-b border-border, bg-background/95 backdrop-blur
+<main id="main-content"         →  flex flex-1 flex-col gap-4 p-4
+```
+
+The shell's `p-4` (16px) provides the outer padding for all page content. Pages must not add extra padding on top of it.
+
+**Page root div pattern:**
+```tsx
+// Standard page — no width constraint
+<div className="flex flex-col gap-4">
+  ...sections...
+</div>
+
+// Constrained page (forms, settings, single-column flows)
+<div className="mx-auto max-w-3xl flex flex-col gap-4">
+  ...sections...
+</div>
+```
+
+**Section spacing:** Never use `mt-*`, `mb-*`, `px-6`, `pb-6`, or `p-6` on the page root or its direct children. The parent `flex flex-col gap-4` (16px) handles all vertical spacing between sections. Card internal padding (`p-5`, `p-6`) is only for content inside cards — never on the section wrapper itself.
+
+**Gap values:** `gap-4` is the only permitted gap on page-level flex columns and inner grids. Never use `gap-5`, `gap-6`, or `gap-8` at the page layout level. Use `space-y-4` (never `space-y-6`) if flex isn't available.
+
+**Delegate component rule:** When a page.tsx renders a single component with no wrapper (`return <Dashboard />`), that component is the effective page root and must follow the same rules — `flex flex-col gap-4` root, no `mb-8`/`mb-6` on section children.
+
 ### Spacing System
 - **Base unit**: 8px
-- **Common spacings**: 4px (tight), 8px (compact), 12px (default inner), 16px (standard), 20px (section gap), 24px (panel padding), 32px (large section gap)
-- **Card internal padding**: 16–20px
-- **Panel padding**: 16–24px
+- **Common spacings**: 4px (tight), 8px (compact), 12px (default inner), 16px (standard — page gap), 20px (card internal), 24px (panel padding)
+- **Card internal padding**: `p-5` (20px) — standard across all spoke apps
+- **Page gap**: `gap-4` (16px) — between all page-level sections
 
 ### Android App — Companion Surface
 
@@ -375,45 +415,58 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 
 ### Buttons
 
-**Primary Green Pill (CTA)**
-- Background: `#9fe870` (Wise Green)
-- Text: `#163300` (Dark Green), 14–16px, weight 600
+> **Implementation rule:** No raw `<button>` elements anywhere in the app. Every button MUST use the ShadCN `Button` component from `@ultranos/ui-kit/components/ui/button` (or via the `@/components/ui/button` re-export in admin-portal). This includes close buttons, nav arrows, toggles, expand/collapse triggers, and icon-only buttons. The only exception is `Button.tsx` itself.
+
+**Button Component** (`@ultranos/ui-kit/components/ui/button`)
+- Implemented with CVA (class-variance-authority) variants: `default`, `outline`, `secondary`, `ghost`, `destructive`, `success`, `link`
+- Size variants: `default` (h-9), `xs`, `sm`, `lg`, `icon`, `icon-xs`, `icon-sm`, `icon-lg`
+- Always `rounded-full` (pill shape) — the base class is baked into the CVA definition
+- All shared states: focus ring (`focus-visible:ring-2 focus-visible:ring-ring/30`), disabled (`opacity-50 pointer-events-none`)
+
+**Primary Green Pill (CTA)** — `variant="default"`
+- Background: `bg-primary` → oklch token (`0.527 0.154 150.069` = Wise Green in light mode)
+- Text: `text-primary-foreground` → oklch token (`0.985 0 0` = near-white)
 - Icon: `#163300`, 16px, left of label (optional)
-- Padding: 10px 20px
+- Padding: 10px 20px → Tailwind: `px-5 py-2`
+- Border-radius: 9999px (pill) → Tailwind: `rounded-pill`
+- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
+- Hover: `brightness-[1.04]` — gated behind `@media (hover: hover) and (pointer: fine)`
+- Active: `brightness-[0.88]`
+- Focus: `ring-2 ring-primary-300 ring-offset-2`
+
+**Secondary Subtle Pill** — `variant="secondary"`
+- Background: `bg-neutral-200`
+- Text: `text-neutral-700`, 14px, weight 600
+- Padding: 8px 16px → Tailwind: `px-5 py-2`
 - Border-radius: 9999px (pill)
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `#cdffad`, `scale(1.03)` — gated behind `@media (hover: hover) and (pointer: fine)`
-- Active: `scale(0.97)`, transition-duration `100ms`
-- Focus: `0 0 0 2px #9fe870, 0 0 0 4px rgba(159, 232, 112, 0.3)`
+- Hover/Active: same brightness model as primary
 
-**Secondary Subtle Pill**
-- Background: `rgba(22, 51, 0, 0.08)` (dark green at 8% opacity)
-- Text: `#0e0f0c`, 14px, weight 600
+**Outlined Pill (Secondary Action)** — `variant="outline"`
+- Background: `bg-white`
+- Border: `border border-neutral-300`
+- Text: `text-neutral-700`, 14px, weight 600
 - Padding: 8px 16px
 - Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `rgba(22, 51, 0, 0.14)`, `scale(1.03)`
-- Active: `scale(0.97)`
 
-**Outlined Pill (Secondary Action)**
-- Background: `#ffffff`
-- Border: `1px solid #e8ebe6`
-- Text: `#0e0f0c`, 14px, weight 600
-- Padding: 8px 16px
-- Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle), border-color 160ms var(--ease-subtle)`
-- Hover: background `#f4f5f2`, border `#868685`, `scale(1.03)`
-- Active: `scale(0.97)`, background `#e8ebe6`
+**Danger** — `variant="danger"`
+- Background: `bg-red-600`, Text: `text-white`
 
-**Icon Button (Circle)**
-- Size: 36–40px diameter
-- Background: `#ffffff` or transparent
-- Border: `1px solid #e8ebe6` (when on white) or none (when on colored surface)
-- Icon: 18–20px, `#454745`
-- Border-radius: 50%
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: background `rgba(211, 242, 192, 0.4)`, `scale(1.03)`
-- Active: `scale(0.97)`
+**Warning** — `variant="warning"`
+- Background: `bg-amber-600`, Text: `text-white`
+
+**Ghost** — `variant="ghost"`
+- Background: `bg-transparent`, Text: `text-primary-500`
+- Use for: inline text-like buttons, menu items, expand/collapse toggles, template selectors
+- Override text color via `className` for contextual use (e.g., `className="text-red-600"` for logout)
+
+**Icon Button (Circle)** — `variant="icon"`
+- Background: transparent → `hover:bg-neutral-100`
+- Icon color: `text-neutral-500` → `hover:text-neutral-700`
+- Padding: `p-2` (default) — override with `className="p-1"` for compact or `className="min-h-[44px] min-w-[44px]"` for touch targets
+- **Border-radius: 50% (circular)** → Tailwind: `rounded-full`
+- Transition: same as other variants
+- Use for: close/dismiss X buttons, navigation arrows, clear buttons, notification bell, sync pulse, reorder arrows, user avatar trigger
+- Override colors via `className` for contextual use (e.g., `className="text-white/80 hover:text-white"` on dark surfaces)
 
 **Icon Button (Green Badge — Anatomy Hotspot)**
 - Size: 32–36px diameter
@@ -421,44 +474,49 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Icon: `#163300`, 16–18px
 - Border-radius: 50%
 - Box-shadow: `0 2px 8px rgba(159, 232, 112, 0.4)`
-- Transition: `transform 160ms var(--ease-out), box-shadow 200ms var(--ease-subtle)`
-- Hover: background `#cdffad`, shadow intensifies to `0 4px 12px rgba(159, 232, 112, 0.6)`, `scale(1.05)` — slightly more dramatic because these are discovery affordances, not repeated actions
+- Hover: background `#cdffad`, shadow intensifies, `scale(1.05)` — slightly more dramatic for discovery affordances
 - Active: `scale(0.95)`
 
-**Floating Action Button ("+ Add record")**
+**Floating Action Button ("+ Add record")** — `variant="primary"` with sizing overrides
 - Background: `#9fe870`
 - Text: `#163300`, 14px, weight 600
 - Icon: `#163300` "+" prefix, 16px
 - Padding: 12px 24px
 - Border-radius: 9999px
-- Transition: `transform 160ms var(--ease-out), background-color 160ms var(--ease-subtle)`
-- Hover: `scale(1.03)`, background `#cdffad`
-- Active: `scale(0.97)`
 - Position: Bottom of right panel, sticky
 
 ### Cards
 
-**Patient Identity Card**
-- Background: `#ffffff`
-- Border-radius: 16–20px
-- Border: `1px solid #e8ebe6`
-- Padding: 16–20px
-- Shadow: none or `0 1px 3px rgba(0,0,0,0.05)` (very subtle)
+> **Implementation rule:** All card-like containers MUST use consistent card styling. In admin-portal and spoke apps (ShadCN-based), use `bg-popover rounded-2xl border border-border shadow-card` as the standard card container. For patient-facing OPD Lite views, use the glassmorphic treatment below. Never manually style cards with raw hex colors.
+
+**Card Component** (`@/components/Card`)
+- Supports variants via `variant` prop (default: `"primary"`)
+- Supports `as` prop for polymorphic element type (default: `div`)
+- All HTML attributes pass through
+
+**Primary Card (Default)** — `variant="primary"`
+- Background: `bg-card-bg/70` (70% opacity for glassmorphic translucency)
+- Backdrop: `backdrop-blur-md` (frosted glass blur effect)
+- Border-radius: `rounded-xl` (16px)
+- Border: `ring-[0.65px] ring-gray-400/40` (thin semi-transparent gray ring — NOT `border border-neutral-200`)
+- Padding: `p-5` (20px)
+- Shadow: `shadow-sm`
+- Tailwind classes: `rounded-xl bg-card-bg/70 backdrop-blur-md p-5 shadow-sm ring-[0.65px] ring-gray-400/40`
+
+**Why glassmorphic?** The frosted glass effect creates depth through translucency rather than shadow stacking, consistent with the flat depth model. The 0.65px ring is thinner than a standard 1px border, producing a refined edge that doesn't compete with content.
+
+**Patient Identity Card** — `<Card>`
+- Uses default primary variant
 - Photo: Circular crop, 72–88px, positioned top-right with slight overlap/bleed beyond the card edge
 
-**Vital Summary Card**
-- Background: `#ffffff`
-- Border-radius: 16px
-- Border: `1px solid #e8ebe6`
-- Padding: 16px
+**Vital Summary Card** — `<Card>`
+- Uses default primary variant
 - Layout: Label (top, gray) → Value (large, bold) → Sparkline/chart (below)
 - Icon: Green-outlined circle (24px) with organ/system icon in `#054d28`, top-left next to the label
 - Entry: Staggered fade + `translateY(8px)`, 300ms `--ease-out`, 50ms delay between siblings
 
-**Insurance/QR Sub-Card**
-- Background: `#ffffff`
-- Border-radius: 12px
-- Border: `1px solid #e8ebe6`
+**Insurance/QR Sub-Card** — `<Card>`
+- Uses default primary variant
 - Layout: QR code (left, ~100px) | Policy details (right, label-value stacked)
 
 **Right Panel Detail Sheet**
@@ -470,6 +528,100 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Close button: × icon, top-right, 32px hit target
 - Scrollable content area with bottom action bar pinned
 - Content items stagger in at 50ms intervals after panel lands
+
+### Empty State
+
+> **Implementation rule:** Use `EmptyState` from `@ultranos/ui-kit/components/ui/empty-state` for all zero-data, no-results, and empty list states. Never build ad-hoc empty state markup inline.
+
+**`EmptyState` component** (`@ultranos/ui-kit/components/ui/empty-state`)
+
+Two sizes:
+
+**`size="md"` — Vertical centered (default)**
+Used inside card bodies, full-page content areas, and table placeholders:
+- Layout: `flex flex-col items-center justify-center gap-2 px-4 py-8 text-center`
+- Icon container: `size-11` rounded-full, `bg-muted text-muted-foreground`
+- Icon: `size-5` (20px), `aria-hidden`
+- Title: `text-sm font-semibold text-foreground`
+- Description: `text-xs text-muted-foreground`, `max-w-xs`
+- Action button: `variant="outline" size="sm"` — optional
+
+**`size="sm"` — Horizontal compact**
+Used inside table rows, narrow panels, and tight UI sections:
+- Layout: `flex items-center gap-2.5 p-4`
+- Icon container: `size-7` rounded-full, `bg-muted text-muted-foreground`
+- Icon: `size-3` (12px), `aria-hidden`
+- Title: `text-xs font-semibold text-foreground`
+- Description: `text-xs text-muted-foreground` — optional
+- Action button: `variant="outline" size="xs"` — optional, `shrink-0`
+
+**Props:**
+
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `title` | `string` | required | Primary message |
+| `description` | `string` | — | Supporting text |
+| `icon` | `LucideIcon` | `Inbox` | Any Lucide icon from `@ultranos/ui-kit/icons` |
+| `action` | `{ label: string; onClick: () => void }` | — | Single CTA button |
+| `size` | `'md' \| 'sm'` | `'md'` | Layout mode |
+
+**Usage pattern:**
+```tsx
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileSearch, ClipboardList } from '@ultranos/ui-kit/icons'
+
+// Card body empty state
+<EmptyState
+  icon={FileSearch}
+  title="No patients found"
+  description="Try adjusting your search or filters."
+  action={{ label: 'Clear filters', onClick: clearFilters }}
+/>
+
+// Table row inline
+<tr><td colSpan={5}><EmptyState size="sm" icon={ClipboardList} title="No records" /></td></tr>
+```
+
+### Allergy Banner
+
+Safety-critical banner that renders FIRST in the patient view, never collapsed, never behind a tab (CLAUDE.md Rule #4). Uses the same card styling as the default Card component — rounded corners, backdrop blur, subtle ring border — with semantic background colors per state. Single-line states use compact vertical padding; the active-allergies state uses full card padding to accommodate substance pills.
+
+**Shared Card Foundation**
+- Border-radius: `rounded-xl` (16px)
+- Backdrop: `backdrop-blur-md`
+- Shadow: `shadow-sm`
+- Ring: `ring-[0.65px]`
+- Margin-bottom: `mb-4` (16px spacing from next sibling)
+- Transition: `transition-colors duration-200`
+- Accessibility: `role="alert"`, `aria-live` (assertive for danger/warning, polite for neutral), `data-banner-state` attribute for testing
+
+**State: Active Allergies (Red)**
+- Background: `bg-red-50/70` (red-tinted, 70% opacity for glassmorphism)
+- Ring color: `ring-red-400/40`
+- Padding: `p-5` (20px all sides — more room for substance pill list)
+- Text: `text-sm font-bold text-red-800`, centered, uppercase substance list prefixed with "ALLERGIES:"
+- `aria-live="assertive"`, `data-banner-state="active"`
+
+**State: Warning — Data Unavailable (Yellow)**
+- Background: `bg-yellow-50/70`
+- Ring color: `ring-yellow-400/40`
+- Padding: `px-5 py-3` (20px horizontal, 12px vertical — compact single-line)
+- Text: `text-sm font-bold text-yellow-900`, centered
+- Content: "Allergy data unavailable — verify before prescribing"
+- `aria-live="assertive"`, `data-banner-state="warning"`
+
+**State: No Known Allergies / NKA (Neutral)**
+- Background: `bg-card-bg/70` (matches default Card component)
+- Ring color: `ring-gray-400/40` (matches default Card component)
+- Padding: `px-5 py-3` (compact single-line)
+- Text: `text-sm font-semibold text-neutral-600`, centered
+- Content: "No Known Allergies (NKA)"
+- `aria-live="polite"`, `data-banner-state="nka"`
+
+**State: Loading (Neutral)**
+- Identical styling to NKA state
+- Content: "Loading allergy data..."
+- `aria-live="polite"`, `data-banner-state="loading"`
 
 ### Navigation
 
@@ -494,6 +646,35 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - Icon color: `#868685` (inactive), `#163300` on `#9fe870` fill (active)
 - Active indicator: Wise Green circular fill (36px diameter) behind the icon
 - Spacing: 44–48px center-to-center
+
+### Tab Bar Filter Pattern
+
+All status/filter tab bars across admin-portal and spoke apps use a consistent pill-container pattern:
+
+```tsx
+// Container
+<div className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
+  {tabs.map((tab) => (
+    <button
+      key={tab}
+      onClick={() => setFilter(tab)}
+      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+        filter === tab
+          ? 'bg-primary text-primary-foreground'   // ← active: green fill, white text
+          : 'text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      {tab}
+    </button>
+  ))}
+</div>
+```
+
+**Rules:**
+- Container: `rounded-full border border-border bg-card p-1 w-fit` — pill shape, fits content
+- Active tab: `bg-primary text-primary-foreground` — green fill, **white** text (never `text-foreground` which is dark)
+- Inactive tab: `text-muted-foreground hover:text-foreground` — no border, no background
+- Individual tab buttons are `rounded-full` (not `rounded-xl` or `rounded-lg`)
 
 ### Charts & Data Visualization
 
@@ -552,26 +733,41 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 | Level | Treatment | Use |
 |-------|-----------|-----|
 | Flat (Level 0) | No shadow, no border | Default canvas, transparent elements |
-| Bordered (Level 1) | `1px solid #e8ebe6` | Cards, sub-cards, input fields |
-| Subtle lift (Level 2) | `0 1px 3px rgba(0,0,0,0.05)` | Patient ID card, hover-state cards |
-| Panel overlay (Level 3) | `-4px 0 16px rgba(0,0,0,0.08)` | Right detail panel when overlaying center |
+| Glassmorphic (Level 1) | `bg-card-bg/70` + `backdrop-blur-md` + `ring-[0.65px] ring-gray-400/40` + `shadow-sm` | All cards, panels, containers — via Card component |
+| Form field (Level 1) | `border border-neutral-300` | Input fields, selects, textareas (need visible editable border) |
+| Panel overlay (Level 2) | `ring-[0.65px] ring-gray-400/40` + `shadow-lg` | Dropdowns, popovers, notification panels |
+| Modal overlay (Level 3) | `ring-[0.65px] ring-gray-400/40` + `shadow-2xl` | Modals, full-screen overlays |
 | Badge glow (Level 4) | `0 2px 8px rgba(159, 232, 112, 0.4)` | Green hotspot badges on the anatomy viewer |
 
-**Shadow Philosophy**: Shadows are rare and subtle. The interface communicates depth through panel layering (left → center → right), border contrast, and background color shifts — not through stacked shadows. Green-glow shadows are reserved exclusively for interactive hotspot badges on the anatomy viewer.
+**Depth Philosophy**: Depth is communicated through glassmorphic translucency (`bg-*/70` + `backdrop-blur-md`), thin ring borders, and panel layering — not through shadow stacking or opaque borders. The old `border border-neutral-200` pattern is fully deprecated. Cards achieve depth by letting the background subtly show through their 70% opacity fill, reinforcing the layered spatial model.
 
 ---
 
 ## 8. Border Radius Scale
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `radius-xs` | 4px | Inline tags, tiny elements |
-| `radius-sm` | 8px | Image thumbnails, input fields, small badges |
-| `radius-md` | 12px | Sub-cards (QR section, insurance panel) |
-| `radius-lg` | 16px | Vital cards, standard cards |
-| `radius-xl` | 20px | Patient ID card, detail panel |
-| `radius-pill` | 9999px | All buttons, nav tabs, timestamp badges, avatar images |
-| `radius-circle` | 50% | Icon buttons, avatar photos, notification badges |
+| Token | Tailwind | Value | Usage |
+|-------|----------|-------|-------|
+| `radius-xs` | `rounded` | 4px | Inline tags, `<kbd>` keyboard badges |
+| `radius-sm` | `rounded-lg` | 8px | Small inline elements: close buttons, status badges, tab buttons inside tab bars |
+| `radius-md` | `rounded-xl` | 12–16px | **Default for all cards, containers, inputs, modals, dropdowns, panels, form fields.** This is the standard radius across the app. |
+| `radius-pill` | `rounded-pill` | 9999px | All text buttons (Button component), nav tabs, timestamp badges |
+| `radius-circle` | `rounded-full` | 50% | Icon buttons (Button `variant="icon"`), avatar photos, notification badges |
+
+> **Implementation rule:** Use `rounded-xl` as the default radius for all containers, inputs, and panels. Never use `rounded-md` on cards or form inputs. `rounded-lg` is reserved for small inline elements only (tab buttons within a tab bar, close button hit areas). `rounded-pill` (9999px) is for all text-bearing buttons via the Button component.
+
+## 8a. Border & Ring System
+
+> **Implementation rule:** Cards and containers use `ring-[0.65px] ring-gray-400/40` — NOT `border border-neutral-200`. The old `border border-neutral-200` pattern is deprecated across the app.
+
+| Context | Border Treatment | Notes |
+|---------|-----------------|-------|
+| Cards (Card component) | `ring-[0.65px] ring-gray-400/40` | Default via Card primary variant |
+| Form inputs (text, select, textarea) | `border border-neutral-300` | Inputs keep visible CSS borders for usability — they need to look editable |
+| Modals & overlays | `ring-[0.65px] ring-gray-400/40` | Consistent with cards |
+| Dropdowns & popovers | `ring-[0.65px] ring-gray-400/40` | Consistent with cards |
+| Tables & data grids | `ring-[0.65px] ring-gray-400/40` | On the wrapper element |
+| Semantic states (error, warning) | `border border-red-300`, `border border-amber-300` | Colored borders are kept for semantic meaning — never replace with gray ring |
+| `<kbd>` keyboard badges | `border border-neutral-200` | Exception: tiny inline elements keep traditional borders |
 
 ---
 
@@ -582,6 +778,59 @@ For larger transitions (e.g., 72 → 85 BPM), consider a brief blur bridge: `fil
 - **Color**: Inherits from context — `#454745` default, `#163300` on green fills, `#163300` on `#9fe870` active sidebar highlight
 - **Icon set direction**: Medical/clinical icons (stethoscope, clipboard, syringe, heart, lungs) alongside standard UI icons (search, filter, download, print, share, chevron, close)
 - **Green circle icon treatment**: For vital-card icons and anatomy hotspots, the icon sits inside a 24–36px green-outlined (`#9fe870` stroke or `#e2f6d5` fill) or green-filled (`#9fe870`) circle with `#163300` icon color
+
+### Icon Library & Implementation
+
+All icons across every app and the admin-portal are standardized on **lucide-react** via `@ultranos/ui-kit`. The catalog lives in `packages/ui-kit/src/icons.ts` and covers ~160 icons across 14 domain groups (Navigation, Users, Clinical, Lab, Pharmacy, Status, Documents, Actions, Calendar, Communication, Media, Charts, Shapes, Admin).
+
+**Tree-shaking — always use the subpath import:**
+```typescript
+// ✅ Correct — only the named icons are bundled by Next.js tree-shaking
+import { Bell, Microscope, ChevronRight } from '@ultranos/ui-kit/icons'
+
+// ❌ Never import lucide-react directly in app code
+import { Bell } from 'lucide-react'
+```
+
+The `@ultranos/ui-kit/icons` subpath maps to its own `dist/icons.js` chunk — separate from the rest of ui-kit — so unused icons are eliminated at build time. Each Lucide icon is a standalone ESM export (~200–500 bytes), compared to ~300KB for the full unshaken library.
+
+**RTL-aware rendering — use `DirectionalIcon`:**
+```typescript
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronRight, Pill } from '@ultranos/ui-kit/icons'
+
+// Navigation icons (arrows, chevrons, back buttons) → mirror in RTL
+<DirectionalIcon category="navigation">
+  <ChevronRight size={20} />
+</DirectionalIcon>
+
+// Medical icons (pill, stethoscope, flask, microscope) → never mirror
+<DirectionalIcon category="medical">
+  <Pill size={20} />
+</DirectionalIcon>
+```
+
+`DirectionalIcon` applies `transform: var(--directional-icon-transform, none)` via a CSS custom property set by `[dir="rtl"]` — zero JavaScript, zero layout recalculation.
+
+**Size conventions:**
+
+| Context | `size` prop | Tailwind equivalent |
+|---------|------------|-------------------|
+| Button / nav tab | `size={16}` | `h-4 w-4` |
+| Sidebar rail | `size={20}` | `h-5 w-5` |
+| Standalone action | `size={24}` | `h-6 w-6` |
+| Empty state / illustration | `size={28}`–`size={48}` | `h-7 w-7` – `h-12 w-12` |
+
+**Stroke weight:** Lucide default is `strokeWidth={2}`. Only override (e.g. `strokeWidth={1.5}`) when the design spec explicitly calls for lighter strokes on large decorative icons.
+
+**Adding new icons:** Add to `packages/ui-kit/src/icons.ts` in the appropriate domain group and rebuild ui-kit (`pnpm -F @ultranos/ui-kit build`). Never add lucide-react to an individual app's `package.json`.
+
+**Intentionally NOT migrated to Lucide (inline SVGs preserved):**
+- Loading spinners (`animate-spin`) — CSS animation pattern with no Lucide equivalent
+- `token-icons.tsx` — custom **filled** geometric shapes; Lucide versions are outlined
+- `ResultColorIndicator.tsx` — uses `strokeWidth="2.5"` deliberately for healthcare-grade legibility
+- `QcHistoryView.tsx` — Levey-Jennings chart with dynamic `viewBox` (data visualization)
+- Cultural flag path registries — data-driven SVG path lookup tables, not UI icons
 
 ---
 
@@ -643,7 +892,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 ## 11. Do's and Don'ts
 
 ### Do
-- Use Inter as the only typeface — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers
+- Use `font-sans` (Manrope) for body/UI text and `font-heading` (Public Sans) for headings across all apps — weight 600 for headings/values, weight 400 for labels/body, weight 700 only for vital numbers. Never hardcode font names in component code.
 - Use Wise Green (`#9fe870`) with Dark Green (`#163300`) text as the primary interactive color system
 - Specify exact transition properties: `transition: transform 160ms var(--ease-out)` — never `transition: all`
 - Use custom easing curves (`--ease-out`, `--ease-in-out`, `--ease-panel`) — never default CSS easings
@@ -676,6 +925,12 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - Don't animate `padding`, `margin`, `height`, or `width` — layout properties trigger expensive reflows
 - Don't use Framer Motion shorthand props (`x`, `y`, `scale`) under load — use full `transform` strings for GPU acceleration
 - Don't mix icon styles — stick to outlined/stroke icons with consistent stroke weight
+- Don't use raw `<button>` elements — always use the ShadCN `Button` from `@ultranos/ui-kit/components/ui/button`
+- Don't use hardcoded hex colors in component code — always use semantic Tailwind classes (`bg-primary`, `text-foreground`, `border-border`, etc.)
+- Don't omit `../../packages/ui-kit/src/**/*.{ts,tsx}` from `tailwind.config.ts` content — missing it causes broken layout in any app using ui-kit components
+- Don't use `border border-neutral-200` on cards or containers — use `ring-[0.65px] ring-gray-400/40` via the Card component
+- Don't use `rounded-md` or `rounded-lg` on cards, containers, or form inputs — use `rounded-xl`
+- Don't manually style card containers with inline Tailwind — use the `Card` component
 
 ---
 
@@ -735,7 +990,7 @@ Use `:focus-visible` (not `:focus`) so keyboard users see focus rings while mous
 - "Create the right detail panel: white background, 20px top-left radius, shadow -4px 0 16px rgba(0,0,0,0.08). Entry: translateX(100%) → 0, 250ms cubic-bezier(0.32,0.72,0,1). Exit: 180ms cubic-bezier(0.23,1,0.32,1). Close × top-right. Content stagger 50ms. Bottom sticky bar: green pill '+ Add record' with scale(0.97) active."
 
 ### Iteration Guide
-1. Inter only — weight 600 for headings, 400 for labels, 700 for vital numbers
+1. Manrope (`font-sans`) + Public Sans (`font-heading`) across all apps — weight 600 for headings, 400 for labels, 700 for vital numbers
 2. Wise Green (`#9fe870`) + Dark Green (`#163300`) for all interactive elements
 3. Custom easing curves — `cubic-bezier(0.23, 1, 0.32, 1)` as the primary UI easing
 4. `scale(1.03)` hover, `scale(0.97)` active — subtle physical feedback
@@ -768,3 +1023,23 @@ When reviewing Ultranos UI code, check for these issues:
 | `:focus` instead of `:focus-visible` | Switch to `:focus-visible` | Mouse users shouldn't see focus rings |
 | Missing `tabular-nums` on vitals | Add `font-variant-numeric: tabular-nums` | Prevents layout shift when numbers change |
 | Animating `height` or `margin` | Switch to `transform: translateY()` | Layout animations trigger expensive reflows |
+| Raw `<button>` element | Use `Button` component with correct variant | Every button must go through the unified Button system |
+| `border border-neutral-200` on card/container | Use Card component or `ring-[0.65px] ring-gray-400/40` | Old border pattern is deprecated — cards use glassmorphic ring |
+| `rounded-md` on card, container, or input | Use `rounded-xl` | `rounded-md` is not part of the radius scale for containers |
+| `rounded-lg` on card or container | Use `rounded-xl` | `rounded-lg` is reserved for small inline elements only |
+| Manual card styling (`bg-white p-6 shadow-sm`) | Use `bg-popover rounded-2xl border border-border shadow-card` (admin/spoke) or `<Card>` (OPD Lite) | Cards must use consistent token-based styling |
+| `bg-card-bg` without `/70` opacity | Use `bg-card-bg/70` via Card component | Cards use 70% opacity for glassmorphic translucency (OPD Lite patient views) |
+| Hardcoded hex in className (`bg-[#9fe870]`) | Use `bg-primary` | All colors must go through oklch semantic tokens |
+| Active tab with `text-foreground` | Use `text-primary-foreground` | `text-foreground` is near-black; active tabs on green need white text |
+| Missing ui-kit in tailwind content array | Add `../../packages/ui-kit/src/**/*.{ts,tsx}` | Component classes live in ui-kit source — Tailwind can't see them otherwise |
+| Button import from app-local file in new apps | Import from `@ultranos/ui-kit/components/ui/button` | App-local `@/components/ui/` files are admin-portal-only re-exports |
+| Ad-hoc empty state markup | Use `EmptyState` component from `@ultranos/ui-kit/components/ui/empty-state` | Never build inline empty state divs |
+| Header height `h-12` | Change to `h-14` on `BreadcrumbHeader` / `PageHeader` | All 4 apps must have identical header height |
+| Page section with `mt-6` / `mt-4` | Remove — parent `flex flex-col gap-4` handles spacing | Adding margin on top of flex gap creates double-spacing |
+| `mb-8` / `mb-6` on flex-column children | Remove — the flex `gap-4` on the parent already spaces children | `gap-4` + `mb-8` creates 48px between sections (way too much) |
+| `px-6 pb-6` wrapper inside page content | Remove the wrapper div, render children directly | Shell `<main>` provides `p-4`; inner wrappers create double-padding |
+| `gap-5`, `gap-6`, `gap-8` on page root | Change to `gap-4` | Only `gap-4` is permitted at the page layout level |
+| `space-y-6` on page-level container | Change to `space-y-4` | Consistent vertical rhythm |
+| Custom `border-b` header bar inside page | Remove entirely | `BreadcrumbHeader` / `PageHeader` is the only header per page |
+| Nested `<main>` tag in page content | Change to `<div>` | Shell already provides `<main id="main-content">` |
+| `p-6` or `p-4` on component root that is a page delegate | Remove — double-padding on top of shell's `p-4` | Delegate components follow the same rules as page.tsx files |

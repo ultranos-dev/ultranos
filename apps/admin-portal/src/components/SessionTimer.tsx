@@ -55,7 +55,7 @@ export function SessionTimer() {
       className={`text-xs ${
         isWarning
           ? 'text-amber-400 font-semibold'
-          : 'text-text-on-dark/40'
+          : 'text-primary-foreground/40'
       }`}
     >
       Session: {hours}h {minutes}m

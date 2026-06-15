@@ -1,7 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { getDb, addToQueue, getQueueItems, type UploadQueueEntry } from '../lib/db'
-import { checkExpiredItems, startExpiryChecker } from '../lib/expiry-check'
+
+// Mock audit-client to prevent initialization side effects in test environment
+vi.mock('../lib/audit-client', () => ({
+  reportReagentEvent: vi.fn(),
+  reportQueueAuditEvent: vi.fn(),
+  emitClientAudit: vi.fn(),
+  startAuditDrain: vi.fn(),
+  stopAuditDrain: vi.fn(),
+  AuditAction: {},
+  AuditResourceType: {},
+}))
+
+import {
+  getDb,
+  addToQueue,
+  getQueueItems,
+  addReagentInventory,
+  getReagentByReagentId,
+  type UploadQueueEntry,
+  ReagentStatus,
+} from '../lib/db'
+import { checkExpiredItems, checkExpiredReagents, startExpiryChecker } from '../lib/expiry-check'
+import { reportReagentEvent } from '../lib/audit-client'
 
 function makeEntry(overrides: Partial<UploadQueueEntry> = {}): Omit<UploadQueueEntry, 'id'> {
   return {
@@ -117,5 +138,115 @@ describe('48-Hour Expiry Check', () => {
     const cleanup = startExpiryChecker(vi.fn())
     expect(typeof cleanup).toBe('function')
     cleanup()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Reagent Expiry Check — checkExpiredReagents()
+// ---------------------------------------------------------------------------
+
+function makeReagentEntry(overrides: Record<string, unknown> = {}) {
+  const base = {
+    reagentId: `r-${Math.random().toString(36).slice(2)}`,
+    name: 'Test Reagent',
+    lotNumber: 'LOT-001',
+    openDate: '2026-04-01',
+    expiryDate: '2026-05-01', // past
+    expectedTests: 100,
+    testsPerformed: 10,
+    unit: 'bottle',
+    costPerUnit: 500,
+    status: ReagentStatus.ACTIVE,
+    disposalDate: null,
+    disposalReason: null,
+    disposalNotes: null,
+    remainingAtDisposal: null,
+    linkedTestCode: '58410-2',
+    hlcTimestamp: '0000000000000-0000-0001',
+    createdAt: '2026-04-01T08:00:00.000Z',
+    syncStatus: 'pending' as const,
+    ...overrides,
+  }
+  return base
+}
+
+describe('checkExpiredReagents', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    const db = getDb()
+    await db.reagent_inventory.clear()
+    await db.reagent_consumption_log.clear()
+  })
+
+  afterEach(async () => {
+    const db = getDb()
+    await db.reagent_inventory.clear()
+    await db.reagent_consumption_log.clear()
+  })
+
+  it('auto-expires ACTIVE reagents with expiryDate in the past and emits audit events', async () => {
+    // Use a real past date (well before today 2026-05-31)
+    const entry = makeReagentEntry({ expiryDate: '2025-01-01' })
+    await addReagentInventory(entry)
+
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(1)
+    const updated = await getReagentByReagentId(entry.reagentId as string)
+    expect(updated?.status).toBe(ReagentStatus.EXPIRED)
+    expect(reportReagentEvent).toHaveBeenCalledWith({
+      action: 'REAGENT_AUTO_EXPIRED',
+      reagentId: entry.reagentId,
+      statusChange: 'ACTIVE → EXPIRED',
+    })
+  })
+
+  it('does not expire ACTIVE reagents that expire in the future', async () => {
+    const entry = makeReagentEntry({ expiryDate: '2027-12-31' })
+    await addReagentInventory(entry)
+
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(0)
+    const updated = await getReagentByReagentId(entry.reagentId as string)
+    expect(updated?.status).toBe(ReagentStatus.ACTIVE)
+    expect(reportReagentEvent).not.toHaveBeenCalled()
+  })
+
+  it('does not re-expire already EXPIRED reagents', async () => {
+    const entry = makeReagentEntry({ expiryDate: '2025-01-01', status: ReagentStatus.EXPIRED })
+    await addReagentInventory(entry)
+
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(0)
+    expect(reportReagentEvent).not.toHaveBeenCalled()
+  })
+
+  it('does not affect DISPOSED or DEPLETED reagents', async () => {
+    await addReagentInventory(makeReagentEntry({ expiryDate: '2025-01-01', status: ReagentStatus.DISPOSED }))
+    await addReagentInventory(makeReagentEntry({ expiryDate: '2025-01-01', status: ReagentStatus.DEPLETED }))
+
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(0)
+  })
+
+  it('handles an empty reagent inventory gracefully', async () => {
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(0)
+  })
+
+  it('auto-expires multiple reagents and emits one event per reagent', async () => {
+    const e1 = makeReagentEntry({ expiryDate: '2025-01-01' })
+    const e2 = makeReagentEntry({ expiryDate: '2025-06-01' })
+    await addReagentInventory(e1)
+    await addReagentInventory(e2)
+
+    const result = await checkExpiredReagents()
+
+    expect(result.expiredCount).toBe(2)
+    expect(reportReagentEvent).toHaveBeenCalledTimes(2)
   })
 })

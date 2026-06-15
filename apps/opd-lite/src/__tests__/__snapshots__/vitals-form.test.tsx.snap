@@ -9,17 +9,18 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
       class="space-y-6"
     >
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-weight"
         >
           Weight
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Weight"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-weight"
             max="500"
             min="0.5"
@@ -29,24 +30,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             kg
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-height"
         >
           Height
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Height"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-height"
             max="300"
             min="20"
@@ -56,24 +58,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             cm
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-systolic"
         >
           Blood Pressure
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Systolic"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-systolic"
             max="300"
             min="40"
@@ -83,13 +86,13 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
             value=""
           />
           <span
-            class="text-lg font-bold text-neutral-400"
+            class="text-lg font-bold text-muted-foreground"
           >
             /
           </span>
           <input
             aria-label="Diastolic"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-diastolic"
             max="200"
             min="20"
@@ -99,24 +102,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             mmHg
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-temperature"
         >
           Temperature
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Temperature"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-temperature"
             max="47"
             min="25"
@@ -126,7 +130,7 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in LTR mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             °C
           </span>
@@ -146,17 +150,18 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
       class="space-y-6"
     >
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-weight"
         >
           Weight
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Weight"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-weight"
             max="500"
             min="0.5"
@@ -166,24 +171,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             kg
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-height"
         >
           Height
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Height"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-height"
             max="300"
             min="20"
@@ -193,24 +199,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             cm
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-systolic"
         >
           Blood Pressure
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Systolic"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-systolic"
             max="300"
             min="40"
@@ -220,13 +227,13 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
             value=""
           />
           <span
-            class="text-lg font-bold text-neutral-400"
+            class="text-lg font-bold text-muted-foreground"
           >
             /
           </span>
           <input
             aria-label="Diastolic"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-diastolic"
             max="200"
             min="20"
@@ -236,24 +243,25 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             mmHg
           </span>
         </div>
       </div>
       <div>
-        <h3
-          class="text-2xl font-black tracking-tight text-neutral-900"
+        <label
+          class="mb-1 block text-sm font-semibold text-foreground"
+          for="vital-temperature"
         >
           Temperature
-        </h3>
+        </label>
         <div
-          class="mt-2 flex items-center gap-3"
+          class="mt-1 flex items-center gap-3"
         >
           <input
             aria-label="Temperature"
-            class="w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2 border-neutral-200 focus:border-primary-400 focus:ring-primary-200"
+            class="w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 border-border focus:border-primary focus:ring-ring"
             id="vital-temperature"
             max="47"
             min="25"
@@ -263,7 +271,7 @@ exports[`VitalsForm > RTL snapshot tests > matches snapshot in RTL mode 1`] = `
             value=""
           />
           <span
-            class="text-sm font-semibold text-neutral-500"
+            class="text-sm font-semibold text-muted-foreground"
           >
             °C
           </span>

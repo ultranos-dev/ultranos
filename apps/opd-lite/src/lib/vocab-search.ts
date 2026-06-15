@@ -1,4 +1,4 @@
-import Fuse from 'fuse.js'
+import Fuse, { type IFuseOptions, type FuseResultMatch } from 'fuse.js'
 import { db } from './db'
 import type { VocabIcd10Entry } from './db'
 
@@ -7,7 +7,7 @@ export interface Icd10Item {
   display: string
 }
 
-const fuseOptions: Fuse.IFuseOptions<Icd10Item> = {
+const fuseOptions: IFuseOptions<Icd10Item> = {
   keys: [
     { name: 'code', weight: 0.4 },
     { name: 'display', weight: 0.6 },
@@ -19,7 +19,7 @@ const fuseOptions: Fuse.IFuseOptions<Icd10Item> = {
 
 export interface VocabSearchResult {
   item: Icd10Item
-  matches: Fuse.FuseResultMatch[] | undefined
+  matches: readonly FuseResultMatch[] | undefined
 }
 
 function toIcd10Item(entry: VocabIcd10Entry): Icd10Item {

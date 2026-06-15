@@ -1,0 +1,66 @@
+<h2>Design — Section 1: Token Mapping</h2>
+<p class="subtitle">Current admin-portal tokens → ShadCN Radix Rhea names. Does this mapping look right?</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
+
+  <!-- Direct renames -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Direct 1-to-1 Renames</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:0.78rem;font-family:monospace">
+      <thead><tr style="border-bottom:2px solid var(--border,#e5e7eb)">
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em">Current class</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em">→</th>
+        <th style="text-align:left;padding:0.4rem 0.5rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em">ShadCN class</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-canvas</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">bg-background</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-surface</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">bg-card</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-surface-raised</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">bg-popover</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-sidebar</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">bg-sidebar</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">text-text-primary</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">text-foreground</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">text-text-secondary</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">text-muted-foreground</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">text-text-on-dark</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">text-primary-foreground</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-accent / text-accent</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">bg-primary / text-primary</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">border-border</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">border-border</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">text-danger / bg-danger</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">text-destructive / bg-destructive</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">shadow-card</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#16a34a">shadow-card (keep)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Opacity modifier conversions + custom extensions -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Opacity Modifiers (no separate token)</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:0.78rem;font-family:monospace;margin-bottom:1.25rem">
+      <tbody>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-accent-hover</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">bg-primary/90</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-accent-subtle</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">bg-primary/10</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">border-accent/20</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">border-primary/20</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-danger-subtle</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">bg-destructive/10</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">border-danger/20</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">border-destructive/20</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-warning-subtle</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">bg-warning/10</td></tr>
+        <tr style="border-bottom:1px solid #f0f0f0"><td style="padding:0.3rem 0.5rem">bg-success-subtle</td><td style="padding:0.3rem">→</td><td style="padding:0.3rem 0.5rem;color:#2563eb">bg-success/10</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Custom Extensions (not in ShadCN base)</h3>
+    <div style="padding:0.75rem;background:oklch(0.98 0.005 60);border:1px solid oklch(0.85 0.02 60);border-radius:0.5rem;font-size:0.78rem">
+      <p style="margin:0 0 0.5rem"><strong>warning</strong> and <strong>success</strong> tokens have no ShadCN equivalent.<br>
+      We keep them as custom CSS vars + Tailwind extensions:</p>
+      <code style="font-size:0.72rem;display:block;white-space:pre">--warning: oklch(0.75 0.15 70);
+--success: oklch(0.72 0.17 145);
+/* in tailwind.config.ts: */
+warning: 'oklch(var(--warning))',
+success: 'oklch(var(--success))',</code>
+    </div>
+
+    <div style="margin-top:1rem;padding:0.75rem;background:oklch(0.97 0.003 200);border:1px solid oklch(0.88 0.008 200);border-radius:0.5rem;font-size:0.78rem">
+      <strong>Dark mode selector:</strong> Keep <code>[data-theme="dark"]</code> — no need to switch to <code>.dark</code> class.<br>
+      Tailwind config: <code>darkMode: ['selector', '[data-theme="dark"]']</code>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.25rem;padding:0.875rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.625rem;font-size:0.82rem">
+  <strong>Does this mapping look right?</strong> Particularly: <em>bg-surface-raised → bg-popover</em> (used for dropdowns and menus) and <em>text-text-on-dark → text-primary-foreground</em> (white text on accent buttons). Let me know in the terminal.
+</div>

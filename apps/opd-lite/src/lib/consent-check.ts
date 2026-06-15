@@ -15,14 +15,15 @@ export type ConsentCheckResult =
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- sync access to zustand store state
     const { useAuthSessionStore } = require('@/stores/auth-session-store')
     return useAuthSessionStore.getState().session?.token ?? null
   } catch {

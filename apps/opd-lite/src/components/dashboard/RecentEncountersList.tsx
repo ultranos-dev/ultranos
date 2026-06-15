@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { Card } from '@/components/Card'
 
 interface RecentEncounter {
   id: string
@@ -18,7 +19,7 @@ interface RecentEncounter {
 function formatDate(timestamp: string): string {
   try {
     // HLC timestamps have format "ISO_counter_nodeId" — extract ISO portion
-    const iso = timestamp.includes('_') ? timestamp.split('_')[0] : timestamp
+    const iso = timestamp.includes('_') ? timestamp.split('_')[0]! : timestamp
     return new Date(iso).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
@@ -33,24 +34,24 @@ function formatDate(timestamp: string): string {
 function getStatusBadgeClasses(status: string): string {
   switch (status) {
     case 'in-progress':
-      return 'bg-pill-green/20 text-pill-text'
+      return 'bg-success/20 text-success'
     case 'finished':
-      return 'bg-neutral-100 text-neutral-600'
+      return 'bg-muted text-muted-foreground'
     default:
-      return 'bg-neutral-100 text-neutral-500'
+      return 'bg-muted text-muted-foreground'
   }
 }
 
-function getStatusLabel(status: string): string {
+function getStatusLabel(status: string, t: (key: string) => string): string {
   switch (status) {
     case 'in-progress':
-      return 'In Progress'
+      return t('statusInProgress')
     case 'finished':
-      return 'Completed'
+      return t('statusCompleted')
     case 'cancelled':
-      return 'Cancelled'
+      return t('statusCancelled')
     case 'entered-in-error':
-      return 'Error'
+      return t('statusError')
     default:
       return status.charAt(0).toUpperCase() + status.slice(1)
   }
@@ -58,6 +59,7 @@ function getStatusLabel(status: string): string {
 
 export function RecentEncountersList() {
   const t = useTranslations('dashboard')
+  const unknownPatient = t('unknownPatient')
   const [encounters, setEncounters] = useState<RecentEncounter[]>([])
   const activeEncounter = useEncounterStore((s) => s.activeEncounter)
 
@@ -74,7 +76,7 @@ export function RecentEncountersList() {
           recent.map(async (enc) => {
             const ref = enc.subject?.reference ?? ''
             const patientId = ref.replace('Patient/', '') || enc.id
-            let patientName = 'Unknown Patient'
+            let patientName = unknownPatient
             try {
               if (ref) {
                 const patient = await db.patients.get(patientId)
@@ -82,7 +84,7 @@ export function RecentEncountersList() {
                   patientName =
                     patient._ultranos?.nameLocal ??
                     patient.name?.[0]?.text ??
-                    'Unknown Patient'
+                    unknownPatient
                   auditPhiAccess(AuditAction.READ, AuditResourceType.PATIENT, patientId, patientId, {
                     context: 'dashboard-recent-encounters',
                   })
@@ -112,30 +114,30 @@ export function RecentEncountersList() {
 
   if (encounters.length === 0) {
     return (
-      <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-        <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
-        <p className="mt-3 text-sm font-semibold text-neutral-400">
+      <Card>
+        <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
+        <p className="mt-3 text-sm font-semibold text-muted-foreground">
           {t('noEncountersYet')}
         </p>
-      </div>
+      </Card>
     )
   }
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-lg font-black text-neutral-900">{t('recentEncounters')}</h3>
-      <ul className="mt-3 divide-y divide-neutral-100" role="list" aria-label="Recent encounters">
+    <Card>
+      <h3 className="text-lg font-black text-foreground">{t('recentEncounters')}</h3>
+      <ul className="mt-3 divide-y divide-border" role="list" aria-label={t('recentEncountersAria')}>
         {encounters.map((enc) => (
           <li key={enc.id}>
             <Link
               href={`/encounter/${enc.patientId}`}
-              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 rounded-lg ps-2 pe-2 -ms-2 -me-2"
+              className="flex items-center justify-between gap-3 py-3 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:bg-muted rounded-lg ps-2 pe-2 -ms-2 -me-2"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-neutral-900">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {enc.patientName}
                 </p>
-                <p className="text-xs font-semibold text-neutral-400">
+                <p className="text-xs font-semibold text-muted-foreground">
                   {formatDate(enc.date)}
                 </p>
               </div>
@@ -143,20 +145,20 @@ export function RecentEncountersList() {
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${getStatusBadgeClasses(enc.status)}`}
                 >
-                  {getStatusLabel(enc.status)}
+                  {getStatusLabel(enc.status, t)}
                 </span>
               </div>
             </Link>
             <Link
               href={`/patient/${enc.patientId}`}
               className="block text-end text-xs font-semibold text-primary-500 hover:underline pe-2 pb-1 -mt-1"
-              aria-label="View patient chart"
+              aria-label={t('viewChartAria')}
             >
               {t('viewChart')}
             </Link>
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   )
 }

@@ -11,7 +11,7 @@
  * Pauses on auth-expired (401) and triggers re-auth.
  */
 
-import { DrainWorker, createSyncQueue, type CapacityWarningInfo } from '@ultranos/sync-engine'
+import { DrainWorker, createSyncQueue } from '@ultranos/sync-engine'
 import { dexieSyncAdapter } from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
 import { useSyncStore } from '@/stores/sync-store'
@@ -27,13 +27,7 @@ let drainWorker: DrainWorker | null = null
 export function startSyncDrain(): void {
   stopSyncDrain()
 
-  const queue = createSyncQueue(dexieSyncAdapter, {
-    onCapacityWarning: (info: CapacityWarningInfo) => {
-      window.dispatchEvent(
-        new CustomEvent('ultranos:sync-capacity-warning', { detail: info }),
-      )
-    },
-  })
+  const queue = createSyncQueue(dexieSyncAdapter)
 
   drainWorker = new DrainWorker({
     queue,
@@ -51,7 +45,12 @@ export function startSyncDrain(): void {
       return result
     },
     onStatusUpdate: (status) => {
-      useSyncStore.getState().updateSyncStatus(status)
+      const store = useSyncStore.getState()
+      store.updateSyncStatus(status)
+      // Update lastSyncedAt when drain completes a cycle with no pending items
+      if (!status.isPending && status.pendingCount === 0) {
+        store.markSynced()
+      }
     },
     onAudit: (entry, outcome) => {
       const session = useAuthSessionStore.getState().session
@@ -69,6 +68,13 @@ export function startSyncDrain(): void {
   })
 
   drainWorker.start()
+}
+
+/**
+ * Trigger an immediate drain cycle. No-op if worker is not running.
+ */
+export function triggerDrain(): void {
+  drainWorker?.drain()
 }
 
 /**

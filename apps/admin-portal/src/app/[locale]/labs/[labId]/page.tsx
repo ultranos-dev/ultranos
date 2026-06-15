@@ -1,0 +1,365 @@
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+
+type LabAction = 'APPROVE' | 'SUSPEND' | 'REACTIVATE'
+
+interface StatusHistoryEntry {
+  status: string
+  changedBy: string
+  changedByName: string | null
+  changedAt: string
+  reason: string | null
+}
+
+interface LabDetail {
+  id: string
+  labName: string
+  licenseReference: string
+  accreditationReference: string | null
+  status: string
+  registeredAt: string
+  technician: {
+    id: string
+    name: string
+    email: string | null
+    credentialRef: string
+    qualification: string | null
+  } | null
+  statusHistory: StatusHistoryEntry[]
+  uploadCount: number
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const variantMap: Record<string, 'warning' | 'success' | 'destructive'> = {
+    PENDING: 'warning',
+    ACTIVE: 'success',
+    SUSPENDED: 'destructive',
+  }
+  return (
+    <Badge variant={variantMap[status] ?? 'secondary'}>
+      {status}
+    </Badge>
+  )
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+/** AC #8: Confirmation dialog with optional reason field */
+function ConfirmationDialog({
+  action,
+  labName,
+  onConfirm,
+  onCancel,
+  submitting,
+  open,
+}: {
+  action: LabAction
+  labName: string
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+  submitting: boolean
+  open: boolean
+}) {
+  const t = useTranslations('labs')
+  const tCommon = useTranslations('common')
+  const [reason, setReason] = useState('')
+
+  const variantMap: Record<LabAction, 'success' | 'destructive' | 'default'> = {
+    APPROVE: 'success',
+    SUSPEND: 'destructive',
+    REACTIVATE: 'default',
+  }
+
+  const config: Record<LabAction, { title: string; description: string; buttonLabel: string }> = {
+    APPROVE: {
+      title: t('detailConfirmApproveTitle'),
+      description: t('detailConfirmApproveDesc'),
+      buttonLabel: t('detailApprove'),
+    },
+    SUSPEND: {
+      title: t('detailConfirmSuspendTitle'),
+      description: t('detailConfirmSuspendDesc'),
+      buttonLabel: t('detailSuspend'),
+    },
+    REACTIVATE: {
+      title: t('detailConfirmReactivateTitle'),
+      description: t('detailConfirmReactivateDesc'),
+      buttonLabel: t('detailReactivate'),
+    },
+  }
+
+  const c = config[action]
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel() }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{c.title}</DialogTitle>
+          <DialogDescription>{c.description}</DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-1">
+          <label htmlFor="reason" className="block text-sm font-medium text-muted-foreground">
+            Reason <span className="text-muted-foreground/60">(optional)</span>
+          </label>
+          <Textarea
+            id="reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={500}
+            rows={3}
+            className="mt-1"
+            placeholder="Enter a reason for this action..."
+          />
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>
+            {tCommon('cancel')}
+          </Button>
+          <Button
+            variant={variantMap[action]}
+            onClick={() => onConfirm(reason)}
+            disabled={submitting}
+          >
+            {submitting ? 'Processing...' : c.buttonLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export default function LabDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const t = useTranslations('labs')
+  const labId = params.labId as string
+
+  const [lab, setLab] = useState<LabDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<LabAction | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  const fetchDetail = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await trpc.admin.getLabDetail.query({ labId })
+      setLab(result)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? t('detailNotFound'))
+    } finally {
+      setLoading(false)
+    }
+  }, [labId])
+
+  useEffect(() => {
+    fetchDetail()
+  }, [fetchDetail])
+
+  async function handleAction(reason: string) {
+    if (!pendingAction || !lab) return
+    try {
+      setSubmitting(true)
+      setError(null)
+      const result = await trpc.admin.reviewLab.mutate({
+        labId,
+        action: pendingAction,
+        ...(reason ? { reason } : {}),
+      })
+      setPendingAction(null)
+      setSuccessMessage(t('detailActionSuccess'))
+      // Refresh detail view — AC #5
+      await fetchDetail()
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? t('detailActionError'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-muted-foreground">{t('detailNotFound')}</div>
+  }
+
+  if (error && !lab) {
+    return (
+      <div>
+        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
+        <div className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+      </div>
+    )
+  }
+
+  if (!lab) return null
+
+  return (
+    <div className="flex flex-col gap-4">
+        <Button variant="ghost" onClick={() => router.push('/labs')}>{t('detailBackToLabs')}</Button>
+
+        {/* Header */}
+        <div className="flex items-center justify-end">
+          <StatusBadge status={lab.status} />
+        </div>
+
+        {/* Success toast */}
+        {successMessage && (
+          <div className="rounded-2xl bg-success/10 border border-success/20 p-3 text-sm text-success">{successMessage}</div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+        )}
+
+        {/* Action buttons — AC #3, status-dependent + Story 55.1 AC #6: Staff link */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/labs/${labId}/staff`)}
+          >
+            {t('detailViewStaff')}
+          </Button>
+          {lab.status === 'PENDING' && (
+            <Button
+              variant="success"
+              onClick={() => setPendingAction('APPROVE')}
+            >
+              {t('detailApprove')}
+            </Button>
+          )}
+          {lab.status === 'ACTIVE' && (
+            <Button
+              variant="destructive"
+              onClick={() => setPendingAction('SUSPEND')}
+            >
+              {t('detailSuspend')}
+            </Button>
+          )}
+          {lab.status === 'SUSPENDED' && (
+            <Button
+              onClick={() => setPendingAction('REACTIVATE')}
+            >
+              {t('detailReactivate')}
+            </Button>
+          )}
+        </div>
+
+        {/* Lab details grid — AC #9 */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Registration Documents */}
+          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailRegistrationInfo')}</h2>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">License Reference</dt>
+                <dd className="font-medium text-foreground">{lab.licenseReference}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Accreditation (ISO 15189)</dt>
+                <dd className="font-medium text-foreground">{lab.accreditationReference ?? '—'}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Upload History</dt>
+                <dd className="font-medium text-foreground">{lab.uploadCount} result{lab.uploadCount !== 1 ? 's' : ''}</dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Technician Credentials */}
+          <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailTechnician')}</h2>
+            {lab.technician ? (
+              <dl className="mt-3 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Name</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.name}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Email</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.email ?? '—'}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Credential Ref</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.credentialRef}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Qualification</dt>
+                  <dd className="font-medium text-foreground">{lab.technician.qualification ?? '—'}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">No technician associated.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Status Transition History — AC #9 */}
+        <div className="rounded-2xl bg-popover p-6 border border-border shadow-card">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">{t('detailStatusHistory')}</h2>
+          {lab.statusHistory.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">No status transitions recorded.</p>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {lab.statusHistory.map((entry, i) => (
+                <div key={i} className="flex items-start gap-3 border-s-2 border-border ps-4 py-1">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={entry.status} />
+                      {entry.changedByName && (
+                        <span className="text-xs font-medium text-foreground">{entry.changedByName}</span>
+                      )}
+                      <span className="text-xs text-muted-foreground">{formatDateTime(entry.changedAt)}</span>
+                    </div>
+                    {entry.reason && (
+                      <p className="mt-1 text-sm text-muted-foreground">{entry.reason}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Confirmation Dialog — AC #8 */}
+        {pendingAction && (
+          <ConfirmationDialog
+            open={pendingAction !== null}
+            action={pendingAction}
+            labName={lab.labName}
+            onConfirm={handleAction}
+            onCancel={() => setPendingAction(null)}
+            submitting={submitting}
+          />
+        )}
+      </div>
+  )
+}

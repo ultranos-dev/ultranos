@@ -1,0 +1,127 @@
+<h2>Pharmacy Lite: Inventory & POS Architecture</h2>
+<p class="subtitle">Module decomposition for the full enterprise pharmacy system</p>
+
+<div class="section">
+  <h3>System Modules</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+
+    <div style="border: 2px solid #9fe870; border-radius: 12px; padding: 16px; background: rgba(159,232,112,0.05);">
+      <div style="font-weight: 700; color: #163300; margin-bottom: 8px;">Module 1: Medication Catalog</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Hub-managed formulary (synced to local cache)</li>
+        <li>Product: name, form, strength, barcode (EAN-13), category</li>
+        <li>Controlled substance schedule (II, III, IV, V)</li>
+        <li>Selling price, cost price, margin</li>
+        <li>Reorder point, min/max stock levels</li>
+      </ul>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 12px; padding: 16px; background: rgba(159,232,112,0.05);">
+      <div style="font-weight: 700; color: #163300; margin-bottom: 8px;">Module 2: Stock Management</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Stock records: catalog_id, batch, lot, expiry, qty, zone</li>
+        <li>Immediate local deduction on dispense</li>
+        <li>FEFO enforcement (First Expiry, First Out)</li>
+        <li>Auto-quarantine expired stock</li>
+        <li>Stock adjustments (damage, returns, corrections)</li>
+        <li>Physical count / reconciliation workflow</li>
+        <li>Controlled substance running balance</li>
+      </ul>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 12px; padding: 16px; background: rgba(159,232,112,0.05);">
+      <div style="font-weight: 700; color: #163300; margin-bottom: 8px;">Module 3: Procurement</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Supplier management (contacts, lead times, terms)</li>
+        <li>PO lifecycle: Draft → Sent → Partially Received → Closed</li>
+        <li>Goods receiving with barcode scan</li>
+        <li>Partial receipts supported</li>
+        <li>Toggle: PO mode vs simple receiving (settings)</li>
+        <li>Cost price captured at receipt time</li>
+      </ul>
+    </div>
+
+    <div style="border: 2px solid #9fe870; border-radius: 12px; padding: 16px; background: rgba(159,232,112,0.05);">
+      <div style="font-weight: 700; color: #163300; margin-bottom: 8px;">Module 4: Network & Transfers</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Stock levels sync to Hub</li>
+        <li>Cross-location stock visibility</li>
+        <li>Transfer requests between pharmacies</li>
+        <li>Transfer states: Requested → Shipped → Received</li>
+        <li>Org-level consolidated stock view (Hub/Admin)</li>
+      </ul>
+    </div>
+
+    <div style="border: 2px solid #ffd11a; border-radius: 12px; padding: 16px; background: rgba(255,209,26,0.05);">
+      <div style="font-weight: 700; color: #6b5900; margin-bottom: 8px;">Module 5: Point of Sale</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Invoice generation (line items from dispense)</li>
+        <li>Payment: cash, card, credit/tab</li>
+        <li>Patient credit ledger + aging reports</li>
+        <li>Daily cash drawer reconciliation</li>
+        <li>Receipt printing (PDF / thermal)</li>
+        <li>Tax field (configurable per country)</li>
+      </ul>
+    </div>
+
+    <div style="border: 2px solid #ffd11a; border-radius: 12px; padding: 16px; background: rgba(255,209,26,0.05);">
+      <div style="font-weight: 700; color: #6b5900; margin-bottom: 8px;">Module 6: Reporting & Alerts</div>
+      <ul style="font-size: 13px; color: #454745; margin: 0; padding-left: 16px;">
+        <li>Dashboard: stock value, low-stock, near-expiry</li>
+        <li>Consumption trends (fast/slow movers)</li>
+        <li>Controlled substance discrepancy report</li>
+        <li>Wastage rate (expired + damaged)</li>
+        <li>Financial: daily sales, margins, receivables</li>
+        <li>Near-expiry alerts (configurable threshold)</li>
+        <li>Low-stock alerts (at reorder point)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Data Flow</h3>
+  <div style="background: #f4f5f2; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.8;">
+    <div style="text-align: center;">
+      <span style="background: #9fe870; color: #163300; padding: 4px 12px; border-radius: 9999px; font-weight: 600;">Hub API</span>
+      <span style="color: #868685;"> ←→ formulary sync, stock sync, transfer events, PO sync</span>
+    </div>
+    <div style="text-align: center; margin-top: 8px; color: #868685;">↕ offline-first sync queue</div>
+    <div style="text-align: center; margin-top: 8px;">
+      <span style="background: #e2f6d5; color: #054d28; padding: 4px 12px; border-radius: 9999px; font-weight: 600;">Pharmacy-Lite (Dexie)</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; text-align: center; font-size: 11px;">
+      <div style="background: white; border: 1px solid #e8ebe6; border-radius: 6px; padding: 8px;">
+        <strong>Dispense</strong><br>→ deduct stock<br>→ create invoice<br>→ sync to Hub
+      </div>
+      <div style="background: white; border: 1px solid #e8ebe6; border-radius: 6px; padding: 8px;">
+        <strong>Receive</strong><br>→ add stock<br>→ record cost<br>→ update PO<br>→ sync to Hub
+      </div>
+      <div style="background: white; border: 1px solid #e8ebe6; border-radius: 6px; padding: 8px;">
+        <strong>Transfer</strong><br>→ request via Hub<br>→ deduct sender<br>→ add receiver<br>→ both sync
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Settings Toggles (Progressive Complexity)</h3>
+  <div style="font-size: 13px; color: #454745;">
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: center;">
+      <span style="background: #e2f6d5; color: #054d28; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">DEFAULT ON</span>
+      <span>Simple goods receiving (no PO required)</span>
+      <span style="background: #e2f6d5; color: #054d28; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">DEFAULT ON</span>
+      <span>FEFO enforcement + expiry quarantine</span>
+      <span style="background: #e2f6d5; color: #054d28; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">DEFAULT ON</span>
+      <span>Controlled substance running balance</span>
+      <span style="background: rgba(255,209,26,0.3); color: #6b5900; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">OPT-IN</span>
+      <span>Purchase order lifecycle</span>
+      <span style="background: rgba(255,209,26,0.3); color: #6b5900; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">OPT-IN</span>
+      <span>Stock zones (storeroom, dispensary, fridge)</span>
+      <span style="background: rgba(255,209,26,0.3); color: #6b5900; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">OPT-IN</span>
+      <span>Patient credit/tab system</span>
+      <span style="background: rgba(255,209,26,0.3); color: #6b5900; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">OPT-IN</span>
+      <span>Inter-pharmacy transfers</span>
+    </div>
+  </div>
+</div>

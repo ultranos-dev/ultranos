@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 
 interface MpiCandidate {
   id: string
@@ -35,6 +37,21 @@ export function MpiResultModal({
 }: MpiResultModalProps) {
   const t = useTranslations('registration')
   const dialogRef = useRef<HTMLDivElement>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  // Auto-expand first candidate when modal opens
+  useEffect(() => {
+    if (open && candidates.length > 0) {
+      setExpandedId(candidates[0]!.id)
+    } else {
+      setExpandedId(null)
+    }
+  }, [open, candidates])
+
+  // Accordion toggle — only one at a time
+  const toggleCandidate = (id: string) => {
+    setExpandedId((prev) => (prev === id ? null : id))
+  }
 
   // Focus trap
   const handleKeyDown = useCallback(
@@ -48,8 +65,8 @@ export function MpiResultModal({
         'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
       )
       if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
+      const first = focusable[0]!
+      const last = focusable[focusable.length - 1]!
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault()
         last.focus()
@@ -94,138 +111,180 @@ export function MpiResultModal({
 
       {/* Modal panel */}
       <div
-        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-white shadow-2xl ${
-          isBlock ? 'border-red-400' : 'border-amber-400'
+        className={`relative mx-4 w-full max-w-xl rounded-xl border-2 bg-background shadow-2xl ${
+          isBlock ? 'border-destructive' : 'border-warning'
         }`}
       >
         {/* Header */}
         <div
           className={`rounded-t-xl border-b px-6 py-4 ${
             isBlock
-              ? 'border-red-200 bg-red-50'
-              : 'border-amber-200 bg-amber-50'
+              ? 'border-destructive/20 bg-destructive/10'
+              : 'border-warning/20 bg-warning/10'
           }`}
         >
           <h2
             id="mpi-result-title"
             className={`text-xl font-black ${
-              isBlock ? 'text-red-800' : 'text-amber-800'
+              isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockTitle') : t('mpiWarnTitle')}
           </h2>
           <p
             className={`mt-1 text-sm font-semibold ${
-              isBlock ? 'text-red-600' : 'text-amber-600'
+              isBlock ? 'text-destructive' : 'text-warning'
             }`}
           >
             {isBlock ? t('mpiBlockDescription') : t('mpiWarnDescription')}
           </p>
         </div>
 
-        {/* Candidate list */}
-        <div className="max-h-80 overflow-y-auto px-6 py-4">
-          <ul className="space-y-3" aria-label={t('mpiCandidates')}>
-            {candidates.map((candidate) => (
-              <li
-                key={candidate.id}
-                className={`rounded-lg border p-4 ${
-                  isBlock ? 'border-red-200 bg-red-50/50' : 'border-amber-200 bg-amber-50/50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-neutral-900">
-                      {[candidate.nameGiven, candidate.nameFather]
-                        .filter(Boolean)
-                        .join(' ') || t('mpiUnknownName')}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600">
-                      {candidate.birthYear && (
-                        <span>
-                          {t('mpiBirthYear')}: {candidate.birthYear}
-                        </span>
-                      )}
-                      {candidate.gender && (
-                        <span>
-                          {t('mpiGender')}: {candidate.gender}
-                        </span>
-                      )}
-                      {candidate.districtOrigin && (
-                        <span>
-                          {t('mpiDistrict')}: {candidate.districtOrigin}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+        {/* Candidate list — accordion, one at a time */}
+        <div className="max-h-96 overflow-y-auto px-6 py-4">
+          <ul className="space-y-2" aria-label={t('mpiCandidates')}>
+            {candidates.map((candidate) => {
+              const isExpanded = expandedId === candidate.id
+              const name =
+                [candidate.nameGiven, candidate.nameFather]
+                  .filter(Boolean)
+                  .join(' ') || t('mpiUnknownName')
 
-                  <div className="text-end shrink-0">
+              return (
+                <li
+                  key={candidate.id}
+                  className={`rounded-lg border overflow-hidden transition-colors ${
+                    isBlock ? 'border-destructive/20' : 'border-warning/20'
+                  } ${isExpanded ? (isBlock ? 'bg-destructive/10' : 'bg-warning/10/50') : 'bg-background'}`}
+                >
+                  {/* Collapsible header — always visible */}
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => toggleCandidate(candidate.id)}
+                    aria-expanded={isExpanded}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Chevron */}
+                      <ChevronRight
+                        size={16}
+                        className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
+                          isExpanded ? 'rotate-90' : ''
+                        }`}
+                      />
+
+                      <span className="text-sm font-bold text-foreground truncate">
+                        {name}
+                      </span>
+                    </div>
+
+                    {/* Score badge */}
                     <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
+                      className={`shrink-0 inline-block rounded-full px-2.5 py-0.5 text-xs font-black ${
                         candidate.mpiScore >= 80
-                          ? 'bg-red-100 text-red-800'
+                          ? 'bg-destructive/20 text-destructive'
                           : candidate.mpiScore >= 60
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-neutral-100 text-neutral-700'
+                            ? 'bg-warning/20 text-warning'
+                            : 'bg-muted text-foreground'
                       }`}
                     >
                       {t('mpiScore')}: {candidate.mpiScore}
                     </span>
-                  </div>
-                </div>
+                  </Button>
 
-                {/* Score breakdown */}
-                {Object.keys(candidate.scoreBreakdown).length > 0 && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs font-semibold text-neutral-500 [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-700">
-                      {t('mpiScoreBreakdown')}
-                    </summary>
-                    <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-neutral-600">
-                      {Object.entries(candidate.scoreBreakdown).map(
-                        ([field, score]) => (
-                          <div key={field} className="flex justify-between">
-                            <span>{field}</span>
-                            <span className="font-mono">{score}</span>
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="border-t border-border px-4 pb-4 pt-3">
+                      {/* Patient details */}
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        {candidate.nameGiven && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiNameGiven')}</span>
+                            <p className="font-semibold text-foreground">{candidate.nameGiven}</p>
                           </div>
-                        ),
-                      )}
-                    </div>
-                  </details>
-                )}
+                        )}
+                        {candidate.nameFather && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiNameFather')}</span>
+                            <p className="font-semibold text-foreground">{candidate.nameFather}</p>
+                          </div>
+                        )}
+                        {candidate.birthYear && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiBirthYear')}</span>
+                            <p className="font-semibold text-foreground">{candidate.birthYear}</p>
+                          </div>
+                        )}
+                        {candidate.gender && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiGender')}</span>
+                            <p className="font-semibold text-foreground capitalize">{candidate.gender}</p>
+                          </div>
+                        )}
+                        {candidate.districtOrigin && (
+                          <div>
+                            <span className="text-xs font-medium text-muted-foreground">{t('mpiDistrict')}</span>
+                            <p className="font-semibold text-foreground">{candidate.districtOrigin}</p>
+                          </div>
+                        )}
+                      </div>
 
-                {/* Go to patient button for BLOCK decision */}
-                {isBlock && (
-                  <button
-                    type="button"
-                    onClick={() => onGoToPatient(candidate.id)}
-                    className="mt-3 w-full min-h-[44px] rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-700 active:scale-[0.97]"
-                  >
-                    {t('mpiGoToPatient')}
-                  </button>
-                )}
-              </li>
-            ))}
+                      {/* Score breakdown */}
+                      {Object.keys(candidate.scoreBreakdown).length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">
+                            {t('mpiScoreBreakdown')}
+                          </p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                            {Object.entries(candidate.scoreBreakdown).map(
+                              ([field, score]) => (
+                                <div key={field} className="flex justify-between">
+                                  <span>{field}</span>
+                                  <span className="font-mono font-semibold">{score}</span>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Go to patient button */}
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        className="mt-3"
+                        type="button"
+                        onClick={() => onGoToPatient(candidate.id)}
+                      >
+                        {t('mpiGoToPatient')}
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
-          <button
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-muted px-6 py-4">
+          <Button
+            variant="secondary"
             type="button"
             onClick={onCancel}
-            className="min-h-[44px] rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-300 active:scale-[0.97]"
           >
             {t('cancel')}
-          </button>
+          </Button>
 
           {decision === 'WARN' && proceedToken && (
-            <button
+            <Button
+              variant="warning"
               type="button"
               onClick={() => onProceed(proceedToken)}
-              className="min-h-[44px] rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-amber-700 active:scale-[0.97]"
             >
-              {t('mpiProceedAnyway')}
-            </button>
+              {t('mpiAddAnyway')}
+            </Button>
           )}
         </div>
       </div>

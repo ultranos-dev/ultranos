@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { searchMedications, type MedicationSearchResult } from '@/lib/medication-search'
+import { searchMedications } from '@/lib/medication-search'
 import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
 
 // Seed vocabulary tables before tests run

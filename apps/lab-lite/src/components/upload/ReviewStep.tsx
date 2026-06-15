@@ -1,5 +1,9 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
+import { formatFileSize } from '@/lib/format'
+
 interface ReviewStepProps {
   patientFirstName: string
   patientAge: number
@@ -10,12 +14,6 @@ interface ReviewStepProps {
   onSubmit: () => void
   submitting: boolean
   error: string | null
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function ReviewStep({
@@ -29,26 +27,28 @@ export function ReviewStep({
   submitting,
   error,
 }: ReviewStepProps) {
+  const t = useTranslations('results')
+
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-neutral-900">Review & Confirm</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t('reviewTitle')}</h2>
 
-      <dl className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+      <dl className="divide-y divide-border/50 rounded-lg border border-border bg-card">
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">Patient</dt>
-          <dd className="text-sm text-neutral-900">{patientFirstName}, {patientAge} years</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('patient')}</dt>
+          <dd className="text-sm text-foreground">{t('patientValue', { firstName: patientFirstName, age: patientAge })}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">Test Category</dt>
-          <dd className="text-sm text-neutral-900">{loincDisplay}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('testCategory')}</dt>
+          <dd className="text-sm text-foreground">{loincDisplay}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">File</dt>
-          <dd className="text-sm text-neutral-900">{fileName} ({formatFileSize(fileSize)})</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('file')}</dt>
+          <dd className="text-sm text-foreground">{t('fileValue', { fileName, fileSize: formatFileSize(fileSize) })}</dd>
         </div>
         <div className="flex justify-between px-4 py-3">
-          <dt className="text-sm font-medium text-neutral-500">Collection Date</dt>
-          <dd className="text-sm text-neutral-900">{collectionDate}</dd>
+          <dt className="text-sm font-medium text-muted-foreground">{t('collectionDate')}</dt>
+          <dd className="text-sm text-foreground">{collectionDate}</dd>
         </div>
       </dl>
 
@@ -58,14 +58,14 @@ export function ReviewStep({
         </div>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        type="submit"
         onClick={onSubmit}
         disabled={submitting}
-        className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {submitting ? 'Submitting...' : 'Confirm & Submit'}
-      </button>
+        {submitting ? t('submitting') : t('confirmSubmit')}
+      </Button>
     </div>
   )
 }

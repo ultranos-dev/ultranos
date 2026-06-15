@@ -1,19 +1,10 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type { SyncQueueEntry as SyncQueueEntryType } from '@/lib/db'
+import { Button } from '@/components/ui/button'
 
 const STALE_THRESHOLD_MS = 2 * 60 * 1000 // 2 minutes
-
-function formatRelativeTime(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime()
-  const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes} min ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
-}
 
 const FHIR_REF_PATTERN = /^[A-Za-z]+\/[A-Za-z0-9._-]+$/
 
@@ -22,17 +13,10 @@ function extractPatientRef(payload: string): string {
     const parsed = JSON.parse(payload)
     const ref = parsed.patientRef
     if (typeof ref === 'string' && FHIR_REF_PATTERN.test(ref)) return ref
-    return 'Unknown'
+    return 'unknown'
   } catch {
-    return 'Unknown'
+    return 'unknown'
   }
-}
-
-function getGenericErrorMessage(entry: SyncQueueEntryType): string {
-  if (entry.status !== 'failed') return ''
-  if (entry.retryCount >= 5) return 'Server error — will retry'
-  if (entry.retryCount >= 2) return 'Network error — check connectivity'
-  return 'Sync failed — will retry'
 }
 
 function isStale(entry: SyncQueueEntryType): boolean {
@@ -49,58 +33,82 @@ interface SyncQueueEntryProps {
 }
 
 export function SyncQueueEntry({ entry, onRetry, onReset, retrying }: SyncQueueEntryProps) {
+  const t = useTranslations('sync')
+  const tTime = useTranslations('time')
+
+  function formatRelativeTime(isoDate: string): string {
+    const diff = Date.now() - new Date(isoDate).getTime()
+    const minutes = Math.floor(diff / 60_000)
+    if (minutes < 1) return tTime('justNow')
+    if (minutes < 60) return tTime('minutesAgo', { minutes })
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return tTime('hoursAgo', { hours })
+    const days = Math.floor(hours / 24)
+    return tTime('daysAgo', { days })
+  }
+
+  function getGenericErrorMessage(e: SyncQueueEntryType): string {
+    if (e.status !== 'failed') return ''
+    if (e.retryCount >= 5) return t('serverError')
+    if (e.retryCount >= 2) return t('networkError')
+    return t('syncFailed')
+  }
+
   const patientRef = extractPatientRef(entry.payload)
+  const unknownRef = t('unknownRef')
+  const displayRef = patientRef === 'unknown' ? unknownRef : patientRef
   const errorMessage = getGenericErrorMessage(entry)
   const stale = isStale(entry)
 
   return (
     <div
       data-testid={`sync-entry-${entry.id}`}
-      className="flex flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-3"
+      className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-3"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-neutral-700">
+          <span className="text-sm font-medium text-foreground">
             {entry.resourceType}
           </span>
           {entry.retryCount > 0 && (
-            <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700">
+            <span className="inline-flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-destructive/10 text-xs font-bold text-destructive">
               {entry.retryCount > 9 ? '9+' : entry.retryCount}
             </span>
           )}
         </div>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-muted-foreground">
           {formatRelativeTime(entry.createdAt)}
         </span>
       </div>
 
-      <span className="text-xs text-neutral-500 font-mono">{patientRef}</span>
+      <span className="text-xs text-muted-foreground font-mono">{displayRef}</span>
 
       {errorMessage && (
-        <span className="text-xs text-red-600">{errorMessage}</span>
+        <span className="text-xs text-destructive">{errorMessage}</span>
       )}
 
       <div className="flex items-center gap-2 mt-1">
         {entry.status === 'failed' && onRetry && (
-          <button
+          <Button
+            variant="default"
             type="button"
-            aria-label="Retry Now"
+            aria-label={t('retryNowAriaLabel')}
             disabled={retrying}
             onClick={() => onRetry(entry)}
-            className="rounded bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Retry Now
-          </button>
+            {t('retryNow')}
+          </Button>
         )}
         {stale && onReset && (
-          <button
+          <Button
+            variant="outline"
+            className="border-warning text-warning hover:bg-warning/10"
             type="button"
-            aria-label="Stale — Reset"
+            aria-label={t('staleResetAriaLabel')}
             onClick={() => onReset(entry)}
-            className="rounded bg-amber-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-amber-600"
           >
-            Stale — Reset
-          </button>
+            {t('staleReset')}
+          </Button>
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
+import { useSidebar } from '@/components/ui/sidebar'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -13,6 +15,7 @@ const SHOW_DELAY_MS = 2 * 60 * 1000 // 2 minutes
 
 export function InstallPrompt() {
   const t = useTranslations('install')
+  const { state: sidebarState } = useSidebar()
   const [showBanner, setShowBanner] = useState(false)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
   const timerFiredRef = useRef(false)
@@ -74,25 +77,31 @@ export function InstallPrompt() {
 
   if (!showBanner) return null
 
+  const sidebarOffset =
+    sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)'
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-neutral-200 bg-white p-4 shadow-lg">
-      <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
-        <p className="text-sm text-neutral-700">
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card p-4 shadow-lg transition-[margin] duration-200"
+      style={{ marginInlineStart: sidebarOffset }}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-foreground">
           {t('message')}
         </p>
         <div className="flex shrink-0 gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={handleDismiss}
-            className="rounded-md px-3 py-2.5 text-sm text-neutral-600 hover:bg-neutral-100"
           >
             {t('dismiss')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleInstall}
-            className="rounded-md bg-primary-700 px-3 py-2.5 text-sm font-medium text-white hover:bg-primary-800"
           >
             {t('install')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

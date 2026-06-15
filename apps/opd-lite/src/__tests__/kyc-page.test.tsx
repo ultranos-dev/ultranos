@@ -180,7 +180,7 @@ describe('KYC Page', () => {
       },
     })
 
-    const { container } = render(<KycPage />)
+    const { container: _container } = render(<KycPage />)
 
     // Wait for loading to finish
     await waitFor(() => {

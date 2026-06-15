@@ -22,7 +22,7 @@ import { emitGuardianAudit } from '@/lib/guardian-audit'
 import { queueConsentSync } from '@/lib/consent-sync'
 import { hubFetch, CompromisedDeviceError } from '@/lib/hub-fetch'
 
-const HUB_API_URL = process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+const HUB_API_URL = process.env.EXPO_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 
 /**
  * HMAC-SHA256 hash a phone number for storage.

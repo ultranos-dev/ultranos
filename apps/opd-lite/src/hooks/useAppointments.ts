@@ -52,9 +52,12 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
   const [appointments, setAppointments] = useState<FhirAppointmentZod[]>([])
   const [slots, setSlots] = useState<FhirSlotZod[]>([])
   const [loading, setLoading] = useState(true)
+  const initialLoadDone = useRef(false)
 
   const loadData = useCallback(async () => {
-    setLoading(true)
+    if (!initialLoadDone.current) {
+      setLoading(true)
+    }
     try {
       const dayStart = startOfDay(date).toISOString()
       const dayEnd = endOfDay(date).toISOString()
@@ -76,6 +79,7 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
       // Dexie failure — keep existing state
     } finally {
       setLoading(false)
+      initialLoadDone.current = true
     }
   }, [date])
 
@@ -287,20 +291,20 @@ export function useAppointments(date: Date): UseAppointmentsReturn {
     }
   }, [loadData])
 
-  // 60-second sync interval
-  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 60-second sync interval — use ref to avoid re-triggering on callback identity change
+  const syncRef = useRef(syncAppointments)
+  syncRef.current = syncAppointments
+
   useEffect(() => {
     // Initial sync on mount
-    void syncAppointments()
+    void syncRef.current()
 
-    syncIntervalRef.current = setInterval(() => {
-      void syncAppointments()
+    const interval = setInterval(() => {
+      void syncRef.current()
     }, 60_000)
 
-    return () => {
-      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current)
-    }
-  }, [syncAppointments])
+    return () => clearInterval(interval)
+  }, [])
 
   return {
     appointments,

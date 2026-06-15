@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export interface ModuleOption {
   code: string
@@ -63,7 +64,7 @@ export function ModuleSelectionStep({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-text-secondary">
+      <p className="text-sm text-muted-foreground">
         Select the modules your organization needs. You can add or remove modules later from the Subscription Dashboard.
       </p>
 
@@ -75,8 +76,8 @@ export function ModuleSelectionStep({
               key={mod.code}
               className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors duration-200 ${
                 isSelected
-                  ? 'border-accent bg-accent-subtle'
-                  : 'border-border hover:border-accent'
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary'
               }`}
             >
               <input
@@ -86,8 +87,8 @@ export function ModuleSelectionStep({
                 className="mt-0.5 h-4 w-4 rounded border-border accent-accent"
               />
               <div>
-                <span className="text-sm font-medium text-text-primary">{mod.name}</span>
-                <p className="mt-0.5 text-xs text-text-secondary">{mod.description}</p>
+                <span className="text-sm font-medium text-foreground">{mod.name}</span>
+                <p className="mt-0.5 text-xs text-muted-foreground">{mod.description}</p>
               </div>
             </label>
           )
@@ -95,29 +96,30 @@ export function ModuleSelectionStep({
       </div>
 
       {error && (
-        <p className="text-xs text-danger" role="alert">{error}</p>
+        <p className="text-xs text-destructive" role="alert">{error}</p>
       )}
 
-      <p className="text-xs text-text-secondary">
+      <p className="text-xs text-muted-foreground">
         All modules include a 30-day free trial. No payment required during trial.
       </p>
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className="flex-1"
           onClick={onBack}
           disabled={loading}
-          className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           Back
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          className="flex-1"
           disabled={loading}
-          className="flex-1 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200 disabled:opacity-50"
         >
           {loading ? 'Creating account\u2026' : 'Complete Registration'}
-        </button>
+        </Button>
       </div>
     </form>
   )

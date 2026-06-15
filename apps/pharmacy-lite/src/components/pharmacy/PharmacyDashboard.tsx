@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import Link from 'next/link'
-import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { db } from '@/lib/db'
 import { DispensingSummaryCard } from './DispensingSummaryCard'
 import { SyncQueueCard } from './SyncQueueCard'
@@ -10,6 +8,9 @@ import {
   RecentDispensingList,
   type RecentDispenseItem,
 } from './RecentDispensingList'
+import { DashboardActionHub } from './DashboardActionHub'
+import { InventoryAlertCard } from './inventory/InventoryAlertCard'
+import { DrawerStatusCard } from './pos/DrawerStatusCard'
 
 const AUTO_REFRESH_INTERVAL_MS = 30_000
 
@@ -73,6 +74,17 @@ async function queryDashboardStats(): Promise<DashboardStats> {
         syncStatus,
       }
     })
+
+    // Enrich with patient names from local DB
+    const patientIds = recentDispenses.map((d) => d.patientRef).filter(Boolean)
+    if (patientIds.length > 0) {
+      const patients = await db.patients.where('id').anyOf(patientIds).toArray()
+      const nameMap = new Map(patients.map((p) => [p.id, p.nameGiven]))
+      recentDispenses = recentDispenses.map((d) => ({
+        ...d,
+        patientName: nameMap.get(d.patientRef),
+      }))
+    }
   } catch (err) {
     // Encryption key not yet available — show sync stats only.
     // Surface non-encryption errors so they aren't silently swallowed.
@@ -85,16 +97,12 @@ async function queryDashboardStats(): Promise<DashboardStats> {
 }
 
 export function PharmacyDashboard() {
-  const session = useAuthSessionStore((s) => s.session)
   const [stats, setStats] = useState<DashboardStats>({
     dispensedToday: 0,
     pendingSync: 0,
     failedSync: 0,
     recentDispenses: [],
   })
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  )
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const refreshStats = useCallback(async () => {
@@ -139,79 +147,33 @@ export function PharmacyDashboard() {
     }
   }, [refreshStats])
 
-  // Online/offline events
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-
-  const pharmacistName = session?.email?.split('@')[0] ?? 'Pharmacist'
-
   return (
-    <div className="space-y-6">
-      {/* Welcome header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-neutral-900">
-            Welcome, {pharmacistName}
-          </h2>
-          <p className="text-sm text-neutral-500">Pharmacy Dashboard</p>
-        </div>
-        <div
-          data-testid="connectivity-indicator"
-          className="flex items-center gap-2"
-        >
-          <span
-            className={`inline-block h-2.5 w-2.5 rounded-full ${
-              isOnline ? 'bg-green-500' : 'bg-red-500'
-            }`}
-          />
-          <span className="text-xs text-neutral-500">
-            {isOnline ? 'Online' : 'Offline'}
-          </span>
-        </div>
-      </div>
+    <div className="mx-auto max-w-3xl flex flex-col gap-4">
+      {/* Multi-entry action hub */}
+      <section>
+        <DashboardActionHub />
+      </section>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Scan Prescription CTA — UX-DR2 primary action */}
-        <Link
-          href="/scan"
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#9fe870] px-4 py-3 text-sm font-bold text-[#163300] shadow-sm transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#163300]"
-        >
-          Scan QR Prescription
-        </Link>
+      {/* Summary cards grid */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DispensingSummaryCard
+          dispensedToday={stats.dispensedToday}
+          pendingSync={stats.pendingSync}
+          failedSync={stats.failedSync}
+        />
+        <SyncQueueCard pendingCount={stats.pendingSync} />
+        <InventoryAlertCard />
+      </section>
 
-        {/* Story 24.3: Paper Prescription OCR quick action */}
-        <Link
-          href="/paper-rx"
-          data-testid="paper-rx-action-card"
-          className="flex items-center justify-center gap-2 rounded-xl border-2 border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-800 shadow-sm transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
-        >
-          Scan Paper Prescription
-        </Link>
-      </div>
-
-      {/* Today's dispensing summary */}
-      <DispensingSummaryCard
-        dispensedToday={stats.dispensedToday}
-        pendingSync={stats.pendingSync}
-        failedSync={stats.failedSync}
-      />
-
-      {/* Pending sync queue */}
-      <SyncQueueCard pendingCount={stats.pendingSync} />
+      {/* Operational row */}
+      <section>
+        <DrawerStatusCard />
+      </section>
 
       {/* Recent dispensing list */}
-      <RecentDispensingList items={stats.recentDispenses} />
+      <section>
+        <RecentDispensingList items={stats.recentDispenses} />
+      </section>
     </div>
   )
 }

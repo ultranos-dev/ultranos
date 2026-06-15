@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-interface SyncStatus {
+export interface SyncStatus {
   isPending: boolean
   isError: boolean
   lastSyncedAt: string | null
@@ -9,7 +9,12 @@ interface SyncStatus {
 }
 
 interface SyncState extends SyncStatus {
-  updateSyncStatus: (status: SyncStatus) => void
+  conflictCount: number
+  isDashboardOpen: boolean
+  updateSyncStatus: (status: Partial<SyncStatus>) => void
+  markSynced: () => void
+  setConflictCount: (count: number) => void
+  setDashboardOpen: (open: boolean) => void
 }
 
 export const useSyncStore = create<SyncState>()((set) => ({
@@ -18,8 +23,22 @@ export const useSyncStore = create<SyncState>()((set) => ({
   lastSyncedAt: null,
   pendingCount: 0,
   failedCount: 0,
+  conflictCount: 0,
+  isDashboardOpen: false,
 
   updateSyncStatus: (status) => {
     set(status)
+  },
+
+  markSynced: () => {
+    set({ lastSyncedAt: new Date().toISOString() })
+  },
+
+  setConflictCount: (count) => {
+    set({ conflictCount: count })
+  },
+
+  setDashboardOpen: (open) => {
+    set({ isDashboardOpen: open })
   },
 }))

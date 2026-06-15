@@ -1,5 +1,45 @@
 # Deferred Work
 
+## Deferred from: code review of 55-8-surveillance-alert-configuration (2026-06-12)
+
+- **W1: `enrollChw` silently stores plaintext PHI when encryption fails** — When `getCachedEncryptionKey()` throws, the catch block falls through and inserts raw `givenName`/`familyName` into the DB with no error or audit event. CLAUDE.md Rule 1 + Rule 6 violation. Story 54-2 code; must be fixed before CHW enrollment goes to production. [`apps/hub-api/src/trpc/routers/admin.ts:enrollChw`]
+- **W2: `listLabStaff` missing org-scoping** — Queries `lab_technicians` by `lab_id` with no `.eq('org_id', ctx.user.orgId)` guard; any admin can enumerate staff of any lab in the system. Story 55-1 code (already `done`); requires targeted fix pass. [`apps/hub-api/src/trpc/routers/admin.ts:listLabStaff`]
+- **W3: `listAllLabStaff` cursor injection via raw `.or()` string** — Cursor parts are split on `:` and interpolated directly into a PostgREST filter string without UUID validation; crafted cursor can inject arbitrary filter clauses. Story 55-2 code (already `done`). [`apps/hub-api/src/trpc/routers/admin.ts:listAllLabStaff`]
+- **W4: `getMentorshipStats` queries active/dissolved pairings and `lab_technicians` count without `org_id` scope** — All three internal queries operate on the full table; admins see cross-org aggregate counts. Story 55-4 code (in `review`); address in 55-4 review. [`apps/hub-api/src/trpc/routers/admin.ts:getMentorshipStats`]
+- **W5: `dissolveMentorshipPairing` / `updateMentorshipCheckin` no org check on pairing** — Both mutations accept a `pairingId` without verifying it belongs to `ctx.user.orgId`; cross-org mutation possible. Story 55-4 code (in `review`). [`apps/hub-api/src/trpc/routers/admin.ts`]
+- **W6: `getNetworkOverview` fires 3 unbounded parallel Supabase queries per lab** — `Promise.all(labs.map(...))` with 3 queries per lab; 50 labs = 150 simultaneous DB round-trips; will exhaust connection pool. Story 54-1 code (in `in-progress`). [`apps/hub-api/src/trpc/routers/admin.ts:getNetworkOverview`]
+
+## Deferred from: code review of 55-8-surveillance-alert-configuration Group 2 (2026-06-12)
+
+- **W1: No unsaved-changes guard on `SurveillanceConfigForm` navigation** — Navigating away with unsaved threshold/lab changes silently discards them. Not in story 55.8 spec. Revisit in a UX polish sprint. [`apps/admin-portal/src/components/alerts/SurveillanceConfigForm.tsx`]
+- **W2: RTL snapshot tests missing for `SurveillanceConfigForm` and `SurveillanceAlertHistory`** — CLAUDE.md requires RTL snapshots for every component. Neither component has RTL test coverage. Defer to Epic 35 (RTL snapshot completion). [`apps/admin-portal/src/__tests__/surveillance-config.test.tsx`]
+- **W3: Top-level `await import()` in test file fragile with `vi.mock` hoisting** — Dynamic imports at module scope alongside `vi.mock` can cause the real module to load before mocks are registered in some Vitest configurations. Pre-existing pattern in this test file. Revisit when migrating to static imports. [`apps/admin-portal/src/__tests__/surveillance-config.test.tsx`]
+
+## Deferred from: code review of 53-7-patient-public-health-guidance (2026-06-10)
+
+- **W1: Audio build pipeline hook absent** — `prepare-guidance-audio.ts` not hooked into build or CI; intentional placeholder until native-speaker recordings are available. Revisit when recordings are delivered.
+- **W2: Runtime localization key guard for seed data** — TypeScript interface enforces all four locale fields at compile time; runtime validation of static typed seed data is low value. Revisit only if dynamic guidance loading is ever introduced.
+
+## Deferred from: code review of 53-5-confidence-inversion-principle (2026-06-10)
+
+- **W1: Escalation POST body wraps in `{ json: { ... } }` (tRPC HTTP format)** [`apps/lab-lite/src/lib/confidence-escalation.ts:82`] — Format depends on whether Hub endpoint is tRPC or REST (see D1 in story review). Defer until the Hub endpoint is created.
+- **W2: Silent `catch {}` on escalation POST — no queuing, retry, or offline fallback** [`apps/lab-lite/src/lib/confidence-escalation.ts:95`] — By-design per spec ("fire-and-forget, never throws"). Revisit if escalation SLA hardens or an offline queue is added in Epic 30.
+- **W3: LOW overlay `dismissed` state is local useState — re-mount resets acknowledgment** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:14`] — React lifecycle limitation: if the parent re-mounts the component, the acknowledged overlay reappears. Low risk in current usage patterns.
+- **W4: `AiOutputWrapper` missing `sourceFeature` prop — escalation audit events lack required metadata field** — Depends on D2 decision (whether `triggerAutoEscalation` is called inside the component or injected by callers). Defer until D2 is resolved.
+- **W5: Stale closure on `onEscalate` in useEffect dependency array** [`apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx:19`] — `onEscalate` excluded from deps to avoid re-escalation on parent re-renders; intentional. Low risk while callers use stable function references.
+- **W6: Missing `chainHash` in audit event payload for AI_AUTO_ESCALATION** [`apps/lab-lite/src/lib/confidence-escalation.ts:39-57`] — `chainHash` is optional in `ClientAuditEventInput`. Verify whether Epic 23 audit chain monitoring requires it for all events.
+
+## Deferred from: code review of 54-1-multi-branch-lab-network (2026-06-10)
+
+- **W1: `patientFirstName: 'Ahmad'` hardcoded in test fixture** [`apps/lab-lite/src/__tests__/network-metrics.test.ts:62`] — PHI hygiene: test fixture uses a real-looking patient first name. CLAUDE.md Rule 1 covers logs/comments rather than test fixtures explicitly, but consider replacing with a generic placeholder (e.g. `'[TEST]'`) across all lab-lite test fixtures for consistency.
+- **D4: AC4 not met — satellite samples not shown as "In Transit" on worklist** — `originLocationId`/`transitStatus` fields absent from `LabOrderEntry`; worklist has no "In Transit" rendering path. Task 10 was marked complete prematurely. Requires schema migration + worklist integration (Story 42.2 scope) wired to the sync engine transit events.
+- **D5: AC5 not met — result routing to satellite unimplemented** — `routeResultToSatellite` is audit-event-only; no patient pickup notification or delivery mechanism exists. Requires notification queue + satellite sync routing in the sync engine (Hub API scope).
+- **D8: Per-location order breakdown missing** — `aggregateNetworkMetrics` and `getLocationStatus` cannot provide per-satellite metrics until `locationId` is added to `LabOrderEntry` schema. Defer alongside any `LabOrderEntry` schema migration work.
+
+## Deferred from: code review of 54-4-reference-lab-integration (2026-06-10)
+
+- **D19: `sendout-pdf.ts` returns HTML Blob, not PDF** [`apps/lab-lite/src/lib/sendout-pdf.ts`] — `renderReferralFormPDF` and `renderShippingManifestPDF` return `new Blob([html], { type: 'text/html' })`. The function names and file name imply PDF output. Code comment acknowledges this as a deliberate placeholder pending a PDF library decision (jsPDF, react-pdf). Track for resolution when a PDF library is evaluated for lab-lite.
+
 > **Status: All items tracked in Epics 28-36** (2026-05-18)
 > All ~172 deferred items below have been assigned to stories in Epics 28-36.
 > See `_bmad-output/planning-artifacts/epics.md` (Addendum 5) for full story details.
@@ -800,3 +840,155 @@
 - **D-RTL2: `Noto Naskh Arabic` (clinical serif font) declared but never applied.** `--font-family-serif-ar` is defined in `tokens.css` but no component references it. AC#5 (clinical font switching) is partially unmet. Blocked until clinical document views are implemented. → **Epic 35, Story 35.2**
 - **D-RTL3: `patient-lite-mobile` never calls `initI18n()`.** The i18n module exists at `src/i18n/index.ts` but `App.tsx` never invokes it. Pre-existing issue not introduced by Story 1-5. → **Epic 35, Story 35.3**
 - **D-RTL4: RTL snapshot test gaps.** EncounterDashboard (pre-existing render issue), PatientSearchScreen, PatientResultList (OPD-Lite), and LabelPreviewPanel (Pharmacy-Lite, missing `dir="rtl"` container wrapper) lack proper RTL direction snapshot tests. AC#8 partially unmet. → **Epic 35, Story 35.4**
+
+## Deferred from: code review of 42-1-role-based-access-control (2026-05-30)
+
+- **D-42.1-R1: Role change not propagated to target user's active session.** `updateStaffRole` writes the new role to the DB but the target user's Zustand session store retains the stale role until page reload. Server-side `enforceLabRole` middleware re-reads from DB on every request, so mutations are blocked correctly — but client-side UI shows elevated affordances for a demoted user until session refresh. Spec explicitly defers this to v1. Future: poll `getMyRole` on visibility change or add Redis-backed role invalidation.
+- **D-42.1-R2: `.single()` on `lab_technicians` locks out multi-row practitioners.** `labRestrictedProcedure` uses `.single()` which throws if a practitioner has rows in multiple labs. Pre-existing from Story 12.1. If multi-lab membership becomes a use case, API needs an explicit lab selector parameter.
+- **D-42.1-R3: `ar.json` missing verification sub-keys.** Arabic locale file is missing `recentPatients`, `noRecentPatients`, `yearsOld`, `searchPatients` etc. present in `en.json`. Pre-existing locale parity gap, not caused by Story 42.1.
+
+## Deferred from: code review of 55-1-lab-staff-role-management (2026-05-30)
+
+- **D-55.1-R1: `pullOrders` returns `orderingPhysicianName`.** Physician full name returned to lab clients violates CLAUDE.md Rule #7 (lab portal sees only patient first name + age). Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R2: `pullOrders` returns `specialInstructions`.** Free-text clinical field exposed to lab endpoint violates Rule #7 data minimization. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R3: Unbounded N+1 `getUserById` fan-out in `listLabStaff`/`listStaff`.** One Auth Admin API call per staff member via `Promise.all` with no concurrency limit. Risk of Auth API quota exhaustion for large labs (50+ staff). Add `p-limit` or batch to ≤10 concurrent. → Epic 34 (operational)
+- **D-55.1-R4: `pullOrders`/`acknowledgeOrder` missing `enforceLabRole` permission gate.** Any LAB_TECH can pull all active orders — no VIEW_ORDERS permission check. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R5: `acknowledgeOrder` count check broken.** Supabase `.update()` doesn't return `count` without `.select('id', { count: 'exact' })`. The "already claimed" guard never triggers. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+- **D-55.1-R6: `pullOrders` audit emits SUCCESS before `getFieldEncryptionKeys()`.** If key retrieval fails after audit, trail shows false success. Pre-existing from Story 42.2. → Epic 42/Story 42.2 fix scope
+
+## Deferred from: code review round 2 of 42-1-role-based-access-control (2026-05-30)
+
+- **D-42.1-R2-1: `acknowledgeOrder` ADMIN sets `received_by_lab_id=null` → phantom unclaimed state.** ADMIN ack writes null lab ID, making the order appear unassigned to all labs in subsequent pullOrders queries. Story 42.2 code; design decision needed when Admin order management is scoped. → Epic 42/Story 42.2
+- **D-42.1-R2-2: `pullOrders` audit `actorId` uses `lab_technicians` row ID, not practitioner UUID.** Uses `ctx.lab?.technicianId` (row ID from lab_technicians table) instead of `ctx.user.sub` (practitioner UUID). Inconsistent with updateStaffRole which correctly uses `ctx.user.sub`. Story 42.2 code. → Epic 42/Story 42.2
+- **D-42.1-R2-3: `pullOrders` returns `specialInstructions` (free-text, possible Rule #7 concern).** Operational test-handling data the lab needs, but free-text could embed PHI. Evaluate Rule #7 scope during Story 42.2 review. → Epic 42/Story 42.2
+- **D-42.1-R2-4: `patientRef` blind-indexed but still returned in `pullOrders`.** Prior fix claimed removal but code uses blind index (HMAC, non-reversible). Architecturally sound; confirm intent during 42.2 review. → Epic 42/Story 42.2
+
+## Deferred from: code review of 47-2-sharps-waste-tracking (2026-05-30)
+
+- **D-47.2-R1: `getContainerHistory` loads all disposed containers into memory with JS filter.** Dexie query uses indexed `location` but JS-filters `type` + `status`. O(disposed) per call, O(active) in `getContainersNearingFull`. Optimize with compound index when data volume warrants.
+- **D-47.2-R2: `WasteContainerList` loads once and never refreshes (stale multi-tab data).** `useEffect` with `[]` deps. Cross-cutting pattern across lab-lite. Address with Dexie liveQuery or event-based refresh.
+- **D-47.2-R3: `ActivateContainerModal` missing focus trap and Escape key handling.** Pre-existing across lab-lite modals. → Epic 35 accessibility sweep.
+- **D-47.2-R4: `activateContainer` does not record who activated.** No `activatedBy` field on `WasteContainer`. Add when role-gated waste operations are scoped.
+- **D-55.2-W4: Activity filter + pagination interaction.** `listAllLabStaff` applies activity filter client-side after DB LIMIT, producing inconsistent page sizes (0–20 items) and making some matching records unreachable. Fix requires denormalizing `last_active_at` into `lab_technicians` table via migration + login hook. Decision: defer to a follow-up story.
+
+## Deferred from: code review of 55-3-employee-health-registry (2026-05-31)
+
+- **D-55.3-D1: Tech self-access and lab manager access to own health record.** AC #4 requires three access tiers (tech self, lab manager, org admin). Currently only org admins can access `getEmployeeHealth`/`updateEmployeeHealth`. Dev Notes explicitly deferred tech self-access to a future Lab-Lite story. Add Lab-Lite endpoint + UI page for self-service and manager access.
+- **D-55.3-D3: Upsert race condition on `updateEmployeeHealth` can silently overwrite exposure history.** Full-row upsert with `onConflict: 'practitioner_id'` has no optimistic locking. Two concurrent saves overwrite each other. Low concurrency expected in current admin-only use, but exposure history is safety-critical. Add `updated_at` optimistic lock or move to append-only exposure entries table when concurrency increases.
+- **D-55.3-W1: `setMonth` date arithmetic fragile for non-12-month intervals.** `screening-reminders.ts` uses `dueDate.setMonth(getMonth() + 12)` — safe for exactly 12 months but silently overflows for shorter intervals (e.g., Jan 31 + 6 months → Aug 1). Use date-fns or clamp the day when extending to other screening types.
+
+## Deferred from: code review of 55-6-cross-facility-inventory-procurement (2026-05-31)
+
+- **D-55.6-W1: No role differentiation for PO approval workflow.** Any admin can approve their own purchase order — no separation of duties between requester and approver. `approved_by` is recorded but not enforced to differ from `created_by`. V1 simplification; add role-gated approval when procurement roles are defined.
+- **D-55.2-W5: `formatDate` uses `undefined` locale.** `page.tsx` calls `toLocaleDateString(undefined, ...)` which renders dates in the browser's locale. For the MENA/Central Asia target, this produces inconsistent formats across devices. Defer until a locale context/i18n system is in place.
+- **D-55.2-W6: No test for `listLabsForFilter` failure path.** The `.catch(() => {})` in `StaffPage` silently hides labs-dropdown fetch failures. Should add a test that asserts the dropdown remains in a usable empty state on failure.
+
+## Deferred from: code review of 49-1-data-budget-mode (2026-06-03)
+
+- **D-49.1-W1: No 30-day usage data pruning.** `dataUsage` Dexie table grows unbounded — no cleanup of records older than 30 days. Storage growth is gradual but will accumulate on devices with limited IndexedDB quota.
+- **D-49.1-W2: Multi-month absence cycle skip.** If the app is not opened for 2+ billing periods, `checkAndRolloverCycle` advances one period but `getUsageForCycle` queries from `currentCycleStart` to today, spanning multiple billing periods and showing inflated usage.
+- **D-49.1-W3: No compress.ts test coverage.** `compressBody()` and `isCompressionAvailable()` have zero tests. Blocked on wiring decision — tests should follow once compression is integrated into the request path.
+- **D-49.1-W4: No RTL snapshot tests for DataBudgetDashboard/DataBudgetIndicator.** CLAUDE.md requires RTL snapshots for patient-facing components in both LTR and RTL. Only LTR tests exist.
+- **D-49.1-W5: No Low Data Mode behavioral tests.** Tests cover Dexie persistence of the `lowDataMode` boolean but not behavioral effects (30-min batching, polling reduction). Blocked on wiring decisions for AC6b-d.
+
+## Deferred from: code review of 49-3-bluetooth-p2p-sync (2026-06-03)
+
+- **D-49.3-W1: Trusted device reconnect skips identity verification.** No check that reconnecting device matches stored `TrustedDevice` record. Accepted risk for local-network clinic scenario. Future story can add long-term device identity key binding. [P2PSendDialog.tsx, handshake.ts]
+- **D-49.3-W2: BLE `connect()` re-prompts user via `requestDevice()`.** Ignores selected device, opens browser picker again. BLE is secondary transport and deferred per spec. [ble-transport.ts:116-128]
+- **D-49.3-W3: `stopDiscovery` method reassignment in LocalNetworkTransport.** `startDiscovery` replaces `stopDiscovery` with a closure that becomes stale after timeout fires. Low impact — same-device dev/test only. [local-network-transport.ts:120-127]
+- **D-49.3-W4: `P2PSendDialog` hardcodes `LocalNetworkTransport`.** BLE transport path never used. Expected per spec (BLE deferred to future native wrapper). [P2PSendDialog.tsx:113]
+
+## Deferred from: code review of 49-4-conflict-zone-security-protocols (2026-06-03)
+
+- **D-49.4-W1: Encryption key displayed in DOM as plaintext.** One-time AES key stored in React state and rendered as `<code>` — extractable via DevTools if device seized with browser open. MVP-accepted (no QR library installed). Future hardening: add QR code generation or secure key ceremony. [SecurityAlertFlow.tsx]
+- **D-49.4-W2: `getOrCreateDeviceId` in localStorage survives device wipe.** Device wipe clears IndexedDB + SW caches but not `localStorage`. Device ID (`lab-lite-device-id`) persists and could correlate device to audit trail entries. Non-PHI but undesirable in extreme threat scenarios. [backup-generator.ts:152]
+- **D-49.4-W3: Unrelated `lab-network.ts` (Story 54.1) included in 49.4 commit.** Process issue — should have been in a separate commit. Not actionable in this review. [types/lab-network.ts]
+
+## Deferred from: code review of 50-3-automated-disease-surveillance-alerts (2026-06-04)
+
+- **D-50.3-W1: `SURVEILLANCE_ALERT_TRANSMITTED` audit event never emitted.** Requires Hub transmission callback to confirm receipt — Hub-side responsibility, not Lab-Lite. Implement when Hub API surveillance endpoint is built. [surveillance-scheduler.ts]
+- **D-50.3-W2: Alert `message` field is hardcoded English — not i18n-keyed.** `buildAlertMessage` generates English strings stored in Dexie and transmitted to Hub. Spec requires i18n keys. Deferred because Hub API surveillance endpoint doesn't exist yet — message format isn't locked. English is lingua franca for WHO IHR reporting. Revisit when Hub endpoint is designed: store structured payload + render via `t()` in UI. [surveillance-scheduler.ts:99-118]
+
+## Deferred from: code review of 50-1-auto-compiled-hmis-report (2026-06-04)
+
+- **D-50.1-W1: `syncStatus` field never transitions from `'pending'` to `'synced'` after Hub sync.** The `finalizeHmisReport` enqueues to `syncQueue` but the report's own `syncStatus` field is never updated on successful sync. Likely handled generically by sync engine drain worker, but no explicit mechanism exists for `hmisReports` table. [db.ts]
+
+## Deferred from: code review of 50-2-multi-donor-report-templates (2026-06-04)
+
+- **D-50.2-W1: `inPeriod` lexicographic string comparison.** Works correctly by contract (dates are YYYY-MM-DD) but fragile if datetime strings with timezone offsets are ever stored in `LabLogbookEntry.date`. [donor-report-generator.ts:27-29]
+- **D-50.2-W2: `testType` label non-determinism for same LOINC code.** First-seen entry's `testType` used as label for all entries with that LOINC; different display names for the same LOINC produce inconsistent labels depending on insertion order. [donor-report-generator.ts:148-150]
+- **D-50.2-W3: `lastAutoTable.finalY` relies on jspdf-autotable internal API.** Unsafe cast `(doc as unknown as { lastAutoTable: ... })` is fragile and will break on library upgrade. [donor-report-pdf.ts:118,162]
+- **D-50.2-W4: Pre-existing `patientRef` in `reportQueueAuditEvent`.** Potential PHI in audit metadata if callers pass patient name instead of opaque reference. Not introduced by Story 50.2. [audit-client.ts:128]
+
+## Deferred from: code review of 51-2-workload-balancing-dashboard (2026-06-04)
+
+- **D-51.2-W1: Missing i18n keys for Story 51.2 in locale files.** The `workload` namespace in `en.json` covers Story 48.1 keys only. Story 51.2 keys (dashboard, pending, inProgress, completedToday, etc.) need to be added to all 5 locale files (en, ar, prs, ps, fa). [messages/*.json]
+- **D-51.2-W2: Missing AppSidebar navigation item.** No "Workload" link added to sidebar for SUPERVISOR+ users. Dashboard is unreachable via navigation. [AppSidebar.tsx]
+- **D-51.2-W3: Touch/tablet DnD fallback not implemented.** HTML5 Drag and Drop doesn't work on mobile touch browsers. Spec suggests a "Reassign" button with tech selector dropdown as fallback. [TechWorkloadCard.tsx]
+- **D-51.2-W4: Tech name lookup from staff registry.** `techLabelFor()` shows truncated UUID. Production should resolve practitioner names from Story 42.1 staff registry. [WorkloadDashboard.tsx]
+- **D-51.2-W5: Sample urgency not displayed alongside sample ID.** Data Minimization Rule #7 says "sample ID and urgency only" but only the sample ID (last 8 chars) is shown. [TechWorkloadCard.tsx]
+
+## Deferred from: code review of 51-1-shift-handover-protocol (2026-06-04)
+
+- **D-51.1-W1: Wall-clock `Date.now()` used for timestamps instead of HLC.** Handover service uses `new Date().toISOString()` for `createdAt`, sync events, and shift session timestamps. Pre-existing pattern across the codebase — HLC is used in sync engine but not in local Dexie writes. [handover-service.ts]
+- **D-51.1-W2: `usePendingHandovers.load` not wrapped in `useCallback`.** The `refresh` return value is a new function reference every render. Any caller using it as a useEffect/useCallback dependency will loop. Low impact currently but fragile. [usePendingHandovers.ts]
+- **D-51.1-W3: `aggregateQcStatus` returns empty array.** QC integration intentionally deferred per Dev Notes — QC results table integration to be added when QC results story is implemented. [handover-service.ts]
+
+## Deferred from: code review of 51-4-equipment-booking-scheduling (2026-06-04)
+
+- **D-51.4-W1: `nextBatch` captured outside Dexie transaction via JS closure.** Works correctly in current Dexie version via closure semantics, but is a latent footgun if the post-transaction block is extended with additional DB calls that rely on the transaction zone. [equipment-service.ts:~2322]
+- **D-51.4-W2: `completeBatch` falls back to `queuedAt` when `startedAt` is null for actual run time calculation.** Can only occur if a RUNNING batch has no `startedAt` (requires external data corruption or a bug in `startBatch`). If triggered, inflates the rolling average run time significantly. [equipment-service.ts:~2316]
+
+## Deferred from: code review of 51-3-sample-collision-prevention (2026-06-04)
+
+- **D-51.3-W1: Audit event for `acquireLock` emitted outside Dexie transaction.** Pre-existing codebase pattern — audit logging is fire-and-forget. If the transaction succeeds but the audit emit throws (or the tab closes), the lock write is unaudited. Systemic architectural issue; not introduced by this story. [sample-lock-service.ts]
+- **D-51.3-W2: `autoReleaseLock` `durationHours` label is misleading.** Reflects wall-clock time held (lockedAt → now), not the configured timeout window. In practice they're the same, but for long-expired locks found late by the checker, the reported duration can exceed the configured timeout. Cosmetic naming issue. [sample-lock-service.ts]
+
+## Deferred from: code review of 51-6-technician-performance-portfolio (2026-06-05)
+
+- **D-51.6-W1: StaffPortfolioList shows truncated opaque IDs instead of tech names.** `displayName: id.slice(0, 8) + '…'` — supervisors can't identify who they're selecting. Requires deciding where offline-available staff display names are stored (practitioner_keys table, a separate staff registry, or derived from session data). Data model decision outside this story's scope. [StaffPortfolioList.tsx:588]
+
+## Deferred from: code review of 51-7-gamified-team-quality-engagement (2026-06-09)
+
+- **D-51.7-W1: Dead code block in `evaluateMonthlyAchievements`.** First `qcRateByTech` loop has an empty `if (current === undefined)` body and populates nothing. The map is correctly populated in the second pass through `qcStatsByTech`. No correctness impact, but confusing to future readers. [achievement-service.ts:192-199]
+- **D-51.7-W2: `enteredAt` string comparison assumes ISO 8601 UTC (`Z`-suffix).** In `calcTurnaroundTime`, `r.enteredAt <= end + 'T23:59:59Z'` silently mis-classifies results stored without timezone suffix (lexicographic sort fails at boundary). Depends on data write conventions established in earlier stories (how `enteredAt` is written to Dexie). [quality-metrics-calculator.ts:117]
+
+## Deferred from: code review of 54-3-courier-transport-tracking (2026-06-10)
+
+- **D-54.3-W1: i18n strings hardcoded English in transport UI components.** All transport components (CourierPickupScreen, CourierDeliveryScreen, ActiveTransportCard) use hardcoded English with TODO comments. Track in Epic 11 i18n stories.
+- **D-54.3-W2: `mapSampleTypeToCategory` conservative fallback to 'blood' undocumented behavior.** Unknown specimen types silently get the blood stability window (6h). The conservative fallback is intentional but not surfaced to the caller. Low risk but could confuse future maintainers. [stability-monitor.ts]
+- **D-54.3-W3: `SampleStabilityWindow` typed as `Record<string, number>` instead of a narrowed key union.** Could be `Record<'blood'|'urine'|'swab'|'csf'|'stool', number>` for compile-time safety. Minor type improvement, no functional impact. [types/transport.ts]
+- **D-54.3-W4: `getTransportsByCourier` CRUD helper added outside Task 2 spec.** Unreviewed additional query surface over transport data. Functional and used by the service layer but not explicitly scoped in the story.
+- **D-54.3-W5: Location IDs shown as raw strings in courier UI.** `ActiveTransportCard` and `CourierDeliveryScreen` display raw UUID-format location IDs to couriers rather than resolved human-readable names. Requires a location resolver service outside this story's scope.
+- **D-54.3-W6: `⚠` Unicode character used instead of Lucide icon in transport flag banner.** `SampleDetailView.tsx:179` renders a Unicode warning symbol rather than a Lucide icon from `@ultranos/ui-kit/icons`. Cosmetic inconsistency; allergy display uses a similar pattern.
+- **D-54.3-W7: `labSampleId` PHI traceability unverified in manifest tests.** PHI exclusion tests check for patient name absence but do not verify that labSampleId is not derived from or traceable to patient identity. Low risk by definition (labSampleId is a lab-assigned sequential number) but worth a documented assertion.
+
+
+## Deferred from: code review of 53-4-tele-consultation-request-builder (2026-06-10)
+
+- **W1: `ai-provenance.ts` / `ai_provenance` Dexie table dependency from Story 53.6** — `consultation-ai-formatter.ts` imports `createProvenanceRecord` from `./ai-provenance`. Story 53.6 (AI Provenance Trail) is a declared dependency but does not appear as `done` in sprint-status. If 53.6 has not been delivered, this import will fail at build time. Verify 53.6 is complete before shipping 53.4. [`apps/lab-lite/src/lib/consultation-ai-formatter.ts`]
+- **W2: No recovery differentiation for photo payload 413 errors during sync** — A request body exceeding Hub payload limits marks `syncStatus: 'failed'` permanently with no differentiation from auth errors or transient failures. Requires Hub-side payload size contract and a retry-without-photos fallback strategy. [`apps/lab-lite/src/lib/consultation-sync.ts:syncPendingRequests`]
+
+## Deferred from: code review of 53-1-contextual-knowledge-cards (2026-06-10)
+
+- **W1: Story 46.2 `learning-trigger-engine.ts` reads `db.lab_results` (PHI) with no audit event** — CLAUDE.md Rule 6 violation; out of scope for Story 53.1; must be addressed in Story 46.2 review. [`apps/lab-lite/src/lib/learning-trigger-engine.ts:1029`]
+- **W2: Story 46.2 `learning-trigger-engine.ts` `evaluateTriggers()` parameters are untyped (implicit `any`)** — TypeScript safety gap in a PHI-adjacent code path; defer to Story 46.2 review. [`apps/lab-lite/src/lib/learning-trigger-engine.ts:1019`]
+
+## Deferred from: code review of 53-3-ai-anomaly-flagging (2026-06-10)
+
+- **W1: `pre-analytical-flag.test.tsx` belongs to Story 54.3, not 53.3** [`apps/lab-lite/src/__tests__/pre-analytical-flag.test.tsx`] — Test was committed in the 53.3 commit but tests transport flag behavior (Story 54.3 scope). Story 54.3 is done; low-risk housekeeping to refile if test infrastructure is reorganized.
+- **W2: `AnomalyFlag.disclaimer` has no runtime enforcement against override** [`apps/lab-lite/src/lib/anomaly-engine.ts`] — `readonly` is TypeScript-only; JSON deserialization bypasses it. Runtime schema validation at every flag consumer is out of scope for this story.
+- **W3: PHI guard test regex only matches Latin-script names** [`apps/lab-lite/src/__tests__/anomaly-engine.test.ts`] — `/\b[A-Z][a-z]+ [A-Z][a-z]+\b/` misses Arabic/Dari names. Low actual risk since the engine input is `Record<string, number|null>` by design; test is defensive but regex is cosmetically incomplete.
+
+## Deferred from: code review of 53-6-ai-provenance-trail (2026-06-10)
+
+- **W1: Dead-letter records with no `failed` status** [`provenance-drain-worker.ts:953–955`] — Permanently-rejected provenance records stay `pending` forever and retry on every online event. Pre-existing pattern from AuditDrainWorker; requires Hub API to return a `failed` record status before this can be fixed client-side. Revisit when /ai-provenance.sync Hub endpoint is implemented.
+
+## Deferred from: code review of 55-7-lab-network-outbreak-management (2026-06-12)
+
+- **D1: `getSurveillanceConfig` / `listSurveillanceAlerts` use `labs.name` instead of `labs.lab_name`** — Column mismatch causes lab names to always return null/Unknown; in 55.8 code bundled in the same diff; review when 55.8 is formally reviewed.
+- **D2: `getManagerlessLabs` / `listLabsForFilter` missing `org_id` scope** — Both 55.2 endpoints query `labs` without filtering by `org_id`, exposing managerless labs from all orgs. Story 55.2 is `done`; requires a targeted fix pass.
+- **D3: `listAllLabStaff` activity filter applied after cursor-page truncation** — Produces wrong page sizes and broken cursor advancement when ACTIVE_7D/INACTIVE filters are active. 55.2 code, story is `done`.
+- **D4: `getMentorshipStats` `avgPairingDurationDays` mixes elapsed-active and final-dissolved duration** — Produces a meaningless average for orgs with mixed active/closed pairings. 55.4 code; review when 55.4 review runs.
+- **D5: `createCertificationPathway` resolves org_id via a secondary practitioner query** — If `ctx.user.sub` matches a practitioner from a different org, the pathway is created in that org. 55.5 code, story is `done`.
+- **D6: `getCachedEncryptionKey` called without `await` in `getEmployeeHealth` / `updateEmployeeHealth`** — If the function is async, the key is a Promise passed to `encryptField`/`decryptField`, producing garbled ciphertext. 55.3 code, story is `done`.

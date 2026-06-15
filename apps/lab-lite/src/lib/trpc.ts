@@ -7,9 +7,9 @@
 
 function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 type AuthEventType =
@@ -17,6 +17,8 @@ type AuthEventType =
   | 'LOGIN_FAILURE'
   | 'MFA_VERIFY_SUCCESS'
   | 'MFA_VERIFY_FAILURE'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'PASSWORD_RESET_COMPLETED'
 
 /**
  * Fire-and-forget audit event reporting to Hub API.
@@ -280,6 +282,245 @@ export async function acknowledgeAllNotifications(token: string): Promise<void> 
     },
     body: JSON.stringify({ json: {} }),
   })
+}
+
+// ── Patient Search (Task 7) ─────────────────────────────────
+
+export interface PatientSearchResult {
+  id: string
+  firstName: string
+  age: number
+  gender?: string
+  phone?: string
+}
+
+/**
+ * Search patients by name query via Hub API.
+ * Returns ONLY firstName, age, and opaque identifiers (data minimization).
+ * Requires valid LAB_TECH JWT in the Authorization header.
+ */
+export async function searchPatients(
+  query: string,
+  token: string,
+): Promise<PatientSearchResult[]> {
+  const url = `${getHubApiUrl()}/lab.searchPatients?input=${encodeURIComponent(JSON.stringify({ json: { query } }))}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`Search failed: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: { patients: PatientSearchResult[] } } } }
+  return body.result.data.json.patients ?? []
+}
+
+// ── MPI Duplicate Detection & Patient Registration (Task 10) ──
+
+export interface CheckDuplicatesResult {
+  decision: 'ALLOW' | 'WARN' | 'BLOCK'
+  candidates: Array<{
+    id: string
+    nameGiven?: string
+    nameFather?: string
+    birthYear?: number
+    gender?: string
+    districtOrigin?: string
+    mpiScore: number
+  }>
+  proceedToken?: string
+}
+
+export interface CreatePatientInput {
+  nameLocal: string
+  nameGiven?: string
+  nameFather?: string
+  nameGrandfather?: string
+  gender: string
+  birthDate?: string
+  birthYearOnly?: boolean
+  birthYear?: number
+  phone?: string
+  consent: {
+    method: 'WRITTEN' | 'VERBAL_WITNESSED'
+    witnessedBy?: string
+    language: string
+    version: string
+  }
+  mpiProceedToken?: string
+}
+
+export interface CreatePatientResult {
+  id: string
+}
+
+/**
+ * Check MPI for duplicate patients before registration.
+ * Returns decision (ALLOW/WARN/BLOCK) with candidate matches.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function checkDuplicates(
+  input: Record<string, unknown>,
+  token: string,
+): Promise<CheckDuplicatesResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+
+  try {
+    const url = `${getHubApiUrl()}/lab.checkDuplicates?input=${encodeURIComponent(JSON.stringify({ json: input }))}`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const message =
+        (body as Record<string, any>)?.error?.json?.message ?? 'Duplicate check failed'
+      throw new Error(message)
+    }
+
+    const body = (await res.json()) as {
+      result: { data: { json: CheckDuplicatesResult } }
+    }
+    return body.result.data.json
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+/**
+ * Create a new patient via Hub API after MPI check.
+ * Requires valid LAB_TECH JWT.
+ */
+export async function createPatient(
+  input: CreatePatientInput,
+  token: string,
+): Promise<CreatePatientResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+
+  try {
+    const res = await fetch(`${getHubApiUrl()}/lab.createPatient`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ json: input }),
+      signal: controller.signal,
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const message =
+        (body as Record<string, any>)?.error?.json?.message ?? 'Patient creation failed'
+      throw new Error(message)
+    }
+
+    const body = (await res.json()) as {
+      result: { data: { json: CreatePatientResult } }
+    }
+    return body.result.data.json
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Order sync (Story 42.2)
+// ---------------------------------------------------------------------------
+
+export interface LabOrderResponse {
+  orderId: string
+  patientFirstName: string
+  patientAge: number | null
+  patientRef: string
+  testsRequested: Array<{ loincCode: string; loincDisplay: string }>
+  urgency: 'routine' | 'urgent' | 'asap' | 'stat'
+  orderingPhysicianName: string
+  specialInstructions: string | null
+  status: string
+  authoredOn: string
+}
+
+export interface PullOrdersResult {
+  orders: LabOrderResponse[]
+  syncTimestamp: string | null
+}
+
+/**
+ * Pull pending test orders from Hub API.
+ * Returns ONLY data-minimized order summaries (CLAUDE.md Rule #7).
+ * Supports incremental sync via `since` parameter.
+ */
+export async function pullOrders(
+  token: string,
+  since?: string,
+): Promise<PullOrdersResult> {
+  const input = encodeURIComponent(
+    JSON.stringify({ json: { ...(since ? { since } : {}) } }),
+  )
+  const res = await fetch(`${getHubApiUrl()}/lab.pullOrders?input=${input}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  })
+  if (!res.ok) throw new Error(`Pull orders failed: ${res.status}`)
+  const body = (await res.json()) as {
+    result: { data: { json: { orders: LabOrderResponse[]; syncTimestamp: string | null } } }
+  }
+  const json = body.result.data.json
+  return { orders: json.orders ?? [], syncTimestamp: json.syncTimestamp ?? null }
+}
+
+/**
+ * Acknowledge an order as RECEIVED by this lab.
+ * Triggers a notification to the ordering physician in OPD-Lite.
+ */
+export async function acknowledgeOrder(
+  orderId: string,
+  token: string,
+): Promise<void> {
+  const res = await fetch(`${getHubApiUrl()}/lab.acknowledgeOrder`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ json: { orderId, status: 'RECEIVED' } }),
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const message =
+      (body as Record<string, any>)?.error?.json?.message ??
+      'Order acknowledgement failed'
+    throw new Error(message)
+  }
+}
+
+// ── Lab Role & Staff Management (Story 42.1) ──────────────────
+
+import type { LabRole } from '@ultranos/shared-types'
+
+export interface GetMyRoleResult {
+  labRole: LabRole | null
+}
+
+/**
+ * Fetch the caller's own lab role from Hub API.
+ * Used by AuthGuard to populate the session store.
+ * Falls back gracefully if offline.
+ */
+export async function getMyRole(token: string): Promise<GetMyRoleResult> {
+  const res = await fetch(`${getHubApiUrl()}/lab.getMyRole`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5_000),
+  })
+  if (!res.ok) throw new Error('Failed to fetch lab role')
+  const body = await res.json() as { result: { data: { json: GetMyRoleResult } } }
+  return body.result.data.json
 }
 
 export { getHubApiUrl }

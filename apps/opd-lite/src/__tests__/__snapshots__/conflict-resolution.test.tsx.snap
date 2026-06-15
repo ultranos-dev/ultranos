@@ -5,38 +5,38 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
   data-testid="conflict-diff-view"
 >
   <div
-    class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+    class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
     role="alert"
   >
     <p
-      class="text-xs font-bold text-amber-800"
+      class="text-xs font-bold text-warning"
     >
       Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
     </p>
     <p
-      class="text-xs text-amber-700"
+      class="text-xs text-warning"
     >
       "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
     </p>
   </div>
   <div
-    class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+    class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
     data-testid="diff-grid"
   >
     <div
-      class="bg-blue-50 ps-4 pe-4 py-2"
+      class="bg-primary/10 ps-4 pe-4 py-2"
     >
       <span
-        class="text-xs font-bold text-blue-800"
+        class="text-xs font-bold text-primary"
       >
         Local Version
       </span>
     </div>
     <div
-      class="bg-purple-50 ps-4 pe-4 py-2"
+      class="bg-secondary ps-4 pe-4 py-2"
     >
       <span
-        class="text-xs font-bold text-purple-800"
+        class="text-xs font-bold text-foreground"
       >
         Remote Version
       </span>
@@ -45,29 +45,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           clinicalStatus
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           active
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           clinicalStatus
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           active
         </p>
@@ -77,29 +77,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           verificationStatus
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           verificationStatus
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -109,29 +109,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           type
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           type
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -141,29 +141,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           category
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           category
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -173,29 +173,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           criticality
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           high
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           criticality
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           high
         </p>
@@ -205,29 +205,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-yellow-50"
+        class="ps-4 pe-4 py-2 bg-warning/10"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           code
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           Penicillin
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-yellow-50"
+        class="ps-4 pe-4 py-2 bg-warning/10"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           code
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           Amoxicillin
         </p>
@@ -237,29 +237,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           reaction
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           reaction
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -269,29 +269,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           onsetDateTime
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           onsetDateTime
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -301,29 +301,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
       class="contents"
     >
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           note
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
       </div>
       <div
-        class="ps-4 pe-4 py-2 bg-white"
+        class="ps-4 pe-4 py-2 bg-background"
       >
         <p
-          class="text-xs font-semibold text-neutral-500"
+          class="text-xs font-semibold text-muted-foreground"
         >
           note
         </p>
         <p
-          class="mt-0.5 text-sm text-neutral-900 break-words"
+          class="mt-0.5 text-sm text-foreground break-words"
         >
           —
         </p>
@@ -334,26 +334,26 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (LT
     class="mt-4 flex flex-wrap gap-2"
   >
     <button
-      class="inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
       data-testid="resolve-keep-both"
       type="button"
     >
       <span
-        class="text-xs font-bold text-green-600"
+        class="text-xs font-bold text-success"
       >
         Recommended
       </span>
       Keep Both
     </button>
     <button
-      class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
       data-testid="resolve-prefer-local"
       type="button"
     >
       Prefer Local
     </button>
     <button
-      class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+      class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
       data-testid="resolve-prefer-remote"
       type="button"
     >
@@ -371,38 +371,38 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
     data-testid="conflict-diff-view"
   >
     <div
-      class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3"
+      class="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3"
       role="alert"
     >
       <p
-        class="text-xs font-bold text-amber-800"
+        class="text-xs font-bold text-warning"
       >
         Safety-Critical Resource — "Keep Both" is recommended (append-only merge)
       </p>
       <p
-        class="text-xs text-amber-700"
+        class="text-xs text-warning"
       >
         "Prefer Local" or "Prefer Remote" will discard one version. Use with caution.
       </p>
     </div>
     <div
-      class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+      class="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
       data-testid="diff-grid"
     >
       <div
-        class="bg-blue-50 ps-4 pe-4 py-2"
+        class="bg-primary/10 ps-4 pe-4 py-2"
       >
         <span
-          class="text-xs font-bold text-blue-800"
+          class="text-xs font-bold text-primary"
         >
           Local Version
         </span>
       </div>
       <div
-        class="bg-purple-50 ps-4 pe-4 py-2"
+        class="bg-secondary ps-4 pe-4 py-2"
       >
         <span
-          class="text-xs font-bold text-purple-800"
+          class="text-xs font-bold text-foreground"
         >
           Remote Version
         </span>
@@ -411,29 +411,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             clinicalStatus
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             active
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             clinicalStatus
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             active
           </p>
@@ -443,29 +443,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             verificationStatus
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             verificationStatus
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -475,29 +475,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             type
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             type
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -507,29 +507,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             category
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             category
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -539,29 +539,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             criticality
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             high
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             criticality
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             high
           </p>
@@ -571,29 +571,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-yellow-50"
+          class="ps-4 pe-4 py-2 bg-warning/10"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             code
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             Penicillin
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-yellow-50"
+          class="ps-4 pe-4 py-2 bg-warning/10"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             code
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             Amoxicillin
           </p>
@@ -603,29 +603,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             reaction
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             reaction
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -635,29 +635,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             onsetDateTime
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             onsetDateTime
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -667,29 +667,29 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
         class="contents"
       >
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             note
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
         </div>
         <div
-          class="ps-4 pe-4 py-2 bg-white"
+          class="ps-4 pe-4 py-2 bg-background"
         >
           <p
-            class="text-xs font-semibold text-neutral-500"
+            class="text-xs font-semibold text-muted-foreground"
           >
             note
           </p>
           <p
-            class="mt-0.5 text-sm text-neutral-900 break-words"
+            class="mt-0.5 text-sm text-foreground break-words"
           >
             —
           </p>
@@ -700,26 +700,26 @@ exports[`ConflictDiffView RTL layout > snapshot: two-column diff view layout (RT
       class="mt-4 flex flex-wrap gap-2"
     >
       <button
-        class="inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-pill bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
         data-testid="resolve-keep-both"
         type="button"
       >
         <span
-          class="text-xs font-bold text-green-600"
+          class="text-xs font-bold text-success"
         >
           Recommended
         </span>
         Keep Both
       </button>
       <button
-        class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
         data-testid="resolve-prefer-local"
         type="button"
       >
         Prefer Local
       </button>
       <button
-        class="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
+        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1.5"
         data-testid="resolve-prefer-remote"
         type="button"
       >

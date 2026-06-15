@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
@@ -15,39 +16,19 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// Mock supabase (required by TopHeader)
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseBrowserClient: () => ({
-    auth: {
-      signOut: vi.fn().mockResolvedValue({}),
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-    },
-  }),
-}))
-
-// Mock auth session store (required by TopHeader)
-vi.mock('@/stores/auth-session-store', () => ({
-  useAuthSessionStore: (selector: any) => {
-    const state = {
-      session: { email: 'admin@ultranos.com', userId: 'u1', practitionerId: 'p1', role: 'admin', sessionId: 's1' },
-      clearSession: vi.fn(),
-    }
-    return selector(state)
-  },
-}))
-
 // Mock trpc client
 const mockListUsers = vi.fn()
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     admin: {
       listUsers: { query: (...args: any[]) => mockListUsers(...args) },
+      exportUsers: { query: vi.fn().mockResolvedValue('') },
     },
   },
   setAccessToken: vi.fn(),
 }))
 
-const { default: UsersPage, formatRelativeTime } = await import('../app/users/page')
+const { default: AllUsersTab, formatRelativeTime } = await import('../app/users/_components/AllUsersTab')
 
 const mockUsers = [
   {
@@ -96,7 +77,7 @@ describe('Users List Page', () => {
   it('renders table with mock user data', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
@@ -128,7 +109,7 @@ describe('Users List Page', () => {
   it('shows empty state when no users', async () => {
     mockListUsers.mockResolvedValue({ users: [], totalCount: 0 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('No staff users yet')).toBeTruthy()
@@ -146,7 +127,7 @@ describe('Users List Page', () => {
   it('shows "Create User" button', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()
@@ -162,7 +143,7 @@ describe('Users List Page', () => {
   it('shows suspended users banner when suspended users exist', async () => {
     mockListUsers.mockResolvedValue({ users: mockUsers, totalCount: 3 })
 
-    render(<UsersPage />)
+    render(<AllUsersTab />)
 
     await waitFor(() => {
       expect(screen.getByText('Dr. Alice Smith')).toBeTruthy()

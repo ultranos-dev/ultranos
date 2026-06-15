@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FhirPatientSchema, CreatePatientInputSchema } from '../fhir/patient.schema.js'
+import { FhirPatientSchema, CreatePatientInputSchema, CreatePatientMpiInputSchema } from '../fhir/patient.schema.js'
 
 describe('FhirPatientSchema', () => {
   const validPatient = {
@@ -125,5 +125,155 @@ describe('CreatePatientInputSchema', () => {
       gender: 'male',
     })
     expect(result.birthYearOnly).toBe(false)
+  })
+
+  it('accepts nameFamily as optional string', () => {
+    const base = {
+      nameLocal: 'Ahmad',
+      gender: 'male',
+      birthDate: '1990-01-01',
+      birthYearOnly: false,
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    }
+    expect(CreatePatientInputSchema.safeParse({ ...base, nameFamily: 'Ahmadzai' }).success).toBe(true)
+    expect(CreatePatientInputSchema.safeParse({ ...base, nameFamily: '' }).success).toBe(true)
+    expect(CreatePatientInputSchema.safeParse(base).success).toBe(true)
+  })
+
+  it('rejects nameFamily longer than 200 chars', () => {
+    const base = {
+      nameLocal: 'Ahmad',
+      gender: 'male',
+      birthDate: '1990-01-01',
+      birthYearOnly: false,
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    }
+    const result = CreatePatientInputSchema.safeParse({ ...base, nameFamily: 'A'.repeat(201) })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('CreatePatientMpiInputSchema — HMIS demographic fields', () => {
+  const base = {
+    nameLocal: 'Ahmad Karimi',
+    nameGiven: 'Ahmad',
+    gender: 'male',
+    birthYearOnly: true,
+    birthYear: 1985,
+    isNomadic: false,
+    consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    addressOrigin: { province: 'Kabul', district: 'Kabul' },
+  }
+
+  it('accepts maritalStatus M', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({ ...base, maritalStatus: 'M' })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects polygamous maritalStatus P', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({ ...base, maritalStatus: 'P' })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts all valid marital status codes', () => {
+    for (const code of ['M', 'S', 'D', 'W', 'UNK'] as const) {
+      const result = CreatePatientMpiInputSchema.safeParse({ ...base, maritalStatus: code })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('accepts a single emergency contact', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      ...base,
+      contacts: [{ relationship: 'SPOUSE', name: 'Fatima Ahmad', phone: '+93701234567' }],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects more than 2 emergency contacts', () => {
+    const contact = { relationship: 'SPOUSE' as const, name: 'Test' }
+    const result = CreatePatientMpiInputSchema.safeParse({
+      ...base,
+      contacts: [contact, contact, contact],
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts displacement categories', () => {
+    for (const cat of ['IDP', 'RETURNEE', 'REFUGEE', 'HOST_COMMUNITY'] as const) {
+      const result = CreatePatientMpiInputSchema.safeParse({ ...base, displacementCategory: cat })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('accepts education levels', () => {
+    for (const lvl of ['NONE', 'PRIMARY', 'SECONDARY', 'TERTIARY', 'UNKNOWN'] as const) {
+      const result = CreatePatientMpiInputSchema.safeParse({ ...base, educationLevel: lvl })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('accepts nationality as 2-char ISO code', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({ ...base, nationality: 'AF' })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects nationality longer than 2 chars', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({ ...base, nationality: 'AFG' })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts disability boolean', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({ ...base, disability: true })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts phoneUse values', () => {
+    for (const use of ['home', 'work', 'mobile'] as const) {
+      const result = CreatePatientMpiInputSchema.safeParse({ ...base, phoneUse: use })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  it('accepts birthYear without birthDate when birthYearOnly is not set', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      nameLocal: 'Ahmad Karimi',
+      nameGiven: 'Ahmad',
+      gender: 'male',
+      birthYear: 1985,
+      isNomadic: false,
+      addressOrigin: { province: 'Kabul', district: 'Kabul' },
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    })
+    expect(result.success).toBe(true)
+  })
+})
+
+describe('CreatePatientMpiInputSchema — Pashto language support', () => {
+  const base = {
+    nameLocal: 'احمد کریمي',
+    nameGiven: 'احمد',
+    gender: 'male',
+    birthYearOnly: true,
+    birthYear: 1985,
+    isNomadic: false,
+    addressOrigin: { province: 'Kabul', district: 'Kabul' },
+  }
+
+  it('accepts ps (Pashto) as consent language', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      ...base,
+      consent: { method: 'WRITTEN', language: 'ps', version: '1.0' },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts ps (Pashto) as preferredLanguage', () => {
+    const result = CreatePatientMpiInputSchema.safeParse({
+      ...base,
+      preferredLanguage: 'ps',
+      consent: { method: 'WRITTEN', language: 'en', version: '1.0' },
+    })
+    expect(result.success).toBe(true)
   })
 })

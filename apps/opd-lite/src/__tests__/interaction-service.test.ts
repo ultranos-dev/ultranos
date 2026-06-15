@@ -2,8 +2,6 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import {
   checkInteractions,
   invalidateInteractionCache,
-  type InteractionResult,
-  type InteractionCheckSummary,
 } from '@/services/interactionService'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import { seedVocabularyIfEmpty } from '@/lib/vocabulary-seeder'
@@ -192,7 +190,7 @@ describe('InteractionChecker service (Dexie-backed)', () => {
           drugB: 'DrugB',
           severity: 'UNKNOWN_SEVERITY',
           description: 'Test interaction',
-        } as any,
+        } as unknown,
       ])
       await expect(checkInteractions('DrugA', ['DrugB'])).rejects.toThrow(
         'Unknown drug interaction severity: "UNKNOWN_SEVERITY"',

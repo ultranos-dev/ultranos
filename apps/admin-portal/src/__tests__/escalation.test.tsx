@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
@@ -15,7 +16,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// Mock supabase (required by TopHeader)
+// Mock supabase
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
     auth: {
@@ -25,7 +26,7 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// Mock auth session store (required by TopHeader)
+// Mock auth session store
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
@@ -65,7 +66,7 @@ beforeEach(() => {
 describe('EscalationModal', () => {
   it('renders form with priority radio buttons', () => {
     render(
-      <EscalationModal alertId="a1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <EscalationModal alertId="a1" open={true} onOpenChange={vi.fn()} onSuccess={vi.fn()} />,
     )
 
     expect(screen.getByText('Escalate Alert')).toBeDefined()
@@ -83,7 +84,7 @@ describe('EscalationModal', () => {
 
   it('renders NORMAL radio checked by default', () => {
     render(
-      <EscalationModal alertId="a1" onClose={vi.fn()} onSuccess={vi.fn()} />,
+      <EscalationModal alertId="a1" open={true} onOpenChange={vi.fn()} onSuccess={vi.fn()} />,
     )
 
     const normalRadio = screen.getByDisplayValue('NORMAL') as HTMLInputElement

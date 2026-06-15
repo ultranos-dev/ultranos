@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useAllergyStore } from '@/stores/allergy-store'
 
 interface AllergyBannerProps {
@@ -17,9 +18,10 @@ interface AllergyBannerProps {
  * - Yellow (warning): allergy data unavailable (load error)
  *
  * CSS: sticky top, z-50 — always visible, never scrolls off.
- * Accessibility: role="alert", aria-live="assertive", contrast >= 4.5:1.
+ * Accessibility: role="alert", aria-live="assertive" (warning/active states), "polite" (loading/NKA), contrast >= 4.5:1.
  */
 export function AllergyBanner({ patientId }: AllergyBannerProps) {
+  const t = useTranslations('allergy')
   const allergies = useAllergyStore((s) => s.allergies)
   const isLoading = useAllergyStore((s) => s.isLoading)
   const loadError = useAllergyStore((s) => s.loadError)
@@ -34,33 +36,33 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   if (isLoading) {
     return (
       <div
-        className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600 transition-colors duration-200"
+        className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
         role="alert"
         aria-live="polite"
         data-testid="allergy-banner"
         data-banner-state="loading"
       >
-        Loading allergy data...
+        {t('bannerLoading')}
       </div>
     )
   }
 
-  // Warning state: data unavailable
+  // Warning state: data unavailable — CLAUDE.md Rule #3
   if (loadError) {
     return (
       <div
-        className="sticky top-0 z-50 bg-yellow-400 ps-4 pe-4 py-3 text-center text-sm font-bold text-yellow-900 transition-colors duration-200"
+        className="mb-4 rounded-xl bg-warning/10 px-5 py-3 shadow-card ring-[0.65px] ring-warning/40 text-center text-sm font-bold text-foreground transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
         data-banner-state="warning"
       >
-        Allergy data unavailable — verify before prescribing
+        {t('bannerUnavailable')}
       </div>
     )
   }
 
-  // Red state: active allergies present
+  // Red state: active allergies present — CLAUDE.md Rule #4: in red, prominent
   if (allergies.length > 0) {
     const substanceList = allergies
       .map((a) => a._ultranos.substanceFreeText || a.code.text || 'Unknown substance')
@@ -68,14 +70,14 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
 
     return (
       <div
-        className="sticky top-0 z-50 bg-red-600 ps-4 pe-4 py-3 text-center text-sm font-bold text-white transition-colors duration-200"
+        className="mb-4 rounded-xl bg-destructive/10 p-5 shadow-card ring-[0.65px] ring-destructive/50 text-center text-sm font-bold text-destructive transition-colors duration-200"
         role="alert"
         aria-live="assertive"
         data-testid="allergy-banner"
         data-banner-state="active"
       >
-        <span aria-label={`Patient has ${allergies.length} known allergies`}>
-          ALLERGIES: {substanceList}
+        <span aria-label={t('bannerActiveAria', { count: allergies.length })}>
+          {t('bannerActive', { substances: substanceList })}
         </span>
       </div>
     )
@@ -84,13 +86,13 @@ export function AllergyBanner({ patientId }: AllergyBannerProps) {
   // Neutral state: no known allergies
   return (
     <div
-      className="sticky top-0 z-50 bg-neutral-200 ps-4 pe-4 py-3 text-center text-sm font-semibold text-neutral-600 transition-colors duration-200"
+      className="mb-4 rounded-xl bg-card px-5 py-3 shadow-card ring-[0.65px] ring-border/50 text-center text-sm font-semibold text-muted-foreground transition-colors duration-200"
       role="alert"
       aria-live="polite"
       data-testid="allergy-banner"
       data-banner-state="nka"
     >
-      No Known Allergies (NKA)
+      {t('bannerNka')}
     </div>
   )
 }

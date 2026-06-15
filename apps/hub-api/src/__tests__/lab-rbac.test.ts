@@ -39,6 +39,7 @@ describe('labRestrictedProcedure', () => {
       data: {
         id: 'tech-1',
         lab_id: 'lab-1',
+        lab_role: 'LAB_TECH',
         labs: { id: 'lab-1', status: 'ACTIVE' },
       },
       error: null,
@@ -57,6 +58,7 @@ describe('labRestrictedProcedure', () => {
       technicianId: 'tech-1',
       labId: 'lab-1',
       labStatus: 'ACTIVE',
+      labRole: 'LAB_TECH',
     })
   })
 
@@ -114,6 +116,7 @@ describe('labRestrictedProcedure', () => {
       data: {
         id: 'tech-2',
         lab_id: 'lab-2',
+        lab_role: 'LAB_TECH',
         labs: { id: 'lab-2', status: 'PENDING' },
       },
       error: null,
@@ -129,5 +132,28 @@ describe('labRestrictedProcedure', () => {
     )
     const result = await caller.labEndpoint()
     expect(result.lab.labStatus).toBe('PENDING')
+  })
+
+  it('includes labRole in context (Story 42.1)', async () => {
+    mockSingle.mockResolvedValue({
+      data: {
+        id: 'tech-3',
+        lab_id: 'lab-3',
+        lab_role: 'SUPERVISOR',
+        labs: { id: 'lab-3', status: 'ACTIVE' },
+      },
+      error: null,
+    })
+
+    const router = createTRPCRouter({
+      labEndpoint: labRestrictedProcedure.query(({ ctx }) => {
+        return { lab: (ctx as any).lab }
+      }),
+    })
+    const caller = createCallerFactory(router)(
+      makeCtx({ sub: 'u3', role: 'LAB_TECH', sessionId: 's1' }),
+    )
+    const result = await caller.labEndpoint()
+    expect(result.lab.labRole).toBe('SUPERVISOR')
   })
 })

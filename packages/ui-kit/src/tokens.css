@@ -8,8 +8,16 @@
 
 :root {
   /* ── Typography ── */
-  --font-family-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* --font-manrope / --font-public-sans are injected by Next.js localFont() or next/font/google */
+  --font-family-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-family-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  /* Tailwind-facing variables consumed by tailwind.preset.ts font-sans / font-heading.
+     Arabic fonts are listed FIRST. Their @font-face unicode-range (U+0600-06FF) means
+     the browser skips them for Latin — Manrope/PublicSans still render for English.
+     For Arabic characters, the browser hits Noto Kufi Arabic before the OS font-linking
+     layer can substitute Segoe UI. This fixes Arabic rendering in LTR (EN) locale. */
+  --font-sans: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Noto Kufi Arabic', 'Noto Sans Arabic', var(--font-public-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Font sizes — modular scale (1.25 ratio) */
   --font-size-xs: 0.75rem;    /* 12px */
@@ -116,7 +124,7 @@
 
   /* ── Arabic font family stacks ── */
   --font-family-sans-ar: 'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif;
-  --font-family-serif-ar: 'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif;
+  --font-family-serif-ar: 'Noto Kufi Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ── RTL Typography defaults (LTR values) ── */
   --text-size-multiplier: 1;
@@ -128,8 +136,102 @@
 
 /* ── RTL overrides ── */
 [dir="rtl"] {
-  --font-family-sans: var(--font-family-sans-ar);
+  --font-family-sans: var(--font-family-serif-ar);
+  /* Switch Tailwind font-sans / font-heading to Noto Kufi Arabic in RTL */
+  --font-sans: var(--font-family-serif-ar);
+  --font-heading: var(--font-family-serif-ar);
   --text-size-multiplier: 1.15;
   --line-height-body: 1.8;
   --directional-icon-transform: scaleX(-1);
+}
+
+/* ── ShadCN / admin-portal semantic tokens (oklch L C H channels) ── */
+/* These variables are consumed by tailwind.preset.ts via            */
+/* oklch(var(--primary) / <alpha-value>) — supply raw L C H triplets  */
+
+/* ── Light mode ── */
+:root {
+  --background:           1 0 0;
+  --foreground:           0.145 0 0;
+  --card:                 1 0 0;
+  --card-foreground:      0.145 0 0;
+  --popover:              1 0 0;
+  --popover-foreground:   0.145 0 0;
+  --primary:              0.527 0.154 150.069;
+  --primary-foreground:   0.985 0 0;
+  --secondary:            0.967 0.001 286.375;
+  --secondary-foreground: 0.205 0.006 286.033;
+  --muted:                0.97 0 0;
+  --muted-foreground:     0.556 0.005 17.567;
+  --accent:               0.97 0 0;
+  --accent-foreground:    0.205 0 0;
+  --destructive:          0.577 0.245 27.325;
+  --border:               0.922 0 0;
+  --input:                0.922 0 0;
+  --ring:                 0.527 0.154 150.069;
+  --radius:               0.625rem;
+
+  /* Sidebar — light (near-white, border-separated) */
+  --sidebar:                    0.985 0 0;
+  --sidebar-foreground:         0.145 0 0;
+  --sidebar-primary:            0.527 0.154 150.069;
+  --sidebar-primary-foreground: 0.985 0 0;
+  --sidebar-accent:             0.97 0 0;
+  --sidebar-accent-foreground:  0.205 0 0;
+  --sidebar-border:             0.922 0 0;
+  --sidebar-ring:               0.7 0 0;
+
+  /* Chart palette — teal-green scale */
+  --chart-1: 0.871 0.15 154.449;
+  --chart-2: 0.723 0.219 149.579;
+  --chart-3: 0.627 0.194 149.214;
+  --chart-4: 0.527 0.154 150.069;
+  --chart-5: 0.448 0.119 151.328;
+
+  /* Custom semantic extensions */
+  --warning:  0.75 0.15 70;
+  --success:  0.72 0.17 145;
+
+  --shadow-card: 0 1px 3px oklch(0.145 0 0 / 0.06);
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  --background:           0.145 0 0;
+  --foreground:           0.985 0 0;
+  --card:                 0.205 0 0;
+  --card-foreground:      0.985 0 0;
+  --popover:              0.205 0 0;
+  --popover-foreground:   0.985 0 0;
+  --primary:              0.448 0.119 151.328;
+  --primary-foreground:   0.985 0 0;
+  --secondary:            0.274 0.006 286.033;
+  --secondary-foreground: 0.985 0 0;
+  --muted:                0.274 0.006 286.033;
+  --muted-foreground:     0.707 0.005 286.286;
+  --accent:               0.274 0.006 286.033;
+  --accent-foreground:    0.985 0 0;
+  --destructive:          0.704 0.191 22.216;
+  --border:               0.274 0.006 286.033;
+  --input:                0.322 0.006 286.033;
+  --ring:                 0.448 0.119 151.328;
+
+  /* Sidebar — dark */
+  --sidebar:                    0.205 0 0;
+  --sidebar-foreground:         0.985 0 0;
+  --sidebar-primary:            0.448 0.119 151.328;
+  --sidebar-primary-foreground: 0.985 0 0;
+  --sidebar-accent:             0.274 0.006 286.033;
+  --sidebar-accent-foreground:  0.985 0 0;
+  --sidebar-border:             0.274 0.006 286.033;
+  --sidebar-ring:               0.5 0 0;
+
+  /* Chart palette — same hues */
+  --chart-1: 0.871 0.15 154.449;
+  --chart-2: 0.723 0.219 149.579;
+  --chart-3: 0.627 0.194 149.214;
+  --chart-4: 0.527 0.154 150.069;
+  --chart-5: 0.448 0.119 151.328;
+
+  --shadow-card: none;
 }

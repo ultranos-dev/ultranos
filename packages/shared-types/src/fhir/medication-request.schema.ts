@@ -43,6 +43,7 @@ const DosageSchema = z.object({
     }).optional(),
     code: CodeableConceptSchema.optional(),
   }).optional(),
+  asNeededBoolean: z.boolean().optional(),
   route: CodeableConceptSchema.optional(),
   doseAndRate: z.array(z.object({
     type: CodeableConceptSchema.optional(),

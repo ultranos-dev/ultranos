@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import type { FulfillmentItem } from '@/stores/fulfillment-store'
 import { MedicationLabel } from './MedicationLabel'
 
@@ -31,6 +33,8 @@ export function LabelPreviewPanel({
   dispensingDate,
   onClose,
 }: LabelPreviewPanelProps) {
+  const t = useTranslations('labelPreview')
+
   const defaultLang = (
     patientLanguage && ['en', 'ar', 'fa'].includes(patientLanguage)
       ? patientLanguage
@@ -41,8 +45,8 @@ export function LabelPreviewPanel({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No labels to preview.</p>
+      <div className="rounded-2xl border border-border p-8 text-center">
+        <p className="text-muted-foreground">{t('noLabels')}</p>
       </div>
     )
   }
@@ -55,24 +59,24 @@ export function LabelPreviewPanel({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {onClose && (
-            <button
+            <Button
+              variant="outline"
               data-testid="close-label-preview-btn"
               type="button"
               onClick={onClose}
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
-              aria-label="Close label preview"
+              aria-label={t('closeAriaLabel')}
             >
-              &larr; Back
-            </button>
+              &larr; {t('back')}
+            </Button>
           )}
-          <h3 className="text-lg font-semibold text-neutral-800">Label Preview</h3>
+          <h3 className="text-lg font-semibold text-foreground">{t('title')}</h3>
         </div>
         <div className="flex items-center gap-3">
           <select
             data-testid="language-selector"
             value={locale}
             onChange={(e) => setLocale(e.target.value as LanguageCode)}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="rounded-md border border-border px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           >
             {LANGUAGES.map((lang) => (
               <option key={lang.code} value={lang.code}>
@@ -81,14 +85,14 @@ export function LabelPreviewPanel({
             ))}
           </select>
 
-          <button
+          <Button
+            variant="default"
             data-testid="print-all-labels-btn"
             type="button"
             onClick={() => window.print()}
-            className="rounded-md bg-neutral-800 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-700"
           >
-            Print All Labels
-          </button>
+            {t('printAllLabels')}
+          </Button>
         </div>
       </div>
 

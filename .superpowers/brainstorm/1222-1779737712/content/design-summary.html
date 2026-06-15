@@ -1,0 +1,187 @@
+<h2>Complete Design: Pharmacy Inventory & POS</h2>
+<p class="subtitle">Full scope summary for approval before spec writing</p>
+
+<div class="section">
+  <h3>What We're Building</h3>
+  <div style="font-size: 13px; color: #454745; line-height: 1.8; max-width: 700px;">
+    Transform pharmacy-lite from a dispensing-only tool into a complete pharmacy operations platform: inventory management, procurement, inter-pharmacy transfers, point-of-sale with cash/card/credit, and operational reporting. Progressive complexity via settings toggles ensures corner pharmacies stay simple while hospital pharmacies get full capability.
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Architecture Decisions (Locked)</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; font-size: 12px;">
+    <div style="background: #f4f5f2; border-radius: 8px; padding: 12px; line-height: 1.7;">
+      <strong>Stock deduction:</strong> Immediate local on dispense<br>
+      <strong>Conflict resolution:</strong> Movements=Tier1(append), Quantities=Tier2(timestamp)<br>
+      <strong>Catalog source:</strong> Hub-managed, locally cached<br>
+      <strong>Barcode:</strong> EAN-13 scan + manual fallback<br>
+      <strong>Expiry:</strong> FEFO enforced + auto-quarantine expired<br>
+      <strong>Controlled:</strong> Running balance + discrepancy reports
+    </div>
+    <div style="background: #f4f5f2; border-radius: 8px; padding: 12px; line-height: 1.7;">
+      <strong>Payments:</strong> Cash + card + patient credit/tab<br>
+      <strong>Money storage:</strong> Integer minor units (no floats)<br>
+      <strong>POS flow:</strong> Configurable (mandatory vs flexible post-dispense)<br>
+      <strong>Network:</strong> Full cross-pharmacy visibility + transfers<br>
+      <strong>Zones:</strong> Opt-in (nullable zone_id on stock)<br>
+      <strong>PO lifecycle:</strong> Opt-in (simple receiving by default)
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Entities (12 total)</h3>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; font-size: 11px;">
+    <div style="border: 1px solid #9fe870; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>CatalogItem</strong><br><span style="color: #868685;">Hub formulary</span>
+    </div>
+    <div style="border: 1px solid #9fe870; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>StockBatch</strong><br><span style="color: #868685;">Per-batch qty + pricing</span>
+    </div>
+    <div style="border: 1px solid #d03238; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>StockMovement</strong><br><span style="color: #868685;">Append-only ledger</span>
+    </div>
+    <div style="border: 1px solid #9fe870; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>GoodsReceipt</strong><br><span style="color: #868685;">Receiving document</span>
+    </div>
+    <div style="border: 1px solid #9fe870; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>StockCount</strong><br><span style="color: #868685;">Physical reconciliation</span>
+    </div>
+    <div style="border: 1px solid #9fe870; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>Supplier</strong><br><span style="color: #868685;">Vendor contacts</span>
+    </div>
+    <div style="border: 1px solid #e8ebe6; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>PurchaseOrder</strong><br><span style="color: #868685;">PO mode only</span>
+    </div>
+    <div style="border: 1px solid #e8ebe6; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>StockTransfer</strong><br><span style="color: #868685;">Transfers mode only</span>
+    </div>
+    <div style="border: 1px solid #ffd11a; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>Invoice</strong><br><span style="color: #868685;">Auto from dispense</span>
+    </div>
+    <div style="border: 1px solid #ffd11a; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>Payment</strong><br><span style="color: #868685;">Cash/card/credit</span>
+    </div>
+    <div style="border: 1px solid #d03238; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>LedgerEntry</strong><br><span style="color: #868685;">Append-only credits</span>
+    </div>
+    <div style="border: 1px solid #ffd11a; border-radius: 6px; padding: 8px; text-align: center;">
+      <strong>CashDrawer</strong><br><span style="color: #868685;">Session-based</span>
+    </div>
+  </div>
+  <div style="font-size: 11px; color: #868685; margin-top: 8px;">
+    <span style="color: #d03238;">Red border</span> = Tier 1 append-only | <span style="color: #9fe870;">Green</span> = Core inventory | <span style="color: #ffd11a;">Yellow</span> = Financial | <span style="color: #e8ebe6;">Gray</span> = Settings-gated
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>New Pages (10) + Modified (3)</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 11px;">
+    <div style="background: #e2f6d5; border-radius: 6px; padding: 8px;">
+      <strong>/inventory</strong> — Stock overview, alerts, search
+    </div>
+    <div style="background: #e2f6d5; border-radius: 6px; padding: 8px;">
+      <strong>/inventory/receive</strong> — Barcode scan + goods receipt
+    </div>
+    <div style="background: #e2f6d5; border-radius: 6px; padding: 8px;">
+      <strong>/inventory/catalog</strong> — Browse Hub formulary
+    </div>
+    <div style="background: #e2f6d5; border-radius: 6px; padding: 8px;">
+      <strong>/inventory/suppliers</strong> — Supplier CRUD (PO mode)
+    </div>
+    <div style="background: #e2f6d5; border-radius: 6px; padding: 8px;">
+      <strong>/inventory/transfers</strong> — Network transfers (opt-in)
+    </div>
+    <div style="background: rgba(255,209,26,0.2); border-radius: 6px; padding: 8px;">
+      <strong>/pos</strong> — Invoice + payment collection
+    </div>
+    <div style="background: rgba(255,209,26,0.2); border-radius: 6px; padding: 8px;">
+      <strong>/pos/accounts</strong> — Patient credit ledgers (opt-in)
+    </div>
+    <div style="background: rgba(255,209,26,0.2); border-radius: 6px; padding: 8px;">
+      <strong>/pos/cash-drawer</strong> — Open/close/reconcile
+    </div>
+    <div style="background: #f4f5f2; border-radius: 6px; padding: 8px;">
+      <strong>/inventory/count</strong> — Physical stock counts
+    </div>
+    <div style="background: #f4f5f2; border-radius: 6px; padding: 8px;">
+      <strong>/reports</strong> — Consumption, margins, wastage
+    </div>
+  </div>
+  <div style="margin-top: 12px; font-size: 11px; color: #454745;">
+    <strong>Modified existing:</strong> Dashboard (add inventory widgets), FulfillmentChecklist (stock deduction + invoice creation + payment CTA), ControlledSubstancesView (real schedule + running balance), Settings (new toggles)
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Settings Toggles</h3>
+  <div style="font-size: 12px; line-height: 2; color: #454745;">
+    <code>enablePurchaseOrders</code> (default: false) — PO lifecycle, supplier page<br>
+    <code>enableZones</code> (default: false) — Zone column, zone management<br>
+    <code>enablePatientCredit</code> (default: false) — Credit payments, accounts page<br>
+    <code>enableTransfers</code> (default: false) — Transfer page, network visibility<br>
+    <code>requirePaymentOnDispense</code> (default: false) — Auto-nav to POS after dispense<br>
+    <code>fefoEnforcement</code> (default: 'enforce') — 'suggest' or 'enforce'<br>
+    <code>expiryAlertDays</code> (default: 90) — Near-expiry threshold<br>
+    <code>lowStockAlertEnabled</code> (default: true)<br>
+    <code>currency</code> (default: 'AFN') — ISO 4217 code<br>
+    <code>currencyMinorUnits</code> (default: 2) — Decimal places<br>
+    <code>taxRate</code> (default: 0) — Tax percentage<br>
+    <code>invoicePrefix</code> (default: 'INV-')
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Core Workflows</h3>
+  <div style="font-size: 12px; color: #454745; line-height: 1.8;">
+    <div style="margin-bottom: 16px; padding: 12px; background: #f4f5f2; border-radius: 8px;">
+      <strong>Dispense (modified):</strong><br>
+      Scan Rx → Verify → Fulfill → <span style="color: #054d28; font-weight: 600;">FEFO batch auto-selected → Stock deducted → StockMovement('dispensed') created → Invoice(draft) auto-generated</span> → Confirm → Success + "Collect Payment" CTA <span style="color: #868685;">(or auto-nav if requirePaymentOnDispense=true)</span>
+    </div>
+    <div style="margin-bottom: 16px; padding: 12px; background: #f4f5f2; border-radius: 8px;">
+      <strong>Receive Stock:</strong><br>
+      Scan barcode / search catalog → Add items (batch, expiry, qty, cost, selling price) → <span style="color: #868685;">[if PO mode: select PO, auto-populate expected items]</span> → Confirm receipt → GoodsReceipt created → StockBatches created → StockMovements('received') created → PO status updated
+    </div>
+    <div style="margin-bottom: 16px; padding: 12px; background: #f4f5f2; border-radius: 8px;">
+      <strong>Collect Payment:</strong><br>
+      Open invoice → Split payment (cash X + card Y + credit Z) → Record each Payment → Update invoice status → <span style="color: #868685;">[if credit: create LedgerEntry, update PatientAccount.balance]</span> → <span style="color: #868685;">[if cash: increment CashDrawer.cashIn]</span> → Print/PDF receipt
+    </div>
+    <div style="margin-bottom: 16px; padding: 12px; background: #f4f5f2; border-radius: 8px;">
+      <strong>Stock Count:</strong><br>
+      Start count (full / spot / controlled-only) → Scan/search items → Enter actual quantities → System shows expected vs actual + variance → Complete count → Auto-generate StockMovement('adjusted') for each variance → <span style="color: #d03238;">Controlled substance variances flagged for review</span>
+    </div>
+    <div style="padding: 12px; background: #f4f5f2; border-radius: 8px;">
+      <strong>Inter-Pharmacy Transfer:</strong><br>
+      View network stock → Request items from sibling pharmacy → <span style="color: #868685;">[sender approves]</span> → Sender ships (deducts stock, StockMovement('transferred_out')) → Receiver confirms (adds stock, StockMovement('transferred_in')) → Both sync to Hub
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Decomposition for Implementation</h3>
+  <div style="font-size: 12px; color: #454745; line-height: 1.8; background: rgba(159,232,112,0.08); border-radius: 8px; padding: 16px; border: 1px solid #9fe870;">
+    <strong>This is too large for a single spec/plan.</strong> Recommended breakdown into 4 sub-projects, each producing working software independently:
+    <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #e8ebe6;">
+        <strong>Sub-project A:</strong> Catalog + Stock Core<br>
+        <span style="color: #868685;">CatalogItem sync, StockBatch, StockMovement, Receive Stock (simple mode), Stock Overview page, FEFO, auto-quarantine, dashboard widgets. Dispense integration (deduction).</span>
+      </div>
+      <div style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #e8ebe6;">
+        <strong>Sub-project B:</strong> POS + Financial<br>
+        <span style="color: #868685;">Invoice, Payment, CashDrawer, LedgerEntry, PatientAccount. POS page, cash drawer page, patient accounts page. Dispense → invoice auto-creation. Receipt printing.</span>
+      </div>
+      <div style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #e8ebe6;">
+        <strong>Sub-project C:</strong> Procurement + Counts<br>
+        <span style="color: #868685;">Supplier, PurchaseOrder, GoodsReceipt (full PO mode), StockCount, controlled substance balance. Suppliers page, stock count page. Controlled view upgrade.</span>
+      </div>
+      <div style="background: white; border-radius: 6px; padding: 10px; border: 1px solid #e8ebe6;">
+        <strong>Sub-project D:</strong> Network + Reports<br>
+        <span style="color: #868685;">StockTransfer, Hub stock sync, cross-pharmacy visibility, transfer workflow pages. Reports page (consumption, margins, wastage, aging).</span>
+      </div>
+    </div>
+    <div style="margin-top: 12px; color: #454745;">
+      <strong>Build order:</strong> A → B → C → D (each builds on the previous, but ships independently)
+    </div>
+  </div>
+</div>

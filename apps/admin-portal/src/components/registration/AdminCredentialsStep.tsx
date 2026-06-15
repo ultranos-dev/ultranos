@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export interface AdminCredentialsData {
   adminName: string
@@ -26,9 +29,9 @@ function getPasswordStrength(password: string): { label: string; color: string; 
   if (/[0-9]/.test(password)) score++
   if (/[^A-Za-z0-9]/.test(password)) score++
 
-  if (score <= 2) return { label: 'Weak', color: 'bg-danger', width: '33%' }
+  if (score <= 2) return { label: 'Weak', color: 'bg-destructive', width: '33%' }
   if (score <= 4) return { label: 'Fair', color: 'bg-warning', width: '66%' }
-  return { label: 'Strong', color: 'bg-accent', width: '100%' }
+  return { label: 'Strong', color: 'bg-primary', width: '100%' }
 }
 
 export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCredentialsStepProps) {
@@ -68,53 +71,47 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="adminName" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="adminName" className="mb-1 text-muted-foreground">
           Full Name
-        </label>
-        <input
+        </Label>
+        <Input
           id="adminName"
           type="text"
-
           value={data.adminName}
           onChange={(e) => onChange({ ...data, adminName: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           placeholder="Dr. Ahmad Hassan"
         />
         {errors.adminName && (
-          <p className="mt-1 text-xs text-danger">{errors.adminName}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.adminName}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="adminEmail" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="adminEmail" className="mb-1 text-muted-foreground">
           Email
-        </label>
-        <input
+        </Label>
+        <Input
           id="adminEmail"
           type="email"
-
           value={data.adminEmail}
           onChange={(e) => onChange({ ...data, adminEmail: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           placeholder="admin@hospital.example"
           autoComplete="email"
         />
         {errors.adminEmail && (
-          <p className="mt-1 text-xs text-danger">{errors.adminEmail}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.adminEmail}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="adminPassword" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="adminPassword" className="mb-1 text-muted-foreground">
           Password
-        </label>
-        <input
+        </Label>
+        <Input
           id="adminPassword"
           type="password"
-
           value={data.adminPassword}
           onChange={(e) => onChange({ ...data, adminPassword: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           autoComplete="new-password"
           minLength={12}
         />
@@ -132,42 +129,38 @@ export function AdminCredentialsStep({ data, onChange, onNext, onBack }: AdminCr
           </div>
         )}
         {errors.adminPassword && (
-          <p className="mt-1 text-xs text-danger">{errors.adminPassword}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.adminPassword}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="confirmPassword" className="mb-1 text-muted-foreground">
           Confirm Password
-        </label>
-        <input
+        </Label>
+        <Input
           id="confirmPassword"
           type="password"
-
           value={data.confirmPassword}
           onChange={(e) => onChange({ ...data, confirmPassword: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           autoComplete="new-password"
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-xs text-danger">{errors.confirmPassword}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.confirmPassword}</p>
         )}
       </div>
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className="flex-1"
           onClick={onBack}
-          className="flex-1 rounded-full border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:scale-[1.02] transition-transform duration-200"
         >
           Back
-        </button>
-        <button
-          type="submit"
-          className="flex-1 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200"
-        >
+        </Button>
+        <Button type="submit" className="flex-1">
           Next
-        </button>
+        </Button>
       </div>
     </form>
   )

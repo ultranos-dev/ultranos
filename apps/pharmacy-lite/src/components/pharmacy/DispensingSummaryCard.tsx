@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface DispensingSummaryCardProps {
   dispensedToday: number
@@ -13,41 +14,44 @@ export const DispensingSummaryCard = memo(function DispensingSummaryCard({
   pendingSync,
   failedSync,
 }: DispensingSummaryCardProps) {
+  const t = useTranslations('dispensing')
   return (
-    <div
-      data-testid="dispensing-summary-card"
-      className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
-    >
-      <h3 className="text-sm font-semibold text-neutral-600 mb-3">
-        Today&apos;s Dispensing
-      </h3>
-      <div className="grid grid-cols-3 gap-4 text-center">
+    <div data-testid="dispensing-summary-card" className="space-y-3">
+      {/* Primary metric — dispensed today (largest, most prominent) */}
+      <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 flex items-center justify-between">
         <div>
-          <div
-            data-testid="dispensed-today-count"
-            className="text-2xl font-bold text-neutral-900"
-          >
-            {dispensedToday}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Dispensed</div>
+          <p className="text-xs font-medium text-primary uppercase tracking-wide">{t('todaysDispensing')}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('dispensed')}</p>
         </div>
-        <div>
-          <div
+        <div data-testid="dispensed-today-count" className="text-3xl font-bold text-primary tabular-nums">
+          {dispensedToday}
+        </div>
+      </div>
+
+      {/* Secondary metrics row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className={`rounded-2xl border p-3 flex items-center justify-between ${
+          pendingSync > 0 ? 'border-warning/20 bg-warning/10' : 'border-border bg-card'
+        }`}>
+          <p className="text-xs font-medium text-muted-foreground">{t('pendingSync')}</p>
+          <span
             data-testid="pending-sync-count"
-            className={`text-2xl font-bold ${pendingSync > 0 ? 'text-amber-600' : 'text-neutral-900'}`}
+            className={`text-lg font-bold tabular-nums ${pendingSync > 0 ? 'text-warning' : 'text-muted-foreground'}`}
           >
             {pendingSync}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Pending Sync</div>
+          </span>
         </div>
-        <div>
-          <div
+
+        <div className={`rounded-2xl border p-3 flex items-center justify-between ${
+          failedSync > 0 ? 'border-destructive/30 bg-destructive/10' : 'border-border bg-card'
+        }`}>
+          <p className="text-xs font-medium text-muted-foreground">{t('failedSync')}</p>
+          <span
             data-testid="failed-sync-count"
-            className={`text-2xl font-bold ${failedSync > 0 ? 'text-red-600' : 'text-neutral-900'}`}
+            className={`text-lg font-bold tabular-nums ${failedSync > 0 ? 'text-destructive' : 'text-muted-foreground'}`}
           >
             {failedSync}
-          </div>
-          <div className="text-xs text-neutral-500 mt-1">Failed Sync</div>
+          </span>
         </div>
       </div>
     </div>

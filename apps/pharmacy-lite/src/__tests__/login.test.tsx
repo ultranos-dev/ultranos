@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import LoginPage from '../app/login/page'
+import LoginPage from '../app/[locale]/(auth)/login/page'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
 // Mock Supabase client
@@ -33,6 +33,14 @@ vi.mock('@/lib/trpc', () => ({
   reportAuthEvent: (...args: unknown[]) => mockReportAuthEvent(...args),
 }))
 
+// Mock encryption (key lives in memory only — no real Web Crypto needed in tests)
+vi.mock('@ultranos/crypto', () => ({
+  generateSessionKey: vi.fn().mockResolvedValue({} as CryptoKey),
+}))
+vi.mock('@/lib/encryption-key-store', () => ({
+  encryptionKeyStore: { isReady: () => false, setKey: vi.fn() },
+}))
+
 // Mock window.location
 Object.defineProperty(window, 'location', {
   value: { href: '' },
@@ -50,8 +58,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
-    expect(screen.getByText('Pharmacy Lite Sign In')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('shows error on failed credential submission and emits LOGIN_FAILURE', async () => {
@@ -65,7 +72,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com')
     await user.type(screen.getByLabelText('Password'), 'wrongpass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Invalid email or password')
@@ -95,7 +102,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
@@ -121,7 +128,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
@@ -151,7 +158,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
@@ -194,7 +201,7 @@ describe('LoginPage', () => {
     // Step 1: credentials
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     // Step 2: MFA
     await waitFor(() => {
@@ -212,6 +219,7 @@ describe('LoginPage', () => {
         role: 'PHARMACIST',
         sessionId: 'sess-abc',
         email: 'pharm@hospital.com',
+        name: '',
       })
     })
 
@@ -242,7 +250,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
@@ -287,7 +295,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()
@@ -298,7 +306,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Failed to retrieve session after MFA verification',
+        'Failed to retrieve session',
       )
     })
 
@@ -322,7 +330,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Failed to retrieve MFA factors')
@@ -350,7 +358,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Failed to initiate MFA challenge')
@@ -379,7 +387,7 @@ describe('LoginPage', () => {
 
     await user.type(screen.getByLabelText('Email'), 'pharm@hospital.com')
     await user.type(screen.getByLabelText('Password'), 'correct-pass')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByLabelText('TOTP Code')).toBeInTheDocument()

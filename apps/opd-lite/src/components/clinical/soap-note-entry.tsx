@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { useSoapNoteStore } from '@/stores/soap-note-store'
 import { parseSOAPWithAI, commitAISOAPNote, isAISOAPError } from '@/services/ai-scribe-service'
 import { searchSOAPMacros, type SOAPTemplate } from '@/lib/soap-macros'
@@ -33,7 +34,7 @@ export function SOAPNoteEntry({
   onAssessmentChange,
   onPlanChange,
   encounterId,
-  patientId,
+  patientId: _patientId,
   aiConsentGranted,
   isOnline,
 }: SOAPNoteEntryProps) {
@@ -47,7 +48,7 @@ export function SOAPNoteEntry({
 
   // Offline macro state
   const [macroMatches, setMacroMatches] = useState<SOAPTemplate[]>([])
-  const [macroQuery, setMacroQuery] = useState('')
+  const [_macroQuery, setMacroQuery] = useState('')
   const macroTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track text changes for macro search when offline
@@ -149,8 +150,8 @@ export function SOAPNoteEntry({
     return () => window.removeEventListener('keydown', handler)
   }, [handleAIAssist, handleConfirmSave, aiDiff.isActive, aiDiff.isLoading])
 
-  const textareaClass = `w-full rounded-lg border border-neutral-200 bg-white px-4 py-3
-    text-base text-neutral-900 placeholder:text-neutral-400
+  const textareaClass = `w-full rounded-xl border border-border bg-background px-4 py-3
+    text-base text-foreground placeholder:text-muted-foreground
     focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200
     transition-colors`
 
@@ -160,33 +161,33 @@ export function SOAPNoteEntry({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-neutral-700">
+          <h3 className="text-sm font-bold text-foreground">
             {aiDiff.isLoading ? 'AI is parsing your notes...' : 'AI Parsed SOAP — Review & Confirm'}
           </h3>
           {!aiDiff.isLoading && (
-            <span className="text-xs text-neutral-400" title={`Model: ${aiDiff.aiModelVersion}`}>
+            <span className="text-xs text-muted-foreground" title={`Model: ${aiDiff.aiModelVersion}`}>
               Model: {aiDiff.aiModelVersion}
             </span>
           )}
         </div>
 
         {aiDiff.isLoading && (
-          <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            <span className="text-sm font-semibold text-blue-700">AI is parsing your notes...</span>
+          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/10 p-4">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-semibold text-primary">AI is parsing your notes...</span>
           </div>
         )}
 
         {aiDiff.error && (
-          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3" role="alert">
-            <p className="text-sm font-semibold text-amber-800">AI unavailable: {aiDiff.error}</p>
-            <button
-              type="button"
+          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
+            <p className="text-sm font-semibold text-warning">AI unavailable: {aiDiff.error}</p>
+            <Button
+              variant="ghost"
               onClick={discardAIDiff}
-              className="mt-2 text-sm font-semibold text-amber-700 underline transition-opacity duration-150 active:opacity-70"
+              className="mt-2 text-sm text-warning underline"
             >
               Return to manual editing
-            </button>
+            </Button>
           </div>
         )}
 
@@ -196,27 +197,27 @@ export function SOAPNoteEntry({
             <div className="grid grid-cols-2 gap-4">
               {/* Left: Original */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-neutral-500">Original</h4>
-                <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700 whitespace-pre-wrap">
-                  {aiDiff.originalText || <span className="italic text-neutral-400">No original text</span>}
+                <h4 className="mb-2 text-xs font-bold uppercase text-muted-foreground">Original</h4>
+                <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3 text-sm text-foreground whitespace-pre-wrap">
+                  {aiDiff.originalText || <span className="italic text-muted-foreground">No original text</span>}
                 </div>
               </div>
 
               {/* Right: AI-parsed (editable) */}
               <div>
-                <h4 className="mb-2 text-xs font-bold uppercase text-green-700">AI Parsed (Editable)</h4>
+                <h4 className="mb-2 text-xs font-bold uppercase text-success">AI Parsed (Editable)</h4>
                 <div className="space-y-3">
                   {(['Subjective', 'Objective', 'Assessment', 'Plan'] as const).map((section) => {
                     const field = `ai${section}` as 'aiSubjective' | 'aiObjective' | 'aiAssessment' | 'aiPlan'
                     return (
                       <div key={section}>
-                        <label className="mb-1 block text-xs font-semibold text-green-800">{section}</label>
+                        <label className="mb-1 block text-xs font-semibold text-success">{section}</label>
                         <textarea
                           value={aiDiff[field]}
                           onChange={(e) => updateAIDiffField(field, e.target.value)}
                           rows={3}
                           dir="auto"
-                          className="w-full rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-neutral-900 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-200"
+                          className="w-full rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm text-foreground focus:border-success focus:outline-none focus:ring-2 focus:ring-success/20"
                         />
                       </div>
                     )
@@ -227,20 +228,20 @@ export function SOAPNoteEntry({
 
             {/* Action buttons */}
             <div className="flex items-center gap-3">
-              <button
+              <Button
+                variant="primary"
                 type="button"
                 onClick={handleConfirmSave}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-all duration-150 hover:bg-green-700 active:scale-[0.97]"
               >
                 Confirm &amp; Save (Ctrl+Enter)
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={discardAIDiff}
-                className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 transition-all duration-150 hover:bg-neutral-300 active:scale-[0.97]"
               >
                 Discard AI
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -250,11 +251,12 @@ export function SOAPNoteEntry({
 
   // === Normal SOAP Entry View ===
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* AI Assist / Template Assist button */}
       <div className="flex items-center gap-3">
         {isOnline ? (
-          <button
+          <Button
+            variant="primary"
             type="button"
             onClick={handleAIAssist}
             disabled={!aiConsentGranted}
@@ -263,26 +265,26 @@ export function SOAPNoteEntry({
                 ? 'Patient has not consented to AI processing'
                 : 'Parse notes with AI (Ctrl+K)'
             }
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-blue-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+            className="gap-2"
           >
             <span aria-hidden="true">✦</span>
             AI Assist
-          </button>
+          </Button>
         ) : (
-          <span className="inline-flex items-center gap-2 rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-semibold text-neutral-600">
+          <span className="inline-flex items-center gap-2 rounded-md bg-secondary px-3 py-1.5 text-sm font-semibold text-muted-foreground">
             <span aria-hidden="true">📋</span>
             Template Assist
           </span>
         )}
 
         {!aiConsentGranted && isOnline && (
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-muted-foreground">
             Patient has not consented to AI processing
           </span>
         )}
 
         {!isOnline && (
-          <span className="text-xs text-amber-600 font-semibold">
+          <span className="text-xs text-warning font-semibold">
             AI unavailable offline — use template macros
           </span>
         )}
@@ -290,18 +292,18 @@ export function SOAPNoteEntry({
 
       {/* Offline macro suggestions */}
       {!isOnline && macroMatches.length > 0 && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-3">
-          <p className="mb-2 text-xs font-bold text-neutral-500 uppercase">Template Suggestions</p>
+        <div className="rounded-xl ring-[0.65px] ring-border/50 bg-background p-3">
+          <p className="mb-2 text-xs font-bold text-muted-foreground uppercase">Template Suggestions</p>
           <div className="space-y-1">
             {macroMatches.map((template) => (
-              <button
+              <Button
                 key={template.keyword}
-                type="button"
+                variant="ghost"
                 onClick={() => applyMacro(template)}
-                className="block w-full rounded-md px-3 py-2 text-start text-sm font-semibold text-neutral-800 transition-all duration-100 hover:bg-neutral-100 active:scale-[0.98]"
+                className="w-full justify-start px-3 py-2 text-sm text-foreground"
               >
                 {template.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -311,7 +313,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-subjective"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Subjective
         </label>
@@ -334,7 +336,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-objective"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Objective
         </label>
@@ -357,7 +359,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-assessment"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Assessment
         </label>
@@ -380,7 +382,7 @@ export function SOAPNoteEntry({
       <div>
         <label
           htmlFor="soap-plan"
-          className="mb-2 block text-sm font-semibold text-neutral-700"
+          className="mb-2 block text-sm font-semibold text-foreground"
         >
           Plan
         </label>

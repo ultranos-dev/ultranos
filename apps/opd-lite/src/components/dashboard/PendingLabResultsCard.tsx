@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { fetchNotifications } from '@/lib/notification-api'
+import { Card } from '@/components/Card'
 
 export function PendingLabResultsCard() {
   const t = useTranslations('dashboard')
@@ -27,21 +28,21 @@ export function PendingLabResultsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('pendingLabResults')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">{count ?? '—'}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{count ?? '—'}</p>
       {count !== null && count > 0 && (
-        <p className="mt-2 text-sm font-semibold text-neutral-500">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('unreadResults')}
         </p>
       )}
       {count === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('unavailableOffline')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

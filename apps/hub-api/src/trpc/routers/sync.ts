@@ -5,6 +5,7 @@ import { enforceResourceAccess } from '../middleware/enforceResourceAccess'
 import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 import { compareHlc, deserializeHlc } from '@ultranos/sync-engine'
+import { flattenForDb } from '@/lib/resource-mappers'
 
 const SyncOperationSchema = z.object({
   resourceType: z.string().min(1),
@@ -23,7 +24,7 @@ const RESOURCE_TABLE_MAP: Record<string, string> = {
   MedicationRequest: 'medications',
   AllergyIntolerance: 'allergy_intolerances',
   MedicationStatement: 'medication_statements',
-  Consent: 'consents',
+  Consent: 'consent_records',
   Patient: 'patients',
 }
 
@@ -33,7 +34,7 @@ const PATIENT_COLUMN_MAP: Record<string, string | null> = {
   medications: 'patient_id',
   allergy_intolerances: 'patient_id',
   medication_statements: 'subject_reference',
-  consents: 'patient_id',
+  consent_records: 'patient_id',
   patients: 'id',
   // Linked through encounter — no direct patient column
   soap_ledger: null,
@@ -160,9 +161,11 @@ export const syncRouter = createTRPCRouter({
             }
           }
 
-          // Apply field-level encryption and persist
+          // Flatten FHIR resource shape to match flat DB columns,
+          // then apply snake_case + field-level encryption.
+          const flat = flattenForDb(op.resourceType, payload)
           const row = db.toRow({
-            ...payload,
+            ...flat,
             hlcTimestamp: op.hlcTimestamp,
           } as Record<string, unknown>)
 

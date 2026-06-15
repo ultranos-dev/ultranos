@@ -3,17 +3,23 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc'
+import { Button } from '@/components/ui/button'
 
 interface Activity {
-  type: string
-  description: string
+  id: string
   timestamp: string
+  actorId: string
+  action: string
+  resourceType: string
+  resourceId: string
+  outcome: string
+  description: string
 }
 
-function dotColor(type: string): string {
-  if (type.toLowerCase().includes('approv')) return 'bg-success'
-  if (type.toLowerCase().includes('suspend') || type.toLowerCase().includes('revok')) return 'bg-danger'
-  return 'bg-accent'
+function dotColor(action: string): string {
+  if (action.toLowerCase().includes('approv')) return 'bg-success'
+  if (action.toLowerCase().includes('suspend') || action.toLowerCase().includes('revok')) return 'bg-destructive'
+  return 'bg-primary'
 }
 
 function relativeTime(timestamp: string): string {
@@ -42,27 +48,29 @@ export function RecentActivityFeed() {
   if (error) return null
 
   return (
-    <div className="rounded-2xl bg-surface-raised border border-border p-6 shadow-card">
+    <div className="rounded-2xl bg-popover border border-border p-6 shadow-card">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-text-secondary">Recent Activity</p>
-        <button
+        <p className="text-sm font-medium text-muted-foreground">Recent Activity</p>
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => router.push('/audit')}
-          className="text-sm font-medium text-accent hover:underline"
+          className="p-0 h-auto"
         >
           View All &rarr;
-        </button>
+        </Button>
       </div>
 
       {activities.length === 0 ? (
-        <p className="mt-4 text-sm text-text-secondary">No recent activity.</p>
+        <p className="mt-4 text-sm text-muted-foreground">No recent activity.</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {activities.map((activity, i) => (
             <li key={i} className="flex items-start gap-3">
-              <span className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${dotColor(activity.type)}`} />
+              <span className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${dotColor(activity.action)}`} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-text-primary truncate">{activity.description}</p>
-                <p className="text-xs text-text-secondary">{relativeTime(activity.timestamp)}</p>
+                <p className="text-sm text-foreground truncate">{activity.description}</p>
+                <p className="text-xs text-muted-foreground">{relativeTime(activity.timestamp)}</p>
               </div>
             </li>
           ))}

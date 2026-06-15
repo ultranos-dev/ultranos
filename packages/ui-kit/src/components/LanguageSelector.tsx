@@ -2,11 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react'
 import { colors, typography, shadows, borderRadius } from '../tokens.js'
+import { getDirection } from '../direction.js'
 import type { SupportedLocale } from '../direction.js'
+
+/** Returns the font-family string appropriate for a locale's native label. */
+function nativeLabelFont(locale: SupportedLocale): string {
+  return getDirection(locale) === 'rtl'
+    ? typography.fontFamily['serif-ar']
+    : 'inherit'
+}
 
 export interface LanguageSelectorProps {
   currentLocale: SupportedLocale
   onLocaleChange: (locale: SupportedLocale) => void
+  collapsed?: boolean
 }
 
 interface LanguageOption {
@@ -19,6 +28,7 @@ const LANGUAGES: LanguageOption[] = [
   { code: 'en', label: 'English', nativeLabel: 'English' },
   { code: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
   { code: 'prs', label: 'Dari', nativeLabel: 'دری' },
+  { code: 'ps', label: 'Pashto', nativeLabel: 'پښتو' },
 ]
 
 /**
@@ -44,7 +54,7 @@ function GlobeIcon(): ReactNode {
   )
 }
 
-export function LanguageSelector({ currentLocale, onLocaleChange }: LanguageSelectorProps) {
+export function LanguageSelector({ currentLocale, onLocaleChange, collapsed = false }: LanguageSelectorProps) {
   const [open, setOpen] = useState(false)
   const [focusIndex, setFocusIndex] = useState(-1)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -148,19 +158,27 @@ export function LanguageSelector({ currentLocale, onLocaleChange }: LanguageSele
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: borderRadius.full,
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          gap: '0.75rem',
+          width: '100%',
+          paddingBlock: '0.5rem',
+          paddingInline: '0.5rem',
+          borderRadius: borderRadius.md,
           border: 'none',
           background: 'none',
           cursor: 'pointer',
-          color: colors.neutral[600],
-          padding: 0,
+          color: colors.neutral[400],
+          fontSize: typography.fontSize.sm,
+          fontFamily: 'inherit',
           transition: 'color 150ms ease, background-color 150ms ease',
         }}
       >
         <GlobeIcon />
+        {!collapsed && (
+          <span lang={currentLocale} style={{ fontFamily: nativeLabelFont(currentLocale) }}>
+            {LANGUAGES.find((l) => l.code === currentLocale)?.nativeLabel}
+          </span>
+        )}
       </button>
 
       {open && (
@@ -172,19 +190,42 @@ export function LanguageSelector({ currentLocale, onLocaleChange }: LanguageSele
           onKeyDown={handleListKeyDown}
           style={{
             position: 'absolute',
-            insetBlockStart: '100%',
-            insetInlineEnd: '0',
-            marginBlockStart: '0.5rem',
+            insetBlockEnd: '100%',
+            insetInlineStart: '0',
+            marginBlockEnd: '0.5rem',
             minWidth: '160px',
-            backgroundColor: colors.neutral[0],
+            backgroundColor: colors.neutral[800],
             boxShadow: shadows.lg,
-            border: `1px solid ${colors.neutral[200]}`,
+            border: `1px solid ${colors.neutral[700]}`,
             borderRadius: borderRadius.md,
             paddingBlock: '0.25rem',
             paddingInline: 0,
             zIndex: 200,
           }}
         >
+          <div
+            style={{
+              paddingInlineStart: '0.75rem',
+              paddingInlineEnd: '0.75rem',
+              paddingBlockStart: '0.5rem',
+              paddingBlockEnd: '0.25rem',
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.neutral[400],
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Language
+          </div>
+          <div
+            style={{
+              marginInline: '-0.25rem',
+              marginBlock: '0.25rem',
+              height: '1px',
+              backgroundColor: colors.neutral[700],
+            }}
+          />
           {LANGUAGES.map((lang, index) => (
             <div
               key={lang.code}
@@ -193,6 +234,8 @@ export function LanguageSelector({ currentLocale, onLocaleChange }: LanguageSele
               role="option"
               aria-selected={lang.code === currentLocale}
               tabIndex={-1}
+              lang={lang.code}
+              dir={getDirection(lang.code)}
               onClick={() => selectLocale(lang.code)}
               style={{
                 display: 'flex',
@@ -203,19 +246,20 @@ export function LanguageSelector({ currentLocale, onLocaleChange }: LanguageSele
                 paddingBlockStart: '0.5rem',
                 paddingBlockEnd: '0.5rem',
                 fontSize: typography.fontSize.sm,
+                fontFamily: nativeLabelFont(lang.code),
                 fontWeight:
                   lang.code === currentLocale
                     ? typography.fontWeight.semibold
                     : typography.fontWeight.normal,
                 color:
                   lang.code === currentLocale
-                    ? colors.primary[700]
-                    : colors.neutral[700],
+                    ? colors.primary[300]
+                    : colors.neutral[300],
                 backgroundColor:
                   index === focusIndex
-                    ? colors.primary[100]
+                    ? colors.primary[900]
                     : lang.code === currentLocale
-                      ? colors.primary[50]
+                      ? colors.neutral[700]
                       : 'transparent',
                 cursor: 'pointer',
                 outline: 'none',

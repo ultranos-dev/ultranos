@@ -4,7 +4,7 @@ import { getSecurityHeaders } from '@ultranos/ui-kit'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
-const hubApiOrigin = process.env.NEXT_PUBLIC_HUB_API_URL || 'http://localhost:3000'
+const hubApiOrigin = process.env.NEXT_PUBLIC_HUB_API_URL || 'http://localhost:3004'
 const reportUri = process.env.CSP_REPORT_URI
 
 const withSerwist = withSerwistInit({

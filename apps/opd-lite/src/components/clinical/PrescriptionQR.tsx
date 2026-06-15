@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { Button } from '@/components/ui/Button'
 import { QRCodeSVG } from 'qrcode.react'
 import type { FhirMedicationRequestZod } from '@ultranos/shared-types'
 import { signPrescriptionBundle, type SignedPrescriptionBundle } from '@/lib/prescription-signing'
@@ -52,16 +53,16 @@ export function PrescriptionQR({
     const qrData = JSON.stringify(bundle)
 
     return (
-      <div className="flex flex-col items-center gap-6 py-6">
-        <h3 className="text-xl font-bold text-green-700">
+      <div className="flex flex-col items-center gap-4 py-6">
+        <h3 className="text-xl font-bold text-success">
           Prescription Finalized
         </h3>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-muted-foreground">
           Patient can scan this code at any pharmacy to fulfill their prescription.
         </p>
         <div
           data-testid="prescription-qr-code"
-          className="rounded-xl border-2 border-neutral-200 bg-white p-4"
+          className="rounded-xl border-2 border-border bg-background p-4"
         >
           <QRCodeSVG
             value={qrData}
@@ -70,16 +71,16 @@ export function PrescriptionQR({
             includeMargin
           />
         </div>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-muted-foreground">
           Cryptographically signed — tamper-proof
         </p>
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={() => window.print()}
-          className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
         >
           Print
-        </button>
+        </Button>
       </div>
     )
   }
@@ -88,20 +89,20 @@ export function PrescriptionQR({
     <div className="flex flex-col items-center gap-4 py-4">
       {error && (
         <div
-          className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-3"
+          className="w-full rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3"
           role="alert"
         >
-          <p className="text-sm font-semibold text-red-800">{error}</p>
+          <p className="text-sm font-semibold text-destructive">{error}</p>
         </div>
       )}
-      <button
+      <Button
+        variant="primary"
         type="button"
         onClick={handleFinalize}
         disabled={prescriptions.length === 0 || signing}
-        className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
       >
         {signing ? 'Signing...' : 'Finalize & Generate QR'}
-      </button>
+      </Button>
     </div>
   )
 }

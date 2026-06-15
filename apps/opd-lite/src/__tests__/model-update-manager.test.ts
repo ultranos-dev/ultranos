@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { AIModelType, MODEL_STALENESS_THRESHOLD_MS, ModelUpdateEventType } from '@ultranos/shared-types'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock the db module
 const mockAiModels = {
@@ -23,7 +22,7 @@ vi.mock('../lib/db', () => ({
 }))
 
 // Mock fetch — save original and restore
-const originalFetch = global.fetch
+const _originalFetch = global.fetch
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 

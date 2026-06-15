@@ -64,3 +64,34 @@ export type { SupportedLocale, Direction } from './direction.js'
 
 export { DirectionalIcon, DIRECTIONAL_ICON_CSS } from './components/DirectionalIcon.js'
 export type { DirectionalIconProps, IconCategory } from './components/DirectionalIcon.js'
+
+export { PasswordStrengthBar, getPasswordStrength } from './components/PasswordStrengthBar.js'
+export type { PasswordStrengthBarProps } from './components/PasswordStrengthBar.js'
+
+export { formatUserRole } from './format-role.js'
+
+export { EmptyState } from './components/ui/empty-state.js'
+export type { EmptyStateProps } from './components/ui/empty-state.js'
+
+export {
+  formatNumber,
+  formatInteger,
+  formatDecimal,
+  formatPercent,
+  formatDate,
+  formatDateTime,
+  formatDateShort,
+  formatTime,
+  formatRelativeTime,
+  getArabicPluralCategory,
+  getDariPluralCategory,
+  getPluralCategory,
+} from './utils/format.js'
+export type {
+  ArabicPluralCategory,
+  DariPluralCategory,
+} from './utils/format.js'
+
+// ─── Icons (Lucide) ─────────────────────────────────────────────────
+// Consumers: prefer importing from '@ultranos/ui-kit/icons' for better tree-shaking.
+export * from './icons.js'

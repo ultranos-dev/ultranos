@@ -1,8 +1,35 @@
+@import '@ultranos/ui-kit/tokens.css';
+@import 'tw-animate-css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import '@ultranos/ui-kit/tokens.css';
+@layer base {
+  * {
+    @apply border-border outline-none;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Print styles: isolate token card for printing */
+@media print {
+  body > *:not(.token-card-print-wrapper) {
+    display: none !important;
+  }
+
+  .token-card-print-wrapper {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

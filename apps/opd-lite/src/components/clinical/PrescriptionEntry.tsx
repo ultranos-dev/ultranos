@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/Button'
 import {
   searchMedications,
   type MedicationSearchResult,
@@ -53,7 +54,7 @@ function highlightMatches(
       parts.push(text.slice(lastIndex, clampedStart))
     }
     parts.push(
-      <mark key={start} className="bg-amber-200 text-neutral-900 rounded-sm ps-0.5 pe-0.5">
+      <mark key={start} className="bg-warning/30 text-foreground rounded-sm ps-0.5 pe-0.5">
         {text.slice(clampedStart, end + 1)}
       </mark>,
     )
@@ -137,7 +138,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
         setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1))
       } else if (e.key === 'Enter' && activeIndex >= 0) {
         e.preventDefault()
-        handleSelectMedication(results[activeIndex].item)
+        handleSelectMedication(results[activeIndex]!.item)
       } else if (e.key === 'Escape') {
         setIsOpen(false)
         setActiveIndex(-1)
@@ -199,21 +200,21 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
   }, [activeIndex])
 
   const inputClasses =
-    'w-full rounded-lg border border-neutral-200 bg-white ps-4 pe-4 py-2.5 ' +
-    'text-base text-neutral-900 placeholder:text-neutral-400 ' +
+    'w-full rounded-xl border border-border bg-background ps-4 pe-4 py-2.5 ' +
+    'text-base text-foreground placeholder:text-muted-foreground ' +
     'transition-colors focus:outline-none focus:ring-2 ' +
     'focus:border-primary-400 focus:ring-primary-200 ' +
     'disabled:opacity-50 disabled:cursor-not-allowed'
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-black tracking-tight text-neutral-900">
+      <h3 className="text-2xl font-black tracking-tight text-foreground">
         Prescription
       </h3>
 
       {/* Medication search autocomplete */}
       <div className="relative">
-        <label htmlFor="medication-search" className="mb-1 block text-sm font-semibold text-neutral-700">
+        <label htmlFor="medication-search" className="mb-1 block text-sm font-semibold text-foreground">
           Medication
         </label>
         <div className="flex gap-2">
@@ -243,14 +244,13 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             className={inputClasses}
           />
           {hasMedication && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={handleClearMedication}
-              className="shrink-0 rounded-lg border border-neutral-200 ps-3 pe-3 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors"
               aria-label="Clear selected medication"
             >
               Clear
-            </button>
+            </Button>
           )}
         </div>
 
@@ -261,8 +261,8 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
             role="listbox"
             aria-label="Medication search results"
             className={
-              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg ' +
-              'border border-neutral-200 bg-white shadow-lg'
+              'absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl ' +
+              'ring-[0.65px] ring-border/50 bg-background shadow-lg'
             }
           >
             {results.map((result, idx) => (
@@ -278,18 +278,18 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
                 onMouseEnter={() => setActiveIndex(idx)}
                 className={
                   'cursor-pointer ps-4 pe-4 py-3 transition-colors ' +
-                  (idx === activeIndex ? 'bg-primary-50' : 'hover:bg-neutral-50')
+                  (idx === activeIndex ? 'bg-primary-50' : 'hover:bg-muted')
                 }
               >
                 <div className="flex items-baseline justify-between">
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-foreground">
                     {highlightMatches(result.item.display, getDisplayIndices(result))}
                   </span>
                   <span className="text-sm font-bold text-primary-700">
                     {result.item.strength}
                   </span>
                 </div>
-                <span className="text-xs text-neutral-500">{result.item.form}</span>
+                <span className="text-xs text-muted-foreground">{result.item.form}</span>
               </li>
             ))}
           </ul>
@@ -298,11 +298,11 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
       {/* Dosage sub-form — visible when medication is selected */}
       {hasMedication && (
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
           <div className="grid grid-cols-3 gap-4">
             {/* Dosage quantity */}
             <div>
-              <label htmlFor="dosage-quantity" className="mb-1 block text-sm font-semibold text-neutral-700">
+              <label htmlFor="dosage-quantity" className="mb-1 block text-sm font-semibold text-foreground">
                 Dosage
               </label>
               <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
                   className={inputClasses}
                   aria-label="Dosage quantity"
                 />
-                <span className="shrink-0 text-sm font-semibold text-neutral-500">
+                <span className="shrink-0 text-sm font-semibold text-muted-foreground">
                   {form.dosageUnit}
                 </span>
               </div>
@@ -326,7 +326,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
             {/* Frequency */}
             <div>
-              <label htmlFor="frequency" className="mb-1 block text-sm font-semibold text-neutral-700">
+              <label htmlFor="frequency" className="mb-1 block text-sm font-semibold text-foreground">
                 Frequency
               </label>
               <select
@@ -347,7 +347,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
             {/* Duration */}
             <div>
-              <label htmlFor="duration" className="mb-1 block text-sm font-semibold text-neutral-700">
+              <label htmlFor="duration" className="mb-1 block text-sm font-semibold text-foreground">
                 Duration (days)
               </label>
               <input
@@ -367,7 +367,7 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
 
           {/* Notes */}
           <div>
-            <label htmlFor="prescription-notes" className="mb-1 block text-sm font-semibold text-neutral-700">
+            <label htmlFor="prescription-notes" className="mb-1 block text-sm font-semibold text-foreground">
               Notes (optional)
             </label>
             <input
@@ -384,19 +384,16 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
           </div>
 
           {validationError && (
-            <p className="text-sm font-semibold text-red-600" role="alert">{validationError}</p>
+            <p className="text-sm font-semibold text-destructive" role="alert">{validationError}</p>
           )}
 
-          <button
+          <Button
+            variant="primary"
             type="submit"
             disabled={disabled || !hasMedication || isSubmitting}
-            className={
-              'rounded-lg bg-primary-600 ps-6 pe-6 py-2.5 text-sm font-bold text-white ' +
-              'transition-colors hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed'
-            }
           >
             {isSubmitting ? 'Saving...' : 'Add Prescription'}
-          </button>
+          </Button>
         </form>
       )}
     </div>

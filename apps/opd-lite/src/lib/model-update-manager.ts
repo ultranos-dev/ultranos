@@ -1,11 +1,9 @@
 import {
   type AIModelManifestEntry,
-  type LocalModelMetadata,
-  MODEL_STALENESS_THRESHOLD_MS,
   ModelUpdateEventType,
   type AIModelType,
 } from '@ultranos/shared-types'
-import { db, type AIModelMetadataEntry, type ModelDownloadProgress } from './db'
+import { db, type AIModelMetadataEntry } from './db'
 
 /**
  * Model Update Manager for OPD Lite PWA — Story 24.4
@@ -35,7 +33,7 @@ function getDeviceId(): string {
 
 /** Check if the device is on Wi-Fi. Falls back to allowing all connections for PWA. */
 export function isOnWifi(): boolean {
-  const conn = (navigator as any).connection
+  const conn = (navigator as unknown as { connection?: { type?: string } }).connection
   if (!conn) return true // Network Information API not supported — allow (PWA typically on clinic Wi-Fi)
   return conn.type === 'wifi' || conn.type === 'ethernet'
 }

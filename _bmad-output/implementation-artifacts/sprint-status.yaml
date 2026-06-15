@@ -1,5 +1,5 @@
 # generated: 2026-04-29T03:34:34.691026
-# last_updated: 2026-05-14T15:10:00.000000
+# last_updated: '2026-06-12T00:00:00.000000'
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-05-22T23:30:00.000000'
+last_updated: '2026-06-12T00:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -467,3 +467,247 @@ development_status:
   pe-12-skip-to-content-link: done                   # Epic 35 — sr-only link in AppShellWrapper
   pe-13-focus-visible-ring-cta: done                 # Epic 26 — focus-visible:outline on dashboard CTAs
   pe-14-axe-core-clinical-component-tests: done      # Epic 35 — axe tests for real pharmacy components
+
+  # ============================================================
+  # EPIC 39: Pharmacy Lite Enterprise UX Overhaul (2026-05-24)
+  # Addendum 13 in epics.md. Design critique → full P0-P4 fix.
+  # ============================================================
+  epic-39: done
+  39-1-button-accessibility-focus-visible-transitions: done
+  39-2-motion-reduce-guards-design-tokens: done
+  39-3-responsive-content-width-dark-mode-cleanup: done
+  39-4-patient-db-schema-v5-store: done
+  39-5-two-phase-patient-search-hook: done
+  39-6-patient-search-ui-components: done
+  39-7-patient-registration-form-allergy-capture: done
+  39-8-dashboard-multi-entry-action-hub: done
+  39-9-allergy-banner-safety-critical: done
+  39-10-interaction-check-banner: done
+  39-11-dispensing-confirmation-modal: done
+  39-12-reusable-empty-state-component: done
+  39-13-dispensing-summary-visual-hierarchy: done
+  39-14-session-expiry-warning-banner: done
+  39-15-keyboard-shortcuts-system: done
+  39-16-login-page-branding: done
+  39-17-patient-name-display-recent-dispensing: done
+  epic-39-retrospective: optional
+
+  # ============================================================
+  # EPIC 40: Pharmacy Inventory & POS (2026-05-25)
+  # Addendum 14 in epics.md. Full enterprise inventory + POS system.
+  # 4 sub-projects (A-D), 49 tasks total.
+  # ============================================================
+  epic-40: done
+
+  # Sub-project A: Catalog + Stock Core (15 tasks)
+  40-a1-inventory-types: done
+  40-a2-dexie-v6-inventory-tables: done
+  40-a3-inventory-zustand-store: done
+  40-a4-catalog-sync-from-hub: done
+  40-a5-stock-service-fefo-deduct-add: done
+  40-a6-expiry-watchdog-stock-alerts: done
+  40-a7-goods-receipt-service: done
+  40-a8-receive-stock-page: done
+  40-a9-stock-table-component: done
+  40-a10-stock-overview-page-alert-panel: done
+  40-a11-catalog-browse-page: done
+  40-a12-dispensing-fefo-stock-deduction: done
+  40-a13-dashboard-inventory-alert-widget: done
+  40-a14-inventory-sidebar-nav: done
+  40-a15-hook-wiring-catalog-expiry: done
+
+  # Sub-project B: POS + Financial (13 tasks)
+  40-b1-pos-types: done
+  40-b2-dexie-v7-pos-tables: done
+  40-b3-pos-zustand-store: done
+  40-b4-invoice-service: done
+  40-b5-payment-service: done
+  40-b6-cash-drawer-service: done
+  40-b7-patient-account-service: done
+  40-b8-pos-page-payment-form: done
+  40-b9-cash-drawer-page: done
+  40-b10-patient-accounts-page: done
+  40-b11-dispensing-invoice-auto-creation: done
+  40-b12-dashboard-drawer-widget-pos-nav: done
+  40-b13-collect-payment-cta: done
+
+  # Sub-project C: Procurement + Counts (11 tasks)
+  40-c1-procurement-types: done
+  40-c2-dexie-v9-procurement-tables: done
+  40-c3-supplier-service: done
+  40-c4-purchase-order-service: done
+  40-c5-stock-count-service: done
+  40-c6-supplier-form: done
+  40-c7-suppliers-page: done
+  40-c8-stock-count-form: done
+  40-c9-stock-count-page: done
+  40-c10-controlled-substances-upgrade: done
+  40-c11-procurement-nav-items: done
+
+  # Sub-project D: Network + Reports (10 tasks)
+  40-d1-transfer-types: done
+  40-d2-dexie-v10-transfers-table: done
+  40-d3-transfer-service: done
+  40-d4-network-stock-query: done
+  40-d5-consumption-wastage-reports: done
+  40-d6-financial-controlled-reports: done
+  40-d7-transfers-page: done
+  40-d8-report-cards: done
+  40-d9-reports-page: done
+  40-d10-transfers-reports-nav: done
+
+  epic-40-retrospective: optional
+
+  # ============================================================
+  # Pharmacy-Lite UX Consistency Fixes (2026-05-26)
+  # Sidebar layout, dashboard card placement, shared patient forms
+  # ============================================================
+  pharm-ux-1-root-layout-legacy-header-removal: done      # Remove old <header> + max-w-2xl from root layout
+  pharm-ux-2-sidebar-layout-match-opd: done               # AppShellWrapper content area matches OPD-Lite
+  pharm-ux-3-dashboard-card-grid-placement: done           # grid-cols-3 placement + mx-auto max-w-3xl container
+  pharm-ux-4-shared-patient-registration-form: done        # Copy OPD-Lite registration components (10 files)
+  pharm-ux-5-register-patient-route: done                  # /register-patient route, DashboardActionHub wiring
+  pharm-ux-6-registration-i18n-namespace: done             # 116 registration keys copied to en/ar/prs
+
+  # ============================================================
+  # EPIC 42: Lab Workflow Authorization (2026-05-30)
+  # Role-based access control for lab staff with four-tier hierarchy
+  # ============================================================
+  epic-42: in-progress
+  42-1-role-based-access-control: in-progress
+  42-3-sample-accessioning-chain-of-custody: review
+  42-4-lab-result-templates-structured-entry: review
+  42-5-result-authorization-workflow: review
+  42-7-smart-sample-prioritization-queue: review
+
+  # ============================================================
+  # EPIC 43: Lab Audit & Compliance (2026-05-31)
+  # Patient identity verification logging, audit chain, PHI compliance
+  # ============================================================
+  epic-43: in-progress
+  43-1-immutable-result-audit-chain: review
+  43-3-amendment-correction-protocol: review
+  43-4-patient-id-verification-logging: review
+  43-6-analyzer-drift-detection: review
+  43-7-pre-release-critical-value-checklist: review
+  43-8-localized-reference-ranges: done
+
+  # ============================================================
+  # EPIC 55: Admin Portal People & Facility Management (2026-05-30)
+  # Addendum 17: Centralized user lifecycle, role assignment,
+  # cross-facility dashboards, and operational configuration.
+  # ============================================================
+  epic-55: in-progress
+  55-1-lab-staff-role-management: done
+  55-2-cross-lab-staff-overview-dashboard: done
+  55-3-employee-health-vaccination-registry: done
+  55-4-mentorship-pairing-management: review
+  55-5-certification-credential-management: done
+  55-6-cross-facility-inventory-procurement: done
+  55-7-lab-network-outbreak-management: done
+  55-8-surveillance-alert-configuration: done
+  epic-55-retrospective: optional
+
+  # ============================================================
+  # EPIC 48: Intelligent Decision Support (2026-05-30)
+  # Power-aware scheduling, workload estimation for low-resource labs
+  # ============================================================
+  epic-48: in-progress
+  48-1-power-aware-workload-scheduler: review
+  48-3-pre-shift-readiness-forecast: review
+  48-4-critical-value-escalation-chain: review
+  epic-48-retrospective: optional
+
+  # ============================================================
+  # EPIC 49: Conflict Zone Security Protocols (2026-05-30)
+  # Emergency data protection, read-only mode, device wipe, backup
+  # ============================================================
+  epic-49: in-progress
+  49-2-sms-critical-result-fallback: done
+  49-3-bluetooth-p2p-sync: done
+  49-4-conflict-zone-security-protocols: done
+
+  # ============================================================
+  # EPIC 54: Multi-Branch Lab Network Management (2026-05-30)
+  # Addendum 18: Network dashboard, satellite modes, sample routing
+  # ============================================================
+  epic-54: in-progress
+  54-1-multi-branch-lab-network: in-progress
+  54-2-chw-collection-module: done
+  54-3-courier-transport-tracking: done
+  54-4-reference-lab-integration: in-progress
+  54-5-outbreak-response-mode: review
+  54-6-seasonal-operations-planner: review
+
+  # ============================================================
+  # EPIC 44: Lab Financial Operations (2026-05-31)
+  # Reagent waste tracking, expiry projection, waste dashboard
+  # ============================================================
+  epic-44: in-progress
+  44-3-reagent-waste-expiry-tracking: review
+
+  # ============================================================
+  # EPIC 45: Patient Consent & Family Delegation (2026-05-31)
+  # Low-literacy consent capture, delegate result access
+  # ============================================================
+  epic-45: in-progress
+  45-3-family-delegate-result-access: in-progress
+  45-5-one-trip-optimization: review
+
+  # ============================================================
+  # EPIC 47: Lab Safety Protocols (2026-05-31)
+  # Post-exposure emergency protocol, spill response, safety reporting
+  # ============================================================
+  epic-47: in-progress
+  47-1-post-exposure-emergency-protocol: review
+  47-7-infection-control-self-audit: review
+
+  # ============================================================
+  # EPIC 46: Solo Lab Technician Support (2026-05-31)
+  # Contextual micro-learning, SOP library, competency tracking
+  # ============================================================
+  epic-46: in-progress
+  46-2-contextual-micro-learning: review
+  46-6-certification-pathway-tracker: review
+  46-7-personal-quality-streak: review
+
+  # ============================================================
+  # EPIC 50: Lab Reporting & Analytics (2026-05-31)
+  # Daily activity log auto-generation and WhatsApp sharing
+  # ============================================================
+  epic-50: in-progress
+  50-1-auto-compiled-hmis-report: done
+  50-2-multi-donor-report-templates: done
+  50-3-automated-disease-surveillance-alerts: done
+  50-4-daily-activity-log-whatsapp: done
+  # ============================================================
+  # EPIC 51: Shift & Workload Management (2026-05-31)
+  # Shift handover protocol and workload tooling
+  # ============================================================
+  epic-51: in-progress
+  51-1-shift-handover-protocol: done
+  51-2-workload-balancing-dashboard: done
+  51-3-sample-collision-prevention: done
+  51-4-equipment-booking-scheduling: in-progress
+  51-6-technician-performance-portfolio: done
+  51-7-gamified-team-quality-engagement: done
+
+  # ============================================================
+  # EPIC 52: Cross-App Integration & Pharmacy Awareness (2026-05-31)
+  # Pharmacy-Lite dispensing events -> Lab-Lite monitoring flags
+  # ============================================================
+  epic-52: in-progress
+  52-1-pharmacy-medication-monitoring-flags: in-progress
+  52-2-shared-inventory-visibility: review
+  52-3-hub-managed-coordinated-procurement: review
+
+  # ============================================================
+  # EPIC 53: AI Clinical Intelligence — Lab-Lite (2026-05-31)
+  # Anomaly detection, confidence inversion, provenance trail
+  # ============================================================
+  epic-53: in-progress
+  53-1-contextual-knowledge-cards: done
+  53-3-ai-anomaly-flagging: done
+  53-4-tele-consultation-request-builder: done
+  53-5-confidence-inversion-principle: done
+  53-7-patient-public-health-guidance: done

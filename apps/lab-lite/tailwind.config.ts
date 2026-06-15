@@ -1,12 +1,11 @@
 import type { Config } from 'tailwindcss'
+import preset from '@ultranos/ui-kit/tailwind.preset'
 
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  presets: [preset],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui-kit/src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["'Inter'", 'system-ui', '-apple-system', "'Segoe UI'", 'Roboto', 'sans-serif'],
-      },
       colors: {
         primary: {
           50: 'var(--color-primary-50)',
@@ -32,7 +31,12 @@ const config: Config = {
           800: 'var(--color-neutral-800)',
           900: 'var(--color-neutral-900)',
         },
+        'pill-green': '#9fe870',
+        'pill-text': '#163300',
         danger: 'var(--color-danger)',
+      },
+      borderRadius: {
+        pill: '9999px',
       },
     },
   },

@@ -1,5 +1,7 @@
 'use client'
 
+import { Card } from '@/components/Card'
+
 const NOTIFICATION_PREFERENCES = [
   { id: 'lab-result-alerts', label: 'Lab result alerts' },
   { id: 'sync-conflict-alerts', label: 'Sync conflict alerts' },
@@ -8,10 +10,10 @@ const NOTIFICATION_PREFERENCES = [
 
 export function PreferencesCard() {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-6">
+    <Card>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-neutral-900">Preferences</h2>
-        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+        <h2 className="text-sm font-semibold text-foreground">Preferences</h2>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           Coming soon
         </span>
       </div>
@@ -22,20 +24,20 @@ export function PreferencesCard() {
             key={pref.id}
             className="flex items-center justify-between"
           >
-            <span className="text-sm text-neutral-700">{pref.label}</span>
+            <span className="text-sm text-foreground">{pref.label}</span>
             <input
               type="checkbox"
               disabled
-              className="h-4 w-4 rounded border-neutral-300 text-blue-600 opacity-50"
+              className="h-4 w-4 rounded border-border text-primary opacity-50"
               aria-label={pref.label}
             />
           </label>
         ))}
       </div>
 
-      <p className="mt-4 text-xs text-neutral-400">
+      <p className="mt-4 text-xs text-muted-foreground">
         Managed by administrator
       </p>
-    </div>
+    </Card>
   )
 }

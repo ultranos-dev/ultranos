@@ -1,18 +1,22 @@
 'use client'
 
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
+import { Card } from '@/components/Card'
 
 interface NameInputSectionProps {
   nameGiven: string
   nameFather: string
   nameGrandfather: string
+  nameFamily: string
   onNameGivenChange: (value: string) => void
   onNameFatherChange: (value: string) => void
   onNameGrandfatherChange: (value: string) => void
+  onNameFamilyChange: (value: string) => void
   errors?: {
     nameGiven?: string
     nameFather?: string
     nameGrandfather?: string
+    nameFamily?: string
   }
 }
 
@@ -20,22 +24,24 @@ export function NameInputSection({
   nameGiven,
   nameFather,
   nameGrandfather,
+  nameFamily,
   onNameGivenChange,
   onNameFatherChange,
   onNameGrandfatherChange,
+  onNameFamilyChange,
   errors,
 }: NameInputSectionProps) {
   const t = useTranslations('registration')
-  const locale = useLocale()
-  const isRtl = locale === 'ar' || locale === 'prs'
 
-  // Compose the full local name preview (given + father + grandfather)
-  const nameParts = [nameGiven, nameFather, nameGrandfather].filter(Boolean)
-  const nameLocalPreview = nameParts.length > 0 ? nameParts.join(' ') : ''
+  // Name groups in entry order: patient's name (given + family), father, grandfather
+  const patientName = [nameGiven, nameFamily].filter(Boolean).join(' ')
+  const fatherName = nameFather.trim()
+  const grandfatherName = nameGrandfather.trim()
+  const hasAnyName = !!(patientName || fatherName || grandfatherName)
 
   return (
-    <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+    <Card as="fieldset">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('nameSection')}
       </legend>
 
@@ -44,31 +50,61 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-given"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameGiven')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </label>
           <input
             id="name-given"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             required
             aria-required="true"
             aria-invalid={!!errors?.nameGiven}
             aria-describedby={errors?.nameGiven ? 'name-given-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGiven
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameGivenPlaceholder')}
             value={nameGiven}
             onChange={(e) => onNameGivenChange(e.target.value)}
           />
           {errors?.nameGiven && (
-            <p id="name-given-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-given-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGiven}
+            </p>
+          )}
+        </div>
+
+        {/* Family Name */}
+        <div>
+          <label
+            htmlFor="name-family"
+            className="mb-1 block text-sm font-semibold text-foreground"
+          >
+            {t('nameFamily')}
+          </label>
+          <input
+            id="name-family"
+            type="text"
+            dir="auto"
+            aria-invalid={!!errors?.nameFamily}
+            aria-describedby={errors?.nameFamily ? 'name-family-error' : undefined}
+            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              errors?.nameFamily
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
+            }`}
+            placeholder={t('nameFamilyPlaceholder')}
+            value={nameFamily}
+            onChange={(e) => onNameFamilyChange(e.target.value)}
+          />
+          {errors?.nameFamily && (
+            <p id="name-family-error" className="mt-1 text-sm text-destructive" role="alert">
+              {errors.nameFamily}
             </p>
           )}
         </div>
@@ -77,27 +113,27 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-father"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameFather')}
           </label>
           <input
             id="name-father"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             aria-invalid={!!errors?.nameFather}
             aria-describedby={errors?.nameFather ? 'name-father-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameFather
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameFatherPlaceholder')}
             value={nameFather}
             onChange={(e) => onNameFatherChange(e.target.value)}
           />
           {errors?.nameFather && (
-            <p id="name-father-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-father-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameFather}
             </p>
           )}
@@ -107,50 +143,56 @@ export function NameInputSection({
         <div>
           <label
             htmlFor="name-grandfather"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('nameGrandfather')}
           </label>
           <input
             id="name-grandfather"
             type="text"
-            dir={isRtl ? 'rtl' : 'ltr'}
+            dir="auto"
             aria-invalid={!!errors?.nameGrandfather}
             aria-describedby={errors?.nameGrandfather ? 'name-grandfather-error' : undefined}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.nameGrandfather
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={t('nameGrandfatherPlaceholder')}
             value={nameGrandfather}
             onChange={(e) => onNameGrandfatherChange(e.target.value)}
           />
           {errors?.nameGrandfather && (
-            <p id="name-grandfather-error" className="mt-1 text-sm text-red-600" role="alert">
+            <p id="name-grandfather-error" className="mt-1 text-sm text-destructive" role="alert">
               {errors.nameGrandfather}
             </p>
           )}
         </div>
 
-        {/* Composed nameLocal preview */}
-        {nameLocalPreview && (
+        {/* Display Name preview — grouped with dividers */}
+        {hasAnyName && (
           <div
-            className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3"
+            className="mt-3 rounded-xl ring-[0.65px] ring-border/50 bg-muted px-4 py-3"
             aria-live="polite"
           >
-            <p className="text-xs font-semibold text-neutral-500 mb-1">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">
               {t('namePreview')}
             </p>
-            <p
-              className="text-lg font-bold text-neutral-900"
-              dir={isRtl ? 'rtl' : 'ltr'}
-            >
-              {nameLocalPreview}
+            <p className="text-lg font-bold text-foreground leading-snug" dir="auto">
+              {[patientName, fatherName, grandfatherName]
+                .filter(Boolean)
+                .map((name, i) => (
+                  <span key={i}>
+                    {i > 0 && (
+                      <span className="mx-2.5 inline-block h-3 w-3 rounded-full border-2 border-muted-foreground/40 align-middle select-none" aria-hidden="true" />
+                    )}
+                    {name}
+                  </span>
+                ))}
             </p>
           </div>
         )}
       </div>
-    </fieldset>
+    </Card>
   )
 }

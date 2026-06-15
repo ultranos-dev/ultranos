@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLocale } from 'next-intl'
+import { X } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { AFGHAN_PROVINCES } from '@ultranos/shared-types'
 import type { AfghanProvince } from '@ultranos/shared-types'
 
@@ -130,7 +132,7 @@ export function ProvinceAutocomplete({
       case 'Enter':
         e.preventDefault()
         if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          handleSelect(filtered[highlightedIndex])
+          handleSelect(filtered[highlightedIndex]!)
         }
         break
       case 'Escape':
@@ -155,32 +157,31 @@ export function ProvinceAutocomplete({
     <div ref={containerRef} className="relative">
       <label
         htmlFor={inputId}
-        className="mb-1 block text-sm font-semibold text-neutral-700"
+        className="mb-1 block text-sm font-semibold text-foreground"
       >
         {label}
-        {required && <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>}
+        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
       </label>
 
       <div className="relative">
         {value ? (
-          <div className="flex items-center min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2">
-            <span className="flex-1 text-sm text-neutral-900">
+          <div className="flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2">
+            <span className="flex-1 text-sm text-foreground">
               {getDisplayName(value)}
             </span>
-            <button
+            <Button
+              variant="icon"
               type="button"
+              className="ms-2 p-1"
               onClick={() => {
                 onChange('')
                 setQuery('')
                 inputRef.current?.focus()
               }}
-              className="ms-2 rounded p-1 text-neutral-400 transition-colors [@media(hover:hover)and(pointer:fine)]:hover:text-neutral-600"
-              aria-label={`Clear ${label}`}
+              aria-label="Clear province"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         ) : (
           <input
@@ -198,8 +199,8 @@ export function ProvinceAutocomplete({
             autoComplete="off"
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               error
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
             placeholder={placeholder}
             value={query}
@@ -218,7 +219,7 @@ export function ProvinceAutocomplete({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-border/50 bg-background shadow-lg"
         >
           {filtered.map((province, index) => (
             <li
@@ -228,8 +229,8 @@ export function ProvinceAutocomplete({
               aria-selected={highlightedIndex === index}
               className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
                 highlightedIndex === index
-                  ? 'bg-blue-50 text-blue-900'
-                  : 'text-neutral-900 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-muted'
               }`}
               onMouseDown={(e) => {
                 e.preventDefault()
@@ -239,10 +240,10 @@ export function ProvinceAutocomplete({
             >
               <span>{getDisplayName(province)}</span>
               {isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">{province}</span>
+                <span className="ms-2 text-xs text-muted-foreground">{province}</span>
               )}
               {!isRtl && (
-                <span className="ms-2 text-xs text-neutral-400">
+                <span className="ms-2 text-xs text-muted-foreground">
                   {PROVINCE_NAME_LOCAL[province]}
                 </span>
               )}
@@ -252,13 +253,13 @@ export function ProvinceAutocomplete({
       )}
 
       {isOpen && !value && filtered.length === 0 && query && (
-        <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-3 text-sm text-neutral-500 shadow-lg">
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-border/50 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
           No matching province
         </div>
       )}
 
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p className="mt-1 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

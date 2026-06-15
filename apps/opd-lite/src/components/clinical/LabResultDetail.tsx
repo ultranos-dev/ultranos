@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { Check } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { db, type LocalDiagnosticReport } from '@/lib/db'
 import {
   acknowledgeNotification,
@@ -20,7 +22,7 @@ interface LabResultDetailProps {
 const SAFE_IMAGE_PREFIXES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 const SAFE_CONTENT_TYPES = [...SAFE_IMAGE_PREFIXES, 'application/pdf']
 
-function isSafeContentType(ct: string): boolean {
+function _isSafeContentType(ct: string): boolean {
   return SAFE_CONTENT_TYPES.some(safe =>
     ct === safe || (safe.endsWith('+xml') ? false : ct.startsWith(safe.split('/')[0] + '/') && SAFE_IMAGE_PREFIXES.some(p => ct === p)),
   )
@@ -74,12 +76,12 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <img
           src={dataUri}
           alt={attachment.title ?? `Attachment ${index + 1}`}
-          className="max-w-full rounded-lg border border-neutral-200"
+          className="max-w-full rounded-xl ring-[0.65px] ring-border/50"
         />
       </div>
     )
@@ -89,12 +91,12 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
     return (
       <div key={index} className="mt-3">
         {attachment.title && (
-          <p className="mb-1 text-sm font-medium text-neutral-700">{attachment.title}</p>
+          <p className="mb-1 text-sm font-medium text-foreground">{attachment.title}</p>
         )}
         <embed
           src={dataUri}
           type="application/pdf"
-          className="h-96 w-full rounded-lg border border-neutral-200"
+          className="h-96 w-full rounded-xl ring-[0.65px] ring-border/50"
           title={attachment.title ?? `PDF ${index + 1}`}
         />
       </div>
@@ -108,7 +110,7 @@ function renderAttachment(attachment: { contentType?: string; data?: string; url
         <a
           href={dataUri}
           download={attachment.title ?? `attachment-${index + 1}`}
-          className="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+          className="text-sm font-medium text-primary underline hover:text-primary"
         >
           Download {attachment.title ?? `Attachment ${index + 1}`}
         </a>
@@ -185,49 +187,50 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
   return (
     <div data-testid="lab-result-detail">
       {/* Back button */}
-      <button
+      <Button
+        variant="ghost"
         type="button"
         onClick={onBack}
-        className="mb-4 text-sm font-semibold text-primary-500 hover:underline"
+        className="mb-4"
         aria-label="Back to lab results"
       >
         &larr; Back to Results
-      </button>
+      </Button>
 
-      <h3 className="text-xl font-bold text-neutral-900">{loincDisplay}</h3>
+      <h3 className="text-xl font-bold text-foreground">{loincDisplay}</h3>
       {loincCode && (
-        <p className="text-xs text-neutral-500">LOINC: {loincCode}</p>
+        <p className="text-xs text-muted-foreground">LOINC: {loincCode}</p>
       )}
 
       {/* Metadata grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <span className="font-medium text-neutral-500">Status</span>
-          <p className="font-semibold text-neutral-900">{statusLabel(report.status)}</p>
+          <span className="font-medium text-muted-foreground">Status</span>
+          <p className="font-semibold text-foreground">{statusLabel(report.status)}</p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Collection Date</span>
-          <p className="font-semibold text-neutral-900">
+          <span className="font-medium text-muted-foreground">Collection Date</span>
+          <p className="font-semibold text-foreground">
             {formatDateTime(report.effectiveDateTime)}
           </p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Issued</span>
-          <p className="font-semibold text-neutral-900">
+          <span className="font-medium text-muted-foreground">Issued</span>
+          <p className="font-semibold text-foreground">
             {formatDateTime(report.issued)}
           </p>
         </div>
         <div>
-          <span className="font-medium text-neutral-500">Lab</span>
-          <p className="font-semibold text-neutral-900">{labName}</p>
+          <span className="font-medium text-muted-foreground">Lab</span>
+          <p className="font-semibold text-foreground">{labName}</p>
         </div>
       </div>
 
       {/* Performers */}
       {performers.length > 1 && (
         <div className="mt-4">
-          <span className="text-sm font-medium text-neutral-500">Performers</span>
-          <ul className="mt-1 text-sm text-neutral-900">
+          <span className="text-sm font-medium text-muted-foreground">Performers</span>
+          <ul className="mt-1 text-sm text-foreground">
             {performers.map((p, i) => (
               <li key={i}>{p.display ?? p.reference}</li>
             ))}
@@ -237,9 +240,9 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
 
       {/* Conclusion */}
       {report.conclusion && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-          <h4 className="text-sm font-bold text-neutral-700">Conclusion</h4>
-          <p className="mt-1 text-sm text-neutral-900 whitespace-pre-wrap">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4">
+          <h4 className="text-sm font-bold text-foreground">Conclusion</h4>
+          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
             {report.conclusion}
           </p>
         </div>
@@ -248,36 +251,35 @@ export function LabResultDetail({ report, notification: notificationProp, onBack
       {/* Presented form (PDF / images) */}
       {report.presentedForm && report.presentedForm.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-bold text-neutral-700">Attached Files</h4>
+          <h4 className="text-sm font-bold text-foreground">Attached Files</h4>
           {report.presentedForm.map((attachment, i) => renderAttachment(attachment, i))}
         </div>
       )}
 
       {/* No file, no conclusion — show text-based summary hint */}
       {!report.conclusion && (!report.presentedForm || report.presentedForm.length === 0) && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-500">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4 text-sm text-muted-foreground">
           No report content or attachments available. Result data may be pending.
         </div>
       )}
 
       {/* Acknowledge button — AC #3 */}
       {notification && !acknowledged && (
-        <button
+        <Button
+          variant="primary"
           type="button"
           onClick={handleAcknowledge}
           disabled={acknowledging}
-          className="mt-6 rounded-md bg-blue-600 px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="mt-6"
           data-testid="acknowledge-button"
         >
           {acknowledging ? 'Acknowledging...' : 'Acknowledge Result'}
-        </button>
+        </Button>
       )}
 
       {acknowledged && (
-        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-green-700">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-          </svg>
+        <div className="mt-6 flex items-center gap-2 text-sm font-medium text-success">
+          <Check className="h-5 w-5" />
           Result Acknowledged
         </div>
       )}

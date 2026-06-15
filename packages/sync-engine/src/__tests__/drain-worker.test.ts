@@ -216,6 +216,52 @@ describe('DrainWorker', () => {
     expect(resolution.strategy).toBe('LWW')
   })
 
+  it('persists failureReason from syncFn error string', async () => {
+    const storage = createInMemoryStorage()
+    const q = createSyncQueue(storage, 1) // maxRetries=1 so first failure is permanent
+
+    await q.enqueue({
+      resourceType: 'Encounter',
+      resourceId: 'enc-1',
+      action: 'create',
+      payload: '{}',
+      hlcTimestamp: '000001700000000:00000:node-1',
+    })
+
+    const sf = vi.fn<(entry: SyncQueueEntry) => Promise<SyncResult>>()
+      .mockResolvedValue({ success: false, error: 'HTTP 502' })
+
+    const worker = new DrainWorker({ queue: q, syncFn: sf })
+    await worker.drain()
+
+    const failed = await storage.getByStatus('failed')
+    expect(failed).toHaveLength(1)
+    expect(failed[0]!.failureReason).toBe('HTTP 502')
+  })
+
+  it('persists failureReason when syncFn throws', async () => {
+    const storage = createInMemoryStorage()
+    const q = createSyncQueue(storage, 1) // maxRetries=1
+
+    await q.enqueue({
+      resourceType: 'Encounter',
+      resourceId: 'enc-1',
+      action: 'create',
+      payload: '{}',
+      hlcTimestamp: '000001700000000:00000:node-1',
+    })
+
+    const sf = vi.fn<(entry: SyncQueueEntry) => Promise<SyncResult>>()
+      .mockRejectedValue(new Error('network timeout'))
+
+    const worker = new DrainWorker({ queue: q, syncFn: sf })
+    await worker.drain()
+
+    const failed = await storage.getByStatus('failed')
+    expect(failed).toHaveLength(1)
+    expect(failed[0]!.failureReason).toBe('network timeout')
+  })
+
   it('does not run concurrent drains', async () => {
     await queue.enqueue({
       resourceType: 'Encounter',

@@ -61,6 +61,8 @@ export interface ClientAuditEvent {
   metadata?: Record<string, unknown>
   queuedAt: string // ISO 8601
   status: ClientAuditEventStatus
+  /** SHA-256 hash linking this event to the previous event in the per-resource chain. */
+  chainHash?: string
 }
 
 export type ClientAuditEventInput = Omit<ClientAuditEvent, 'id' | 'queuedAt' | 'status'>
@@ -121,9 +123,9 @@ export async function emitClientAudit(input: ClientAuditEventInput): Promise<voi
           const parts = path.split('.')
           let target: Record<string, unknown> = cleaned
           for (let i = 0; i < parts.length - 1; i++) {
-            target = target[parts[i]] as Record<string, unknown>
+            target = target[parts[i]!] as Record<string, unknown>
           }
-          delete target[parts[parts.length - 1]]
+          delete target[parts[parts.length - 1]!]
         }
         input = { ...input, metadata: cleaned }
       }

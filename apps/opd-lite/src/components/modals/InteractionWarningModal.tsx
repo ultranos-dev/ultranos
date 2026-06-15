@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { DrugInteractionSeverity } from '@ultranos/shared-types'
 import type { InteractionResult } from '@/services/interactionService'
+import { Button } from '@/components/ui/Button'
 
 interface InteractionWarningModalProps {
   open: boolean
@@ -13,29 +14,29 @@ interface InteractionWarningModalProps {
 
 const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   [DrugInteractionSeverity.CONTRAINDICATED]: {
-    bg: 'bg-red-100',
-    text: 'text-red-800',
-    border: 'border-red-300',
+    bg: 'bg-destructive/20',
+    text: 'text-destructive',
+    border: 'border-destructive/30',
   },
   [DrugInteractionSeverity.MAJOR]: {
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    border: 'border-red-200',
+    bg: 'bg-destructive/10',
+    text: 'text-destructive',
+    border: 'border-destructive/20',
   },
   [DrugInteractionSeverity.MODERATE]: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-800',
-    border: 'border-amber-200',
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/20',
   },
   [DrugInteractionSeverity.MINOR]: {
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-800',
-    border: 'border-yellow-200',
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/20',
   },
 }
 
 function getSeverityStyle(severity: DrugInteractionSeverity) {
-  return SEVERITY_STYLES[severity] ?? SEVERITY_STYLES[DrugInteractionSeverity.MAJOR]
+  return (SEVERITY_STYLES[severity] ?? SEVERITY_STYLES[DrugInteractionSeverity.MAJOR])!
 }
 
 export function InteractionWarningModal({
@@ -63,8 +64,8 @@ export function InteractionWarningModal({
       'button:not([disabled]), textarea, [tabindex]:not([tabindex="-1"])',
     )
     if (focusable.length === 0) return
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
+    const first = focusable[0]!
+    const last = focusable[focusable.length - 1]!
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault()
       last.focus()
@@ -125,16 +126,16 @@ export function InteractionWarningModal({
         aria-hidden="true"
       />
       {/* Modal panel */}
-      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-red-400 bg-white shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
+      <div className="relative mx-4 w-full max-w-lg rounded-xl border-2 border-destructive bg-background shadow-2xl animate-[modalSlideIn_200ms_ease-out_forwards]">
         {/* Header */}
-        <div className="rounded-t-xl border-b border-red-200 bg-red-50 px-6 py-4">
+        <div className="rounded-t-xl border-b border-destructive/20 bg-destructive/10 px-6 py-4">
           <h2
             id="interaction-warning-title"
-            className="text-xl font-black text-red-800"
+            className="text-xl font-black text-destructive"
           >
             {modalTitle}
           </h2>
-          <p className="mt-1 text-sm font-semibold text-red-600">
+          <p className="mt-1 text-sm font-semibold text-destructive">
             Review the following drug interactions before proceeding.
           </p>
         </div>
@@ -155,11 +156,11 @@ export function InteractionWarningModal({
                     >
                       {interaction.severity}
                     </span>
-                    <span className="text-sm font-bold text-neutral-900">
+                    <span className="text-sm font-bold text-foreground">
                       {interaction.drugA} + {interaction.drugB}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-neutral-700">
+                  <p className="mt-1 text-sm text-foreground">
                     {interaction.description}
                   </p>
                 </li>
@@ -169,16 +170,16 @@ export function InteractionWarningModal({
         </div>
 
         {/* Override justification */}
-        <div className="border-t border-neutral-200 px-6 py-4">
+        <div className="border-t border-border px-6 py-4">
           <label
             htmlFor="override-justification"
-            className="mb-2 block text-sm font-bold text-neutral-700"
+            className="mb-2 block text-sm font-bold text-foreground"
           >
             Override Justification (required to proceed)
           </label>
           <textarea
             id="override-justification"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
             rows={2}
             placeholder="Enter clinical justification for overriding this warning..."
             value={justification}
@@ -187,24 +188,24 @@ export function InteractionWarningModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 rounded-b-xl border-t border-neutral-200 bg-neutral-50 px-6 py-4">
-          <button
+        <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-muted px-6 py-4">
+          <Button
+            variant="secondary"
             type="button"
             onClick={onCancel}
-            className="rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-bold text-neutral-700 transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-300 active:scale-[0.97]"
             aria-label="Cancel prescription"
           >
             Cancel Prescription
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             type="button"
             onClick={handleOverride}
             disabled={justification.trim().length === 0}
-            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition-all duration-150 [@media(hover:hover)and(pointer:fine)]:hover:bg-red-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Proceed anyway"
           >
             Proceed Anyway
-          </button>
+          </Button>
         </div>
       </div>
     </div>

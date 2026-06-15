@@ -1,9 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import type { LocalMedicationDispense } from '@/lib/medication-dispense'
+import { getControlledSubstanceBalances } from '@/lib/procurement/stock-count-service'
 
 /**
  * TODO: Controlled substance filtering requires a `controlledSubstanceSchedule`
@@ -64,6 +67,7 @@ function statusLabel(
 
 export function ControlledSubstancesView() {
   const t = useTranslations('controlled')
+  const tBalances = useTranslations('controlledBalances')
 
   const [dispenses, setDispenses] = useState<LocalMedicationDispense[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -74,6 +78,7 @@ export function ControlledSubstancesView() {
     dateFrom: '',
     dateTo: '',
   })
+  const [balances, setBalances] = useState<{ catalogItemId: string; catalogItemName: string; schedule: string; totalOnHand: number; batchCount: number }[]>([])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
@@ -81,6 +86,9 @@ export function ControlledSubstancesView() {
     setLoading(true)
     setError(null)
     try {
+      const balanceData = await getControlledSubstanceBalances()
+      setBalances(balanceData)
+
       let query = db.dispenses.orderBy('meta.lastUpdated')
 
       // Apply date range filter using indexed meta.lastUpdated
@@ -133,17 +141,17 @@ export function ControlledSubstancesView() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold text-foreground">
         {t('title')}
       </h1>
 
       {/* Date range filter */}
-      <div className="mt-4 flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         <div>
           <label
             htmlFor="cs-date-from"
-            className="block text-xs font-medium text-neutral-500 dark:text-neutral-400"
+            className="block text-xs font-medium text-muted-foreground"
           >
             {t('dateFrom')}
           </label>
@@ -152,13 +160,13 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateFrom}
             onChange={handleDateFromChange}
-            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+            className="mt-1 rounded-md border border-border px-3 py-1.5 text-sm"
           />
         </div>
         <div>
           <label
             htmlFor="cs-date-to"
-            className="block text-xs font-medium text-neutral-500 dark:text-neutral-400"
+            className="block text-xs font-medium text-muted-foreground"
           >
             {t('dateTo')}
           </label>
@@ -167,112 +175,127 @@ export function ControlledSubstancesView() {
             type="date"
             value={filters.dateTo}
             onChange={handleDateToChange}
-            className="mt-1 rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+            className="mt-1 rounded-md border border-border px-3 py-1.5 text-sm"
           />
         </div>
       </div>
 
+      {/* Running Balances */}
+      {balances.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-2">{tBalances('title')}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {balances.map((item) => (
+              <div key={item.catalogItemId} className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+                <p className="text-xs font-bold text-destructive">C{item.schedule}</p>
+                <p className="text-sm font-medium text-foreground">{item.catalogItemName}</p>
+                <p className="text-lg font-bold tabular-nums text-foreground">{item.totalOnHand}</p>
+                <p className="text-[10px] text-muted-foreground">{tBalances('batchCount', { count: item.batchCount })}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Loading */}
       {loading && (
-        <div className="mt-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="py-12 text-center text-sm text-muted-foreground">
           {t('loading')}
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="mt-6 py-12 text-center text-sm text-red-600 dark:text-red-400">
+        <div className="py-12 text-center text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && !error && dispenses.length === 0 && (
-        <div className="mt-6 rounded-lg border border-neutral-200 px-4 py-12 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-          {t('noRecords')}
-        </div>
+        <EmptyState title={t('noRecords')} />
       )}
 
       {/* Table */}
       {!loading && !error && dispenses.length > 0 && (
         <>
-          <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mt-2 text-xs text-muted-foreground">
             {t('records', { count: totalCount })}
           </div>
 
-          <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-700">
-            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-              <thead className="bg-neutral-50 dark:bg-neutral-800">
+          <div className="mt-2 overflow-x-auto rounded-lg border border-border">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
                     {t('date')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
                     {t('patient')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
                     {t('medication')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                     title={t('scheduleNote')}
                   >
                     {t('schedule')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
                     {t('prescriber')}
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
+                    className="px-4 py-3 text-start text-xs font-medium uppercase tracking-wider text-muted-foreground"
                   >
                     {t('status')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <tbody className="divide-y divide-border">
                 {dispenses.map((d) => (
                   <tr
                     key={d.id}
-                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                    className="hover:bg-accent"
                   >
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
                       {formatDateTime(d.meta?.lastUpdated)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
                       {d.subject.reference}
                     </td>
-                    <td className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="px-4 py-3 text-sm text-foreground">
                       {extractMedicationDisplay(d)}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-400 dark:text-neutral-500">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                       {/* controlledSubstanceSchedule not in schema yet */}
                       ---
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
                       {extractPrescriberRef(d)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <span
                         className={
                           d.status === 'completed'
-                            ? 'text-green-700 dark:text-green-400'
+                            ? 'text-success'
                             : d.status === 'entered-in-error'
-                              ? 'text-red-700 dark:text-red-400'
-                              : 'text-amber-700 dark:text-amber-400'
+                              ? 'text-destructive'
+                              : 'text-warning'
                         }
                       >
                         {statusLabel(d.status, t)}
@@ -287,23 +310,23 @@ export function ControlledSubstancesView() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-4">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               >
                 {t('previous')}
-              </button>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              </Button>
+              <span className="text-sm text-muted-foreground">
                 {t('page')} {page} {t('of')} {totalPages}
               </span>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               >
                 {t('next')}
-              </button>
+              </Button>
             </div>
           )}
         </>

@@ -195,6 +195,29 @@ describe('sync queue', () => {
       const counts = await queue.getCounts()
       expect(counts.failedCount).toBe(1)
     })
+
+    it('persists failureReason when provided', async () => {
+      await queue.enqueue({
+        resourceType: 'Encounter',
+        resourceId: 'enc-1',
+        action: 'create',
+        payload: '{}',
+        hlcTimestamp: '000001700000000:00000:node-1',
+      })
+
+      const pending = await queue.getPending()
+      const entryId = pending[0]!.id
+
+      // Fail 5 times to reach permanently failed state
+      for (let i = 0; i < 5; i++) {
+        await queue.markFailed(entryId, 'HTTP 500')
+      }
+
+      // Retrieve the failed entry via storage to inspect failureReason
+      const failed = await storage.getByStatus('failed')
+      expect(failed).toHaveLength(1)
+      expect(failed[0]!.failureReason).toBe('HTTP 500')
+    })
   })
 
   describe('getPending', () => {

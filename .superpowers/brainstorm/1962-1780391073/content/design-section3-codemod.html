@@ -1,0 +1,116 @@
+<h2>Design — Section 3: Codemod + Manual Exceptions</h2>
+<p class="subtitle">What the script does · what it can't do · what gets reviewed by hand</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
+
+  <!-- Codemod -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">The Codemod Script</h3>
+    <p style="font-size:0.8rem;margin:0 0 0.75rem">A Node.js script (<code>scripts/migrate-tokens.mjs</code>) with a deterministic replacement table. Runs on <code>apps/admin-portal/src/**/*.{tsx,ts,css}</code>.</p>
+
+    <div style="background:#1e1e2e;color:#cdd6f4;border-radius:0.625rem;padding:1rem;font-family:monospace;font-size:0.71rem;line-height:1.65;margin-bottom:0.75rem">
+      <span style="color:#6c7086">// Token rename map (class-name level)</span><br>
+      <span style="color:#89dceb">const RENAMES</span> = [<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-canvas'</span>, <span style="color:#fab387">'bg-background'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-surface-raised'</span>, <span style="color:#fab387">'bg-popover'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-surface'</span>, <span style="color:#fab387">'bg-card'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'text-text-primary'</span>, <span style="color:#fab387">'text-foreground'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'text-text-secondary'</span>, <span style="color:#fab387">'text-muted-foreground'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'text-text-on-dark'</span>, <span style="color:#fab387">'text-primary-foreground'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-accent-subtle'</span>, <span style="color:#fab387">'bg-primary/10'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-accent-hover'</span>, <span style="color:#fab387">'bg-primary/90'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'text-accent'</span>, <span style="color:#fab387">'text-primary'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-accent'</span>, <span style="color:#fab387">'bg-primary'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'border-accent'</span>, <span style="color:#fab387">'border-primary'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-danger-subtle'</span>, <span style="color:#fab387">'bg-destructive/10'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-warning-subtle'</span>, <span style="color:#fab387">'bg-warning/10'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-success-subtle'</span>, <span style="color:#fab387">'bg-success/10'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'text-danger'</span>, <span style="color:#fab387">'text-destructive'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'bg-danger'</span>, <span style="color:#fab387">'bg-destructive'</span>],<br>
+      &nbsp;&nbsp;[<span style="color:#a6e3a1">'border-danger'</span>, <span style="color:#fab387">'border-destructive'</span>],<br>
+      &nbsp;&nbsp;<span style="color:#6c7086">// border-s-danger, border-s-2 etc. handled by partial match</span><br>
+      ]<br><br>
+      <span style="color:#6c7086">// Longer tokens replaced first (avoid partial matches)</span><br>
+      <span style="color:#6c7086">// Dry-run mode prints diff without writing</span>
+    </div>
+
+    <div style="padding:0.6rem 0.75rem;background:oklch(0.97 0.003 200);border:1px solid oklch(0.88 0.008 200);border-radius:0.5rem;font-size:0.75rem">
+      <strong>Longer tokens first:</strong> <code>bg-surface-raised</code> must be replaced before <code>bg-surface</code> to avoid partial match collision.
+    </div>
+  </div>
+
+  <!-- Manual exceptions -->
+  <div>
+    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Manual Updates (codemod can't handle these)</h3>
+
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+        <span style="background:#dc2626;color:#fff;font-size:0.65rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px">SIDEBAR.TSX</span>
+        <span style="font-size:0.78rem;font-weight:600">Hardcoded dark-background classes</span>
+      </div>
+      <div style="background:#1e1e2e;color:#cdd6f4;border-radius:0.5rem;padding:0.75rem;font-family:monospace;font-size:0.7rem;line-height:1.6">
+        <span style="color:#f38ba8">- text-white/80</span> → <span style="color:#a6e3a1">+ text-sidebar-foreground/80</span><br>
+        <span style="color:#f38ba8">- text-white/60</span> → <span style="color:#a6e3a1">+ text-sidebar-foreground/60</span><br>
+        <span style="color:#f38ba8">- hover:bg-white/[0.08]</span> → <span style="color:#a6e3a1">+ hover:bg-sidebar-accent</span><br>
+        <span style="color:#f38ba8">- bg-white/[0.12]</span> → <span style="color:#a6e3a1">+ bg-sidebar-accent</span><br>
+        <span style="color:#f38ba8">- border-white/10</span> → <span style="color:#a6e3a1">+ border-sidebar-border</span><br>
+        <span style="color:#f38ba8">- text-accent (active)</span> → <span style="color:#a6e3a1">+ text-sidebar-primary</span><br>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+        <span style="background:#d97706;color:#fff;font-size:0.65rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px">LAYOUT.TSX</span>
+        <span style="font-size:0.78rem;font-weight:600">Font variable injection</span>
+      </div>
+      <p style="font-size:0.78rem;margin:0">Add Manrope + Public Sans via <code>next/font/google</code>. Apply <code>.variable</code> classes to <code>&lt;html&gt;</code>.</p>
+    </div>
+
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+        <span style="background:#6d28d9;color:#fff;font-size:0.65rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px">TESTS</span>
+        <span style="font-size:0.78rem;font-weight:600">Snapshot updates only</span>
+      </div>
+      <p style="font-size:0.78rem;margin:0">Existing tests assert class names like <code>bg-canvas</code>. After codemod, run <code>pnpm test</code> and update snapshots with <code>-u</code> flag.</p>
+    </div>
+
+    <div style="padding:0.6rem 0.75rem;background:oklch(0.96 0.01 150 / 0.12);border:1px solid oklch(0.527 0.154 150.069 / 0.25);border-radius:0.5rem;font-size:0.75rem">
+      <strong>Excluded from codemod:</strong> The 6 inline SVG components listed in CLAUDE.md (token-icons, ResultColorIndicator, ConfidenceIndicator, QcHistoryView, CulturalFlagsBanner, CulturalFlagsEditor) use hardcoded hex/oklch values — these are intentional and stay unchanged.
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:1.25rem">
+  <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem">Execution Order</h3>
+  <div style="display:flex;gap:0;align-items:stretch">
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem 0 0 0.5rem;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">1</div>
+      <div>Update <code>globals.css</code> + <code>tailwind.config.ts</code></div>
+    </div>
+    <div style="width:2px;background:#e2e8f0"></div>
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">2</div>
+      <div>Add fonts to <code>layout.tsx</code></div>
+    </div>
+    <div style="width:2px;background:#e2e8f0"></div>
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">3</div>
+      <div>Run codemod dry-run → review diff</div>
+    </div>
+    <div style="width:2px;background:#e2e8f0"></div>
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">4</div>
+      <div>Apply codemod</div>
+    </div>
+    <div style="width:2px;background:#e2e8f0"></div>
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">5</div>
+      <div>Manual <code>Sidebar.tsx</code> update</div>
+    </div>
+    <div style="width:2px;background:#e2e8f0"></div>
+    <div style="flex:1;padding:0.75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0.5rem 0.5rem 0;font-size:0.78rem;text-align:center">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">6</div>
+      <div><code>pnpm test -u</code> snapshot updates</div>
+    </div>
+  </div>
+</div>

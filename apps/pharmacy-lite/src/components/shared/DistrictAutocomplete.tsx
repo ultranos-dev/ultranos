@@ -1,0 +1,263 @@
+'use client'
+
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { X } from '@ultranos/ui-kit/icons'
+import { getDistrictsByProvince } from '@ultranos/shared-types'
+import type { AfghanProvince, AfghanDistrict } from '@ultranos/shared-types'
+
+interface DistrictAutocompleteProps {
+  province: AfghanProvince | ''
+  value: string
+  onChange: (district: string) => void
+  label: string
+  placeholder: string
+  required?: boolean
+  error?: string
+}
+
+export function DistrictAutocomplete({
+  province,
+  value,
+  onChange,
+  label,
+  placeholder,
+  required,
+  error,
+}: DistrictAutocompleteProps) {
+  const t = useTranslations('patientSearch')
+  const locale = useLocale()
+  const isRtl = locale === 'ar' || locale === 'prs'
+  const [query, setQuery] = useState('')
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const listboxRef = useRef<HTMLUListElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+
+  const districts: AfghanDistrict[] = useMemo(
+    () => (province ? getDistrictsByProvince(province) : []),
+    [province],
+  )
+
+  const getDisplayName = useCallback(
+    (d: AfghanDistrict) => (isRtl ? d.nameLocal : d.name),
+    [isRtl],
+  )
+
+  const filtered = useMemo(() => {
+    if (!query) return districts
+    const q = query.toLowerCase()
+    return districts.filter(
+      (d) =>
+        d.name.toLowerCase().includes(q) ||
+        d.nameLocal.includes(query),
+    )
+  }, [districts, query])
+
+  // Reset value when province changes
+  useEffect(() => {
+    if (value && province) {
+      const stillValid = districts.some((d) => d.name === value)
+      if (!stillValid) {
+        onChange('')
+      }
+    }
+  }, [province])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    setHighlightedIndex(-1)
+  }, [query])
+
+  const handleSelect = (district: AfghanDistrict) => {
+    onChange(district.name)
+    setQuery('')
+    setIsOpen(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen && (e.key === 'ArrowDown' || e.key === 'Enter')) {
+      e.preventDefault()
+      setIsOpen(true)
+      return
+    }
+    if (!isOpen) return
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setHighlightedIndex((prev) =>
+          prev < filtered.length - 1 ? prev + 1 : 0,
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setHighlightedIndex((prev) =>
+          prev > 0 ? prev - 1 : filtered.length - 1,
+        )
+        break
+      case 'Enter':
+        e.preventDefault()
+        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
+          const selected = filtered[highlightedIndex]
+          if (selected) handleSelect(selected)
+        }
+        break
+      case 'Escape':
+        e.preventDefault()
+        setIsOpen(false)
+        break
+    }
+  }
+
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listboxRef.current) {
+      const item = listboxRef.current.children[highlightedIndex] as HTMLElement | undefined
+      item?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [highlightedIndex])
+
+  const disabled = !province
+  const inputId = `district-autocomplete-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const listboxId = `${inputId}-listbox`
+
+  const selectedDistrict = districts.find((d) => d.name === value)
+
+  return (
+    <div ref={containerRef} className="relative">
+      <label
+        htmlFor={inputId}
+        className="mb-1 block text-sm font-semibold text-foreground"
+      >
+        {label}
+        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
+      </label>
+
+      <div className="relative">
+        {value && selectedDistrict ? (
+          <div
+            className={`flex items-center min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 ${
+              disabled ? 'opacity-50' : ''
+            }`}
+          >
+            <span className="flex-1 text-sm text-foreground">
+              {getDisplayName(selectedDistrict)}
+            </span>
+            {!disabled && (
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                className="ms-2 p-1"
+                onClick={() => {
+                  onChange('')
+                  setQuery('')
+                  inputRef.current?.focus()
+                }}
+                aria-label={t('clearDistrict')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ) : (
+          <input
+            ref={inputRef}
+            id={inputId}
+            type="text"
+            role="combobox"
+            aria-expanded={isOpen}
+            aria-controls={listboxId}
+            aria-activedescendant={
+              highlightedIndex >= 0 ? `${inputId}-option-${highlightedIndex}` : undefined
+            }
+            aria-required={required}
+            aria-invalid={!!error}
+            aria-disabled={disabled}
+            autoComplete="off"
+            disabled={disabled}
+            className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+              disabled
+                ? 'cursor-not-allowed border-border bg-muted text-muted-foreground'
+                : error
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                  : 'border-border focus:border-blue-400 focus:ring-blue-400'
+            }`}
+            placeholder={disabled ? '' : placeholder}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setIsOpen(true)
+            }}
+            onFocus={() => {
+              if (!disabled) setIsOpen(true)
+            }}
+            onKeyDown={handleKeyDown}
+          />
+        )}
+      </div>
+
+      {isOpen && !disabled && !value && filtered.length > 0 && (
+        <ul
+          ref={listboxRef}
+          id={listboxId}
+          role="listbox"
+          className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl ring-[0.65px] ring-gray-400/40 bg-background shadow-lg"
+        >
+          {filtered.map((district, index) => (
+            <li
+              key={district.name}
+              id={`${inputId}-option-${index}`}
+              role="option"
+              aria-selected={highlightedIndex === index}
+              className={`cursor-pointer px-3 py-2.5 text-sm min-h-[44px] flex items-center ${
+                highlightedIndex === index
+                  ? 'bg-blue-50 text-blue-900'
+                  : 'text-foreground [@media(hover:hover)and(pointer:fine)]:hover:bg-accent'
+              }`}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                handleSelect(district)
+              }}
+              onMouseEnter={() => setHighlightedIndex(index)}
+            >
+              <span>{getDisplayName(district)}</span>
+              {isRtl && (
+                <span className="ms-2 text-xs text-muted-foreground">{district.name}</span>
+              )}
+              {!isRtl && (
+                <span className="ms-2 text-xs text-muted-foreground">
+                  {district.nameLocal}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {isOpen && !disabled && !value && filtered.length === 0 && query && (
+        <div className="absolute z-20 mt-1 w-full rounded-xl ring-[0.65px] ring-gray-400/40 bg-background px-3 py-3 text-sm text-muted-foreground shadow-lg">
+          {t('noMatchingDistrict')}
+        </div>
+      )}
+
+      {error && (
+        <p className="mt-1 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}

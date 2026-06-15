@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { TIER_1_RESOURCE_TYPES } from '@/lib/conflict-resolution'
+import { Card } from '@/components/Card'
 
 export function UnresolvedConflictsCard() {
   const t = useTranslations('dashboard')
@@ -17,7 +18,7 @@ export function UnresolvedConflictsCard() {
           .filter(
             (entry) =>
               entry.conflictFlag === true &&
-              entry.status !== 'resolved' &&
+              entry.status !== 'synced' &&
               (TIER_1_RESOURCE_TYPES as readonly string[]).includes(entry.resourceType)
           )
           .count()
@@ -33,12 +34,12 @@ export function UnresolvedConflictsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('unresolvedConflicts')}
       </h3>
       <div className="mt-2 flex items-center gap-2">
-        <p className="text-3xl font-black text-neutral-900">{count ?? '—'}</p>
+        <p className="text-3xl font-black text-foreground">{count ?? '—'}</p>
         {count !== null && count > 0 && (
           <span className="inline-flex items-center rounded-full bg-conflict-red px-2 py-0.5 text-xs font-bold text-white">
             {count}
@@ -58,6 +59,6 @@ export function UnresolvedConflictsCard() {
           {t('conflictCheckUnavailable')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

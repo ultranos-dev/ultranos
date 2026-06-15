@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import {
   verifyPrescriptionQr,
   fetchAndCachePractitionerKey,
@@ -25,6 +27,7 @@ interface PharmacyScannerViewProps {
 export function PharmacyScannerView({
   onNavigateToReview,
 }: PharmacyScannerViewProps) {
+  const t = useTranslations('prescription')
   const [phase, setPhase] = useState<ViewPhase>({ step: 'idle' })
   const [pasteInput, setPasteInput] = useState('')
   const scannerRef = useRef<HTMLDivElement>(null)
@@ -133,7 +136,7 @@ export function PharmacyScannerView({
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-neutral-900">
+      <h2 className="text-xl font-bold text-foreground">
         Pharmacy Prescription Scanner
       </h2>
 
@@ -143,10 +146,12 @@ export function PharmacyScannerView({
           <div
             id="pharmacy-scanner-viewport"
             ref={scannerRef}
-            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-neutral-300"
+            className="mx-auto max-w-sm overflow-hidden rounded-xl border-2 border-border"
             data-testid="scanner-viewport"
           />
-          <button
+          <Button
+            variant="secondary"
+            className="w-full"
             type="button"
             onClick={() => {
               if (html5QrRef.current) {
@@ -155,29 +160,28 @@ export function PharmacyScannerView({
               }
               setPhase({ step: 'idle' })
             }}
-            className="mt-3 w-full rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Stop Scanner
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Idle: show scan + manual entry options */}
       {phase.step === 'idle' && (
         <>
-          <button
+          <Button
+            variant="default"
             type="button"
             onClick={startCameraScanner}
-            className="rounded-md bg-primary-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-700"
             data-testid="start-scanner-btn"
           >
             Scan Prescription QR
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
-            <span className="h-px flex-1 bg-neutral-200" />
-            <span className="text-xs text-neutral-400">or paste QR data</span>
-            <span className="h-px flex-1 bg-neutral-200" />
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or paste QR data</span>
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <div className="flex gap-2">
@@ -185,22 +189,22 @@ export function PharmacyScannerView({
               type="text"
               value={pasteInput}
               onChange={(e) => setPasteInput(e.target.value)}
-              placeholder="Paste QR payload"
-              className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              placeholder={t('pasteQrPlaceholder')}
+              className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
               data-testid="qr-paste-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handlePasteVerify()
               }}
             />
-            <button
+            <Button
+              variant="default"
               type="button"
               onClick={handlePasteVerify}
               disabled={!pasteInput.trim()}
-              className="rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               data-testid="verify-btn"
             >
               Verify
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -208,11 +212,11 @@ export function PharmacyScannerView({
       {/* Verifying state */}
       {phase.step === 'verifying' && (
         <div
-          className="rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-center"
+          className="rounded-2xl border border-border bg-muted p-6 text-center"
           role="status"
           data-testid="verifying-status"
         >
-          <p className="text-sm font-semibold text-neutral-600">
+          <p className="text-sm font-semibold text-muted-foreground">
             Verifying prescription signature...
           </p>
         </div>
@@ -233,18 +237,19 @@ export function PharmacyScannerView({
       {/* Error state */}
       {phase.step === 'error' && (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 p-6"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
-          <p className="text-sm font-bold text-red-800">{phase.message}</p>
-          <button
+          <p className="text-sm font-bold text-destructive">{phase.message}</p>
+          <Button
+            variant="destructive"
+            className="mt-3"
             type="button"
             onClick={handleReset}
-            className="mt-3 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -271,15 +276,15 @@ function ResultDisplay({
     case 'verified':
       return (
         <div
-          className="rounded-lg border-2 border-green-400 bg-green-50 p-6"
+          className="rounded-2xl border-2 border-success/20 bg-success/10 p-6"
           role="status"
           data-testid="verification-success"
         >
-          <p className="text-lg font-bold text-green-800">
+          <p className="text-lg font-bold text-success">
             Verification Successful
           </p>
           {result.practitionerName && (
-            <p className="mt-1 text-sm text-green-700">
+            <p className="mt-1 text-sm text-success">
               Prescribed by: {result.practitionerName}
             </p>
           )}
@@ -287,11 +292,11 @@ function ResultDisplay({
             {result.prescriptions.map((rx) => (
               <div
                 key={rx.id}
-                className="rounded-md border border-green-200 bg-white p-3"
+                className="rounded-md border border-success/20 bg-card p-3"
                 data-testid={`rx-item-${rx.id}`}
               >
-                <p className="font-semibold text-neutral-900">{rx.medN}</p>
-                <p className="text-sm text-neutral-600">
+                <p className="font-semibold text-foreground">{rx.medN}</p>
+                <p className="text-sm text-muted-foreground">
                   {rx.dos.qty} {rx.dos.unit}
                   {rx.dos.freqN ? ` × ${rx.dos.freqN}` : rx.dos.freq ? ` ${rx.dos.freq}` : ''}
                   {rx.dos.perU ? `/${rx.dos.perU}` : ''}
@@ -301,21 +306,21 @@ function ResultDisplay({
             ))}
           </div>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="default"
               type="button"
               onClick={() => onProceedToReview(result.prescriptions, result.practitionerName)}
-              className="rounded-md bg-green-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
               data-testid="proceed-to-review-btn"
             >
               Proceed to Fulfillment
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={onReset}
-              className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
             >
               Scan Another
-            </button>
+            </Button>
           </div>
         </div>
       )
@@ -323,151 +328,157 @@ function ResultDisplay({
     case 'invalid_signature':
       return (
         <div
-          className="rounded-lg border-2 border-red-500 bg-red-100 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="fraud-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             ⚠ Fraud Warning
           </p>
-          <p className="mt-2 text-sm font-semibold text-red-800">
+          <p className="mt-2 text-sm font-semibold text-destructive">
             This prescription has an INVALID cryptographic signature. It may have
             been tampered with or was not issued by an authorized clinician.
           </p>
-          <p className="mt-2 text-sm text-red-700">
+          <p className="mt-2 text-sm text-destructive">
             DO NOT dispense medication based on this prescription.
             Report this incident to your supervisor immediately.
           </p>
-          <button
+          <Button
+            variant="destructive"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-300 px-4 py-2 text-sm font-semibold text-red-900"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
     case 'expired':
       return (
         <div
-          className="rounded-lg border-2 border-amber-400 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="expired-warning"
         >
-          <p className="text-lg font-bold text-amber-800">
+          <p className="text-lg font-bold text-warning">
             Prescription Expired
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             This prescription expired on{' '}
             {new Date(result.expiry).toLocaleDateString()}.
             It cannot be fulfilled.
           </p>
-          <button
+          <Button
+            variant="outline"
+            className="mt-4 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-amber-200 px-4 py-2 text-sm font-semibold text-amber-800"
           >
             Scan Another
-          </button>
+          </Button>
         </div>
       )
 
     case 'unknown_clinician':
       return (
         <div
-          className="rounded-lg border-2 border-amber-400 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="unknown-clinician-warning"
         >
-          <p className="text-lg font-bold text-amber-800">
+          <p className="text-lg font-bold text-warning">
             Unknown Clinician
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             The prescription signature is valid, but the signing clinician is not
             in the local trusted registry.
           </p>
           {result.fallbackAvailable && isAuthenticated && (
-            <button
+            <Button
+              variant="outline"
+              className="mt-3 border-warning text-warning hover:bg-warning/10"
               type="button"
               onClick={() => onFetchKey(rawQr)}
-              className="mt-3 rounded-md bg-amber-300 px-4 py-2 text-sm font-semibold text-amber-800"
               data-testid="fetch-key-btn"
             >
               Look Up on Hub
-            </button>
+            </Button>
           )}
-          <button
+          <Button
+            variant="secondary"
+            className="ms-3 mt-3"
             type="button"
             onClick={onReset}
-            className="ms-3 mt-3 rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       )
 
     case 'key_revoked':
       return (
         <div
-          className="rounded-lg border-2 border-red-500 bg-red-100 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="key-revoked-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             Prescriber Key Revoked
           </p>
-          <p className="mt-2 text-sm font-semibold text-red-800">
+          <p className="mt-2 text-sm font-semibold text-destructive">
             The prescriber&apos;s signing key has been revoked. This prescription
             cannot be verified and MUST NOT be dispensed.
           </p>
-          <p className="mt-2 text-sm text-red-700">
+          <p className="mt-2 text-sm text-destructive">
             Contact the prescribing clinician or your supervisor for a new prescription.
           </p>
-          <button
+          <Button
+            variant="destructive"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-300 px-4 py-2 text-sm font-semibold text-red-900"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
     case 'key_untrusted_offline':
       return (
         <div
-          className="rounded-lg border-2 border-amber-500 bg-amber-50 p-6"
+          className="rounded-2xl border-2 border-warning/20 bg-warning/10 p-6"
           role="alert"
           data-testid="key-untrusted-offline-warning"
         >
-          <p className="text-lg font-bold text-amber-900">
+          <p className="text-lg font-bold text-warning">
             Prescriber Verification Unavailable
           </p>
-          <p className="mt-2 text-sm font-semibold text-amber-800">
+          <p className="mt-2 text-sm font-semibold text-warning">
             Prescriber verification unavailable — Hub offline. Key was previously
             valid but has expired. Cannot verify current status.
           </p>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 text-sm text-warning">
             Dispensing is blocked until the prescriber key can be re-verified.
           </p>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="outline"
+              className="border-warning text-warning hover:bg-warning/10"
               type="button"
               onClick={() => onRetryVerify(rawQr)}
-              className="rounded-md bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition-colors hover:bg-amber-500"
               data-testid="retry-revalidation-btn"
             >
               Wait and Retry
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={onReset}
-              className="rounded-md bg-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
               data-testid="cancel-offline-btn"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )
@@ -475,39 +486,41 @@ function ResultDisplay({
     case 'untrusted':
       return (
         <div
-          className="rounded-lg border-2 border-red-400 bg-red-50 p-6"
+          className="rounded-2xl border-2 border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="untrusted-warning"
         >
-          <p className="text-lg font-bold text-red-900">
+          <p className="text-lg font-bold text-destructive">
             Verification Blocked
           </p>
-          <p className="mt-2 text-sm text-red-800">{result.reason}</p>
-          <button
+          <p className="mt-2 text-sm text-destructive">{result.reason}</p>
+          <Button
+            variant="destructive"
+            className="mt-4"
             type="button"
             onClick={onReset}
-            className="mt-4 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )
 
     case 'parse_error':
       return (
         <div
-          className="rounded-lg border border-red-300 bg-red-50 p-6"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6"
           role="alert"
           data-testid="scan-error"
         >
-          <p className="text-sm font-bold text-red-800">{result.message}</p>
-          <button
+          <p className="text-sm font-bold text-destructive">{result.message}</p>
+          <Button
+            variant="destructive"
+            className="mt-3"
             type="button"
             onClick={onReset}
-            className="mt-3 rounded-md bg-red-200 px-4 py-2 text-sm font-semibold text-red-800"
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )
   }

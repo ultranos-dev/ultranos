@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 import { CandidateComparisonCard, type DuplicateCandidate } from './CandidateComparisonCard'
 
 /* ------------------------------------------------------------------ */
@@ -30,29 +32,41 @@ function getHubApiUrl(): string {
   return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
 }
 
-async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {
-  // TODO: Replace with trpc.duplicateReview.list.useQuery()
-  const url = `${getHubApiUrl()}/duplicateReview.list?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  })
-  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
-  const body = (await res.json()) as {
-    result: { data: { json: DuplicateReviewRow[] } }
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  try {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    if (data.session?.access_token) {
+      headers['Authorization'] = `Bearer ${data.session.access_token}`
+    }
+  } catch {
+    // Auth unavailable — proceed without token (Hub will reject if required)
   }
-  return body.result.data.json
+  return headers
+}
+
+async function fetchDuplicateReviews(): Promise<DuplicateReviewRow[]> {
+  const headers = await getAuthHeaders()
+  const url = `${getHubApiUrl()}/duplicateReview.list?input=${encodeURIComponent(JSON.stringify({ json: {} }))}`
+  const res = await fetch(url, { method: 'GET', headers })
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
+  const body = (await res.json()) as unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = (body as any)?.result?.data?.json
+  if (!Array.isArray(rows)) throw new Error('Unexpected response shape from Hub API')
+  return rows as DuplicateReviewRow[]
 }
 
 async function submitDecision(
   reviewId: string,
   decision: 'DISMISSED' | 'FLAGGED_FOR_MERGE'
 ): Promise<void> {
-  // TODO: Replace with trpc.duplicateReview.decide.useMutation()
+  const headers = await getAuthHeaders()
   const url = `${getHubApiUrl()}/duplicateReview.decide`
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ json: { reviewId, decision } }),
   })
   if (!res.ok) throw new Error(`Hub API error: ${res.status}`)
@@ -114,23 +128,21 @@ export function DuplicateReviewTable() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12" role="status">
-        <span className="text-sm text-neutral-500">{t('loading')}</span>
+        <span className="text-sm text-muted-foreground">{t('loading')}</span>
       </div>
     )
   }
 
   if (error && rows.length === 0) {
     return (
-      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <div role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         {error}
       </div>
     )
   }
 
   if (rows.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-neutral-500">{t('noReviews')}</p>
-    )
+    return <EmptyState title={t('noReviews')} />
   }
 
   /* ---- Table ---- */
@@ -138,15 +150,15 @@ export function DuplicateReviewTable() {
   return (
     <div>
       {error && (
-        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div role="alert" className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
+            <tr className="border-b border-border bg-muted text-muted-foreground">
               <th className="px-4 py-3 text-start font-semibold">{t('colPatient')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colScore')}</th>
               <th className="px-4 py-3 text-start font-semibold">{t('colDecision')}</th>
@@ -208,9 +220,9 @@ function TableRow({
   t,
 }: TableRowProps) {
   const decisionBadge: Record<ReviewDecision, { label: string; classes: string }> = {
-    PENDING: { label: t('decisionPending'), classes: 'bg-amber-100 text-amber-800' },
-    DISMISSED: { label: t('decisionDismissed'), classes: 'bg-neutral-100 text-neutral-600' },
-    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-blue-100 text-blue-800' },
+    PENDING: { label: t('decisionPending'), classes: 'bg-warning/20 text-warning' },
+    DISMISSED: { label: t('decisionDismissed'), classes: 'bg-muted text-muted-foreground' },
+    FLAGGED_FOR_MERGE: { label: t('decisionFlagged'), classes: 'bg-primary text-primary' },
   }
 
   const badge = decisionBadge[row.decision]
@@ -218,46 +230,46 @@ function TableRow({
   return (
     <>
       <tr
-        className="border-b border-neutral-100 hover:bg-neutral-50 cursor-pointer"
+        className="border-b border-border hover:bg-muted cursor-pointer"
         onClick={onToggle}
         aria-expanded={isExpanded}
         role="row"
       >
-        <td className="px-4 py-3 font-medium text-neutral-900">{row.patientLabel}</td>
-        <td className="px-4 py-3 text-neutral-700">{row.topScore}</td>
+        <td className="px-4 py-3 font-medium text-foreground">{row.patientLabel}</td>
+        <td className="px-4 py-3 text-foreground">{row.topScore}</td>
         <td className="px-4 py-3">
           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${badge.classes}`}>
             {badge.label}
           </span>
         </td>
-        <td className="px-4 py-3 text-neutral-500 text-xs">{row.createdAt}</td>
+        <td className="px-4 py-3 text-muted-foreground text-xs">{row.createdAt}</td>
         <td className="px-4 py-3 text-end">
           {isPending && (
             <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 disabled={isBusy}
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDismiss()
                 }}
-                className="min-h-[44px] rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500 disabled:opacity-50"
                 aria-label={t('dismissAriaLabel', { patient: row.patientLabel })}
               >
                 {t('actionDismiss')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
                 disabled={isBusy}
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation()
                   onFlag()
                 }}
-                className="min-h-[44px] rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
                 aria-label={t('flagAriaLabel', { patient: row.patientLabel })}
               >
                 {t('actionFlagMerge')}
-              </button>
+              </Button>
             </div>
           )}
         </td>
@@ -265,7 +277,7 @@ function TableRow({
 
       {isExpanded && (
         <tr>
-          <td colSpan={5} className="bg-neutral-50 px-4 py-4">
+          <td colSpan={5} className="bg-muted px-4 py-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {row.candidates.map((candidate) => (
                 <CandidateComparisonCard key={candidate.id} candidate={candidate} />

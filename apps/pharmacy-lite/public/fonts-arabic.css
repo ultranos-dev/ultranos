@@ -14,7 +14,7 @@
 @font-face {
   font-family: 'Noto Sans Arabic';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 500;
   font-display: swap;
   src: url('/fonts/NotoSansArabic-Regular.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
@@ -23,7 +23,7 @@
 @font-face {
   font-family: 'Noto Sans Arabic';
   font-style: normal;
-  font-weight: 500;
+  font-weight: 501 600;
   font-display: swap;
   src: url('/fonts/NotoSansArabic-Medium.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
@@ -32,30 +32,30 @@
 @font-face {
   font-family: 'Noto Sans Arabic';
   font-style: normal;
-  font-weight: 700;
+  font-weight: 601 900;
   font-display: swap;
   src: url('/fonts/NotoSansArabic-Bold.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   Noto Naskh Arabic — formal/clinical content (reports, notes)
+   Noto Kufi Arabic — formal/clinical content (reports, notes)
    ══════════════════════════════════════════════════════════════ */
 
 @font-face {
-  font-family: 'Noto Naskh Arabic';
+  font-family: 'Noto Kufi Arabic';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/NotoNaskhArabic-Regular.woff2') format('woff2');
+  src: url('/fonts/NotoKufiArabic-Regular.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
 @font-face {
-  font-family: 'Noto Naskh Arabic';
+  font-family: 'Noto Kufi Arabic';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/NotoNaskhArabic-Bold.woff2') format('woff2');
+  src: url('/fonts/NotoKufiArabic-Bold.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 
@@ -9,7 +10,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
-// Mock supabase (imported by TopHeader)
+// Mock supabase
 vi.mock('@/lib/supabase', () => ({
   getSupabaseBrowserClient: () => ({
     auth: {
@@ -19,7 +20,7 @@ vi.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// Mock auth session store (imported by TopHeader)
+// Mock auth session store
 vi.mock('@/stores/auth-session-store', () => ({
   useAuthSessionStore: (selector: any) => {
     const state = {
@@ -30,7 +31,7 @@ vi.mock('@/stores/auth-session-store', () => ({
   },
 }))
 
-// Mock ThemeProvider (imported by TopHeader)
+// Mock ThemeProvider
 vi.mock('@/components/ThemeProvider', () => ({
   useTheme: () => ({ theme: 'light', toggleTheme: vi.fn() }),
 }))

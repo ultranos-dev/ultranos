@@ -4,11 +4,12 @@ A decentralized healthcare micro-app platform for low-resource, offline-prone cl
 
 ## Tech Stack
 
+- **Admin Portal:** Next.js 15 PWA, TypeScript, Tailwind CSS v3, ShadCN UI (radix-ui), oklch semantic tokens (`apps/admin-portal/`)
 - **OPD Lite (primary):** Next.js 15 PWA, TypeScript, Tailwind CSS, IndexedDB (encrypted via Web Crypto API), Service Worker for offline
 - **OPD Lite Mobile:** Expo (React Native), TypeScript, SQLCipher, Android Keystore [SCAFFOLDED — future dev]
 - **Patient Lite Mobile:** React Native 0.76+ (iOS + Android), RTL-first, TypeScript, SQLCipher
-- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`)
-- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`)
+- **Pharmacy Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (standalone spoke — `apps/pharmacy-lite/`), ShadCN via ui-kit re-exports
+- **Lab Lite:** Next.js 15 PWA, TypeScript, Tailwind CSS (push-only, data-minimized — `apps/lab-lite/`), ShadCN via ui-kit re-exports
 - **Central Hub API:** Node.js, Express/Fastify, PostgreSQL 16, Redis, JWT (RS256)
 - **AI Integration:** OpenAI-compatible API (Cloud LLM), Edge ONNX models, Cloud Vision OCR
 - **Infrastructure:** Terraform, Docker, GitHub Actions CI/CD
@@ -30,7 +31,7 @@ ultranos/
 │   ├── sync-engine/       # Offline queue, HLC timestamps, conflict resolution
 │   ├── crypto/            # Encryption helpers (Web Crypto + SQLCipher wrappers)
 │   ├── drug-db/           # Drug interaction checker (online + offline subset)
-│   ├── ui-kit/            # Shared component library (RTL-ready)
+│   ├── ui-kit/            # Shared component library: 14 ShadCN components, oklch tokens, shared Tailwind preset, RTL support
 │   └── audit-logger/      # Structured audit event emitter
 ├── infra/                 # Terraform, Docker configs
 ├── docs/                  # PRD, architecture decisions, regulatory docs
@@ -95,6 +96,156 @@ All clinical data types in `packages/shared-types/` map to FHIR R4 resources. Wh
 - Types live in `packages/shared-types/src/fhir/`
 - **Meta fields:** Use FHIR R4 canonical `Meta` field names: `lastUpdated` (ISO 8601 instant), `versionId` (string). The `createdAt` field is an Ultranos extension and MUST live inside the `_ultranos` namespace, never in `meta`. Do NOT use `createdAt`/`updatedAt` in the `meta` object.
 
+### UI Component System (ShadCN)
+
+All Next.js apps use **ShadCN** components from `packages/ui-kit/src/components/ui/`. The 15 canonical components are: `badge`, `breadcrumb`, `button`, `dialog`, `dropdown-menu`, `empty-state`, `input`, `label`, `select`, `separator`, `sheet`, `sidebar`, `skeleton`, `textarea`, `tooltip`.
+
+**⛔ Source-level changes only — no app-level duplication:**
+All changes to shared UI components (ShadCN components, tokens, language selector, sidebar layout, etc.) **MUST be made in `packages/ui-kit/src/`**, not duplicated or overridden at the app level. App-level overrides are only permitted when there is an explicit app-specific requirement that cannot be generalized. After any change to `packages/ui-kit/src/`, you MUST rebuild the package before apps can pick up the change:
+```bash
+pnpm --filter @ultranos/ui-kit build
+# Then clear app .next caches if needed
+rm -rf apps/<app-name>/.next
+```
+The compiled output lives in `packages/ui-kit/dist/`. Apps resolve imports through `dist/`, not source `.tsx` files — a source edit without a rebuild will have no effect. App-level `src/components/ui/` files are **thin re-export proxies only** — never put component logic or styling in them.
+
+**Import rule — always import from `@ultranos/ui-kit/components/ui/<name>`:**
+```typescript
+// ✅ Correct — from shared ui-kit
+import { Button, buttonVariants } from '@ultranos/ui-kit/components/ui/button'
+import { Badge } from '@ultranos/ui-kit/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader } from '@ultranos/ui-kit/components/ui/dialog'
+
+// ✅ Also correct — admin-portal re-exports proxy to ui-kit (zero import changes needed)
+import { Button } from '@/components/ui/button'   // admin-portal only
+
+// ❌ Wrong — never copy ShadCN source into app-local files
+```
+
+**Color tokens — oklch semantic system:**
+All apps share the oklch L C H channel variables defined in `packages/ui-kit/src/tokens.css`. Use semantic Tailwind classes, never hardcoded hex or raw oklch values in component code:
+```typescript
+// ✅ Correct — semantic tokens
+className="bg-primary text-primary-foreground hover:bg-primary/80"
+className="bg-destructive/10 text-destructive"
+className="bg-card border border-border rounded-2xl"
+
+// ❌ Wrong — hardcoded values
+className="bg-[#9fe870] text-[#163300]"
+style={{ backgroundColor: 'oklch(0.527 0.154 150.069)' }}
+```
+
+**Fonts — Manrope (sans) + Public Sans (heading), all apps:**
+Every Next.js app loads Manrope and Public Sans as local fonts with CSS variables  and . The  maps them as  and . Arabic/RTL overrides are handled via  (Noto Sans Arabic / Noto Naskh Arabic).
+
+**Shared Tailwind preset — `@ultranos/ui-kit/tailwind.preset`:**
+Every Next.js app's `tailwind.config.ts` MUST use the shared preset and MUST scan the ui-kit source:
+```typescript
+import preset from '@ultranos/ui-kit/tailwind.preset'
+
+const config: Config = {
+  presets: [preset],
+  content: [
+    './src/**/*.{ts,tsx}',
+    '../../packages/ui-kit/src/**/*.{ts,tsx}',  // ← REQUIRED: classes live in ui-kit source
+  ],
+  // ...app-specific font overrides only
+}
+```
+**Omitting `../../packages/ui-kit/src/**/*.{ts,tsx}` from `content` causes missing CSS** (sidebar collapsing broken, icon sizes wrong, animations missing) because component class strings live in ui-kit, not the app's own src.
+
+**Sidebar layout — ShadCN sidebar-07:**
+All admin and spoke apps use the ShadCN sidebar-07 layout: `SidebarProvider` → `AppSidebar` + `SidebarInset`. `TooltipProvider` must wrap `SidebarProvider` because `SidebarMenuButton` uses `Tooltip` internally. See `apps/admin-portal/src/components/AuthGuard.tsx`.
+
+**EmptyState component — `@ultranos/ui-kit/components/ui/empty-state`:**
+Use `EmptyState` for all empty list, no-results, and zero-data states. Never build ad-hoc empty state markup inline.
+```typescript
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { FileSearch } from '@ultranos/ui-kit/icons'
+
+// Default (md) — vertical centered, use inside card bodies and full-page content areas
+<EmptyState
+  icon={FileSearch}
+  title="No results found"
+  description="Try adjusting your filters."
+  action={{ label: 'Clear filters', onClick: handleClear }}
+/>
+
+// Compact (sm) — horizontal inline, use inside table rows and tight UI sections
+<EmptyState size="sm" icon={FileSearch} title="No results" />
+```
+Props: `title` (required), `description`, `icon` (defaults to `Inbox`), `action` (`{ label, onClick }`), `size` (`'md'` | `'sm'`, default `'md'`), plus any `div` HTML attribute.
+
+### Content Area Layout
+
+**Shell structure (identical across all 4 apps):**
+```
+BreadcrumbHeader / PageHeader  →  h-14, sticky, border-b
+<main id="main-content"        →  flex flex-1 flex-col gap-4 p-4
+  <page root div>              →  flex flex-col gap-4  (or mx-auto max-w-* flex flex-col gap-4)
+    section / card / grid      →  no mt-*, no mb-* on direct children — gap-4 handles spacing
+```
+
+**Governing rules — apply to every page file AND delegate component:**
+
+| Rule | Standard |
+|------|----------|
+| Header height | `h-14` on all `BreadcrumbHeader` / `PageHeader` |
+| Shell `<main>` | `flex flex-1 flex-col gap-4 p-4` + `id="main-content"` — never change |
+| Page root div | `flex flex-col gap-4` — no `mt-*`, no extra `px-*`/`py-*`/`p-*` |
+| `max-w-*` constraints | On the page root div: `mx-auto max-w-3xl flex flex-col gap-4` |
+| Inner gap values | `gap-4` only (never `gap-5`, `gap-6`, `gap-8`) |
+| Vertical stacking | `space-y-4` (never `space-y-6`) |
+| Direct child margins | No `mb-6`, `mb-8`, `mt-4`, `mt-6` on direct children of the root — flex `gap-4` handles spacing |
+| Custom page headers | Not allowed — `BreadcrumbHeader` / `PageHeader` is the only header per page |
+| Nested `<main>` tags | Never — the shell already provides `<main>` |
+
+**Delegate component rule:** Many page.tsx files render a single component with no wrapper (`return <Dashboard />`). The rendered component is effectively the page root and must follow the same layout rules as a page file. If the component has `mb-8` on its section children or wraps in a padded div, those are violations.
+
+**What NOT to add on top of the shell's `p-4`:**
+- ❌ `px-6 pb-6` wrapper divs inside the page
+- ❌ `p-6` or `p-4` on the component root (creates double-padding)
+- ❌ `mt-6`/`mt-4` on section divs
+- ❌ `mb-8`/`mb-6` on flex-column children
+
+### Icons
+
+All icons across every app and the admin-portal are standardized on **lucide-react** via the shared `@ultranos/ui-kit` package.
+
+**Import rule — always use the subpath for tree-shaking:**
+```typescript
+// ✅ Correct — tree-shakeable, only used icons bundled
+import { Bell, ChevronRight, Microscope } from '@ultranos/ui-kit/icons'
+
+// ❌ Wrong — pulls everything through the barrel export
+import { Bell } from '@ultranos/ui-kit'
+
+// ❌ Wrong — bypasses the shared catalog, causes version drift
+import { Bell } from 'lucide-react'
+```
+
+**RTL mirroring — use `DirectionalIcon` from `@ultranos/ui-kit`:**
+```typescript
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { ChevronRight } from '@ultranos/ui-kit/icons'
+
+// Navigation icons (arrows, chevrons, back buttons) → mirror in RTL
+<DirectionalIcon category="navigation"><ChevronRight size={20} /></DirectionalIcon>
+
+// Medical icons (pill, stethoscope, flask, microscope) → never mirror
+<DirectionalIcon category="medical"><Microscope size={20} /></DirectionalIcon>
+```
+
+**Adding new icons:** Add to `packages/ui-kit/src/icons.ts` in the appropriate domain group. Never add lucide-react directly to an app's `package.json`.
+
+**Intentionally kept as inline SVG** (do not migrate these):
+- `apps/lab-lite/src/components/queue/token-icons.tsx` — custom filled geometric shapes; Lucide versions are outlined
+- `apps/lab-lite/src/components/results/ResultColorIndicator.tsx` — `strokeWidth="2.5"` chosen deliberately for healthcare readability
+- `apps/lab-lite/src/components/ai/ConfidenceIndicator.tsx` — custom hardcoded fill colors (#fee2e2, #dc2626 etc.)
+- `apps/lab-lite/src/components/qc/QcHistoryView.tsx` — Levey-Jennings chart (data visualization, dynamic viewBox)
+- `apps/lab-lite/src/components/patients/CulturalFlagsBanner.tsx` / `CulturalFlagsEditor.tsx` — data-driven flag path registry
+- All `animate-spin` loading spinners — CSS animation SVGs, no Lucide equivalent
+
 ### RTL Support
 Arabic and Dari are RTL languages. Every UI component must work in both LTR and RTL.
 - Use logical CSS properties: `margin-inline-start` not `margin-left`, `padding-inline-end` not `padding-right`
@@ -127,6 +278,14 @@ When writing sync logic, use the correct tier:
 - RTL: snapshot tests for every patient-facing component in both LTR and RTL
 - Audit: every API endpoint that touches PHI must have a test asserting an audit event was emitted
 - Offline: integration tests that simulate network disconnection mid-operation and verify queue persistence
+
+## ⛔ Git — No Autonomous Commits
+
+**Agents must never stage files or create commits without an explicit user instruction to do so.** This applies in all contexts: after completing a task, at the end of a workflow, or when a skill or tool suggests it. The user controls all git operations.
+
+- Do NOT run `git add`, `git commit`, or any variant automatically.
+- Do NOT stage files as a "convenience" step after edits.
+- Only commit when the user explicitly says "commit" or equivalent.
 
 ## Decision Points
 

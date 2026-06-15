@@ -1,8 +1,22 @@
+@import '@ultranos/ui-kit/tokens.css';
+@import "tw-animate-css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import '@ultranos/ui-kit/tokens.css';
+/* ── Base resets (matches admin-portal) ── */
+@layer base {
+  * {
+    @apply border-border outline-none;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
 
 @media print {
   body * {

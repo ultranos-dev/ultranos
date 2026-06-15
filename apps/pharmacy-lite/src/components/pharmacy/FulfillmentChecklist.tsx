@@ -1,6 +1,15 @@
 'use client'
 
+import { useState } from 'react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useFulfillmentStore, type FulfillmentItem } from '@/stores/fulfillment-store'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { DispensingConfirmationModal } from './DispensingConfirmationModal'
+import { AllergyBanner } from './AllergyBanner'
+import { usePatientStore } from '@/stores/patient-store'
+import { usePosStore } from '@/stores/pos-store'
 
 interface FulfillmentChecklistProps {
   onConfirm?: (selectedItems: FulfillmentItem[]) => void
@@ -13,14 +22,18 @@ function formatFrequency(freqN?: number, perU?: string): string {
 }
 
 export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
+  const t = useTranslations('fulfillment')
+  const tD = useTranslations('dispensing')
   const { phase, items, practitionerName, patientName, patientAge, toggleItem, selectAll, deselectAll, setBrandName, setBatchLot } =
     useFulfillmentStore()
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [dispensingComplete, setDispensingComplete] = useState(false)
+  const activePatient = usePatientStore((s) => s.activePatient)
+  const activeInvoice = usePosStore((s) => s.activeInvoice)
 
   if (phase === 'empty' || items.length === 0) {
     return (
-      <div data-testid="fulfillment-empty-state" className="rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No prescriptions loaded. Scan a prescription QR code first.</p>
-      </div>
+      <EmptyState data-testid="fulfillment-empty-state" title={t('emptyState')} />
     )
   }
 
@@ -31,43 +44,46 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-neutral-800">Fulfillment Checklist</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
           {patientName && (
-            <p data-testid="patient-info" className="text-sm font-medium text-neutral-700">
-              Patient: {patientName}{patientAge != null ? `, ${patientAge} y/o` : ''}
+            <p data-testid="patient-info" className="text-sm font-medium text-foreground">
+              {patientAge != null ? t('patientInfoWithAge', { name: patientName, age: patientAge }) : t('patientInfo', { name: patientName })}
             </p>
           )}
           {practitionerName && (
-            <p className="text-sm text-neutral-500">Prescribed by {practitionerName}</p>
+            <p className="text-sm text-muted-foreground">{t('prescribedBy', { name: practitionerName })}</p>
           )}
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
             data-testid="select-all-btn"
             type="button"
             onClick={selectAll}
-            className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
           >
-            Select All
-          </button>
-          <button
+            {t('selectAll')}
+          </Button>
+          <Button
+            variant="secondary"
             data-testid="deselect-all-btn"
             type="button"
             onClick={deselectAll}
-            className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200"
           >
-            Deselect All
-          </button>
+            {t('deselectAll')}
+          </Button>
         </div>
       </div>
+
+      {/* Allergy banner — SAFETY-CRITICAL: highest display prominence */}
+      <AllergyBanner allergies={activePatient?.allergies} patientName={activePatient?.nameGiven} />
 
       {/* Medication items */}
       <ul className="space-y-3" role="list">
         {items.map((item) => (
           <li
             key={item.prescription.id}
-            className={`rounded-lg border p-4 transition-colors ${
-              item.selected ? 'border-primary-300 bg-primary-50/50' : 'border-neutral-200 bg-neutral-50'
+            className={`rounded-2xl border p-4 transition-colors ${
+              item.selected ? 'border-primary-300 bg-primary-50/50' : 'border-border bg-muted'
             }`}
           >
             <div className="flex items-start gap-3">
@@ -77,14 +93,14 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                 data-testid={`fulfill-checkbox-${item.prescription.id}`}
                 checked={item.selected}
                 onChange={() => toggleItem(item.prescription.id)}
-                className="mt-1 h-5 w-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+                className="mt-1 h-5 w-5 rounded border-border text-primary-600 focus:ring-primary-500"
                 aria-label={`Fulfill ${item.prescription.medN}`}
               />
 
               <div className="min-w-0 flex-1">
                 {/* Medication info */}
-                <p className="font-medium text-neutral-800">{item.prescription.medT}</p>
-                <p className="text-sm text-neutral-600">
+                <p className="font-medium text-foreground">{item.prescription.medT}</p>
+                <p className="text-sm text-muted-foreground">
                   {item.prescription.dos.qty} {item.prescription.dos.unit}
                   {item.prescription.dos.freqN && (
                     <span> &middot; {formatFrequency(item.prescription.dos.freqN, item.prescription.dos.perU)}</span>
@@ -98,9 +114,9 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                     <div>
                       <label
                         htmlFor={`brand-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-neutral-600"
+                        className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
-                        Brand Name
+                        {t('brandName')}
                       </label>
                       <input
                         id={`brand-${item.prescription.id}`}
@@ -108,16 +124,16 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         type="text"
                         value={item.brandName}
                         onChange={(e) => setBrandName(item.prescription.id, e.target.value)}
-                        placeholder="e.g. Amoxil"
-                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        placeholder={t('brandPlaceholder')}
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor={`batch-${item.prescription.id}`}
-                        className="mb-1 block text-xs font-medium text-neutral-600"
+                        className="mb-1 block text-xs font-medium text-muted-foreground"
                       >
-                        Batch / Lot No. <span className="text-neutral-400">(Optional)</span>
+                        {t('batchLot')} <span className="text-muted-foreground">{t('batchOptional')}</span>
                       </label>
                       <input
                         id={`batch-${item.prescription.id}`}
@@ -125,8 +141,8 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
                         type="text"
                         value={item.batchLot}
                         onChange={(e) => setBatchLot(item.prescription.id, e.target.value)}
-                        placeholder="e.g. LOT-2026-04A"
-                        className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        placeholder={t('batchPlaceholder')}
+                        className="w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                       />
                     </div>
                   </div>
@@ -138,18 +154,44 @@ export function FulfillmentChecklist({ onConfirm }: FulfillmentChecklistProps) {
       </ul>
 
       {/* Confirm Dispensing button — "Primary Green Pill" per UX spec */}
-      <button
+      <Button
+        variant="default"
+        className="w-full"
         data-testid="confirm-dispensing-btn"
         type="button"
         disabled={!hasSelection}
-        onClick={() => {
-          const selected = items.filter((i) => i.selected)
-          onConfirm?.(selected)
-        }}
-        className="w-full rounded-pill bg-pill-green px-6 py-3 text-base font-semibold text-pill-text transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => setShowConfirmModal(true)}
       >
-        Confirm Dispensing
-      </button>
+        {t('confirmDispensing')}
+      </Button>
+
+      {dispensingComplete && (
+        <div className="rounded-2xl border-2 border-success/20 bg-success/10 p-4 space-y-3" data-testid="dispensing-complete-card">
+          <p className="text-sm font-bold text-success">{tD('dispensingComplete')}</p>
+          {activeInvoice && (
+            <Link href="/pos">
+              <Button variant="default" className="w-full" type="button" data-testid="collect-payment-cta">
+                {tD('collectPayment', { invoiceNumber: activeInvoice.invoiceNumber })}
+              </Button>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <DispensingConfirmationModal
+          items={items.filter((i) => i.selected)}
+          patientName={activePatient?.nameGiven ?? patientName ?? undefined}
+          patientAllergies={activePatient?.allergies}
+          onConfirm={() => {
+            setShowConfirmModal(false)
+            const selected = items.filter((i) => i.selected)
+            onConfirm?.(selected)
+            setDispensingComplete(true)
+          }}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
     </div>
   )
 }

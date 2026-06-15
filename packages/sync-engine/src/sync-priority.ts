@@ -18,6 +18,7 @@ export const SYNC_PRIORITY: Record<string, number> = {
   MedicationStatement: 2,
   DiagnosticReport: 3,
   MedicationDispense: 3,
+  ServiceRequest: 3,
   Encounter: 4,
   ClinicalImpression: 4,
   Condition: 4,
@@ -25,6 +26,7 @@ export const SYNC_PRIORITY: Record<string, number> = {
   Appointment: 5,
   Slot: 5,
   Patient: 6,
+  InventorySnapshot: 6,  // Operational metadata — same priority as Patient demographics (Story 52.2)
 }
 
 /**

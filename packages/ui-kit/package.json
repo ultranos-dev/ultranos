@@ -10,7 +10,28 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./tokens.css": "./src/tokens.css"
+    "./icons": {
+      "import": "./dist/icons.js",
+      "types": "./dist/icons.d.ts"
+    },
+    "./tokens.css": "./src/tokens.css",
+    "./connected-language-selector": "./src/components/ConnectedLanguageSelector.tsx",
+    "./components/ui/badge":         "./src/components/ui/badge.tsx",
+    "./components/ui/breadcrumb":    "./src/components/ui/breadcrumb.tsx",
+    "./components/ui/button":        "./src/components/ui/button.tsx",
+    "./components/ui/dialog":        "./src/components/ui/dialog.tsx",
+    "./components/ui/dropdown-menu": "./src/components/ui/dropdown-menu.tsx",
+    "./components/ui/input":         "./src/components/ui/input.tsx",
+    "./components/ui/label":         "./src/components/ui/label.tsx",
+    "./components/ui/select":        "./src/components/ui/select.tsx",
+    "./components/ui/separator":     "./src/components/ui/separator.tsx",
+    "./components/ui/sheet":         "./src/components/ui/sheet.tsx",
+    "./components/ui/sidebar":       "./src/components/ui/sidebar.tsx",
+    "./components/ui/skeleton":      "./src/components/ui/skeleton.tsx",
+    "./components/ui/textarea":      "./src/components/ui/textarea.tsx",
+    "./components/ui/tooltip":       "./src/components/ui/tooltip.tsx",
+    "./components/ui/empty-state":   "./src/components/ui/empty-state.tsx",
+    "./tailwind.preset":             "./src/tailwind.preset.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -20,12 +41,17 @@
     "lint": "eslint ."
   },
   "peerDependencies": {
+    "next": "^14.0.0 || ^15.0.0",
     "next-intl": "^4.0.0",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "tailwindcss": "^3.0.0"
   },
   "peerDependenciesMeta": {
     "next-intl": {
+      "optional": true
+    },
+    "tailwindcss": {
       "optional": true
     }
   },
@@ -39,7 +65,15 @@
     "next-intl": "^4.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "radix-ui": "^1.4.3",
+    "tailwind-merge": "^3.6.0"
   }
 }

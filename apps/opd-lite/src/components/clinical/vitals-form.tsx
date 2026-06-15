@@ -19,16 +19,16 @@ interface VitalsFormProps {
 
 function inputClasses(status?: RangeStatus): string {
   const base =
-    'w-full rounded-lg border bg-white px-4 py-3 text-base text-neutral-900 ' +
-    'placeholder:text-neutral-400 transition-colors focus:outline-none focus:ring-2'
+    'w-full rounded-lg border bg-background px-4 py-3 text-base text-foreground ' +
+    'placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2'
 
   if (status === 'panic') {
-    return `${base} border-red-500 focus:border-red-500 focus:ring-red-200`
+    return `${base} border-destructive focus:border-destructive focus:ring-destructive/20`
   }
   if (status === 'warning') {
-    return `${base} border-amber-500 focus:border-amber-500 focus:ring-amber-200`
+    return `${base} border-warning focus:border-warning focus:ring-warning/20`
   }
-  return `${base} border-neutral-200 focus:border-primary-400 focus:ring-primary-200`
+  return `${base} border-border focus:border-primary focus:ring-ring`
 }
 
 export function VitalsForm({
@@ -46,12 +46,12 @@ export function VitalsForm({
   rangeStatuses,
 }: VitalsFormProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Weight */}
       <div>
         <label
           htmlFor="vital-weight"
-          className="mb-1 block text-sm font-semibold text-neutral-700"
+          className="mb-1 block text-sm font-semibold text-foreground"
         >
           Weight
         </label>
@@ -68,7 +68,7 @@ export function VitalsForm({
             step={0.1}
             className={inputClasses(rangeStatuses.weight)}
           />
-          <span className="text-sm font-semibold text-neutral-500">kg</span>
+          <span className="text-sm font-semibold text-muted-foreground">kg</span>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export function VitalsForm({
       <div>
         <label
           htmlFor="vital-height"
-          className="mb-1 block text-sm font-semibold text-neutral-700"
+          className="mb-1 block text-sm font-semibold text-foreground"
         >
           Height
         </label>
@@ -93,7 +93,7 @@ export function VitalsForm({
             step={0.1}
             className={inputClasses(rangeStatuses.height)}
           />
-          <span className="text-sm font-semibold text-neutral-500">cm</span>
+          <span className="text-sm font-semibold text-muted-foreground">cm</span>
         </div>
       </div>
 
@@ -103,14 +103,14 @@ export function VitalsForm({
           className={
             'rounded-lg px-4 py-3 ' +
             (rangeStatuses.bmi === 'panic'
-              ? 'border border-red-500 bg-red-50'
+              ? 'border border-destructive bg-destructive/5'
               : rangeStatuses.bmi === 'warning'
-                ? 'border border-amber-500 bg-amber-50'
-                : 'bg-neutral-50')
+                ? 'border border-warning bg-warning/5'
+                : 'bg-muted')
           }
         >
-          <span className="text-sm font-semibold text-neutral-500">BMI</span>
-          <span className="ms-2 text-xl font-black text-neutral-900">
+          <span className="text-sm font-semibold text-muted-foreground">BMI</span>
+          <span className="ms-2 text-xl font-black text-foreground">
             {bmi.toFixed(1)}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function VitalsForm({
       <div>
         <label
           htmlFor="vital-systolic"
-          className="mb-1 block text-sm font-semibold text-neutral-700"
+          className="mb-1 block text-sm font-semibold text-foreground"
         >
           Blood Pressure
         </label>
@@ -137,7 +137,7 @@ export function VitalsForm({
             step={1}
             className={inputClasses(rangeStatuses.systolic)}
           />
-          <span className="text-lg font-bold text-neutral-400">/</span>
+          <span className="text-lg font-bold text-muted-foreground">/</span>
           <input
             id="vital-diastolic"
             aria-label="Diastolic"
@@ -150,7 +150,7 @@ export function VitalsForm({
             step={1}
             className={inputClasses(rangeStatuses.diastolic)}
           />
-          <span className="text-sm font-semibold text-neutral-500">mmHg</span>
+          <span className="text-sm font-semibold text-muted-foreground">mmHg</span>
         </div>
       </div>
 
@@ -158,7 +158,7 @@ export function VitalsForm({
       <div>
         <label
           htmlFor="vital-temperature"
-          className="mb-1 block text-sm font-semibold text-neutral-700"
+          className="mb-1 block text-sm font-semibold text-foreground"
         >
           Temperature
         </label>
@@ -175,7 +175,7 @@ export function VitalsForm({
             step={0.1}
             className={inputClasses(rangeStatuses.temperature)}
           />
-          <span className="text-sm font-semibold text-neutral-500">°C</span>
+          <span className="text-sm font-semibold text-muted-foreground">°C</span>
         </div>
       </div>
     </div>

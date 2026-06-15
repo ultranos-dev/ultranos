@@ -241,7 +241,7 @@ describe('encounter store', () => {
           period: { start: '' },
           _ultranos: { isOfflineCreated: true, hlcTimestamp: '', createdAt: '' },
           meta: { lastUpdated: '' },
-        } as any,
+        } as unknown,
       })
 
       await useEncounterStore.getState().loadActiveEncounter('nonexistent-patient')

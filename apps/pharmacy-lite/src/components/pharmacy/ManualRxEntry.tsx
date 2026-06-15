@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
 import { OfflineGraceForm } from './OfflineGraceForm'
+import { getHubApiUrl } from '@/lib/trpc'
+import { useAuthSessionStore } from '@/stores/auth-session-store'
 
 interface ManualRxEntryProps {
   onPrescriptionFound: (prescription: {
@@ -20,6 +24,8 @@ export function ManualRxEntry({
   onGraceDispense,
   isOnline,
 }: ManualRxEntryProps) {
+  const t = useTranslations('manualRx')
+  const getAccessToken = useAuthSessionStore((s) => s.getAccessToken)
   const [rxId, setRxId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,11 +39,20 @@ export function ManualRxEntry({
     setIsLoading(true)
 
     try {
-      // Dynamic import to avoid bundling trpc client when offline
-      const { trpc } = await import('@/lib/trpc')
-      const result = await trpc.medication.getPrescription.query({
-        prescriptionId: trimmedId,
+      const token = await getAccessToken()
+      const url = new URL(getHubApiUrl())
+      url.pathname = url.pathname.replace(/\/$/, '') + '/medication.getPrescription'
+      const res = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ json: { prescriptionId: trimmedId } }),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const body = await res.json() as { result?: { data?: { json?: { id: string; medications: string[] } } } }
+      const result = body.result?.data?.json
 
       if (result) {
         onPrescriptionFound({
@@ -45,10 +60,10 @@ export function ManualRxEntry({
           medications: result.medications,
         })
       } else {
-        setError('Prescription not found')
+        setError(t('prescriptionNotFound'))
       }
     } catch {
-      setError('Prescription not found')
+      setError(t('prescriptionNotFound'))
     } finally {
       setIsLoading(false)
     }
@@ -63,10 +78,10 @@ export function ManualRxEntry({
     return (
       <div
         data-testid="manual-rx-entry"
-        className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+        className="rounded-2xl border border-border bg-card p-4 shadow-card"
       >
-        <h3 className="text-sm font-semibold text-neutral-600 mb-3">
-          Grace Dispensing
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+          {t('graceDispensingHeading')}
         </h3>
         <OfflineGraceForm
           onSubmit={handleGraceSubmit}
@@ -79,17 +94,17 @@ export function ManualRxEntry({
   return (
     <div
       data-testid="manual-rx-entry"
-      className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+      className="rounded-2xl border border-border bg-card p-4 shadow-card"
     >
-      <h3 className="text-sm font-semibold text-neutral-600 mb-3">
-        Manual Prescription Entry
+      <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+        {t('manualEntryHeading')}
       </h3>
 
       {/* Offline warning banner */}
       {!isOnline && (
-        <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-800">
-            You are offline. Use grace dispensing for urgent prescriptions.
+        <div className="mb-3 rounded-2xl border border-warning/20 bg-warning/10 p-3">
+          <p className="text-sm font-medium text-warning">
+            {t('offlineWarning')}
           </p>
         </div>
       )}
@@ -98,15 +113,15 @@ export function ManualRxEntry({
       <div className="mb-3">
         <label
           htmlFor="rx-id-input"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
-          Prescription ID
+          {t('prescriptionIdLabel')}
         </label>
         <input
           id="rx-id-input"
           data-testid="rx-id-input"
           type="text"
-          placeholder="Enter Rx ID (UUID or short code)"
+          placeholder={t('rxIdPlaceholder')}
           value={rxId}
           onChange={(e) => {
             setRxId(e.target.value)
@@ -117,7 +132,7 @@ export function ManualRxEntry({
               handleLookup()
             }
           }}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
 
@@ -125,33 +140,35 @@ export function ManualRxEntry({
       {error && (
         <div
           data-testid="rx-lookup-error"
-          className="mb-3 rounded-lg border border-red-200 bg-red-50 p-2"
+          className="mb-3 rounded-lg border border-destructive/20 bg-destructive/10 p-2"
         >
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {/* Action buttons */}
       <div className="flex gap-3">
         {isOnline ? (
-          <button
+          <Button
+            variant="default"
+            className="flex-1"
             type="button"
             onClick={handleLookup}
             disabled={!rxId.trim() || isLoading}
             data-testid="rx-lookup-button"
-            className="flex-1 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Looking up...' : 'Look Up'}
-          </button>
+            {isLoading ? t('lookingUp') : t('lookUp')}
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="outline"
+            className="flex-1 border-warning text-warning hover:bg-warning/10"
             type="button"
             onClick={() => setShowGraceForm(true)}
             data-testid="grace-dispense-button"
-            className="flex-1 rounded-lg border border-amber-400 bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
           >
-            Proceed with Grace Dispensing
-          </button>
+            {t('proceedGraceDispensing')}
+          </Button>
         )}
       </div>
     </div>

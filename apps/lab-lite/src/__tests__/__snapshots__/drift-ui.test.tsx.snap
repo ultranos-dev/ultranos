@@ -1,0 +1,391 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctly in LTR 1`] = `
+<div>
+  <div
+    aria-atomic="true"
+    aria-live="assertive"
+    class="rounded-lg border p-3 bg-red-50 border-red-300"
+    data-severity="REJECT"
+    data-testid="drift-alert-banner"
+    role="alert"
+  >
+    <div
+      class="flex items-start gap-3"
+    >
+      <div
+        aria-hidden="true"
+        class="mt-0.5 shrink-0 text-red-500"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
+      </div>
+      <div
+        class="min-w-0 flex-1"
+      >
+        <p
+          class="text-sm font-semibold text-red-800"
+        >
+          QC Out of Control
+        </p>
+        <p
+          class="mt-0.5 text-sm text-red-800"
+        >
+          REJECT: latest value (116.00) exceeds ±3SD limit. Stop testing and recalibrate.
+        </p>
+      </div>
+      <div
+        class="flex shrink-0 flex-col gap-1.5 sm:flex-row"
+      >
+        <button
+          aria-label="Acknowledge Alert"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          type="button"
+        >
+          Acknowledge
+        </button>
+        <button
+          aria-label="View QC History"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          type="button"
+        >
+          View QC History
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WestgardHistoryView > RTL snapshots > DriftAlertBanner renders correctly in RTL 1`] = `
+<div>
+  <div
+    aria-atomic="true"
+    aria-live="assertive"
+    class="rounded-lg border p-3 bg-red-50 border-red-300"
+    data-severity="REJECT"
+    data-testid="drift-alert-banner"
+    role="alert"
+  >
+    <div
+      class="flex items-start gap-3"
+    >
+      <div
+        aria-hidden="true"
+        class="mt-0.5 shrink-0 text-red-500"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-circle-x"
+          fill="none"
+          height="20"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+          />
+          <path
+            d="m15 9-6 6"
+          />
+          <path
+            d="m9 9 6 6"
+          />
+        </svg>
+      </div>
+      <div
+        class="min-w-0 flex-1"
+      >
+        <p
+          class="text-sm font-semibold text-red-800"
+        >
+          QC Out of Control
+        </p>
+        <p
+          class="mt-0.5 text-sm text-red-800"
+        >
+          REJECT: latest value (116.00) exceeds ±3SD limit. Stop testing and recalibrate.
+        </p>
+      </div>
+      <div
+        class="flex shrink-0 flex-col gap-1.5 sm:flex-row"
+      >
+        <button
+          aria-label="Acknowledge Alert"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          type="button"
+        >
+          Acknowledge
+        </button>
+        <button
+          aria-label="View QC History"
+          class="rounded px-2.5 py-1 text-xs font-medium bg-red-100 hover:bg-red-200 text-red-800 transition-colors"
+          type="button"
+        >
+          View QC History
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders correctly in LTR 1`] = `
+<div>
+  <div
+    class="space-y-6"
+  >
+    <div
+      class="overflow-x-auto rounded-lg border border-border bg-card"
+    >
+      <table
+        aria-label="QC Run History"
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground"
+        >
+          <tr>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Run Date
+            </th>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Control Level
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Target Mean
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Target SD
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Observed Value
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Deviation (SD)
+            </th>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border/50"
+        >
+          <tr
+            class=""
+          >
+            <td
+              class="px-3 py-2.5 text-foreground"
+            >
+              6/5/2026
+            </td>
+            <td
+              class="px-3 py-2.5 text-muted-foreground"
+            >
+              LEVEL_2
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
+            >
+              100.00
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
+            >
+              5.00
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums font-medium text-foreground"
+            >
+              100.50
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-muted-foreground"
+            >
+              +
+              0.10
+               SD
+            </td>
+            <td
+              class="px-3 py-2.5"
+            >
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700"
+              >
+                PASS
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`WestgardHistoryView > RTL snapshots > WestgardHistoryView renders correctly in RTL 1`] = `
+<div>
+  <div
+    class="space-y-6"
+  >
+    <div
+      class="overflow-x-auto rounded-lg border border-border bg-card"
+    >
+      <table
+        aria-label="QC Run History"
+        class="w-full text-sm"
+      >
+        <thead
+          class="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground"
+        >
+          <tr>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Run Date
+            </th>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Control Level
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Target Mean
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Target SD
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Observed Value
+            </th>
+            <th
+              class="px-3 py-2.5 text-end"
+              scope="col"
+            >
+              Deviation (SD)
+            </th>
+            <th
+              class="px-3 py-2.5 text-start"
+              scope="col"
+            >
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody
+          class="divide-y divide-border/50"
+        >
+          <tr
+            class=""
+          >
+            <td
+              class="px-3 py-2.5 text-foreground"
+            >
+              6/5/2026
+            </td>
+            <td
+              class="px-3 py-2.5 text-muted-foreground"
+            >
+              LEVEL_2
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
+            >
+              100.00
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-foreground"
+            >
+              5.00
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums font-medium text-foreground"
+            >
+              100.50
+            </td>
+            <td
+              class="px-3 py-2.5 text-end tabular-nums text-muted-foreground"
+            >
+              +
+              0.10
+               SD
+            </td>
+            <td
+              class="px-3 py-2.5"
+            >
+              <span
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold bg-green-100 text-green-700"
+              >
+                PASS
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+`;

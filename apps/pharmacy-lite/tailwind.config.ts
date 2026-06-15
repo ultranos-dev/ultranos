@@ -1,12 +1,14 @@
 import type { Config } from 'tailwindcss'
+import preset from '@ultranos/ui-kit/tailwind.preset'
 
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  presets: [preset],
+  content: [
+    './src/**/*.{ts,tsx}',
+    '../../packages/ui-kit/src/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["'Inter'", 'system-ui', '-apple-system', "'Segoe UI'", 'Roboto', 'sans-serif'],
-      },
       fontWeight: {
         black: '900',
       },

@@ -1,8 +1,8 @@
 export function getHubApiUrl(): string {
   if (typeof window !== 'undefined') {
-    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+    return process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc'
   }
-  return process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc'
+  return process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc'
 }
 
 type AuthEventType =
@@ -10,6 +10,8 @@ type AuthEventType =
   | 'LOGIN_FAILURE'
   | 'MFA_VERIFY_SUCCESS'
   | 'MFA_VERIFY_FAILURE'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'PASSWORD_RESET_COMPLETED'
 
 /**
  * Fire-and-forget audit event reporting to Hub API.

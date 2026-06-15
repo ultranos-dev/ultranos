@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
+import { Button } from '@/components/ui/Button'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { useAppointments } from '@/hooks/useAppointments'
 import { AppointmentSlot } from './AppointmentSlot'
@@ -82,7 +85,7 @@ export function DayScheduleView() {
     const val = e.target.value
     if (val) {
       // Parse as local date to avoid timezone shift
-      const [y, m, d] = val.split('-').map(Number)
+      const [y = 0, m = 1, d = 1] = val.split('-').map(Number)
       setSelectedDate(new Date(y, m - 1, d))
     }
   }
@@ -96,63 +99,43 @@ export function DayScheduleView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Date navigation */}
       <div className="flex items-center justify-between gap-4">
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={prevDay}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('previousDay')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
-        </button>
+          <DirectionalIcon category="navigation">
+            <ChevronLeft className="h-5 w-5" />
+          </DirectionalIcon>
+        </Button>
 
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-neutral-900">
+          <h2 className="text-lg font-bold text-foreground">
             {formatDisplayDate(selectedDate)}
           </h2>
           <input
             type="date"
             value={formatDate(selectedDate)}
             onChange={handleDateInput}
-            className="rounded-md border border-neutral-300 px-2 py-1 text-sm"
+            className="rounded-xl border border-border px-2 py-1 text-sm"
             aria-label={t('datePicker')}
           />
         </div>
 
-        <button
+        <Button
+          variant="outline"
           type="button"
           onClick={nextDay}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('nextDay')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-            />
-          </svg>
-        </button>
+          <DirectionalIcon category="navigation">
+            <ChevronRight className="h-5 w-5" />
+          </DirectionalIcon>
+        </Button>
       </div>
 
       {/* Time grid */}

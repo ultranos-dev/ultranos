@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   fetchNotifications,
-  fetchUnreadCount,
   acknowledgeNotification,
   type NotificationItem,
 } from '@/lib/notification-api'

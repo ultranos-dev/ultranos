@@ -6,15 +6,16 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
 
   const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
+  const isPublicPage = pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password'
 
   useEffect(() => {
-    if (isLoginPage) return
+    if (isPublicPage) return
 
     let cancelled = false
 
@@ -25,7 +26,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
         if (cancelled) return
 
-        if (!data.session) {
+        if (!data.session || !encryptionKeyStore.isReady()) {
           const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
           window.location.href = `/login?returnUrl=${returnUrl}`
           return
@@ -34,14 +35,21 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         if (!useAuthSessionStore.getState().isAuthenticated) {
           try {
             const jwt = data.session.access_token
-            const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+            const jwtPart = jwt.split('.')[1]
+            if (!jwtPart) throw new Error('Invalid JWT format')
+            const base64 = jwtPart.replace(/-/g, '+').replace(/_/g, '/')
             const payload = JSON.parse(atob(base64))
             useAuthSessionStore.getState().setSession({
               userId: payload.sub,
               practitionerId: payload.practitioner_id ?? payload.sub,
-              role: payload.role ?? '',
+              role: (payload.role !== 'authenticated' ? payload.role : null) ?? data.session.user?.user_metadata?.role ?? '',
               sessionId: payload.session_id ?? '',
               email: data.session.user?.email ?? '',
+              name: (() => {
+                const m = data.session.user?.user_metadata
+                return m?.full_name ?? m?.name ??
+                  ((m?.given_name || m?.family_name) ? `${m?.given_name ?? ''} ${m?.family_name ?? ''}`.trim() : '')
+              })(),
             })
           } catch {
             const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
@@ -62,7 +70,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isLoginPage])
+  }, [isPublicPage])
 
   useEntitlementCheck('PHARMACY_LITE')
   const entitlementStatus = useAuthSessionStore((s) => s.entitlementStatus)
@@ -73,7 +81,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     window.location.href = '/login'
   }
 
-  if (isLoginPage) return <>{children}</>
+  if (isPublicPage) return <>{children}</>
   if (!ready) return null
 
   return (

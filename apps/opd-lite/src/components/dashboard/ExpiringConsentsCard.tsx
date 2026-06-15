@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Card } from '@/components/Card'
 
 /**
  * Dashboard card showing the number of active consents expiring within 90 days.
@@ -46,21 +47,21 @@ export function ExpiringConsentsCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {/* TODO: t('consent.expiringConsents') */}
         Expiring Consents
       </h3>
       <div className="mt-2 flex items-center gap-2">
         <p
-          className="text-3xl font-black text-neutral-900"
+          className="text-3xl font-black text-foreground"
           role="status"
           aria-label={`${count ?? 0} consents expiring soon`}
         >
           {count ?? '\u2014'}
         </p>
         {count !== null && count > 0 && (
-          <span className="inline-flex items-center rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">
+          <span className="inline-flex items-center rounded-full bg-warning px-2 py-0.5 text-xs font-bold text-white">
             {count}
           </span>
         )}
@@ -68,18 +69,18 @@ export function ExpiringConsentsCard() {
       {count !== null && count > 0 && (
         <Link
           href="/expiring-consents"
-          className="mt-2 inline-block min-h-[44px] text-sm font-semibold text-amber-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+          className="mt-2 inline-block min-h-[44px] text-sm font-semibold text-warning hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warning"
         >
           {/* TODO: t('consent.reviewNow') */}
           Review Now
         </Link>
       )}
       {count === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {/* TODO: t('consent.unavailableOffline') */}
           Unavailable offline
         </p>
       )}
-    </div>
+    </Card>
   )
 }

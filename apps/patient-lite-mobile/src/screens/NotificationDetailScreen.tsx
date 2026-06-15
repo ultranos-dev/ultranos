@@ -8,7 +8,7 @@
  *   - Prescription: "View Prescription" (navigates to Timeline)
  *   - Consent change: "View Privacy Settings" (navigates to Privacy tab)
  */
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import {
   View,
   Text,
@@ -26,6 +26,9 @@ import {
   consumerTypography,
 } from '@/theme/consumer'
 import { useTheme } from '@/theme/ThemeProvider'
+import { GuidanceDisplay } from '@/components/guidance/GuidanceDisplay'
+import { getGuidanceById } from '@/data/guidance-bundle'
+import type { GuidanceContentBundle } from '@/types/guidance'
 
 function notificationLabel(type: string, t: (key: string) => string): string {
   switch (type) {
@@ -57,6 +60,7 @@ export function NotificationDetailScreen({
   const { colors } = useTheme()
   const navigation = useNavigation()
   const { notifications, markAsRead } = useNotificationStore()
+  const [acknowledgedGuidanceIds, setAcknowledgedGuidanceIds] = useState<Set<string>>(new Set())
 
   const notification = notifications.find(n => n.id === notificationId)
 
@@ -190,6 +194,25 @@ export function NotificationDetailScreen({
             <Text style={styles.actionButtonText}>{actionLabel}</Text>
           </Pressable>
         )}
+
+        {/* Public health guidance — shown for LAB_RESULT_AVAILABLE when guidance triggered */}
+        {notification.type === 'LAB_RESULT_AVAILABLE' &&
+          Array.isArray(notification.payload?.guidanceContentIds) &&
+          (notification.payload.guidanceContentIds as string[]).map((guidanceId) => {
+            const content: GuidanceContentBundle | undefined = getGuidanceById(guidanceId)
+            if (!content) return null
+            return (
+              <View key={guidanceId} style={styles.guidanceSection}>
+                <GuidanceDisplay
+                  content={content}
+                  onAcknowledge={(id) =>
+                    setAcknowledgedGuidanceIds((prev) => new Set([...prev, id]))
+                  }
+                  isAcknowledged={acknowledgedGuidanceIds.has(guidanceId)}
+                />
+              </View>
+            )
+          })}
       </ScrollView>
     </View>
   )
@@ -297,5 +320,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: consumerTypography.bodySize,
+  },
+  guidanceSection: {
+    marginTop: consumerSpacing.lg,
   },
 })

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
+import { Card } from '@/components/Card'
 
 export function QueueDepthCard() {
   const t = useTranslations('dashboard')
@@ -35,16 +36,16 @@ export function QueueDepthCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm" role="status" aria-label={t('queueDepth')}>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card role="status" aria-label={t('queueDepth')}>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('queueDepth')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">{depth}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{depth}</p>
       {depth > 0 && (
-        <p className="mt-2 text-sm font-semibold text-neutral-500">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('patientsWaiting')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

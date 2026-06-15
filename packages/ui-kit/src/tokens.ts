@@ -5,10 +5,10 @@
 
 export const typography = {
   fontFamily: {
-    sans: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    sans: "var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif",
     mono: "'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace",
     'sans-ar': "'Noto Sans Arabic', Tahoma, 'Segoe UI', sans-serif",
-    'serif-ar': "'Noto Naskh Arabic', 'Traditional Arabic', 'Simplified Arabic', serif",
+    'serif-ar': "'Noto Kufi Arabic', var(--font-manrope), system-ui, -apple-system, 'Segoe UI', sans-serif",
   },
   fontSize: {
     xs: '0.75rem',
@@ -119,6 +119,6 @@ export const arabicFontFiles = [
   'NotoSansArabic-Regular.woff2',
   'NotoSansArabic-Medium.woff2',
   'NotoSansArabic-Bold.woff2',
-  'NotoNaskhArabic-Regular.woff2',
-  'NotoNaskhArabic-Bold.woff2',
+  'NotoKufiArabic-Regular.woff2',
+  'NotoKufiArabic-Bold.woff2',
 ] as const

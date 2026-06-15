@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 // Mock next/navigation
@@ -247,7 +247,7 @@ describe('SessionInfoCard', () => {
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)
     const countdown = container.querySelector('[data-testid="session-countdown"]')
-    expect(countdown?.className).toContain('green')
+    expect(countdown?.className).toContain('success')
   })
 
   it('shows yellow color when 2-5 min remaining', async () => {
@@ -265,7 +265,7 @@ describe('SessionInfoCard', () => {
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)
     const countdown = container.querySelector('[data-testid="session-countdown"]')
-    expect(countdown?.className).toContain('yellow')
+    expect(countdown?.className).toContain('warning')
   })
 
   it('shows red color when <2 min remaining', async () => {
@@ -283,7 +283,7 @@ describe('SessionInfoCard', () => {
     const { SessionInfoCard } = await import('@/components/settings/SessionInfoCard')
     const { container } = render(<SessionInfoCard />)
     const countdown = container.querySelector('[data-testid="session-countdown"]')
-    expect(countdown?.className).toContain('red')
+    expect(countdown?.className).toContain('destructive')
   })
 })
 

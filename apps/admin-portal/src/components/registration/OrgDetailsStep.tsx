@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 const COUNTRY_OPTIONS = [
   { code: 'IQ', name: 'Iraq' },
@@ -65,33 +68,31 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="orgName" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="orgName" className="mb-1 text-muted-foreground">
           Organization Name
-        </label>
-        <input
+        </Label>
+        <Input
           id="orgName"
           type="text"
-
           value={data.orgName}
           onChange={(e) => onChange({ ...data, orgName: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           placeholder="Al-Noor Medical Center"
         />
         {errors.orgName && (
-          <p className="mt-1 text-xs text-danger">{errors.orgName}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.orgName}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="countryCode" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="countryCode" className="mb-1 text-muted-foreground">
           Country
-        </label>
+        </Label>
+        {/* select left as-is — ShadCN Select requires significant restructuring with onValueChange */}
         <select
           id="countryCode"
-
           value={data.countryCode}
           onChange={(e) => onChange({ ...data, countryCode: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         >
           <option value="">Select a country</option>
           {COUNTRY_OPTIONS.map((c) => (
@@ -101,34 +102,29 @@ export function OrgDetailsStep({ data, onChange, onNext }: OrgDetailsStepProps) 
           ))}
         </select>
         {errors.countryCode && (
-          <p className="mt-1 text-xs text-danger">{errors.countryCode}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.countryCode}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="billingEmail" className="mb-1 block text-sm font-medium text-text-secondary">
+        <Label htmlFor="billingEmail" className="mb-1 text-muted-foreground">
           Billing Email
-        </label>
-        <input
+        </Label>
+        <Input
           id="billingEmail"
           type="email"
-
           value={data.billingEmail}
           onChange={(e) => onChange({ ...data, billingEmail: e.target.value })}
-          className="w-full rounded-xl border border-border px-4 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           placeholder="billing@hospital.example"
         />
         {errors.billingEmail && (
-          <p className="mt-1 text-xs text-danger">{errors.billingEmail}</p>
+          <p className="mt-1 text-xs text-destructive">{errors.billingEmail}</p>
         )}
       </div>
 
-      <button
-        type="submit"
-        className="w-full rounded-full bg-accent px-4 py-2 text-sm font-semibold text-text-primary hover:scale-[1.02] transition-transform duration-200"
-      >
+      <Button type="submit" className="w-full">
         Next
-      </button>
+      </Button>
     </form>
   )
 }

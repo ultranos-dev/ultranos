@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
 import { deserializeHlc } from '@ultranos/sync-engine'
+import { Card } from '@/components/Card'
 
 export function AvgWaitTimeCard() {
   const t = useTranslations('dashboard')
@@ -70,23 +71,23 @@ export function AvgWaitTimeCard() {
   }, [])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm" role="status" aria-label={t('avgWaitTime')}>
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card role="status" aria-label={t('avgWaitTime')}>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('avgWaitTime')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">
+      <p className="mt-2 text-3xl font-black text-foreground">
         {avgMinutes !== null ? `${avgMinutes}m` : '—'}
       </p>
       {avgMinutes !== null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-500">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('avgWaitTimeDesc')}
         </p>
       )}
       {avgMinutes === null && (
-        <p className="mt-2 text-sm font-semibold text-neutral-400">
+        <p className="mt-2 text-sm font-semibold text-muted-foreground">
           {t('noDataYet')}
         </p>
       )}
-    </div>
+    </Card>
   )
 }

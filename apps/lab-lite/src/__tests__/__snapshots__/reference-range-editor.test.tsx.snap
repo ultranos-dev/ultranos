@@ -1,0 +1,1419 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in LTR 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <div
+      class="space-y-4"
+      data-testid="reference-range-editor"
+    >
+      <div
+        class="flex items-center justify-between gap-2"
+      >
+        <h2
+          class="text-base font-semibold text-foreground"
+        >
+          referenceRanges
+        </h2>
+      </div>
+      <input
+        aria-label="Search analytes"
+        class="w-full rounded border border-border px-3 py-1.5 text-sm placeholder:text-muted-foreground"
+        placeholder="Search analyte name or LOINC code..."
+        type="search"
+        value=""
+      />
+      <div
+        class="divide-y divide-border/50 rounded-lg border border-border bg-card"
+      >
+        <div
+          data-testid="analyte-row-1742-6"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                ALT (SGPT)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1742-6
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1920-8"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                AST (SGOT)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1920-8
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2160-0"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Creatinine
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2160-0
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1558-6"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Glucose (Fasting)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1558-6
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-4548-4"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                HbA1c
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                4548-4
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-4544-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Hematocrit
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                4544-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-718-7"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Hemoglobin
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                718-7
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-777-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Platelets
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                777-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2823-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Potassium
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2823-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2951-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Sodium
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2951-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1975-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Total Bilirubin
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1975-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-3016-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                TSH
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                3016-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-5767-9"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Urine pH
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                5767-9
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2965-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Urine Specific Gravity
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2965-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-6690-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                White Blood Cells
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                6690-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ReferenceRangeEditor — RTL snapshot (Task 10.15) > renders in RTL 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="space-y-4"
+      data-testid="reference-range-editor"
+    >
+      <div
+        class="flex items-center justify-between gap-2"
+      >
+        <h2
+          class="text-base font-semibold text-foreground"
+        >
+          referenceRanges
+        </h2>
+      </div>
+      <input
+        aria-label="Search analytes"
+        class="w-full rounded border border-border px-3 py-1.5 text-sm placeholder:text-muted-foreground"
+        placeholder="Search analyte name or LOINC code..."
+        type="search"
+        value=""
+      />
+      <div
+        class="divide-y divide-border/50 rounded-lg border border-border bg-card"
+      >
+        <div
+          data-testid="analyte-row-1742-6"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                ALT (SGPT)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1742-6
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1920-8"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                AST (SGOT)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1920-8
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2160-0"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Creatinine
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2160-0
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1558-6"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Glucose (Fasting)
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1558-6
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-4548-4"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                HbA1c
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                4548-4
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-4544-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Hematocrit
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                4544-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-718-7"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Hemoglobin
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                718-7
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-777-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Platelets
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                777-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2823-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Potassium
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2823-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2951-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Sodium
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2951-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-1975-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Total Bilirubin
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                1975-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-3016-3"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                TSH
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                3016-3
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-5767-9"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Urine pH
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                5767-9
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-2965-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                Urine Specific Gravity
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                2965-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <div
+          data-testid="analyte-row-6690-2"
+        >
+          <button
+            aria-expanded="false"
+            class="flex w-full items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
+            type="button"
+          >
+            <div
+              class="flex items-center gap-2 text-start"
+            >
+              <span
+                class="text-sm font-medium text-foreground"
+              >
+                White Blood Cells
+              </span>
+              <span
+                class="text-xs text-muted-foreground font-mono"
+              >
+                6690-2
+              </span>
+            </div>
+            <div
+              class="flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-chevron-down text-muted-foreground transition-transform"
+                fill="none"
+                height="16"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="16"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m6 9 6 6 6-6"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

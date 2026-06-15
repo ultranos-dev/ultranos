@@ -2,10 +2,14 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { setAccessToken, trpc } from '@/lib/trpc'
-import { Sidebar } from '@/components/Sidebar'
-import { useSidebarCollapse } from '@/hooks/useSidebarCollapse'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import { BreadcrumbHeader } from '@/components/BreadcrumbHeader'
+import { Button } from '@/components/ui/button'
 
 type GuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'access-denied' | 'public'
 
@@ -15,7 +19,7 @@ const TRIAL_BYPASS_PATHS = ['/subscriptions', '/subscriptions/billing']
 /** Admin session max age: 4 hours per NFR9. */
 const SESSION_MAX_AGE_S = 4 * 60 * 60
 
-const PUBLIC_PATHS = ['/', '/login', '/register']
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password']
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GuardState>('loading')
@@ -73,6 +77,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
             role,
             sessionId: payload.session_id ?? '',
             email: data.session.user?.email ?? '',
+            name: data.session.user?.user_metadata?.full_name ?? data.session.user?.user_metadata?.name ?? '',
           })
         }
 
@@ -83,7 +88,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         // Check if the org's trial has expired
         trpc.subscription.getOrgSubscriptions
           .query()
-          .then((r) => {
+          .then((r: { organization?: { status: string; trialEndsAt?: string | null } }) => {
             const org = r.organization as {
               status: string
               trialEndsAt?: string | null
@@ -107,7 +112,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
     // Listen for token refresh events to keep the in-memory token current
     const { data: { subscription } } = getSupabaseBrowserClient().auth.onAuthStateChange(
-      (event, session) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         if (event === 'TOKEN_REFRESHED' && session) {
           setAccessToken(session.access_token)
         }
@@ -129,24 +134,24 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (state === 'access-denied') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
-        <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-danger-subtle p-8 text-center">
-          <h1 className="text-xl font-bold text-danger">Access Denied</h1>
-          <p className="mt-2 text-sm text-text-secondary">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-md rounded-2xl border border-danger-subtle bg-destructive/10 p-8 text-center">
+          <h1 className="text-xl font-bold text-destructive">Access Denied</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             You do not have admin privileges. This portal is restricted to users with the ADMIN role.
           </p>
-          <button
-            type="button"
+          <Button
+            variant="destructive"
+            className="mt-4"
             onClick={() => {
               useAuthSessionStore.getState().clearSession()
               setAccessToken(null)
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="mt-4 rounded-full bg-danger px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-colors"
           >
             Sign Out
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -168,31 +173,31 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
 function TrialExpiredInterstitial() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-surface-raised p-8 text-center shadow-card">
-        <h1 className="text-xl font-bold text-text-primary">Your free trial has expired</h1>
-        <p className="mt-2 text-sm text-text-secondary">
+    <div className="flex min-h-screen items-center justify-center bg-card">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-popover p-8 text-center shadow-card">
+        <h1 className="text-xl font-bold text-foreground">Your free trial has expired</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Add a payment method to continue using Ultranos.
         </p>
-        <a
-          href="/subscriptions/billing"
-          className="mt-6 inline-block rounded-full bg-brand-lime px-6 py-2.5 text-sm font-semibold text-text-primary hover:opacity-90 transition-opacity"
+        <Button
+          asChild
+          className="mt-6"
         >
-          Set Up Billing
-        </a>
+          <a href="/subscriptions/billing">Set Up Billing</a>
+        </Button>
         <div className="mt-3">
-          <button
-            type="button"
+          <Button
+            variant="link"
+            className="text-muted-foreground"
             onClick={() => {
               useAuthSessionStore.getState().clearSession()
               setAccessToken(null)
               getSupabaseBrowserClient().auth.signOut()
               window.location.href = '/login'
             }}
-            className="text-sm text-text-secondary underline hover:text-text-primary transition-colors"
           >
             Sign Out
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -200,14 +205,17 @@ function TrialExpiredInterstitial() {
 }
 
 function AuthenticatedShell({ children }: { children: ReactNode }) {
-  const { collapsed, toggle } = useSidebarCollapse()
-
   return (
-    <div className="flex min-h-screen">
-      <Sidebar collapsed={collapsed} onToggle={toggle} />
-      <div className="flex-1 flex flex-col min-w-0">
-        {children}
-      </div>
-    </div>
+    <TooltipProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <BreadcrumbHeader />
+          <main id="main-content" className="flex flex-1 flex-col gap-4 p-4">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </TooltipProvider>
   )
 }

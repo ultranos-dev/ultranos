@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { CircleCheck, ChevronDown } from '@ultranos/ui-kit/icons'
 import { db, type SyncQueueEntry } from '@/lib/db'
 import { isTier1Resource, isConflictOverdue } from '@/lib/conflict-resolution'
-import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
+import { auditPhiAccess, AuditAction } from '@/lib/audit'
+import type { AuditResourceType } from '@/lib/audit'
+import { Button } from '@/components/ui/Button'
 import { ConflictDiffView } from './ConflictDiffView'
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -38,7 +41,7 @@ export function ConflictList() {
       const tier1 = all.filter(
         (entry) =>
           entry.conflictFlag === true &&
-          entry.status !== 'resolved' &&
+          entry.status !== 'synced' &&
           isTier1Resource(entry.resourceType),
       )
 
@@ -90,29 +93,27 @@ export function ConflictList() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
-        <p className="text-sm text-neutral-500">Loading conflicts...</p>
+      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center">
+        <p className="text-sm text-muted-foreground">Loading conflicts...</p>
       </div>
     )
   }
 
   if (loadError) {
     return (
-      <div className="rounded-xl border border-red-300 bg-red-50 p-8 text-center" data-testid="conflict-load-error" role="alert">
-        <p className="text-sm font-semibold text-red-800">Unable to load conflict data</p>
-        <p className="mt-1 text-xs text-red-600">The conflict check could not read local data. This does not mean there are no conflicts.</p>
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-8 text-center" data-testid="conflict-load-error" role="alert">
+        <p className="text-sm font-semibold text-destructive">Unable to load conflict data</p>
+        <p className="mt-1 text-xs text-destructive">The conflict check could not read local data. This does not mean there are no conflicts.</p>
       </div>
     )
   }
 
   if (conflicts.length === 0) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center" data-testid="no-conflicts">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="mx-auto h-12 w-12 text-green-400">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <p className="mt-3 text-sm font-semibold text-neutral-700">No unresolved conflicts</p>
-        <p className="mt-1 text-xs text-neutral-500">All Tier 1 safety-critical data is in sync.</p>
+      <div className="rounded-xl bg-card/70 backdrop-blur-md p-8 shadow-sm ring-[0.65px] ring-border/50 text-center" data-testid="no-conflicts">
+        <CircleCheck className="mx-auto h-12 w-12 text-success" />
+        <p className="mt-3 text-sm font-semibold text-foreground">No unresolved conflicts</p>
+        <p className="mt-1 text-xs text-muted-foreground">All Tier 1 safety-critical data is in sync.</p>
       </div>
     )
   }
@@ -120,7 +121,7 @@ export function ConflictList() {
   return (
     <div className="space-y-3" data-testid="conflict-list">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-neutral-700">
+        <p className="text-sm font-semibold text-foreground">
           {conflicts.length} unresolved conflict{conflicts.length !== 1 ? 's' : ''}
         </p>
       </div>
@@ -136,15 +137,16 @@ export function ConflictList() {
         return (
           <div
             key={entry.id}
-            className={`rounded-xl border bg-white shadow-sm transition-colors ${
+            className={`rounded-xl border bg-background shadow-sm transition-colors ${
               overdue
-                ? 'border-red-300 bg-red-50'
-                : 'border-neutral-200'
+                ? 'border-destructive/30 bg-destructive/10'
+                : 'border-border'
             }`}
             data-testid="conflict-item"
           >
             {/* Conflict summary row */}
-            <button
+            <Button
+              variant="ghost"
               type="button"
               onClick={() => handleExpand(entry.id)}
               className="flex w-full items-center gap-3 ps-5 pe-5 py-4 text-start"
@@ -152,20 +154,20 @@ export function ConflictList() {
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-neutral-900">
+                  <span className="text-sm font-bold text-foreground">
                     {safeResourceLabel(entry.resourceType)}
                   </span>
-                  <span className="text-xs text-neutral-400">ID {shortId}</span>
+                  <span className="text-xs text-muted-foreground">ID {shortId}</span>
                   {overdue && (
                     <span
-                      className="inline-flex items-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white"
+                      className="inline-flex items-center rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-white"
                       data-testid="overdue-badge"
                     >
                       OVERDUE
                     </span>
                   )}
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                   <span>Patient: {patientShortId}</span>
                   <span>{formatConflictAge(entry.createdAt)}</span>
                   <span>{new Date(entry.createdAt).toLocaleString()}</span>
@@ -173,23 +175,16 @@ export function ConflictList() {
               </div>
 
               {/* Chevron */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform ${
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
                   isExpanded ? 'rotate-180' : ''
                 }`}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
+              />
+            </Button>
 
             {/* Expanded diff view */}
             {isExpanded && (
-              <div className="border-t border-neutral-200 ps-5 pe-5 py-4">
+              <div className="border-t border-border ps-5 pe-5 py-4">
                 <ConflictDiffView entry={entry} onResolved={handleResolved} />
               </div>
             )}

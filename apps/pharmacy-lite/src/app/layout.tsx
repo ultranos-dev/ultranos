@@ -3,19 +3,33 @@ import localFont from 'next/font/local'
 import { getLocale } from 'next-intl/server'
 import { getDirection } from '@ultranos/ui-kit'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
 
-const inter = localFont({
+const manrope = localFont({
   src: [
-    { path: '../../public/fonts/inter-latin-400.woff2', weight: '400', style: 'normal' },
-    { path: '../../public/fonts/inter-latin-500.woff2', weight: '500', style: 'normal' },
-    { path: '../../public/fonts/inter-latin-600.woff2', weight: '600', style: 'normal' },
-    { path: '../../public/fonts/inter-latin-700.woff2', weight: '700', style: 'normal' },
-    { path: '../../public/fonts/inter-latin-900.woff2', weight: '900', style: 'normal' },
+    {
+      path: '../../public/fonts/manrope/Manrope-Regular.woff2',
+      weight: '100 900',
+      style: 'normal',
+    },
   ],
+  variable: '--font-manrope',
   display: 'swap',
-  variable: '--font-inter',
 })
+
+const publicSans = localFont({
+  src: [
+    { path: '../../public/fonts/public-sans/PublicSans-Regular.woff2',  weight: '400', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-Medium.woff2',   weight: '500', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-SemiBold.woff2', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/public-sans/PublicSans-Bold.woff2',     weight: '700', style: 'normal' },
+  ],
+  variable: '--font-public-sans',
+  display: 'swap',
+})
+
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)}catch(e){}})();`
 
 export const metadata: Metadata = {
   title: 'Pharmacy Lite — Prescription Fulfillment',
@@ -25,24 +39,23 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
   const dir = getDirection(locale)
-  const isRtl = dir === 'rtl'
-
   return (
-    <html lang={locale} dir={dir} className={inter.variable}>
+    <html
+      lang={locale}
+      dir={dir}
+      suppressHydrationWarning
+      className={`${manrope.variable} ${publicSans.variable}`}
+    >
       <head>
-        {isRtl && <link rel="stylesheet" href="/fonts-arabic.css" />}
+        <link rel="stylesheet" href="/fonts-arabic.css" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="font-sans bg-neutral-50 text-neutral-900 antialiased">
-        <ClientErrorBoundary>
-          <header className="border-b border-neutral-200 bg-white px-6 py-3">
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold text-primary-700">Pharmacy Lite</h1>
-            </div>
-          </header>
-          <main className="mx-auto max-w-2xl px-4 py-6">
+      <body className="font-sans bg-background text-foreground antialiased">
+        <ThemeProvider>
+          <ClientErrorBoundary>
             {children}
-          </main>
-        </ClientErrorBoundary>
+          </ClientErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   )

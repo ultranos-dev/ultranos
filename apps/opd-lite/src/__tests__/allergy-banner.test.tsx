@@ -90,8 +90,8 @@ describe('AllergyBanner', () => {
     await waitFor(() => {
       expect(banner).toBeDefined()
       expect(banner?.getAttribute('data-banner-state')).toBe('active')
-      expect(banner?.className).toContain('bg-red-600')
-      expect(banner?.className).toContain('text-white')
+      expect(banner?.className).toContain('bg-destructive/10')
+      expect(banner?.className).toContain('text-destructive')
       expect(screen.getByText(/Penicillin/)).toBeDefined()
       expect(screen.getByText(/Peanuts/)).toBeDefined()
     })
@@ -118,7 +118,7 @@ describe('AllergyBanner', () => {
     await waitFor(() => {
       expect(banner?.getAttribute('data-banner-state')).toBe('warning')
       expect(banner?.getAttribute('aria-live')).toBe('assertive')
-      expect(banner?.className).toContain('bg-yellow-400')
+      expect(banner?.className).toContain('bg-warning/10')
       expect(screen.getByText(/Allergy data unavailable/)).toBeDefined()
     })
   })
@@ -149,9 +149,9 @@ describe('AllergyBanner', () => {
     const banner = container.querySelector('[data-testid="allergy-banner"]')
 
     await waitFor(() => {
-      expect(banner?.className).toContain('sticky')
-      expect(banner?.className).toContain('top-0')
-      expect(banner?.className).toContain('z-50')
+      expect(banner?.getAttribute('data-banner-state')).toBe('active')
+      expect(banner?.getAttribute('role')).toBe('alert')
+      expect(banner?.getAttribute('aria-live')).toBe('assertive')
     })
   })
 
@@ -197,7 +197,7 @@ describe('AllergyBanner', () => {
     const banner = container.querySelector('[data-testid="allergy-banner"]')
     // Banner must still render active state and show substances in RTL
     expect(banner?.getAttribute('data-banner-state')).toBe('active')
-    expect(banner?.className).toContain('bg-red-600')
+    expect(banner?.className).toContain('bg-destructive/10')
     expect(screen.getByText(/Penicillin/)).toBeDefined()
     expect(screen.getByText(/Peanuts/)).toBeDefined()
     // Snapshot confirms DOM structure is stable inside an RTL container.

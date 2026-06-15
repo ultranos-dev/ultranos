@@ -2,9 +2,12 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from '@ultranos/ui-kit/icons'
+import { DirectionalIcon } from '@ultranos/ui-kit'
 import { useAppointmentStore } from '@/stores/appointment-store'
 import { db } from '@/lib/db'
 import { BookingModal } from './BookingModal'
+import { Button } from '@/components/ui/Button'
 import type { FhirAppointmentZod } from '@ultranos/shared-types'
 
 /** Configurable week start day. Saturday (6) is default for MENA. */
@@ -80,10 +83,10 @@ function formatWeekRange(start: Date, end: Date): string {
 }
 
 const SERVICE_TYPE_COLORS: Record<string, string> = {
-  'new-consult': 'bg-green-500',
-  'follow-up': 'bg-blue-500',
-  urgent: 'bg-red-500',
-  'walk-in': 'bg-amber-500',
+  'new-consult': 'bg-success',
+  'follow-up': 'bg-primary',
+  urgent: 'bg-destructive',
+  'walk-in': 'bg-warning',
 }
 
 interface CellData {
@@ -114,7 +117,7 @@ export function WeekScheduleView() {
     [selectedDate],
   )
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart])
-  const weekEnd = weekDays[6]
+  const weekEnd = weekDays[6]!
 
   const today = useMemo(() => {
     const d = new Date()
@@ -214,121 +217,74 @@ export function WeekScheduleView() {
 
   // Mobile: single-day list view with prev/next
   if (isMobile) {
-    const currentDay = weekDays[mobileDayOffset] ?? weekDays[0]
+    const currentDay = weekDays[mobileDayOffset] ?? weekDays[0]!
     return (
       <div className="space-y-4">
         {/* Week range header */}
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={prevWeek}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
             aria-label={t('previousWeek')}
           >
-            <svg
-              className="h-5 w-5 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
-          </button>
-          <h2 className="text-base font-bold text-neutral-900">
+            <DirectionalIcon category="navigation">
+              <ChevronLeft className="h-5 w-5" />
+            </DirectionalIcon>
+          </Button>
+          <h2 className="text-base font-bold text-foreground">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={nextWeek}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
             aria-label={t('nextWeek')}
           >
-            <svg
-              className="h-5 w-5 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
-          </button>
+            <DirectionalIcon category="navigation">
+              <ChevronRight className="h-5 w-5" />
+            </DirectionalIcon>
+          </Button>
         </div>
 
         {/* Day selector with prev/next */}
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={() =>
               setMobileDayOffset(Math.max(0, mobileDayOffset - 1))
             }
             disabled={mobileDayOffset === 0}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
             aria-label={t('previousDay')}
           >
-            <svg
-              className="h-4 w-4 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
-          </button>
+            <DirectionalIcon category="navigation">
+              <ChevronLeft className="h-4 w-4" />
+            </DirectionalIcon>
+          </Button>
 
-          <button
+          <Button
+            variant={isSameDay(currentDay, today) ? 'primary' : 'secondary'}
             type="button"
             onClick={() => handleDayClick(currentDay)}
-            className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
-              isSameDay(currentDay, today)
-                ? 'bg-primary-100 text-primary-800'
-                : 'text-neutral-900'
-            }`}
+            className="px-4 py-2 text-sm"
           >
             {currentDay.toLocaleDateString(undefined, {
               weekday: 'long',
               month: 'short',
               day: 'numeric',
             })}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="icon"
             onClick={() =>
               setMobileDayOffset(Math.min(6, mobileDayOffset + 1))
             }
             disabled={mobileDayOffset === 6}
-            className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-30"
             aria-label={t('nextDay')}
           >
-            <svg
-              className="h-4 w-4 rtl:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.25 4.5l7.5 7.5-7.5 7.5"
-              />
-            </svg>
-          </button>
+            <DirectionalIcon category="navigation">
+              <ChevronRight className="h-4 w-4" />
+            </DirectionalIcon>
+          </Button>
         </div>
 
         {/* Time slots for selected day */}
@@ -337,18 +293,19 @@ export function WeekScheduleView() {
             const cellKey = `${mobileDayOffset}-${time}`
             const data = cellDataMap.get(cellKey)
             return (
-              <button
+              <Button
                 key={time}
+                variant="ghost"
                 type="button"
                 onClick={() => handleCellClick(currentDay, time)}
-                className={`w-full rounded-lg border p-2.5 text-start transition-colors ${
+                className={`w-full rounded-lg border p-2.5 text-start ${
                   data
-                    ? 'border-blue-200 bg-blue-50 hover:bg-blue-100'
-                    : 'border-neutral-200 bg-white hover:bg-neutral-50'
+                    ? 'border-primary/20 bg-primary/10 hover:bg-primary'
+                    : 'border-border bg-background hover:bg-muted'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold tabular-nums text-neutral-700">
+                  <span className="text-sm font-semibold tabular-nums text-foreground">
                     {time}
                   </span>
                   {data && (
@@ -359,7 +316,7 @@ export function WeekScheduleView() {
                             key={type}
                             className={`inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
                               SERVICE_TYPE_COLORS[type] ??
-                              'bg-neutral-500'
+                              'bg-muted'
                             }`}
                           >
                             {count}
@@ -369,7 +326,7 @@ export function WeekScheduleView() {
                     </div>
                   )}
                 </div>
-              </button>
+              </Button>
             )
           })}
         </div>
@@ -393,51 +350,29 @@ export function WeekScheduleView() {
     <div className="space-y-4">
       {/* Week navigation */}
       <div className="flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="icon"
           onClick={prevWeek}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('previousWeek')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
-        </button>
+          <DirectionalIcon category="navigation">
+            <ChevronLeft className="h-5 w-5" />
+          </DirectionalIcon>
+        </Button>
 
-        <h2 className="text-lg font-bold text-neutral-900">
+        <h2 className="text-lg font-bold text-foreground">
           {formatWeekRange(weekStart, weekEnd)}
         </h2>
 
-        <button
-          type="button"
+        <Button
+          variant="icon"
           onClick={nextWeek}
-          className="rounded-lg border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 transition-colors"
           aria-label={t('nextWeek')}
         >
-          <svg
-            className="h-5 w-5 rtl:rotate-180"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5l7.5 7.5-7.5 7.5"
-            />
-          </svg>
-        </button>
+          <DirectionalIcon category="navigation">
+            <ChevronRight className="h-5 w-5" />
+          </DirectionalIcon>
+        </Button>
       </div>
 
       {/* Legend */}
@@ -452,18 +387,18 @@ export function WeekScheduleView() {
             <span
               className={`inline-block h-3 w-3 rounded-full ${SERVICE_TYPE_COLORS[key]}`}
             />
-            <span className="text-neutral-600">{label}</span>
+            <span className="text-muted-foreground">{label}</span>
           </div>
         ))}
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+      <div className="overflow-x-auto rounded-xl ring-[0.65px] ring-border/50">
         <table className="w-full border-collapse">
           <thead>
             <tr>
               {/* Time column header */}
-              <th className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-neutral-100 px-2 py-2 text-start text-xs font-semibold text-neutral-600">
+              <th className="sticky start-0 z-10 border-b border-e border-border bg-muted px-2 py-2 text-start text-xs font-semibold text-muted-foreground">
                 {t('time')}
               </th>
               {/* Day headers — flex-direction: row auto-reverses in RTL */}
@@ -472,19 +407,20 @@ export function WeekScheduleView() {
                 return (
                   <th
                     key={idx}
-                    className={`border-b border-neutral-200 px-1 py-2 text-center text-xs font-semibold ${
+                    className={`border-b border-border px-1 py-2 text-center text-xs font-semibold ${
                       isToday
                         ? 'bg-primary-50 text-primary-800'
-                        : 'bg-neutral-50 text-neutral-700'
+                        : 'bg-muted text-foreground'
                     }`}
                   >
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
                       onClick={() => handleDayClick(day)}
                       className="hover:underline"
                     >
                       {formatShortDate(day)}
-                    </button>
+                    </Button>
                   </th>
                 )
               })}
@@ -494,7 +430,7 @@ export function WeekScheduleView() {
             {TIME_SLOTS.map((time) => (
               <tr key={time} className="group">
                 {/* Time label */}
-                <td className="sticky start-0 z-10 border-b border-e border-neutral-200 bg-white px-2 py-1.5 text-xs font-medium tabular-nums text-neutral-600">
+                <td className="sticky start-0 z-10 border-b border-e border-border bg-background px-2 py-1.5 text-xs font-medium tabular-nums text-muted-foreground">
                   {time}
                 </td>
                 {/* Cells for each day */}
@@ -506,17 +442,18 @@ export function WeekScheduleView() {
                   return (
                     <td
                       key={dayIdx}
-                      className={`border-b border-neutral-100 px-0.5 py-0.5 ${
+                      className={`border-b border-border px-0.5 py-0.5 ${
                         isToday ? 'bg-primary-50/30' : ''
                       }`}
                     >
-                      <button
+                      <Button
+                        variant="ghost"
                         type="button"
                         onClick={() => handleCellClick(day, time)}
-                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded transition-colors ${
+                        className={`flex h-7 w-full items-center justify-center gap-0.5 rounded ${
                           data
-                            ? 'hover:bg-blue-100'
-                            : 'hover:bg-neutral-100'
+                            ? 'hover:bg-primary'
+                            : 'hover:bg-muted'
                         }`}
                       >
                         {data &&
@@ -526,14 +463,14 @@ export function WeekScheduleView() {
                                 key={type}
                                 className={`inline-flex h-5 min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${
                                   SERVICE_TYPE_COLORS[type] ??
-                                  'bg-neutral-500'
+                                  'bg-muted'
                                 }`}
                               >
                                 {count}
                               </span>
                             ),
                           )}
-                      </button>
+                      </Button>
                     </td>
                   )
                 })}

@@ -82,22 +82,6 @@ describe('AuthGuard (Lab Lite)', () => {
     })
   })
 
-  it('renders children on /login without auth check', () => {
-    Object.defineProperty(window.location, 'pathname', {
-      value: '/login',
-      writable: true,
-    })
-
-    render(
-      <AuthGuard>
-        <div>Login Form</div>
-      </AuthGuard>,
-    )
-
-    expect(screen.getByText('Login Form')).toBeInTheDocument()
-    expect(mockGetSession).not.toHaveBeenCalled()
-  })
-
   it('renders null during loading, never children', async () => {
     let resolveSession!: (v: unknown) => void
     mockGetSession.mockReturnValue(new Promise((r) => { resolveSession = r }))

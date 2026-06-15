@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { verifyPatient, type VerifyPatientResult } from '@/lib/trpc'
 import { cacheVerifiedPatient, getCachedPatient } from '@/lib/offline-verify'
+import { Button } from '@/components/ui/Button'
 import { OfflineVerificationBadge } from './OfflineVerificationBadge'
 import { OnlineStatusIndicator } from './OnlineStatusIndicator'
 
@@ -103,7 +104,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
       {/* National ID input */}
       {!verifiedResult && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <label htmlFor="national-id" className="text-sm font-medium text-neutral-700">
+          <label htmlFor="national-id" className="text-sm font-medium text-foreground">
             National ID
           </label>
           <input
@@ -113,7 +114,7 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             onChange={(e) => setNationalId(e.target.value)}
             placeholder={isOnline ? 'Enter patient National ID' : 'Enter cached patient ID'}
             disabled={loading}
-            className="rounded-lg border border-neutral-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-lg border border-border px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
             autoComplete="off"
           />
           {!isOnline && (
@@ -122,13 +123,13 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
               verification.
             </p>
           )}
-          <button
+          <Button
+            variant="primary"
             type="submit"
             disabled={loading || !nationalId.trim()}
-            className="rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-primary-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Verifying...' : isOnline ? 'Look Up Patient' : 'Check Cache'}
-          </button>
+          </Button>
         </form>
       )}
 
@@ -140,26 +141,27 @@ export function PatientVerifyForm({ onVerified, onError, token }: PatientVerifyF
             <OfflineVerificationBadge source={verificationSource} />
           </div>
           <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="font-medium text-neutral-600">First Name</dt>
-            <dd className="text-neutral-900">{verifiedResult.firstName}</dd>
-            <dt className="font-medium text-neutral-600">Age</dt>
-            <dd className="text-neutral-900">{verifiedResult.age}</dd>
+            <dt className="font-medium text-muted-foreground">First Name</dt>
+            <dd className="text-foreground">{verifiedResult.firstName}</dd>
+            <dt className="font-medium text-muted-foreground">Age</dt>
+            <dd className="text-foreground">{verifiedResult.age}</dd>
           </dl>
           <div className="mt-4 flex gap-3">
-            <button
+            <Button
+              variant="primary"
+              className="flex-1"
               type="button"
               onClick={handleConfirm}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white [@media(hover:hover)and(pointer:fine)]:hover:bg-green-700 active:brightness-[0.88] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Confirm Patient
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               type="button"
               onClick={handleReset}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-600 [@media(hover:hover)and(pointer:fine)]:hover:bg-neutral-50 active:brightness-[0.88] transition-all duration-150"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       )}

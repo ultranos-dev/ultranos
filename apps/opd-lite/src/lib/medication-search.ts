@@ -1,4 +1,4 @@
-import Fuse from 'fuse.js'
+import Fuse, { type IFuseOptions, type FuseResultMatch } from 'fuse.js'
 import { db } from './db'
 import type { VocabMedicationEntry } from './db'
 
@@ -9,7 +9,7 @@ export interface MedicationItem {
   strength: string
 }
 
-const fuseOptions: Fuse.IFuseOptions<MedicationItem> = {
+const fuseOptions: IFuseOptions<MedicationItem> = {
   keys: [
     { name: 'display', weight: 0.5 },
     { name: 'form', weight: 0.2 },
@@ -23,7 +23,7 @@ const fuseOptions: Fuse.IFuseOptions<MedicationItem> = {
 
 export interface MedicationSearchResult {
   item: MedicationItem
-  matches: Fuse.FuseResultMatch[] | undefined
+  matches: readonly FuseResultMatch[] | undefined
 }
 
 function toMedicationItem(entry: VocabMedicationEntry): MedicationItem {

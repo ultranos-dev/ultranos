@@ -9,7 +9,7 @@ import { usePatientSearch } from '@/lib/use-patient-search'
 import { SearchInput } from '@/components/search-input'
 import { PatientResultList } from '@/components/patient-result-list'
 import Link from 'next/link'
-import { PillButton } from '@/components/pill-button'
+import { Button } from '@/components/ui/Button'
 import { TodayEncountersCard } from './TodayEncountersCard'
 import { PendingLabResultsCard } from './PendingLabResultsCard'
 import { UnresolvedConflictsCard } from './UnresolvedConflictsCard'
@@ -53,32 +53,32 @@ export function ClinicalDashboard() {
   const displayRole = formatRole(session?.role ?? '')
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <div className="flex flex-col gap-4">
       {/* Welcome message */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tight text-neutral-900">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {t('welcome', { name: displayName })}
         </h1>
-        <p className="mt-1 text-sm font-semibold text-neutral-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {displayRole}
         </p>
       </div>
 
       {/* Primary CTAs */}
-      <div className="mb-8 flex items-center gap-3">
-        <PillButton onClick={handleStartEncounter}>
+      <div className="flex items-center gap-3">
+        <Button variant="primary" onClick={handleStartEncounter}>
           {t('startEncounter')}
-        </PillButton>
+        </Button>
         <Link
           href="/register-patient"
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors min-h-[44px]"
+          className="inline-flex items-center justify-center rounded-pill bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           {t('registerNew')}
         </Link>
       </div>
 
       {/* Inline patient search */}
-      <section className="mb-8" ref={searchRef}>
+      <section ref={searchRef}>
         <SearchInput value={query} onChange={handleQueryChange} />
         {(results.length > 0 || isSearching || query.length > 0) && (
           <div className="mt-2">
@@ -93,7 +93,7 @@ export function ClinicalDashboard() {
       </section>
 
       {/* Summary cards grid */}
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <TodayEncountersCard />
         <PendingLabResultsCard />
         <UnresolvedConflictsCard />
@@ -104,6 +104,6 @@ export function ClinicalDashboard() {
       <section>
         <RecentEncountersList />
       </section>
-    </main>
+    </div>
   )
 }

@@ -34,6 +34,10 @@ const handler = async (req: Request) => {
     req,
     router: appRouter,
     createContext: () => createTRPCContext({ headers: req.headers }),
+    onError({ error, path }) {
+      console.error(`[tRPC ERROR] ${path}:`, error.message)
+      if (error.cause) console.error(`[tRPC ERROR] cause:`, error.cause)
+    },
     responseMeta({ ctx }) {
       const headers: Record<string, string> = {}
       // Story 27.9 AC 3.4: Signal read-only mode to frontend for cancelled orgs

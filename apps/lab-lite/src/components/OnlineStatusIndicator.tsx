@@ -30,7 +30,7 @@ export function OnlineStatusIndicator() {
         className={`h-2 w-2 rounded-full ${online ? 'bg-green-500' : 'bg-red-500'}`}
         aria-hidden="true"
       />
-      <span className="text-xs text-neutral-500">{online ? 'Online' : 'Offline'}</span>
+      <span className="text-xs text-muted-foreground">{online ? 'Online' : 'Offline'}</span>
     </div>
   )
 }

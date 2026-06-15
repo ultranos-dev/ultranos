@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { db } from '@/lib/db'
+import { Card } from '@/components/Card'
 import { useEncounterStore } from '@/stores/encounter-store'
 import { deserializeHlc } from '@ultranos/sync-engine'
 
@@ -56,17 +57,17 @@ export function TodayEncountersCard() {
   }, [activeEncounter])
 
   return (
-    <div className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <h3 className="text-sm font-black text-neutral-500 uppercase tracking-wide">
+    <Card>
+      <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wide">
         {t('todayEncounters')}
       </h3>
-      <p className="mt-2 text-3xl font-black text-neutral-900">{stats.total}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{stats.total}</p>
       {stats.hasActive && (
-        <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pill-text">
-          <span className="inline-block h-2 w-2 rounded-full bg-pill-green animate-pulse" />
+        <span className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-success">
+          <span className="inline-block h-2 w-2 rounded-full bg-success animate-pulse" />
           {tEnc('activeConsultation')}
         </span>
       )}
-    </div>
+    </Card>
   )
 }

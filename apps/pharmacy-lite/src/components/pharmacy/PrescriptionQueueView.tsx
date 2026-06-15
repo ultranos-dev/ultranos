@@ -7,6 +7,8 @@ import { syncDispenseToHub } from '@/lib/dispense-sync'
 import { useFulfillmentStore } from '@/stores/fulfillment-store'
 import type { VerifiedPrescription } from '@/lib/prescription-verify'
 import { QueueItemCard } from './QueueItemCard'
+import { EmptyState } from '@/components/ui/empty-state'
+import { List } from '@ultranos/ui-kit/icons'
 
 type TabId = 'active' | 'completed' | 'failed'
 
@@ -127,15 +129,15 @@ export function PrescriptionQueueView() {
   }
 
   return (
-    <div data-testid="prescription-queue-view" className="space-y-4">
+    <div data-testid="prescription-queue-view" className="flex flex-col gap-4">
       {error && (
-        <div role="alert" className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Tab bar */}
-      <div role="tablist" className="flex border-b border-neutral-200">
+      <div role="tablist" className="flex gap-1 rounded-full border border-border bg-card p-1 w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -143,21 +145,21 @@ export function PrescriptionQueueView() {
             role="tab"
             aria-selected={activeTab === tab.id}
             aria-controls={`tabpanel-${tab.id}`}
-            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-full px-5 py-1.5 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'border-b-2 border-[#163300] text-[#163300]'
-                : 'text-neutral-500 hover:text-neutral-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
             {tab.id === 'active' && activeItems.length > 0 && (
-              <span className="ms-1 inline-flex items-center rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+              <span className="ms-1 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
                 {activeItems.length}
               </span>
             )}
             {tab.id === 'failed' && failedItems.length > 0 && (
-              <span className="ms-1 inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-xs text-red-700">
+              <span className="ms-1 inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
                 {failedItems.length}
               </span>
             )}
@@ -172,11 +174,14 @@ export function PrescriptionQueueView() {
         aria-labelledby={`tab-${activeTab}`}
       >
         {currentItems.length === 0 ? (
-          <p className="text-sm text-neutral-400 py-8 text-center">
-            {emptyMessages[activeTab]}
-          </p>
+          <EmptyState
+            icon={List}
+            title={emptyMessages[activeTab]}
+            description={activeTab === 'active' ? 'Scan a prescription QR code to start filling orders.' : 'Completed and failed items will appear here.'}
+            action={activeTab === 'active' ? { label: 'Scan Prescription', onClick: () => router.push('/scan') } : undefined}
+          />
         ) : (
-          <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white overflow-hidden">
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
             {currentItems.map((item) => (
               <QueueItemCard
                 key={item.id}

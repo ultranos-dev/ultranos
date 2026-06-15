@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import type { FhirPatient } from '@ultranos/shared-types'
 import { PillButton } from './pill-button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
 
 interface PatientResultListProps {
   results: FhirPatient[]
@@ -41,27 +42,24 @@ function getIdentifier(patient: FhirPatient): string | null {
 }
 
 export function PatientResultList({ results, isSearching, onSelect, query }: PatientResultListProps) {
-  const t = useTranslations('registration')
+  const t = useTranslations('patient')
+  const tReg = useTranslations('registration')
 
   if (isSearching) {
     return (
       <div className="flex items-center justify-center gap-2 py-8" role="status">
-        <svg className="h-4 w-4 animate-spin text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="h-4 w-4 animate-spin text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
         </svg>
-        <span className="font-semibold text-neutral-500">Searching...</span>
+        <span className="font-semibold text-muted-foreground">{t('loading')}</span>
       </div>
     )
   }
 
   if (results.length === 0) {
     if (!query) return null
-    return (
-      <div className="py-8 text-center text-sm text-neutral-500">
-        No patients found
-      </div>
-    )
+    return <EmptyState title={t('noResults')} size="sm" />
   }
 
   return (
@@ -76,7 +74,7 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
           opacity: 0;
         }
       `}</style>
-      <ul className="divide-y divide-neutral-100" role="list" aria-label="Patient search results">
+      <ul className="divide-y divide-border" role="list" aria-label={t('searchResults')}>
         {results.map((patient, index) => {
           const identifier = getIdentifier(patient)
           return (
@@ -86,18 +84,18 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
               style={{ animationDelay: `${index * 40}ms` }}
             >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-semibold text-neutral-900">
+              <p className="truncate text-base font-semibold text-foreground">
                 {getDisplayName(patient)}
               </p>
-              <p className="text-sm font-semibold text-neutral-500">
-                {patient.gender ?? 'Unknown'} &middot; {formatAge(patient.birthDate, patient.birthYearOnly)}
+              <p className="text-sm font-semibold text-muted-foreground">
+                {patient.gender ?? t('unknownGender')} &middot; {formatAge(patient.birthDate, patient.birthYearOnly)}
                 {identifier && (
                   <span className="ms-2">{identifier}</span>
                 )}
               </p>
             </div>
             <PillButton onClick={() => onSelect(patient)}>
-              Select
+              {t('select')}
             </PillButton>
           </li>
         )
@@ -106,9 +104,9 @@ export function PatientResultList({ results, isSearching, onSelect, query }: Pat
       {results.length < 3 && (
         <Link
           href={`/register-patient${query ? `?nameGiven=${encodeURIComponent(query)}` : ''}`}
-          className="mt-4 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors min-h-[44px]"
+          className="mt-4 flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary transition-colors min-h-[44px]"
         >
-          {t('registerNew')}
+          {tReg('registerNew')}
         </Link>
       )}
     </>

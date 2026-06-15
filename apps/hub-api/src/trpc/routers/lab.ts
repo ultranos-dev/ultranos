@@ -3,10 +3,12 @@ import { TRPCError } from '@trpc/server'
 import { createTRPCRouter, protectedProcedure, baseProcedure } from '../init'
 import { labRestrictedProcedure } from '../rbac'
 import { enforceLabActive } from '../middleware/enforceLabActive'
+import { enforceLabRole } from '../middleware/enforceLabRole'
 import { enforceEntitlement } from '../middleware/enforceEntitlement'
 import { enforceVerifiedOrg } from '../middleware/enforceVerifiedOrg'
 import { db } from '@/lib/supabase'
 import { AuditLogger } from '@ultranos/audit-logger'
+import { LabRole, LabPermission } from '@ultranos/shared-types'
 import { generateBlindIndex, encryptField } from '@ultranos/crypto/server'
 import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { scanFile } from '@/lib/virus-scanner'
@@ -800,6 +802,685 @@ export const labRouter = createTRPCRouter({
         processingTimeMs: result.processingTimeMs,
         available: result.available,
         provider: result.provider,
+      }
+    }),
+
+  /**
+   * Story 42.1 AC 3: Get the caller's own lab role.
+   * Used by Lab-Lite AuthGuard to populate the session store.
+   *
+   * Uses protectedProcedure (auth only) — any authenticated lab-lite user may call
+   * this regardless of role. Returns null if no lab affiliation exists rather than
+   * throwing 403, avoiding the chicken-and-egg problem of needing a role to fetch
+   * your role.
+   */
+  getMyRole: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data } = await ctx.supabase
+        .from('lab_technicians')
+        .select('lab_role, labs!inner(status)')
+        .eq('practitioner_id', ctx.user.sub)
+        .maybeSingle()
+
+      if (!data) {
+        return { labRole: null }
+      }
+
+      const lab = data.labs as unknown as { status: string }
+      if (lab.status !== 'ACTIVE') {
+        return { labRole: null }
+      }
+
+      return { labRole: (data.lab_role ?? null) as import('@ultranos/shared-types').LabRole | null }
+    }),
+
+  /**
+   * Story 42.1 AC 1: List staff members in the caller's lab.
+   * Gated by VIEW_STAFF permission (SUPERVISOR+).
+   * Data minimization: returns only practitioner identity, not patient data.
+   */
+  listStaff: labRestrictedProcedure
+    .use(enforceLabRole(LabPermission.VIEW_STAFF))
+    .query(async ({ ctx }) => {
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Lab affiliation required',
+        })
+      }
+
+      const { data: staff, error } = await ctx.supabase
+        .from('lab_technicians')
+        .select('practitioner_id, lab_role, created_at, practitioners!inner(id)')
+        .eq('lab_id', labId)
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch staff list',
+        })
+      }
+
+      // Look up emails via targeted getUserById per practitioner (fixes listUsers() pagination bug — Story 55.1 AC #4)
+      const practitionerIds = (staff ?? []).map((s: any) => s.practitioner_id)
+      let emailMap: Record<string, string> = {}
+
+      if (practitionerIds.length > 0) {
+        const { data: practitioners } = await ctx.supabase
+          .from('practitioners')
+          .select('id, auth_user_id')
+          .in('id', practitionerIds)
+
+        if (practitioners && practitioners.length > 0) {
+          const lookups = practitioners
+            .filter((p: any) => p.auth_user_id)
+            .map(async (p: any) => {
+              const { data } = await ctx.supabase.auth.admin.getUserById(p.auth_user_id)
+              if (data?.user?.email) {
+                emailMap[p.id] = data.user.email
+              }
+            })
+          await Promise.all(lookups)
+        }
+      }
+
+      return (staff ?? []).map((s: any) => ({
+        practitionerId: s.practitioner_id as string,
+        email: emailMap[s.practitioner_id] ?? '',
+        labRole: s.lab_role as LabRole,
+        createdAt: s.created_at as string,
+      }))
+    }),
+
+  /**
+   * Story 42.1 AC 1, 5: Update a staff member's lab role.
+   * Gated by MANAGE_STAFF_ROLES permission (LAB_MANAGER only).
+   * Uses atomic RPC for last-manager protection (Story 55.1 fix).
+   * Emits audit event on success.
+   */
+  updateStaffRole: labRestrictedProcedure
+    .use(enforceLabRole(LabPermission.MANAGE_STAFF_ROLES))
+    .input(
+      z.object({
+        targetPractitionerId: z.string().uuid(),
+        newRole: z.nativeEnum(LabRole),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const labId = ctx.lab?.labId
+      if (!labId) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Lab affiliation required',
+        })
+      }
+
+      // Use atomic RPC for transactional last-manager protection (fixes TOCTOU race)
+      const { data, error } = await ctx.supabase.rpc('update_lab_role_atomic', {
+        p_target_id: input.targetPractitionerId,
+        p_lab_id: labId,
+        p_new_role: input.newRole,
+      })
+
+      if (error) {
+        if (error.message?.includes('Cannot demote the last Lab Manager')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Cannot demote — only one Lab Manager remains in this lab',
+          })
+        }
+        if (error.message?.includes('Staff member not found')) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Staff member not found in your lab',
+          })
+        }
+        if (error.message?.includes('Invalid lab role')) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message,
+          })
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to update staff role',
+        })
+      }
+
+      const result = data as { success: boolean; previousRole: string; newRole: string; changed: boolean }
+
+      // Emit audit event (AC 5) — use practitioner IDs only, never email
+      if (result.changed) {
+        const audit = new AuditLogger(ctx.supabase)
+        try {
+          await audit.emit({
+            action: 'UPDATE',
+            resourceType: 'PRACTITIONER',
+            resourceId: input.targetPractitionerId,
+            actorId: ctx.user.sub,
+            actorRole: ctx.user.role,
+            outcome: 'SUCCESS',
+            sessionId: ctx.user.sessionId,
+            metadata: {
+              previousRole: result.previousRole,
+              newRole: input.newRole,
+              labId,
+            },
+          })
+        } catch {
+          console.warn('[AUDIT_FAILURE]', {
+            action: 'UPDATE',
+            resourceType: 'PRACTITIONER',
+            resourceId: input.targetPractitionerId,
+          })
+        }
+      }
+
+      return { success: true, previousRole: result.previousRole, newRole: result.newRole }
+    }),
+
+  /**
+   * Story 42.2 AC 1, 5: Pull pending test orders for this lab.
+   * Data minimization enforced: returns ONLY first name + age (CLAUDE.md Rule #7).
+   * Never returns reasonCode, supportingInfo, encounter, or clinical context.
+   * Supports incremental sync via `since` parameter.
+   */
+  pullOrders: labRestrictedProcedure
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        since: z.string().datetime().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase)
+      const labId = ctx.lab?.labId
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+
+      // Build query: active orders scoped to this lab (or unassigned)
+      let query = ctx.supabase
+        .from('service_requests')
+        .select(`
+          id,
+          status,
+          priority,
+          code_code,
+          code_display,
+          patient_id,
+          requester_id,
+          authored_on,
+          special_instructions,
+          meta_last_updated,
+          patients!inner(id, given_name, birth_date),
+          practitioners!service_requests_requester_id_fkey(id, given_name, family_name)
+        `)
+        .in('status', ['active', 'on-hold'])
+        .order('meta_last_updated', { ascending: false })
+        .limit(100)
+
+      // Scope to this lab (received by this lab, or unassigned)
+      if (labId) {
+        query = query.or(`received_by_lab_id.eq.${labId},received_by_lab_id.is.null`)
+      }
+
+      // Incremental sync: only orders updated since the given timestamp
+      if (input.since) {
+        query = query.gte('meta_last_updated', input.since)
+      }
+
+      const { data: orders, error } = await query
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch orders',
+        })
+      }
+
+      // Audit-log the order pull as a PHI access event (Safety Rule #6)
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'ServiceRequest',
+          resourceId: 'order-pull',
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            orderAction: 'pull_orders',
+            orderCount: (orders ?? []).length,
+            labId: labId ?? 'admin',
+            since: input.since ?? null,
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'ServiceRequest', resourceId: 'order-pull' })
+      }
+
+      // P4: Use blind index for patientRef — never expose raw patient UUID
+      const { hmacKey } = await getFieldEncryptionKeys()
+
+      // Data minimization projection: return ONLY first name + age
+      const mapped = (orders ?? []).map((order: any) => {
+        const patient = order.patients
+        const practitioner = order.practitioners
+
+        // P8: Compute age from birth_date — never expose DOB. Null if missing.
+        let patientAge: number | null = null
+        if (patient?.birth_date) {
+          const birthDate = new Date(patient.birth_date)
+          const today = new Date()
+          patientAge = today.getFullYear() - birthDate.getFullYear()
+          const monthDiff = today.getMonth() - birthDate.getMonth()
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            patientAge--
+          }
+        }
+
+        return {
+          orderId: order.id,
+          patientFirstName: patient?.given_name ?? '',
+          patientAge,
+          patientRef: patient?.id ? `Patient/${generateBlindIndex(patient.id, hmacKey)}` : '',
+          testsRequested: [{
+            loincCode: order.code_code,
+            loincDisplay: order.code_display ?? order.code_code,
+          }],
+          urgency: order.priority ?? 'routine',
+          orderingPhysicianName: practitioner
+            ? `${practitioner.given_name ?? ''} ${practitioner.family_name ?? ''}`.trim()
+            : 'Unknown',
+          specialInstructions: order.special_instructions ?? null,
+          status: order.status,
+          authoredOn: order.authored_on,
+        }
+      })
+
+      // P11: Return max server timestamp for accurate incremental sync
+      const maxServerTs = (orders ?? []).reduce(
+        (max: string, o: any) => (o.meta_last_updated > max ? o.meta_last_updated : max),
+        '',
+      )
+
+      return { orders: mapped, syncTimestamp: maxServerTs || null }
+    }),
+
+  /**
+   * Story 42.2 AC 2, 3: Acknowledge an order as RECEIVED by this lab.
+   * Updates the ServiceRequest status and dispatches a notification
+   * to the ordering physician so the status change is visible in OPD-Lite.
+   */
+  acknowledgeOrder: labRestrictedProcedure
+    .use(enforceLabActive())
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+        status: z.literal('RECEIVED'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const audit = new AuditLogger(ctx.supabase)
+      const labId = ctx.lab?.labId
+      const technicianId = ctx.lab?.technicianId ?? ctx.user.sub
+      const now = new Date().toISOString()
+
+      // Fetch the order to verify it exists and get requester for notification
+      const { data: order, error: fetchError } = await ctx.supabase
+        .from('service_requests')
+        .select('id, requester_id, code_display, status')
+        .eq('id', input.orderId)
+        .single()
+
+      if (fetchError || !order) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Order not found',
+        })
+      }
+
+      // Status guard: only active/on-hold orders can be acknowledged
+      if (!['active', 'on-hold'].includes(order.status)) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Order cannot be acknowledged — current status: ${order.status}`,
+        })
+      }
+
+      // Conditional update: only claim if not already claimed by another lab
+      const { error: updateError, count } = await ctx.supabase
+        .from('service_requests')
+        .update({
+          status: 'on-hold',
+          received_at: now,
+          received_by_lab_id: labId ?? null,
+          received_by_tech_id: technicianId,
+          meta_last_updated: now,
+        })
+        .eq('id', input.orderId)
+        .or(`received_by_lab_id.is.null${labId ? `,received_by_lab_id.eq.${labId}` : ''}`)
+        .select('id', { count: 'exact', head: true })
+
+      if (count === 0 && !updateError) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Order has already been claimed by another lab',
+        })
+      }
+
+      if (updateError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to acknowledge order',
+        })
+      }
+
+      // Dispatch notification to the ordering physician (AC 3)
+      // Reuses Story 17.4 notification dispatch pattern
+      if (order.requester_id) {
+        const nextRetryAt = new Date(Date.now() + 60_000).toISOString()
+        try {
+          const { data: inserted } = await ctx.supabase
+            .from('notifications')
+            .insert({
+              recipient_ref: order.requester_id,
+              recipient_role: 'CLINICIAN',
+              type: 'ORDER_RECEIVED',
+              payload: JSON.stringify({
+                orderId: input.orderId,
+                testCategory: order.code_display ?? 'Lab Test',
+                acknowledgedAt: now,
+              }),
+              status: 'QUEUED',
+              next_retry_at: nextRetryAt,
+            })
+            .select('id')
+            .single()
+
+          if (inserted) {
+            try {
+              await audit.emit({
+                action: 'CREATE',
+                resourceType: 'NOTIFICATION',
+                resourceId: inserted.id,
+                actorId: technicianId,
+                actorRole: ctx.user.role,
+                outcome: 'SUCCESS',
+                sessionId: ctx.user.sessionId,
+                metadata: {
+                  notificationAction: 'dispatched_on_order_ack',
+                  orderId: input.orderId,
+                },
+              })
+            } catch {
+              console.warn('[AUDIT_FAILURE]', { action: 'CREATE', resourceType: 'NOTIFICATION', resourceId: inserted.id })
+            }
+          }
+        } catch {
+          // Notification dispatch is best-effort — ack still succeeds
+        }
+      }
+
+      // Audit-log the acknowledgement (Safety Rule #6)
+      try {
+        await audit.emit({
+          action: 'UPDATE',
+          resourceType: 'ServiceRequest',
+          resourceId: input.orderId,
+          actorId: technicianId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: {
+            orderAction: 'order_acknowledged',
+            labId: labId ?? 'admin',
+          },
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'UPDATE', resourceType: 'ServiceRequest', resourceId: input.orderId })
+      }
+
+      return { success: true, receivedAt: now }
+    }),
+
+  // ================================================================
+  // Story 55.4: Mentorship Pairing — Lab-Lite read-only endpoint
+  // ================================================================
+
+  /**
+   * AC #6: Returns the active mentorship pairing for the current authenticated user.
+   * Data minimization: partner's first name only.
+   * Emits READ audit event.
+   */
+  getMyMentorship: labRestrictedProcedure
+    .query(async ({ ctx }) => {
+      const practitionerId = ctx.user.sub
+
+      // Find active pairing where user is mentor or mentee
+      const { data: pairing, error } = await ctx.supabase
+        .from('mentorship_pairings')
+        .select(`
+          id, mentor_practitioner_id, mentee_practitioner_id, goals, start_date, lab_id,
+          mentor:practitioners!mentorship_pairings_mentor_practitioner_id_fkey(given_name),
+          mentee:practitioners!mentorship_pairings_mentee_practitioner_id_fkey(given_name),
+          labs!mentorship_pairings_lab_id_fkey(lab_name)
+        `)
+        .eq('status', 'ACTIVE')
+        .or(`mentor_practitioner_id.eq.${practitionerId},mentee_practitioner_id.eq.${practitionerId}`)
+        .maybeSingle()
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch mentorship pairing',
+        })
+      }
+
+      // Emit audit event (AC #6 — READ)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'MENTORSHIP',
+          resourceId: pairing?.id ?? 'none',
+          actorId: practitionerId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'READ', resourceType: 'MENTORSHIP' })
+      }
+
+      if (!pairing) {
+        return null
+      }
+
+      const isMentor = pairing.mentor_practitioner_id === practitionerId
+      const partner = isMentor
+        ? (pairing.mentee as any)
+        : (pairing.mentor as any)
+      const lab = pairing.labs as any
+
+      // Fetch check-ins for this pairing
+      const { data: checkins } = await ctx.supabase
+        .from('mentorship_checkins')
+        .select('month, status')
+        .eq('pairing_id', pairing.id)
+        .order('month', { ascending: false })
+
+      return {
+        role: isMentor ? 'MENTOR' as const : 'MENTEE' as const,
+        partnerName: partner?.given_name ?? 'Unknown',
+        labName: lab?.lab_name ?? 'Unknown',
+        goals: pairing.goals,
+        startDate: pairing.start_date,
+        checkins: (checkins ?? []).map((c: any) => ({
+          month: c.month as string,
+          status: c.status as string,
+        })),
+      }
+    }),
+
+  // ================================================================
+  // Story 55.5: Certification — Lab-Lite read-only endpoint
+  // ================================================================
+
+  /**
+   * Task 8 / AC #7: Returns the caller's own certification progress.
+   * Read-only — no mutations exposed to lab users.
+   * Emits CERTIFICATION_PROGRESS_VIEWED audit event.
+   */
+  getMyCertifications: labRestrictedProcedure
+    .query(async ({ ctx }) => {
+      const practitionerId = ctx.user.sub
+
+      // Fetch all progress records for this practitioner
+      const { data: rows, error } = await ctx.supabase
+        .from('certification_progress')
+        .select(`
+          id, pathway_id, milestone_index, status, evidence_ref,
+          reviewer_note, approved_at, submitted_at, created_at,
+          certification_pathways!inner(id, name, milestones, status)
+        `)
+        .eq('practitioner_id', practitionerId)
+        .order('pathway_id')
+        .order('milestone_index', { ascending: true })
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch certifications',
+        })
+      }
+
+      // Emit audit event (AC #7 — data access tracking)
+      const audit = new AuditLogger(ctx.supabase)
+      try {
+        await audit.emit({
+          action: 'CERTIFICATION_PROGRESS_VIEWED',
+          resourceType: 'CERTIFICATION_PROGRESS',
+          resourceId: practitionerId,
+          actorId: practitionerId,
+          actorRole: ctx.user.role,
+          outcome: 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+        })
+      } catch {
+        console.warn('[AUDIT_FAILURE]', { action: 'CERTIFICATION_PROGRESS_VIEWED' })
+      }
+
+      // Group by pathway
+      const pathwayMap = new Map<string, {
+        pathwayId: string
+        pathwayName: string
+        milestones: Array<{
+          milestoneIndex: number
+          title: string
+          type: string
+          requiredCount: number
+          status: string
+          submittedAt: string | null
+          approvedAt: string | null
+        }>
+      }>()
+
+      for (const row of (rows ?? []) as any[]) {
+        const pathway = row.certification_pathways
+        const pathwayMilestones = Array.isArray(pathway?.milestones) ? pathway.milestones : []
+        const detail = pathwayMilestones[row.milestone_index] ?? { title: 'Unknown', type: 'UNKNOWN', required_count: 1 }
+
+        if (!pathwayMap.has(row.pathway_id)) {
+          pathwayMap.set(row.pathway_id, {
+            pathwayId: row.pathway_id,
+            pathwayName: pathway?.name ?? 'Unknown',
+            milestones: [],
+          })
+        }
+
+        pathwayMap.get(row.pathway_id)!.milestones.push({
+          milestoneIndex: row.milestone_index,
+          title: detail.title,
+          type: detail.type,
+          requiredCount: detail.required_count,
+          status: row.status,
+          submittedAt: row.submitted_at,
+          approvedAt: row.approved_at,
+        })
+      }
+
+      const pathways = Array.from(pathwayMap.values()).map((p) => ({
+        ...p,
+        completionPct: p.milestones.length > 0
+          ? Math.round((p.milestones.filter((m) => m.status === 'APPROVED').length / p.milestones.length) * 100)
+          : 0,
+      }))
+
+      return { pathways }
+    }),
+
+  // ================================================================
+  // Employee Health — Emergency Vaccination Status (Story 55.3)
+  // ================================================================
+
+  /**
+   * Emergency access: returns ONLY vaccination status fields for a practitioner.
+   * Data minimization: no titer dates, dose counts, TB results, or exposure history.
+   */
+  getEmergencyVaccinationStatus: labRestrictedProcedure
+    .use(enforceLabRole(LabPermission.VIEW_STAFF))
+    .input(z.object({ practitionerId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // Verify target practitioner belongs to the same lab as the caller
+      if (ctx.lab) {
+        const { data: targetTech } = await ctx.supabase
+          .from('lab_technicians')
+          .select('lab_id')
+          .eq('practitioner_id', input.practitionerId)
+          .single()
+
+        if (!targetTech || targetTech.lab_id !== ctx.lab.labId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Target practitioner is not in your lab',
+          })
+        }
+      }
+
+      // Data minimization: SELECT only the three vaccination status columns
+      const { data, error } = await ctx.supabase
+        .from('employee_health_records')
+        .select('hep_b_status, tetanus_status, covid_status')
+        .eq('practitioner_id', input.practitionerId)
+        .single()
+
+      // P1+D2: audit after error check with accurate outcome.
+      // Best-effort for emergency endpoint — audit failure must not block access during incidents.
+      try {
+        const audit = new AuditLogger(ctx.supabase)
+        await audit.emit({
+          action: 'READ',
+          resourceType: 'EMPLOYEE_HEALTH',
+          resourceId: input.practitionerId,
+          actorId: ctx.user.sub,
+          actorRole: ctx.user.role,
+          outcome: error || !data ? 'NOT_FOUND' : 'SUCCESS',
+          sessionId: ctx.user.sessionId,
+          metadata: { accessType: 'EMERGENCY', scope: 'VACCINATION_STATUS_ONLY' },
+        })
+      } catch {
+        console.error('[emergency-vaccination] audit emit failed for practitioner', input.practitionerId)
+      }
+
+      if (error || !data) {
+        return null
+      }
+
+      return {
+        hepBStatus: data.hep_b_status as string,
+        tetanusStatus: data.tetanus_status as string,
+        covidStatus: data.covid_status as string,
       }
     }),
 })

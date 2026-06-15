@@ -1,4 +1,4 @@
-import type { KycStatus } from '../enums.js'
+import type { KycStatus, LabRole } from '../enums.js'
 
 // FHIR R4 Practitioner + Ultranos extensions
 // Ref: https://hl7.org/fhir/R4/practitioner.html
@@ -58,4 +58,6 @@ export interface PractitionerSession {
   role: 'DOCTOR' | 'PHARMACIST' | 'LAB_TECH' | 'ADMIN'
   sessionId: string
   deviceId?: string
+  /** Lab sub-role within LAB_TECH umbrella. Story 42.1. */
+  labRole?: LabRole
 }

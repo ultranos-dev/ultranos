@@ -8,6 +8,7 @@ import {
   type ResolutionType,
 } from '@/lib/conflict-resolution'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { Button } from '@/components/ui/Button'
 
 /** Fields to display for each resource type — never show raw IDs or internal fields. */
 const DISPLAY_FIELDS: Record<string, string[]> = {
@@ -176,8 +177,8 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
   if (!remoteData) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <p className="text-sm text-amber-800">
+      <div className="rounded-lg border border-warning/20 bg-warning/10 p-4">
+        <p className="text-sm text-warning">
           Remote version data is not available for this conflict.
           The conflict may need to be retried via sync.
         </p>
@@ -189,11 +190,11 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
     <div data-testid="conflict-diff-view">
       {/* Tier 1 safety warning */}
       {isTier1 && (
-        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3" role="alert">
-          <p className="text-xs font-bold text-amber-800">
+        <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3" role="alert">
+          <p className="text-xs font-bold text-warning">
             Safety-Critical Resource — &quot;Keep Both&quot; is recommended (append-only merge)
           </p>
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-warning">
             &quot;Prefer Local&quot; or &quot;Prefer Remote&quot; will discard one version. Use with caution.
           </p>
         </div>
@@ -201,15 +202,15 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Side-by-side diff grid — uses logical properties for RTL */}
       <div
-        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-lg border border-neutral-200 bg-neutral-200"
+        className="grid grid-cols-[1fr_1fr] gap-px overflow-hidden rounded-xl ring-[0.65px] ring-border/50 bg-secondary"
         data-testid="diff-grid"
       >
         {/* Column headers */}
-        <div className="bg-blue-50 ps-4 pe-4 py-2">
-          <span className="text-xs font-bold text-blue-800">Local Version</span>
+        <div className="bg-primary/10 ps-4 pe-4 py-2">
+          <span className="text-xs font-bold text-primary">Local Version</span>
         </div>
-        <div className="bg-purple-50 ps-4 pe-4 py-2">
-          <span className="text-xs font-bold text-purple-800">Remote Version</span>
+        <div className="bg-secondary ps-4 pe-4 py-2">
+          <span className="text-xs font-bold text-foreground">Remote Version</span>
         </div>
 
         {/* Field rows */}
@@ -217,19 +218,19 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
           <div key={field} className="contents">
             <div
               className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-yellow-50' : 'bg-white'
+                isDifferent ? 'bg-warning/10' : 'bg-background'
               }`}
             >
-              <p className="text-xs font-semibold text-neutral-500">{field}</p>
-              <p className="mt-0.5 text-sm text-neutral-900 break-words">{localValue}</p>
+              <p className="text-xs font-semibold text-muted-foreground">{field}</p>
+              <p className="mt-0.5 text-sm text-foreground break-words">{localValue}</p>
             </div>
             <div
               className={`ps-4 pe-4 py-2 ${
-                isDifferent ? 'bg-yellow-50' : 'bg-white'
+                isDifferent ? 'bg-warning/10' : 'bg-background'
               }`}
             >
-              <p className="text-xs font-semibold text-neutral-500">{field}</p>
-              <p className="mt-0.5 text-sm text-neutral-900 break-words">{remoteValue}</p>
+              <p className="text-xs font-semibold text-muted-foreground">{field}</p>
+              <p className="mt-0.5 text-sm text-foreground break-words">{remoteValue}</p>
             </div>
           </div>
         ))}
@@ -237,94 +238,93 @@ export function ConflictDiffView({ entry, onResolved }: ConflictDiffViewProps) {
 
       {/* Resolution actions */}
       {!canResolve ? (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-          <p className="text-xs font-semibold text-neutral-600">
+        <div className="mt-4 rounded-xl ring-[0.65px] ring-border/50 bg-muted p-3">
+          <p className="text-xs font-semibold text-muted-foreground">
             Only physicians can resolve conflicts. Please contact a physician to review.
           </p>
         </div>
       ) : (
         <div className="mt-4 flex flex-wrap gap-2">
           {/* Keep Both — default, emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="primary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('keep-both')}
             disabled={resolving}
-            className={`inline-flex items-center gap-1.5 rounded-md ps-4 pe-4 py-2 text-sm font-bold transition-colors disabled:opacity-50 ${
-              isTier1
-                ? 'border-2 border-green-500 bg-green-50 text-green-800 hover:bg-green-100'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
             data-testid="resolve-keep-both"
           >
             {isTier1 && (
-              <span className="text-xs font-bold text-green-600">Recommended</span>
+              <span className="text-xs font-bold text-success">Recommended</span>
             )}
             Keep Both
-          </button>
+          </Button>
 
           {/* Prefer Local — de-emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="secondary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('prefer-local')}
             disabled={resolving}
-            className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
             data-testid="resolve-prefer-local"
           >
             Prefer Local
-          </button>
+          </Button>
 
           {/* Prefer Remote — de-emphasized for Tier 1 */}
-          <button
+          <Button
+            variant="secondary"
+            className="gap-1.5"
             type="button"
             onClick={() => handleResolve('prefer-remote')}
             disabled={resolving}
-            className="inline-flex items-center gap-1.5 rounded-md bg-neutral-100 ps-4 pe-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:opacity-50"
             data-testid="resolve-prefer-remote"
           >
             Prefer Remote
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Confirmation dialog for Tier 1 destructive actions */}
       {confirmAction && (
         <div
-          className="mt-3 rounded-lg border-2 border-red-300 bg-red-50 p-4"
+          className="mt-3 rounded-lg border-2 border-destructive/30 bg-destructive/10 p-4"
           role="alertdialog"
           aria-label="Confirm destructive resolution"
           data-testid="confirm-destructive-dialog"
         >
-          <p className="text-sm font-bold text-red-800">
+          <p className="text-sm font-bold text-destructive">
             Confirm: {confirmAction === 'prefer-local' ? 'Discard Remote' : 'Discard Local'} Version
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-destructive">
             You are about to permanently discard one version of a safety-critical record.
             This action cannot be undone. CLAUDE.md recommends &quot;Keep Both&quot; for Tier 1 resources.
           </p>
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
+              variant="danger"
               type="button"
               onClick={() => executeResolve(confirmAction)}
               disabled={resolving}
-              className="rounded-md bg-red-600 ps-3 pe-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
               data-testid="confirm-destructive-yes"
             >
               Yes, discard
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               type="button"
               onClick={() => setConfirmAction(null)}
-              className="rounded-md bg-neutral-200 ps-3 pe-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-300"
               data-testid="confirm-destructive-cancel"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {error && (
-        <p className="mt-2 text-sm font-semibold text-red-600" role="alert">
+        <p className="mt-2 text-sm font-semibold text-destructive" role="alert">
           {error}
         </p>
       )}

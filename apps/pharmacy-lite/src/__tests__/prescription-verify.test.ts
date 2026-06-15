@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { db } from '@/lib/db'
+import type * as SyncEngineModule from '@ultranos/sync-engine'
 
 // Mock the sync-engine crypto module
 vi.mock('@ultranos/sync-engine', async () => {
-  const actual = await vi.importActual<typeof import('@ultranos/sync-engine')>('@ultranos/sync-engine')
+  const actual = await vi.importActual<typeof SyncEngineModule>('@ultranos/sync-engine')
   return {
     ...actual,
     verifySignature: vi.fn(),
@@ -28,7 +29,7 @@ vi.mock('@/lib/trpc', () => ({
 
 import { verifySignature } from '@ultranos/sync-engine'
 import { verifyPrescriptionQr } from '@/lib/prescription-verify'
-import { revalidateKey } from '@/lib/practitioner-key-cache'
+import { revalidateKey as _revalidateKey } from '@/lib/practitioner-key-cache'
 import type { SignedPrescriptionBundle } from '@/lib/prescription-types'
 
 const mockVerify = vi.mocked(verifySignature)

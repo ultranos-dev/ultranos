@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { FileText } from '@ultranos/ui-kit/icons'
+import { Button } from '@/components/ui/Button'
 import { ConsentTextModal } from './ConsentTextModal'
+import { Card } from '@/components/Card'
 
 type ConsentMethod = 'WRITTEN' | 'VERBAL_WITNESSED'
-type ConsentLanguage = 'en' | 'ar' | 'prs'
+type ConsentLanguage = 'en' | 'ar' | 'prs' | 'ps'
 
 interface ConsentSectionProps {
   method: ConsentMethod | ''
@@ -22,9 +25,10 @@ interface ConsentSectionProps {
 }
 
 const CONSENT_LANGUAGES: { value: ConsentLanguage; labelKey: string }[] = [
-  { value: 'en', labelKey: 'languageEnglish' },
-  { value: 'ar', labelKey: 'languageArabic' },
+  { value: 'en',  labelKey: 'languageEnglish' },
+  { value: 'ar',  labelKey: 'languageArabic' },
   { value: 'prs', labelKey: 'languageDari' },
+  { value: 'ps',  labelKey: 'languagePashto' },
 ]
 
 export function ConsentSection({
@@ -42,8 +46,8 @@ export function ConsentSection({
   return (
     <>
     <ConsentTextModal open={consentModalOpen} onClose={() => setConsentModalOpen(false)} />
-    <fieldset className="rounded-xl bg-card-bg p-5 shadow-sm">
-      <legend className="text-base font-bold text-neutral-900 mb-4">
+    <Card as="fieldset">
+      <legend className="text-base font-bold text-foreground mb-4">
         {t('consentSection')}
       </legend>
 
@@ -52,10 +56,10 @@ export function ConsentSection({
         <div role="radiogroup" aria-labelledby="consent-method-label">
           <p
             id="consent-method-label"
-            className="mb-2 text-sm font-semibold text-neutral-700"
+            className="mb-2 text-sm font-semibold text-foreground"
           >
             {t('consentMethod')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </p>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
@@ -66,10 +70,10 @@ export function ConsentSection({
                 value="WRITTEN"
                 checked={method === 'WRITTEN'}
                 onChange={() => onMethodChange('WRITTEN')}
-                className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                className="h-5 w-5 border-border text-primary focus:ring-ring"
                 aria-invalid={!!errors?.method}
               />
-              <span className="text-sm font-medium text-neutral-700">
+              <span className="text-sm font-medium text-foreground">
                 {t('consentWritten')}
               </span>
             </label>
@@ -81,17 +85,17 @@ export function ConsentSection({
                 value="VERBAL_WITNESSED"
                 checked={method === 'VERBAL_WITNESSED'}
                 onChange={() => onMethodChange('VERBAL_WITNESSED')}
-                className="h-5 w-5 border-neutral-300 text-blue-600 focus:ring-blue-400"
+                className="h-5 w-5 border-border text-primary focus:ring-ring"
                 aria-invalid={!!errors?.method}
               />
-              <span className="text-sm font-medium text-neutral-700">
+              <span className="text-sm font-medium text-foreground">
                 {t('consentVerbalWitnessed')}
               </span>
             </label>
           </div>
 
           {errors?.method && (
-            <p className="mt-1 text-sm text-red-600" role="alert">
+            <p className="mt-1 text-sm text-destructive" role="alert">
               {errors.method}
             </p>
           )}
@@ -102,10 +106,10 @@ export function ConsentSection({
           <div>
             <label
               htmlFor="consent-witness"
-              className="mb-1 block text-sm font-semibold text-neutral-700"
+              className="mb-1 block text-sm font-semibold text-foreground"
             >
               {t('consentWitness')}
-              <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+              <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
             </label>
             <input
               id="consent-witness"
@@ -116,15 +120,15 @@ export function ConsentSection({
               aria-describedby={errors?.witnessedBy ? 'consent-witness-error' : undefined}
               className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
                 errors?.witnessedBy
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                  : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                  ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                  : 'border-border focus:border-primary focus:ring-ring'
               }`}
               placeholder={t('consentWitnessPlaceholder')}
               value={witnessedBy}
               onChange={(e) => onWitnessedByChange(e.target.value)}
             />
             {errors?.witnessedBy && (
-              <p id="consent-witness-error" className="mt-1 text-sm text-red-600" role="alert">
+              <p id="consent-witness-error" className="mt-1 text-sm text-destructive" role="alert">
                 {errors.witnessedBy}
               </p>
             )}
@@ -135,10 +139,10 @@ export function ConsentSection({
         <div>
           <label
             htmlFor="consent-language"
-            className="mb-1 block text-sm font-semibold text-neutral-700"
+            className="mb-1 block text-sm font-semibold text-foreground"
           >
             {t('consentLanguage')}
-            <span className="text-red-600 ms-0.5" aria-hidden="true">*</span>
+            <span className="text-destructive ms-0.5" aria-hidden="true">*</span>
           </label>
           <select
             id="consent-language"
@@ -147,8 +151,8 @@ export function ConsentSection({
             aria-invalid={!!errors?.language}
             className={`w-full min-h-[44px] rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               errors?.language
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                : 'border-neutral-300 focus:border-blue-400 focus:ring-blue-400'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive'
+                : 'border-border focus:border-primary focus:ring-ring'
             }`}
           >
             {CONSENT_LANGUAGES.map((lang) => (
@@ -158,25 +162,23 @@ export function ConsentSection({
             ))}
           </select>
           {errors?.language && (
-            <p className="mt-1 text-sm text-red-600" role="alert">
+            <p className="mt-1 text-sm text-destructive" role="alert">
               {errors.language}
             </p>
           )}
         </div>
 
         {/* View full consent button */}
-        <button
-          type="button"
+        <Button
+          variant="outline"
           onClick={() => setConsentModalOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition-colors min-h-[44px] [@media(hover:hover)and(pointer:fine)]:hover:bg-blue-100"
+          className="gap-1.5 border-primary/20 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-          </svg>
+          <FileText className="h-4 w-4" />
           {t('viewFullConsent')}
-        </button>
+        </Button>
       </div>
-    </fieldset>
+    </Card>
     </>
   )
 }

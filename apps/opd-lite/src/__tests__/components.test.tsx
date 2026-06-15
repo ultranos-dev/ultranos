@@ -24,13 +24,13 @@ function makePatient(id: string, nameLocal: string): FhirPatient {
 }
 
 describe('PillButton', () => {
-  it('should render with green pill styling', () => {
+  it('should render with primary styling', () => {
     const onClick = vi.fn()
     render(<PillButton onClick={onClick}>Select</PillButton>)
     const button = screen.getByRole('button', { name: 'Select' })
     expect(button).toBeDefined()
     expect(button.className).toContain('rounded-pill')
-    expect(button.className).toContain('bg-pill-green')
+    expect(button.className).toContain('bg-primary')
   })
 
   it('should call onClick when clicked', () => {

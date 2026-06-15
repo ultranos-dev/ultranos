@@ -1,5 +1,6 @@
-import { getQueueItems, updateQueueItemStatus } from './db'
+import { getQueueItems, updateQueueItemStatus, autoExpireReagents } from './db'
 import type { QueueAuditEvent } from './upload-queue-worker'
+import { reportReagentEvent } from './audit-client'
 
 const EXPIRY_MS = 48 * 60 * 60 * 1000 // 48 hours
 const CHECK_INTERVAL_MS = 15 * 60 * 1000 // 15 minutes
@@ -37,17 +38,41 @@ export async function checkExpiredItems(
 }
 
 /**
+ * Scan ACTIVE reagents whose expiryDate < today and mark them EXPIRED.
+ * Uses a Dexie transaction-with-status-check to guard against concurrent tab writes.
+ * Emits REAGENT_AUTO_EXPIRED audit events for each auto-expired reagent.
+ * Returns the count of reagents auto-expired.
+ */
+export async function checkExpiredReagents(): Promise<{ expiredCount: number }> {
+  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const expiredReagentIds = await autoExpireReagents(today)
+
+  for (const reagentId of expiredReagentIds) {
+    reportReagentEvent({
+      action: 'REAGENT_AUTO_EXPIRED',
+      reagentId,
+      statusChange: 'ACTIVE → EXPIRED',
+    })
+  }
+
+  return { expiredCount: expiredReagentIds.length }
+}
+
+/**
  * Start periodic expiry checking (every 15 minutes).
- * Also runs immediately on startup. Returns cleanup function.
+ * Also runs immediately on startup. Checks both upload queue items and reagents.
+ * Returns cleanup function.
  */
 export function startExpiryChecker(
   onAuditEvent: (event: QueueAuditEvent) => void,
 ): () => void {
   // Run immediately
   checkExpiredItems(onAuditEvent)
+  checkExpiredReagents()
 
   const interval = setInterval(() => {
     checkExpiredItems(onAuditEvent)
+    checkExpiredReagents()
   }, CHECK_INTERVAL_MS)
 
   return () => clearInterval(interval)

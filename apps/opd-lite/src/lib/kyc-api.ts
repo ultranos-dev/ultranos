@@ -9,8 +9,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 function getHubApiUrl(): string {
   return typeof window !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3000/api/trpc')
-    : (process.env.HUB_API_URL ?? 'http://localhost:3000/api/trpc')
+    ? (process.env.NEXT_PUBLIC_HUB_API_URL ?? 'http://localhost:3004/api/trpc')
+    : (process.env.HUB_API_URL ?? 'http://localhost:3004/api/trpc')
 }
 
 async function getAuthToken(): Promise<string | null> {
