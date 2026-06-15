@@ -11,10 +11,12 @@ import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useLangStore } from '@/store/lang-store'
+import { useThemeColors } from '@/hooks/useThemeColors'
 import type { DrugSearchResult } from '@ultranos/shared-types'
 
 export default function SearchTab() {
   const { t } = useTranslation()
+  const colors = useThemeColors()
   const router = useRouter()
   const token = useAuthStore((s) => s.token)
   const lastVersion = useSyncStore((s) => s.lastVersion)
@@ -45,12 +47,12 @@ export default function SearchTab() {
   }, [lastVersion, lang, token])
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
       <SearchBar value={query} onSearch={handleSearch} />
       <SyncStatusBanner />
       {results.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>{t('search.empty')}</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('search.empty')}</Text>
         </View>
       ) : (
         <FlatList
@@ -70,7 +72,7 @@ export default function SearchTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyText: { color: '#6b7280', textAlign: 'center', fontSize: 15 },
+  emptyText: { textAlign: 'center', fontSize: 15 },
 })

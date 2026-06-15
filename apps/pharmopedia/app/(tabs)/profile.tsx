@@ -6,10 +6,11 @@ import { useAuthStore } from '@/store/auth-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
 import { useThemeStore, type ThemeMode } from '@/store/theme-store'
+import { useThemeColors } from '@/hooks/useThemeColors'
 import { runSync } from '@/sync/catalog-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
-import { Colors, FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'EN' },
@@ -26,6 +27,7 @@ const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
 
 export default function ProfileTab() {
   const { t } = useTranslation()
+  const colors = useThemeColors()
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const token = useAuthStore((s) => s.token)
@@ -85,26 +87,26 @@ export default function ProfileTab() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.label}>{t('profile.role')}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.role')}</Text>
         {user?.role && <RoleBadge role={user.role} />}
         {user?.facilityId && (
-          <Text style={styles.facility}>{t('profile.facility', { id: user.facilityId })}</Text>
+          <Text style={[styles.facility, { color: colors.textSecondary }]}>{t('profile.facility', { id: user.facilityId })}</Text>
         )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>{t('profile.language')}</Text>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.language')}</Text>
         <View style={styles.langRow}>
           {LANG_OPTIONS.map(({ value, label }) => (
             <Pressable
               key={value}
               testID={`lang-btn-${value}`}
-              style={[styles.langBtn, lang === value && styles.langBtnActive]}
+              style={[styles.langBtn, { borderColor: colors.border }, lang === value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
               onPress={() => handleLangPress(value)}
             >
-              <Text style={[styles.langText, lang === value && styles.langTextActive]}>
+              <Text style={[styles.langText, { color: colors.textSecondary }, lang === value && { color: colors.white, fontFamily: FontFamily.sansSemibold }]}>
                 {label}
               </Text>
             </Pressable>
@@ -112,17 +114,17 @@ export default function ProfileTab() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>{t('profile.appearance')}</Text>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.appearance')}</Text>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((opt) => (
             <Pressable
               key={opt.value}
               testID={`theme-${opt.value}`}
-              style={[styles.themeBtn, themeMode === opt.value && styles.themeBtnActive]}
+              style={[styles.themeBtn, { borderColor: colors.border }, themeMode === opt.value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
               onPress={() => void setThemeMode(opt.value)}
             >
-              <Text style={[styles.themeText, themeMode === opt.value && styles.themeTextActive]}>
+              <Text style={[styles.themeText, { color: colors.textSecondary }, themeMode === opt.value && { color: colors.white }]}>
                 {t(opt.labelKey)}
               </Text>
             </Pressable>
@@ -130,31 +132,31 @@ export default function ProfileTab() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>{t('profile.catalogSync')}</Text>
-        <Text testID="last-synced-text" style={styles.value}>{formatSyncTime(lastSyncAt)}</Text>
-        <Text style={styles.value}>{t('profile.version', { number: lastVersion })}</Text>
-        {status === 'syncing' && <Text style={styles.syncing}>{t('profile.syncing')}</Text>}
-        {status === 'error' && <Text style={styles.error}>{t('profile.syncFailed')}</Text>}
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.catalogSync')}</Text>
+        <Text testID="last-synced-text" style={[styles.value, { color: colors.textSecondary }]}>{formatSyncTime(lastSyncAt)}</Text>
+        <Text style={[styles.value, { color: colors.textSecondary }]}>{t('profile.version', { number: lastVersion })}</Text>
+        {status === 'syncing' && <Text style={[styles.syncing, { color: colors.primary500 }]}>{t('profile.syncing')}</Text>}
+        {status === 'error' && <Text style={[styles.error, { color: colors.danger }]}>{t('profile.syncFailed')}</Text>}
         <Pressable
           testID="sync-now-button"
-          style={[styles.button, status === 'syncing' && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: colors.primary500 }, status === 'syncing' && styles.buttonDisabled]}
           onPress={handleSyncNow}
           disabled={status === 'syncing'}
         >
-          <Text style={styles.buttonText}>
+          <Text style={[styles.buttonText, { color: colors.white }]}>
             {status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
           </Text>
         </Pressable>
       </View>
 
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Pressable
           testID="logout-button"
-          style={[styles.button, styles.logoutButton]}
+          style={[styles.button, { backgroundColor: colors.dangerLight }]}
           onPress={handleLogout}
         >
-          <Text style={[styles.buttonText, styles.logoutText]}>{t('profile.logout')}</Text>
+          <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -162,9 +164,8 @@ export default function ProfileTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.neutral50, padding: Spacing[5] },
+  container: { flex: 1, padding: Spacing[5] },
   section: {
-    backgroundColor: Colors.white,
     borderRadius: Radius.lg,
     padding: Spacing[4],
     marginBottom: Spacing[4],
@@ -173,47 +174,37 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontFamily: FontFamily.sansBold,
-    color: Colors.neutral500,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
-  value: { fontSize: 15, fontFamily: FontFamily.sans, color: Colors.neutral700 },
-  facility: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.neutral500, marginTop: 4 },
-  syncing: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.primary500 },
-  error: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.danger },
+  value: { fontSize: 15, fontFamily: FontFamily.sans },
+  facility: { fontSize: 14, fontFamily: FontFamily.sans, marginTop: 4 },
+  syncing: { fontSize: 14, fontFamily: FontFamily.sans },
+  error: { fontSize: 14, fontFamily: FontFamily.sans },
   themeRow: { flexDirection: 'row', gap: Spacing[2] },
   themeBtn: {
     flex: 1,
     paddingVertical: Spacing[2],
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.neutral200,
     alignItems: 'center',
   },
-  themeBtnActive: { backgroundColor: Colors.primary500, borderColor: Colors.primary500 },
-  themeText: { fontSize: 14, fontFamily: FontFamily.sansMedium, color: Colors.neutral700 },
-  themeTextActive: { color: Colors.white },
+  themeText: { fontSize: 14, fontFamily: FontFamily.sansMedium },
   langRow: { flexDirection: 'row', gap: Spacing[2], flexWrap: 'wrap' },
   langBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.neutral200,
   },
-  langBtnActive: { backgroundColor: Colors.primary500, borderColor: Colors.primary500 },
-  langText: { fontSize: 14, fontFamily: FontFamily.sans, color: Colors.neutral700 },
-  langTextActive: { color: Colors.white, fontFamily: FontFamily.sansSemibold },
+  langText: { fontSize: 14, fontFamily: FontFamily.sans },
   button: {
-    backgroundColor: Colors.primary500,
     borderRadius: Radius.md,
     padding: 12,
     alignItems: 'center',
     marginTop: Spacing[2],
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: Colors.white, fontFamily: FontFamily.sansSemibold, fontSize: 15 },
-  logoutButton: { backgroundColor: Colors.dangerLight },
-  logoutText: { color: Colors.dangerDark },
+  buttonText: { fontFamily: FontFamily.sansSemibold, fontSize: 15 },
 })

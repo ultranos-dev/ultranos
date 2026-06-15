@@ -7,6 +7,7 @@ import { getDrugByAtcCodeApi } from '@/api/drug-catalog'
 import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
 import { useLangStore, isRtlLang } from '@/store/lang-store'
+import { useThemeColors } from '@/hooks/useThemeColors'
 import { OverviewTab } from '@/components/DrugDetail/OverviewTab'
 import { ClinicalTab } from '@/components/DrugDetail/ClinicalTab'
 import { PricingTab } from '@/components/DrugDetail/PricingTab'
@@ -18,6 +19,7 @@ type Tab = 'overview' | 'clinical' | 'pricing' | 'enrich'
 
 export default function DrugDetailScreen() {
   const { t } = useTranslation()
+  const colors = useThemeColors()
   const { atcCode } = useLocalSearchParams<{ atcCode: string }>()
   const router = useRouter()
   const { token, user } = useAuthStore()
@@ -59,14 +61,14 @@ export default function DrugDetailScreen() {
   }
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>
+    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary500} /></View>
   }
 
   if (!entry) {
     return (
       <View style={styles.center}>
-        <Text style={styles.notFound}>{t('drug.notFound')}</Text>
-        <Pressable onPress={() => router.back()}><Text style={styles.back}>{t('drug.back')}</Text></Pressable>
+        <Text style={[styles.notFound, { color: colors.textSecondary }]}>{t('drug.notFound')}</Text>
+        <Pressable onPress={() => router.back()}><Text style={[styles.back, { color: colors.primary500 }]}>{t('drug.back')}</Text></Pressable>
       </View>
     )
   }
@@ -78,22 +80,22 @@ export default function DrugDetailScreen() {
   const secondaryName = useLocal ? entry.innName : undefined
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.primaryName, isRtl && styles.rtlText]}>{primaryName}</Text>
-        {secondaryName && <Text style={styles.secondaryName}>{secondaryName}</Text>}
-        <Text style={styles.subheader}>{entry.atcCode} · {entry.therapeuticClass}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.primaryName, { color: colors.textPrimary }, isRtl && styles.rtlText]}>{primaryName}</Text>
+        {secondaryName && <Text style={[styles.secondaryName, { color: colors.textSecondary }]}>{secondaryName}</Text>}
+        <Text style={[styles.subheader, { color: colors.textSecondary }]}>{entry.atcCode} · {entry.therapeuticClass}</Text>
       </View>
 
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         {TABS.map((tab) => (
           <Pressable
             key={tab}
             testID={`tab-${tab}`}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
+            style={[styles.tab, activeTab === tab && { borderBottomWidth: 2, borderBottomColor: colors.primary500 }]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+            <Text style={[styles.tabText, { color: colors.textSecondary }, activeTab === tab && { color: colors.primary500, fontWeight: '600' }]}>
               {TAB_LABELS[tab]}
             </Text>
           </Pressable>
@@ -111,19 +113,17 @@ export default function DrugDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  primaryName: { fontSize: 22, fontWeight: '700', color: '#111827', textTransform: 'capitalize' },
-  secondaryName: { fontSize: 14, color: '#6b7280', marginTop: 2 },
-  subheader: { fontSize: 14, color: '#6b7280', marginTop: 4 },
+  header: { padding: 16, borderBottomWidth: 1 },
+  primaryName: { fontSize: 22, fontWeight: '700', textTransform: 'capitalize' },
+  secondaryName: { fontSize: 14, marginTop: 2 },
+  subheader: { fontSize: 14, marginTop: 4 },
   rtlText: { fontFamily: 'NotoNaskhArabic', textAlign: 'right' },
-  tabBar: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
+  tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
   tab: { paddingHorizontal: 18, paddingVertical: 12 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#2563eb' },
-  tabText: { fontSize: 15, color: '#6b7280' },
-  tabTextActive: { color: '#2563eb', fontWeight: '600' },
+  tabText: { fontSize: 15 },
   content: { flex: 1 },
-  notFound: { fontSize: 18, color: '#374151', marginBottom: 12 },
-  back: { color: '#2563eb', fontSize: 16 },
+  notFound: { fontSize: 18, marginBottom: 12 },
+  back: { fontSize: 16 },
 })
