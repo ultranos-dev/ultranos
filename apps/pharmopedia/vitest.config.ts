@@ -22,6 +22,8 @@ export default defineConfig({
       // overrides; this alias handles the module-resolution layer.
       'react-native': path.resolve(__dirname, 'src/__mocks__/react-native.js'),
       '@testing-library/react-native': path.resolve(__dirname, 'src/__mocks__/@testing-library/react-native.js'),
+      'react-native-reanimated': path.resolve(__dirname, 'src/__mocks__/react-native-reanimated.js'),
+      'lucide-react-native': path.resolve(__dirname, 'src/__mocks__/lucide-react-native.js'),
     },
   },
   server: {

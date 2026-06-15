@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
 import * as Location from 'expo-location'
 import { useTranslation } from 'react-i18next'
+import { MapPinOff } from 'lucide-react-native'
+import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { getDrugPricesApi } from '@/api/drug-catalog'
 import { useAuthStore } from '@/store/auth-store'
 import { PriceCard } from '@/components/PriceCard'
@@ -82,8 +84,10 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
       )}
 
       {!loading && !error && prices.length === 0 && (
-        <View style={styles.empty}>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('pricing.noResults')}</Text>
+        <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
+          <MapPinOff size={48} color={colors.textMuted} />
+          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t('pricing.emptyTitle')}</Text>
+          <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>{t('pricing.emptyDescription')}</Text>
         </View>
       )}
 
@@ -91,7 +95,7 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
         <FlatList
           data={prices}
           keyExtractor={(item) => item.facilityId}
-          renderItem={({ item }) => <PriceCard price={item} />}
+          renderItem={({ item, index }) => <PriceCard price={item} index={index} />}
         />
       )}
     </View>
@@ -107,6 +111,21 @@ const styles = StyleSheet.create({
   errorText: { textAlign: 'center', marginBottom: 12 },
   retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
   retryText: { fontWeight: '600' },
-  empty: { padding: 32, alignItems: 'center' },
-  emptyText: {},
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing[8],
+    gap: Spacing[3],
+  },
+  emptyTitle: {
+    fontSize: FontSize.md,
+    fontFamily: FontFamily.sansSemibold,
+    textAlign: 'center',
+  },
+  emptyDescription: {
+    fontSize: FontSize.sm,
+    fontFamily: FontFamily.sans,
+    textAlign: 'center',
+  },
 })

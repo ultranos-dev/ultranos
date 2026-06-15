@@ -39,21 +39,52 @@ function queryByTestId(instance, testID) {
   return found ? normalizeNode(found) : null
 }
 
+function matchesText(child, text) {
+  if (typeof child !== 'string') return false
+  if (text instanceof RegExp) return text.test(child)
+  return child === text
+}
+
+function collectLeafText(node) {
+  if (!node) return ''
+  if (typeof node === 'string') return node
+  if (!node.children) return ''
+  return node.children.map(collectLeafText).join('')
+}
+
 function queryByText(instance, text) {
   let found = null
-  function search(node) {
-    if (!node) return
-    if (typeof node === 'string' && node === text) { found = node; return }
-    if (node.children) node.children.forEach(search)
-  }
   const json = instance.toJSON()
   function deepSearch(node) {
-    if (!node) return
+    if (!node || found) return
     if (node.children) {
+      // Check if this node's full leaf text matches
+      const fullText = collectLeafText(node)
+      if (fullText && (text instanceof RegExp ? text.test(fullText) : fullText === text)) {
+        // Prefer the closest matching leaf node
+        const isLeafMatch = node.children.some(child => matchesText(child, text))
+        if (isLeafMatch) {
+          found = node
+          return
+        }
+        // For regex, also accept if any child string matches
+        if (text instanceof RegExp) {
+          const directStringMatch = node.children.some(child => typeof child === 'string' && text.test(child))
+          if (directStringMatch) { found = node; return }
+        }
+      }
+      // Recurse into children
       node.children.forEach(child => {
-        if (typeof child === 'string' && child === text) { found = node; return }
-        deepSearch(child)
+        if (typeof child === 'string') {
+          if (matchesText(child, text)) { if (!found) found = node }
+        } else {
+          deepSearch(child)
+        }
       })
+      // Fallback: if regex and full concatenated text matches, use this node
+      if (!found && text instanceof RegExp && text.test(fullText)) {
+        found = node
+      }
     }
   }
   deepSearch(json)
@@ -106,8 +137,9 @@ function render(element) {
 
 const fireEvent = {
   press: (element) => {
-    if (element && element.props && element.props.onClick) {
-      element.props.onClick()
+    if (element && element.props) {
+      if (element.props.onPress) element.props.onPress()
+      else if (element.props.onClick) element.props.onClick()
     }
   },
   changeText: (element, text) => {
@@ -120,4 +152,57 @@ const fireEvent = {
   },
 }
 
-module.exports = { render, screen, fireEvent }
+/**
+ * waitFor — polls the callback until it stops throwing or the timeout expires.
+ * Wraps each retry in ReactTestRenderer.act so that async state updates
+ * (from resolved promises in useEffect) are flushed before the callback runs.
+ */
+async function waitFor(callback, { timeout = 1000, interval = 50 } = {}) {
+  const start = Date.now()
+  let lastError
+  while (Date.now() - start < timeout) {
+    // Flush pending React state updates and effects
+    await ReactTestRenderer.act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, interval))
+    })
+    try {
+      return callback()
+    } catch (err) {
+      lastError = err
+    }
+  }
+  throw lastError
+}
+
+/**
+ * act — thin wrapper around ReactTestRenderer.act so that async state
+ * updates (resolved promises, useEffect callbacks) are flushed before
+ * assertions run.
+ */
+async function act(callback) {
+  await ReactTestRenderer.act(async () => {
+    await callback()
+  })
+}
+
+/**
+ * renderHook — renders a hook inside a minimal wrapper component and
+ * exposes the hook's return value via `result.current`.
+ */
+function renderHook(renderCallback) {
+  let hookResult
+  function TestComponent() {
+    hookResult = renderCallback()
+    return null
+  }
+  ReactTestRenderer.act(() => {
+    ReactTestRenderer.create(React.createElement(TestComponent))
+  })
+  return {
+    get result() {
+      return { get current() { return hookResult } }
+    },
+  }
+}
+
+module.exports = { render, screen, fireEvent, waitFor, act, renderHook }

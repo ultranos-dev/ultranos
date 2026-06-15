@@ -8,6 +8,10 @@ const en = {
   search: {
     placeholder: 'Search drugs\u2026',
     empty: 'Search by drug name, brand name, or ATC code',
+    emptyTitle: 'Find a medication',
+    emptyDescription: 'Search by drug name, brand, or ATC code',
+    noResultsTitle: 'No results',
+    noResultsDescription: 'Try a different spelling or search term',
     lang: { en: 'EN', prs: '\u062f\u0631\u06cc', ps: '\u067e\u069a\u062a\u0648', ar: '\u0639\u0631\u0628\u064a' },
   },
   sync: {
@@ -66,6 +70,8 @@ const en = {
     locationRequired: 'Location permission required to find nearby pharmacies',
     unavailable: 'Pricing unavailable \u2014 check your connection and try again',
     noResults: 'No pharmacy prices found nearby',
+    emptyTitle: 'No prices nearby',
+    emptyDescription: 'Try again when connected to the internet',
     retry: 'Retry',
     inStock: 'In stock',
     lowStock: 'Low stock',
@@ -102,15 +108,36 @@ const en = {
   },
   browse: {
     empty: 'No categories available — sync the catalog first',
+    emptyTitle: 'No categories yet',
+    emptyDescription: 'Sync your catalog to browse by class',
     noDrugs: 'No drugs in this category',
   },
   saved: {
     empty: 'No saved drugs yet — tap the bookmark icon on any drug to save it',
+    emptyTitle: 'No saved drugs',
+    emptyDescription: 'Bookmark drugs to find them quickly here',
   },
   common: {
     cancel: 'Cancel',
     ok: 'OK',
     back: 'Back',
+    somethingWentWrong: 'Something went wrong',
+    reload: 'Reload',
+    tabError: 'This section encountered an error',
+  },
+  net: {
+    offline: "You're offline — showing cached data",
+  },
+  welcome: {
+    tagline: 'Your offline drug reference',
+    getStarted: 'Get Started',
+  },
+  coach: {
+    browseClass: 'Tap a category to see all drugs in that class',
+    detailBookmark: 'Save drugs for quick access in the Saved tab',
+    detailTabs: 'Swipe between tabs for clinical details, pricing, and more',
+    profileLang: 'Change your language anytime from settings',
+    profileSync: 'Keep your catalog updated — sync downloads the latest drugs',
   },
   profile: {
     role: 'Role',

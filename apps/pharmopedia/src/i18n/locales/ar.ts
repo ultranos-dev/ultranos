@@ -6,6 +6,10 @@ const ar: Translations = {
     placeholder: 'ابحث عن الدواء\u2026',
     empty: 'ابحث باسم الدواء أو الاسم التجاري أو رمز ATC',
     lang: { en: 'EN', prs: 'دری', ps: 'پښتو', ar: 'عربي' },
+    emptyTitle: 'ابحث عن دواء',
+    emptyDescription: 'ابحث بالاسم التجاري أو الاسم العلمي أو رمز ATC',
+    noResultsTitle: 'لا توجد نتائج',
+    noResultsDescription: 'جرب تهجئة مختلفة',
   },
   sync: {
     syncing: 'جارٍ مزامنة الكتالوج\u2026',
@@ -57,6 +61,8 @@ const ar: Translations = {
     locationRequired: 'إذن الموقع مطلوب للعثور على الصيدليات القريبة',
     unavailable: 'التسعير غير متاح \u2014 تحقق من اتصالك وأعد المحاولة',
     noResults: 'لم يتم العثور على أسعار صيدليات قريبة',
+    emptyTitle: 'لا توجد أسعار قريبة',
+    emptyDescription: 'حاول مرة أخرى عند الاتصال بالإنترنت',
     retry: 'إعادة المحاولة',
     inStock: 'متوفر',
     lowStock: 'مخزون منخفض',
@@ -83,14 +89,35 @@ const ar: Translations = {
   browse: {
     empty: 'لا توجد فئات متاحة — قم بمزامنة الكتالوج أولاً',
     noDrugs: 'لا توجد أدوية في هذه الفئة',
+    emptyTitle: 'لا توجد فئات بعد',
+    emptyDescription: 'قم بمزامنة الكتالوج للتصفح حسب الفئة',
   },
   saved: {
     empty: 'لا توجد أدوية محفوظة بعد — اضغط على أيقونة الإشارة المرجعية لأي دواء لحفظه',
+    emptyTitle: 'لا توجد أدوية محفوظة',
+    emptyDescription: 'أضف أدوية إلى المفضلة للعثور عليها بسرعة هنا',
   },
   common: {
     cancel: 'إلغاء',
     ok: 'حسناً',
     back: 'رجوع',
+    somethingWentWrong: 'حدث خطأ ما',
+    reload: 'إعادة التحميل',
+    tabError: 'واجه هذا القسم خطأ',
+  },
+  net: {
+    offline: 'أنت غير متصل — يتم عرض البيانات المحفوظة',
+  },
+  welcome: {
+    tagline: 'مرجعك الدوائي بدون اتصال',
+    getStarted: 'ابدأ',
+  },
+  coach: {
+    browseClass: 'اضغط على فئة لرؤية جميع الأدوية فيها',
+    detailBookmark: 'احفظ الأدوية للوصول السريع في تبويب المحفوظات',
+    detailTabs: 'اسحب بين التبويبات للتفاصيل السريرية والأسعار',
+    profileLang: 'غيّر لغتك في أي وقت من الإعدادات',
+    profileSync: 'حافظ على تحديث الكتالوج — المزامنة تنزّل أحدث الأدوية',
   },
   profile: {
     role: 'الدور',

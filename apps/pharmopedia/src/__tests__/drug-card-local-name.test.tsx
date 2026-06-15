@@ -9,6 +9,24 @@ vi.mock('@/store/lang-store', () => ({
   isRtlLang: (lang: string) => ['prs', 'ps', 'ar'].includes(lang),
 }))
 
+vi.mock('@/store/bookmark-store', () => ({
+  useBookmarkStore: (s: (state: { isBookmarked: (atcCode: string) => boolean }) => unknown) =>
+    s({ isBookmarked: () => false }),
+}))
+
+vi.mock('@/hooks/useThemeColors', () => ({
+  useThemeColors: () => ({
+    surfaceElevated: '#ffffff',
+    borderSubtle: '#e5e7eb',
+    primary500: '#2e9e71',
+    textPrimary: '#111827',
+    textSecondary: '#6b7280',
+    textMuted: '#9ca3af',
+    surfaceSubtle: '#f3f4f6',
+    danger: '#dc2626',
+  }),
+}))
+
 const BASE: DrugSearchResult = {
   atcCode: 'J01CA04',
   innName: 'Amoxicillin',

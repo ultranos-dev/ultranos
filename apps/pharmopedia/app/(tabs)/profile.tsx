@@ -1,8 +1,10 @@
+import { useRef, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/auth-store'
+import { useCoachMarkStore } from '@/store/coach-mark-store'
 import { useSyncStore } from '@/store/sync-store'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
 import { useThemeStore, type ThemeMode } from '@/store/theme-store'
@@ -10,7 +12,10 @@ import { useThemeColors } from '@/hooks/useThemeColors'
 import { runSync } from '@/sync/catalog-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
+import { hapticNotification, hapticSelection } from '@/lib/haptics'
+import { NotificationFeedbackType } from 'expo-haptics'
 import { FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { CoachMark } from '@/components/CoachMark'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'EN' },
@@ -43,6 +48,9 @@ export default function ProfileTab() {
   const themeMode = useThemeStore((s) => s.mode)
   const setThemeMode = useThemeStore((s) => s.setMode)
 
+  const visitCount = useRef(0)
+  useEffect(() => { visitCount.current += 1 }, [])
+
   async function handleSyncNow() {
     if (!token || status === 'syncing') return
     setStatus('syncing')
@@ -50,8 +58,10 @@ export default function ProfileTab() {
     try {
       const { version } = await runSync(getDatabase(), token, setSyncedCount)
       setLastSync(version, new Date().toISOString())
+      void hapticNotification(NotificationFeedbackType.Success)
     } catch {
       setStatus('error')
+      void hapticNotification(NotificationFeedbackType.Error)
     }
   }
 
@@ -61,6 +71,7 @@ export default function ProfileTab() {
     } catch {
       // clearCatalog failed — session already cleared from memory
     }
+    void useCoachMarkStore.getState().reset()
     router.replace('/(auth)/login')
   }
 
@@ -77,6 +88,7 @@ export default function ProfileTab() {
       )
     } else {
       void setLang(selected)
+      void hapticSelection()
     }
   }
 
@@ -122,7 +134,7 @@ export default function ProfileTab() {
               key={opt.value}
               testID={`theme-${opt.value}`}
               style={[styles.themeBtn, { borderColor: colors.border }, themeMode === opt.value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
-              onPress={() => void setThemeMode(opt.value)}
+              onPress={() => { void setThemeMode(opt.value); void hapticSelection() }}
             >
               <Text style={[styles.themeText, { color: colors.textSecondary }, themeMode === opt.value && { color: colors.white }]}>
                 {t(opt.labelKey)}
@@ -159,6 +171,16 @@ export default function ProfileTab() {
           <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
         </Pressable>
       </View>
+      <CoachMark
+        markKey="profile-lang"
+        hint={t('coach.profileLang')}
+        visible={visitCount.current >= 2}
+      />
+      <CoachMark
+        markKey="profile-sync"
+        hint={t('coach.profileSync')}
+        visible={visitCount.current >= 2}
+      />
     </SafeAreaView>
   )
 }

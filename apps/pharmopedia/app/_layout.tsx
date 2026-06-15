@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Appearance } from 'react-native'
 import { Stack, Redirect } from 'expo-router'
 // Suppress react-native-screens passing pointerEvents as a prop on web (library bug, not our code)
@@ -26,11 +26,15 @@ import { useAuthStore } from '@/store/auth-store'
 import { useDeviceSecurityStore } from '@/stores/device-security-store'
 import { useLangStore } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
+import { useCoachMarkStore } from '@/store/coach-mark-store'
 import { useThemeStore } from '@/store/theme-store'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { initI18n } from '@/i18n'
+import { hasSeenWelcome } from './welcome'
 
 export default function RootLayout() {
   const { isAuthenticated, initialized, initialize } = useAuthStore()
+  const [showWelcome, setShowWelcome] = useState<boolean | null>(null)
   const setSecurityResult = useDeviceSecurityStore((s) => s.setResult)
   const langInit = useLangStore((s) => s.init)
   const langInitialized = useLangStore((s) => s.initialized)
@@ -58,11 +62,17 @@ export default function RootLayout() {
         await themeInit()
         initI18n(useLangStore.getState().lang)
         await useBookmarkStore.getState().init(getDatabase())
+        await useCoachMarkStore.getState().init()
+        const seen = await hasSeenWelcome()
+        setShowWelcome(!seen)
       } catch {
         // DB unavailable (web platform without WASM, first-launch failure) — proceed without local cache
         await langInit()
         await themeInit()
         initI18n(useLangStore.getState().lang)
+        await useCoachMarkStore.getState().init()
+        const seen = await hasSeenWelcome()
+        setShowWelcome(!seen)
       } finally {
         initialize()
       }
@@ -77,17 +87,21 @@ export default function RootLayout() {
     return () => sub.remove()
   }, [onSystemChange])
 
-  if (!initialized || !langInitialized || !themeInitialized || !fontsLoaded) return null
+  if (!initialized || !langInitialized || !themeInitialized || !fontsLoaded || showWelcome === null) return null
 
   return (
     <>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '' }} />
-      </Stack>
-      {!isAuthenticated && <Redirect href="/(auth)/login" />}
+      <ErrorBoundary>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+          <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
+          <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
+        </Stack>
+      </ErrorBoundary>
+      {showWelcome && <Redirect href="/welcome" />}
+      {!showWelcome && !isAuthenticated && <Redirect href="/(auth)/login" />}
     </>
   )
 }

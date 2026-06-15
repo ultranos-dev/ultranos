@@ -6,6 +6,10 @@ const ps: Translations = {
     placeholder: 'دوا وپلټئ\u2026',
     empty: 'د دوا نوم، د تجارت نوم، یا د ATC کوډ له مخې وپلټئ',
     lang: { en: 'EN', prs: 'دری', ps: 'پښتو', ar: 'عربي' },
+    emptyTitle: 'یوه درمل ومومئ',
+    emptyDescription: 'د درمل نوم، برانډ یا ATC کوډ سره لټون وکړئ',
+    noResultsTitle: 'هیڅ پایلې نشته',
+    noResultsDescription: 'بل املا هڅه وکړئ',
   },
   sync: {
     syncing: 'کاتالوګ سنک کیږي\u2026',
@@ -57,6 +61,8 @@ const ps: Translations = {
     locationRequired: 'د نږدې درمل پلورنځیو موندلو لپاره د موقعیت اجازه ورکړئ',
     unavailable: 'نرخ ونه موندل شو \u2014 خپله اتصال وګورئ',
     noResults: 'نږدې درمل پلورنځیو کې هیڅ نرخ ونه موندل شو',
+    emptyTitle: 'نږدې بیې ونه موندل شوې',
+    emptyDescription: 'کله چې انټرنیټ ته وصل شئ بیا هڅه وکړئ',
     retry: 'بیا هڅه وکړئ',
     inStock: 'موجود',
     lowStock: 'لږ موجود',
@@ -83,14 +89,35 @@ const ps: Translations = {
   browse: {
     empty: 'هیڅ کټګورۍ شتون نلري — لومړی کټالوګ همغږي کړئ',
     noDrugs: 'پدې کټګورۍ کې هیڅ دارو شتون نلري',
+    emptyTitle: 'تر اوسه هیڅ کټګوري نشته',
+    emptyDescription: 'خپل کتابچه همغږي کړئ',
   },
   saved: {
     empty: 'تاسو هیڅ خوندي شوي دارو نلرئ — د هرې درملې د نښانک آیکون باندې فشار ورکړئ',
+    emptyTitle: 'هیڅ خوندي شوي درمل نشته',
+    emptyDescription: 'درمل نښه کړئ ترڅو دلته ژر ومومئ',
   },
   common: {
     cancel: 'لغول',
     ok: 'سمه ده',
     back: 'شاته',
+    somethingWentWrong: 'یوه ستونزه رامنځته شوه',
+    reload: 'بیا پورته کول',
+    tabError: 'دا برخه له تېروتنې سره مخ شوه',
+  },
+  net: {
+    offline: 'تاسو آفلاین یاست — کیش شوی معلومات ښودل کیږي',
+  },
+  welcome: {
+    tagline: 'ستاسو آفلاین درملو مرجع',
+    getStarted: 'پیل وکړئ',
+  },
+  coach: {
+    browseClass: 'په یوه کټګوري ټک وکړئ ترڅو ټولې درمل وګورئ',
+    detailBookmark: 'درمل خوندي کړئ ترڅو د خوندي شوي تب کې ژر ومومئ',
+    detailTabs: 'د کلینیکي توضیحاتو او بیو لپاره تبونو ته سوایپ وکړئ',
+    profileLang: 'خپله ژبه هر وخت د تنظیماتو څخه بدل کړئ',
+    profileSync: 'خپل کتابچه تازه وساتئ — همغږي وروستي درمل ډاونلوډ کوي',
   },
   profile: {
     role: 'رول',

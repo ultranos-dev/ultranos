@@ -7,6 +7,9 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { hapticNotification } from '@/lib/haptics'
+import { NotificationFeedbackType } from 'expo-haptics'
+import { LanguageChips } from '@/components/LanguageChips'
 
 type Flow = 'clinical' | 'patient'
 type OtpStep = 'phone' | 'code'
@@ -33,6 +36,7 @@ export default function LoginScreen() {
     setLoading(false)
     if (err || !data.session) {
       setError(err?.message ?? t('login.loginFailed'))
+      void hapticNotification(NotificationFeedbackType.Error)
       return
     }
     const session = data.session
@@ -50,7 +54,7 @@ export default function LoginScreen() {
     setError(null)
     const { error: err } = await supabase.auth.signInWithOtp({ phone })
     setLoading(false)
-    if (err) { setError(err.message); return }
+    if (err) { setError(err.message); void hapticNotification(NotificationFeedbackType.Error); return }
     setOtpStep('code')
   }
 
@@ -61,6 +65,7 @@ export default function LoginScreen() {
     setLoading(false)
     if (err || !data.session) {
       setError(err?.message ?? t('login.otpFailed'))
+      void hapticNotification(NotificationFeedbackType.Error)
       return
     }
     const session = data.session
@@ -78,6 +83,7 @@ export default function LoginScreen() {
       style={[styles.container, { backgroundColor: colors.surface }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <LanguageChips />
       <Text style={[styles.title, { color: colors.textPrimary }]}>{t('login.title')}</Text>
 
       {/* Flow toggle */}

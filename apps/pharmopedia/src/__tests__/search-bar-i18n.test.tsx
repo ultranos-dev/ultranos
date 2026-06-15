@@ -1,43 +1,45 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react-native'
-import { SearchBar } from '@/components/SearchBar'
 
-vi.mock('@/store/lang-store', () => {
-  const store = { lang: 'en', setLang: vi.fn() }
-  return {
-    useLangStore: (selector) => selector(store),
-    isRtlLang: (lang) => ['prs', 'ps', 'ar'].includes(lang),
-  }
-})
+vi.mock('@/hooks/useThemeColors', () => ({
+  useThemeColors: () => ({
+    surface: '#ffffff',
+    border: '#e5e7eb',
+    textPrimary: '#111827',
+    textMuted: '#9ca3af',
+    surfaceSubtle: '#f3f4f6',
+  }),
+}))
+
+vi.mock('@/store/lang-store', () => ({
+  useLangStore: (selector: (s: { lang: string }) => unknown) => selector({ lang: 'en' }),
+  isRtlLang: (lang: string) => ['prs', 'ps', 'ar'].includes(lang),
+}))
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key) => ({
+    t: (key: string) => ({
       'search.placeholder': 'Search drugs\u2026',
-      'search.lang.en': 'EN',
-      'search.lang.prs': 'دری',
-      'search.lang.ps': 'پښتو',
-      'search.lang.ar': 'عربي',
     }[key] ?? key),
   }),
 }))
 
-describe('SearchBar', () => {
-  it('renders all four language buttons', () => {
-    render(<SearchBar value="" onSearch={vi.fn()} />)
-    expect(screen.getByTestId('lang-en')).toBeTruthy()
-    expect(screen.getByTestId('lang-prs')).toBeTruthy()
-    expect(screen.getByTestId('lang-ps')).toBeTruthy()
-    expect(screen.getByTestId('lang-ar')).toBeTruthy()
-  })
+import { SearchBar } from '@/components/SearchBar'
 
-  it('shows Arabic label عربي for ar button', () => {
+describe('SearchBar', () => {
+  it('renders the search input', () => {
     render(<SearchBar value="" onSearch={vi.fn()} />)
-    expect(screen.getByText('عربي')).toBeTruthy()
+    expect(screen.getByTestId('search-input')).toBeTruthy()
   })
 
   it('uses translated placeholder', () => {
     render(<SearchBar value="" onSearch={vi.fn()} />)
     expect(screen.getByPlaceholderText('Search drugs\u2026')).toBeTruthy()
+  })
+
+  it('does not render language buttons (moved to LanguageChips)', () => {
+    render(<SearchBar value="" onSearch={vi.fn()} />)
+    expect(screen.queryByTestId('lang-en')).toBeNull()
+    expect(screen.queryByTestId('lang-prs')).toBeNull()
   })
 })
