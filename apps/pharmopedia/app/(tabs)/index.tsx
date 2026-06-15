@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import { View, FlatList, Text, StyleSheet, SafeAreaView, RefreshControl } from 'react-native'
+import { View, FlatList, Text, StyleSheet, RefreshControl } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { Search, SearchX } from 'lucide-react-native'
@@ -96,12 +97,11 @@ export default function SearchTab() {
         <FlatList
           data={results}
           keyExtractor={(item, index) => `${item.atcCode}-${index}`}
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <DrugCard
               result={item}
               lang={lang}
               onPress={() => router.push(`/drug/${item.atcCode}`)}
-              index={index}
             />
           )}
           refreshControl={

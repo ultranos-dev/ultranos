@@ -9,7 +9,7 @@ const mockSetSyncedCount = vi.fn()
 const mockSetLastSync = vi.fn()
 const mockRunSync = vi.fn()
 
-vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
+vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}), isDatabaseReady: () => true }))
 vi.mock('@/sync/catalog-sync', () => ({
   runSync: (...args: unknown[]) => mockRunSync(...args),
 }))

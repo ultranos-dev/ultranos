@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useLangStore, type Lang } from '@/store/lang-store'
-import { FontFamily, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { hapticSelection } from '@/lib/haptics'
 
@@ -24,6 +24,8 @@ export function LanguageChips() {
           <Pressable
             key={chip.value}
             testID={`lang-chip-${chip.value}`}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: lang === chip.value }}
             style={[
               styles.chip,
               {
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: FontSize.sm,
     fontFamily: FontFamily.sansMedium,
   },
 })

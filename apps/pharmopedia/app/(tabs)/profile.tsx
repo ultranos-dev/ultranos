@@ -1,4 +1,3 @@
-import { useRef, useEffect } from 'react'
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -14,7 +13,7 @@ import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
 import { hapticNotification, hapticSelection } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
-import { FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CoachMark } from '@/components/CoachMark'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
@@ -48,9 +47,6 @@ export default function ProfileTab() {
   const themeMode = useThemeStore((s) => s.mode)
   const setThemeMode = useThemeStore((s) => s.setMode)
 
-  const visitCount = useRef(0)
-  useEffect(() => { visitCount.current += 1 }, [])
-
   async function handleSyncNow() {
     if (!token || status === 'syncing') return
     setStatus('syncing')
@@ -73,6 +69,17 @@ export default function ProfileTab() {
     }
     void useCoachMarkStore.getState().reset()
     router.replace('/(auth)/login')
+  }
+
+  function confirmLogout() {
+    Alert.alert(
+      t('profile.logoutConfirmTitle'),
+      t('profile.logoutConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' as const },
+        { text: t('profile.logoutConfirm'), style: 'destructive' as const, onPress: () => void handleLogout() },
+      ],
+    )
   }
 
   function handleLangPress(selected: Lang) {
@@ -109,7 +116,9 @@ export default function ProfileTab() {
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.language')}</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.preferences')}</Text>
+
+        <Text style={[styles.sublabel, { color: colors.textSecondary }]}>{t('profile.language')}</Text>
         <View style={styles.langRow}>
           {LANG_OPTIONS.map(({ value, label }) => (
             <Pressable
@@ -124,10 +133,8 @@ export default function ProfileTab() {
             </Pressable>
           ))}
         </View>
-      </View>
 
-      <View style={[styles.section, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.appearance')}</Text>
+        <Text style={[styles.sublabel, { color: colors.textSecondary, marginTop: Spacing[3] }]}>{t('profile.appearance')}</Text>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((opt) => (
             <Pressable
@@ -160,13 +167,20 @@ export default function ProfileTab() {
             {status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
           </Text>
         </Pressable>
+        <Pressable
+          testID="show-tips-button"
+          style={[styles.tipsButton]}
+          onPress={() => { void useCoachMarkStore.getState().reset(); void hapticSelection() }}
+        >
+          <Text style={[styles.tipsText, { color: colors.primary500 }]}>{t('profile.showTips')}</Text>
+        </Pressable>
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Pressable
           testID="logout-button"
           style={[styles.button, { backgroundColor: colors.dangerLight }]}
-          onPress={handleLogout}
+          onPress={confirmLogout}
         >
           <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
         </Pressable>
@@ -174,12 +188,12 @@ export default function ProfileTab() {
       <CoachMark
         markKey="profile-lang"
         hint={t('coach.profileLang')}
-        visible={visitCount.current >= 2}
+        visible
       />
       <CoachMark
         markKey="profile-sync"
         hint={t('coach.profileSync')}
-        visible={visitCount.current >= 2}
+        visible
       />
     </SafeAreaView>
   )
@@ -194,16 +208,21 @@ const styles = StyleSheet.create({
     gap: Spacing[2],
   },
   label: {
-    fontSize: 13,
+    fontSize: FontSize.xs,
     fontFamily: FontFamily.sansBold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: Spacing[1],
   },
-  value: { fontSize: 15, fontFamily: FontFamily.sans },
-  facility: { fontSize: 14, fontFamily: FontFamily.sans, marginTop: 4 },
-  syncing: { fontSize: 14, fontFamily: FontFamily.sans },
-  error: { fontSize: 14, fontFamily: FontFamily.sans },
+  sublabel: {
+    fontSize: FontSize.xs,
+    fontFamily: FontFamily.sansMedium,
+    marginBottom: Spacing[1],
+  },
+  value: { fontSize: FontSize.base, fontFamily: FontFamily.sans },
+  facility: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, marginTop: Spacing[1] },
+  syncing: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  error: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
   themeRow: { flexDirection: 'row', gap: Spacing[2] },
   themeBtn: {
     flex: 1,
@@ -212,21 +231,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
   },
-  themeText: { fontSize: 14, fontFamily: FontFamily.sansMedium },
+  themeText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
   langRow: { flexDirection: 'row', gap: Spacing[2], flexWrap: 'wrap' },
   langBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[1],
     borderRadius: Radius.md,
     borderWidth: 1,
   },
-  langText: { fontSize: 14, fontFamily: FontFamily.sans },
+  langText: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
   button: {
     borderRadius: Radius.md,
-    padding: 12,
+    padding: Spacing[3],
     alignItems: 'center',
     marginTop: Spacing[2],
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { fontFamily: FontFamily.sansSemibold, fontSize: 15 },
+  buttonText: { fontFamily: FontFamily.sansSemibold, fontSize: FontSize.base },
+  tipsButton: {
+    marginTop: Spacing[2],
+    alignItems: 'center',
+  },
+  tipsText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: FontSize.sm,
+  },
 })

@@ -100,7 +100,7 @@ export default function RootLayout() {
           <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
         </Stack>
       </ErrorBoundary>
-      {showWelcome && <Redirect href="/welcome" />}
+      {showWelcome && !isAuthenticated && <Redirect href="/welcome" />}
       {!showWelcome && !isAuthenticated && <Redirect href="/(auth)/login" />}
     </>
   )

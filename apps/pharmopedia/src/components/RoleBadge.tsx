@@ -13,7 +13,7 @@ const ROLE_TEXT_COLORS: Record<string, string> = {
 
 export function RoleBadge({ role }: { role: string }) {
   return (
-    <View style={[styles.badge, { backgroundColor: ROLE_COLORS[role] ?? '#f3f4f6' }]}>
+    <View style={[styles.badge, { backgroundColor: ROLE_COLORS[role] ?? '#f3f4f6' }]} accessibilityLabel={role}>
       <Text style={[styles.text, { color: ROLE_TEXT_COLORS[role] ?? '#374151' }]}>
         {role}
       </Text>

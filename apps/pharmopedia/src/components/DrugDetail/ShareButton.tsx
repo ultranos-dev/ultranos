@@ -21,7 +21,7 @@ export function ShareButton({ atcCode, drugName }: Props) {
   }
 
   return (
-    <Pressable testID="share-button" style={styles.btn} onPress={() => void handleShare()}>
+    <Pressable testID="share-button" style={styles.btn} onPress={() => void handleShare()} accessibilityRole="button" accessibilityLabel="Share">
       <Share2 size={22} color={colors.textSecondary} />
     </Pressable>
   )

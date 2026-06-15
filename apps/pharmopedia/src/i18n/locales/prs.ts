@@ -10,6 +10,7 @@ const prs: Translations = {
     emptyDescription: 'با نام دارو، برند یا کد ATC جستجو کنید',
     noResultsTitle: 'نتیجه‌ای یافت نشد',
     noResultsDescription: 'املای دیگری را امتحان کنید',
+    recentSearches: 'جستجوهای اخیر',
   },
   sync: {
     syncing: 'کاتالوگ همگام‌سازی می‌شود\u2026',
@@ -19,8 +20,10 @@ const prs: Translations = {
   },
   drug: {
     notFound: 'دارو یافت نشد',
+    notFoundDescription: 'این دارو ممکن است هنوز در کاتالوگ نباشد.',
+    searchInstead: 'جستجو',
     back: 'برگشت',
-    tabs: { overview: 'مرور', clinical: 'بالینی', formulary: 'Formulary', pricing: 'قیمت', enrich: 'تکمیل' },
+    tabs: { overview: 'مرور', clinical: 'بالینی', formulary: 'Formulary', pricing: 'قیمت', enrich: 'ویرایش' },
     overview: {
       summary: 'خلاصه',
       usedFor: 'موارد استفاده',
@@ -39,6 +42,7 @@ const prs: Translations = {
       pregnancyCategory: 'رده بارداری',
       renalAdjustment: 'تعدیل کلیوی',
       interactions: 'Drug interactions',
+      safetyWarning: 'تداخلات منع مصرف',
       pediatricDosing: 'Pediatric dosing',
       adminNotes: 'Administration notes',
       pharmacokinetics: 'Pharmacokinetics',
@@ -111,6 +115,9 @@ const prs: Translations = {
   welcome: {
     tagline: 'مرجع داروی آفلاین شما',
     getStarted: 'شروع کنید',
+    feature1: 'هزاران دارو را آفلاین جستجو کنید',
+    feature2: 'قیمت‌ها را از داروخانه‌های نزدیک دریافت کنید',
+    feature3: 'به زبان‌های انگلیسی، دری، پشتو و عربی',
   },
   coach: {
     browseClass: 'روی یک دسته ضربه بزنید تا داروهای آن را ببینید',
@@ -137,6 +144,11 @@ const prs: Translations = {
     themeLight: 'روشن',
     themeDark: 'تاریک',
     themeSystem: 'سیستم',
+    logoutConfirmTitle: 'خروج؟',
+    logoutConfirmMessage: 'شما باید دوباره وارد شوید. داده‌های همگام نشده روی این دستگاه باقی می‌ماند.',
+    logoutConfirm: 'خروج',
+    preferences: 'ترجیحات',
+    showTips: 'نمایش مجدد راهنما',
   },
   login: {
     title: 'فارماپدیا',
@@ -154,6 +166,13 @@ const prs: Translations = {
     loginFailed: 'ورود ناموفق',
     otpFailed: 'تأیید OTP ناموفق',
     register: "Don't have an account? Register",
+    forgotPassword: 'رمز عبور فراموش شده؟',
+    resetSent: 'ایمیل بازنشانی رمز عبور ارسال شد. صندوق ورودی خود را بررسی کنید.',
+    resetFailed: 'ارسال ایمیل بازنشانی ناموفق بود. دوباره تلاش کنید.',
+    resetEmail: 'ایمیل خود را برای بازنشانی رمز عبور وارد کنید',
+    sendReset: 'ارسال ایمیل بازنشانی',
+    resendCode: 'ارسال مجدد کد',
+    resendIn: 'ارسال مجدد در {{seconds}} ثانیه',
   },
   formulary: {
     status: 'Formulary status',
@@ -178,6 +197,8 @@ const prs: Translations = {
     signIn: 'Already have an account? Sign in',
     failed: 'Registration failed',
     otpFailed: 'Verification failed',
+    resendCode: 'ارسال مجدد کد',
+    resendIn: 'ارسال مجدد در {{seconds}} ثانیه',
   },
 }
 

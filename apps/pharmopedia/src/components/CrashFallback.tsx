@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import * as Updates from 'expo-updates'
 import { AlertTriangle } from 'lucide-react-native'
-import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { Colors, FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 interface Props {
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: FontSize.base,
     fontFamily: FontFamily.sansSemibold,
-    color: '#ffffff',
+    color: Colors.white,
   },
   inlineContainer: {
     flex: 1,

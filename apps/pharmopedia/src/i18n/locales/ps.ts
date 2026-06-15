@@ -10,6 +10,7 @@ const ps: Translations = {
     emptyDescription: 'د درمل نوم، برانډ یا ATC کوډ سره لټون وکړئ',
     noResultsTitle: 'هیڅ پایلې نشته',
     noResultsDescription: 'بل املا هڅه وکړئ',
+    recentSearches: 'وروستي لټونونه',
   },
   sync: {
     syncing: 'کاتالوګ سنک کیږي\u2026',
@@ -19,8 +20,10 @@ const ps: Translations = {
   },
   drug: {
     notFound: 'دوا ونه موندل شوه',
+    notFoundDescription: 'دا درمل ممکن لا تر اوسه په کتالوګ کې نه وي.',
+    searchInstead: 'لټون',
     back: 'شاته',
-    tabs: { overview: 'لنډیز', clinical: 'کلیني', formulary: 'Formulary', pricing: 'نرخ', enrich: 'بشپړول' },
+    tabs: { overview: 'لنډیز', clinical: 'کلیني', formulary: 'Formulary', pricing: 'نرخ', enrich: 'سمول' },
     overview: {
       summary: 'لنډیز',
       usedFor: 'د کارولو ځایونه',
@@ -39,6 +42,7 @@ const ps: Translations = {
       pregnancyCategory: 'د حمل کټګوري',
       renalAdjustment: 'د پښتورګو تنظیم',
       interactions: 'Drug interactions',
+      safetyWarning: 'د منع تعاملات',
       pediatricDosing: 'Pediatric dosing',
       adminNotes: 'Administration notes',
       pharmacokinetics: 'Pharmacokinetics',
@@ -111,6 +115,9 @@ const ps: Translations = {
   welcome: {
     tagline: 'ستاسو آفلاین درملو مرجع',
     getStarted: 'پیل وکړئ',
+    feature1: 'زرګونه درمل آفلاین ولټوئ',
+    feature2: 'د نږدې دواخانو نرخونه ترلاسه کړئ',
+    feature3: 'په انګلیسي، دری، پښتو او عربي ژبو',
   },
   coach: {
     browseClass: 'په یوه کټګوري ټک وکړئ ترڅو ټولې درمل وګورئ',
@@ -137,6 +144,11 @@ const ps: Translations = {
     themeLight: 'رڼا',
     themeDark: 'تیاره',
     themeSystem: 'سیسټم',
+    logoutConfirmTitle: 'وتل؟',
+    logoutConfirmMessage: 'تاسو باید بیا ننوتل وکړئ. نه سنک شوي معلومات به پدې وسیله پاتې شي.',
+    logoutConfirm: 'وتل',
+    preferences: 'ترجیحات',
+    showTips: 'لارښوونې بیا وښایاست',
   },
   login: {
     title: 'فارماپیدیا',
@@ -154,6 +166,13 @@ const ps: Translations = {
     loginFailed: 'ننوتل ناموفقه',
     otpFailed: 'د OTP تصدیق ناموفقه',
     register: "Don't have an account? Register",
+    forgotPassword: 'پاسورډ مو هیر شوی؟',
+    resetSent: 'د پاسورډ بیا تنظیم ایمیل لیږل شو.',
+    resetFailed: 'د بیا تنظیم ایمیل لیږل ناکام شو.',
+    resetEmail: 'د پاسورډ بیا تنظیم لپاره خپل ایمیل ولیکئ',
+    sendReset: 'د بیا تنظیم ایمیل لیږل',
+    resendCode: 'کوډ بیا ولیږئ',
+    resendIn: 'بیا لیږل په {{seconds}} ثانیو کې',
   },
   formulary: {
     status: 'Formulary status',
@@ -178,6 +197,8 @@ const ps: Translations = {
     signIn: 'Already have an account? Sign in',
     failed: 'Registration failed',
     otpFailed: 'Verification failed',
+    resendCode: 'کوډ بیا ولیږئ',
+    resendIn: 'بیا لیږل په {{seconds}} ثانیو کې',
   },
 }
 

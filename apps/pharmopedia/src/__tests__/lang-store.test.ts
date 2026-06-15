@@ -54,7 +54,7 @@ describe('useLangStore.setLang', () => {
   it('persists lang to SecureStore', async () => {
     const { setItemAsync } = await import('expo-secure-store') as { setItemAsync: ReturnType<typeof vi.fn> }
     await useLangStore.getState().setLang('prs')
-    expect(setItemAsync).toHaveBeenCalledWith('@pharmopedia/lang', 'prs')
+    expect(setItemAsync).toHaveBeenCalledWith('pharmopedia.lang', 'prs')
   })
 
   it('calls reloadAsync when RTL direction changes', async () => {

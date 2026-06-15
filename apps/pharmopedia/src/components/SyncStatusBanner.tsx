@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import { useTranslation } from 'react-i18next'
 import { useSyncStore } from '@/store/sync-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 
 export function SyncStatusBanner() {
   const { t } = useTranslation()
@@ -25,7 +26,7 @@ export function SyncStatusBanner() {
   if (status === 'syncing') {
     return (
       <View style={[styles.banner, { backgroundColor: colors.infoLight }]}>
-        <Animated.Text style={[styles.text, { color: colors.textPrimary }, countAnimatedStyle]}>
+        <Animated.Text style={[styles.text, { color: colors.textPrimary }, countAnimatedStyle]} accessibilityRole="text" accessibilityLiveRegion="polite">
           {syncedCount > 0
             ? t('sync.syncingCount', { count: syncedCount })
             : t('sync.syncing')}
@@ -37,7 +38,7 @@ export function SyncStatusBanner() {
   if (status === 'error') {
     return (
       <View style={[styles.banner, { backgroundColor: colors.dangerLight }]}>
-        <Text style={[styles.text, { color: colors.textPrimary }]}>{t('sync.failed')}</Text>
+        <Text style={[styles.text, { color: colors.textPrimary }]} accessibilityRole="text" accessibilityLiveRegion="polite">{t('sync.failed')}</Text>
       </View>
     )
   }
@@ -45,7 +46,7 @@ export function SyncStatusBanner() {
   if (!lastSyncAt) {
     return (
       <View style={[styles.banner, { backgroundColor: colors.warningLight }]}>
-        <Text style={[styles.text, { color: colors.textPrimary }]}>{t('sync.notSynced')}</Text>
+        <Text style={[styles.text, { color: colors.textPrimary }]} accessibilityRole="text" accessibilityLiveRegion="polite">{t('sync.notSynced')}</Text>
       </View>
     )
   }
@@ -54,6 +55,6 @@ export function SyncStatusBanner() {
 }
 
 const styles = StyleSheet.create({
-  banner: { paddingHorizontal: 16, paddingVertical: 8 },
-  text: { fontSize: 13, textAlign: 'center' },
+  banner: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[2] },
+  text: { fontSize: FontSize.sm, textAlign: 'center' },
 })

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import * as SecureStore from 'expo-secure-store'
 
-const COACH_KEY = '@pharmopedia/coach-dismissed'
+const COACH_KEY = 'pharmopedia.coach-dismissed'
 
 interface CoachMarkState {
   dismissed: Set<string>

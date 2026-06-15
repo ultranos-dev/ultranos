@@ -5,7 +5,7 @@ import { Appearance } from 'react-native'
 export type ThemeMode = 'light' | 'dark' | 'system'
 type ResolvedTheme = 'light' | 'dark'
 
-const THEME_KEY = '@pharmopedia/theme'
+const THEME_KEY = 'pharmopedia.theme'
 const VALID_MODES: ReadonlySet<string> = new Set(['light', 'dark', 'system'])
 
 function resolveTheme(mode: ThemeMode): ResolvedTheme {

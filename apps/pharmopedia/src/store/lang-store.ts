@@ -7,7 +7,7 @@ export type Lang = 'en' | 'prs' | 'ps' | 'ar'
 
 const RTL_LANGS: ReadonlySet<Lang> = new Set(['prs', 'ps', 'ar'])
 const VALID_LANGS: ReadonlySet<string> = new Set(['en', 'prs', 'ps', 'ar'])
-const LANG_KEY = '@pharmopedia/lang'
+const LANG_KEY = 'pharmopedia.lang'
 
 export function isRtlLang(lang: Lang): boolean {
   return RTL_LANGS.has(lang)

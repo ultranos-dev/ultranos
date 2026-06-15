@@ -7,8 +7,8 @@ import { useThemeColors } from '@/hooks/useThemeColors'
 
 export function NetStatusBanner() {
   const { t } = useTranslation()
-  const { isConnected } = useNetInfo()
   const colors = useThemeColors()
+  const { isConnected } = useNetInfo()
 
   // Don't show during initial check (isConnected === null) or when connected
   if (isConnected !== false) return null
@@ -18,6 +18,8 @@ export function NetStatusBanner() {
       entering={FadeInDown.duration(200)}
       exiting={FadeOutUp.duration(200)}
       style={[styles.banner, { backgroundColor: colors.warningLight }]}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive"
     >
       <Text style={[styles.text, { color: colors.warningDark }]}>
         {t('net.offline')}

@@ -12,10 +12,10 @@ interface Props {
 
 export function CoachMark({ markKey, hint, visible }: Props) {
   const colors = useThemeColors()
-  const shouldShow = useCoachMarkStore((s) => s.shouldShow)
+  const isDismissed = useCoachMarkStore((s) => s.dismissed.has(markKey))
   const dismiss = useCoachMarkStore((s) => s.dismiss)
 
-  if (!visible || !shouldShow(markKey)) return null
+  if (!visible || isDismissed) return null
 
   return (
     <Modal transparent animationType="none" visible>
@@ -23,6 +23,8 @@ export function CoachMark({ markKey, hint, visible }: Props) {
         testID="coach-mark-overlay"
         style={styles.overlay}
         onPress={() => void dismiss(markKey)}
+        accessibilityRole="button"
+        accessibilityLabel={hint}
       >
         <Animated.View
           entering={FadeIn.delay(300).duration(250)}

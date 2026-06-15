@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { View, Text, Pressable, StyleSheet, SafeAreaView } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,7 @@ import { ClinicalTab } from '@/components/DrugDetail/ClinicalTab'
 import { PricingTab } from '@/components/DrugDetail/PricingTab'
 import { EnrichTab } from '@/components/DrugDetail/EnrichTab'
 import { ShareButton } from '@/components/DrugDetail/ShareButton'
+import { SafetyBanner } from '@/components/DrugDetail/SafetyBanner'
 import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { CoachMark } from '@/components/CoachMark'
@@ -39,10 +41,7 @@ export default function DrugDetailScreen() {
   const isRtl = isRtlLang(lang)
 
   const isBookmarked = useBookmarkStore((s) => s.isBookmarked)
-  const toggleBookmark = useBookmarkStore((s) => s.toggleBookmark)
-
-  const visitCount = useRef(0)
-  useEffect(() => { visitCount.current += 1 }, [])
+  const toggleBookmark = useBookmarkStore((s) => s.toggle)
 
   const [entry, setEntry] = useState<DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3 | null>(null)
   const [loading, setLoading] = useState(true)
@@ -129,7 +128,10 @@ export default function DrugDetailScreen() {
     return (
       <View style={styles.center}>
         <Text style={[styles.notFound, { color: colors.textSecondary }]}>{t('drug.notFound')}</Text>
-        <Pressable onPress={() => router.back()}><Text style={[styles.back, { color: colors.primary500 }]}>{t('drug.back')}</Text></Pressable>
+        <Text style={[styles.notFoundDesc, { color: colors.textMuted }]}>{t('drug.notFoundDescription')}</Text>
+        <Pressable onPress={() => router.replace('/(tabs)' as never)} accessibilityRole="button">
+          <Text style={[styles.back, { color: colors.primary500 }]}>{t('drug.searchInstead')}</Text>
+        </Pressable>
       </View>
     )
   }
@@ -144,7 +146,7 @@ export default function DrugDetailScreen() {
           {localName || entry.innName}
         </Text>
         <Text style={[styles.innLine, { color: colors.textSecondary }]}>
-          {entry.innName} · {entry.atcCode}
+          {entry.innName}{isClinical ? ` · ${entry.atcCode}` : ''}
         </Text>
         <View style={[styles.classBadge, { backgroundColor: colors.surfaceSubtle }]}>
           <Text style={[styles.classBadgeText, { color: colors.textSecondary }]}>
@@ -155,8 +157,8 @@ export default function DrugDetailScreen() {
           <Pressable testID="bookmark-btn" onPress={() => void handleToggleBookmark()}>
             <Animated.View style={heartAnimatedStyle}>
               <Heart
-                color={isBookmarked(entry.atcCode) ? colors.danger : colors.textMuted}
-                fill={isBookmarked(entry.atcCode) ? colors.danger : 'none'}
+                color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
+                fill={isBookmarked(entry.atcCode) ? colors.primary500 : 'none'}
                 size={24}
               />
             </Animated.View>
@@ -164,6 +166,10 @@ export default function DrugDetailScreen() {
           <ShareButton entry={entry} />
         </View>
       </View>
+
+      {isClinical && 'interactions' in entry && (entry as DrugEntryTier2).interactions?.length > 0 && (
+        <SafetyBanner interactions={(entry as DrugEntryTier2).interactions} />
+      )}
 
       <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         {TABS.map((tab, i) => (
@@ -214,12 +220,12 @@ export default function DrugDetailScreen() {
       <CoachMark
         markKey="detail-bookmark"
         hint={t('coach.detailBookmark')}
-        visible={visitCount.current >= 2 && !!entry}
+        visible={!!entry}
       />
       <CoachMark
         markKey="detail-tabs"
         hint={t('coach.detailTabs')}
-        visible={visitCount.current >= 2 && !!entry}
+        visible={!!entry}
       />
     </SafeAreaView>
   )
@@ -228,7 +234,7 @@ export default function DrugDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 16, borderBottomWidth: 1 },
+  header: { padding: Spacing[4], borderBottomWidth: 1 },
   primaryName: {
     fontSize: FontSize.xl,
     fontFamily: FontFamily.headingBold,
@@ -242,12 +248,12 @@ const styles = StyleSheet.create({
   classBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: Spacing[2],
-    paddingVertical: 2,
+    paddingVertical: Spacing[1],
     borderRadius: Radius.sm,
     marginBottom: Spacing[3],
   },
   classBadgeText: {
-    fontSize: 12,
+    fontSize: FontSize.xs,
     fontFamily: FontFamily.sans,
   },
   actionRow: {
@@ -257,8 +263,8 @@ const styles = StyleSheet.create({
   },
   rtlText: { fontFamily: FontFamily.arabic, textAlign: 'right' },
   tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
-  tab: { paddingHorizontal: 18, paddingVertical: 12 },
-  tabText: { fontSize: 15 },
+  tab: { paddingHorizontal: Spacing[4], paddingVertical: Spacing[3] },
+  tabText: { fontSize: FontSize.base },
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
@@ -266,6 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   content: { flex: 1 },
-  notFound: { fontSize: 18, marginBottom: 12 },
-  back: { fontSize: 16 },
+  notFound: { fontSize: FontSize.lg, marginBottom: Spacing[3] },
+  notFoundDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, textAlign: 'center', marginBottom: Spacing[3], paddingHorizontal: Spacing[6] },
+  back: { fontSize: FontSize.base },
 })

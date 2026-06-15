@@ -35,6 +35,7 @@ export function SkeletonCard({ testID, lines = 2 }: Props) {
     <View
       testID={testID}
       style={[styles.card, { backgroundColor: colors.surface, borderBottomColor: colors.borderSubtle }]}
+      importantForAccessibility="no-hide-descendants"
     >
       <Animated.View
         style={[styles.titleLine, { backgroundColor: colors.surfaceSubtle }, animatedStyle]}

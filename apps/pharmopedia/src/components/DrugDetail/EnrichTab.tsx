@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { hapticNotification } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 
 const PHARMACIST_ROLES = new Set(['PHARMACIST', 'ADMIN'])
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH'])
@@ -75,13 +76,13 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('enrich.localNames')}</Text>
-      <TextInput testID="local-name-en" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.englishName')} placeholderTextColor={colors.textMuted} value={localNameEn} onChangeText={setLocalNameEn} />
-      <TextInput testID="local-name-prs" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dariName')} placeholderTextColor={colors.textMuted} value={localNamePrs} onChangeText={setLocalNamePrs} />
+      <TextInput testID="local-name-en" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.englishName')} placeholderTextColor={colors.textMuted} value={localNameEn} onChangeText={setLocalNameEn} accessibilityLabel={t('enrich.englishName')} />
+      <TextInput testID="local-name-prs" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dariName')} placeholderTextColor={colors.textMuted} value={localNamePrs} onChangeText={setLocalNamePrs} accessibilityLabel={t('enrich.dariName')} />
 
       {isPharmacist && (
         <>
           <Text style={[styles.sectionTitle, { marginTop: 16, color: colors.textSecondary }]}>{t('enrich.pharmacistFields')}</Text>
-          <TextInput testID="dispensing-notes" style={[styles.input, styles.multiline, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dispensingNotes')} placeholderTextColor={colors.textMuted} value={dispensingNotes} onChangeText={setDispensingNotes} multiline maxLength={500} />
+          <TextInput testID="dispensing-notes" style={[styles.input, styles.multiline, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dispensingNotes')} placeholderTextColor={colors.textMuted} value={dispensingNotes} onChangeText={setDispensingNotes} multiline maxLength={500} accessibilityLabel={t('enrich.dispensingNotes')} />
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('enrich.formularyStatus')}</Text>
           <View style={styles.formularyRow}>
@@ -99,14 +100,14 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
             ))}
           </View>
 
-          <TextInput testID="unit-cost" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.unitCost')} placeholderTextColor={colors.textMuted} value={unitCost} onChangeText={setUnitCost} keyboardType="decimal-pad" />
+          <TextInput testID="unit-cost" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.unitCost')} placeholderTextColor={colors.textMuted} value={unitCost} onChangeText={setUnitCost} keyboardType="decimal-pad" accessibilityLabel={t('enrich.unitCost')} />
         </>
       )}
 
-      {error && <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: colors.danger }]} accessibilityRole="alert">{error}</Text>}
       {success && <Text style={[styles.successText, { color: colors.successDark }]}>{t('enrich.saveSuccess')}</Text>}
 
-      <Pressable testID="enrich-submit" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleSubmit} disabled={loading}>
+      <Pressable testID="enrich-submit" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleSubmit} disabled={loading} accessibilityRole="button">
         {loading ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.buttonText, { color: colors.white }]}>{t('enrich.save')}</Text>}
       </Pressable>
     </ScrollView>
@@ -115,18 +116,40 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { padding: 16 },
-  restricted: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  restrictedText: { textAlign: 'center' },
-  sectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
-  label: { fontSize: 14, marginBottom: 6 },
-  input: { borderWidth: 1, borderRadius: 8, padding: 10, fontSize: 15, marginBottom: 12 },
+  content: { padding: Spacing[4] },
+  restricted: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing[6] },
+  restrictedText: { textAlign: 'center', fontFamily: FontFamily.sans },
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontFamily: FontFamily.sansBold,
+    marginBottom: Spacing[2],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  label: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, marginBottom: Spacing[1] },
+  input: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    padding: Spacing[3],
+    fontSize: FontSize.base,
+    fontFamily: FontFamily.sans,
+    marginBottom: Spacing[3],
+  },
   multiline: { height: 80, textAlignVertical: 'top' },
-  formularyRow: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
-  formularyBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1 },
-  formularyText: { fontSize: 13 },
-  error: { marginBottom: 8 },
-  successText: { marginBottom: 8 },
-  button: { borderRadius: 8, padding: 14, alignItems: 'center' },
-  buttonText: { fontWeight: '700', fontSize: 16 },
+  formularyRow: { flexDirection: 'row', gap: Spacing[2], marginBottom: Spacing[3], flexWrap: 'wrap' },
+  formularyBtn: {
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[1],
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  formularyText: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  error: { marginBottom: Spacing[2], fontFamily: FontFamily.sans },
+  successText: { marginBottom: Spacing[2], fontFamily: FontFamily.sans },
+  button: {
+    borderRadius: Radius.md,
+    padding: Spacing[3],
+    alignItems: 'center',
+  },
+  buttonText: { fontFamily: FontFamily.sansBold, fontSize: FontSize.base },
 })

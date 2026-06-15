@@ -10,6 +10,7 @@ const ar: Translations = {
     emptyDescription: 'ابحث بالاسم التجاري أو الاسم العلمي أو رمز ATC',
     noResultsTitle: 'لا توجد نتائج',
     noResultsDescription: 'جرب تهجئة مختلفة',
+    recentSearches: 'عمليات البحث الأخيرة',
   },
   sync: {
     syncing: 'جارٍ مزامنة الكتالوج\u2026',
@@ -19,8 +20,10 @@ const ar: Translations = {
   },
   drug: {
     notFound: 'الدواء غير موجود',
+    notFoundDescription: 'قد لا يكون هذا الدواء في الكتالوج بعد.',
+    searchInstead: 'بحث',
     back: 'رجوع',
-    tabs: { overview: 'نظرة عامة', clinical: 'سريري', formulary: 'Formulary', pricing: 'التسعير', enrich: 'إثراء' },
+    tabs: { overview: 'نظرة عامة', clinical: 'سريري', formulary: 'Formulary', pricing: 'التسعير', enrich: 'تعديل' },
     overview: {
       summary: 'ملخص',
       usedFor: 'يُستخدم لـ',
@@ -39,6 +42,7 @@ const ar: Translations = {
       pregnancyCategory: 'فئة الحمل',
       renalAdjustment: 'تعديل الكلى',
       interactions: 'Drug interactions',
+      safetyWarning: 'تفاعلات ممنوعة الاستعمال',
       pediatricDosing: 'Pediatric dosing',
       adminNotes: 'Administration notes',
       pharmacokinetics: 'Pharmacokinetics',
@@ -111,6 +115,9 @@ const ar: Translations = {
   welcome: {
     tagline: 'مرجعك الدوائي بدون اتصال',
     getStarted: 'ابدأ',
+    feature1: 'ابحث عن آلاف الأدوية بدون اتصال',
+    feature2: 'احصل على الأسعار من الصيدليات القريبة',
+    feature3: 'متاح بالإنجليزية والدرية والبشتوية والعربية',
   },
   coach: {
     browseClass: 'اضغط على فئة لرؤية جميع الأدوية فيها',
@@ -137,6 +144,11 @@ const ar: Translations = {
     themeLight: 'فاتح',
     themeDark: 'داكن',
     themeSystem: 'النظام',
+    logoutConfirmTitle: 'تسجيل الخروج؟',
+    logoutConfirmMessage: 'ستحتاج إلى تسجيل الدخول مرة أخرى. ستبقى البيانات غير المتزامنة على هذا الجهاز.',
+    logoutConfirm: 'تسجيل الخروج',
+    preferences: 'التفضيلات',
+    showTips: 'إظهار النصائح مرة أخرى',
   },
   login: {
     title: 'فارموبيديا',
@@ -154,6 +166,13 @@ const ar: Translations = {
     loginFailed: 'فشل تسجيل الدخول',
     otpFailed: 'فشل التحقق من OTP',
     register: "Don't have an account? Register",
+    forgotPassword: 'نسيت كلمة المرور؟',
+    resetSent: 'تم إرسال بريد إعادة تعيين كلمة المرور.',
+    resetFailed: 'فشل إرسال بريد إعادة التعيين.',
+    resetEmail: 'أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور',
+    sendReset: 'إرسال بريد إعادة التعيين',
+    resendCode: 'إعادة إرسال الرمز',
+    resendIn: 'إعادة إرسال في {{seconds}} ث',
   },
   formulary: {
     status: 'Formulary status',
@@ -178,6 +197,8 @@ const ar: Translations = {
     signIn: 'Already have an account? Sign in',
     failed: 'Registration failed',
     otpFailed: 'Verification failed',
+    resendCode: 'إعادة إرسال الرمز',
+    resendIn: 'إعادة إرسال في {{seconds}} ث',
   },
 }
 

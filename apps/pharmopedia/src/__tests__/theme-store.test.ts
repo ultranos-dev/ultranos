@@ -77,7 +77,7 @@ describe('theme-store', () => {
     await act(async () => { await result.current.init() })
     await act(async () => { await result.current.setMode('dark') })
 
-    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('@pharmopedia/theme', 'dark')
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('pharmopedia.theme', 'dark')
     expect(result.current.mode).toBe('dark')
     expect(result.current.resolvedTheme).toBe('dark')
   })

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Text, TextInput, Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native'
@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth-store'
 import { hapticNotification } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
-import { FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { LanguageChips } from '@/components/LanguageChips'
 
@@ -25,6 +25,13 @@ export default function RegisterScreen() {
   const [step, setStep] = useState<Step>('phone')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
 
   async function handleRequestOtp() {
     setLoading(true)
@@ -33,6 +40,7 @@ export default function RegisterScreen() {
     setLoading(false)
     if (err) { setError(err.message); void hapticNotification(NotificationFeedbackType.Error); return }
     setStep('code')
+    setCooldown(60)
   }
 
   async function handleVerifyOtp() {
@@ -78,7 +86,7 @@ export default function RegisterScreen() {
             keyboardType="phone-pad"
           />
           <Pressable testID="request-otp-button" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleRequestOtp} disabled={loading}>
-            {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>{t('register.sendCode')}</Text>}
+            {loading ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.buttonText, { color: colors.white }]}>{t('register.sendCode')}</Text>}
           </Pressable>
         </>
       ) : (
@@ -90,12 +98,21 @@ export default function RegisterScreen() {
             placeholder={t('register.sixDigitCode')}
             placeholderTextColor={colors.textMuted}
             value={otpCode}
-            onChangeText={setOtpCode}
+            onChangeText={(text) => setOtpCode(text.replace(/[^0-9]/g, ''))}
             keyboardType="number-pad"
             maxLength={6}
           />
           <Pressable testID="verify-otp-button" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleVerifyOtp} disabled={loading}>
-            {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>{t('register.verify')}</Text>}
+            {loading ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.buttonText, { color: colors.white }]}>{t('register.verify')}</Text>}
+          </Pressable>
+          <Pressable
+            testID="resend-otp-button"
+            onPress={() => void handleRequestOtp()}
+            disabled={cooldown > 0}
+          >
+            <Text style={[styles.link, { color: cooldown > 0 ? colors.textMuted : colors.primary500 }]}>
+              {cooldown > 0 ? t('register.resendIn', { seconds: cooldown }) : t('register.resendCode')}
+            </Text>
           </Pressable>
           <Pressable testID="register-back-button" onPress={() => setStep('phone')}>
             <Text style={[styles.link, { color: colors.primary500 }]}>{t('register.back')}</Text>
@@ -112,19 +129,19 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: Spacing[6] },
-  title: { fontSize: 28, fontFamily: FontFamily.headingBold, textAlign: 'center', marginBottom: 8 },
-  subtitle: { fontSize: 15, fontFamily: FontFamily.sans, textAlign: 'center', marginBottom: 32 },
+  title: { fontSize: FontSize['3xl'] - 2, fontFamily: FontFamily.headingBold, textAlign: 'center', marginBottom: Spacing[2] },
+  subtitle: { fontSize: FontSize.base, fontFamily: FontFamily.sans, textAlign: 'center', marginBottom: Spacing[8] },
   input: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
+    padding: Spacing[3],
+    marginBottom: Spacing[3],
+    fontSize: FontSize.base,
     fontFamily: FontFamily.sans,
   },
-  button: { borderRadius: Radius.md, padding: 14, alignItems: 'center' as const, marginTop: Spacing[2] },
-  buttonText: { color: '#ffffff', fontFamily: FontFamily.sansBold, fontSize: 16 },
-  error: { marginBottom: 12, textAlign: 'center' as const, fontFamily: FontFamily.sans },
-  hint: { marginBottom: 12, textAlign: 'center' as const, fontFamily: FontFamily.sans },
-  link: { textAlign: 'center' as const, marginTop: 12, fontFamily: FontFamily.sans },
+  button: { borderRadius: Radius.md, padding: Spacing[3], alignItems: 'center' as const, marginTop: Spacing[2] },
+  buttonText: { fontFamily: FontFamily.sansBold, fontSize: FontSize.base },
+  error: { marginBottom: Spacing[3], textAlign: 'center' as const, fontFamily: FontFamily.sans },
+  hint: { marginBottom: Spacing[3], textAlign: 'center' as const, fontFamily: FontFamily.sans },
+  link: { textAlign: 'center' as const, marginTop: Spacing[3], fontFamily: FontFamily.sans },
 })

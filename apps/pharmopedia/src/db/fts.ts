@@ -23,7 +23,7 @@ function toFtsQuery(q: string): string {
 export async function searchDrugs(
   db: SQLite.SQLiteDatabase,
   q: string,
-  lang: 'en' | 'prs' | 'ps',
+  lang: 'en' | 'prs' | 'ps' | 'ar',
   limit: number,
 ): Promise<DrugSearchResult[]> {
   const ftsQuery = toFtsQuery(q)

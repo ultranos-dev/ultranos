@@ -3,7 +3,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated'
 import {
   Heart, Pill, Shield, Brain, Bone, Eye, Baby, Droplets, Flame, Activity, ChevronRight,
 } from 'lucide-react-native'
-import { FontFamily, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 const CLASS_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
@@ -42,6 +42,7 @@ export function TherapeuticClassCard({ name, count, onPress, index }: Props) {
     <Animated.View entering={FadeInUp.delay(enterDelay).duration(300)}>
       <Pressable
         testID={`class-card-${name}`}
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.card,
           { backgroundColor: pressed ? colors.surfaceSubtle : colors.surface, borderBottomColor: colors.borderSubtle },
@@ -75,24 +76,24 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
   },
   name: {
-    fontSize: 15,
+    fontSize: FontSize.base,
     fontFamily: FontFamily.sansMedium,
     flex: 1,
   },
   countBadge: {
     paddingHorizontal: Spacing[2],
-    paddingVertical: 2,
+    paddingVertical: Spacing[1],
     borderRadius: Radius.full,
     minWidth: 28,
     alignItems: 'center',
   },
   countText: {
-    fontSize: 13,
+    fontSize: FontSize.sm,
     fontFamily: FontFamily.sansSemibold,
   },
 })

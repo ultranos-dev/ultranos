@@ -16,13 +16,12 @@ vi.mock('@/store/bookmark-store', () => ({
 
 vi.mock('@/hooks/useThemeColors', () => ({
   useThemeColors: () => ({
-    surfaceElevated: '#ffffff',
+    surface: '#ffffff',
+    surfaceSubtle: '#f3f4f6',
     borderSubtle: '#e5e7eb',
-    primary500: '#2e9e71',
     textPrimary: '#111827',
     textSecondary: '#6b7280',
     textMuted: '#9ca3af',
-    surfaceSubtle: '#f3f4f6',
     danger: '#dc2626',
   }),
 }))

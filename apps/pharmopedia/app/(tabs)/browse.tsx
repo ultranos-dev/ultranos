@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   View, Text, FlatList, Pressable, StyleSheet, RefreshControl,
 } from 'react-native'
@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { FolderOpen } from 'lucide-react-native'
-import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { getDatabase } from '@/db/migrations'
 import { getTherapeuticClasses, getDrugsByTherapeuticClass, type TherapeuticClass } from '@/db/browse'
 import { TherapeuticClassCard } from '@/components/TherapeuticClassCard'
@@ -25,9 +25,6 @@ export default function BrowseTab() {
   const router = useRouter()
   const lang = useLangStore((s) => s.lang)
   const lastVersion = useSyncStore((s) => s.lastVersion)
-
-  const visitCount = useRef(0)
-  useEffect(() => { visitCount.current += 1 }, [])
 
   const [classes, setClasses] = useState<TherapeuticClass[]>([])
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
@@ -130,12 +127,11 @@ export default function BrowseTab() {
           <FlatList
             data={drugs}
             keyExtractor={(item) => item.atcCode}
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <DrugCard
                 result={item}
                 lang={lang}
                 onPress={() => router.push(`/drug/${item.atcCode}`)}
-                index={index}
               />
             )}
             refreshControl={
@@ -176,7 +172,7 @@ export default function BrowseTab() {
       <CoachMark
         markKey="browse-class"
         hint={t('coach.browseClass')}
-        visible={visitCount.current >= 2 && classes.length > 0}
+        visible={classes.length > 0}
       />
     </SafeAreaView>
   )
@@ -184,7 +180,7 @@ export default function BrowseTab() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing[8] },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
@@ -205,12 +201,12 @@ const styles = StyleSheet.create({
   classHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
     borderBottomWidth: 1,
   },
   backBtn: { paddingVertical: 4 },
-  backText: { fontSize: 15 },
-  classTitle: { fontSize: 16, fontWeight: '600', flex: 1 },
+  backText: { fontSize: FontSize.base },
+  classTitle: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold, flex: 1 },
 })

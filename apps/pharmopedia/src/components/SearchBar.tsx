@@ -1,8 +1,9 @@
 import { useRef, useEffect } from 'react'
-import { View, TextInput, StyleSheet } from 'react-native'
+import { View, TextInput, Pressable, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { X } from 'lucide-react-native'
 import { useLangStore, isRtlLang } from '@/store/lang-store'
-import { FontFamily, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 interface Props {
@@ -25,33 +26,50 @@ export function SearchBar({ value, onSearch }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <TextInput
-        testID="search-input"
-        style={[
-          styles.input,
-          { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle },
-          isRtl && styles.inputRtl,
-        ]}
-        placeholder={t('search.placeholder')}
-        placeholderTextColor={colors.textMuted}
-        value={value}
-        onChangeText={(text) => onSearch(text)}
-        autoCorrect={false}
-        autoCapitalize="none"
-        textAlign={isRtl ? 'right' : 'left'}
-      />
+      <View style={[styles.inputRow, { borderColor: colors.border, backgroundColor: colors.surfaceSubtle }]}>
+        <TextInput
+          testID="search-input"
+          style={[
+            styles.input,
+            { color: colors.textPrimary },
+            isRtl && styles.inputRtl,
+          ]}
+          placeholder={t('search.placeholder')}
+          placeholderTextColor={colors.textMuted}
+          value={value}
+          onChangeText={(text) => onSearch(text)}
+          accessibilityRole="search"
+          accessibilityLabel={t('search.placeholder')}
+          accessibilityHint={t('search.empty')}
+          autoCorrect={false}
+          autoCapitalize="none"
+          textAlign={isRtl ? 'right' : 'left'}
+        />
+        {value.length > 0 && (
+          <Pressable
+            testID="search-clear"
+            onPress={() => onSearch('')}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            style={styles.clearButton}
+          >
+            <X size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: { padding: Spacing[3], borderBottomWidth: 1 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: Radius.md },
   input: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    padding: 10,
-    fontSize: 16,
+    flex: 1,
+    padding: Spacing[3],
+    fontSize: FontSize.base,
     fontFamily: FontFamily.sans,
   },
   inputRtl: { fontFamily: FontFamily.arabic },
+  clearButton: { paddingHorizontal: Spacing[3] },
 })

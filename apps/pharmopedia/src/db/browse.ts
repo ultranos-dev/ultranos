@@ -61,7 +61,7 @@ export async function getDrugsByTherapeuticClass(
       ? JSON.parse(row.local_names)
       : {}
     const localName =
-      lang !== 'en' && lang !== 'ar' ? localNames[lang] : undefined
+      lang !== 'en' ? localNames[lang] : undefined
     return {
       atcCode: row.atc_code,
       innName: row.inn_name,

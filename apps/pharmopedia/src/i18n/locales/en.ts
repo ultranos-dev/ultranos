@@ -13,6 +13,7 @@ const en = {
     noResultsTitle: 'No results',
     noResultsDescription: 'Try a different spelling or search term',
     lang: { en: 'EN', prs: '\u062f\u0631\u06cc', ps: '\u067e\u069a\u062a\u0648', ar: '\u0639\u0631\u0628\u064a' },
+    recentSearches: 'Recent searches',
   },
   sync: {
     syncing: 'Syncing catalog\u2026',
@@ -22,13 +23,15 @@ const en = {
   },
   drug: {
     notFound: 'Drug not found',
+    notFoundDescription: 'This drug may not be in the catalog yet. Try searching instead.',
+    searchInstead: 'Search',
     back: 'Go back',
     tabs: {
       overview: 'Overview',
       clinical: 'Clinical',
       formulary: 'Formulary',
       pricing: 'Pricing',
-      enrich: 'Enrich',
+      enrich: 'Edit',
     },
     overview: {
       summary: 'Summary',
@@ -48,6 +51,7 @@ const en = {
       pregnancyCategory: 'Pregnancy category',
       renalAdjustment: 'Renal adjustment',
       interactions: 'Drug interactions',
+      safetyWarning: 'Contraindicated interactions',
       pediatricDosing: 'Pediatric dosing',
       adminNotes: 'Administration notes',
       pharmacokinetics: 'Pharmacokinetics',
@@ -131,6 +135,9 @@ const en = {
   welcome: {
     tagline: 'Your offline drug reference',
     getStarted: 'Get Started',
+    feature1: 'Search thousands of medications offline',
+    feature2: 'Get pricing from nearby pharmacies',
+    feature3: 'Available in English, Dari, Pashto, and Arabic',
   },
   coach: {
     browseClass: 'Tap a category to see all drugs in that class',
@@ -157,6 +164,11 @@ const en = {
     themeLight: 'Light',
     themeDark: 'Dark',
     themeSystem: 'System',
+    logoutConfirmTitle: 'Sign Out?',
+    logoutConfirmMessage: 'You will need to sign in again. Any unsynced data will remain on this device.',
+    logoutConfirm: 'Sign Out',
+    preferences: 'Preferences',
+    showTips: 'Show Tips Again',
   },
   login: {
     title: 'Pharmopedia',
@@ -174,6 +186,13 @@ const en = {
     loginFailed: 'Login failed',
     otpFailed: 'OTP verification failed',
     register: "Don't have an account? Register",
+    forgotPassword: 'Forgot password?',
+    resetSent: 'Password reset email sent. Check your inbox.',
+    resetFailed: 'Failed to send reset email. Try again.',
+    resetEmail: 'Enter your email to reset password',
+    sendReset: 'Send Reset Email',
+    resendCode: 'Resend Code',
+    resendIn: 'Resend in {{seconds}}s',
   },
   register: {
     title: 'Create Account',
@@ -187,6 +206,8 @@ const en = {
     signIn: 'Already have an account? Sign in',
     failed: 'Registration failed',
     otpFailed: 'Verification failed',
+    resendCode: 'Resend Code',
+    resendIn: 'Resend in {{seconds}}s',
   },
 } as const
 

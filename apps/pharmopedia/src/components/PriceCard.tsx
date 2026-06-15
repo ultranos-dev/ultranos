@@ -3,7 +3,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated'
 import { MapPin } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import type { PharmacyPrice } from '@ultranos/shared-types'
-import { FontFamily, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 export function PriceCard({ price, index }: { price: PharmacyPrice; index?: number }) {
@@ -32,8 +32,10 @@ export function PriceCard({ price, index }: { price: PharmacyPrice; index?: numb
   return (
     <Animated.View entering={FadeInUp.delay(enterDelay).duration(300)}>
       <View
-        style={[styles.card, { backgroundColor: colors.surface, borderLeftColor: stockBorderColor }]}
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: stockBorderColor }]}
         testID={`price-card-${price.facilityId}`}
+        accessibilityRole="text"
+        accessibilityLabel={`${price.pharmacyName}, ${t('pricing.price', { price: price.retailPrice.toFixed(2) })}, ${t('pricing.distance', { km: price.distanceKm.toFixed(1) })}`}
       >
         <View style={styles.topRow}>
           <Text style={[styles.pharmacy, { color: colors.textPrimary }]}>{price.pharmacyName}</Text>
@@ -66,14 +68,14 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing[4],
     marginBottom: Spacing[3],
     borderRadius: Radius.lg,
-    borderLeftWidth: 3,
+    borderWidth: 1,
   },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pharmacy: { fontSize: 15, fontFamily: FontFamily.sansSemibold, flex: 1 },
-  priceText: { fontSize: 17, fontFamily: FontFamily.sansBold },
+  pharmacy: { fontSize: FontSize.base, fontFamily: FontFamily.sansSemibold, flex: 1 },
+  priceText: { fontSize: FontSize.lg, fontFamily: FontFamily.sansBold },
   bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing[1] },
-  distanceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  distance: { fontSize: 13, fontFamily: FontFamily.sans },
-  stock: { fontSize: 13, fontFamily: FontFamily.sansSemibold },
-  meta: { fontSize: 13, fontFamily: FontFamily.sans, marginTop: Spacing[1] },
+  distanceRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
+  distance: { fontSize: FontSize.sm, fontFamily: FontFamily.sans },
+  stock: { fontSize: FontSize.sm, fontFamily: FontFamily.sansSemibold },
+  meta: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, marginTop: Spacing[1] },
 })

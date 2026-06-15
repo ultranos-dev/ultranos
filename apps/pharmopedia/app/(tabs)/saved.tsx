@@ -55,12 +55,11 @@ export default function SavedTab() {
       <FlatList
         data={drugResults}
         keyExtractor={(item) => item.atcCode}
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <DrugCard
             result={item}
             lang={lang}
             onPress={() => router.push(`/drug/${item.atcCode}`)}
-            index={index}
           />
         )}
         refreshControl={

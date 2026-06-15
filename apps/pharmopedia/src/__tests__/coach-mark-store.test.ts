@@ -39,7 +39,7 @@ describe('coach-mark-store', () => {
 
     expect(useCoachMarkStore.getState().dismissed.has('browse-class')).toBe(true)
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-      '@pharmopedia/coach-dismissed',
+      'pharmopedia.coach-dismissed',
       'browse-class',
     )
   })

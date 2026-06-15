@@ -68,7 +68,7 @@ export function FormularyTab({ entry }: { entry: DrugEntryTier3 }) {
           <Text style={[styles.muted, { color: colors.textMuted }]}>{t('formulary.noRecalls')}</Text>
         ) : (
           entry.recallAlerts.map((alert) => (
-            <View key={alert.recallId} style={[styles.recallCard, { backgroundColor: colors.warningLight, borderLeftColor: colors.warning }]}>
+            <View key={alert.recallId} style={[styles.recallCard, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}>
               <Text style={[styles.recallDescription, { color: colors.textPrimary }]}>{alert.description}</Text>
               <Text style={[styles.recallMeta, { color: colors.textSecondary }]}>{alert.status} · {alert.initiationDate}</Text>
             </View>
@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 14, fontFamily: FontFamily.sansBold },
   substituteCode: { fontSize: 14, fontFamily: FontFamily.sansMedium, marginBottom: 4 },
   recallCard: {
-    borderLeftWidth: 3,
-    paddingStart: 12,
-    paddingVertical: Spacing[2],
+    padding: Spacing[3],
     marginBottom: Spacing[2],
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: undefined, // will be set inline
   },
   recallDescription: { fontSize: 14, fontFamily: FontFamily.sansSemibold, marginBottom: 2 },
   recallMeta: { fontSize: 12, fontFamily: FontFamily.sans },
