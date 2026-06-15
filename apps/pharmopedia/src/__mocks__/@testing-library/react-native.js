@@ -132,7 +132,21 @@ function render(element) {
     instance = ReactTestRenderer.create(element)
   })
   _currentInstance = instance
-  return { instance }
+  return {
+    instance,
+    getByTestId: (testID) => {
+      const result = queryByTestId(instance, testID)
+      if (!result) throw new Error(`Unable to find an element with testID: ${testID}`)
+      return result
+    },
+    queryByTestId: (testID) => queryByTestId(instance, testID),
+    getByText: (text) => {
+      const result = queryByText(instance, text)
+      if (!result) throw new Error(`Unable to find an element with text: ${text}`)
+      return result
+    },
+    queryByText: (text) => queryByText(instance, text),
+  }
 }
 
 const fireEvent = {

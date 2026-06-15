@@ -1,0 +1,60 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen } from '@testing-library/react-native'
+import { SectionCard } from '@/components/DrugDetail/SectionCard'
+
+vi.mock('@/hooks/useThemeColors', () => ({
+  useThemeColors: () => ({
+    textPrimary: '#111', textSecondary: '#666', textMuted: '#999',
+    surface: '#fff', surfaceSubtle: '#f5f5f5',
+    dangerLight: '#fee2e2', dangerDark: '#991b1b',
+    warningLight: '#fef3c7', warningDark: '#92400e',
+    successLight: '#dcfce7', successDark: '#166534',
+    danger: '#dc2626', warning: '#d97706',
+    border: '#e5e5e5',
+  }),
+}))
+
+describe('SectionCard', () => {
+  it('renders title and text content', () => {
+    render(<SectionCard title="Summary" text="Amoxicillin is an antibiotic." />)
+    expect(screen.getByText('Summary')).toBeTruthy()
+    expect(screen.getByText('Amoxicillin is an antibiotic.')).toBeTruthy()
+  })
+
+  it('renders bulleted list items', () => {
+    render(<SectionCard title="Side Effects" items={['Nausea', 'Rash']} />)
+    expect(screen.getByText(/Nausea/)).toBeTruthy()
+    expect(screen.getByText(/Rash/)).toBeTruthy()
+  })
+
+  it('applies danger severity background', () => {
+    const { getByTestId } = render(
+      <SectionCard title="Contraindications" items={['Penicillin allergy']} severity="danger" testID="section-contra" />
+    )
+    const container = getByTestId('section-contra')
+    const style = container.props.style
+    const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style
+    expect(flat.backgroundColor).toBe('#fee2e2')
+  })
+
+  it('applies warning severity background', () => {
+    const { getByTestId } = render(
+      <SectionCard title="Interactions" items={['Warfarin']} severity="warning" testID="section-inter" />
+    )
+    const container = getByTestId('section-inter')
+    const style = container.props.style
+    const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style
+    expect(flat.backgroundColor).toBe('#fef3c7')
+  })
+
+  it('applies RTL text alignment', () => {
+    render(<SectionCard title="Test" text="Content" isRtl />)
+    expect(screen.getByText('Content')).toBeTruthy()
+  })
+
+  it('sets accessibilityRole header on title', () => {
+    render(<SectionCard title="Dosing" text="500mg" />)
+    const title = screen.getByText('Dosing')
+    expect(title.props.accessibilityRole).toBe('header')
+  })
+})
