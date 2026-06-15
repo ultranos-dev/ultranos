@@ -1,4 +1,5 @@
 import { Pressable, Text, StyleSheet } from 'react-native'
+import { useThemeColors } from '@/hooks/useThemeColors'
 
 interface Props {
   name: string
@@ -7,14 +8,20 @@ interface Props {
 }
 
 export function TherapeuticClassCard({ name, count, onPress }: Props) {
+  const colors = useThemeColors()
+
   return (
     <Pressable
       testID={`class-card-${name}`}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.surface, borderBottomColor: colors.borderSubtle },
+        pressed && { backgroundColor: colors.surfaceSubtle },
+      ]}
       onPress={onPress}
     >
-      <Text style={styles.name} numberOfLines={2}>{name}</Text>
-      <Text style={styles.count}>{count}</Text>
+      <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>{name}</Text>
+      <Text style={[styles.count, { color: colors.textSecondary }]}>{count}</Text>
     </Pressable>
   )
 }
@@ -26,11 +33,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
-  cardPressed: { backgroundColor: '#f9fafb' },
-  name: { fontSize: 15, fontWeight: '500', color: '#111827', flex: 1, marginEnd: 12 },
-  count: { fontSize: 13, color: '#6b7280', minWidth: 24, textAlign: 'right' },
+  name: { fontSize: 15, fontWeight: '500', flex: 1, marginEnd: 12 },
+  count: { fontSize: 13, minWidth: 24, textAlign: 'right' },
 })

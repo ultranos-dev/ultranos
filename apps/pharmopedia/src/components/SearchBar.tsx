@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { View, TextInput, Pressable, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { useLangStore, isRtlLang, type Lang } from '@/store/lang-store'
+import { useThemeColors } from '@/hooks/useThemeColors'
 
 const LANGS: Lang[] = ['en', 'prs', 'ps', 'ar']
 
@@ -12,6 +13,7 @@ interface Props {
 
 export function SearchBar({ value, onSearch }: Props) {
   const { t } = useTranslation()
+  const colors = useThemeColors()
   const lang = useLangStore((s) => s.lang)
   const setLang = useLangStore((s) => s.setLang)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -24,26 +26,28 @@ export function SearchBar({ value, onSearch }: Props) {
   }, [value, onSearch])
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
       <TextInput
         testID="search-input"
-        style={[styles.input, isRtl && styles.inputRtl]}
+        style={[styles.input, { borderColor: colors.border }, isRtl && styles.inputRtl]}
         placeholder={t('search.placeholder')}
+        placeholderTextColor={colors.textMuted}
         value={value}
         onChangeText={(text) => onSearch(text)}
         autoCorrect={false}
         autoCapitalize="none"
         textAlign={isRtl ? 'right' : 'left'}
+        color={colors.textPrimary}
       />
       <View style={styles.langs}>
         {LANGS.map((l) => (
           <Pressable
             key={l}
             testID={`lang-${l}`}
-            style={[styles.langBtn, lang === l && styles.langBtnActive]}
+            style={[styles.langBtn, { borderColor: colors.border }, lang === l && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
             onPress={() => void setLang(l)}
           >
-            <Text style={[styles.langText, lang === l && styles.langTextActive]}>
+            <Text style={[styles.langText, { color: colors.textSecondary }, lang === l && { color: colors.white }]}>
               {t(`search.lang.${l}`)}
             </Text>
           </Pressable>
@@ -54,12 +58,10 @@ export function SearchBar({ value, onSearch }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 10, fontSize: 16, marginBottom: 8 },
+  container: { padding: 12, borderBottomWidth: 1 },
+  input: { borderWidth: 1, borderRadius: 8, padding: 10, fontSize: 16, marginBottom: 8 },
   inputRtl: { fontFamily: 'NotoNaskhArabic' },
   langs: { flexDirection: 'row', gap: 8 },
-  langBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#d1d5db' },
-  langBtnActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  langText: { fontSize: 13, color: '#374151' },
-  langTextActive: { color: '#fff' },
+  langBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
+  langText: { fontSize: 13 },
 })
