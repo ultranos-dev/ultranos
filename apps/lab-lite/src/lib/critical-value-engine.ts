@@ -10,6 +10,13 @@
 
 import { getCriticalThresholdByAnalyte } from './db'
 
+export class DetectionUnavailableError extends Error {
+  constructor() {
+    super('Critical value detection unavailable — threshold DB read failed')
+    this.name = 'DetectionUnavailableError'
+  }
+}
+
 export interface CriticalValueInput {
   loincCode: string   // individual analyte LOINC (e.g. '718-7')
   analyte: string     // analyte name matching CriticalThreshold.analyte (e.g. 'Hemoglobin')
@@ -87,8 +94,9 @@ export async function isCriticalValue(
 
     return notCritical
   } catch {
-    // Never throw — threshold lookup errors must not block the clinical workflow
-    return notCritical
+    // DB lookup failed — throw so callers can show a warning.
+    // Per CLAUDE.md Rule #3 analogy: fail-open with explicit warning is safer than silent false negative.
+    throw new DetectionUnavailableError()
   }
 }
 

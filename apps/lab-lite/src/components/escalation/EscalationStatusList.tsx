@@ -89,22 +89,30 @@ interface ChainCardProps {
 function ChainCard({ chain, canAcknowledge, userId, onAcknowledged, t }: ChainCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [acknowledging, setAcknowledging] = useState(false)
+  const [ackError, setAckError] = useState<string | null>(null)
 
   const handleAcknowledge = async () => {
     if (!canAcknowledge || acknowledging) return
+    setAckError(null)
     setAcknowledging(true)
     try {
-      await acknowledgeStep(chain.chainId, chain.currentStep, userId)
+      const lastSentStep = chain.steps
+        .filter((s) => s.status === 'sent' || s.status === 'acknowledged')
+        .sort((a, b) => b.stepNumber - a.stepNumber)[0]
+      const stepToAck = lastSentStep?.stepNumber ?? chain.currentStep
+      await acknowledgeStep(chain.chainId, stepToAck, userId)
       reportEscalationEvent({
         action: 'ESCALATION_STEP_ACKNOWLEDGED',
         chainId: chain.chainId,
-        stepNumber: chain.currentStep,
+        stepNumber: stepToAck,
         recipientRole: 'lab_manager',
         notificationType: 'dashboard_ack',
         timestamp: new Date().toISOString(),
         resultId: chain.resultId,
       })
       onAcknowledged()
+    } catch {
+      setAckError('Acknowledgment failed — please try again or contact support.')
     } finally {
       setAcknowledging(false)
     }
@@ -136,14 +144,19 @@ function ChainCard({ chain, canAcknowledge, userId, onAcknowledged, t }: ChainCa
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {chain.status === 'active' && canAcknowledge && (
-            <button
-              type="button"
-              onClick={handleAcknowledge}
-              disabled={acknowledging}
-              className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {acknowledging ? t('acknowledging') : t('acknowledge')}
-            </button>
+            <div className="flex flex-col items-end gap-1">
+              <button
+                type="button"
+                onClick={handleAcknowledge}
+                disabled={acknowledging}
+                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {acknowledging ? t('acknowledging') : t('acknowledge')}
+              </button>
+              {ackError && (
+                <p role="alert" className="text-sm text-destructive mt-1">{ackError}</p>
+              )}
+            </div>
           )}
           <button
             type="button"

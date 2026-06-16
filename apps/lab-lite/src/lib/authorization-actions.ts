@@ -174,9 +174,9 @@ export async function approveResult(options: ApproveOptions): Promise<void> {
   void checkAndInitiateEscalation({
     resultId: result.id,
     loincCode: result.loincCode,
-    analyte: result.testCategory,
+    analyte: result.loincCode,  // loincCode used for threshold lookup; analyte name resolved from threshold table
     patientRef: result.patientRef,
-    orderingPhysicianId: result.authorizedBy ?? actorId,
+    orderingPhysicianId: result.orderingPractitionerRef ?? 'ordering_physician_unknown',
     abnormalityFlags: result.abnormalityFlags,
   })
 }

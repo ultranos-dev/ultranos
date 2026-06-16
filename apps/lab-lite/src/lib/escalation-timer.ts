@@ -35,7 +35,8 @@ export function onEscalationStep(listener: StepListener): () => void {
   return () => stepListeners.delete(listener)
 }
 
-function emitStep(event: EscalationStepEvent): void {
+export function emitStep(chainId: string, step: EscalationStep): void {
+  const event: EscalationStepEvent = { chainId, step }
   stepListeners.forEach((l) => {
     try {
       l(event)
@@ -65,7 +66,7 @@ export function startEscalationTimer(chainId: string): void {
     try {
       const step = await advanceEscalation(chainId)
       if (step) {
-        emitStep({ chainId, step })
+        emitStep(chainId, step)
       } else {
         // If chain is complete (null returned after step 5), clean up timer
         const { getEscalationChainById } = await import('./db')
@@ -107,11 +108,23 @@ export async function resumeActiveEscalations(): Promise<void> {
     const activeChains = await getActiveEscalations()
 
     for (const chain of activeChains) {
-      // Catch up any missed steps from the downtime gap
-      const missed = await catchUpMissedSteps(chain.chainId)
-      for (const step of missed) {
-        emitStep({ chainId: chain.chainId, step })
+      // D3: Re-emit step 1 alert for chains stuck at step 1 (e.g., after app crash before tech ack)
+      if (chain.currentStep === 1) {
+        const step1 = chain.steps.find((s: any) => s.stepNumber === 1)
+        if (step1) {
+          setTimeout(() => emitStep(chain.chainId, step1), 0)
+        }
       }
+
+      // Catch up any missed steps from the downtime gap
+      const missedSteps = await catchUpMissedSteps(chain.chainId)
+
+      // P4: Defer emission until after call stack clears — allows React components to register listeners first
+      setTimeout(() => {
+        for (const missed of missedSteps) {
+          emitStep(chain.chainId, missed)
+        }
+      }, 0)
 
       // Restart the timer for this chain
       startEscalationTimer(chain.chainId)

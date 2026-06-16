@@ -23,7 +23,7 @@
  * not patient-identifying. Actual numeric values are NOT logged.
  */
 
-import { checkResultForCriticalValues } from './critical-value-engine'
+import { checkResultForCriticalValues, DetectionUnavailableError } from './critical-value-engine'
 import { initiateEscalation } from './escalation-manager'
 import { startEscalationTimer } from './escalation-timer'
 import { reportEscalationEvent } from './audit-client'
@@ -133,14 +133,6 @@ export async function checkAndInitiateEscalation(
 
     const now = new Date().toISOString()
 
-    // Audit: CRITICAL_VALUE_DETECTED (once per result, before initiating chains)
-    reportEscalationEvent({
-      action: 'CRITICAL_VALUE_DETECTED',
-      chainId: 'pre-initiation', // no chain yet
-      resultId: input.resultId,
-      timestamp: now,
-    })
-
     // Initiate one escalation chain per critical finding
     for (const critical of criticals) {
       try {
@@ -150,6 +142,17 @@ export async function checkAndInitiateEscalation(
           input.patientRef,
           input.orderingPhysicianId,
         )
+
+        // P15: Audit CRITICAL_VALUE_DETECTED with the real chainId, inside the loop
+        reportEscalationEvent({
+          action: 'CRITICAL_VALUE_DETECTED',
+          chainId: chain.chainId,
+          resultId: input.resultId,
+          stepNumber: 1,
+          recipientRole: 'lab_tech',
+          notificationType: 'tech_alert',
+          timestamp: new Date().toISOString(),
+        })
 
         // Audit: ESCALATION_INITIATED
         reportEscalationEvent({
@@ -168,7 +171,24 @@ export async function checkAndInitiateEscalation(
         // Failure to initiate one chain must not prevent others
       }
     }
-  } catch {
-    // Never throw — authorization workflow must not be blocked
+  } catch (err) {
+    if (err instanceof DetectionUnavailableError) {
+      // D2: Surface detection failure as a warning — do not silently swallow
+      reportEscalationEvent({
+        action: 'CRITICAL_VALUE_DETECTED',
+        chainId: 'detection-failed',
+        resultId: input.resultId,
+        stepNumber: 0,
+        recipientRole: 'system',
+        notificationType: 'tech_alert',
+        timestamp: new Date().toISOString(),
+      })
+      // Emit a custom event so UI can show "Detection unavailable" warning
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('criticalDetectionUnavailable', { detail: { resultId: input.resultId } }))
+      }
+      return
+    }
+    // Re-throw unexpected errors
   }
 }

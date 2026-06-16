@@ -58,8 +58,10 @@ export function CriticalValueAlert({
 
   const checkboxRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const soundButtonRef = useRef<HTMLButtonElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioBeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Focus trap: on mount, focus the checkbox
@@ -74,7 +76,11 @@ export function CriticalValueAlert({
       return
     }
     if (e.key === 'Tab') {
-      const focusable = [checkboxRef.current, buttonRef.current].filter(Boolean) as HTMLElement[]
+      const focusable = [
+        !soundEnabled ? soundButtonRef.current : null,
+        checkboxRef.current,
+        buttonRef.current,
+      ].filter((el): el is HTMLElement => el !== null)
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
       if (e.shiftKey) {
@@ -117,8 +123,7 @@ export function CriticalValueAlert({
 
       playBeep()
       // Repeat every 2 seconds
-      const interval = setInterval(playBeep, 2000)
-      return () => clearInterval(interval)
+      audioBeatIntervalRef.current = setInterval(playBeep, 2000)
     } catch {
       // Fallback: <audio> element
       if (audioRef.current) {
@@ -133,6 +138,8 @@ export function CriticalValueAlert({
   // Stop audio on cleanup
   useEffect(() => {
     return () => {
+      clearInterval(audioBeatIntervalRef.current ?? undefined)
+      audioBeatIntervalRef.current = null
       audioCtxRef.current?.close()
       audioRef.current?.pause()
     }
@@ -189,7 +196,6 @@ export function CriticalValueAlert({
       aria-describedby="critical-alert-desc"
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-red-950"
       onKeyDown={handleKeyDown}
-      onClick={startAudio}
       ref={containerRef}
     >
       {/* Hidden audio fallback */}
@@ -214,6 +220,7 @@ export function CriticalValueAlert({
         {/* Enable sound prompt (shown before first interaction) */}
         {!soundEnabled && (
           <button
+            ref={soundButtonRef}
             type="button"
             className="mt-4 w-full rounded-lg border border-red-300 bg-red-50 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
             onClick={startAudio}

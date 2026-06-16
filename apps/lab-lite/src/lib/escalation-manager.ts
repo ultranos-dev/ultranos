@@ -120,8 +120,8 @@ export async function initiateEscalation(
     getDefaultEscalationContact('district_officer'),
   ])
 
-  const medicalDirectorId = directorContact?.name ?? 'medical_director_unset'
-  const districtOfficerId = districtContact?.name ?? 'district_officer_unset'
+  const medicalDirectorId = directorContact ? 'medical_director' : 'medical_director_unset'
+  const districtOfficerId = districtContact ? 'district_officer' : 'district_officer_unset'
 
   const steps = buildSteps(orderingPhysicianId, medicalDirectorId, districtOfficerId, now)
 
@@ -178,6 +178,20 @@ export async function acknowledgeStep(
       steps: updatedSteps,
       currentStep: 2,
     })
+
+    // D4: Immediately advance step 2 (in-app physician notification) without waiting for timer tick
+    try {
+      const step2 = await advanceEscalation(chainId)
+      if (step2) {
+        // Emit step event asynchronously so callers can trigger in-app notification
+        import('./escalation-timer').then(({ emitStep }) => {
+          emitStep(chainId, step2)
+        }).catch(() => { /* best-effort */ })
+      }
+    } catch {
+      // Non-fatal: timer will catch step 2 on next tick if this fails
+    }
+
     return
   }
 
@@ -194,6 +208,11 @@ export async function acknowledgeStep(
     acknowledgedAt: now,
     acknowledgedBy,
   })
+
+  // Stop the escalation timer for this chain immediately
+  import('./escalation-timer').then(({ stopEscalationTimer }) => {
+    stopEscalationTimer(chainId)
+  }).catch(() => { /* best-effort */ })
 }
 
 /**
@@ -242,6 +261,21 @@ export async function advanceEscalation(chainId: string): Promise<EscalationStep
     currentStep: isLastStep ? chain.currentStep : nextStepNumber,
     ...(isLastStep ? { status: 'expired' as const } : {}),
   })
+
+  // Emit ESCALATION_EXPIRED audit event when chain reaches terminal state
+  if (isLastStep) {
+    import('./audit-client').then(({ reportEscalationEvent }) => {
+      reportEscalationEvent({
+        action: 'ESCALATION_EXPIRED',
+        chainId,
+        resultId: chain.resultId,
+        stepNumber: chain.currentStep,
+        recipientRole: currentStepDef.recipientRole,
+        notificationType: currentStepDef.type,
+        timestamp: new Date().toISOString(),
+      })
+    }).catch(() => { /* best-effort */ })
+  }
 
   return currentStepDef
 }

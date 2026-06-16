@@ -74,6 +74,7 @@ export interface LabResultForAuthorization {
   qcStatus: QcStatus
   enteredBy: string             // practitioner ID
   enteredByRole: string         // LabRole string
+  orderingPractitionerRef?: string   // opaque Practitioner/{uuid} — the ordering physician (from service request)
   enteredAt: string             // HLC timestamp
   authorizationStatus: AuthorizationStatus
   authorizedBy?: string

@@ -61,23 +61,27 @@ export async function sendCriticalValueSms(
     }
   }
 
+  // Guard: sentinel phone numbers mean the contact is not configured — skip queue write
+  if (phoneNumber.includes('_unset')) {
+    return {
+      queued: false,
+      sent: false,
+      message: 'SMS skipped — contact not configured',
+    }
+  }
+
   // Queue for manual follow-up: in production, a worker draining a Dexie
-  // sms_queue table would pick this up. For now, we log to a named queue.
+  // smsQueue table would pick this up. For now, we log to a named queue.
   try {
     const { getDb } = await import('./db')
     const db = getDb()
-    // Use a generic key-value store approach via a named table if available.
-    // If the sms_queue table doesn't exist yet (Story 49.2), we silently skip
-    // the Dexie write — the SmsResult status is still returned to the caller.
-    if ('sms_queue' in db) {
-      await (db as any).sms_queue.add({
-        chainId,
-        phoneNumber, // stored for manual follow-up, not in logs
-        body: buildSmsBody(chainId, analyte, direction),
-        queuedAt: new Date().toISOString(),
-        status: 'pending_manual',
-      })
-    }
+    await db.smsQueue.add({
+      chainId,
+      phoneNumber, // stored for manual follow-up, not in logs
+      body: buildSmsBody(chainId, analyte, direction),
+      queuedAt: new Date().toISOString(),
+      status: 'pending_manual',
+    })
   } catch {
     // Never throw — escalation timer must continue regardless
   }

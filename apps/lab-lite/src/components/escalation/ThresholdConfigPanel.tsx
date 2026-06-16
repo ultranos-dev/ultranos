@@ -15,8 +15,8 @@ import { useTranslations } from 'next-intl'
 import { LabRole } from '@ultranos/shared-types'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import {
-  getAllCriticalThresholds,
-  putCriticalThreshold,
+  getAllCriticalValueThresholds,
+  putCriticalValueThreshold,
   deactivateCriticalThreshold,
   resetCriticalThresholdsToDefaults,
 } from '@/lib/db'
@@ -44,7 +44,7 @@ export function ThresholdConfigPanel() {
 
   const load = useCallback(async () => {
     try {
-      const all = await getAllCriticalThresholds()
+      const all = await getAllCriticalValueThresholds()
       setThresholds(all.sort((a, b) => a.analyte.localeCompare(b.analyte)))
     } catch {
       setError(t('loadError'))
@@ -90,7 +90,7 @@ export function ThresholdConfigPanel() {
         configuredBy: session?.userId ?? 'unknown',
         updatedAt: new Date().toISOString(),
       }
-      await putCriticalThreshold(updated)
+      await putCriticalValueThreshold(updated)
       setThresholds((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
       setEditing(null)
     } catch {
@@ -102,16 +102,20 @@ export function ThresholdConfigPanel() {
 
   const toggleActive = async (threshold: CriticalThreshold) => {
     if (!canEdit || threshold.id == null) return
-    if (threshold.isActive) {
-      await deactivateCriticalThreshold(threshold.id)
-    } else {
-      await putCriticalThreshold({
-        ...threshold,
-        isActive: true,
-        updatedAt: new Date().toISOString(),
-      })
+    try {
+      if (threshold.isActive) {
+        await deactivateCriticalThreshold(threshold.id)
+      } else {
+        await putCriticalValueThreshold({
+          ...threshold,
+          isActive: true,
+          updatedAt: new Date().toISOString(),
+        })
+      }
+      await load()
+    } catch {
+      setError(t('thresholds.toggleError') ?? 'Failed to update threshold — please try again.')
     }
-    await load()
   }
 
   const handleReset = async () => {
