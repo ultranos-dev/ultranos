@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import '@/lib/key-lifecycle-hooks'
 import { startSyncDrain, stopSyncDrain, triggerDrain } from '@/lib/sync-drain-init'
 import { startKrlSync, stopKrlSync } from '@/lib/krl-sync-worker'
 import { startAuditDrain, stopAuditDrain } from '@/lib/audit'

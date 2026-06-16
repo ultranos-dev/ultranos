@@ -1,5 +1,6 @@
 'use client'
 
+import '@/lib/key-lifecycle-hooks'
 import { useEffect, useRef } from 'react'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useSyncStore } from '@/stores/sync-store'

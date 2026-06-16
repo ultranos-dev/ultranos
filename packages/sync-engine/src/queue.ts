@@ -13,13 +13,21 @@ export interface SyncQueueEntry {
   resourceId: string
   action: 'create' | 'update' | 'sync:conflict_resolved' | 'pull-conflict'
   payload: string
-  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved'
+  status: 'pending' | 'syncing' | 'failed' | 'synced' | 'resolved' | 'awaiting-key'
   hlcTimestamp: string
   createdAt: string
   retryCount: number
   lastAttemptAt?: string
   failureReason?: string
 }
+
+/**
+ * Sentinel prefix marking AES-GCM encrypted payloads in the sync queue.
+ * The crypto version (v1, v2, …) is embedded inside the payload by encryptPayload()
+ * so stored format is: enc:<version>:<base64(iv+ciphertext)>
+ * e.g. "enc:v1:<base64>" or "enc:v2:<base64>" after key rotation.
+ */
+export const ENCRYPTED_PAYLOAD_PREFIX = 'enc:'
 
 export type EnqueueInput = Pick<
   SyncQueueEntry,
@@ -48,11 +56,9 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
   return {
     /**
      * Enqueue a sync operation. Deduplicates by resourceId:
-     * if a pending or syncing entry for the same resourceId exists, it is replaced
-     * (pending) or a new entry is created alongside the in-flight one (syncing).
+     * if a pending entry for the same resourceId exists, it is replaced.
      */
     async enqueue(input: EnqueueInput): Promise<void> {
-      // Check pending first — coalesce into existing pending entry
       const existingPending = await storage.getByResourceId(input.resourceId, 'pending')
 
       if (existingPending) {
@@ -65,11 +71,6 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
         })
         return
       }
-
-      // If an entry is currently syncing, we still need to enqueue the newer
-      // version so it syncs after the in-flight operation completes.
-      // The new entry is a separate queue item (different id) that will be
-      // picked up on the next drain cycle.
 
       const entry: SyncQueueEntry = {
         id: crypto.randomUUID(),
@@ -103,7 +104,6 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       )
     },
 
-    /** Transition an entry to syncing status. */
     async markSyncing(id: string): Promise<void> {
       const all = await storage.getByStatus('pending')
       const entry = all.find((e) => e.id === id)
@@ -111,9 +111,7 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       await storage.put({ ...entry, status: 'syncing' })
     },
 
-    /** Mark an entry as successfully synced. */
     async markSynced(id: string): Promise<void> {
-      // Check pending and syncing statuses
       const pending = await storage.getByStatus('pending')
       const syncing = await storage.getByStatus('syncing')
       const entry = [...pending, ...syncing].find((e) => e.id === id)
@@ -125,10 +123,6 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       })
     },
 
-    /**
-     * Mark a sync attempt as failed. Increments retryCount and applies backoff.
-     * If maxRetries is reached, the entry is marked as permanently failed.
-     */
     async markFailed(id: string, reason?: string): Promise<void> {
       const pending = await storage.getByStatus('pending')
       const syncing = await storage.getByStatus('syncing')
@@ -158,8 +152,33 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
     },
 
     /**
+     * Mark an entry as awaiting-key — payload is encrypted but the session key
+     * is unavailable. Accepts entries in either 'pending' or 'syncing' status,
+     * allowing a direct pending→awaiting-key transition without an intermediate
+     * markSyncing call (avoids a two-write race window in the drain worker).
+     */
+    async markAwaitingKey(id: string): Promise<void> {
+      const pending = await storage.getByStatus('pending')
+      const syncing = await storage.getByStatus('syncing')
+      const entry = [...pending, ...syncing].find((e) => e.id === id)
+      if (!entry) return
+      await storage.put({ ...entry, status: 'awaiting-key' })
+    },
+
+    /**
+     * Reset all awaiting-key entries back to pending after re-authentication
+     * restores the session key.
+     */
+    async restoreAwaitingKeyEntries(): Promise<void> {
+      const awaitingKey = await storage.getByStatus('awaiting-key')
+      for (const entry of awaitingKey) {
+        await storage.put({ ...entry, status: 'pending' })
+      }
+    },
+
+    /**
      * Recover stale entries stuck in 'syncing' status (e.g., after a crash).
-     * Entries in 'syncing' older than the threshold are reset to 'pending'.
+     * Does NOT touch 'awaiting-key' entries � those require key restoration.
      */
     async recoverStale(staleThresholdMs = 120_000): Promise<void> {
       const syncing = await storage.getByStatus('syncing')
@@ -174,7 +193,6 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       }
     },
 
-    /** Get counts of pending and failed entries for the sync status store. */
     async getCounts(): Promise<{ pendingCount: number; failedCount: number }> {
       const [pendingCount, failedCount] = await Promise.all([
         storage.count('pending'),
@@ -183,7 +201,6 @@ export function createSyncQueue(storage: SyncQueueStorage, maxRetries = DEFAULT_
       return { pendingCount, failedCount }
     },
 
-    /** Get the timestamp of the most recently synced entry. */
     async getLastSyncedAt(): Promise<string | null> {
       const latest = await storage.getLatestSynced()
       return latest?.lastAttemptAt ?? null

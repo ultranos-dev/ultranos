@@ -2,14 +2,15 @@
  * OPD-Lite PWA sync worker.
  *
  * Wires the generic DrainWorker to opd-lite's Dexie queue and tRPC client.
- * In-page worker: listens for `online` events + 30s polling.
+ * In-page worker: listens for online events + 30s polling.
  * Upgrade to Service Worker deferred per Dev Notes.
  */
 
 import { DrainWorker, type SyncResult, type SyncQueueEntry, type ConflictResolution, type SyncRecord } from '@ultranos/sync-engine'
 import { createMeterFetch } from '@ultranos/sync-engine'
 import { recordDataUsage } from './db'
-import { syncQueue } from './sync-queue'
+import { syncQueue, decryptEntryPayload } from './sync-queue'
+import { encryptionKeyStore } from './encryption-key-store'
 import { auditPhiAccess, AuditAction } from './audit'
 import type { AuditResourceType } from './audit'
 
@@ -40,6 +41,9 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
     queue: syncQueue,
     pollIntervalMs: 30_000,
 
+    decryptFn: decryptEntryPayload,
+    isKeyAvailable: () => encryptionKeyStore.isReady(),
+
     syncFn: async (entry: SyncQueueEntry): Promise<SyncResult> => {
       const token = config.getAuthToken()
       const res = await meteredFetch(`${config.hubBaseUrl}/api/trpc/sync.push`, {
@@ -65,7 +69,6 @@ export function startSyncWorker(config: SyncWorkerConfig): void {
         return { success: false, error: `HTTP ${res.status}` }
       }
 
-      // Parse the tRPC response — Hub returns 200 with per-operation results
       const data = await res.json() as {
         result: { data: { json: { results: Array<{
           resourceId: string

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import '@/lib/key-lifecycle-hooks' // registers re-auth listener for awaiting-key queue restoration
 import { startSyncWorker, stopSyncWorker, triggerDrain } from '@/lib/sync-worker'
 import { pullPatientChanges } from '@/lib/sync-pull'
 import { useSyncStore } from '@/stores/sync-store'

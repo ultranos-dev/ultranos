@@ -34,9 +34,9 @@ export type {
   ConflictResolution,
 } from './conflict-resolver.js'
 
-export { createSyncQueue, getBackoffMs } from './queue.js'
+export { createSyncQueue, getBackoffMs, ENCRYPTED_PAYLOAD_PREFIX } from './queue.js'
 export { enqueueSyncAction } from './enqueue.js'
-export type { EnqueueSyncActionInput } from './enqueue.js'
+export type { EnqueueSyncActionInput, EnqueueEncryptFn } from './enqueue.js'
 export { DrainWorker } from './drain-worker.js'
 export type { SyncResult, DrainWorkerConfig } from './drain-worker.js'
 export type {

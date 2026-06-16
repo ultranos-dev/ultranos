@@ -4,6 +4,14 @@ import {
   encryptionKeyStore,
 } from './encryption-key-store'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFn = (...args: any[]) => any
+
+/** Type-safe helper to access a method on a Dexie table proxy target by name. */
+function getTargetMethod(target: object, method: string): AnyFn {
+  return (target as unknown as Record<string, AnyFn>)[method]!
+}
+
 export { EncryptionKeyNotAvailableError } from './encryption-key-store'
 
 /**
@@ -60,8 +68,9 @@ async function encryptRecord(
   record: Record<string, unknown>,
   indexedFields: Set<string>,
   key: CryptoKey,
+  version: string,
 ): Promise<Record<string, unknown>> {
-  const encrypted = await encryptPayload(key, record)
+  const encrypted = await encryptPayload(key, record, version)
   const stored: Record<string, unknown> = { [ENC_FIELD]: encrypted }
 
   for (const field of indexedFields) {
@@ -76,20 +85,20 @@ async function encryptRecord(
 
 async function decryptRecord(
   stored: Record<string, unknown>,
-  key: CryptoKey,
+  keyOrMap: CryptoKey | Record<string, CryptoKey>,
 ): Promise<Record<string, unknown>> {
   const encValue = stored[ENC_FIELD]
   if (typeof encValue !== 'string') {
     throw new EncryptedDataCorruptError()
   }
-  return (await decryptPayload(key, encValue)) as Record<string, unknown>
+  return (await decryptPayload(keyOrMap, encValue)) as Record<string, unknown>
 }
 
 async function decryptResults(results: unknown[]): Promise<unknown[]> {
-  const key = encryptionKeyStore.requireKey()
+  const keyMap = encryptionKeyStore.requireKeyMap()
   return Promise.all(
     results.map((r) =>
-      r == null ? r : decryptRecord(r as Record<string, unknown>, key),
+      r == null ? r : decryptRecord(r as Record<string, unknown>, keyMap),
     ),
   )
 }
@@ -111,26 +120,26 @@ function wrapChain(target: object): unknown {
 
       if (prop === 'first') {
         return async () => {
-          const key = encryptionKeyStore.requireKey()
+          const keyMap = encryptionKeyStore.requireKeyMap()
           const result = await (t as { first: () => Promise<unknown> }).first()
           if (result == null) return result
-          return decryptRecord(result as Record<string, unknown>, key)
+          return decryptRecord(result as Record<string, unknown>, keyMap)
         }
       }
 
       if (prop === 'last') {
         return async () => {
-          const key = encryptionKeyStore.requireKey()
+          const keyMap = encryptionKeyStore.requireKeyMap()
           const result = await (t as { last: () => Promise<unknown> }).last()
           if (result == null) return result
-          return decryptRecord(result as Record<string, unknown>, key)
+          return decryptRecord(result as Record<string, unknown>, keyMap)
         }
       }
 
       // sortBy() returns Promise<T[]> — decrypt the results
       if (prop === 'sortBy') {
         return async (...args: unknown[]) => {
-          const raw = await (val as (...args: unknown[]) => unknown).apply(t, args)
+          const raw = await (val as AnyFn).apply(t, args)
           return decryptResults(raw as unknown[])
         }
       }
@@ -157,7 +166,7 @@ function wrapChain(target: object): unknown {
 
       if (typeof val === 'function') {
         return (...args: unknown[]) => {
-          const result = (val as (...args: unknown[]) => unknown).apply(t, args)
+          const result = (val as AnyFn).apply(t, args)
           if (result != null && typeof result === 'object') {
             return wrapChain(result as object)
           }
@@ -230,7 +239,7 @@ function wrapChainWithFilter(
 
       if (typeof val === 'function') {
         return (...args: unknown[]) => {
-          const result = (val as (...args: unknown[]) => unknown).apply(t, args)
+          const result = (val as AnyFn).apply(t, args)
           if (result != null && typeof result === 'object') {
             return wrapChainWithFilter(result as object, predicate)
           }
@@ -271,12 +280,14 @@ export function applyEncryptionMiddleware(
         if (prop === 'put') {
           return async (item: unknown, keyOrOpts?: unknown) => {
             const key = encryptionKeyStore.requireKey()
+            const version = encryptionKeyStore.getCurrentWriteVersion()
             const encrypted = await encryptRecord(
               item as Record<string, unknown>,
               indexedSet,
               key,
+              version,
             )
-            return (target as Record<string, (...args: unknown[]) => unknown>)['put']!.call(
+            return getTargetMethod(target, 'put').call(
               target,
               encrypted,
               keyOrOpts,
@@ -287,12 +298,14 @@ export function applyEncryptionMiddleware(
         if (prop === 'add') {
           return async (item: unknown, keyOrOpts?: unknown) => {
             const key = encryptionKeyStore.requireKey()
+            const version = encryptionKeyStore.getCurrentWriteVersion()
             const encrypted = await encryptRecord(
               item as Record<string, unknown>,
               indexedSet,
               key,
+              version,
             )
-            return (target as Record<string, (...args: unknown[]) => unknown>)['add']!.call(
+            return getTargetMethod(target, 'add').call(
               target,
               encrypted,
               keyOrOpts,
@@ -303,16 +316,18 @@ export function applyEncryptionMiddleware(
         if (prop === 'bulkPut') {
           return async (items: unknown[], keysOrOpts?: unknown) => {
             const key = encryptionKeyStore.requireKey()
+            const version = encryptionKeyStore.getCurrentWriteVersion()
             const encrypted = await Promise.all(
               items.map((i) =>
                 encryptRecord(
                   i as Record<string, unknown>,
                   indexedSet,
                   key,
+                  version,
                 ),
               ),
             )
-            return (target as Record<string, (...args: unknown[]) => unknown>)['bulkPut']!.call(
+            return getTargetMethod(target, 'bulkPut').call(
               target,
               encrypted,
               keysOrOpts,
@@ -322,22 +337,22 @@ export function applyEncryptionMiddleware(
 
         if (prop === 'update') {
           return async (keyValue: unknown, modifications: Record<string, unknown>) => {
-            const cryptoKey = encryptionKeyStore.requireKey()
+            const writeKey = encryptionKeyStore.requireKey()
+            const version = encryptionKeyStore.getCurrentWriteVersion()
+            const keyMap = encryptionKeyStore.requireKeyMap()
             // Read current decrypted record, apply mods, re-encrypt and put
-            const current = await (target as Record<string, (...args: unknown[]) => unknown>)[
-              'get'
-            ]!.call(target, keyValue)
+            const current = await getTargetMethod(target, 'get').call(target, keyValue)
             if (current == null) return 0
             const decrypted = await decryptRecord(
               current as Record<string, unknown>,
-              cryptoKey,
+              keyMap,
             )
             // Apply dotted-key modifications
             for (const [modKey, modVal] of Object.entries(modifications)) {
               setNestedValue(decrypted, modKey, modVal)
             }
-            const encrypted = await encryptRecord(decrypted, indexedSet, cryptoKey)
-            await (target as Record<string, (...args: unknown[]) => unknown>)['put']!.call(
+            const encrypted = await encryptRecord(decrypted, indexedSet, writeKey, version)
+            await getTargetMethod(target, 'put').call(
               target,
               encrypted,
             )
@@ -348,16 +363,18 @@ export function applyEncryptionMiddleware(
         if (prop === 'bulkAdd') {
           return async (items: unknown[], keysOrOpts?: unknown) => {
             const key = encryptionKeyStore.requireKey()
+            const version = encryptionKeyStore.getCurrentWriteVersion()
             const encrypted = await Promise.all(
               items.map((i) =>
                 encryptRecord(
                   i as Record<string, unknown>,
                   indexedSet,
                   key,
+                  version,
                 ),
               ),
             )
-            return (target as Record<string, (...args: unknown[]) => unknown>)['bulkAdd']!.call(
+            return getTargetMethod(target, 'bulkAdd').call(
               target,
               encrypted,
               keysOrOpts,
@@ -368,20 +385,16 @@ export function applyEncryptionMiddleware(
         // --- Read methods: decrypt after ---
         if (prop === 'get') {
           return async (keyOrFilter: unknown) => {
-            const key = encryptionKeyStore.requireKey()
-            const result = await (target as Record<string, (...args: unknown[]) => unknown>)[
-              'get'
-            ]!.call(target, keyOrFilter)
+            const keyMap = encryptionKeyStore.requireKeyMap()
+            const result = await getTargetMethod(target, 'get').call(target, keyOrFilter)
             if (result == null) return result
-            return decryptRecord(result as Record<string, unknown>, key)
+            return decryptRecord(result as Record<string, unknown>, keyMap)
           }
         }
 
         if (prop === 'toArray') {
           return async () => {
-            const raw = await (target as Record<string, (...args: unknown[]) => unknown>)[
-              'toArray'
-            ]!.call(target)
+            const raw = await getTargetMethod(target, 'toArray').call(target)
             return decryptResults(raw as unknown[])
           }
         }
@@ -389,9 +402,7 @@ export function applyEncryptionMiddleware(
         // --- Table-level each(): collect all, decrypt, then iterate ---
         if (prop === 'each') {
           return async (callback: (item: unknown) => void) => {
-            const raw = await (target as Record<string, (...args: unknown[]) => unknown>)[
-              'toArray'
-            ]!.call(target)
+            const raw = await getTargetMethod(target, 'toArray').call(target)
             const decrypted = await decryptResults(raw as unknown[])
             for (const item of decrypted) {
               if (item != null) callback(item)
@@ -402,15 +413,13 @@ export function applyEncryptionMiddleware(
         // --- bulkGet: decrypt each result ---
         if (prop === 'bulkGet') {
           return async (keys: unknown[]) => {
-            const cryptoKey = encryptionKeyStore.requireKey()
-            const results = await (target as Record<string, (...args: unknown[]) => unknown>)[
-              'bulkGet'
-            ]!.call(target, keys)
+            const keyMap = encryptionKeyStore.requireKeyMap()
+            const results = await getTargetMethod(target, 'bulkGet').call(target, keys)
             return Promise.all(
               (results as unknown[]).map((r) =>
                 r == null
                   ? r
-                  : decryptRecord(r as Record<string, unknown>, cryptoKey),
+                  : decryptRecord(r as Record<string, unknown>, keyMap),
               ),
             )
           }
@@ -420,9 +429,7 @@ export function applyEncryptionMiddleware(
         if (prop === 'filter') {
           if (typeof val !== 'function') return val
           return (predicate: (item: unknown) => boolean) => {
-            const collection = (target as Record<string, (...args: unknown[]) => unknown>)[
-              'toCollection'
-            ]!.call(target) as { filter: (...args: unknown[]) => unknown }
+            const collection = getTargetMethod(target, 'toCollection').call(target)
             const filtered = collection.filter(
               (_raw: Record<string, unknown>) => {
                 // Cannot async-decrypt inside Dexie's sync filter,
@@ -431,7 +438,7 @@ export function applyEncryptionMiddleware(
               },
             )
             // Wrap with post-decryption filter on terminal methods
-            return wrapChainWithFilter(filtered as object, predicate)
+            return wrapChainWithFilter(filtered, predicate)
           }
         }
 
@@ -439,7 +446,7 @@ export function applyEncryptionMiddleware(
         if (prop === 'where' || prop === 'orderBy') {
           if (typeof val !== 'function') return val
           return (...args: unknown[]) => {
-            const result = (val as (...args: unknown[]) => unknown).apply(target, args)
+            const result = (val as AnyFn).apply(target, args)
             if (result != null && typeof result === 'object') {
               return wrapChain(result as object)
             }
@@ -451,7 +458,7 @@ export function applyEncryptionMiddleware(
         if (prop === 'toCollection') {
           if (typeof val !== 'function') return val
           return (...args: unknown[]) => {
-            const result = (val as (...args: unknown[]) => unknown).apply(target, args)
+            const result = (val as AnyFn).apply(target, args)
             if (result != null && typeof result === 'object') {
               return wrapChain(result as object)
             }

@@ -9,6 +9,7 @@
  */
 
 import type { SyncQueue, SyncQueueEntry } from './queue.js'
+import { ENCRYPTED_PAYLOAD_PREFIX } from './queue.js'
 import type { ConflictResolution, SyncRecord } from './conflict-resolver.js'
 
 export interface SyncResult {
@@ -37,6 +38,17 @@ export interface DrainWorkerConfig {
   onAudit?: (entry: SyncQueueEntry, outcome: 'success' | 'failure' | 'conflict') => void
   /** Polling interval in ms when online. Default: 30000 (30s). */
   pollIntervalMs?: number
+  /**
+   * Decrypt an encrypted payload (enc:v1: prefix) back to its JSON string.
+   * Called in-memory just before the syncFn Hub push � never written back to storage.
+   */
+  decryptFn?: (encryptedPayload: string) => Promise<string>
+  /**
+   * Returns true when the session encryption key is available.
+   * If false and an encrypted payload is encountered, the entry is set to
+   * 'awaiting-key' and skipped until re-authentication restores the key.
+   */
+  isKeyAvailable?: () => boolean
 }
 
 export class DrainWorker {
@@ -63,7 +75,6 @@ export class DrainWorker {
       }
     }, this.config.pollIntervalMs)
 
-    // Drain immediately if currently online
     if (typeof navigator === 'undefined' || navigator.onLine) {
       void this.drain()
     }
@@ -86,28 +97,59 @@ export class DrainWorker {
     this.draining = true
 
     try {
-      // Recover entries stuck in 'syncing' from a previous crash/tab close
       await this.config.queue.recoverStale()
 
       const pending = await this.config.queue.getPending()
 
       for (const entry of pending) {
+        const isEncrypted = entry.payload.startsWith(ENCRYPTED_PAYLOAD_PREFIX)
+
+        // If encrypted but key unavailable, defer directly to awaiting-key (single write—no race)
+        if (isEncrypted && this.config.isKeyAvailable && !this.config.isKeyAvailable()) {
+          await this.config.queue.markAwaitingKey(entry.id)
+          continue
+        }
+
+        // If encrypted but no decryptFn configured, fail the entry rather than forwarding ciphertext
+        if (isEncrypted && !this.config.decryptFn) {
+          await this.config.queue.markSyncing(entry.id)
+          await this.config.queue.markFailed(entry.id, 'No decryptFn configured for encrypted payload')
+          this.config.onAudit?.(entry, 'failure')
+          continue
+        }
+
         await this.config.queue.markSyncing(entry.id)
 
         try {
-          const result = await this.config.syncFn(entry)
+          // Decrypt in memory just before Hub push � never persisted back
+          let decryptedPayload = entry.payload
+          if (isEncrypted && this.config.decryptFn) {
+            decryptedPayload = await this.config.decryptFn(entry.payload)
+          }
+          const entryForSync: SyncQueueEntry = decryptedPayload !== entry.payload
+            ? { ...entry, payload: decryptedPayload }
+            : entry
+
+          const result = await this.config.syncFn(entryForSync)
 
           if (result.success) {
             await this.config.queue.markSynced(entry.id)
             this.config.onAudit?.(entry, 'success')
           } else if (result.conflict?.remoteVersion) {
             this.config.onAudit?.(entry, 'conflict')
-            // Conflict handling is delegated to Task 4
             if (this.config.onConflict) {
               const { resolveConflict } = await import('./conflict-resolver.js')
+              let localData: unknown
+              try {
+                localData = JSON.parse(decryptedPayload)
+              } catch {
+                await this.config.queue.markFailed(entry.id, 'Payload parse error — cannot resolve conflict')
+                this.config.onAudit?.(entry, 'failure')
+                continue
+              }
               const localRecord: SyncRecord = {
                 id: entry.resourceId,
-                data: JSON.parse(entry.payload),
+                data: localData as Record<string, unknown>,
                 hlcTimestamp: (await import('./hlc.js')).deserializeHlc(entry.hlcTimestamp),
                 version: entry.hlcTimestamp,
               }
@@ -116,12 +158,10 @@ export class DrainWorker {
                 await this.config.onConflict(entry, resolution)
                 await this.config.queue.markSynced(entry.id)
               } catch {
-                // onConflict handler failed — mark as failed so it retries
                 await this.config.queue.markFailed(entry.id, 'Conflict handler failed')
                 this.config.onAudit?.(entry, 'failure')
               }
             } else {
-              // No onConflict handler — mark synced (conflict swallowed)
               await this.config.queue.markSynced(entry.id)
             }
           } else {

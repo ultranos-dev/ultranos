@@ -6,14 +6,16 @@
  * - Hub API sync function (medication.recordDispense)
  * - SyncStore status updates
  * - Audit logging
+ * - Payload decryption (Story 28.3)
  *
  * Start after login, stop on logout/session expiry.
  * Pauses on auth-expired (401) and triggers re-auth.
  */
 
 import { DrainWorker, createSyncQueue } from '@ultranos/sync-engine'
-import { dexieSyncAdapter } from './dexie-sync-adapter'
+import { dexieSyncAdapter, decryptPharmacyEntryPayload } from './dexie-sync-adapter'
 import { drainSyncFn } from './drain-sync-fn'
+import { encryptionKeyStore } from './encryption-key-store'
 import { useSyncStore } from '@/stores/sync-store'
 import { auditPhiAccess, AuditAction, AuditResourceType } from '@/lib/audit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
@@ -21,7 +23,7 @@ import { useAuthSessionStore } from '@/stores/auth-session-store'
 let drainWorker: DrainWorker | null = null
 
 /**
- * Start the sync drain worker. Idempotent â€” stops any existing worker first.
+ * Start the sync drain worker. Idempotent — stops any existing worker first.
  * Should be called after successful authentication.
  */
 export function startSyncDrain(): void {
@@ -34,8 +36,6 @@ export function startSyncDrain(): void {
     syncFn: async (entry) => {
       const result = await drainSyncFn(entry)
 
-      // On auth-expired: pause drain and trigger re-auth
-      // authExpired flag tells DrainWorker to revert entry to pending (no retry burn)
       if (!result.success && result.error === 'auth-expired') {
         stopSyncDrain()
         window.dispatchEvent(new CustomEvent('ultranos:session-expired'))
@@ -44,10 +44,11 @@ export function startSyncDrain(): void {
 
       return result
     },
+    decryptFn: decryptPharmacyEntryPayload,
+    isKeyAvailable: () => encryptionKeyStore.isReady(),
     onStatusUpdate: (status) => {
       const store = useSyncStore.getState()
       store.updateSyncStatus(status)
-      // Update lastSyncedAt when drain completes a cycle with no pending items
       if (!status.isPending && status.pendingCount === 0) {
         store.markSynced()
       }

@@ -201,6 +201,21 @@ class PharmacyLiteDatabase extends Dexie {
       dataBudgetConfig: '&id',
       dataUsage: '++id, date, category, [date+category]',
     })
+
+    // v12: Story 28.6 — Search Encryption Strategy
+    // Remove nameGiven and phone from patients indexes — both are PHI.
+    // Patient search uses in-memory decrypt-and-filter via the middleware's filter() proxy.
+    this.version(12).stores({
+      patients: 'id, createdAt',
+    }).upgrade(async (tx) => {
+      // Remove cleartext PHI fields from existing patient records in IndexedDB.
+      // nameGiven and phone are already encrypted inside the _enc blob — this upgrade
+      // only removes the redundant cleartext copies from the stored objects.
+      await tx.table('patients').toCollection().modify((record: Record<string, unknown>) => {
+        delete record['nameGiven']
+        delete record['phone']
+      })
+    })
   }
 }
 
@@ -237,8 +252,11 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
     ],
   },
   {
+    // Story 28.6: nameGiven and phone removed from indexedFields — both are PHI.
+    // Search uses the middleware's filter() proxy (in-memory decrypt-and-filter).
+    // See adr-028-search-encryption-strategy.
     tableName: 'patients',
-    indexedFields: ['id', 'nameGiven', 'phone', 'createdAt'],
+    indexedFields: ['id', 'createdAt'],
   },
 ]
 
