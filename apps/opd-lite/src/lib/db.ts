@@ -7,6 +7,7 @@ import {
   applyEncryptionMiddleware,
   type EncryptionTableConfig,
 } from './dexie-encryption-middleware'
+import { encryptionKeyStore } from './encryption-key-store'
 
 /**
  * Local patient record type — mirrors FhirPatient for Dexie storage.
@@ -90,6 +91,16 @@ export interface PractitionerKeyEntry {
   practitionerId: string
   practitionerName: string
   cachedAt: string           // ISO 8601 timestamp
+}
+
+/**
+ * Tracks the plaintext-to-encrypted migration status for PHI tables
+ * added to encryption middleware in Story 28.1. Not PHI itself.
+ */
+export interface EncryptionMigrationEntry {
+  tableName: string           // primary key — e.g. 'practitionerKeys'
+  status: 'pending' | 'encrypted'
+  migratedAt?: string         // ISO 8601 timestamp — set when status transitions to 'encrypted'
 }
 
 // --- Vocabulary tables (Story 10.3) ---
@@ -198,6 +209,7 @@ class OpdLiteDatabase extends Dexie {
   syncMeta!: EntityTable<SyncMetaEntry, 'patientId'>
   dataBudgetConfig!: Dexie.Table<DataBudgetConfig, string>
   dataUsage!: Dexie.Table<DataUsageRecord & { id?: number }, number>
+  encryptionMigrations!: EntityTable<EncryptionMigrationEntry, 'tableName'>
 
   constructor() {
     super('opd-lite')
@@ -581,6 +593,42 @@ class OpdLiteDatabase extends Dexie {
       dataBudgetConfig: '&id',
       dataUsage: '++id, date, category, [date+category]',
     })
+
+    // v22: Story 28.6 — Search Encryption Strategy
+    // Remove _ultranos.nameLocal and _ultranos.nameLatin from patients indexes.
+    // Names are now exclusively inside the encrypted _enc blob.
+    // Search is performed via in-memory decrypt-and-filter (Option A).
+    // _ultranos.nationalIdHash remains indexed — it is a blind index (HMAC-SHA256), not PHI.
+    this.version(22).stores({
+      patients: 'id, _ultranos.nationalIdHash, meta.lastUpdated',
+    }).upgrade(async (tx) => {
+      // Remove cleartext name fields from existing patient records in IndexedDB.
+      // These fields are already encrypted inside the _enc blob — this upgrade
+      // only removes the redundant cleartext copies from the stored objects.
+      await tx.table('patients').toCollection().modify((record: Record<string, unknown>) => {
+        const ultranos = record['_ultranos']
+        if (ultranos != null && typeof ultranos === 'object') {
+          const ext = ultranos as Record<string, unknown>
+          delete ext['nameLocal']
+          delete ext['nameLatin']
+        }
+      })
+    })
+
+    // v23: Story 28.1 — Encryption Completeness
+    // - Adds encryptionMigrations table to track plaintext→encrypted migration for
+    //   practitionerKeys and diagnosticReports (tables added after Story 7.1).
+    // - Not encrypted: contains only table names and migration status (no PHI).
+    // - Seeds pending rows for the two newly-encrypted tables so that
+    //   runPendingEncryptionMigrations() picks them up on first startup after upgrade.
+    this.version(23).stores({
+      encryptionMigrations: '&tableName',
+    }).upgrade(async (tx) => {
+      await tx.table('encryptionMigrations').bulkPut([
+        { tableName: 'practitionerKeys', status: 'pending' },
+        { tableName: 'diagnosticReports', status: 'pending' },
+      ])
+    })
   }
 }
 
@@ -589,19 +637,25 @@ class OpdLiteDatabase extends Dexie {
  * Indexed fields remain in cleartext for Dexie queries; all other
  * fields are encrypted into a single `_enc` blob in IndexedDB.
  *
- * Non-PHI tables (syncQueue, practitionerKeys) are NOT encrypted —
- * they contain operational data (opaque IDs, timestamps) rather than
- * clinical content. Audit tables are encrypted because they contain
+ * Non-PHI tables (syncQueue, clientAuditLog, vocabulary*, aiModels,
+ * modelDownloadProgress, encryptionMigrations) are NOT encrypted —
+ * they contain operational/reference data rather than clinical content.
+ * Audit tables (interactionAuditLog) are encrypted because they contain
  * medicationDisplay and patient references (clinical content).
+ *
+ * Story 28.1 additions: practitionerKeys (practitioner identity data)
+ * and diagnosticReports (lab results with clinical conclusions) are now
+ * encrypted. Both were added after Story 7.1 and lacked coverage.
  */
 const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
   {
+    // Story 28.6: nameLocal and nameLatin removed from indexedFields.
+    // These are now exclusively in the encrypted _enc blob.
+    // Search uses in-memory decrypt-and-filter. See adr-028-search-encryption-strategy.
     tableName: 'patients',
     indexedFields: [
       'id',
-      '_ultranos.nameLocal',
       '_ultranos.nationalIdHash',
-      '_ultranos.nameLatin',
       'meta.lastUpdated',
     ],
   },
@@ -686,11 +740,46 @@ const PHI_TABLE_CONFIGS: EncryptionTableConfig[] = [
     tableName: 'appointments',
     indexedFields: ['id', 'status', 'start', '_ultranos.hlcTimestamp'],
   },
+  // Story 28.1: practitionerKeys added to encryption — contains practitioner
+  // name and identity data (PHI). publicKey and practitionerId remain indexed.
+  {
+    tableName: 'practitionerKeys',
+    indexedFields: ['publicKey', 'practitionerId'],
+  },
+  // Story 28.1: diagnosticReports added to encryption — contains clinical
+  // conclusions, performer info, and lab result data (PHI).
+  {
+    tableName: 'diagnosticReports',
+    indexedFields: ['id', 'status', 'subject.reference', 'meta.lastUpdated'],
+  },
 ]
 
 export const db = new OpdLiteDatabase()
 
+// ---------------------------------------------------------------------------
+// Raw (un-proxied) table references — captured BEFORE applyEncryptionMiddleware
+// replaces table refs with encrypting proxies.
+//
+// These are intentionally module-private: the encryption middleware's proxy
+// is the only legitimate read/write path for PHI tables in production.
+// Test access is gated behind _getTestRawTables() which throws outside Vitest.
+// ---------------------------------------------------------------------------
+const _rawPractitionerKeys = db.practitionerKeys
+const _rawDiagnosticReports = db.diagnosticReports
+
 applyEncryptionMiddleware(db, PHI_TABLE_CONFIGS)
+
+/**
+ * @internal Test-only — returns raw un-proxied table handles for verifying
+ * that the encryption proxy has written `_enc` blobs to IndexedDB.
+ *
+ * Throws in production (process.env.VITEST is undefined outside Vitest runs).
+ * Never import this in non-test code.
+ */
+export function _getTestRawTables() {
+  if (!process.env.VITEST) throw new Error('_getTestRawTables is test-only')
+  return { practitionerKeys: _rawPractitionerKeys, diagnosticReports: _rawDiagnosticReports }
+}
 
 // ---------------------------------------------------------------------------
 // Data Budget helpers (v21) — Story 48.x
@@ -777,4 +866,79 @@ export async function checkAndRolloverCycle(): Promise<boolean> {
     }
     return false
   })
+}
+
+// ---------------------------------------------------------------------------
+// Story 28.1: Plaintext-to-encrypted migration for practitionerKeys and
+// diagnosticReports — tables that existed before encryption was added.
+// ---------------------------------------------------------------------------
+
+/**
+ * Migrate records in a raw (un-proxied) table that lack an `_enc` field
+ * by re-writing them through the encrypted proxy.
+ *
+ * Records that already have `_enc` are already encrypted and are skipped.
+ */
+async function migratePlaintextRecords<T>(
+  rawTable: { toArray: () => Promise<T[]> },
+  encryptedTable: { bulkPut: (items: T[]) => Promise<unknown> },
+): Promise<void> {
+  const all = await rawTable.toArray()
+  const plaintext = all.filter(
+    (r) => !('_enc' in (r as Record<string, unknown>)),
+  )
+  if (plaintext.length === 0) return
+  await encryptedTable.bulkPut(plaintext)
+}
+
+/**
+ * Run pending encryption migrations for PHI tables added in Story 28.1.
+ *
+ * Safe to call at app startup — returns immediately if the encryption key
+ * is not yet available (caller should retry after `encryptionKeyStore.setKey()`).
+ *
+ * Idempotent: records that are already encrypted (have `_enc`) are skipped.
+ * Migration entries are only updated to 'encrypted' once all records in
+ * that table have been processed.
+ *
+ * Concurrent calls are collapsed: a second call while migration is in flight
+ * returns immediately to prevent double-encryption.
+ */
+let _migrationInFlight = false
+
+export async function runPendingEncryptionMigrations(): Promise<void> {
+  if (!encryptionKeyStore.isReady()) return
+  if (_migrationInFlight) return
+  _migrationInFlight = true
+
+  try {
+    const all = await db.encryptionMigrations.toArray()
+    const pending = all.filter((e) => e.status === 'pending')
+
+    if (pending.length === 0) return
+
+    await Promise.all(
+      pending.map(async (entry) => {
+        try {
+          if (entry.tableName === 'practitionerKeys') {
+            await migratePlaintextRecords(_rawPractitionerKeys, db.practitionerKeys)
+          } else if (entry.tableName === 'diagnosticReports') {
+            await migratePlaintextRecords(_rawDiagnosticReports, db.diagnosticReports)
+          }
+          await db.encryptionMigrations.put({
+            tableName: entry.tableName,
+            status: 'encrypted',
+            migratedAt: new Date().toISOString(),
+          })
+        } catch (err) {
+          // Log opaque error (no PHI) so the condition is visible in dev tools.
+          // The entry stays 'pending' and will be retried on next invocation.
+          // Records already encrypted (have '_enc') are safely skipped on retry.
+          console.error('[28.1 migration] failed for table:', entry.tableName, err instanceof Error ? err.message : 'unknown error')
+        }
+      }),
+    )
+  } finally {
+    _migrationInFlight = false
+  }
 }
