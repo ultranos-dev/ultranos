@@ -1,0 +1,54 @@
+<h2>Complete design — Pharmopedia</h2>
+<p class="subtitle">Full summary before writing the spec</p>
+
+<div class="mockup">
+  <div class="mockup-header">What we're building</div>
+  <div class="mockup-body" style="font-size:0.85em;line-height:1.7;color:var(--text-secondary)">
+    A standalone Expo (React Native) app — <code>apps/pharmopedia/</code> — serving as an offline-first drug reference for all authenticated roles. Content is role-tiered: patients see plain-language summaries, clinical staff see full pharmacological detail, pharmacists see formulary and pricing data.
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Decisions locked</div>
+  <div class="mockup-body" style="font-size:0.82em;line-height:1.8">
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td style="color:var(--text-secondary);width:40%">App type</td><td>Standalone Expo app</td></tr>
+      <tr><td style="color:var(--text-secondary)">Auth</td><td>Authenticated — OTP (patient) or credentials (clinical)</td></tr>
+      <tr><td style="color:var(--text-secondary)">Roles</td><td>All roles — tier-scoped content</td></tr>
+      <tr><td style="color:var(--text-secondary)">Offline</td><td>Full catalog sync — expo-sqlite + FTS5</td></tr>
+      <tr><td style="color:var(--text-secondary)">Navigation</td><td>expo-router — 2 tabs + drug detail as pushed screen</td></tr>
+      <tr><td style="color:var(--text-secondary)">State</td><td>Zustand (auth-store + sync-store)</td></tr>
+      <tr><td style="color:var(--text-secondary)">Search</td><td>FTS5 offline (INN + brand + ATC + local names)</td></tr>
+      <tr><td style="color:var(--text-secondary)">Brand name API fix</td><td>Generated column migration on drug_catalog in Plan 3</td></tr>
+      <tr><td style="color:var(--text-secondary)">Features in scope</td><td>Search, Drug detail, Pricing (online), Enrich (role-gated)</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Directory structure</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.78em;line-height:1.7;color:var(--text-secondary)">
+    apps/pharmopedia/<br>
+    &nbsp;&nbsp;app/_layout.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; root + AuthGuard<br>
+    &nbsp;&nbsp;app/(auth)/login.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; OTP + credential login<br>
+    &nbsp;&nbsp;app/(tabs)/index.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Search tab<br>
+    &nbsp;&nbsp;app/(tabs)/profile.tsx &nbsp;&nbsp;&nbsp;&nbsp; Profile + sync status<br>
+    &nbsp;&nbsp;app/drug/[atcCode].tsx &nbsp;&nbsp;&nbsp;&nbsp; Drug detail (4 inner tabs)<br>
+    &nbsp;&nbsp;src/db/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; schema, migrations, queries, fts<br>
+    &nbsp;&nbsp;src/store/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auth-store, sync-store<br>
+    &nbsp;&nbsp;src/api/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hub-fetch, drug-catalog client<br>
+    &nbsp;&nbsp;src/sync/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; catalog-sync orchestrator<br>
+    &nbsp;&nbsp;src/components/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SearchBar, DrugCard, DrugDetail/*, PriceCard, RoleBadge, SyncStatusBanner<br>
+    &nbsp;&nbsp;package.json &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expo ~52, expo-router, expo-sqlite, zustand, i18next
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Also in scope: Hub API + DB changes</div>
+  <div class="mockup-body" style="font-size:0.85em;line-height:1.7;color:var(--text-secondary)">
+    1. Supabase migration: add <code>brand_names_text</code> generated column + pg_trgm index to <code>drug_catalog</code><br>
+    2. Update <code>drugCatalog.search</code> router to include <code>brand_names_text.ilike.${likeQ}</code> in the OR filter
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this complete design look right? Ready to write the spec.</p>

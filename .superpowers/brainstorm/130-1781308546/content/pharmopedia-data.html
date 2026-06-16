@@ -1,0 +1,61 @@
+<h2>Data layer</h2>
+<p class="subtitle">SQLite schema, FTS5 search index, sync orchestration</p>
+
+<div class="mockup">
+  <div class="mockup-header">SQLite tables (src/db/schema.ts)</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.82em;line-height:1.7">
+    <div style="color:var(--accent);margin-bottom:4px">drug_catalog</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">
+      atc_code TEXT PRIMARY KEY<br>
+      inn_name TEXT NOT NULL<br>
+      brand_names TEXT  <span style="color:var(--text-muted)">-- JSON array</span><br>
+      dose_forms TEXT   <span style="color:var(--text-muted)">-- JSON array</span><br>
+      therapeutic_class TEXT<br>
+      local_names TEXT  <span style="color:var(--text-muted)">-- JSON object {en, prs, ps}</span><br>
+      tier1_json TEXT   <span style="color:var(--text-muted)">-- full Tier1 payload as JSON</span><br>
+      tier2_json TEXT   <span style="color:var(--text-muted)">-- full Tier2 payload as JSON (null for patients)</span><br>
+      tier3_json TEXT   <span style="color:var(--text-muted)">-- full Tier3 payload as JSON (null for non-pharmacist)</span><br>
+      version INTEGER NOT NULL
+    </div>
+    <div style="color:var(--accent);margin-top:12px;margin-bottom:4px">drug_catalog_fts  <span style="color:var(--text-muted);font-size:0.9em">(FTS5 virtual table)</span></div>
+    <div style="padding-left:16px;color:var(--text-secondary)">
+      content='drug_catalog', content_rowid='rowid'<br>
+      Indexed: inn_name, atc_code, brand_names_flat, local_names_flat<br>
+      <span style="color:var(--text-muted)">brand_names_flat / local_names_flat = JSON arrays joined to space-separated string</span>
+    </div>
+    <div style="color:var(--accent);margin-top:12px;margin-bottom:4px">sync_meta</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">
+      key TEXT PRIMARY KEY  <span style="color:var(--text-muted)">-- e.g. 'lastVersion', 'lastSyncAt'</span><br>
+      value TEXT NOT NULL
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Sync flow (src/sync/catalog-sync.ts)</div>
+  <div class="mockup-body" style="font-size:0.85em;line-height:1.7">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">1</span> App foregrounds → check network</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">2</span> Read <code>lastVersion</code> from sync_meta (0 if first run)</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">3</span> Call <code>drugCatalog.sync(sinceVersion, limit: 200)</code></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">4</span> Upsert rows into drug_catalog + rebuild FTS triggers</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">5</span> Save new <code>latestVersion</code> to sync_meta</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--accent);color:#fff;border-radius:4px;padding:2px 8px;font-size:0.8em">6</span> Repeat until <code>entries.length === 0</code></div>
+    </div>
+    <div style="margin-top:10px;color:var(--text-secondary)">
+      Sync state (status: 'idle' | 'syncing' | 'error', lastSyncAt) held in zustand sync-store.<br>
+      First-run: blocking splash progress bar. Subsequent: background, non-blocking.
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Tier payload storage strategy</div>
+  <div class="mockup-body" style="font-size:0.85em;color:var(--text-secondary)">
+    Each row stores the full tier-scoped payload the API returned at sync time. The app never re-scopes locally — it trusts what the server sent.
+    Tier 2+ fields only populated if the user's role grants them (server enforces this on sync).
+    If a user's role changes, a fresh sync overwrites rows with the new tier payload.
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this data layer look right?</p>

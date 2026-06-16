@@ -7,6 +7,7 @@ import { CatalogSearchInput } from './CatalogSearchInput'
 import { ReceiveStockItemRow, type ReceiveLineItem } from './ReceiveStockItemRow'
 import { processGoodsReceipt } from '@/lib/inventory/goods-receipt-service'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { setDrugPrice } from '@/lib/trpc'
 import type { CatalogItem } from '@/lib/inventory/types'
 
 interface ReceiveStockFormProps {
@@ -67,6 +68,22 @@ export function ReceiveStockForm({ locationId, currencyMinorUnits, onComplete }:
         notes: notes.trim() || undefined,
       })
       onComplete()
+
+      // Best-effort: publish retail prices to the Hub drug catalog.
+      // Fire-and-forget — never awaited to avoid blocking onComplete.
+      for (const item of items) {
+        if (item.catalogItem.atcCode && item.sellingPrice > 0) {
+          void setDrugPrice({
+            atcCode: item.catalogItem.atcCode,
+            facilityId: locationId,
+            retailPrice: item.sellingPrice / Math.pow(10, currencyMinorUnits),
+            stockSignal: 'in_stock',
+            doseForm: item.catalogItem.form,
+          }).catch(() => {
+            // best-effort — swallow any error
+          })
+        }
+      }
     } catch {
       setError(t('failedProcessReceipt'))
     } finally {

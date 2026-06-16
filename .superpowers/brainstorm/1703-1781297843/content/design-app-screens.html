@@ -1,0 +1,221 @@
+<h2>Design — Section 3: App Screens & Navigation</h2>
+<p class="subtitle">Core screens and UX structure for Pharmopedia mobile</p>
+
+<!-- Navigation structure -->
+<div style="margin-bottom:20px">
+  <h3 style="margin-bottom:12px">Navigation Structure</h3>
+  <div style="background:var(--surface-raised);border-radius:8px;padding:14px;font-size:12px;display:flex;gap:24px">
+    <div>
+      <div style="font-weight:600;margin-bottom:6px">Bottom Tab Bar</div>
+      <div style="display:flex;flex-direction:column;gap:3px;color:var(--text-secondary)">
+        <div>🔍 <strong>Search</strong> — primary landing tab</div>
+        <div>📂 <strong>Browse</strong> — by ATC therapeutic class</div>
+        <div>🔖 <strong>Saved</strong> — bookmarked drugs</div>
+        <div>👤 <strong>Profile</strong> — role, sync status, settings</div>
+      </div>
+    </div>
+    <div style="border-left:1px solid var(--border);padding-left:24px">
+      <div style="font-weight:600;margin-bottom:6px">Drug Detail (modal/stack)</div>
+      <div style="display:flex;flex-direction:column;gap:3px;color:var(--text-secondary)">
+        <div>Pushed from Search, Browse, or Saved</div>
+        <div>Content sections gated by role tier</div>
+        <div>Bookmark toggle in header</div>
+        <div>Share button (deep link)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phone mockups - key screens -->
+<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+
+  <!-- Search Screen -->
+  <div style="width:200px">
+    <div style="font-weight:600;font-size:12px;text-align:center;margin-bottom:8px;color:var(--text-secondary)">SEARCH (Home Tab)</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+      <div style="background:var(--primary);padding:16px 14px 12px;color:#fff">
+        <div style="font-size:10px;opacity:.7;margin-bottom:2px">PHARMOPEDIA</div>
+        <div style="font-size:14px;font-weight:700">Drug Reference</div>
+      </div>
+      <div style="padding:12px">
+        <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <span style="font-size:14px">🔍</span>
+          <span style="font-size:11px;color:var(--text-secondary)">Search by name, ATC, brand…</span>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase">Recently Viewed</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 10px">
+            <div style="font-size:11px;font-weight:600">Amoxicillin</div>
+            <div style="font-size:10px;color:var(--text-secondary)">J01CA04 · Antibiotic</div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 10px">
+            <div style="font-size:11px;font-weight:600">Metformin</div>
+            <div style="font-size:10px;color:var(--text-secondary)">A10BA02 · Antidiabetic</div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 10px">
+            <div style="font-size:11px;font-weight:600">آموکسیسیلین</div>
+            <div style="font-size:10px;color:var(--text-secondary)">جستجوی اخیر · دری</div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin:10px 0 6px;text-transform:uppercase">Browse Categories</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px">Antibiotics</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px">Pain Relief</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px">Diabetes</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px">Maternal</div>
+        </div>
+      </div>
+      <!-- Bottom nav -->
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;background:var(--surface)">
+        <div style="text-align:center;font-size:16px;color:var(--primary)">🔍</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">📂</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">🔖</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drug Detail — Public tier -->
+  <div style="width:200px">
+    <div style="font-weight:600;font-size:12px;text-align:center;margin-bottom:8px;color:#6366f1">DRUG DETAIL — Public Tier</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+      <div style="background:var(--primary);padding:12px 14px 10px;color:#fff;display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">←</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">Amoxicillin</div>
+          <div style="font-size:10px;opacity:.7">J01CA04 · Aminopenicillin</div>
+        </div>
+        <span style="font-size:14px">🔖</span>
+      </div>
+      <div style="padding:10px">
+        <div style="background:#eef2ff;border-radius:6px;padding:8px;margin-bottom:8px;font-size:11px">
+          <strong>What is this drug?</strong><br>
+          <span style="color:var(--text-secondary)">An antibiotic used to treat bacterial infections including chest, urinary tract, and ear infections.</span>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">TREATS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 6px;font-size:10px">Chest infection</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 6px;font-size:10px">Ear infection</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 6px;font-size:10px">UTI</div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">COMMON SIDE EFFECTS</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px">Nausea, diarrhoea, skin rash. Seek help if rash is severe.</div>
+        <div style="background:#fff7ed;border-radius:6px;padding:7px;font-size:10px;border-left:2px solid #f97316">
+          ⚠️ <strong>When to seek help:</strong> Difficulty breathing or swelling of the face — stop and seek emergency care.
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;background:var(--surface)">
+        <div style="text-align:center;font-size:16px;color:var(--primary)">🔍</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">📂</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">🔖</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drug Detail — Clinical tier -->
+  <div style="width:200px">
+    <div style="font-weight:600;font-size:12px;text-align:center;margin-bottom:8px;color:#0ea5e9">DRUG DETAIL — Clinical Tier</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+      <div style="background:var(--primary);padding:12px 14px 10px;color:#fff;display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">←</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">Amoxicillin</div>
+          <div style="font-size:10px;opacity:.7">J01CA04 · Aminopenicillin</div>
+        </div>
+        <span style="font-size:14px">🔖</span>
+      </div>
+      <div style="padding:10px">
+        <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto">
+          <div style="background:var(--primary);color:#fff;border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Overview</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Dosing</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Interactions</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Safety</div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px">MECHANISM</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:7px">Inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins (PBPs).</div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px">ADULT DOSING</div>
+        <div style="background:var(--surface-raised);border-radius:6px;padding:6px 8px;font-size:10px;margin-bottom:7px">
+          500 mg TDS × 5–7 days (oral)<br>
+          1g TDS for severe infections
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px">INTERACTIONS (3)</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="background:#fff1f2;border-radius:4px;padding:4px 6px;font-size:10px;border-left:2px solid #e11d48">⛔ Methotrexate — Contraindicated</div>
+          <div style="background:#fff7ed;border-radius:4px;padding:4px 6px;font-size:10px;border-left:2px solid #f97316">⚠️ Warfarin — Monitor INR</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;background:var(--surface)">
+        <div style="text-align:center;font-size:16px;color:var(--primary)">🔍</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">📂</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">🔖</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drug Detail — Pharmacist tier -->
+  <div style="width:200px">
+    <div style="font-weight:600;font-size:12px;text-align:center;margin-bottom:8px;color:#10b981">DRUG DETAIL — Pharmacist Tier</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+      <div style="background:var(--primary);padding:12px 14px 10px;color:#fff;display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">←</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">Amoxicillin</div>
+          <div style="font-size:10px;opacity:.7">J01CA04 · آموکسیسیلین</div>
+        </div>
+        <span style="font-size:14px">🔖</span>
+      </div>
+      <div style="padding:10px">
+        <div style="display:flex;gap:4px;margin-bottom:8px;overflow-x:auto">
+          <div style="background:var(--primary);color:#fff;border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Overview</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Dosing</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Interactions</div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:3px 8px;font-size:10px;white-space:nowrap">Formulary</div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">FORMULARY STATUS</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div style="background:#d1fae5;color:#065f46;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600">✓ On BPHS Formulary</div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">FACILITY AVAILABILITY</div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:8px">
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px;display:flex;justify-content:space-between">
+            <span>Kabul Clinic A</span><span style="color:#10b981;font-weight:600">In stock</span>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px;display:flex;justify-content:space-between">
+            <span>Parwan CHC</span><span style="color:#f59e0b;font-weight:600">Low stock</span>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-bottom:3px">THERAPEUTIC SUBSTITUTES</div>
+        <div style="background:var(--surface-raised);border-radius:4px;padding:4px 7px;font-size:10px">Ampicillin · Co-amoxiclav</div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;background:var(--surface)">
+        <div style="text-align:center;font-size:16px;color:var(--primary)">🔍</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">📂</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">🔖</div>
+        <div style="text-align:center;font-size:16px;opacity:.4">👤</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Additional features note -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+  <div style="background:var(--surface-raised);border-radius:8px;padding:12px">
+    <div style="font-weight:600;font-size:12px;margin-bottom:6px">Offline Indicator</div>
+    <div style="font-size:12px;color:var(--text-secondary)">A persistent banner when offline. Search and browse work fully from local cache. Sync timestamp shown on Profile tab ("Last updated 2h ago").</div>
+  </div>
+  <div style="background:var(--surface-raised);border-radius:8px;padding:12px">
+    <div style="font-weight:600;font-size:12px;margin-bottom:6px">RTL / Dari & Pashto</div>
+    <div style="font-size:12px;color:var(--text-secondary)">Language toggle in Profile. Dari/Pashto names shown as the primary title when the local name exists. Full RTL layout flip — same pattern as Patient Lite.</div>
+  </div>
+  <div style="background:var(--surface-raised);border-radius:8px;padding:12px">
+    <div style="font-weight:600;font-size:12px;margin-bottom:6px">Deep Links</div>
+    <div style="font-size:12px;color:var(--text-secondary)">OPD-Lite and Pharmacy-Lite can deep-link into Pharmopedia drug detail by ATC code. Share button on drug detail generates a link for peer sharing.</div>
+  </div>
+</div>
+
+<div style="padding:12px 16px;background:var(--surface-raised);border-radius:8px;border-left:3px solid var(--primary);font-size:13px">
+  Does this screen structure look right? Next section: <strong>integration touchpoints</strong> — exactly how OPD-Lite and Pharmacy-Lite connect to Pharmopedia's data layer, and the Hub API changes needed.
+</div>

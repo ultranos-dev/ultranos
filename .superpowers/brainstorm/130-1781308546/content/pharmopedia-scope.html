@@ -1,0 +1,20 @@
+<h2>Where does Pharmopedia live?</h2>
+<p class="subtitle">Patient Lite Mobile currently has 4 tabs: Home, Timeline, Privacy, Notifications</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>New tab in Patient Lite Mobile</h3>
+      <p>Pharmopedia becomes a 5th tab. Shares existing auth, hubFetch, offline storage (expo-sqlite), and zustand store. Lowest overhead — no new app bundle, no separate Play Store listing.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">⭐ Recommended</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Standalone Expo app</h3>
+      <p>Separate app with its own auth flow, hubFetch wrapper, and offline stack. Own Play Store / App Store listing. Useful if Pharmopedia is intended for a much broader non-patient audience (general public, non-clinical staff).</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<h2>API client + auth</h2>
+<p class="subtitle">How Pharmopedia talks to the Hub API</p>
+
+<div class="mockup">
+  <div class="mockup-header">src/api/hub-fetch.ts — copied verbatim from Patient Lite Mobile</div>
+  <div class="mockup-body" style="font-size:0.85em;color:var(--text-secondary)">
+    Certificate-pinned fetch wrapper. Injects Authorization header from auth-store.
+    All API calls go through this. <code>EXPO_PUBLIC_HUB_API_URL</code> env var.
+    No changes — same implementation as patient-lite-mobile.
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">src/api/drug-catalog.ts — tRPC-style REST client</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.82em;line-height:1.7">
+    <div style="color:var(--accent)">search(q, lang, limit)</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">GET /trpc/drugCatalog.search?input=…  →  DrugSearchResult[]</div>
+    <div style="color:var(--accent);margin-top:8px">getByAtcCode(atcCode)</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">GET /trpc/drugCatalog.getByAtcCode?input=…  →  DrugEntryTier1|2|3</div>
+    <div style="color:var(--accent);margin-top:8px">sync(sinceVersion, limit)</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">GET /trpc/drugCatalog.sync?input=…  →  { entries, latestVersion }</div>
+    <div style="color:var(--accent);margin-top:8px">getPrices(atcCode, lat, lng, sort, limit)</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">GET /trpc/drugCatalog.getPrices?input=…  →  PharmacyPrice[]</div>
+    <div style="color:var(--accent);margin-top:8px">enrich(atcCode, fields)</div>
+    <div style="padding-left:16px;color:var(--text-secondary)">POST /trpc/drugCatalog.enrich  →  DrugEntryTier1|2|3</div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">src/store/auth-store.ts — zustand</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.82em;line-height:1.7">
+    <div style="color:var(--text-secondary)">
+      token: string | null  <span style="color:var(--text-muted)">-- memory only, never persisted</span><br>
+      user: { sub, role, facilityId? } | null<br>
+      login(credentials) → calls Hub auth endpoint, stores token<br>
+      logout() → clears token, clears SQLite drug_catalog, redirects to (auth)/login<br>
+      refreshToken() → uses refresh token (httpOnly cookie) to get new access token
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Login screen — two flows on one screen</div>
+  <div class="mockup-body" style="font-size:0.85em;color:var(--text-secondary);line-height:1.6">
+    <strong>PATIENT:</strong> Phone number → OTP → token<br>
+    <strong>Clinical staff:</strong> Username + password → token (+ TOTP if MFA enabled)<br><br>
+    Toggle between flows via a segmented control. Same screen, two form states.
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this look right?</p>

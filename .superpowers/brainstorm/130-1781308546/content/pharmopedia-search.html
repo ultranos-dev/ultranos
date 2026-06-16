@@ -1,0 +1,49 @@
+<h2>Brand name search — updated design</h2>
+<p class="subtitle">Two search paths behave differently for brand names</p>
+
+<div class="mockup">
+  <div class="mockup-header">Offline search (FTS5) — brand names fully supported</div>
+  <div class="mockup-body" style="font-size:0.85em;line-height:1.6;color:var(--text-secondary)">
+    FTS5 virtual table indexes four columns:<br>
+    <code>inn_name</code> · <code>atc_code</code> · <code>brand_names_flat</code> · <code>local_names_flat</code><br><br>
+    <code>brand_names_flat</code> = brand names array joined as space-separated text at sync time.<br>
+    Searching "Augmentin" → matches the row for Amoxicillin/Clavulanate.<br><br>
+    <strong>Works fully offline. No schema changes needed.</strong>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Online search (API fallback) — brand names NOT yet supported</div>
+  <div class="mockup-body" style="font-size:0.85em;line-height:1.6;color:var(--text-secondary)">
+    The Hub API <code>drugCatalog.search</code> endpoint uses PostgREST <code>ILIKE</code> on <code>brand_names TEXT[]</code>.
+    PostgREST cannot ILIKE a text array directly — a generated column is required.<br><br>
+    The router already has a comment noting this limitation:<br>
+    <code style="font-size:0.9em;background:var(--surface-2);padding:2px 6px;border-radius:4px">"brand name search requires a future brand_names_text generated column"</code><br><br>
+    The API fallback is only used on first launch before sync completes. Once synced, all searches go through FTS5 locally.
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Decision: fix the API gap in Plan 3 or defer?</div>
+  <div class="mockup-body">
+    <div class="options" style="margin:0">
+      <div class="option" data-choice="fix" onclick="toggleSelect(this)">
+        <div class="letter">A</div>
+        <div class="content">
+          <h3>Fix it in Plan 3 — add the generated column migration</h3>
+          <p>Add a <code>brand_names_text TEXT GENERATED ALWAYS AS (array_to_string(brand_names, ' ')) STORED</code> column to drug_catalog in Supabase, add a GIN/trigram index, update the search endpoint. Closes the gap completely.</p>
+          <p style="margin-top:6px;font-size:0.85em;opacity:0.7">⭐ Recommended — small migration, clean user experience on first launch too</p>
+        </div>
+      </div>
+      <div class="option" data-choice="defer" onclick="toggleSelect(this)">
+        <div class="letter">B</div>
+        <div class="content">
+          <h3>Defer — accept brand name search only works offline</h3>
+          <p>On first launch, brand name searches return no results until sync completes. Add a UI hint: "For best results, sync the catalog." After sync, brand name search works fully via FTS5.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Which approach?</p>

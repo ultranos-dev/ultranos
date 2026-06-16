@@ -1,0 +1,28 @@
+<h2>Offline strategy</h2>
+<p class="subtitle">The Hub API has a <code>drugCatalog.sync</code> endpoint (incremental, version-based). How much of the catalog should work offline?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Full offline — sync entire catalog</h3>
+      <p>On first launch, download the full drug catalog into local SQLite. Subsequent opens use the sync endpoint for incremental updates. Search and all detail screens work without network.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">⭐ Recommended — aligns with the platform's offline-first mandate and the sync endpoint we already built</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Partial offline — cache recently viewed only</h3>
+      <p>No initial sync. Each drug detail screen caches its data on first view. Search always requires network. Lighter storage footprint.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Online only</h3>
+      <p>Always requires network. No local database. Simplest to build, but breaks the platform's core offline-first constraint.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">Not recommended — conflicts with the offline-first mandate</p>
+    </div>
+  </div>
+</div>

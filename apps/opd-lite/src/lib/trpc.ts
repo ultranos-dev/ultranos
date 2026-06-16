@@ -1,4 +1,4 @@
-import type { FhirPatient } from '@ultranos/shared-types'
+import type { DrugSearchResult, FhirPatient } from '@ultranos/shared-types'
 
 export interface PatientSearchResult {
   patients: FhirPatient[]
@@ -172,4 +172,65 @@ export async function searchPatientsOnHub(query: string, signal?: AbortSignal): 
 
   const body = await res.json() as { result: { data: { json: PatientSearchResult } } }
   return body.result.data.json
+}
+
+export type EnrichDrugFields = {
+  localNames?: Record<string, string>
+  dispensingNotes?: string
+  formularyStatus?: 'on_formulary' | 'off_formulary' | 'restricted'
+  unitCost?: number
+}
+
+/**
+ * Search the Hub drug catalog by INN name, ATC code, brand name, or local name.
+ * Returns identity fields only (no tier content).
+ */
+export async function searchDrugCatalog(
+  q: string,
+  lang: 'en' | 'prs' | 'ps' = 'en',
+  signal?: AbortSignal,
+): Promise<DrugSearchResult[]> {
+  const url = new URL(getHubApiUrl())
+  url.pathname = url.pathname.replace(/\/$/, '') + '/drugCatalog.search'
+  url.searchParams.set('input', JSON.stringify({ json: { q, lang, limit: 20 } }))
+
+  const headers: Record<string, string> = {}
+  if (typeof window !== 'undefined') {
+    const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+    const { data } = await getSupabaseBrowserClient().auth.getSession()
+    if (data.session?.access_token) {
+      headers['Authorization'] = `Bearer ${data.session.access_token}`
+    }
+  }
+
+  const res = await fetch(url.toString(), { method: 'GET', headers, signal })
+  if (!res.ok) throw new Error(`Drug catalog search failed: ${res.status}`)
+  const body = await res.json() as { result: { data: { json: DrugSearchResult[] } } }
+  return body.result.data.json
+}
+
+/**
+ * Write local-name enrichment to the Hub drug catalog.
+ * Clinician tier: localNames only. Pharmacist tier: all fields.
+ * No-op (silent return) when session is missing. Throws on network failure
+ * so the caller can display an error message.
+ */
+export async function enrichDrug(
+  atcCode: string,
+  fields: EnrichDrugFields,
+): Promise<void> {
+  if (typeof window === 'undefined') return
+  const { getSupabaseBrowserClient } = await import('@/lib/supabase')
+  const { data: { session } } = await getSupabaseBrowserClient().auth.getSession()
+  if (!session?.access_token) return
+
+  const res = await fetch(`${getHubApiUrl()}/drugCatalog.enrich`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ json: { atcCode, fields } }),
+  })
+  if (!res.ok) throw new Error(`Drug enrichment failed: ${res.status}`)
 }

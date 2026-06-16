@@ -246,6 +246,47 @@ import { ChevronRight } from '@ultranos/ui-kit/icons'
 - `apps/lab-lite/src/components/patients/CulturalFlagsBanner.tsx` / `CulturalFlagsEditor.tsx` — data-driven flag path registry
 - All `animate-spin` loading spinners — CSS animation SVGs, no Lucide equivalent
 
+### Native Design Tokens (React Native / Expo apps)
+
+The web token system (`tokens.css`, Tailwind, ShadCN) does not work in React Native. All Expo/React Native apps — currently `apps/pharmopedia/`, and future `apps/opd-lite-mobile/` and `apps/patient-lite-mobile/` — must use the shared JS token file instead.
+
+**File:** `packages/ui-kit/src/tokens.native.ts`
+**Import path:** `@ultranos/ui-kit/tokens.native`
+**Package export:** declared in `packages/ui-kit/package.json` as `"./tokens.native": "./src/tokens.native.ts"`
+
+```typescript
+import { Colors, FontFamily, FontSize, Spacing, Radius, Shadow } from '@ultranos/ui-kit/tokens.native'
+
+// ✅ Correct — use token values in StyleSheet.create()
+const styles = StyleSheet.create({
+  button: { backgroundColor: Colors.primary500, borderRadius: Radius.md },
+  label:  { fontFamily: FontFamily.sansBold, color: Colors.neutral900 },
+  card:   { padding: Spacing[4], marginBottom: Spacing[3] },
+})
+
+// ❌ Wrong — never hardcode hex, font names as string literals, or raw px values
+const styles = StyleSheet.create({
+  button: { backgroundColor: '#2563eb' },
+  label:  { fontFamily: 'Manrope-Bold' },
+})
+```
+
+**Primary color:** `Colors.primary500 = '#2e9e71'` (Ultranos Wise Green, derived from `hsl(156, 55%, 40%)` in `tokens.css`). Never use generic blue (`#2563eb`) as a primary in RN apps.
+
+**Fonts in Expo apps:** Load Manrope and Public Sans via `@expo-google-fonts/manrope` and `@expo-google-fonts/public-sans` in the root `_layout.tsx` `useFonts()` call. The registered names must match the `FontFamily.*` constants exactly:
+- `'Manrope'`, `'Manrope-Medium'`, `'Manrope-SemiBold'`, `'Manrope-Bold'`
+- `'PublicSans'`, `'PublicSans-Bold'`
+- `'NotoNaskhArabic'` — for Arabic/RTL content (`FontFamily.arabic`)
+
+**Metro config:** Expo apps using `expo-sqlite` require a `metro.config.js` that adds `.mjs` to `sourceExts` and `.wasm` to `assetExts`:
+```javascript
+const { getDefaultConfig } = require('expo/metro-config')
+const config = getDefaultConfig(__dirname)
+config.resolver.sourceExts.push('mjs')
+config.resolver.assetExts.push('wasm')
+module.exports = config
+```
+
 ### RTL Support
 Arabic and Dari are RTL languages. Every UI component must work in both LTR and RTL.
 - Use logical CSS properties: `margin-inline-start` not `margin-left`, `padding-inline-end` not `padding-right`

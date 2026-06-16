@@ -24,6 +24,7 @@ export interface CatalogItem {
   strengthUnit: string
   packSize: number
   barcode?: string
+  atcCode?: string           // ATC code linking to global drug catalog (optional)
   category: string
   controlledSchedule?: ControlledSchedule
   defaultSellingPrice: number

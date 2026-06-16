@@ -1,0 +1,162 @@
+<h2>Design — Section 4: Hub API Integration Touchpoints</h2>
+<p class="subtitle">New endpoints, how each app connects, auth/role scoping, and ETL pipeline</p>
+
+<!-- New Hub endpoints -->
+<div style="margin-bottom:20px">
+  <h3 style="margin-bottom:12px">New Hub API Endpoints — <code>/drug-catalog</code></h3>
+  <div style="display:flex;flex-direction:column;gap:6px">
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#10b981;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">GET</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/search?q=&lang=&limit=</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Fuzzy search by INN name, brand name, Dari/Pashto name, or ATC code. Used by OPD-Lite (prescription entry), Pharmacy-Lite (catalog browse), and Pharmopedia (search tab). Returns name + ATC code + therapeutic class only — no tier content.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">All apps</div>
+    </div>
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#10b981;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">GET</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/:atcCode</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Full drug profile. Role extracted from JWT — Hub returns only fields for that tier (public/clinician/pharmacist). Single endpoint, role-scoped response. Used by Pharmopedia drug detail screen.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">Pharmopedia</div>
+    </div>
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#10b981;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">GET</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/sync?since=&lang=</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Incremental sync for Pharmopedia offline. Returns all entries updated since HLC watermark. Same pattern as existing spoke sync. Initial sync downloads full catalog; subsequent syncs are delta-only.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">Pharmopedia only</div>
+    </div>
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">PATCH</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/:atcCode/enrich</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Local enrichment write. Only accepts enrichment fields (localNames, dispensingNotes, formularyStatus, unitCost). Never overwrites ETL-sourced fields. Clinician role → localNames only. Pharmacist role → all enrichment fields. Audit event emitted on every write.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">OPD-Lite + Pharmacy-Lite</div>
+    </div>
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#10b981;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">GET</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/:atcCode/prices?lat=&lng=&sort=distance|savings&limit=</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Real-time pharmacy prices for a given drug near a coordinate. Queries pharmacy_prices table joined to facility locations. Returns pharmacy name, distance, price, stock signal. Online-only — no offline fallback. Sort by distance or savings.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">Pharmopedia only</div>
+    </div>
+
+    <div style="background:var(--surface-raised);border-radius:8px;padding:11px 14px;display:flex;gap:12px;align-items:flex-start">
+      <div style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;min-width:36px;text-align:center;margin-top:1px">PUT</div>
+      <div style="flex:1">
+        <div style="font-family:monospace;font-size:12px;font-weight:600">/drug-catalog/:atcCode/prices/:facilityId</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px">Pharmacy-Lite writes/updates its retail price and stock signal for a drug. Called when pharmacist saves a price in Pharmacy-Lite. Pharmacist role only — facility scoped to their own pharmacy.</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-secondary);white-space:nowrap">Pharmacy-Lite only</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ETL pipeline -->
+<div style="margin-bottom:20px">
+  <h3 style="margin-bottom:12px">ETL Seed Pipeline</h3>
+  <div style="background:var(--surface-raised);border-radius:8px;padding:14px">
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:12px">
+
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:2px">DrugBank API <span style="color:#f59e0b;font-size:10px">⚠️ Commercial</span></div>
+          <div style="color:var(--text-secondary);font-size:10px">Interactions · MOA · PK · substitutes · renal dosing</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:2px">OpenFDA <span style="color:#10b981;font-size:10px">Free</span></div>
+          <div style="color:var(--text-secondary);font-size:10px">Labels · adverse events (FAERS) · recalls · brand names · pregnancy category</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px">
+          <div style="font-weight:600;margin-bottom:2px">NLM — RxNorm + MedlinePlus + DailyMed <span style="color:#10b981;font-size:10px">Free</span></div>
+          <div style="color:var(--text-secondary);font-size:10px">RxNorm CUI · plain-language summaries (MedlinePlus) · structured labeling (DailyMed) · indication-specific dosing</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;font-size:20px;padding-top:32px">→</div>
+
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+        <div style="background:var(--primary);color:#fff;border-radius:6px;padding:10px;font-size:11px">
+          <div style="font-weight:700;margin-bottom:4px">Normalizer (scripts/etl/)</div>
+          <div style="opacity:.85;font-size:10px">1. Dedup on ATC + RxNorm CUI</div>
+          <div style="opacity:.85;font-size:10px">2. Merge fields by source priority</div>
+          <div style="opacity:.85;font-size:10px">3. Never overwrite local enrichment</div>
+          <div style="opacity:.85;font-size:10px">4. Flag conflicts for admin review</div>
+        </div>
+        <div style="text-align:center;font-size:18px;color:var(--text-secondary)">↓</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px;text-align:center">
+          <div style="font-weight:600">Hub <code>drug_catalog</code> table</div>
+          <div style="color:var(--text-secondary);font-size:10px;margin-top:2px">PostgreSQL · scheduled refresh monthly</div>
+        </div>
+      </div>
+
+    </div>
+    <div style="font-size:11px;color:var(--text-secondary);background:var(--surface);border-radius:6px;padding:8px">
+      <strong>Source field priority:</strong> When the same field (e.g. contraindications) exists in multiple sources, priority is: DrugBank → OpenFDA → NLM. Local enrichment is a separate column and is never in the merge conflict path.
+    </div>
+  </div>
+</div>
+
+<!-- Role & auth scoping -->
+<div style="margin-bottom:20px">
+  <h3 style="margin-bottom:12px">Auth & Role Scoping</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:var(--surface-raised);border-radius:8px;padding:12px;font-size:12px">
+      <div style="font-weight:600;margin-bottom:6px">JWT Role Claim</div>
+      <div style="font-family:monospace;font-size:11px;background:var(--surface);border-radius:4px;padding:8px;color:var(--text-secondary)">
+        {<br>
+        &nbsp;&nbsp;"sub": "user-uuid",<br>
+        &nbsp;&nbsp;"role": "pharmacist",<br>
+        &nbsp;&nbsp;"facilityId": "fac-uuid",<br>
+        &nbsp;&nbsp;"app": "pharmopedia"<br>
+        }
+      </div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:6px">Same Ultranos auth — no new token system. Role already exists on the token from existing apps.</div>
+    </div>
+    <div style="background:var(--surface-raised);border-radius:8px;padding:12px;font-size:12px">
+      <div style="font-weight:600;margin-bottom:6px">Hub Enforcement</div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px">
+        <div style="background:var(--surface);border-radius:4px;padding:6px 8px"><span style="color:#6366f1;font-weight:600">public / patient</span> → Tier 1 fields only</div>
+        <div style="background:var(--surface);border-radius:4px;padding:6px 8px"><span style="color:#0ea5e9;font-weight:600">clinician / nurse</span> → Tier 1 + Tier 2</div>
+        <div style="background:var(--surface);border-radius:4px;padding:6px 8px"><span style="color:#10b981;font-weight:600">pharmacist</span> → All tiers</div>
+        <div style="background:var(--surface);border-radius:4px;padding:6px 8px;color:var(--text-secondary)">PATCH /enrich: facility-scoped — pharmacist can only enrich drugs with their facilityId</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- packages/drug-db boundary -->
+<div style="background:var(--surface-raised);border-radius:8px;padding:14px;margin-bottom:16px">
+  <div style="font-weight:600;font-size:12px;margin-bottom:8px">packages/drug-db — Unchanged Boundary</div>
+  <div style="display:flex;gap:16px;font-size:11px">
+    <div style="flex:1">
+      <div style="color:#10b981;font-weight:600;margin-bottom:4px">✓ Stays in drug-db</div>
+      <div style="color:var(--text-secondary)">• CONTRAINDICATED / ALLERGY_MATCH / WARNING logic</div>
+      <div style="color:var(--text-secondary)">• Offline interaction checking (no network needed)</div>
+      <div style="color:var(--text-secondary)">• Severity levels (severity.ts)</div>
+      <div style="color:var(--text-secondary)">• Local offline subset for OPD-Lite / Pharmacy-Lite</div>
+    </div>
+    <div style="flex:1">
+      <div style="color:#ef4444;font-weight:600;margin-bottom:4px">✗ Moves to Hub /drug-catalog</div>
+      <div style="color:var(--text-secondary)">• Drug content (names, descriptions, dosing)</div>
+      <div style="color:var(--text-secondary)">• Multilingual fields (Dari/Pashto)</div>
+      <div style="color:var(--text-secondary)">• Tiered clinical content</div>
+      <div style="color:var(--text-secondary)">• Pharmacy prices and availability</div>
+    </div>
+  </div>
+</div>
+
+<div style="padding:12px 16px;background:var(--surface-raised);border-radius:8px;border-left:3px solid var(--primary);font-size:13px">
+  That covers all four design sections. Does this integration design look right? If so, I'll write the full spec document.
+</div>

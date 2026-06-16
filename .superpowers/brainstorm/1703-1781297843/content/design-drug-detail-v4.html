@@ -1,0 +1,245 @@
+<h2>Design — Drug Detail v4: Pricing & Savings (revised)</h2>
+<p class="subtitle">NGO/donor content removed. Pharmacy finder added — real prices from Pharmacy-Lite network, sortable by distance or savings.</p>
+
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+
+  <!-- Public Tier -->
+  <div style="width:210px">
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="background:#6366f1;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px">PUBLIC TIER</span>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.15)">
+      <div style="background:#1e3a5f;padding:13px 14px 10px;color:#fff">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;opacity:.8">←</span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:700">Amoxicillin</div><div style="font-size:10px;opacity:.7">آموکسیسیلین · Antibiotic</div></div>
+          <span style="font-size:14px">🔖</span>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:0 8px;display:flex;overflow-x:auto">
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Overview</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Side Effects</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Warnings</div>
+        <div style="padding:7px 8px;font-size:9px;font-weight:600;border-bottom:2px solid #6366f1;color:#6366f1;white-space:nowrap">💰 Pricing</div>
+      </div>
+      <div style="padding:10px;font-size:11px">
+        <!-- Free at BPHS -->
+        <div style="background:#d1fae5;border-radius:7px;padding:8px;margin-bottom:9px;display:flex;gap:6px;align-items:flex-start">
+          <span style="font-size:15px">🏥</span>
+          <div><div style="font-weight:700;font-size:10px;color:#065f46">Free at BPHS clinics</div><div style="font-size:9px;color:#065f46;margin-top:1px">Available at no cost through the national health programme.</div></div>
+        </div>
+        <!-- Sort controls -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase">Pharmacies Near You</div>
+          <div style="display:flex;gap:3px">
+            <div style="background:#6366f1;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600">Nearest</div>
+            <div style="background:var(--surface-raised);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text-secondary)">Cheapest</div>
+          </div>
+        </div>
+        <!-- Pharmacy list -->
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 9px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:10px;font-weight:600">Al-Shifa Pharmacy</div>
+              <div style="background:#d1fae5;color:#065f46;padding:1px 5px;border-radius:8px;font-size:9px">In stock</div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <div style="font-size:9px;color:var(--text-secondary)">📍 0.4 km · Karte Char</div>
+              <div style="font-size:10px;font-weight:700">85 AFN</div>
+            </div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 9px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:10px;font-weight:600">Sehat Dawakhana</div>
+              <div style="background:#d1fae5;color:#065f46;padding:1px 5px;border-radius:8px;font-size:9px">In stock</div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <div style="font-size:9px;color:var(--text-secondary)">📍 1.1 km · Wazir Akbar Khan</div>
+              <div style="font-size:10px;font-weight:700">95 AFN</div>
+            </div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 9px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:10px;font-weight:600">Hekmat Pharmacy</div>
+              <div style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:8px;font-size:9px">Low stock</div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <div style="font-size:9px;color:var(--text-secondary)">📍 2.0 km · Macroyan</div>
+              <div style="font-size:10px;font-weight:700">80 AFN</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 0;background:var(--surface)">
+        <div style="font-size:16px;color:#6366f1">🔍</div><div style="font-size:16px;opacity:.3">📂</div><div style="font-size:16px;opacity:.3">🔖</div><div style="font-size:16px;opacity:.3">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Tier -->
+  <div style="width:210px">
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="background:#0ea5e9;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px">CLINICAL TIER</span>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.15)">
+      <div style="background:#1e3a5f;padding:13px 14px 10px;color:#fff">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;opacity:.8">←</span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:700">Amoxicillin</div><div style="font-size:10px;opacity:.7">J01CA04 · Aminopenicillin</div></div>
+          <span style="font-size:14px">🔖</span>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:0 8px;display:flex;overflow-x:auto">
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Dosing</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Adverse Fx</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Interactions</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Warnings</div>
+        <div style="padding:7px 8px;font-size:9px;font-weight:600;border-bottom:2px solid #0ea5e9;color:#0ea5e9;white-space:nowrap">💰 Pricing</div>
+      </div>
+      <div style="padding:10px;font-size:11px">
+        <!-- Affordability summary -->
+        <div style="display:flex;gap:4px;margin-bottom:9px">
+          <div style="flex:1;background:#d1fae5;border-radius:6px;padding:7px;text-align:center">
+            <div style="font-size:9px;color:#065f46;font-weight:600">BPHS FREE</div>
+            <div style="font-size:10px;color:#065f46">Available</div>
+          </div>
+          <div style="flex:1;background:#eff6ff;border-radius:6px;padding:7px;text-align:center">
+            <div style="font-size:9px;color:#1d4ed8;font-weight:600">PRIVATE LOW</div>
+            <div style="font-size:10px;color:#1d4ed8">80 AFN</div>
+          </div>
+        </div>
+        <!-- Sort + pharmacy list -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase">Nearby Pharmacies</div>
+          <div style="display:flex;gap:3px">
+            <div style="background:var(--surface-raised);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text-secondary)">Nearest</div>
+            <div style="background:#0ea5e9;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600">Cheapest</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 9px;border-left:2px solid #10b981">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:10px;font-weight:600">Hekmat Pharmacy</div>
+              <div style="font-size:10px;font-weight:700;color:#10b981">80 AFN 🏷️</div>
+            </div>
+            <div style="font-size:9px;color:var(--text-secondary)">📍 2.0 km · Low stock</div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:6px;padding:7px 9px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <div style="font-size:10px;font-weight:600">Al-Shifa Pharmacy</div>
+              <div style="font-size:10px;font-weight:700">85 AFN</div>
+            </div>
+            <div style="font-size:9px;color:var(--text-secondary)">📍 0.4 km · In stock</div>
+          </div>
+        </div>
+        <!-- Cost vs alternatives -->
+        <div style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:4px">vs Alternatives (cheapest nearby)</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between">
+            <span style="font-weight:600">Amoxicillin</span><span>80 AFN</span>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between">
+            <span>Co-amoxiclav</span><span style="color:var(--text-secondary)">220 AFN</span>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between">
+            <span>Azithromycin</span><span style="color:var(--text-secondary)">150 AFN</span>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 0;background:var(--surface)">
+        <div style="font-size:16px;color:#0ea5e9">🔍</div><div style="font-size:16px;opacity:.3">📂</div><div style="font-size:16px;opacity:.3">🔖</div><div style="font-size:16px;opacity:.3">👤</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pharmacist Tier -->
+  <div style="width:210px">
+    <div style="text-align:center;margin-bottom:8px">
+      <span style="background:#10b981;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px">PHARMACIST TIER</span>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.15)">
+      <div style="background:#1e3a5f;padding:13px 14px 10px;color:#fff">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;opacity:.8">←</span>
+          <div style="flex:1"><div style="font-size:14px;font-weight:700">Amoxicillin</div><div style="font-size:10px;opacity:.7">J01CA04 · آموکسیسیلین</div></div>
+          <span style="font-size:14px">🔖</span>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:0 8px;display:flex;overflow-x:auto">
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Dosing</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Adverse Fx</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Interactions</div>
+        <div style="padding:7px 8px;font-size:9px;color:var(--text-secondary);white-space:nowrap">Formulary</div>
+        <div style="padding:7px 8px;font-size:9px;font-weight:600;border-bottom:2px solid #10b981;color:#10b981;white-space:nowrap">💰 Pricing</div>
+      </div>
+      <div style="padding:10px;font-size:11px">
+        <!-- My pharmacy price -->
+        <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:7px;padding:8px;margin-bottom:9px">
+          <div style="font-size:9px;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:4px">Your Pharmacy (Al-Shifa)</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <span style="font-size:10px">Retail price (500mg × 20)</span>
+            <span style="font-size:11px;font-weight:700">85 AFN</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:10px">Procurement cost</span>
+            <span style="font-size:10px;color:#065f46;font-weight:600">64 AFN → margin 25%</span>
+          </div>
+        </div>
+        <!-- Market comparison -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div style="font-size:10px;font-weight:700;color:var(--text-secondary);text-transform:uppercase">Market Prices Nearby</div>
+          <div style="display:flex;gap:3px">
+            <div style="background:var(--surface-raised);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text-secondary)">Nearest</div>
+            <div style="background:#10b981;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600">Cheapest</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:600">Hekmat Pharmacy</div><div style="font-size:9px;color:var(--text-secondary)">2.0 km · Low stock</div></div>
+            <div style="text-align:right"><div style="font-weight:700;color:#10b981">80 AFN 🏷️</div><div style="font-size:9px;color:var(--text-secondary)">cheapest</div></div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:600">Sehat Dawakhana</div><div style="font-size:9px;color:var(--text-secondary)">1.1 km · In stock</div></div>
+            <div style="font-weight:700">95 AFN</div>
+          </div>
+          <div style="background:var(--surface-raised);border-radius:5px;padding:5px 8px;font-size:10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:600">Ibn Sina Drugs</div><div style="font-size:9px;color:var(--text-secondary)">3.2 km · In stock</div></div>
+            <div style="font-weight:700">120 AFN</div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:7px 0;background:var(--surface)">
+        <div style="font-size:16px;color:#10b981">🔍</div><div style="font-size:16px;opacity:.3">📂</div><div style="font-size:16px;opacity:.3">🔖</div><div style="font-size:16px;opacity:.3">👤</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Data flow note -->
+<div style="background:var(--surface-raised);border-radius:8px;padding:14px;margin-bottom:12px">
+  <div style="font-weight:600;font-size:12px;margin-bottom:8px">How pharmacy prices flow into Pharmopedia</div>
+  <div style="display:flex;align-items:center;gap:8px;font-size:12px;flex-wrap:wrap">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;text-align:center">
+      <div style="font-weight:600">Pharmacy-Lite</div>
+      <div style="font-size:10px;color:var(--text-secondary)">Pharmacist sets retail price<br>per drug × form × quantity</div>
+    </div>
+    <div>→</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;text-align:center">
+      <div style="font-weight:600">Hub /drug-catalog</div>
+      <div style="font-size:10px;color:var(--text-secondary)">Stores price + location<br>+ stock signal per pharmacy</div>
+    </div>
+    <div>→</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;text-align:center">
+      <div style="font-weight:600">Pharmopedia</div>
+      <div style="font-size:10px;color:var(--text-secondary)">Queries Hub by drug + coords<br>Sorts by distance or price</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-secondary)">
+    ⚠️ Pharmacy location data requires Pharmacy-Lite facilities to have GPS coordinates stored in Hub. Price data is real-time from Hub (not offline-cached) — requires connectivity to show the pharmacy list. A "prices unavailable offline" state is shown when disconnected.
+  </div>
+</div>
+
+<div style="padding:12px 16px;background:var(--surface-raised);border-radius:8px;border-left:3px solid var(--primary);font-size:13px">
+  Does this revised Pricing & Savings section look right? If so, ready to move to the final section — <strong>Hub API integration touchpoints</strong>.
+</div>

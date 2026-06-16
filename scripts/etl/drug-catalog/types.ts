@@ -12,6 +12,10 @@
 export interface EmlDrugEntry {
   atcCode: string
   innName: string
+  /** US-equivalent names for API lookups (e.g., paracetamol → acetaminophen) */
+  aliases?: string[]
+  /** EML status from Afghanistan National Licensed Medicine List */
+  emlStatus?: 'eml' | 'lml'
 }
 
 export interface SourceDrugData {
@@ -98,6 +102,7 @@ export interface NormalizedDrugRow {
   warnings_summary_plain: Record<string, string>
   substitutes: string[]
   recall_alerts: unknown[]
+  eml_status?: 'eml' | 'lml'
   etl_source: string
   last_etl_refresh: string
 }

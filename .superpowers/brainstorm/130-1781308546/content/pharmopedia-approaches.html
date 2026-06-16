@@ -1,0 +1,47 @@
+<h2>Architecture approaches</h2>
+<p class="subtitle">Three ways to structure the Pharmopedia standalone app</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>expo-router + expo-sqlite (FTS5) + zustand</h3>
+      <p><strong>Navigation:</strong> Expo Router file-based routing — screens are files, deep links are free, URL-like navigation.</p>
+      <p><strong>Offline DB:</strong> expo-sqlite with an FTS5 virtual table for full-text search. Manual schema, full control.</p>
+      <p><strong>State:</strong> Zustand slices for sync state (lastVersion, syncStatus) and UI state.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Modern Expo standard (Expo recommends expo-router)</li><li>Deep linking + web support built-in</li><li>FTS5 gives fast offline search</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Different nav approach than Patient Lite Mobile (react-navigation)</li></ul></div>
+      </div>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">⭐ Recommended</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>react-navigation + expo-sqlite (FTS5) + zustand</h3>
+      <p><strong>Navigation:</strong> React Navigation — same library used in Patient Lite Mobile. Stack + Tab navigators.</p>
+      <p><strong>Offline DB:</strong> Same expo-sqlite + FTS5 approach as A.</p>
+      <p><strong>State:</strong> Same zustand approach as A.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Exact same navigation patterns as Patient Lite Mobile</li><li>Familiar to anyone who worked on that app</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>react-navigation is being superseded by expo-router for new apps</li><li>More boilerplate (navigator definitions, type files)</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>expo-router + WatermelonDB + zustand</h3>
+      <p><strong>Navigation:</strong> Expo Router (same as A).</p>
+      <p><strong>Offline DB:</strong> WatermelonDB — reactive observable queries, built on SQLite, purpose-built for sync-heavy mobile apps.</p>
+      <p><strong>State:</strong> WatermelonDB handles most observable state; zustand for UI only.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Reactive queries — UI auto-updates when DB changes</li><li>Designed for offline-first sync patterns</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Significant complexity overhead for a read-heavy catalog</li><li>Custom sync adapter to write against our Hub API sync endpoint</li><li>Heavier bundle</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

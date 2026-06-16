@@ -1,0 +1,77 @@
+<h2>Component architecture</h2>
+<p class="subtitle">Key screens and their component breakdown</p>
+
+<div class="mockup">
+  <div class="mockup-header">Search screen (app/(tabs)/index.tsx)</div>
+  <div class="mockup-body">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="mock-nav" style="font-size:0.85em">🔍  Search drugs...  &nbsp;&nbsp;&nbsp; [lang: EN ▾]</div>
+      <div style="font-size:0.82em;color:var(--text-secondary);padding:4px 0">
+        SyncStatusBanner — shows "Syncing…", "Last synced 2h ago", or "Offline — cached data"
+      </div>
+      <div class="mock-content" style="padding:8px;font-size:0.82em">
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <strong>Amoxicillin</strong> &nbsp;<span style="opacity:0.5">J01CA04</span><br>
+          <span style="font-size:0.85em;color:var(--text-secondary)">Antibiotic • Capsule, Suspension</span>
+        </div>
+        <div style="border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px">
+          <strong>Paracetamol</strong> &nbsp;<span style="opacity:0.5">N02BE01</span><br>
+          <span style="font-size:0.85em;color:var(--text-secondary)">Analgesic • Tablet, Syrup</span>
+        </div>
+        <div style="opacity:0.4;font-size:0.85em">DrugCard × N</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:0.82em;color:var(--text-secondary)">
+      Query: FTS5 <code>MATCH</code> on local DB while synced; falls back to <code>drugCatalog.search</code> API if not yet synced.
+      Language selector sets <code>lang</code> param for local_names display.
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Drug detail screen (app/drug/[atcCode].tsx)</div>
+  <div class="mockup-body">
+    <div style="font-size:0.82em;margin-bottom:8px"><strong>Amoxicillin</strong> &nbsp;<span style="opacity:0.5">J01CA04 · Antibiotic</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="padding:4px 10px;background:var(--accent);color:#fff;border-radius:6px;font-size:0.78em">Overview</span>
+      <span style="padding:4px 10px;background:var(--surface-2);border-radius:6px;font-size:0.78em">Clinical ★</span>
+      <span style="padding:4px 10px;background:var(--surface-2);border-radius:6px;font-size:0.78em">Pricing</span>
+      <span style="padding:4px 10px;background:var(--surface-2);border-radius:6px;font-size:0.78em">Enrich ★</span>
+    </div>
+    <div style="font-size:0.8em;color:var(--text-secondary);line-height:1.5">
+      ★ = hidden for PATIENT role<br><br>
+      <strong>OverviewTab:</strong> summaryPlain, usedFor, commonSideEffects, whenToSeekHelp, storageInstructions, pregnancySummaryPlain, warningsSummaryPlain — all from Tier 1<br><br>
+      <strong>ClinicalTab:</strong> mechanismOfAction, indicationsClinical, adultDosing, pediatricDosing, renalAdjustment, adverseEvents, contraindications, interactions, pharmacokinetics — Tier 2<br><br>
+      <strong>PricingTab:</strong> calls getPrices with device GPS; shows PharmacyPrice list sorted by distance or price. Requires network — shows offline warning if unavailable.<br><br>
+      <strong>EnrichTab:</strong> form to set localNames (clinical+), dispensingNotes / formularyStatus / unitCost (pharmacist only). Calls enrich mutation. Optimistically updates local DB row.
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Profile screen (app/(tabs)/profile.tsx)</div>
+  <div class="mockup-body" style="font-size:0.82em;color:var(--text-secondary);line-height:1.6">
+    Role badge (PATIENT / DOCTOR / PHARMACIST etc.) · Facility name if applicable<br>
+    Sync status: last synced timestamp + manual "Sync now" button<br>
+    Language preference selector (EN / Dari / Pashto)<br>
+    Logout button → clears token + local DB
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">src/components/ file map</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.8em;line-height:1.7;color:var(--text-secondary)">
+    SearchBar.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; — debounced input, lang selector<br>
+    SyncStatusBanner.tsx — reads sync-store, shows status strip<br>
+    DrugCard.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; — list item: INN name, ATC, dose forms, class<br>
+    DrugDetail/<br>
+    &nbsp;&nbsp;OverviewTab.tsx &nbsp; — Tier 1 fields<br>
+    &nbsp;&nbsp;ClinicalTab.tsx &nbsp; — Tier 2 fields<br>
+    &nbsp;&nbsp;PricingTab.tsx &nbsp;&nbsp; — getPrices + GPS<br>
+    &nbsp;&nbsp;EnrichTab.tsx &nbsp;&nbsp;&nbsp; — enrich form, role-gated fields<br>
+    PriceCard.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; — pharmacy name, distance, price, stock signal<br>
+    RoleBadge.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; — colored role pill
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this component breakdown look right?</p>

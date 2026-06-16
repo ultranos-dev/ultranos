@@ -1,0 +1,29 @@
+<h2>Authentication model</h2>
+<p class="subtitle">Pharmopedia is standalone — who can use it, and do they need to log in?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Fully public — no login required</h3>
+      <p>Anyone can browse the drug catalog. No account needed. Appropriate if Pharmopedia is a general patient/public reference tool (like a drug encyclopedia).</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">Simpler, broader reach. Hub API would need a public/anonymous endpoint.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Authenticated — login required</h3>
+      <p>Users must log in (OTP for patients, credentials for clinical staff). Enables role-tiered content (Tier 1/2/3), the enrich endpoint, and pharmacy pricing. Same auth stack as other apps.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">⭐ Recommended — aligns with the tier model already built in Plan 1</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid — browse public, login for enriched content</h3>
+      <p>Basic drug info (INN name, dose forms, therapeutic class) is visible without login. Clinical details, pricing, and offline sync require a logged-in session.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">More complex auth flow and two API code paths to maintain.</p>
+    </div>
+  </div>
+</div>

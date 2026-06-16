@@ -1,0 +1,56 @@
+<h2>Navigation structure</h2>
+<p class="subtitle">expo-router file-based routing — screens are files, paths are URLs</p>
+
+<div class="mockup">
+  <div class="mockup-header">app/ directory → screen hierarchy</div>
+  <div class="mockup-body" style="font-family:monospace;font-size:0.9em;line-height:1.8">
+    <div style="color:var(--text-secondary)">app/</div>
+    <div style="padding-left:20px">
+      <div><span style="color:var(--accent)">_layout.tsx</span> <span style="color:var(--text-secondary)">— root: AuthGuard + font loading</span></div>
+      <div style="margin-top:8px"><span style="color:var(--accent)">(auth)/</span></div>
+      <div style="padding-left:20px">
+        <div><span style="color:var(--accent)">_layout.tsx</span></div>
+        <div><span style="color:var(--accent)">login.tsx</span> <span style="color:var(--text-secondary)">— OTP for patients, credentials for clinical staff</span></div>
+      </div>
+      <div style="margin-top:8px"><span style="color:var(--accent)">(tabs)/</span></div>
+      <div style="padding-left:20px">
+        <div><span style="color:var(--accent)">_layout.tsx</span> <span style="color:var(--text-secondary)">— 2-tab bar: Search + Profile</span></div>
+        <div><span style="color:var(--accent)">index.tsx</span> <span style="color:var(--text-secondary)">— Search tab (FTS offline + API fallback)</span></div>
+        <div><span style="color:var(--accent)">profile.tsx</span> <span style="color:var(--text-secondary)">— Role badge, sync status, logout</span></div>
+      </div>
+      <div style="margin-top:8px"><span style="color:var(--accent)">drug/</span></div>
+      <div style="padding-left:20px">
+        <div><span style="color:var(--accent)">[atcCode].tsx</span> <span style="color:var(--text-secondary)">— Drug detail (pushed from search results)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Drug detail screen — tab layout inside the screen</div>
+  <div class="mockup-body">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="padding:6px 14px;background:var(--accent);color:#fff;border-radius:6px;font-size:0.85em">Overview</div>
+      <div style="padding:6px 14px;background:var(--surface-2);border-radius:6px;font-size:0.85em">Clinical <span style="opacity:0.5;font-size:0.8em">(Tier 2+)</span></div>
+      <div style="padding:6px 14px;background:var(--surface-2);border-radius:6px;font-size:0.85em">Pricing</div>
+      <div style="padding:6px 14px;background:var(--surface-2);border-radius:6px;font-size:0.85em">Enrich <span style="opacity:0.5;font-size:0.8em">(clinical+)</span></div>
+    </div>
+    <div style="font-size:0.85em;color:var(--text-secondary)">
+      Tabs are conditionally rendered based on role tier.<br>
+      PATIENT sees: Overview + Pricing<br>
+      DOCTOR/NURSE/LAB_TECH sees: Overview + Clinical + Pricing + Enrich<br>
+      PHARMACIST/ADMIN sees: Overview + Clinical + Pricing + Enrich (with full Tier 3 fields)
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:16px">
+  <div class="mockup-header">Auth flow</div>
+  <div class="mockup-body" style="font-size:0.85em">
+    Root <code>_layout.tsx</code> checks auth-store. If no token → redirect to <code>(auth)/login</code>.
+    After login → redirect to <code>(tabs)</code>. Token lives in memory only (never persisted to AsyncStorage).
+    On app background/foreground: if token expired → re-auth screen.
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this navigation structure look right?</p>

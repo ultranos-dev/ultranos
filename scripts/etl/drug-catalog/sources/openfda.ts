@@ -26,18 +26,12 @@ function parseSentences(text: string, max: number): string[] {
     .slice(0, max)
 }
 
-/**
- * Fetches drug label data from OpenFDA by generic name.
- * @param atcCode - Passed through for SourceDrugData tracking only; not sent to API
- * @param innName - International Nonproprietary Name to search
- * @returns SourceDrugData with parsed label data if found; empty data on any failure (never throws)
- */
-export async function fetchFromOpenFda(
+async function fetchOpenFdaByName(
   atcCode: string,
-  innName: string
-): Promise<SourceDrugData> {
+  name: string
+): Promise<SourceDrugData | null> {
   try {
-    const search = encodeURIComponent(`openfda.generic_name:"${innName}"`)
+    const search = encodeURIComponent(`openfda.generic_name:"${name}"`)
     const url = `${OPENFDA_BASE}?search=${search}&limit=1`
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 8000)
@@ -47,11 +41,11 @@ export async function fetchFromOpenFda(
     } finally {
       clearTimeout(timeoutId)
     }
-    if (!res.ok) return { source: 'openfda', atcCode }
+    if (!res.ok) return null
 
     const json = await res.json() as OpenFdaResponse
     const r = json.results?.[0]
-    if (!r) return { source: 'openfda', atcCode }
+    if (!r) return null
 
     const brandNames = [...new Set(
       (r.openfda?.brand_name ?? []).map(n => n.split(' ')[0]).filter(Boolean)
@@ -81,6 +75,34 @@ export async function fetchFromOpenFda(
       mechanismOfAction: mechanismOfAction ? mechanismOfAction : undefined,
     }
   } catch {
-    return { source: 'openfda', atcCode }
+    return null
   }
+}
+
+/**
+ * Fetches drug label data from OpenFDA by generic name.
+ * Tries the INN name first, then falls back to aliases if provided.
+ * @param atcCode - Passed through for SourceDrugData tracking only; not sent to API
+ * @param innName - International Nonproprietary Name to search
+ * @param aliases - Optional US-equivalent names to try if INN returns no results
+ * @returns SourceDrugData with parsed label data if found; empty data on any failure (never throws)
+ */
+export async function fetchFromOpenFda(
+  atcCode: string,
+  innName: string,
+  aliases?: string[]
+): Promise<SourceDrugData> {
+  // Try INN name first
+  const result = await fetchOpenFdaByName(atcCode, innName)
+  if (result) return result
+
+  // Try aliases in order
+  if (aliases) {
+    for (const alias of aliases) {
+      const aliasResult = await fetchOpenFdaByName(atcCode, alias)
+      if (aliasResult) return aliasResult
+    }
+  }
+
+  return { source: 'openfda', atcCode }
 }

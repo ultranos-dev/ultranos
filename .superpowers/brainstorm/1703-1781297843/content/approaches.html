@@ -1,0 +1,112 @@
+<h2>Pharmopedia — 3 Architectural Approaches</h2>
+<p class="subtitle">How does Pharmopedia connect to the rest of the Ultranos ecosystem?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Package-Centric — Enhance <code>packages/drug-db</code></h3>
+      <p>Expand the existing <code>drug-db</code> package into the canonical drug catalog. OPD-Lite, Pharmacy-Lite, and Pharmopedia all read from it. Curation in OPD/Pharmacy writes up to Hub; Hub syncs enriched data back into <code>drug-db</code> for all consumers.</p>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">
+        <div style="display:flex;gap:24px">
+          <div>
+            <div style="color:var(--success);font-weight:600;margin-bottom:4px">Pros</div>
+            <div>• drug-db already exists — no new service</div>
+            <div>• Shared package = one source of truth</div>
+            <div>• Offline subset already designed for it</div>
+          </div>
+          <div>
+            <div style="color:var(--danger);font-weight:600;margin-bottom:4px">Cons</div>
+            <div>• drug-db becomes very large &amp; complex</div>
+            <div>• Consumer-friendly content (plain language, media) is awkward in a typed package</div>
+            <div>• Package rebuild required every drug update</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="background:var(--surface-raised);border-radius:8px;padding:12px;font-size:11px;font-family:monospace">
+          OPD-Lite ──curates──▶ Hub DB ◀──curates── Pharmacy-Lite<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;packages/drug-db (enhanced)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌──────┴──────┬───────────┐<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPD-Lite&nbsp;&nbsp;Pharmacy-Lite&nbsp;&nbsp;Pharmopedia RN
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Service-Centric — Dedicated Hub Drug Catalog API</h3>
+      <p>A new <code>/drug-catalog</code> service lives in Hub API. This is the canonical store. All three apps sync from it independently. <code>packages/drug-db</code> stays focused on interaction checking only (its original purpose). Pharmopedia syncs the full catalog; OPD/Pharmacy sync relevant subsets.</p>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">
+        <div style="display:flex;gap:24px">
+          <div>
+            <div style="color:var(--success);font-weight:600;margin-bottom:4px">Pros</div>
+            <div>• Clean separation — drug-db stays lean</div>
+            <div>• Hub controls all drug data centrally</div>
+            <div>• Rich media, multilingual content fits naturally in a DB, not a package</div>
+            <div>• Each app syncs only what it needs</div>
+          </div>
+          <div>
+            <div style="color:var(--danger);font-weight:600;margin-bottom:4px">Cons</div>
+            <div>• New Hub service to build</div>
+            <div>• OPD-Lite &amp; Pharmacy-Lite need sync wiring to the new endpoint</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="background:var(--surface-raised);border-radius:8px;padding:12px;font-size:11px;font-family:monospace">
+          OPD-Lite ──curates──▶ Hub /drug-catalog ◀── Pharmacy-Lite<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sync down (role-scoped)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌──────────┴──────────┬────────────────┐<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPD-Lite&nbsp;&nbsp;&nbsp;&nbsp;Pharmacy-Lite&nbsp;&nbsp;&nbsp;&nbsp;Pharmopedia RN<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(clinical&nbsp;&nbsp;&nbsp;(formulary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(full catalog)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;subset)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;subset)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid — Hub Service + <code>drug-db</code> as Interaction-Only Package</h3>
+      <p>Same as B, but <code>packages/drug-db</code> explicitly stays scoped to interaction checking (its current purpose). Drug content (names, descriptions, media, tiered info) lives in Hub. Pharmopedia syncs content from Hub. OPD/Pharmacy use drug-db for interaction logic and Hub for catalog display. No overlap, no confusion.</p>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">
+        <div style="display:flex;gap:24px">
+          <div>
+            <div style="color:var(--success);font-weight:600;margin-bottom:4px">Pros</div>
+            <div>• Clearest boundaries in the codebase</div>
+            <div>• drug-db stays small &amp; testable</div>
+            <div>• Content &amp; interaction logic don't bleed into each other</div>
+            <div>• Easiest to reason about for future devs</div>
+          </div>
+          <div>
+            <div style="color:var(--danger);font-weight:600;margin-bottom:4px">Cons</div>
+            <div>• Same Hub build cost as B</div>
+            <div>• Slightly more initial wiring across apps</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="background:var(--surface-raised);border-radius:8px;padding:12px;font-size:11px;font-family:monospace">
+          packages/drug-db → interaction checking only (unchanged)<br><br>
+          Hub /drug-catalog → full drug content (new)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;┌───────────┴──────────┬────────────────┐<br>
+          OPD-Lite&nbsp;&nbsp;&nbsp;&nbsp;Pharmacy-Lite&nbsp;&nbsp;&nbsp;&nbsp;Pharmopedia RN<br>
+          (names+search)&nbsp;(formulary)&nbsp;&nbsp;&nbsp;&nbsp;(full tiered view)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px 16px;background:var(--surface-raised);border-radius:8px;border-left:3px solid var(--primary)">
+  <span style="font-weight:600">Recommendation: C</span> — keeps drug-db focused, puts rich content where it belongs (a database, not a compiled package), and gives each app exactly the subset it needs.
+</div>

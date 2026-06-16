@@ -17,8 +17,8 @@ interface RunDeps {
 
 async function processOneDrug(entry: EmlDrugEntry): Promise<NormalizedDrugRow> {
   const [nlm, openFda, drugBank] = await Promise.all([
-    fetchFromNlm(entry.atcCode, entry.innName),
-    fetchFromOpenFda(entry.atcCode, entry.innName),
+    fetchFromNlm(entry.atcCode, entry.innName, entry.aliases),
+    fetchFromOpenFda(entry.atcCode, entry.innName, entry.aliases),
     fetchFromDrugBank(entry.atcCode, entry.innName),
   ])
   return normalizeDrug(entry, [nlm, openFda, drugBank])
@@ -74,8 +74,12 @@ if (process.argv[1] === __filename) {
   }
   const __dirname = dirname(__filename)
   const entries: EmlDrugEntry[] = JSON.parse(
-    readFileSync(join(__dirname, 'seed/who-eml-phase1.json'), 'utf-8')
+    readFileSync(join(__dirname, 'seed/afghan-eml-2014.json'), 'utf-8')
   )
+  // All drugs in this seed are from the Afghanistan EML
+  for (const entry of entries) {
+    entry.emlStatus = entry.emlStatus ?? 'eml'
+  }
   console.log(`Starting ETL for ${entries.length} drugs...`)
   runEtl(entries)
     .then(({ processed, failed }) => {

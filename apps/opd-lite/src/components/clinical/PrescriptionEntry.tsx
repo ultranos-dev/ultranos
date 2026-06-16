@@ -12,10 +12,12 @@ import {
   EMPTY_PRESCRIPTION_FORM,
   type PrescriptionFormData,
 } from '@/lib/prescription-config'
+import { enrichDrug } from '@/lib/trpc'
 
 interface PrescriptionEntryProps {
   onSubmit: (form: PrescriptionFormData) => void | Promise<void>
   disabled?: boolean
+  canEnrich?: boolean
 }
 
 function getDisplayIndices(
@@ -66,7 +68,7 @@ function highlightMatches(
   return <>{parts}</>
 }
 
-export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps) {
+export function PrescriptionEntry({ onSubmit, disabled, canEnrich = false }: PrescriptionEntryProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<MedicationSearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -74,6 +76,11 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
   const [form, setForm] = useState<PrescriptionFormData>(EMPTY_PRESCRIPTION_FORM)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [localNameEn, setLocalNameEn] = useState('')
+  const [localNamePrs, setLocalNamePrs] = useState('')
+  const [isEnriching, setIsEnriching] = useState(false)
+  const [enrichSuccess, setEnrichSuccess] = useState(false)
+  const [enrichError, setEnrichError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -152,8 +159,32 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
     setQuery('')
     setResults([])
     setValidationError(null)
+    setLocalNameEn('')
+    setLocalNamePrs('')
+    setEnrichSuccess(false)
+    setEnrichError(null)
     inputRef.current?.focus()
   }, [])
+
+  const handleEnrich = useCallback(async () => {
+    if (!localNameEn && !localNamePrs) return
+    setIsEnriching(true)
+    setEnrichError(null)
+    setEnrichSuccess(false)
+    try {
+      const localNames: Record<string, string> = {}
+      if (localNameEn) localNames.en = localNameEn
+      if (localNamePrs) localNames.prs = localNamePrs
+      await enrichDrug(form.medicationCode, { localNames })
+      setEnrichSuccess(true)
+      setLocalNameEn('')
+      setLocalNamePrs('')
+    } catch {
+      setEnrichError('Failed to save local name')
+    } finally {
+      setIsEnriching(false)
+    }
+  }, [form.medicationCode, localNameEn, localNamePrs])
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -295,6 +326,56 @@ export function PrescriptionEntry({ onSubmit, disabled }: PrescriptionEntryProps
           </ul>
         )}
       </div>
+
+      {hasMedication && (
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={`pharmopedia://drug/${form.medicationCode}`}
+            className="text-sm font-medium text-primary-700 underline underline-offset-2"
+            aria-label="Open in Pharmopedia"
+          >
+            Open in Pharmopedia
+          </a>
+        </div>
+      )}
+
+      {hasMedication && canEnrich && (
+        <div className="rounded-xl ring-[0.65px] ring-border/50 bg-muted p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">Add local name</h4>
+          <input
+            type="text"
+            placeholder="English name override"
+            aria-label="English name override"
+            value={localNameEn}
+            onChange={(e) => setLocalNameEn(e.target.value)}
+            disabled={isEnriching}
+            className={inputClasses}
+          />
+          <input
+            type="text"
+            placeholder="Dari name (دری)"
+            aria-label="Dari name"
+            value={localNamePrs}
+            onChange={(e) => setLocalNamePrs(e.target.value)}
+            disabled={isEnriching}
+            dir="rtl"
+            className={inputClasses}
+          />
+          {enrichError && (
+            <p className="text-sm font-semibold text-destructive">{enrichError}</p>
+          )}
+          {enrichSuccess && (
+            <p className="text-sm font-semibold text-success">Saved</p>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleEnrich}
+            disabled={isEnriching || (!localNameEn && !localNamePrs)}
+          >
+            {isEnriching ? 'Saving...' : 'Save name'}
+          </Button>
+        </div>
+      )}
 
       {/* Dosage sub-form — visible when medication is selected */}
       {hasMedication && (

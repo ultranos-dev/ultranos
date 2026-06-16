@@ -1,0 +1,27 @@
+<h2>Which roles does Pharmopedia serve?</h2>
+<p class="subtitle">The Hub API already has a 3-tier content model — Tier 1 (public), Tier 2 (clinical), Tier 3 (pharmacist). Who is the primary audience for this app?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Patients only</h3>
+      <p>Tier 1 content: plain-language summaries, common side effects, storage instructions, pregnancy summary. No clinical dosing, no pharmacokinetics, no pricing.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Clinical staff only (doctors, nurses, pharmacists)</h3>
+      <p>Tier 2 + Tier 3 content: mechanism of action, dosing, adverse events, interactions, pharmacokinetics, formulary status, pricing. Designed for clinical decision support.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>All roles — content scoped by role</h3>
+      <p>Any authenticated user can use the app. Each role sees their tier: patients see Tier 1, clinical staff see Tier 2, pharmacists see Tier 3. One app, one codebase, adaptive content.</p>
+      <p style="margin-top:8px;font-size:0.85em;opacity:0.7">⭐ Recommended — the tier model is already built; no reason to restrict the app to one role</p>
+    </div>
+  </div>
+</div>

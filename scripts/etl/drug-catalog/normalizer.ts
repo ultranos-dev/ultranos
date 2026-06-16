@@ -57,6 +57,7 @@ export function normalizeDrug(
     warnings_summary_plain: firstDefined(...sorted.map(s => s.warningsSummaryPlain)) ?? {},
     substitutes: [],
     recall_alerts: [],
+    eml_status: entry.emlStatus,
     etl_source: sourceNames,
     last_etl_refresh: now,
   }

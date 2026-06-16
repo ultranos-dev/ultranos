@@ -31,7 +31,8 @@
     "./components/ui/textarea":      "./src/components/ui/textarea.tsx",
     "./components/ui/tooltip":       "./src/components/ui/tooltip.tsx",
     "./components/ui/empty-state":   "./src/components/ui/empty-state.tsx",
-    "./tailwind.preset":             "./src/tailwind.preset.ts"
+    "./tailwind.preset":             "./src/tailwind.preset.ts",
+    "./tokens.native":               "./src/tokens.native.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -65,6 +66,7 @@
     "next-intl": "^4.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-native": "*",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
