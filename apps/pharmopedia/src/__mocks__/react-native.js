@@ -36,12 +36,16 @@ function SafeAreaView({ children, style, testID, ...rest }) {
   return React.createElement('SafeAreaView', { style, testID, ...rest }, children)
 }
 
-function FlatList({ data, renderItem, keyExtractor, ...rest }) {
+function FlatList({ data, renderItem, keyExtractor, ListHeaderComponent, ListEmptyComponent, ...rest }) {
+  const header = ListHeaderComponent ? React.createElement(React.Fragment, { key: '__header' }, ListHeaderComponent) : null
   const items = (data || []).map((item, index) => {
     const key = keyExtractor ? keyExtractor(item, index) : String(index)
     return React.createElement(React.Fragment, { key }, renderItem({ item, index }))
   })
-  return React.createElement('FlatList', rest, ...items)
+  const empty = (!data || data.length === 0) && ListEmptyComponent
+    ? React.createElement(React.Fragment, { key: '__empty' }, ListEmptyComponent)
+    : null
+  return React.createElement('FlatList', rest, header, ...items, empty)
 }
 
 const StyleSheet = {
@@ -77,6 +81,9 @@ const Animated = {
   spring: () => ({ start: (cb) => cb && cb({ finished: true }), stop: () => {} }),
   parallel: () => ({ start: (cb) => cb && cb({ finished: true }), stop: () => {} }),
   sequence: () => ({ start: (cb) => cb && cb({ finished: true }), stop: () => {} }),
+  event: () => () => {},
+  FlatList,
+  ScrollView: View,
 }
 
 const Dimensions = {
@@ -146,4 +153,10 @@ module.exports = {
   Share: {
     share: async (_content, _options) => ({ action: 'sharedAction', activityType: undefined }),
   },
+  BackHandler: {
+    addEventListener: (_event, _cb) => ({ remove: () => {} }),
+    removeEventListener: () => {},
+    exitApp: () => {},
+  },
+  RefreshControl: View,
 }

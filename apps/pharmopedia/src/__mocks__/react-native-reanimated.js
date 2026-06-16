@@ -23,6 +23,36 @@ const FadeOutDown = new Proxy({}, {
   get: (_t, _k) => () => animationStub,
 })
 
+const FadeInDown = new Proxy({}, {
+  get: (_t, _k) => () => animationStub,
+})
+
+const FadeOutUp = new Proxy({}, {
+  get: (_t, _k) => () => animationStub,
+})
+
+const Easing = {
+  linear: (t) => t,
+  ease: (t) => t,
+  quad: (t) => t,
+  cubic: (t) => t,
+  inOut: () => (t) => t,
+  in: () => (t) => t,
+  out: () => (t) => t,
+  poly: () => (t) => t,
+  sin: (t) => t,
+  circle: (t) => t,
+  exp: (t) => t,
+  elastic: () => (t) => t,
+  back: () => (t) => t,
+  bounce: (t) => t,
+  bezier: () => (t) => t,
+  bezierFn: () => (t) => t,
+  steps: () => (t) => t,
+}
+
+const withRepeat = (_anim, _n, _reverse) => _anim
+
 // Animated components — passthrough wrappers that drop animation props
 function AnimatedView({ children, style, testID, entering: _entering, exiting: _exiting, ...rest }) {
   return React.createElement('View', { style, testID, ...rest }, children)
@@ -49,10 +79,20 @@ const Extrapolation = { CLAMP: 'clamp' }
 // Expose Animated.* members directly on module.exports so that
 // `import Animated from 'react-native-reanimated'` → Animated.View works
 // regardless of whether vitest uses __esModule default or whole-module-as-default.
+// FadeIn animation stub (used by CoachMark component)
+const FadeIn = new Proxy({}, {
+  get: (_t, _k) => () => animationStub,
+})
+
 module.exports = {
   // Named exports
+  FadeIn,
   FadeInUp,
   FadeOutDown,
+  FadeInDown,
+  FadeOutUp,
+  Easing,
+  withRepeat,
   useAnimatedStyle,
   useSharedValue,
   withTiming,

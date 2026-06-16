@@ -49,6 +49,11 @@ describe('Profile — theme toggle', () => {
     useThemeStore.setState({ mode: 'light', resolvedTheme: 'light', initialized: true })
   })
 
+  it('renders the Profile title', () => {
+    const { getByText } = render(<ProfileTab />)
+    expect(getByText('tabs.profile')).toBeTruthy()
+  })
+
   it('renders appearance section with three options', () => {
     render(<ProfileTab />)
     expect(screen.getByText('profile.appearance')).toBeTruthy()

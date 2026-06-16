@@ -24,7 +24,7 @@ vi.mock('@/store/theme-store', () => ({
 
 vi.mock('@/store/coach-mark-store', () => ({
   useCoachMarkStore: Object.assign(
-    (sel: (s: Record<string, unknown>) => unknown) => sel({ shouldShow: () => false }),
+    (sel: (s: Record<string, unknown>) => unknown) => sel({ shouldShow: () => false, dismissed: new Set<string>() }),
     { getState: () => ({ reset: vi.fn() }) },
   ),
 }))

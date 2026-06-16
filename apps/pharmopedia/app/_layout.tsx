@@ -31,6 +31,8 @@ import { useThemeStore } from '@/store/theme-store'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { initI18n } from '@/i18n'
 import { hasSeenWelcome } from './welcome'
+import { UiKitProvider } from '@ultranos/ui-kit/native'
+import { isRtlLang } from '@/store/lang-store'
 
 export default function RootLayout() {
   const { isAuthenticated, initialized, initialize } = useAuthStore()
@@ -42,6 +44,7 @@ export default function RootLayout() {
   const themeInitialized = useThemeStore((s) => s.initialized)
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme)
   const onSystemChange = useThemeStore((s) => s.onSystemChange)
+  const lang = useLangStore((s) => s.lang)
 
   const [fontsLoaded] = useFonts({
     'Manrope':          Manrope_400Regular,
@@ -92,14 +95,16 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style={resolvedTheme === 'dark' ? 'light' : 'dark'} />
-      <ErrorBoundary>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
-          <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-          <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
-          <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
-        </Stack>
-      </ErrorBoundary>
+      <UiKitProvider mode={resolvedTheme} rtl={isRtlLang(lang)}>
+        <ErrorBoundary>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
+            <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
+          </Stack>
+        </ErrorBoundary>
+      </UiKitProvider>
       {showWelcome && !isAuthenticated && <Redirect href="/welcome" />}
       {!showWelcome && !isAuthenticated && <Redirect href="/(auth)/login" />}
     </>

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  View, Text, FlatList, Pressable, StyleSheet, RefreshControl,
+  View, Text, FlatList, Pressable, StyleSheet, RefreshControl, BackHandler,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { FolderOpen } from 'lucide-react-native'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { CollapsibleList, EmptyState } from '@ultranos/ui-kit/native'
 import { getDatabase } from '@/db/migrations'
 import { getTherapeuticClasses, getDrugsByTherapeuticClass, type TherapeuticClass } from '@/db/browse'
 import { TherapeuticClassCard } from '@/components/TherapeuticClassCard'
@@ -70,6 +71,14 @@ export default function BrowseTab() {
     setDrugs([])
   }
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedClass !== null) { handleBack(); return true }
+      return false
+    })
+    return () => sub.remove()
+  }, [selectedClass])
+
   const onRefreshClasses = useCallback(async () => {
     setClassesRefreshing(true)
     try {
@@ -95,16 +104,6 @@ export default function BrowseTab() {
     }
   }, [selectedClass, lang])
 
-  if (classesLoading && classes.length === 0 && selectedClass === null) {
-    return (
-      <View style={styles.container}>
-        {[0, 1, 2, 3].map((i) => (
-          <SkeletonCard key={i} testID={`skeleton-class-${i}`} />
-        ))}
-      </View>
-    )
-  }
-
   if (selectedClass !== null) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
@@ -127,6 +126,7 @@ export default function BrowseTab() {
           <FlatList
             data={drugs}
             keyExtractor={(item) => item.atcCode}
+            contentContainerStyle={styles.drugListContent}
             renderItem={({ item }) => (
               <DrugCard
                 result={item}
@@ -144,56 +144,37 @@ export default function BrowseTab() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
+    <>
+      <CollapsibleList
+        title={t('tabs.browse')}
+        data={classes}
+        keyExtractor={(item) => item.name}
+        renderItem={({ item, index }) => (
+          <TherapeuticClassCard name={item.name} count={item.count} index={index} onPress={() => void handleClassPress(item.name)} />
+        )}
+        ListEmptyComponent={
+          classesLoading
+            ? <View>{[0, 1, 2, 3].map((i) => <SkeletonCard key={i} testID={`skeleton-class-${i}`} />)}</View>
+            : <EmptyState icon={FolderOpen} title={t('browse.emptyTitle')} description={t('browse.emptyDescription')} />
+        }
+        refreshing={classesRefreshing}
+        onRefresh={onRefreshClasses}
+      />
       <NetStatusBanner />
-      {classes.length === 0 ? (
-        <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-          <FolderOpen size={48} color={colors.textMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t('browse.emptyTitle')}</Text>
-          <Text style={[styles.emptyDescription, { color: colors.textSecondary }]}>{t('browse.emptyDescription')}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={classes}
-          keyExtractor={(item) => item.name}
-          renderItem={({ item, index }) => (
-            <TherapeuticClassCard
-              name={item.name}
-              count={item.count}
-              onPress={() => void handleClassPress(item.name)}
-              index={index}
-            />
-          )}
-          refreshControl={
-            <RefreshControl refreshing={classesRefreshing} onRefresh={onRefreshClasses} tintColor={colors.primary500} />
-          }
-        />
-      )}
       <CoachMark
         markKey="browse-class"
         hint={t('coach.browseClass')}
         visible={classes.length > 0}
       />
-    </SafeAreaView>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  drugListContent: { paddingBottom: Spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing[8] },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing[8],
-    gap: Spacing[3],
-  },
-  emptyTitle: {
-    fontSize: FontSize.md,
-    fontFamily: FontFamily.sansSemibold,
-    textAlign: 'center',
-  },
-  emptyDescription: {
+  emptyText: {
     fontSize: FontSize.sm,
     fontFamily: FontFamily.sans,
     textAlign: 'center',

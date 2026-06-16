@@ -120,6 +120,7 @@ const en = {
     empty: 'No saved drugs yet — tap the bookmark icon on any drug to save it',
     emptyTitle: 'No saved drugs',
     emptyDescription: 'Bookmark drugs to find them quickly here',
+    browseCta: 'Browse medicines',
   },
   common: {
     cancel: 'Cancel',

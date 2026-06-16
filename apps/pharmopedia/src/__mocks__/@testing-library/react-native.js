@@ -35,7 +35,12 @@ function queryByTestId(instance, testID) {
     if (node.props && node.props.testID === testID) { found = node; return }
     if (node.children) node.children.forEach(search)
   }
-  search(instance.toJSON())
+  const json = instance.toJSON()
+  if (Array.isArray(json)) {
+    json.forEach(search)
+  } else {
+    search(json)
+  }
   return found ? normalizeNode(found) : null
 }
 
@@ -87,7 +92,11 @@ function queryByText(instance, text) {
       }
     }
   }
-  deepSearch(json)
+  if (Array.isArray(json)) {
+    json.forEach(deepSearch)
+  } else {
+    deepSearch(json)
+  }
   return found
 }
 
@@ -173,6 +182,35 @@ function render(element) {
     instance = ReactTestRenderer.create(element)
   })
   _currentInstance = instance
+
+  async function findByTestId(testID, { timeout = 1000, interval = 50 } = {}) {
+    const start = Date.now()
+    let lastError
+    while (Date.now() - start < timeout) {
+      await ReactTestRenderer.act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, interval))
+      })
+      const result = queryByTestId(instance, testID)
+      if (result) return result
+      lastError = new Error(`Unable to find an element with testID: ${testID}`)
+    }
+    throw lastError
+  }
+
+  async function findByText(text, { timeout = 1000, interval = 50 } = {}) {
+    const start = Date.now()
+    let lastError
+    while (Date.now() - start < timeout) {
+      await ReactTestRenderer.act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, interval))
+      })
+      const result = queryByText(instance, text)
+      if (result) return result
+      lastError = new Error(`Unable to find an element with text: ${text}`)
+    }
+    throw lastError
+  }
+
   return {
     instance,
     toJSON: () => instance.toJSON(),
@@ -182,12 +220,14 @@ function render(element) {
       return result
     },
     queryByTestId: (testID) => queryByTestId(instance, testID),
+    findByTestId,
     getByText: (text) => {
       const result = queryByText(instance, text)
       if (!result) throw new Error(`Unable to find an element with text: ${text}`)
       return result
     },
     queryByText: (text) => queryByText(instance, text),
+    findByText,
     getByLabelText: (label) => {
       const result = queryByLabelText(instance, label)
       if (!result) throw new Error(`Unable to find an element with accessibilityLabel: ${label}`)

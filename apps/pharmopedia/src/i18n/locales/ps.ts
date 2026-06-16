@@ -100,6 +100,7 @@ const ps: Translations = {
     empty: 'تاسو هیڅ خوندي شوي دارو نلرئ — د هرې درملې د نښانک آیکون باندې فشار ورکړئ',
     emptyTitle: 'هیڅ خوندي شوي درمل نشته',
     emptyDescription: 'درمل نښه کړئ ترڅو دلته ژر ومومئ',
+    browseCta: 'درمل وپلټئ',
   },
   common: {
     cancel: 'لغول',

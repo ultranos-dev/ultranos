@@ -1,5 +1,4 @@
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/auth-store'
@@ -11,10 +10,12 @@ import { useThemeColors } from '@/hooks/useThemeColors'
 import { runSync } from '@/sync/catalog-sync'
 import { getDatabase } from '@/db/migrations'
 import { RoleBadge } from '@/components/RoleBadge'
+import { NetStatusBanner } from '@/components/NetStatusBanner'
 import { hapticNotification, hapticSelection } from '@/lib/haptics'
 import { NotificationFeedbackType } from 'expo-haptics'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { CoachMark } from '@/components/CoachMark'
+import { CollapsibleScreen } from '@ultranos/ui-kit/native'
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
   { value: 'en', label: 'EN' },
@@ -46,6 +47,7 @@ export default function ProfileTab() {
   const setLang = useLangStore((s) => s.setLang)
   const themeMode = useThemeStore((s) => s.mode)
   const setThemeMode = useThemeStore((s) => s.setMode)
+  const langCoachDismissed = useCoachMarkStore((s) => s.dismissed.has('profile-lang'))
 
   async function handleSyncNow() {
     if (!token || status === 'syncing') return
@@ -106,7 +108,9 @@ export default function ProfileTab() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
+    <CollapsibleScreen title={t('tabs.profile')}>
+      <NetStatusBanner />
+
       <View style={[styles.section, { backgroundColor: colors.surface }]}>
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.role')}</Text>
         {user?.role && <RoleBadge role={user.role} />}
@@ -193,14 +197,13 @@ export default function ProfileTab() {
       <CoachMark
         markKey="profile-sync"
         hint={t('coach.profileSync')}
-        visible
+        visible={langCoachDismissed}
       />
-    </SafeAreaView>
+    </CollapsibleScreen>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: Spacing[5] },
   section: {
     borderRadius: Radius.lg,
     padding: Spacing[4],
