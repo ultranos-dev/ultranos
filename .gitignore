@@ -15,3 +15,6 @@ coverage/
 
 # Claude Code agent worktrees — ephemeral, contain nested .git repos
 .claude/worktrees/
+
+# Superpowers brainstorm scratch dir
+.superpowers/

@@ -27,6 +27,9 @@
       ],
       "@ultranos/shared-types": [
         "../../packages/shared-types/src/index.ts"
+      ],
+      "@ultranos/ui-kit/native": [
+        "../../packages/ui-kit/src/native/index.ts"
       ]
     }
   },
