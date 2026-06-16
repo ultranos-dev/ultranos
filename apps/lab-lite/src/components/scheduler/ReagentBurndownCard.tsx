@@ -13,10 +13,12 @@
  */
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import Link from 'next/link'
 import { RefreshCw, Settings, ChevronDown, ChevronUp } from '@ultranos/ui-kit/icons'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@ultranos/ui-kit/components/ui/empty-state'
+import { PackageSearch } from '@ultranos/ui-kit/icons'
 import { useReagentBurndown } from '@/hooks/useReagentBurndown'
 import type { BurndownResult } from '@/lib/reagent-burndown'
 import type { AlertLevel } from '@/lib/db'
@@ -58,13 +60,15 @@ function AlertBadge({ level }: { level: AlertLevel }) {
 function BurndownMiniChart({
   currentStock,
   daysUntilDepletion,
-  daysUntilExpiry,
+  evaluationNow,
+  expiryDate,
   alertLevel,
   isRtl,
 }: {
   currentStock: number
   daysUntilDepletion: number
-  daysUntilExpiry: number | null
+  evaluationNow: Date
+  expiryDate: string | undefined
   alertLevel: AlertLevel
   isRtl: boolean
 }) {
@@ -75,7 +79,6 @@ function BurndownMiniChart({
   // Clamp stock to 0 to avoid negative-stock SVG glitches
   const stock = Math.max(0, currentStock)
   if (stock === 0) {
-    // Already at stockout — show flat zero line
     return (
       <svg
         width={W}
@@ -89,8 +92,10 @@ function BurndownMiniChart({
     )
   }
 
-  // Depletion line: from (0, 0) to (x at depletion, H) in SVG coords (y grows down)
-  const depletionX = Math.min((daysUntilDepletion / WINDOW) * W, W)
+  // P19: clamp daysUntilDepletion to [0, WINDOW] before computing SVG x positions
+  // Negative values (overdue) render as x=0 (already empty), not outside the viewport.
+  const clampedDays = Math.max(0, Math.min(daysUntilDepletion, WINDOW))
+  const depletionX = (clampedDays / WINDOW) * W
 
   // Color by alert level
   const lineColor =
@@ -100,13 +105,14 @@ function BurndownMiniChart({
         ? '#f59e0b'
         : '#22c55e'
 
-  // Map stock range [0..stock] to y [H..0] (top = full, bottom = empty)
-  // Start: x=0, y=0 (top = full stock)
-  // End: x=depletionX, y=H (bottom = zero stock)
   const startX = isRtl ? W : 0
   const endX = isRtl ? W - depletionX : depletionX
 
-  // Expiry line (vertical dashed, if within 60-day window)
+  // P20: use evaluationNow (captured at evaluation time) for expiry marker — not live Date.now()
+  const daysUntilExpiry = expiryDate
+    ? Math.floor((new Date(expiryDate).getTime() - evaluationNow.getTime()) / 86400000)
+    : null
+
   const expiryX =
     daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry < WINDOW
       ? isRtl
@@ -171,6 +177,7 @@ function ConfidenceDot({ level }: { level: 'high' | 'medium' | 'low' }) {
 
 // ---------------------------------------------------------------------------
 // Reagent row
+// P20: receives evaluationNow instead of calling Date.now() at render time
 // ---------------------------------------------------------------------------
 
 function formatDate(iso: string | undefined): string {
@@ -186,16 +193,14 @@ function formatDate(iso: string | undefined): string {
 
 function ReagentRow({
   item,
+  evaluationNow,
   isRtl,
 }: {
   item: BurndownResult
+  evaluationNow: Date
   isRtl: boolean
 }) {
   const t = useTranslations('scheduler.burndown')
-
-  const daysUntilExpiry = item.expiryDate
-    ? Math.round((new Date(item.expiryDate).getTime() - Date.now()) / 86400000)
-    : null
 
   const stockDisplay = item.currentStock <= 0
     ? <span className="font-semibold text-red-600 uppercase text-xs">{t('stockout')}</span>
@@ -252,7 +257,8 @@ function ReagentRow({
         <BurndownMiniChart
           currentStock={item.currentStock}
           daysUntilDepletion={item.daysRemaining}
-          daysUntilExpiry={daysUntilExpiry}
+          evaluationNow={evaluationNow}
+          expiryDate={item.expiryDate}
           alertLevel={item.alertLevel}
           isRtl={isRtl}
         />
@@ -286,12 +292,18 @@ function sortItems(items: BurndownResult[], key: SortKey): BurndownResult[] {
 // Main card
 // ---------------------------------------------------------------------------
 
-export function ReagentBurndownCard({ locale }: { locale?: string }) {
+export function ReagentBurndownCard() {
   const t = useTranslations('scheduler.burndown')
+  // P11: use useLocale() — not an optional prop — so RTL detection always works
+  const locale = useLocale()
+  const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
+
   const { burndownData, isLoading, error, refresh } = useReagentBurndown()
   const [sortKey, setSortKey] = useState<SortKey>('urgency')
   const [showAll, setShowAll] = useState(false)
-  const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'
+
+  // P20: capture evaluation time once per render cycle so chart markers stay consistent
+  const evaluationNow = new Date()
 
   const counts = burndownData.reduce(
     (acc, r) => { acc[r.alertLevel] = (acc[r.alertLevel] ?? 0) + 1; return acc },
@@ -301,22 +313,21 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
   const sorted = sortItems(burndownData, sortKey)
   const displayed = showAll ? sorted : sorted.slice(0, 3)
 
-  // Empty state
+  // P27: use EmptyState component — never ad-hoc inline markup
   if (!isLoading && burndownData.length === 0 && !error) {
     return (
       <section
         className="rounded-lg border border-border bg-card p-4"
         data-testid="burndown-card"
       >
-        <div className="text-center py-6 text-sm text-muted-foreground">
-          <p>{t('emptyState')}</p>
-          <Link
-            href={`${locale ? `/${locale}` : ''}/settings`}
-            className="mt-2 inline-block text-blue-600 underline"
-          >
-            {t('emptyStateAction')}
-          </Link>
-        </div>
+        <EmptyState
+          icon={PackageSearch}
+          title={t('emptyState')}
+          action={{
+            label: t('emptyStateAction'),
+            onClick: () => { window.location.href = `/${locale}/settings/suppliers` },
+          }}
+        />
       </section>
     )
   }
@@ -358,7 +369,7 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
             <RefreshCw size={14} aria-hidden="true" />
           </Button>
           <Link
-            href={`${locale ? `/${locale}` : ''}/settings/suppliers`}
+            href={`/${locale}/settings/suppliers`}
             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             <Settings size={13} aria-hidden="true" />
@@ -395,7 +406,8 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
                 onClick={() => setSortKey(key)}
                 className={`rounded px-2 py-0.5 transition-colors ${
                   sortKey === key
-                    ? 'bg-card text-white'
+                    // P10: use semantic tokens — bg-primary text-primary-foreground
+                    ? 'bg-primary text-primary-foreground'
                     : 'hover:bg-muted text-muted-foreground'
                 }`}
                 data-testid={`sort-${key}`}
@@ -421,7 +433,12 @@ export function ReagentBurndownCard({ locale }: { locale?: string }) {
               </thead>
               <tbody>
                 {displayed.map((item) => (
-                  <ReagentRow key={item.reagentId} item={item} isRtl={isRtl} />
+                  <ReagentRow
+                    key={item.reagentId}
+                    item={item}
+                    evaluationNow={evaluationNow}
+                    isRtl={isRtl}
+                  />
                 ))}
               </tbody>
             </table>

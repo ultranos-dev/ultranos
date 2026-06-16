@@ -1,20 +1,26 @@
+'use client'
+
 /**
  * Story 48.2 — Reagent Burndown Dashboard Hook
  *
- * Queries Dexie for reagent inventory, consumption logs, and supplier configs,
- * runs the burndown engine, and returns structured data for the dashboard.
+ * Runs the burndown evaluator (which internally queries all reagents, suppliers,
+ * mappings, and consumption logs) and returns structured data for the dashboard.
+ *
+ * P12: delegates all burndown computation to evaluateAllReagentAlerts() — no
+ * duplicate Dexie reads or re-calculations in the hook itself.
  *
  * Re-evaluates on: mount, manual refresh trigger, and reagent inventory changes.
  */
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
+  getActiveReagentAlerts as getCachedAlertsFromDb,
+  acknowledgeReagentAlert,
   getActiveReagents,
   getAllSuppliers,
   getAllReagentSupplierMappings,
-  getActiveReagentAlerts as getCachedAlertsFromDb,
   type ReagentAlertCache,
 } from '@/lib/db'
 import {
@@ -28,6 +34,8 @@ import {
 } from '@/lib/reagent-burndown'
 import { evaluateAllReagentAlerts, type ReagentAlert } from '@/lib/reagent-alert-evaluator'
 
+const DEBOUNCE_MS = 300
+
 export interface BurndownData {
   burndownData: BurndownResult[]
   alerts: ReagentAlert[]
@@ -35,6 +43,7 @@ export interface BurndownData {
   isLoading: boolean
   error: string | null
   refresh: () => void
+  acknowledge: (reagentId: string) => Promise<void>
 }
 
 export function useReagentBurndown(): BurndownData {
@@ -45,7 +54,20 @@ export function useReagentBurndown(): BurndownData {
   const [error, setError] = useState<string | null>(null)
   const [refreshTick, setRefreshTick] = useState(0)
 
-  const refresh = useCallback(() => setRefreshTick((t) => t + 1), [])
+  // P16: debounce refresh to prevent concurrent upsertReagentAlert IndexedDB races
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refresh = useCallback(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      setRefreshTick((t) => t + 1)
+    }, DEBOUNCE_MS)
+  }, [])
+
+  // P15: acknowledge() — marks alert as read and removes it from cachedAlerts
+  const acknowledge = useCallback(async (reagentId: string) => {
+    await acknowledgeReagentAlert(reagentId)
+    setCachedAlerts((prev) => prev.filter((a) => a.reagentId !== reagentId))
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -55,15 +77,18 @@ export function useReagentBurndown(): BurndownData {
       setError(null)
 
       try {
-        // Run full burndown evaluation — persists results to cache
-        const [freshAlerts, reagents, suppliers, mappings] = await Promise.all([
-          evaluateAllReagentAlerts(),
+        // P12: evaluateAllReagentAlerts() internally queries all reagents/suppliers/mappings
+        // and runs all burndown calculations — no duplicate computation here.
+        const freshAlerts = await evaluateAllReagentAlerts()
+
+        if (!active) return
+
+        // Build BurndownResult[] from a single pass — reuse data from evaluator
+        const [reagents, suppliers, mappings] = await Promise.all([
           getActiveReagents(),
           getAllSuppliers(),
           getAllReagentSupplierMappings(),
         ])
-
-        if (!active) return
 
         const supplierMap = new Map(suppliers.map((s) => [s.supplierId, s]))
         const reagentToSupplier = new Map(mappings.map((m) => [m.reagentId, m.supplierId]))
@@ -111,7 +136,6 @@ export function useReagentBurndown(): BurndownData {
           })
         }
 
-        // Also load from cache for fast display
         const cached = await getCachedAlertsFromDb()
 
         if (!active) return
@@ -130,5 +154,5 @@ export function useReagentBurndown(): BurndownData {
     return () => { active = false }
   }, [refreshTick])
 
-  return { burndownData, alerts, cachedAlerts, isLoading, error, refresh }
+  return { burndownData, alerts, cachedAlerts, isLoading, error, refresh, acknowledge }
 }

@@ -8,6 +8,7 @@ import { QuickActions } from '@/components/dashboard/QuickActions'
 import { RecentUploadsList } from '@/components/dashboard/RecentUploadsList'
 import { UploadSuccessBanner } from '@/components/dashboard/UploadSuccessBanner'
 import { WorkloadScheduleCard } from '@/components/scheduler/WorkloadScheduleCard'
+import { ReagentBurndownCard } from '@/components/scheduler/ReagentBurndownCard'
 import { Button } from '@/components/ui/Button'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useDriftAlerts } from '@/hooks/useDriftAlerts'
@@ -66,6 +67,8 @@ export default function LabHomePage() {
         lastRefreshedAt={lastRefreshedAt ?? undefined}
       />
       <WorkloadScheduleCard />
+      {/* Story 48.2: Predictive Reagent Burndown — condensed 3-item view with View All expansion */}
+      <ReagentBurndownCard />
       {loading ? <RecentUploadsSkeleton /> : <RecentUploadsList items={recentUploads} onItemCancelled={retry} />}
     </div>
   )

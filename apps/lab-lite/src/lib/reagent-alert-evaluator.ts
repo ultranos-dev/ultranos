@@ -43,6 +43,13 @@ export interface ReagentAlert {
   supplierLeadTimeDays: number
 }
 
+/** Reagent skipped due to malformed expiry — exposed so UI can warn the user. */
+export interface SkippedReagent {
+  reagentId: string
+  reagentName: string
+  reason: 'malformed_expiry'
+}
+
 // ---------------------------------------------------------------------------
 // Core evaluation
 // ---------------------------------------------------------------------------
@@ -54,28 +61,33 @@ export interface ReagentAlert {
  * Results are persisted to Dexie for offline access.
  * 24-hour deduplication: if an alert for the same reagent at the same level
  * was already evaluated within the last 24 hours, it is not re-fired.
- * Grouped summary: caller should prefer showing "N reagents need reorder"
- * rather than N separate toast notifications.
+ *
+ * Returns `{ alerts, skipped }` where skipped lists reagents with malformed expiry
+ * so the caller can display a warning (P14 — never silently drop reagents).
  */
-export async function evaluateAllReagentAlerts(): Promise<ReagentAlert[]> {
-  const [reagents, suppliers, mappings] = await Promise.all([
+export async function evaluateAllReagentAlerts(): Promise<ReagentAlert[]>
+export async function evaluateAllReagentAlerts(opts: { includeSkipped: true }): Promise<{ alerts: ReagentAlert[]; skipped: SkippedReagent[] }>
+export async function evaluateAllReagentAlerts(opts?: { includeSkipped?: boolean }): Promise<ReagentAlert[] | { alerts: ReagentAlert[]; skipped: SkippedReagent[] }> {
+  const [reagents, suppliers, mappings, existingCache] = await Promise.all([
     getActiveReagents(),
     getAllSuppliers(),
     getAllReagentSupplierMappings(),
+    getAllReagentAlerts(),
   ])
 
   const supplierMap = new Map(suppliers.map((s) => [s.supplierId, s]))
   const reagentToSupplier = new Map(mappings.map((m) => [m.reagentId, m.supplierId]))
+  const cachedByReagent = new Map(existingCache.map((c) => [c.reagentId, c]))
 
   const now = new Date()
   const alerts: ReagentAlert[] = []
+  const skipped: SkippedReagent[] = []
 
   for (const reagent of reagents) {
     // Guard: clamp negative stock to 0
     const currentStock = Math.max(0, reagent.expectedTests - reagent.testsPerformed)
 
-    const [rate] = await Promise.all([calculateDailyConsumptionRate(reagent.reagentId)])
-
+    const rate = await calculateDailyConsumptionRate(reagent.reagentId)
     const usageDepletion = projectUsageDepletionDate(currentStock, rate.averageDailyUsage)
 
     let expiryDate: Date
@@ -83,7 +95,8 @@ export async function evaluateAllReagentAlerts(): Promise<ReagentAlert[]> {
       expiryDate = new Date(reagent.expiryDate)
       if (isNaN(expiryDate.getTime())) throw new Error('invalid')
     } catch {
-      // Malformed expiry — skip reagent rather than crash
+      // P14: never silently skip — record for caller to warn the user
+      skipped.push({ reagentId: reagent.reagentId, reagentName: reagent.name, reason: 'malformed_expiry' })
       continue
     }
 
@@ -115,6 +128,10 @@ export async function evaluateAllReagentAlerts(): Promise<ReagentAlert[]> {
     // Only include actionable alerts (info / warning / critical)
     if (alertLevel === 'none') continue
 
+    // P5: 24-hour deduplication — check cached alert before firing
+    const cached = cachedByReagent.get(reagent.reagentId)
+    if (cached && !shouldRefireAlert(cached, alertLevel, now)) continue
+
     alerts.push({
       reagentId: reagent.reagentId,
       reagentName: reagent.name,
@@ -128,23 +145,30 @@ export async function evaluateAllReagentAlerts(): Promise<ReagentAlert[]> {
     })
   }
 
+  if (opts?.includeSkipped) return { alerts, skipped }
   return alerts
 }
 
 /**
  * Determine if an alert should be re-fired given the 24-hour deduplication window.
  * Returns true if the alert is new or has escalated since last evaluation.
+ *
+ * P17: guards against corrupted or unknown AlertLevel values — treats them as 'none' (severity 0).
  */
 export function shouldRefireAlert(
   cached: ReagentAlertCache,
   newLevel: AlertLevel,
   now: Date,
 ): boolean {
-  // Always re-fire if severity has escalated
   const severity: Record<AlertLevel, number> = { none: 0, info: 1, warning: 2, critical: 3 }
-  if (severity[newLevel] > severity[cached.alertLevel]) return true
+  // P17: unknown alertLevel resolves to undefined → default to 0 (treat as 'none')
+  const cachedSeverity = severity[cached.alertLevel] ?? 0
+  const newSeverity = severity[newLevel] ?? 0
 
-  // Suppress same-level re-fire within 24 hours
+  // Always re-fire if severity has escalated
+  if (newSeverity > cachedSeverity) return true
+
+  // Suppress same-level (or de-escalated) re-fire within 24 hours
   const lastEval = new Date(cached.evaluatedAt)
   const hoursSince = (now.getTime() - lastEval.getTime()) / (1000 * 60 * 60)
   return hoursSince >= 24

@@ -35,15 +35,18 @@ vi.mock('../lib/db', async (importOriginal) => {
   }
 })
 
+// P23: don't spread `original` from the stub — the real functions are now implemented,
+// but we still need full control over calculateDailyConsumptionRate in these tests.
+// Import the real module and mock only the DB-dependent function.
 vi.mock('../lib/reagent-burndown', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/reagent-burndown')>()
+  const real = await importOriginal<typeof import('../lib/reagent-burndown')>()
   return {
-    ...original,
+    ...real,
     calculateDailyConsumptionRate: vi.fn(async () => ({
       averageDailyUsage: 10,
       unit: 'mL',
       dataPointCount: 15,
-      confidenceLevel: 'high',
+      confidenceLevel: 'high' as const,
     })),
   }
 })

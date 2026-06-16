@@ -1,7 +1,7 @@
 /**
  * Story 48.2 — Reagent Consumption Logging Hook
  *
- * Provides logConsumption() to record reagent usage and auto-decrement stock.
+ * Provides logConsumption() to record reagent usage and update stock.
  * Designed to be called from the result entry workflow (Story 42.4) when a
  * test completes and reagent is consumed.
  *
@@ -26,11 +26,13 @@ export function useReagentConsumption() {
 
   /**
    * Log a reagent consumption event.
-   * - Writes a new entry to reagent_consumption_log.
-   * - Auto-decrements the reagent's expectedTests by quantityUsed (if unit is 'tests').
-   *   For non-test units (mL, strips, etc.), the stock is not auto-decremented here
-   *   because the inventory is tracked in different units — the operator should
-   *   manually update stock in the inventory panel.
+   *
+   * - Writes a new entry to reagent_consumption_log (P3: correct field names).
+   * - For 'tests' unit only: increments testsPerformed on the reagent inventory
+   *   record, clamped to [0, expectedTests] to prevent corruption (P13).
+   * - addReagentConsumptionLog no longer auto-increments testsPerformed (P4).
+   * - For non-test units (mL, strips, etc.): the operator should manually
+   *   update stock in the inventory panel (unit-aware behavior, see P18).
    */
   const logConsumption = useCallback(
     async (params: LogConsumptionParams): Promise<void> => {
@@ -46,14 +48,18 @@ export function useReagentConsumption() {
         technicianId,
       }
 
+      // Insert log entry — no side-effects on inventory (P4: single owner of stock decrement)
       await addReagentConsumptionLog(entry)
 
-      // Auto-decrement stock: only applicable when unit matches inventory tracking unit.
-      // Guard against negative stock — clamp to 0.
-      const reagent = await getReagentByReagentId(reagentId)
-      if (reagent) {
-        const newTests = Math.max(0, reagent.testsPerformed + (unit === 'tests' ? quantityUsed : 0))
-        if (unit === 'tests') {
+      // Stock update: only for test-count-tracked reagents
+      if (unit === 'tests') {
+        const reagent = await getReagentByReagentId(reagentId)
+        if (reagent) {
+          // P13: clamp to [0, expectedTests] — prevent negative stock AND overflow
+          const newTests = Math.min(
+            reagent.expectedTests,
+            Math.max(0, reagent.testsPerformed + quantityUsed),
+          )
           await updateReagent(reagentId, { testsPerformed: newTests })
         }
       }

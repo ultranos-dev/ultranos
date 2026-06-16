@@ -513,6 +513,21 @@ export function LabSettingsView() {
           </div>
         )}
 
+        {/* Supplier Configuration — Story 48.2 (P25: nav entry required for route to be reachable) */}
+        <Link
+          href="/settings/suppliers"
+          data-testid="supplier-config-link"
+          className="rounded-lg border border-border bg-card p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground">{tScheduler('supplierConfig')}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {tScheduler('supplierConfigDesc')}
+            </p>
+          </div>
+          <ChevronRight size={20} className="text-muted-foreground rtl:-scale-x-100" aria-hidden="true" />
+        </Link>
+
         {/* Power & Scheduling */}
         <Link
           href="/settings/power-schedule"

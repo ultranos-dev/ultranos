@@ -182,7 +182,7 @@ export function SupplierConfigPanel() {
         getAllReagentSupplierMappings(),
       ])
       setSuppliers(s)
-      setReagents(r.filter((r) => r.status === 'ACTIVE' as unknown as string || true))
+      setReagents(r.filter((r) => r.status === 'ACTIVE'))
       setMappings(new Map(m.map((mp: ReagentSupplierMapping) => [mp.reagentId, mp.supplierId])))
     } finally {
       setIsLoading(false)
@@ -192,28 +192,39 @@ export function SupplierConfigPanel() {
   useEffect(() => { void loadData() }, [loadData])
 
   async function handleSaveSupplier(values: SupplierFormState, existingId?: number) {
-    const payload = {
-      supplierId: crypto.randomUUID(),
-      supplierName: values.supplierName.trim(),
-      leadTimeDays: Number(values.leadTimeDays),
-      contactInfo: values.contactInfo.trim(),
-      notes: values.notes.trim(),
-      updatedAt: new Date().toISOString(),
-    }
-
     if (existingId != null) {
-      await updateSupplier(existingId, payload)
+      // P6: UPDATE — only patch mutable fields; never regenerate supplierId
+      await updateSupplier(existingId, {
+        supplierName: values.supplierName.trim(),
+        leadTimeDays: Number(values.leadTimeDays),
+        contactInfo: values.contactInfo.trim(),
+        notes: values.notes.trim(),
+        updatedAt: new Date().toISOString(),
+      })
     } else {
-      await addSupplier(payload)
+      await addSupplier({
+        supplierId: crypto.randomUUID(),
+        supplierName: values.supplierName.trim(),
+        leadTimeDays: Number(values.leadTimeDays),
+        contactInfo: values.contactInfo.trim(),
+        notes: values.notes.trim(),
+        updatedAt: new Date().toISOString(),
+      })
     }
 
     setEditingId(null)
     await loadData()
   }
 
-  async function handleDelete(id: number, reagentId?: string) {
+  async function handleDelete(supplierId: string, id: number) {
+    // P7: remove all reagent-supplier mappings for this supplier before deleting
+    const affectedMappings = await getAllReagentSupplierMappings()
+    await Promise.all(
+      affectedMappings
+        .filter((m) => m.supplierId === supplierId)
+        .map((m) => removeReagentSupplier(m.reagentId)),
+    )
     await deleteSupplier(id)
-    if (reagentId) await removeReagentSupplier(reagentId)
     await loadData()
   }
 
@@ -309,7 +320,7 @@ export function SupplierConfigPanel() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDelete(supplier.id!)}
+                      onClick={() => handleDelete(supplier.supplierId, supplier.id!)}
                       className="text-red-500 hover:text-red-700"
                       data-testid={`delete-supplier-${supplier.id}`}
                     >

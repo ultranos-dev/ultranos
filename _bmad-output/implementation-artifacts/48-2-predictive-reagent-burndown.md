@@ -1,6 +1,6 @@
 # Story 48.2: Predictive Reagent Burndown
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -31,26 +31,26 @@ All computation runs locally against Dexie data — fully offline.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Dexie Schema — `reagent_consumption_log` and `supplier_config` Tables** (AC: 1, 3, 7)
-  - [ ] Add new Dexie version to `apps/lab-lite/src/lib/db.ts` with `reagent_consumption_log` and `supplier_config` tables.
-  - [ ] Define `ReagentConsumptionEntry` interface: `id` (auto-increment), `reagentId` (string — references reagent inventory from Story 44.3), `loincCode` (string — test that consumed it), `quantityUsed` (number), `unit` (string — mL, strips, tests, etc.), `consumedAt` (string — ISO 8601), `technicianId` (string).
-  - [ ] Index: `++id, reagentId, loincCode, consumedAt`.
-  - [ ] Define `SupplierConfig` interface: `id` (auto-increment), `supplierId` (string — UUID), `supplierName` (string), `leadTimeDays` (number), `contactInfo` (string — phone or email), `notes` (string), `updatedAt` (string — ISO 8601).
-  - [ ] Index: `++id, &supplierId`.
-  - [ ] Define `ReagentSupplierMapping` interface: `reagentId` (string), `supplierId` (string). Index: `[reagentId+supplierId], reagentId, supplierId`.
+- [x] **Task 1: Dexie Schema — `reagent_consumption_log` and `supplier_config` Tables** (AC: 1, 3, 7)
+  - [x] Add new Dexie version to `apps/lab-lite/src/lib/db.ts` with `reagent_consumption_log` and `supplier_config` tables.
+  - [x] Define `ReagentConsumptionEntry` interface: `id` (auto-increment), `reagentId` (string — references reagent inventory from Story 44.3), `loincCode` (string — test that consumed it), `quantityUsed` (number), `unit` (string — mL, strips, tests, etc.), `consumedAt` (string — ISO 8601), `technicianId` (string).
+  - [x] Index: `++id, reagentId, loincCode, consumedAt`.
+  - [x] Define `SupplierConfig` interface: `id` (auto-increment), `supplierId` (string — UUID), `supplierName` (string), `leadTimeDays` (number), `contactInfo` (string — phone or email), `notes` (string), `updatedAt` (string — ISO 8601).
+  - [x] Index: `++id, &supplierId`.
+  - [x] Define `ReagentSupplierMapping` interface: `reagentId` (string), `supplierId` (string). Index: `[reagentId+supplierId], reagentId, supplierId`.
 
-- [ ] **Task 2: Consumption Rate Calculation Engine** (AC: 1, 2, 7)
-  - [ ] Create `apps/lab-lite/src/lib/reagent-burndown.ts`.
-  - [ ] `calculateDailyConsumptionRate(reagentId: string, lookbackDays?: number): Promise<ConsumptionRate>` — queries `reagent_consumption_log` for the lookback window (default 30 days), returns `{ averageDailyUsage, unit, dataPointCount, confidenceLevel }`. Confidence: `high` (>= 14 data points), `medium` (7-13), `low` (< 7).
-  - [ ] `projectUsageDepletionDate(currentStock: number, dailyRate: number): Date | null` — returns null if rate is 0 (no consumption). Calculates `today + (currentStock / dailyRate)` days.
-  - [ ] `getEffectiveDepletionDate(usageDepletion: Date | null, expiryDate: Date): { date: Date; reason: 'usage' | 'expiry' }` — returns whichever comes first. If usage depletion is null, returns expiry.
-  - [ ] `calculateReorderDate(effectiveDepletion: Date, leadTimeDays: number): Date` — subtracts lead time. If reorder date is in the past, return today (already overdue).
-  - [ ] `evaluateAlertThreshold(effectiveDepletion: Date, today?: Date): AlertLevel` — returns `'none' | 'info' | 'warning' | 'critical'` based on days remaining: > 30 = none, 30 = info, 14 = warning, 7 = critical.
+- [x] **Task 2: Consumption Rate Calculation Engine** (AC: 1, 2, 7)
+  - [x] Create `apps/lab-lite/src/lib/reagent-burndown.ts`.
+  - [x] `calculateDailyConsumptionRate(reagentId: string, lookbackDays?: number): Promise<ConsumptionRate>` — queries `reagent_consumption_log` for the lookback window (default 30 days), returns `{ averageDailyUsage, unit, dataPointCount, confidenceLevel }`. Confidence: `high` (>= 14 data points), `medium` (7-13), `low` (< 7).
+  - [x] `projectUsageDepletionDate(currentStock: number, dailyRate: number): Date | null` — returns null if rate is 0 (no consumption). Calculates `today + (currentStock / dailyRate)` days.
+  - [x] `getEffectiveDepletionDate(usageDepletion: Date | null, expiryDate: Date): { date: Date; reason: 'usage' | 'expiry' }` — returns whichever comes first. If usage depletion is null, returns expiry.
+  - [x] `calculateReorderDate(effectiveDepletion: Date, leadTimeDays: number): Date` — subtracts lead time. If reorder date is in the past, return today (already overdue).
+  - [x] `evaluateAlertThreshold(effectiveDepletion: Date, today?: Date): AlertLevel` — returns `'none' | 'info' | 'warning' | 'critical'` based on days remaining: > 30 = none, 30 = info, 14 = warning, 7 = critical.
 
-- [ ] **Task 3: Burndown Dashboard Component** (AC: 4, 6)
-  - [ ] Create `apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx`.
-  - [ ] Summary header: total reagent count, count by alert level (critical / warning / info / ok).
-  - [ ] Reagent list: each reagent row displays:
+- [x] **Task 3: Burndown Dashboard Component** (AC: 4, 6)
+  - [x] Create `apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx`.
+  - [x] Summary header: total reagent count, count by alert level (critical / warning / info / ok).
+  - [x] Reagent list: each reagent row displays:
     - Reagent name and unit
     - Current stock level (with unit)
     - Daily consumption rate (with confidence indicator: high/medium/low)
@@ -58,61 +58,119 @@ All computation runs locally against Dexie data — fully offline.
     - Chemical expiry date
     - Recommended reorder date
     - Alert badge: color-coded by threshold (green = ok, blue = info/30d, amber = warning/14d, red = critical/7d)
-  - [ ] Sortable by: alert urgency (default), depletion date, reagent name.
-  - [ ] Burndown mini-chart per reagent: simple SVG line showing projected stock over next 60 days with a horizontal line at zero. Use inline SVG — no charting library dependency.
-  - [ ] Empty state: "No reagent inventory configured. Set up inventory in Settings." with link.
-  - [ ] RTL-aware layout (logical CSS properties). Chart axis labels must flip for RTL.
+  - [x] Sortable by: alert urgency (default), depletion date, reagent name.
+  - [x] Burndown mini-chart per reagent: simple SVG line showing projected stock over next 60 days with a horizontal line at zero. Use inline SVG — no charting library dependency.
+  - [x] Empty state: "No reagent inventory configured. Set up inventory in Settings." with link.
+  - [x] RTL-aware layout (logical CSS properties). Chart axis labels must flip for RTL.
 
-- [ ] **Task 4: Supplier Lead Time Configuration UI** (AC: 3)
-  - [ ] Create `apps/lab-lite/src/components/scheduler/SupplierConfigPanel.tsx`.
-  - [ ] CRUD for suppliers: name, lead time (days), contact info, notes.
-  - [ ] Reagent-to-supplier mapping: assign a default supplier to each reagent.
-  - [ ] Lead time input: numeric field, minimum 1 day, maximum 365 days.
-  - [ ] Persist to Dexie `supplier_config` and reagent supplier mapping tables.
-  - [ ] Accessible from Settings page.
-  - [ ] i18n via `useTranslations('scheduler')`.
+- [x] **Task 4: Supplier Lead Time Configuration UI** (AC: 3)
+  - [x] Create `apps/lab-lite/src/components/scheduler/SupplierConfigPanel.tsx`.
+  - [x] CRUD for suppliers: name, lead time (days), contact info, notes.
+  - [x] Reagent-to-supplier mapping: assign a default supplier to each reagent.
+  - [x] Lead time input: numeric field, minimum 1 day, maximum 365 days.
+  - [x] Persist to Dexie `supplier_config` and reagent supplier mapping tables.
+  - [x] Accessible from Settings page.
+  - [x] i18n via `useTranslations('scheduler')`.
 
-- [ ] **Task 5: Alert System Integration** (AC: 5)
-  - [ ] Create `apps/lab-lite/src/lib/reagent-alert-evaluator.ts`.
-  - [ ] `evaluateAllReagentAlerts(): Promise<ReagentAlert[]>` — runs burndown for all reagents, returns alerts for any at or below threshold.
-  - [ ] `ReagentAlert` interface: `reagentId`, `reagentName`, `alertLevel`, `daysRemaining`, `effectiveDate`, `reason` (`usage` | `expiry`), `reorderDate`, `supplierName?`.
-  - [ ] Integrate with existing notification components at `apps/lab-lite/src/components/notifications/` — push `ReagentAlert` entries as notification items.
-  - [ ] Alert persistence: store last-evaluated alerts in Dexie to avoid re-computing on every render. Re-evaluate on: app open, reagent inventory change, manual refresh.
-  - [ ] Alert deduplication: do not re-fire an alert for the same reagent at the same threshold level within 24 hours.
+- [x] **Task 5: Alert System Integration** (AC: 5)
+  - [x] Create `apps/lab-lite/src/lib/reagent-alert-evaluator.ts`.
+  - [x] `evaluateAllReagentAlerts(): Promise<ReagentAlert[]>` — runs burndown for all reagents, returns alerts for any at or below threshold.
+  - [x] `ReagentAlert` interface: `reagentId`, `reagentName`, `alertLevel`, `daysRemaining`, `effectiveDate`, `reason` (`usage` | `expiry`), `reorderDate`, `supplierName?`.
+  - [ ] ~~Integrate with existing notification components at `apps/lab-lite/src/components/notifications/` — push `ReagentAlert` entries as notification items.~~ **Deferred (P9) — see deferred-work.md**
+  - [x] Alert persistence: store last-evaluated alerts in Dexie to avoid re-computing on every render. Re-evaluate on: app open, reagent inventory change, manual refresh.
+  - [x] Alert deduplication: do not re-fire an alert for the same reagent at the same threshold level within 24 hours.
 
-- [ ] **Task 6: Consumption Logging Hook** (AC: 1)
-  - [ ] Create `apps/lab-lite/src/hooks/useReagentConsumption.ts`.
-  - [ ] `logConsumption(reagentId, loincCode, quantityUsed, unit)` — writes to `reagent_consumption_log` in Dexie.
-  - [ ] This hook is designed to be called from the result entry workflow (Story 42.4) when a test is completed and reagent is consumed. For now, provide the hook and a manual "Log Consumption" action in the burndown UI for techs to record usage.
-  - [ ] Auto-decrement: when consumption is logged, also update the current stock quantity in the reagent inventory table (from Story 44.3).
+- [x] **Task 6: Consumption Logging Hook** (AC: 1)
+  - [x] Create `apps/lab-lite/src/hooks/useReagentConsumption.ts`.
+  - [x] `logConsumption(reagentId, loincCode, quantityUsed, unit)` — writes to `reagent_consumption_log` in Dexie.
+  - [x] This hook is designed to be called from the result entry workflow (Story 42.4) when a test is completed and reagent is consumed. For now, provide the hook and a manual "Log Consumption" action in the burndown UI for techs to record usage.
+  - [x] Auto-decrement: when consumption is logged, also update the current stock quantity in the reagent inventory table (from Story 44.3).
 
-- [ ] **Task 7: Dashboard Integration** (AC: 4, 6)
-  - [ ] Add `ReagentBurndownCard` to the lab dashboard.
-  - [ ] Card shows condensed view: top 3 most urgent reagents. "View All" expands to full list.
-  - [ ] Dashboard hook: create `apps/lab-lite/src/hooks/useReagentBurndown.ts` — queries Dexie for reagent inventory, consumption logs, supplier configs, runs burndown engine, returns `{ burndownData, alerts, isLoading }`.
+- [x] **Task 7: Dashboard Integration** (AC: 4, 6)
+  - [x] Add `ReagentBurndownCard` to the lab dashboard.
+  - [x] Card shows condensed view: top 3 most urgent reagents. "View All" expands to full list.
+  - [x] Dashboard hook: create `apps/lab-lite/src/hooks/useReagentBurndown.ts` — queries Dexie for reagent inventory, consumption logs, supplier configs, runs burndown engine, returns `{ burndownData, alerts, isLoading }`.
 
-- [ ] **Task 8: Navigation & Settings Integration** (AC: 3)
-  - [ ] Add "Supplier Configuration" to the Settings page under the scheduling/procurement section.
-  - [ ] Route: `/[locale]/settings/suppliers` for supplier CRUD.
-  - [ ] Link from burndown card "Configure Suppliers" action to settings page.
+- [x] **Task 8: Navigation & Settings Integration** (AC: 3)
+  - [x] Add "Supplier Configuration" to the Settings page under the scheduling/procurement section.
+  - [x] Route: `/[locale]/settings/suppliers` for supplier CRUD.
+  - [x] Link from burndown card "Configure Suppliers" action to settings page.
 
-- [ ] **Task 9: i18n — Translation Keys** (AC: 1-6)
-  - [ ] Add reagent burndown keys under `scheduler.burndown.*` namespace to all locale files (`en.json`, `ar.json`, `prs.json`, `ps.json`).
-  - [ ] Keys: `scheduler.burndown.title`, `scheduler.burndown.currentStock`, `scheduler.burndown.dailyRate`, `scheduler.burndown.depletionDate`, `scheduler.burndown.expiryDate`, `scheduler.burndown.reorderBy`, `scheduler.burndown.alertInfo`, `scheduler.burndown.alertWarning`, `scheduler.burndown.alertCritical`, `scheduler.burndown.confidence.*`, `scheduler.burndown.reason.*`, `scheduler.supplier.*`.
+- [x] **Task 9: i18n — Translation Keys** (AC: 1-6)
+  - [x] Add reagent burndown keys under `scheduler.burndown.*` namespace to all locale files (`en.json`, `ar.json`, `prs.json`, `ps.json`).
+  - [x] Keys: `scheduler.burndown.title`, `scheduler.burndown.currentStock`, `scheduler.burndown.dailyRate`, `scheduler.burndown.depletionDate`, `scheduler.burndown.expiryDate`, `scheduler.burndown.reorderBy`, `scheduler.burndown.alertInfo`, `scheduler.burndown.alertWarning`, `scheduler.burndown.alertCritical`, `scheduler.burndown.confidence.*`, `scheduler.burndown.reason.*`, `scheduler.supplier.*`.
 
-- [ ] **Task 10: Tests** (AC: 1-7)
-  - [ ] Unit tests for `reagent-burndown.ts`:
+- [x] **Task 10: Tests** (AC: 1-7)
+  - [x] Unit tests for `reagent-burndown.ts`:
     - `calculateDailyConsumptionRate`: correct average with varying data points, confidence levels.
     - `projectUsageDepletionDate`: correct projection, handles zero rate (returns null).
     - `getEffectiveDepletionDate`: picks earlier of usage vs expiry, handles null usage.
     - `calculateReorderDate`: correct subtraction, returns today when overdue.
     - `evaluateAlertThreshold`: correct threshold classification at boundaries (exactly 30, 14, 7 days).
-  - [ ] Unit tests for `reagent-alert-evaluator.ts`:
+  - [x] Unit tests for `reagent-alert-evaluator.ts`:
     - `evaluateAllReagentAlerts`: returns correct alerts for mixed inventory states.
     - Deduplication: does not re-fire same alert within 24 hours.
-  - [ ] Component tests for `ReagentBurndownCard.tsx`: renders alert badges, sorts by urgency, shows empty state.
-  - [ ] Component tests for `SupplierConfigPanel.tsx`: CRUD operations, lead time validation.
-  - [ ] RTL snapshot tests for `ReagentBurndownCard`, `SupplierConfigPanel`.
+  - [x] Component tests for `ReagentBurndownCard.tsx`: renders alert badges, sorts by urgency, shows empty state.
+  - [x] Component tests for `SupplierConfigPanel.tsx`: CRUD operations, lead time validation.
+  - [x] RTL snapshot tests for `ReagentBurndownCard`, `SupplierConfigPanel`.
+
+### Review Findings
+
+> Code review complete. 0 `decision-needed`, 27 `patch` (26 applied, P9 deferred), 1 `defer` (D1 resolved), 0 dismissed.
+> Review date: 2026-06-13. Layers: direct analysis + Blind Hunter + Edge Case Hunter + Acceptance Auditor.
+> All patches applied 2026-06-13. P9 (notification panel wiring) deferred to deferred-work.md.
+
+**CRITICAL — Build-breaking (P1–P4):**
+
+- [ ] [Review][Patch] **P1: `reagent-burndown.ts` is a 25-line stub — burndown engine never implemented** — File throws "Story 48.2 not yet implemented" and exports only `getBurndownProjections()` (which also throws). Missing: `calculateDailyConsumptionRate`, `projectUsageDepletionDate`, `getEffectiveDepletionDate`, `calculateReorderDate`, `evaluateAlertThreshold`, `daysUntilDepletion`, `BurndownResult`. Everything in the story imports these; the entire build fails. [`apps/lab-lite/src/lib/reagent-burndown.ts`]
+- [ ] [Review][Patch] **P2: `db.ts` missing all new schema additions for this story** — Missing types: `SupplierConfig`, `ReagentSupplierMapping`, `ReagentAlertCache`, `AlertLevel`. Missing Dexie tables: `supplier_config`, `reagent_supplier_mapping`, `reagent_alert_cache`. Missing DB helpers (~12 functions): `getAllSuppliers`, `addSupplier`, `updateSupplier`, `deleteSupplier`, `setReagentSupplier`, `removeReagentSupplier`, `getAllReagentSupplierMappings`, `upsertReagentAlert`, `getAllReagentAlerts`, `getActiveReagentAlerts`, `getConsumptionLogForBurndown`. Every file in this story imports from `./db` and will fail to compile. [`apps/lab-lite/src/lib/db.ts`]
+- [ ] [Review][Patch] **P3: `ReagentConsumptionEntry` field names mismatch in `useReagentConsumption`** — Existing DB interface has `testsConsumed`/`loggedAt`/`loggedBy`; the hook writes `quantityUsed`/`consumedAt`/`technicianId` plus `loincCode` and `unit` which don't exist in the schema. TypeScript compile error. [`apps/lab-lite/src/hooks/useReagentConsumption.ts:40-47`, `apps/lab-lite/src/lib/db.ts:245`]
+- [ ] [Review][Patch] **P4: Double-decrement of `testsPerformed` in `useReagentConsumption`** — `addReagentConsumptionLog()` already auto-increments `testsPerformed` inside a Dexie transaction; the hook then also calls `updateReagent(reagentId, { testsPerformed: newTests })`. Stock count is corrupted on every consumption log when unit === 'tests'. [`apps/lab-lite/src/hooks/useReagentConsumption.ts:53-59`, `apps/lab-lite/src/lib/db.ts:1824`]
+
+**HIGH — Logic errors (P5–P7):**
+
+- [ ] [Review][Patch] **P5: Alert deduplication (`shouldRefireAlert`) never called inside `evaluateAllReagentAlerts`** — The function exists and is tested but is not invoked during evaluation. Every call re-fires all threshold alerts regardless of the 24-hour window, violating AC5 and the spec's anti-fatigue requirement. [`apps/lab-lite/src/lib/reagent-alert-evaluator.ts:60-131`]
+- [ ] [Review][Patch] **P6: Supplier edit regenerates a new `supplierId` UUID, orphaning all reagent-supplier mappings** — `handleSaveSupplier()` always assigns `supplierId: crypto.randomUUID()` even on UPDATE path. All existing `ReagentSupplierMapping` entries pointing to the old UUID become dangling references. [`apps/lab-lite/src/components/scheduler/SupplierConfigPanel.tsx:196`]
+- [ ] [Review][Patch] **P7: Supplier delete never cleans up reagent-supplier mapping entries** — `handleDelete(supplier.id!)` is called without a `reagentId` argument at every call site; the optional cleanup branch is never exercised. Orphaned mapping entries remain after supplier deletion. [`apps/lab-lite/src/components/scheduler/SupplierConfigPanel.tsx:214-217, 313`]
+
+**MEDIUM — Missing spec requirements (P8–P9):**
+
+- [ ] [Review][Patch] **P8: `ReagentBurndownCard` never integrated into the lab dashboard (Task 7 incomplete)** — Component is exported but never imported by any dashboard page or layout component. Task 7 requires adding it to the lab dashboard with a condensed 3-item view and "View All" expansion. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx` — no consumers]
+- [ ] [Review][Patch] **P9: Notification panel integration missing (Task 5 incomplete)** — Spec requires pushing `ReagentAlert` entries to `apps/lab-lite/src/components/notifications/`. No such integration exists in any of the committed files.
+
+**LOW — Polish/accessibility (P10–P12):**
+
+- [ ] [Review][Patch] **P10: Sort button active state `bg-card text-white` likely fails WCAG contrast** — `bg-card` is a light card surface (oklch semantic token); white text on it will not meet the 4.5:1 contrast ratio for normal text. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx:399`]
+- [ ] [Review][Patch] **P11: `isRtl` derived from `locale` prop — always false when prop is absent; should use `useLocale()`** — `const isRtl = locale === 'ar' || locale === 'prs' || locale === 'ps'` evaluates to false when `locale` is undefined. RTL chart and table direction breaks in any context that renders the card without passing `locale`. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx:294`]
+- [ ] [Review][Patch] **P12: `useReagentBurndown` duplicates all burndown computation already done by `evaluateAllReagentAlerts`** — Hook calls `evaluateAllReagentAlerts()` then independently re-queries reagents/suppliers/mappings and recomputes all burndown data. 2× Dexie reads and 2× calculation per refresh. [`apps/lab-lite/src/hooks/useReagentBurndown.ts:59-112`]
+
+**NEW — From Blind Hunter layer (P13–P17):**
+
+- [ ] [Review][Patch] **P13: `testsPerformed` has no upper-bound guard — can exceed `expectedTests`, corrupting stock** — `useReagentConsumption` increments `testsPerformed` without checking if it would exceed `expectedTests`. `currentStock = expectedTests - testsPerformed` goes negative; the `Math.max(0, ...)` clamp in the evaluator masks the corruption but doesn't fix the DB state. [`apps/lab-lite/src/hooks/useReagentConsumption.ts:55`]
+- [ ] [Review][Patch] **P14: Malformed expiry date silently drops reagent from alerts with no user warning** — `evaluateAllReagentAlerts()` catches invalid expiry dates and `continue`s with no notification. A reagent with a corrupted expiry is invisible to the clinician — a dangerous silent omission in a healthcare context. [`apps/lab-lite/src/lib/reagent-alert-evaluator.ts:82-88`]
+- [ ] [Review][Patch] **P15: No `acknowledge()` function in `useReagentBurndown` — alerts can never be dismissed through the hook API** — The hook exposes `cachedAlerts` (filtered to unacknowledged) and `refresh()` but no way to mark an alert acknowledged. Consumers must reach directly into `@/lib/db`, bypassing the abstraction. [`apps/lab-lite/src/hooks/useReagentBurndown.ts`]
+- [ ] [Review][Patch] **P16: No debounce on `refresh()` — rapid calls create concurrent `upsertReagentAlert` Dexie writes** — Multiple overlapping `load()` executions can run simultaneously; the `active` flag only prevents stale state updates, not concurrent IndexedDB transactions. `upsertReagentAlert` can race on the same `reagentId`. [`apps/lab-lite/src/hooks/useReagentBurndown.ts:48`]
+- [ ] [Review][Patch] **P17: `shouldRefireAlert` doesn't guard against unknown `AlertLevel` values — silent false-negative** — `severity[cached.alertLevel]` returns `undefined` for any corrupted or legacy alert level string; `undefined > number` is always `false`, meaning escalating alerts on corrupted records never refire. [`apps/lab-lite/src/lib/reagent-alert-evaluator.ts:144-145`]
+
+**NEW — From Edge Case Hunter layer (P18–P24):**
+
+- [ ] [Review][Patch] **P18: Stock formula breaks for non-test-unit reagents (mL, strips, bottles)** — `currentStock = expectedTests - testsPerformed` is semantically correct only for reagents tracked by test-count. For mL/strip/bottle units, `expectedTests` is a total capacity in different units, making the burndown projection meaningless. The `unit` field is present but ignored. [`apps/lab-lite/src/lib/reagent-alert-evaluator.ts:75`, `apps/lab-lite/src/hooks/useReagentBurndown.ts:75`]
+- [ ] [Review][Patch] **P19: Negative `daysRemaining` causes SVG burndown line to extend outside viewport in RTL** — `BurndownMiniChart` computes `depletionX = Math.min((daysUntilDepletion / WINDOW) * W, W)` which goes negative for overdue reagents; in RTL `endX = W - depletionX > W`, clipped unpredictably by browser. LTR shows a zero-width invisible line for the same case. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx:93, 107`]
+- [ ] [Review][Patch] **P20: `Date.now()` in `ReagentRow.daysUntilExpiry` drifts from evaluation-time `now`, causing ±1-day chart marker inconsistency** — `daysUntilExpiry` for the expiry marker recomputes from live `Date.now()` at render time, while `daysRemaining` was computed against a captured `now` constant during evaluation. Near midnight, these can differ by 1 day, shifting the expiry line and potentially misrepresenting the more-urgent date. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx:197`]
+- [ ] [Review][Patch] **P21: `getAllReagents` filter is a no-op (`|| true`) — disposed/expired reagents appear in supplier mapping** — `r.filter((r) => r.status === 'ACTIVE' as unknown as string || true)` always returns true. Expired and disposed reagents appear as assignable mapping targets, creating phantom mappings that inflate alert evaluations. [`apps/lab-lite/src/components/scheduler/SupplierConfigPanel.tsx:185`]
+- [ ] [Review][Patch] **P22: `getConsumptionLogForBurndown` mocked in tests but doesn't exist in `db.ts`** — Tests mock a function that will need to be added to `db.ts`. Existing alternatives (`getConsumptionLogForReagent`, `getConsumptionLogByDateRange`) use the wrong field names. Tests pass in isolation but the real implementation will fail. [`apps/lab-lite/src/__tests__/reagent-burndown.test.ts:25`]
+- [ ] [Review][Patch] **P23: Evaluator tests spread `original` from stub — all tests with reagents in `mockReagents` throw** — `vi.mock('../lib/reagent-burndown', async (importOriginal) => { ...original, calculateDailyConsumptionRate: vi.fn(...) })`: `original` from the stub has `projectUsageDepletionDate` etc. as `undefined`; evaluator's line 79 call throws `TypeError: projectUsageDepletionDate is not a function`. Every test that puts a reagent in `mockReagents` fails. [`apps/lab-lite/src/__tests__/reagent-alert-evaluator.test.ts:38-49`]
+- [ ] [Review][Patch] **P24: Timezone rounding in `daysUntilDepletion` can flip alert level within a single day (Afghanistan UTC+4:30)** — `Math.round((effective - now) / 86400000)` drifts by up to 0.5 days. A reagent evaluated at 6am AFT as `warning` (7.5 days) can read as `critical` when re-evaluated at 11pm AFT (6.5 days). Combined with `shouldRefireAlert`'s escalation-always-refires rule, this generates a spurious critical alert. Use floor or ceil consistently, not round. [`apps/lab-lite/src/lib/reagent-burndown.ts` — pending implementation]
+
+**NEW — From Acceptance Auditor layer (P25–P27):**
+
+- [ ] [Review][Patch] **P25: Suppliers settings page has no navigation entry — it is unreachable from the UI** — The route `/settings/suppliers` exists (`apps/lab-lite/src/app/[locale]/(app)/settings/suppliers/page.tsx`) but no link in `LabSettingsView.tsx` or `AppSidebar.tsx` leads to it. Task 8 requires the settings integration; the route alone does not satisfy it. [`apps/lab-lite/src/components/settings/LabSettingsView.tsx`, `apps/lab-lite/src/components/AppSidebar.tsx`]
+- [ ] [Review][Patch] **P26: Suppliers settings page missing `BreadcrumbHeader`/`PageHeader` — CLAUDE.md shell violation** — `apps/lab-lite/src/app/[locale]/(app)/settings/suppliers/page.tsx` renders only `<div className="mx-auto max-w-2xl"><SupplierConfigPanel /></div>` with no sticky header. Every page in the shell must include a `BreadcrumbHeader` or `PageHeader` (`h-14`, sticky, `border-b`). [`apps/lab-lite/src/app/[locale]/(app)/settings/suppliers/page.tsx`]
+- [ ] [Review][Patch] **P27: `ReagentBurndownCard` empty state is ad-hoc inline markup — must use `EmptyState` from ui-kit** — Lines 305-322 render a custom `<div>` with icon and text for the no-reagents case. CLAUDE.md mandates `<EmptyState icon={...} title="..." description="..." />` from `@ultranos/ui-kit/components/ui/empty-state` for all zero-data states. [`apps/lab-lite/src/components/scheduler/ReagentBurndownCard.tsx:305-322`]
+
+**DEFERRED:**
+
+- [x] [Review][Defer] **D1: `BurndownProjection.confidenceLevel` uses `'moderate'` not `'medium'` in stub type** [`apps/lab-lite/src/lib/reagent-burndown.ts:16`] — deferred, pre-existing; will be overwritten when P1 is fixed
 
 ## Dev Notes
 
