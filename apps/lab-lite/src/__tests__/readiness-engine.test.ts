@@ -20,10 +20,21 @@ import { ReagentStatus } from '../lib/db'
 // Mocks
 // ---------------------------------------------------------------------------
 
+// Hoisted so the factory below can reference it before module import resolution
+const { mockOrdersToArray } = vi.hoisted(() => ({
+  mockOrdersToArray: vi.fn(),
+}))
+
 vi.mock('../lib/db', () => ({
-  ReagentStatus: { ACTIVE: 'ACTIVE', EXPIRED: 'EXPIRED', DEPLETED: 'DEPLETED' },
-  getActiveReagents: vi.fn(),
-  getOrders: vi.fn(),
+  ReagentStatus: { ACTIVE: 'ACTIVE', EXPIRED: 'EXPIRED', DEPLETED: 'DEPLETED', DISPOSED: 'DISPOSED' },
+  getAllReagents: vi.fn(),
+  getDb: vi.fn(() => ({
+    orders: {
+      where: vi.fn().mockReturnValue({
+        anyOf: vi.fn().mockReturnValue({ toArray: mockOrdersToArray }),
+      }),
+    },
+  })),
 }))
 
 vi.mock('../lib/workload-scheduler', () => ({
@@ -36,7 +47,7 @@ vi.mock('../stores/auth-session-store', () => ({
   },
 }))
 
-import { getActiveReagents, getOrders } from '../lib/db'
+import { getAllReagents } from '../lib/db'
 import { calculatePowerBudget } from '../lib/workload-scheduler'
 import { useAuthSessionStore } from '../stores/auth-session-store'
 
@@ -44,41 +55,28 @@ import { useAuthSessionStore } from '../stores/auth-session-store'
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeReagent(overrides: Partial<{
-  name: string
-  status: string
-  expiryDate: string
-  expectedTests: number
-  testsPerformed: number
-  linkedTestCode: string
-  manufacturer: string
-}> = {}) {
-  return {
-    name: 'TestReagent',
-    status: ReagentStatus.ACTIVE,
-    expiryDate: futureDateISO(30),
-    expectedTests: 100,
-    testsPerformed: 10,
-    linkedTestCode: 'CHEM',
-    manufacturer: 'LabCorp',
-    ...overrides,
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makeReagent(overrides: Record<string, any> = {}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { name: 'TestReagent', status: ReagentStatus.ACTIVE, expiryDate: futureDateISO(30), expectedTests: 100, testsPerformed: 10, linkedTestCode: 'CHEM', manufacturer: 'LabCorp', ...overrides } as any
 }
 
 function futureDateISO(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  return d.toISOString().split('T')[0] ?? ''
 }
 
 function pastDateISO(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() - days)
-  return d.toISOString().split('T')[0]
+  return d.toISOString().split('T')[0] ?? ''
 }
 
-function makeOrder(overrides: Partial<{ status: string; urgency: string }> = {}) {
-  return { status: 'RECEIVED', urgency: 'routine', ...overrides }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makeOrder(overrides: Record<string, any> = {}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { status: 'RECEIVED', urgency: 'routine', ...overrides } as any
 }
 
 // ---------------------------------------------------------------------------
@@ -87,7 +85,7 @@ function makeOrder(overrides: Partial<{ status: string; urgency: string }> = {})
 
 describe('evaluatePersonnel', () => {
   it('returns red when no session', async () => {
-    vi.mocked(useAuthSessionStore.getState).mockReturnValue({ session: null } as ReturnType<typeof useAuthSessionStore.getState>)
+    vi.mocked(useAuthSessionStore.getState).mockReturnValue({ session: null } as unknown as ReturnType<typeof useAuthSessionStore.getState>)
     const result = await evaluatePersonnel()
     expect(result.status).toBe('red')
     expect(result.dimension).toBe('personnel')
@@ -96,7 +94,7 @@ describe('evaluatePersonnel', () => {
   it('returns amber when session exists (no roster)', async () => {
     vi.mocked(useAuthSessionStore.getState).mockReturnValue({
       session: { userId: 'u1', practitionerId: 'p1', role: 'lab_tech', sessionId: 's1', email: 'a@b.com', labRole: 'tech' },
-    } as ReturnType<typeof useAuthSessionStore.getState>)
+    } as unknown as ReturnType<typeof useAuthSessionStore.getState>)
     const result = await evaluatePersonnel()
     expect(result.status).toBe('amber')
   })
@@ -108,24 +106,24 @@ describe('evaluatePersonnel', () => {
 
 describe('evaluateReagents', () => {
   beforeEach(() => {
-    vi.mocked(getActiveReagents).mockReset()
+    vi.mocked(getAllReagents).mockReset()
   })
 
-  it('returns amber when getActiveReagents throws', async () => {
-    vi.mocked(getActiveReagents).mockRejectedValue(new Error('db error'))
+  it('returns amber when getAllReagents throws', async () => {
+    vi.mocked(getAllReagents).mockRejectedValue(new Error('db error'))
     const result = await evaluateReagents()
     expect(result.status).toBe('amber')
   })
 
   it('returns amber when no reagents configured', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([])
+    vi.mocked(getAllReagents).mockResolvedValue([])
     const result = await evaluateReagents()
     expect(result.status).toBe('amber')
     expect(result.summaryKey).toBe('readiness.dimensions.reagents.summaryNotConfigured')
   })
 
   it('returns green when all reagents have >14 days remaining', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expiryDate: futureDateISO(30) }),
       makeReagent({ expiryDate: futureDateISO(20) }),
     ])
@@ -134,7 +132,7 @@ describe('evaluateReagents', () => {
   })
 
   it('returns amber when any reagent has ≤14 days remaining', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expiryDate: futureDateISO(30) }),
       makeReagent({ expiryDate: futureDateISO(10) }),
     ])
@@ -143,7 +141,7 @@ describe('evaluateReagents', () => {
   })
 
   it('returns red when any reagent has ≤7 days remaining', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expiryDate: futureDateISO(5) }),
     ])
     const result = await evaluateReagents()
@@ -151,7 +149,7 @@ describe('evaluateReagents', () => {
   })
 
   it('returns red when reagent has expired status', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ status: ReagentStatus.EXPIRED }),
     ])
     const result = await evaluateReagents()
@@ -159,7 +157,7 @@ describe('evaluateReagents', () => {
   })
 
   it('returns red when reagent has expired date (past)', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expiryDate: pastDateISO(1) }),
     ])
     const result = await evaluateReagents()
@@ -167,7 +165,7 @@ describe('evaluateReagents', () => {
   })
 
   it('returns red when tests remaining ≤ 0 (stockout)', async () => {
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expectedTests: 50, testsPerformed: 50, expiryDate: futureDateISO(30) }),
     ])
     const result = await evaluateReagents()
@@ -178,7 +176,7 @@ describe('evaluateReagents', () => {
     const many = Array.from({ length: 8 }, (_, i) =>
       makeReagent({ name: `R${i}`, expiryDate: futureDateISO(5) }),
     )
-    vi.mocked(getActiveReagents).mockResolvedValue(many)
+    vi.mocked(getAllReagents).mockResolvedValue(many)
     const result = await evaluateReagents()
     expect(result.details.length).toBeLessThanOrEqual(5)
   })
@@ -187,7 +185,7 @@ describe('evaluateReagents', () => {
     const many = Array.from({ length: 6 }, (_, i) =>
       makeReagent({ name: `R${i}`, expiryDate: futureDateISO(3) }),
     )
-    vi.mocked(getActiveReagents).mockResolvedValue(many)
+    vi.mocked(getAllReagents).mockResolvedValue(many)
     const result = await evaluateReagents()
     expect(result.recommendations.length).toBeLessThanOrEqual(3)
   })
@@ -211,34 +209,23 @@ describe('evaluateEquipment', () => {
 
 describe('evaluatePendingOrders', () => {
   beforeEach(() => {
-    vi.mocked(getOrders).mockReset()
+    mockOrdersToArray.mockReset()
   })
 
   it('returns amber when getOrders throws', async () => {
-    vi.mocked(getOrders).mockRejectedValue(new Error('db error'))
+    mockOrdersToArray.mockRejectedValue(new Error('db error'))
     const result = await evaluatePendingOrders()
     expect(result.status).toBe('amber')
   })
 
   it('returns green when zero pending orders', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
-      makeOrder({ status: 'COMPLETED' }),
-    ])
-    const result = await evaluatePendingOrders()
-    expect(result.status).toBe('green')
-  })
-
-  it('returns green when all orders are completed', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
-      makeOrder({ status: 'COMPLETED' }),
-      makeOrder({ status: 'VERIFIED' }),
-    ])
+    mockOrdersToArray.mockResolvedValue([])
     const result = await evaluatePendingOrders()
     expect(result.status).toBe('green')
   })
 
   it('returns amber when pending orders exist but none urgent', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
+    mockOrdersToArray.mockResolvedValue([
       makeOrder({ status: 'RECEIVED', urgency: 'routine' }),
       makeOrder({ status: 'IN_PROGRESS', urgency: 'routine' }),
     ])
@@ -249,7 +236,7 @@ describe('evaluatePendingOrders', () => {
   })
 
   it('returns red when any pending order is urgent', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
+    mockOrdersToArray.mockResolvedValue([
       makeOrder({ status: 'RECEIVED', urgency: 'routine' }),
       makeOrder({ status: 'RECEIVED', urgency: 'urgent' }),
     ])
@@ -258,7 +245,7 @@ describe('evaluatePendingOrders', () => {
   })
 
   it('returns red for stat urgency', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
+    mockOrdersToArray.mockResolvedValue([
       makeOrder({ status: 'IN_PROGRESS', urgency: 'stat' }),
     ])
     const result = await evaluatePendingOrders()
@@ -266,7 +253,7 @@ describe('evaluatePendingOrders', () => {
   })
 
   it('returns red for asap urgency', async () => {
-    vi.mocked(getOrders).mockResolvedValue([
+    mockOrdersToArray.mockResolvedValue([
       makeOrder({ status: 'RECEIVED', urgency: 'asap' }),
     ])
     const result = await evaluatePendingOrders()
@@ -338,6 +325,17 @@ describe('evaluatePower', () => {
     const result = await evaluatePower()
     expect(result.status).toBe('green')
   })
+
+  it('returns amber when totalMinutes is 0 (guard against division-by-zero)', async () => {
+    vi.mocked(calculatePowerBudget).mockResolvedValue({
+      startTime: '06:00',
+      endTime: '06:00',
+      totalMinutes: 0,
+      remainingMinutes: 0,
+    })
+    const result = await evaluatePower()
+    expect(result.status).toBe('amber')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -348,11 +346,11 @@ describe('generateReadinessBriefing', () => {
   it('returns overall green when all dimensions are green', async () => {
     vi.mocked(useAuthSessionStore.getState).mockReturnValue({
       session: { userId: 'u1', practitionerId: 'p1', role: 'lab_tech', sessionId: 's1', email: 'a@b.com', labRole: 'tech' },
-    } as ReturnType<typeof useAuthSessionStore.getState>)
-    vi.mocked(getActiveReagents).mockResolvedValue([
+    } as unknown as ReturnType<typeof useAuthSessionStore.getState>)
+    vi.mocked(getAllReagents).mockResolvedValue([
       makeReagent({ expiryDate: futureDateISO(30) }),
     ])
-    vi.mocked(getOrders).mockResolvedValue([makeOrder({ status: 'COMPLETED' })])
+    mockOrdersToArray.mockResolvedValue([])
     vi.mocked(calculatePowerBudget).mockResolvedValue({
       startTime: '18:00',
       endTime: '22:00',
@@ -371,9 +369,9 @@ describe('generateReadinessBriefing', () => {
   })
 
   it('returns overall red when any dimension is red', async () => {
-    vi.mocked(useAuthSessionStore.getState).mockReturnValue({ session: null } as ReturnType<typeof useAuthSessionStore.getState>)
-    vi.mocked(getActiveReagents).mockResolvedValue([])
-    vi.mocked(getOrders).mockResolvedValue([makeOrder({ status: 'RECEIVED', urgency: 'stat' })])
+    vi.mocked(useAuthSessionStore.getState).mockReturnValue({ session: null } as unknown as ReturnType<typeof useAuthSessionStore.getState>)
+    vi.mocked(getAllReagents).mockResolvedValue([])
+    mockOrdersToArray.mockResolvedValue([makeOrder({ status: 'RECEIVED', urgency: 'stat' })])
     vi.mocked(calculatePowerBudget).mockResolvedValue(null)
 
     const briefing = await generateReadinessBriefing()
@@ -383,9 +381,9 @@ describe('generateReadinessBriefing', () => {
   it('returns overall amber when worst is amber (no red)', async () => {
     vi.mocked(useAuthSessionStore.getState).mockReturnValue({
       session: { userId: 'u1', practitionerId: 'p1', role: 'lab_tech', sessionId: 's1', email: 'a@b.com', labRole: 'tech' },
-    } as ReturnType<typeof useAuthSessionStore.getState>)
-    vi.mocked(getActiveReagents).mockResolvedValue([makeReagent({ expiryDate: futureDateISO(30) })])
-    vi.mocked(getOrders).mockResolvedValue([makeOrder({ status: 'COMPLETED' })])
+    } as unknown as ReturnType<typeof useAuthSessionStore.getState>)
+    vi.mocked(getAllReagents).mockResolvedValue([makeReagent({ expiryDate: futureDateISO(30) })])
+    mockOrdersToArray.mockResolvedValue([])
     vi.mocked(calculatePowerBudget).mockResolvedValue({
       startTime: '18:00',
       endTime: '22:00',

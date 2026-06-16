@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { DirectionalIcon } from '@ultranos/ui-kit'
 import {
   Users,
@@ -120,9 +121,7 @@ function RecommendationCallout({
 
   return (
     <div className={`flex items-start gap-2 rounded-md p-2.5 text-xs ${styleClass}`}>
-      <DirectionalIcon category="navigation">
-        <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
-      </DirectionalIcon>
+      <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden="true" />
       <span>{t(msgKey, args as Record<string, string | number | Date> | undefined)}</span>
     </div>
   )
@@ -213,17 +212,22 @@ function DimensionRow({ result }: { result: DimensionResult }) {
 
 export function ReadinessBriefingCard() {
   const t = useTranslations()
-  const { briefing, isLoading, refresh, lastRefreshedAt } = useReadinessBriefing()
+  const { briefing, isLoading, error, refresh, lastRefreshedAt } = useReadinessBriefing()
 
   // Auto-expand on first load of the calendar day
   const [cardExpanded, setCardExpanded] = useState(false)
 
   useEffect(() => {
-    const today = new Date().toDateString()
-    const stored = sessionStorage.getItem(SESSION_KEY)
-    if (stored !== today) {
+    try {
+      const today = new Date().toDateString()
+      const stored = sessionStorage.getItem(SESSION_KEY)
+      if (stored !== today) {
+        setCardExpanded(true)
+        sessionStorage.setItem(SESSION_KEY, today)
+      }
+    } catch {
+      // sessionStorage unavailable (Safari private mode) — default to expanded
       setCardExpanded(true)
-      sessionStorage.setItem(SESSION_KEY, today)
     }
   }, [])
 
@@ -308,6 +312,11 @@ export function ReadinessBriefingCard() {
                 </div>
               ))}
             </div>
+          ) : error ? (
+            <div className="flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
+              <AlertTriangle size={14} className="shrink-0" aria-hidden="true" />
+              <span>{t('readiness.errorMessage')}</span>
+            </div>
           ) : briefing ? (
             <div>
               {briefing.dimensions.map((dim) => (
@@ -315,6 +324,19 @@ export function ReadinessBriefingCard() {
               ))}
             </div>
           ) : null}
+
+          {/* Drill-in link */}
+          {briefing && (
+            <Link
+              href="/planner"
+              className="mt-3 flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              {t('readiness.viewFullPlanner')}
+              <DirectionalIcon category="navigation">
+                <ChevronRight size={12} aria-hidden="true" />
+              </DirectionalIcon>
+            </Link>
+          )}
 
           {/* Timestamp footer */}
           {lastRefreshedAt && (

@@ -43,14 +43,42 @@ vi.mock('@ultranos/ui-kit/icons', () => ({
   AlertTriangle: () => <svg data-testid="icon-alert" />,
 }))
 
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}))
+
+vi.mock('@/components/ui/Button', () => ({
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    className,
+    'aria-label': ariaLabel,
+  }: {
+    children: React.ReactNode
+    onClick?: () => void
+    disabled?: boolean
+    className?: string
+    'aria-label'?: string
+  }) => (
+    <button onClick={onClick} disabled={disabled} className={className} aria-label={ariaLabel}>
+      {children}
+    </button>
+  ),
+}))
+
 const mockRefresh = vi.fn()
 let mockBriefing: ReadinessBriefing | null = null
 let mockIsLoading = false
+let mockError = false
 
 vi.mock('../hooks/useReadinessBriefing', () => ({
   useReadinessBriefing: () => ({
     briefing: mockBriefing,
     isLoading: mockIsLoading,
+    error: mockError,
     refresh: mockRefresh,
     lastRefreshedAt: mockBriefing ? new Date('2026-01-01T07:30:00') : null,
   }),
@@ -123,6 +151,7 @@ beforeEach(() => {
   mockRefresh.mockClear()
   mockBriefing = null
   mockIsLoading = false
+  mockError = false
   // Force auto-expand by setting sessionStorage to a past date
   globalThis.sessionStorage = {
     getItem: vi.fn(() => 'Mon Jan 01 2020'), // old date → triggers auto-expand
@@ -221,6 +250,24 @@ describe('ReadinessBriefingCard', () => {
       // Collapsed summary with "{ready} of {total} dimensions ready"
       const summaries = screen.getAllByText((text) => text.includes('readiness.collapsedSummary'))
       expect(summaries.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('renders error callout when error=true and briefing is null', async () => {
+    mockError = true
+    mockBriefing = null
+    render(<ReadinessBriefingCard />)
+    await waitFor(() => {
+      expect(screen.getByText('readiness.errorMessage')).toBeDefined()
+    })
+  })
+
+  it('renders drill-in link to /planner when briefing is loaded', async () => {
+    mockBriefing = makeBriefing()
+    render(<ReadinessBriefingCard />)
+    await waitFor(() => {
+      const link = screen.getByText('readiness.viewFullPlanner')
+      expect(link.closest('a')?.getAttribute('href')).toBe('/planner')
     })
   })
 

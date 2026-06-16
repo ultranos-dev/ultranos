@@ -1,6 +1,6 @@
 # Story 48.3: Pre-Shift Readiness Forecast
 
-Status: review
+Status: done
 
 ## Story
 
@@ -215,7 +215,7 @@ POWER:
 
 ### Completion Notes
 
-- All 6 ACs satisfied and tested (56 total tests: 29 engine + 17 recommendations + 10 component).
+- All 6 ACs satisfied and tested (58 total tests: 29 engine + 17 recommendations + 12 component).
 - `DimensionResult` interface uses i18n keys (not hardcoded strings) throughout — `titleKey`, `summaryKey`, `summaryArgs`, `details[]`, `recommendations[]`, `recommendationArgs[]`.
 - `evaluateEquipment` gracefully returns amber "not configured" — equipment table not yet implemented (future story).
 - Power evaluation delegates to `calculatePowerBudget()` from Story 48.1's `workload-scheduler.ts`. This required completing the missing db.ts helpers (`PowerScheduleEntry`, `TestTimeEstimate`, `power_schedules` table, `test_time_estimates` table) that Story 48.1 depended on but had not been committed.
@@ -226,3 +226,52 @@ POWER:
 ### Change Log
 
 - 2026-06-01: Implemented Story 48.3 — Pre-Shift Readiness Forecast (all 7 tasks, 56 tests)
+
+### Review Findings — Group 1: lib/ (2026-06-13)
+
+- [x] [Review][Decision] D1: `evaluatePersonnel()` has no green path — accepted as intentional MVP behavior; amber is correct when no roster is configured [readiness-engine.ts:70-77]
+- [x] [Review][Decision] D2: Power null case conflates "no schedule configured" vs "no power today" — accepted as-is; elapsed-window red path covers the no-power-today case [readiness-engine.ts:269-282]
+- [x] [Review][Patch] P1: Switch `getActiveReagents()` → `getAllReagents()` filtered to exclude DISPOSED — EXPIRED reagents now visible to the shift briefing [readiness-engine.ts:109-116]
+- [x] [Review][Patch] P2: Fix `daysUntilDate()` to parse ISO date as local midnight (`isoDate + 'T00:00:00'`) — eliminates ±1 day drift in UTC+4:30 [readiness-engine.ts:64-67]
+- [x] [Review][Patch] P3: Add `totalMinutes <= 0` guard in `evaluatePower()` before division — returns amber on zero-duration schedule entry [readiness-engine.ts:345-356] + test added
+- [x] [Review][Patch] P4: Replace `getOrders()` with `getDb().orders.where('status').anyOf(['RECEIVED','IN_PROGRESS']).toArray()` indexed query [readiness-engine.ts:253-260]
+- [x] [Review][Defer] W1: `worstStatus([])` returns 'green' — defensive improvement, not a current bug given all evaluators always push ≥1 status [readiness-engine.ts:50-54] — deferred, pre-existing
+- [x] [Review][Defer] W2: `Promise.all` in `generateReadinessBriefing()` — `Promise.allSettled` would be more resilient if a future evaluator forgets its try/catch [readiness-engine.ts:385-395] — deferred, pre-existing
+- [x] [Review][Defer] W3: "N more..." overflow link (spec Pitfall) — engine truncates recommendations to 3 but emits no overflow count; depends on component implementation (review in Group 2) [readiness-engine.ts] — deferred, pending Group 2 review
+
+### Review Findings — Group 2: Components (2026-06-14)
+
+- [x] [Review][Decision] D3: `/planner/page.tsx` and 5 panel components implement Story 54.6 (Seasonal Operations Planner), not 48.3 (Shift Readiness). Has 2 build-breaking imports (`reportPlannerEvent`, 4 missing db functions). Decision: REMOVE — belongs to Story 54.6, will be implemented when dependencies exist.
+- [x] [Review][Patch] P5: `AlertTriangle` wrapped in `DirectionalIcon category="navigation"` — warning icon will mirror in RTL. Remove wrapper. [ReadinessBriefingCard.tsx:447-449]
+- [x] [Review][Patch] P6: `useReadinessBriefing` hook has no error state — consumers cannot distinguish loading-complete from failure. Add `error` to return. [useReadinessBriefing.ts]
+- [x] [Review][Patch] P7: `overallStatus = briefing?.overallStatus ?? 'amber'` — displays amber status badge when no data is available, which is clinical misinformation. Add explicit error/empty state. [ReadinessBriefingCard.tsx:558]
+- [x] [Review][Patch] P8: `sessionStorage.getItem/setItem` called without try/catch — throws in Safari private mode. [ReadinessBriefingCard.tsx:546-551]
+- [x] [Review][Patch] P9: No drill-in link to /planner in ReadinessBriefingCard — spec Task 3 requires it. [ReadinessBriefingCard.tsx]
+- [x] [Review][Patch] P10: `DeadlinesPanel.countdown()` parses date-only strings as UTC midnight then applies local setHours — same ±1 day drift as P2. [DeadlinesPanel.tsx:691-696]
+- [x] [Review][Defer] W4: `handleFinalizePlan` and `handleDeadlineActioned` have no try/catch — removed with D3 planner page deletion
+- [x] [Review][Defer] W5: `URL.revokeObjectURL` called immediately after `a.click()` in handleExportPdf — removed with D3 planner page deletion
+- [x] [Review][Defer] W6: `reportPlannerEvent` fire-and-forget audit pattern — consistent with codebase, revisit in audit reliability review
+- [x] [Review][Defer] W7: Hardcoded English strings across planner page and panel components — removed with D3; ReadinessBriefingCard correctly uses i18n keys
+- [x] [Review][Defer] W8: Reactive refresh on equipment-status/reagent changes not implemented in useReadinessBriefing — spec requires it, but Dexie liveQuery integration is a follow-up concern
+
+### Review Findings — Group 3: Tests + Snapshot (2026-06-14)
+
+- [x] [Review][Patch] P11: `useReadinessBriefing` mock in briefing card test missing `error` field — test for error state could not be written. Added `let mockError = false`, `error: mockError` to mock return, `mockError = false` to beforeEach. [readiness-briefing-card.test.tsx:55-65]
+- [x] [Review][Patch] P12: No `next/link` mock and no tests for error callout or drill-in `/planner` link — both added by P7/P9 patches but untested. Added `vi.mock('next/link', ...)` passthrough anchor mock + "renders error callout when error=true" test + "renders drill-in link to /planner" test. [readiness-briefing-card.test.tsx:46-50, 236-252]
+- [x] [Review][Patch] P13: `@/components/ui/Button` re-exports from unbuilt `@ultranos/ui-kit/components/ui/button` — Vitest could not resolve import, blocking snapshot update. Added `vi.mock('@/components/ui/Button', ...)` inline button stub. Snapshot regenerated (12 tests all pass). [readiness-briefing-card.test.tsx:52-68]
+- [x] [Review][Defer] W9: `readiness-engine.test.ts` — `vi.hoisted()` pattern required for `mockOrdersToArray` due to Vitest hoisting semantics; pattern is non-obvious but correct. Comment explaining why would prevent future regression when editing mocks. [readiness-engine.test.ts:~20-35] — deferred, low priority
+- [x] [Review][Defer] W10: `readiness-briefing-card.test.tsx` — no test for "click to toggle dimension row expansion". `DimensionRow` internal expand/collapse state is exercised only indirectly via the initial render of amber/red dimensions. A `fireEvent.click` on a green dimension row (which has no hasDetails) and an amber row with details would close a coverage gap. [readiness-briefing-card.test.tsx] — deferred, nice-to-have
+- [x] [Review][Defer] W11: `readiness-recommendations.test.ts` — no test for unknown/invalid dimension string. `generateRecommendations('unknown', 'red', {})` would fall through to an empty return or throw. A defensive smoke test for this path costs one line. [readiness-recommendations.test.ts] — deferred, low priority
+
+### Review Findings — Group 4: Spec Delta (2026-06-14)
+
+- [x] [Review][Delta] Task 1 spec says "queries `getActiveReagents()`" — implementation changed to `getAllReagents()` with DISPOSED filter (P1). Spec text is now incorrect. Task subtask updated to reflect actual behavior.
+- [x] [Review][Delta] Task 1 spec says "queries `getOrders()`" — implementation uses indexed Dexie query `getDb().orders.where('status').anyOf([...])` (P4). Spec text is now incorrect.
+- [x] [Review][Delta] Task 3 spec says "`AlertTriangle` icon (DirectionalIcon navigation category → mirrors RTL)" — this was a spec error; warning triangles must not mirror in RTL (P5 removed the wrapper). Spec text is now incorrect.
+- [x] [Review][Delta] Task 4 spec says "Returns `{ briefing, isLoading, refresh, lastRefreshedAt }`" — `error: boolean` was added (P6/P7). Spec is incomplete but augmentation is correct.
+- [x] [Review][Delta] Task 7 spec says "10 tests" for component — 2 new tests added (error callout, drill-in link). Actual count: 12.
+- [x] [Review][Delta] Completion Notes say "56 total tests" — after patches P11/P12: 58 total (29 engine + 17 recommendations + 12 component). Count updated below.
+- [x] [Review][Delta] AC6 says "Refresh button re-evaluates all dimensions" — implemented and tested. ✓
+- [x] [Review][No-delta] Task 5: `ReadinessBriefingCard` as first card on dashboard — verified in `page.tsx`. ✓
+- [x] [Review][No-delta] AC5 "generates from local Dexie data (offline)" — all 5 evaluators read only from Dexie/Zustand. No network calls. ✓
+- [x] [Review][No-delta] CLAUDE.md Rule #7 (data minimization) — pending orders show count only. ✓

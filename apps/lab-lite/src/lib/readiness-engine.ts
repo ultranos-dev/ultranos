@@ -7,7 +7,7 @@
  * CLAUDE.md Rule #7: pending orders show COUNT only, never patient names/IDs.
  */
 
-import { getActiveReagents, getOrders, ReagentStatus } from '@/lib/db'
+import { getAllReagents, getDb, ReagentStatus, type LabOrderEntry } from '@/lib/db'
 import { calculatePowerBudget } from '@/lib/workload-scheduler'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 
@@ -61,7 +61,10 @@ function worstStatus(statuses: RAGStatus[]): RAGStatus {
 function daysUntilDate(isoDate: string): number {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const target = new Date(isoDate)
+  // Append T00:00:00 (no Z) so the date is parsed as local midnight,
+  // matching the device clock. Without this, YYYY-MM-DD is UTC midnight
+  // which causes ±1 day drift in UTC+4:30 (Afghanistan).
+  const target = new Date(isoDate + 'T00:00:00')
   target.setHours(0, 0, 0, 0)
   return Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
@@ -106,7 +109,11 @@ export async function evaluatePersonnel(): Promise<DimensionResult> {
 export async function evaluateReagents(): Promise<DimensionResult> {
   let reagents
   try {
-    reagents = await getActiveReagents()
+    // getAllReagents includes EXPIRED rows so the EXPIRED branch below is
+    // reachable. DISPOSED reagents are excluded — they are intentionally
+    // removed from service and should not count as stockouts.
+    const all = await getAllReagents()
+    reagents = all.filter((r) => r.status !== ReagentStatus.DISPOSED)
   } catch {
     return {
       dimension: 'reagents',
@@ -243,9 +250,14 @@ export async function evaluateEquipment(): Promise<DimensionResult> {
 // ---------------------------------------------------------------------------
 
 export async function evaluatePendingOrders(): Promise<DimensionResult> {
-  let orders
+  let pending: LabOrderEntry[]
   try {
-    orders = await getOrders()
+    // Use the indexed `status` field to avoid loading the full orders table.
+    // The orders schema indexes status since v1 — this is a single Dexie pass.
+    pending = await getDb()
+      .orders.where('status')
+      .anyOf(['RECEIVED', 'IN_PROGRESS'])
+      .toArray()
   } catch {
     return {
       dimension: 'pendingOrders',
@@ -257,10 +269,6 @@ export async function evaluatePendingOrders(): Promise<DimensionResult> {
       recommendationArgs: [{}],
     }
   }
-
-  const pending = orders.filter(
-    (o) => o.status === 'RECEIVED' || o.status === 'IN_PROGRESS',
-  )
 
   if (pending.length === 0) {
     return {
@@ -336,6 +344,19 @@ export async function evaluatePower(): Promise<DimensionResult> {
   }
 
   const { startTime, endTime, totalMinutes, remainingMinutes } = powerBudget
+
+  if (totalMinutes <= 0) {
+    // Guard against malformed schedule entry with zero duration (avoids NaN from division)
+    return {
+      dimension: 'power',
+      status: 'amber',
+      titleKey: 'readiness.dimensions.power.title',
+      summaryKey: 'readiness.dimensions.power.summaryNotConfigured',
+      details: ['readiness.dimensions.power.detailNoSchedule'],
+      recommendations: ['readiness.recommendations.powerAmber'],
+      recommendationArgs: [{}],
+    }
+  }
 
   if (remainingMinutes <= 0) {
     // Power window has fully elapsed for today

@@ -12,6 +12,7 @@ import { generateReadinessBriefing, type ReadinessBriefing } from '@/lib/readine
 interface UseReadinessBriefingResult {
   briefing: ReadinessBriefing | null
   isLoading: boolean
+  error: boolean
   refresh: () => void
   lastRefreshedAt: Date | null
 }
@@ -19,14 +20,18 @@ interface UseReadinessBriefingResult {
 export function useReadinessBriefing(): UseReadinessBriefingResult {
   const [briefing, setBriefing] = useState<ReadinessBriefing | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null)
 
   const load = useCallback(async () => {
     setIsLoading(true)
+    setError(false)
     try {
       const result = await generateReadinessBriefing()
       setBriefing(result)
       setLastRefreshedAt(new Date())
+    } catch {
+      setError(true)
     } finally {
       setIsLoading(false)
     }
@@ -37,5 +42,5 @@ export function useReadinessBriefing(): UseReadinessBriefingResult {
     load()
   }, [load])
 
-  return { briefing, isLoading, refresh: load, lastRefreshedAt }
+  return { briefing, isLoading, error, refresh: load, lastRefreshedAt }
 }
