@@ -335,7 +335,8 @@
     "portfolio": "زما پورتفولیو",
     "readinessBoard": "د چمتوالي بورډ",
     "mentorship": "Mentorship",
-    "visualAtlas": "لیداری اطلس"
+    "visualAtlas": "لیداری اطلس",
+    "escalations": "لوړیدنې"
   },
   "network": {
     "networkDashboard": "د لابراتوار شبکه",
@@ -482,7 +483,8 @@
     "smsSendTest": "د ازموینې SMS لیږل",
     "smsTestPhone": "د ازموینې د تلیفون شمیره",
     "smsConfigSaved": "د SMS ترتیبات خوندي شول",
-    "smsTestSent": "د ازموینې SMS صف کې اضافه شو"
+    "smsTestSent": "د ازموینې SMS صف کې اضافه شو",
+    "criticalValues": "بحراني ارزښتونه او لوړیدنه"
   },
   "queuePage": {
     "title": "د پورته کولو لیست",
@@ -1268,7 +1270,9 @@
       "validationOverlap": "د دې ورځې لپاره مهال ویش شتون لري.",
       "noSchedule": "د بریښنا مهال ویش تنظیم شوی نه دی",
       "setupPrompt": "د جنراتور مهال ویش تنظیم کړئ ترڅو ازمایښونه لومړیتوب ولري.",
-      "setupAction": "د بریښنا مهال ویش تنظیم"
+      "setupAction": "د بریښنا مهال ویش تنظیم",
+      "saveError": "مهال ویش خوندي نشو. بیا هڅه وکړئ.",
+      "deleteConfirm": "ایا غواړئ دا د بریښنا مهال ویش حذف کړئ؟"
     },
     "workload": {
       "title": "د کار مهال ویش",
@@ -2963,6 +2967,8 @@
     },
     "loading": "د چمتوالي معلومات بارېږي…",
     "lastEvaluated": "وروستی ارزونه د {time} پر مهال",
+    "errorMessage": "د چمتوالي معلومات پورته نشي کېدای. د بیا هڅې لپاره تازه وکړئ.",
+    "viewFullPlanner": "د بشپړ چمتوالي پلان لیدل",
     "dimensions": {
       "personnel": {
         "title": "کارمندان",
@@ -3469,6 +3475,70 @@
       "action3": "د لوبیا ملاریا، د پښتورګو ناکامۍ او شدید انیمیا نظارت",
       "action4": "که شونی وي نوع ثبت کړئ",
       "clinicalContext": "5 سلنه یا زیات پاراسیټیمیا د WHO د شدید ملاریا معیارونه پوره کوي. وریدي آرتیسونیت غوره درملنه ده."
+    }
+  },
+  "escalation": {
+    "alert": {
+      "title": "بحراني ارزښت",
+      "subtitle": "د ډاکتر سمدستي خبرول اړین دي",
+      "acknowledgmentText": "ما دا بحراني ارزښت وکتل او به د امر ورکوونکي ډاکتر خبرولو ډاډ ورکړم",
+      "enableSound": "د خبردارۍ غږ فعالول",
+      "acknowledgeButton": "تصدیق",
+      "criticalHigh": "بحراني لوړ > {threshold} {unit}",
+      "criticalLow": "بحراني ټیټ < {threshold} {unit}",
+      "patientLabel": "ناروغ",
+      "physicianLabel": "امر ورکوونکی ډاکتر",
+      "timestampLabel": "د کشف وخت"
+    },
+    "thresholds": {
+      "title": "د بحراني ارزښتونو حدود",
+      "col": {
+        "analyte": "تحلیل شوي مادې",
+        "testName": "د ازمویل نوم",
+        "criticalLow": "بحراني ټیټ",
+        "criticalHigh": "بحراني لوړ",
+        "unit": "یونیټ",
+        "active": "فعال"
+      },
+      "addButton": "حد اضافه کړئ",
+      "resetButton": "د اصلي حالت ته ستنیدل",
+      "toggleError": "د حد تازه کول ناکامه شول — بیا هڅه وکړئ.",
+      "saveSuccess": "خوندي شو"
+    },
+    "contacts": {
+      "title": "د لوړولو اړیکې",
+      "medicalDirector": "طبي مدیر",
+      "districtOfficer": "د ولسوالۍ روغتیا مسؤول",
+      "name": "نوم",
+      "phone": "د تلیفون شمیره",
+      "saveButton": "خوندي کړئ",
+      "saved": "خوندي شو",
+      "phoneInvalid": "د تلیفون شمیرې بڼه سمه نه ده"
+    },
+    "status": {
+      "title": "د لوړولو حالت",
+      "activeTab": "فعال",
+      "historyTab": "تاریخچه",
+      "step": "ګام",
+      "analyte": "تحلیل شوي مادې",
+      "direction": {
+        "high": "بحراني لوړ",
+        "low": "بحراني ټیټ"
+      },
+      "patientRef": "ناروغ",
+      "currentStep": "اوسنی ګام",
+      "timeAgo": "تیر شوی وخت",
+      "acknowledgeButton": "د ترلاسه کیدو تصدیق",
+      "acknowledging": "تصدیق کیږي...",
+      "noActiveEscalations": "فعال لوړیدنې نشته",
+      "noHistory": "د لوړولو تاریخچه نشته",
+      "stepTypes": {
+        "tech_alert": "تخنیکي خبردارۍ",
+        "inapp_notification": "د ډاکتر خبرول",
+        "sms_physician": "ډاکتر ته SMS",
+        "sms_director": "طبي مدیر ته SMS",
+        "flag_district": "د ولسوالۍ مسؤول خبردارۍ"
+      }
     }
   }
 }

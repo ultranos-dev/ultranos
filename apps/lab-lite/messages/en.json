@@ -335,7 +335,8 @@
     "equipment": "Equipment",
     "portfolio": "My Portfolio",
     "readinessBoard": "Readiness Board",
-    "mentorship": "Mentorship"
+    "mentorship": "Mentorship",
+    "escalations": "Escalations"
   },
   "network": {
     "networkDashboard": "Lab Network",
@@ -481,7 +482,8 @@
     "smsSendTest": "Send Test SMS",
     "smsTestPhone": "Test Phone Number",
     "smsConfigSaved": "SMS configuration saved",
-    "smsTestSent": "Test SMS queued"
+    "smsTestSent": "Test SMS queued",
+    "criticalValues": "Critical Values & Escalation"
   },
   "queuePage": {
     "title": "Upload Queue",
@@ -1267,7 +1269,9 @@
       "validationOverlap": "A schedule already exists for this day.",
       "noSchedule": "No power schedule configured",
       "setupPrompt": "Set up your generator schedule to optimize test prioritization.",
-      "setupAction": "Set Up Power Schedule"
+      "setupAction": "Set Up Power Schedule",
+      "saveError": "Failed to save schedule. Please try again.",
+      "deleteConfirm": "Delete this power schedule?"
     },
     "workload": {
       "title": "Workload Schedule",
@@ -1345,7 +1349,9 @@
       }
     },
     "supplier": {
-      "title": "Supplier Configuration",
+      "pageTitle": "Supplier Configuration",
+      "backToSettings": "Settings",
+      "title": "Suppliers",
       "addSupplier": "Add Supplier",
       "noSuppliers": "No suppliers configured.",
       "noSupplier": "No supplier",
@@ -2994,6 +3000,8 @@
     },
     "loading": "Loading readiness data…",
     "lastEvaluated": "Last evaluated at {time}",
+    "errorMessage": "Unable to load readiness data. Tap refresh to retry.",
+    "viewFullPlanner": "View full readiness planner",
     "dimensions": {
       "personnel": {
         "title": "Personnel",
@@ -3468,6 +3476,70 @@
       "action3": "Monitor for cerebral malaria, renal failure, and severe anaemia",
       "action4": "Document species if identifiable (P. falciparum highest risk)",
       "clinicalContext": "Parasitaemia at or above 5% meets WHO criteria for severe malaria and is associated with high mortality without prompt treatment. IV artesunate is the drug of choice. Complications include cerebral malaria, acute kidney injury, severe anaemia, and metabolic acidosis."
+    }
+  },
+  "escalation": {
+    "alert": {
+      "title": "CRITICAL VALUE",
+      "subtitle": "Immediate physician notification required",
+      "acknowledgmentText": "I have reviewed this critical value and will ensure the ordering physician is notified",
+      "enableSound": "Enable Alert Sound",
+      "acknowledgeButton": "Acknowledge",
+      "criticalHigh": "Critical High > {threshold} {unit}",
+      "criticalLow": "Critical Low < {threshold} {unit}",
+      "patientLabel": "Patient",
+      "physicianLabel": "Ordering Physician",
+      "timestampLabel": "Detected"
+    },
+    "thresholds": {
+      "title": "Critical Value Thresholds",
+      "col": {
+        "analyte": "Analyte",
+        "testName": "Test Name",
+        "criticalLow": "Critical Low",
+        "criticalHigh": "Critical High",
+        "unit": "Unit",
+        "active": "Active"
+      },
+      "addButton": "Add Threshold",
+      "resetButton": "Reset to Defaults",
+      "toggleError": "Failed to update threshold — please try again.",
+      "saveSuccess": "Saved"
+    },
+    "contacts": {
+      "title": "Escalation Contacts",
+      "medicalDirector": "Medical Director",
+      "districtOfficer": "District Health Officer",
+      "name": "Name",
+      "phone": "Phone Number",
+      "saveButton": "Save",
+      "saved": "Saved",
+      "phoneInvalid": "Invalid phone number format"
+    },
+    "status": {
+      "title": "Escalation Status",
+      "activeTab": "Active",
+      "historyTab": "History",
+      "step": "Step",
+      "analyte": "Analyte",
+      "direction": {
+        "high": "Critical High",
+        "low": "Critical Low"
+      },
+      "patientRef": "Patient",
+      "currentStep": "Current Step",
+      "timeAgo": "Time elapsed",
+      "acknowledgeButton": "Acknowledge Receipt",
+      "acknowledging": "Acknowledging...",
+      "noActiveEscalations": "No active escalations",
+      "noHistory": "No escalation history",
+      "stepTypes": {
+        "tech_alert": "Tech Alert",
+        "inapp_notification": "Physician Notification",
+        "sms_physician": "SMS to Physician",
+        "sms_director": "SMS to Medical Director",
+        "flag_district": "District Health Officer Alert"
+      }
     }
   }
 }

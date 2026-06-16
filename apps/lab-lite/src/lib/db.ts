@@ -34,6 +34,8 @@ import type { SurveillanceAlert, ReportableDiseaseConfig, SurveillanceBaseline, 
 import type { QualityStreak, QualityMetric, Badge, EarnedBadge } from '@/lib/quality-streak-types'
 import type { CriticalValueThreshold, CompletedChecklist, ChecklistConfig } from '@/lib/critical-values/types'
 import { DEFAULT_CRITICAL_THRESHOLDS } from '@/lib/critical-values/default-thresholds'
+// Story 48.4 alias — ThresholdConfigPanel imports CriticalThreshold
+export type CriticalThreshold = CriticalValueThreshold
 import type { SmsQueueEntry, SmsGatewayConfig, SmsEscalationScheduleEntry } from '@/lib/sms/sms-gateway'
 import type { CHWSampleCollection, CourierHandoff } from '@/types/chw-mode'
 import type { ReferenceLab, SendOut, SendOutStatusTransition } from '@/types/reference-lab'
@@ -245,10 +247,47 @@ export interface ReagentInventoryEntry {
 export interface ReagentConsumptionEntry {
   id?: number
   reagentId: string
-  testsConsumed: number
-  loggedAt: string                    // ISO 8601
-  loggedBy: string                    // practitioner ID
-  notes: string | null
+  loincCode: string                   // test that consumed it
+  quantityUsed: number
+  unit: string                        // mL, strips, tests, etc.
+  consumedAt: string                  // ISO 8601
+  technicianId: string
+}
+
+// ---------------------------------------------------------------------------
+// Reagent Burndown types (v44) — Story 48.2: Predictive Reagent Burndown
+// No PHI — reagent names and quantities, no patient data.
+// ---------------------------------------------------------------------------
+
+export type AlertLevel = 'none' | 'info' | 'warning' | 'critical'
+
+export interface SupplierConfig {
+  id?: number
+  supplierId: string                  // UUID — stable identifier, never regenerated on edit
+  supplierName: string
+  leadTimeDays: number
+  contactInfo: string
+  notes: string
+  updatedAt: string                   // ISO 8601
+}
+
+export interface ReagentSupplierMapping {
+  reagentId: string
+  supplierId: string
+}
+
+export interface ReagentAlertCache {
+  id?: number
+  reagentId: string                   // unique per reagent — upserted, not appended
+  reagentName: string
+  alertLevel: AlertLevel
+  daysRemaining: number
+  effectiveDate: string               // ISO 8601
+  reason: 'usage' | 'expiry'
+  reorderDate: string                 // ISO 8601
+  supplierName?: string
+  evaluatedAt: string                 // ISO 8601 — last time this was computed
+  acknowledged: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -511,8 +550,8 @@ export interface InstrumentNotification {
 
 // v35 — Power-Aware Workload Scheduler (Story 48.1)
 export interface PowerScheduleEntry {
-  id: string                    // UUID
-  dayOfWeek: number             // 0 = Sunday … 6 = Saturday
+  id?: number                   // auto-increment; omit on insert
+  dayOfWeek: number | null      // 0 = Sunday … 6 = Saturday; null = default (all days)
   startTime: string             // HH:mm
   durationMinutes: number       // length of power window
   isActive: boolean             // false = schedule disabled for this day
@@ -526,6 +565,54 @@ export interface TestTimeEstimate {
   requiresPower: boolean        // false = manual / benchtop (no analyzer)
   batchSize: number             // samples per analyzer run
   updatedAt: string             // ISO 8601
+}
+
+// ---------------------------------------------------------------------------
+// Story 48.4 — Critical Value Escalation Chain types
+// ---------------------------------------------------------------------------
+
+export type EscalationStepType = 'tech_alert' | 'inapp_notification' | 'sms_physician' | 'sms_director' | 'flag_district'
+export type EscalationStepStatus = 'pending' | 'sent' | 'acknowledged' | 'escalated' | 'skipped'
+export type EscalationChainStatus = 'active' | 'acknowledged' | 'expired'
+export type EscalationContactRole = 'physician' | 'medical_director' | 'district_officer'
+
+export interface EscalationStep {
+  stepNumber: number         // 1–5
+  type: EscalationStepType
+  recipientId: string        // opaque ID or sentinel ('releasing_tech', 'medical_director', 'district_officer')
+  recipientRole: string
+  scheduledAt: string        // ISO 8601
+  sentAt: string | null
+  acknowledgedAt: string | null
+  status: EscalationStepStatus
+}
+
+export interface EscalationChain {
+  id?: number                // Dexie auto-increment
+  chainId: string            // UUID
+  resultId: string           // opaque lab result ID
+  loincCode: string
+  analyte: string
+  criticalValue: number      // stored for display (not in audit metadata)
+  unit: string
+  criticalDirection: 'high' | 'low'
+  patientRef: string         // opaque Patient/{uuid}
+  orderingPhysicianId: string
+  currentStep: number        // 1–5
+  status: EscalationChainStatus
+  steps: EscalationStep[]    // stored as JSON
+  createdAt: string          // ISO 8601
+  acknowledgedAt: string | null
+  acknowledgedBy: string | null
+}
+
+export interface EscalationContact {
+  id?: number                // Dexie auto-increment
+  role: EscalationContactRole
+  name: string
+  phoneNumber: string
+  isDefault: boolean
+  updatedAt: string          // ISO 8601
 }
 
 class LabLiteDatabase extends Dexie {
@@ -665,7 +752,7 @@ class LabLiteDatabase extends Dexie {
   instrument_history!: Dexie.Table<InstrumentHistoryEntry, string>
   instrument_notifications!: Dexie.Table<InstrumentNotification, string>
   // v35 — Power-Aware Workload Scheduler (Story 48.1)
-  power_schedules!: Dexie.Table<PowerScheduleEntry, string>
+  power_schedules!: Dexie.Table<PowerScheduleEntry, number>
   test_time_estimates!: Dexie.Table<TestTimeEstimate, string>
   // v36 — CHW Collection Module (Story 54.2)
   chw_samples!: Dexie.Table<CHWSampleCollection, string>
@@ -696,6 +783,16 @@ class LabLiteDatabase extends Dexie {
   // No PHI — inputDescription is structural only; sampleId is an opaque UUID.
   // hlcTimestamp indexed for chain ordering; timestamp indexed for date-range UI queries.
   ai_provenance!: Dexie.Table<any, string>
+  // v44 — Predictive Reagent Burndown (Story 48.2)
+  // No PHI — reagent names, quantities, supplier contacts. No patient data.
+  supplier_config!: Dexie.Table<SupplierConfig, number>
+  reagent_supplier_mapping!: Dexie.Table<ReagentSupplierMapping, [string, string]>
+  reagent_alert_cache!: Dexie.Table<ReagentAlertCache, number>
+  // v45 — Critical Value Escalation Chain (Story 48.4)
+  // PHI note: escalation_chains stores criticalValue + patientRef together for display.
+  // Access is restricted to clinical staff. Not in audit metadata (audit uses chainId only).
+  escalation_chains!: Dexie.Table<EscalationChain, number>
+  escalation_contacts!: Dexie.Table<EscalationContact, number>
 
   constructor() {
     super('lab-lite-db')
@@ -1511,11 +1608,12 @@ class LabLiteDatabase extends Dexie {
       instrument_notifications: '&id, techId, instrumentId, dismissed, [techId+dismissed]',
     })
     // v35 — Power-Aware Workload Scheduler (Story 48.1)
-    // power_schedules: one record per weekday. dayOfWeek indexed for getActiveScheduleForDay lookup.
-    // test_time_estimates: keyed by loincCode; all fields indexed for scheduler queries.
+    // power_schedules: one record per weekday (auto-increment id). dayOfWeek indexed for
+    //   getActiveScheduleForDay lookup; null dayOfWeek = default (all days) schedule.
+    // test_time_estimates: keyed by loincCode; requiresPower indexed for scheduler queries.
     // No PHI — operational scheduling data only.
     this.version(35).stores({
-      power_schedules: '&id, dayOfWeek, isActive',
+      power_schedules: '++id, dayOfWeek, isActive',
       test_time_estimates: '&loincCode, requiresPower',
     })
     // v36 — CHW Collection Module (Story 54.2)
@@ -1592,6 +1690,20 @@ class LabLiteDatabase extends Dexie {
       guidance_content: '&id, conditionCode, version',
       guidance_triggers: '&id, conditionCode, templateLoincCode',
     })
+    // v44 — Predictive Reagent Burndown (Story 48.2)
+    // Updates reagent_consumption_log index to use consumedAt (field name fix).
+    // Adds supplier_config, reagent_supplier_mapping, reagent_alert_cache.
+    this.version(44).stores({
+      reagent_consumption_log: '++id, reagentId, loincCode, consumedAt',
+      supplier_config: '++id, &supplierId',
+      reagent_supplier_mapping: '[reagentId+supplierId], reagentId, supplierId',
+      reagent_alert_cache: '++id, &reagentId, alertLevel, evaluatedAt, acknowledged',
+    })
+    // v45 — Critical Value Escalation Chain (Story 48.4)
+    this.version(45).stores({
+      escalation_chains: '++id, &chainId, resultId, status, currentStep, createdAt',
+      escalation_contacts: '++id, role, isDefault',
+    })
   }
 }
 
@@ -1604,6 +1716,8 @@ export function getDb(): LabLiteDatabase {
     import('@/lib/security/read-only-guard').then(({ installReadOnlyGuard }) => {
       if (dbInstance) installReadOnlyGuard(dbInstance)
     }).catch(() => { /* best-effort — guard is a defense-in-depth layer */ })
+    // Seed default test time estimates on first load (Story 48.1 — no-op if already seeded).
+    dbInstance.on('ready', () => seedTestTimeEstimatesIfEmpty().catch(() => { /* best-effort */ }))
   }
   return dbInstance
 }
@@ -1816,21 +1930,16 @@ export async function markReagentsSynced(reagentIds: string[]): Promise<void> {
 // Reagent Consumption Log helpers (v4)
 // ---------------------------------------------------------------------------
 
-/** Add a consumption log entry and increment testsPerformed on the parent reagent. */
+/**
+ * Add a consumption log entry.
+ * Stock decrement (testsPerformed) is handled by the caller (useReagentConsumption)
+ * to avoid double-counting and to apply unit-aware logic.
+ */
 export async function addReagentConsumptionLog(
   entry: Omit<ReagentConsumptionEntry, 'id'>,
 ): Promise<number> {
   const db = getDb()
-  return db.transaction('rw', db.reagent_inventory, db.reagent_consumption_log, async () => {
-    const logId = await db.reagent_consumption_log.add(entry as ReagentConsumptionEntry)
-    await db.reagent_inventory
-      .where('reagentId')
-      .equals(entry.reagentId)
-      .modify((r: ReagentInventoryEntry) => {
-        r.testsPerformed += entry.testsConsumed
-      })
-    return logId
-  })
+  return db.reagent_consumption_log.add(entry as ReagentConsumptionEntry)
 }
 
 /** Return all consumption log entries for a given reagentId, ordered oldest-first. */
@@ -1841,12 +1950,12 @@ export async function getConsumptionLogForReagent(
   return db.reagent_consumption_log
     .where('reagentId')
     .equals(reagentId)
-    .sortBy('loggedAt')
+    .sortBy('consumedAt')
 }
 
 /**
  * Return all consumption log entries across all reagents within a date range.
- * startDate and endDate are YYYY-MM-DD strings; comparison is on loggedAt ISO string prefix.
+ * startDate and endDate are YYYY-MM-DD strings; comparison is on consumedAt ISO string prefix.
  */
 export async function getConsumptionLogByDateRange(
   startDate: string,
@@ -1854,7 +1963,120 @@ export async function getConsumptionLogByDateRange(
 ): Promise<ReagentConsumptionEntry[]> {
   const db = getDb()
   const all = await db.reagent_consumption_log.toArray()
-  return all.filter((e) => e.loggedAt >= startDate && e.loggedAt <= endDate + 'T23:59:59.999Z')
+  return all.filter((e) => e.consumedAt >= startDate && e.consumedAt <= endDate + 'T23:59:59.999Z')
+}
+
+/**
+ * Return consumption log entries for a reagent within the last N days.
+ * Used by the burndown engine (Story 48.2) to calculate daily consumption rate.
+ */
+export async function getConsumptionLogForBurndown(
+  reagentId: string,
+  lookbackDays = 30,
+): Promise<ReagentConsumptionEntry[]> {
+  const db = getDb()
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - lookbackDays)
+  const cutoffStr = cutoff.toISOString()
+  const all = await db.reagent_consumption_log
+    .where('reagentId')
+    .equals(reagentId)
+    .toArray()
+  return all.filter((e) => e.consumedAt >= cutoffStr).sort((a, b) => a.consumedAt.localeCompare(b.consumedAt))
+}
+
+// ---------------------------------------------------------------------------
+// Supplier Config helpers (v44) — Story 48.2
+// ---------------------------------------------------------------------------
+
+export async function getAllSuppliers(): Promise<SupplierConfig[]> {
+  const db = getDb()
+  return db.supplier_config.toArray()
+}
+
+export async function addSupplier(supplier: Omit<SupplierConfig, 'id'>): Promise<number> {
+  const db = getDb()
+  return db.supplier_config.add(supplier as SupplierConfig)
+}
+
+/** Update a supplier by its auto-increment id. Never regenerates supplierId. */
+export async function updateSupplier(
+  id: number,
+  patch: Partial<Omit<SupplierConfig, 'id' | 'supplierId'>>,
+): Promise<void> {
+  const db = getDb()
+  await db.supplier_config.update(id, patch)
+}
+
+export async function deleteSupplier(id: number): Promise<void> {
+  const db = getDb()
+  await db.supplier_config.delete(id)
+}
+
+// ---------------------------------------------------------------------------
+// Reagent-Supplier Mapping helpers (v44) — Story 48.2
+// ---------------------------------------------------------------------------
+
+export async function getAllReagentSupplierMappings(): Promise<ReagentSupplierMapping[]> {
+  const db = getDb()
+  return db.reagent_supplier_mapping.toArray()
+}
+
+/** Set (upsert) the supplier for a reagent. Replaces any existing mapping. */
+export async function setReagentSupplier(reagentId: string, supplierId: string): Promise<void> {
+  const db = getDb()
+  await db.reagent_supplier_mapping.put({ reagentId, supplierId })
+}
+
+/** Remove the supplier mapping for a reagent. No-op if no mapping exists. */
+export async function removeReagentSupplier(reagentId: string): Promise<void> {
+  const db = getDb()
+  await db.reagent_supplier_mapping
+    .where('reagentId')
+    .equals(reagentId)
+    .delete()
+}
+
+// ---------------------------------------------------------------------------
+// Reagent Alert Cache helpers (v44) — Story 48.2
+// ---------------------------------------------------------------------------
+
+/** Upsert an alert cache entry by reagentId (unique constraint). */
+export async function upsertReagentAlert(
+  alert: Omit<ReagentAlertCache, 'id'>,
+): Promise<void> {
+  const db = getDb()
+  const existing = await db.reagent_alert_cache
+    .where('reagentId')
+    .equals(alert.reagentId)
+    .first()
+  if (existing?.id != null) {
+    await db.reagent_alert_cache.update(existing.id, alert)
+  } else {
+    await db.reagent_alert_cache.add(alert as ReagentAlertCache)
+  }
+}
+
+/** Return all alert cache entries. */
+export async function getAllReagentAlerts(): Promise<ReagentAlertCache[]> {
+  const db = getDb()
+  return db.reagent_alert_cache.toArray()
+}
+
+/** Return unacknowledged alerts at info/warning/critical level. */
+export async function getActiveReagentAlerts(): Promise<ReagentAlertCache[]> {
+  const db = getDb()
+  const all = await db.reagent_alert_cache.toArray()
+  return all.filter((a) => a.alertLevel !== 'none' && !a.acknowledged)
+}
+
+/** Mark an alert as acknowledged by reagentId. */
+export async function acknowledgeReagentAlert(reagentId: string): Promise<void> {
+  const db = getDb()
+  await db.reagent_alert_cache
+    .where('reagentId')
+    .equals(reagentId)
+    .modify({ acknowledged: true })
 }
 
 // ---------------------------------------------------------------------------
@@ -3046,6 +3268,100 @@ export async function getAllCriticalValueThresholds(): Promise<CriticalValueThre
   return db.criticalValueThresholds.where('isActive').equals(1).toArray()
 }
 
+/** Deactivate a critical value threshold (sets isActive: false). */
+export async function deactivateCriticalThreshold(id: number): Promise<void> {
+  const db = getDb()
+  await db.criticalValueThresholds.update(id, { isActive: false })
+}
+
+/** Reset all critical value thresholds to factory defaults (clears and re-seeds). */
+export async function resetCriticalThresholdsToDefaults(): Promise<void> {
+  const db = getDb()
+  await db.criticalValueThresholds.clear()
+  await db.criticalValueThresholds.bulkAdd(
+    DEFAULT_CRITICAL_THRESHOLDS.map((t) => ({ ...t, id: undefined })) as CriticalValueThreshold[],
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Escalation Chain helpers (v45) — Story 48.4
+// chainId is a UUID; all PHI references use opaque IDs only.
+// ---------------------------------------------------------------------------
+
+export async function createEscalationChain(chain: Omit<EscalationChain, 'id'>): Promise<void> {
+  const db = getDb()
+  await db.escalation_chains.add(chain as EscalationChain)
+}
+
+export async function getEscalationChainById(chainId: string): Promise<EscalationChain | undefined> {
+  const db = getDb()
+  return db.escalation_chains.where('chainId').equals(chainId).first()
+}
+
+export async function updateEscalationChain(
+  chainId: string,
+  updates: Partial<Omit<EscalationChain, 'id' | 'chainId'>>,
+): Promise<void> {
+  const db = getDb()
+  const record = await db.escalation_chains.where('chainId').equals(chainId).first()
+  if (record?.id != null) {
+    await db.escalation_chains.update(record.id, updates)
+  }
+}
+
+export async function getActiveEscalationChains(): Promise<EscalationChain[]> {
+  const db = getDb()
+  return db.escalation_chains.where('status').equals('active').toArray()
+}
+
+export async function getEscalationHistory(resultId?: string): Promise<EscalationChain[]> {
+  const db = getDb()
+  if (resultId) {
+    return db.escalation_chains
+      .where('resultId').equals(resultId)
+      .filter((c) => c.status !== 'active')
+      .toArray()
+  }
+  return db.escalation_chains
+    .filter((c) => c.status !== 'active')
+    .toArray()
+}
+
+// ---------------------------------------------------------------------------
+// Escalation Contact helpers (v45) — Story 48.4
+// Contacts store only name + phone — no patient data. LAB_MANAGER only.
+// ---------------------------------------------------------------------------
+
+export async function getDefaultEscalationContact(
+  role: EscalationContactRole,
+): Promise<EscalationContact | undefined> {
+  const db = getDb()
+  return db.escalation_contacts
+    .where('role').equals(role)
+    .filter((c) => c.isDefault)
+    .first()
+}
+
+export async function getEscalationContacts(role?: EscalationContactRole): Promise<EscalationContact[]> {
+  const db = getDb()
+  if (role) {
+    return db.escalation_contacts.where('role').equals(role).toArray()
+  }
+  return db.escalation_contacts.toArray()
+}
+
+export async function putEscalationContact(
+  contact: Omit<EscalationContact, 'id'>,
+): Promise<void> {
+  const db = getDb()
+  const existing = await db.escalation_contacts.where('role').equals(contact.role).filter((c) => c.isDefault).first()
+  if (existing?.id != null) {
+    await db.escalation_contacts.update(existing.id, contact)
+  } else {
+    await db.escalation_contacts.add(contact as EscalationContact)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Completed Checklist helpers (v18) — Story 43.7
 // completedChecklists is append-only per CLAUDE.md audit rules.
@@ -3596,20 +3912,57 @@ export async function closeAvailabilityRecord(id: string, endedAt: string): Prom
 // Power-Aware Workload Scheduler (Story 48.1)
 // ---------------------------------------------------------------------------
 
+/** Default test time estimates for the 8 standard LOINC categories (Story 48.1 spec). */
+const DEFAULT_TEST_TIME_ESTIMATES: Omit<TestTimeEstimate, 'updatedAt'>[] = [
+  { loincCode: '58410-2', displayName: 'CBC',                  estimatedMinutes: 15, requiresPower: true,  batchSize: 20 },
+  { loincCode: '57698-3', displayName: 'Lipid Panel',          estimatedMinutes: 12, requiresPower: true,  batchSize: 10 },
+  { loincCode: '4548-4',  displayName: 'HbA1c',                estimatedMinutes: 8,  requiresPower: true,  batchSize: 10 },
+  { loincCode: '51990-0', displayName: 'Basic Metabolic Panel', estimatedMinutes: 10, requiresPower: true,  batchSize: 15 },
+  { loincCode: '24325-3', displayName: 'Liver Function Tests', estimatedMinutes: 12, requiresPower: true,  batchSize: 10 },
+  { loincCode: '3016-3',  displayName: 'TSH',                  estimatedMinutes: 25, requiresPower: true,  batchSize: 8  },
+  { loincCode: '24356-8', displayName: 'Urinalysis',           estimatedMinutes: 5,  requiresPower: false, batchSize: 1  },
+  { loincCode: '1558-6',  displayName: 'Fasting Blood Glucose', estimatedMinutes: 3, requiresPower: true,  batchSize: 20 },
+]
+
 /**
- * Return the active power schedule for a given weekday, or undefined if none.
+ * Return the active power schedule for a given weekday, or the default (null) schedule if none.
  * dayOfWeek follows JS Date.getDay() convention: 0 = Sunday … 6 = Saturday.
  */
 export async function getActiveScheduleForDay(
   dayOfWeek: number,
 ): Promise<PowerScheduleEntry | undefined> {
   const db = getDb()
-  const entries = await db.power_schedules
+  // 1. Try day-specific active schedule
+  const specific = await db.power_schedules
     .where('dayOfWeek')
     .equals(dayOfWeek)
     .filter((s) => s.isActive)
     .first()
-  return entries
+  if (specific) return specific
+  // 2. Fall back to the default (all-days) schedule — dayOfWeek stored as null
+  return db.power_schedules
+    .filter((s) => s.dayOfWeek === null && s.isActive)
+    .first()
+}
+
+/** Return all power schedule entries, ordered by id. */
+export async function getPowerSchedules(): Promise<PowerScheduleEntry[]> {
+  const db = getDb()
+  return db.power_schedules.orderBy('id').toArray()
+}
+
+/** Upsert a power schedule entry (id omitted — auto-assigned by Dexie). */
+export async function putPowerSchedule(
+  entry: Omit<PowerScheduleEntry, 'id'>,
+): Promise<number> {
+  const db = getDb()
+  return db.power_schedules.add(entry as PowerScheduleEntry)
+}
+
+/** Delete a power schedule entry by its auto-increment id. */
+export async function deletePowerSchedule(id: number): Promise<void> {
+  const db = getDb()
+  await db.power_schedules.delete(id)
 }
 
 /**
@@ -3620,6 +3973,37 @@ export async function getTestTimeEstimate(
 ): Promise<TestTimeEstimate | undefined> {
   const db = getDb()
   return db.test_time_estimates.get(loincCode)
+}
+
+/** Return all test time estimates, ordered by loincCode. */
+export async function getTestTimeEstimates(): Promise<TestTimeEstimate[]> {
+  const db = getDb()
+  return db.test_time_estimates.orderBy('loincCode').toArray()
+}
+
+/** Upsert a single test time estimate (persists user customizations). */
+export async function putTestTimeEstimate(estimate: TestTimeEstimate): Promise<void> {
+  const db = getDb()
+  await db.test_time_estimates.put(estimate)
+}
+
+/** Reset all test time estimates to factory defaults (clears user customizations). */
+export async function resetTestTimeEstimates(): Promise<void> {
+  const db = getDb()
+  const now = new Date().toISOString()
+  await db.test_time_estimates.clear()
+  await db.test_time_estimates.bulkPut(
+    DEFAULT_TEST_TIME_ESTIMATES.map((e) => ({ ...e, updatedAt: now })),
+  )
+}
+
+/** Seed default test time estimates if the table is empty (called on db ready). */
+export async function seedTestTimeEstimatesIfEmpty(): Promise<void> {
+  const db = getDb()
+  const count = await db.test_time_estimates.count()
+  if (count === 0) {
+    await resetTestTimeEstimates()
+  }
 }
 
 // ---------------------------------------------------------------------------

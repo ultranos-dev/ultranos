@@ -335,7 +335,8 @@
     "portfolio": "پورتفولیوی من",
     "readinessBoard": "تابلوی آمادگی",
     "mentorship": "Mentorship",
-    "visualAtlas": "اطلس بصری"
+    "visualAtlas": "اطلس بصری",
+    "escalations": "ارتقاءها"
   },
   "network": {
     "networkDashboard": "شبکه لابراتوار",
@@ -482,7 +483,8 @@
     "smsSendTest": "ارسال پیامک آزمایشی",
     "smsTestPhone": "شماره تلفن آزمایشی",
     "smsConfigSaved": "پیکربندی SMS ذخیره شد",
-    "smsTestSent": "پیامک آزمایشی در صف قرار گرفت"
+    "smsTestSent": "پیامک آزمایشی در صف قرار گرفت",
+    "criticalValues": "ارزش‌های بحرانی و ارتقاء"
   },
   "queuePage": {
     "title": "صف بارگذاری",
@@ -1268,7 +1270,9 @@
       "validationOverlap": "برنامه‌ای برای این روز موجود است.",
       "noSchedule": "برنامه برق تنظیم نشده",
       "setupPrompt": "برنامه جنراتور را تنظیم کنید تا آزمایش‌ها اولویت‌بندی شوند.",
-      "setupAction": "تنظیم برنامه برق"
+      "setupAction": "تنظیم برنامه برق",
+      "saveError": "ذخیره برنامه ناموفق بود. لطفاً دوباره امتحان کنید.",
+      "deleteConfirm": "آیا می‌خواهید این برنامه برق را حذف کنید؟"
     },
     "workload": {
       "title": "برنامه کاری",
@@ -2963,6 +2967,8 @@
     },
     "loading": "در حال بارگذاری داده‌های آمادگی…",
     "lastEvaluated": "آخرین ارزیابی در {time}",
+    "errorMessage": "بارگذاری دادههای آمادگی ناممکن است. برای تلاش مجدد، تازه‌سازی کنید.",
+    "viewFullPlanner": "مشاهده برنامه‌ریز کامل آمادگی",
     "dimensions": {
       "personnel": {
         "title": "کارمندان",
@@ -3469,6 +3475,70 @@
       "action3": "مالاریای مغزی، نارسایی کلیه و کم خونی شدید را پایش کنید",
       "action4": "در صورت امکان گونه را مستند کنید",
       "clinicalContext": "انگل زایی 5 درصد یا بالاتر معیارهای WHO برای مالاریای شدید را برآورده می کند. آرتسونات وریدی داروی انتخابی است."
+    }
+  },
+  "escalation": {
+    "alert": {
+      "title": "ارزش بحرانی",
+      "subtitle": "اطلاع فوری داکتر ضروری است",
+      "acknowledgmentText": "من این ارزش بحرانی را بررسی کردم و اطمینان می‌دهم که داکتر درخواست‌کننده مطلع شود",
+      "enableSound": "فعال کردن صدای هشدار",
+      "acknowledgeButton": "تأیید",
+      "criticalHigh": "بحرانی بلند > {threshold} {unit}",
+      "criticalLow": "بحرانی پایین < {threshold} {unit}",
+      "patientLabel": "بیمار",
+      "physicianLabel": "داکتر درخواست‌کننده",
+      "timestampLabel": "زمان کشف"
+    },
+    "thresholds": {
+      "title": "حدود ارزش بحرانی",
+      "col": {
+        "analyte": "ماده تحلیل",
+        "testName": "نام آزمایش",
+        "criticalLow": "پایین بحرانی",
+        "criticalHigh": "بلند بحرانی",
+        "unit": "واحد",
+        "active": "فعال"
+      },
+      "addButton": "افزودن حد",
+      "resetButton": "بازگشت به پیش‌فرض",
+      "toggleError": "به‌روزرسانی حد ناموفق بود — دوباره تلاش کنید.",
+      "saveSuccess": "ذخیره شد"
+    },
+    "contacts": {
+      "title": "مخاطبین ارتقاء",
+      "medicalDirector": "مدیر طبی",
+      "districtOfficer": "مسؤول صحت ولسوالی",
+      "name": "نام",
+      "phone": "شماره تلفون",
+      "saveButton": "ذخیره",
+      "saved": "ذخیره شد",
+      "phoneInvalid": "فرمت شماره تلفون نادرست است"
+    },
+    "status": {
+      "title": "وضعیت ارتقاء",
+      "activeTab": "فعال",
+      "historyTab": "تاریخچه",
+      "step": "مرحله",
+      "analyte": "ماده تحلیل",
+      "direction": {
+        "high": "بحرانی بلند",
+        "low": "بحرانی پایین"
+      },
+      "patientRef": "بیمار",
+      "currentStep": "مرحله فعلی",
+      "timeAgo": "زمان سپری شده",
+      "acknowledgeButton": "تأیید دریافت",
+      "acknowledging": "در حال تأیید...",
+      "noActiveEscalations": "هیچ ارتقاء فعالی وجود ندارد",
+      "noHistory": "تاریخچه ارتقاء وجود ندارد",
+      "stepTypes": {
+        "tech_alert": "هشدار تکنیشن",
+        "inapp_notification": "اطلاع داکتر",
+        "sms_physician": "پیامک به داکتر",
+        "sms_director": "پیامک به مدیر طبی",
+        "flag_district": "هشدار مسؤول ولسوالی"
+      }
     }
   }
 }

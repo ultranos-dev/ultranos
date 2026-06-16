@@ -302,7 +302,8 @@
     "portfolio": "محفظتي",
     "readinessBoard": "لوحة الاستعداد",
     "mentorship": "Mentorship",
-    "visualAtlas": "الأطلس المرئي"
+    "visualAtlas": "الأطلس المرئي",
+    "escalations": "التصعيدات"
   },
   "patients": {
     "registerTitle": "تسجيل مريض جديد",
@@ -482,7 +483,8 @@
     "smsSendTest": "إرسال رسالة اختبار",
     "smsTestPhone": "رقم الهاتف للاختبار",
     "smsConfigSaved": "تم حفظ إعدادات SMS",
-    "smsTestSent": "تم إضافة رسالة SMS الاختبارية إلى قائمة الانتظار"
+    "smsTestSent": "تم إضافة رسالة SMS الاختبارية إلى قائمة الانتظار",
+    "criticalValues": "القيم الحرجة والتصعيد"
   },
   "queuePage": {
     "title": "قائمة التحميل",
@@ -1268,7 +1270,9 @@
       "validationOverlap": "يوجد جدول بالفعل لهذا اليوم.",
       "noSchedule": "لم يتم تكوين جدول الطاقة",
       "setupPrompt": "قم بإعداد جدول المولد لتحسين أولويات الفحوصات.",
-      "setupAction": "إعداد جدول الطاقة"
+      "setupAction": "إعداد جدول الطاقة",
+      "saveError": "فشل حفظ الجدول. يرجى المحاولة مرة أخرى.",
+      "deleteConfirm": "هل تريد حذف جدول الطاقة هذا؟"
     },
     "workload": {
       "title": "جدول عبء العمل",
@@ -2963,6 +2967,8 @@
     },
     "loading": "جار تحميل بيانات الجاهزية…",
     "lastEvaluated": "آخر تقييم في {time}",
+    "errorMessage": "تعذّر تحميل بيانات الاستعداد. انقر على تحديث لإعادة المحاولة.",
+    "viewFullPlanner": "عرض مخطط الاستعداد الكامل",
     "dimensions": {
       "personnel": {
         "title": "الكوادر",
@@ -3469,6 +3475,70 @@
       "action3": "مراقبة الملاريا الدماغية والفشل الكلوي وفقر الدم الشديد",
       "action4": "توثيق النوع إن أمكن التحديد",
       "clinicalContext": "طفيليات بنسبة 5% أو أكثر تستوفي معايير منظمة الصحة العالمية للملاريا الشديدة. الأرتيسونات الوريدي هو العلاج الأمثل."
+    }
+  },
+  "escalation": {
+    "alert": {
+      "title": "قيمة حرجة",
+      "subtitle": "مطلوب إشعار فوري للطبيب",
+      "acknowledgmentText": "لقد راجعت هذه القيمة الحرجة وسأضمن إشعار الطبيب المعالج",
+      "enableSound": "تفعيل صوت التنبيه",
+      "acknowledgeButton": "إقرار",
+      "criticalHigh": "مرتفع حرج > {threshold} {unit}",
+      "criticalLow": "منخفض حرج < {threshold} {unit}",
+      "patientLabel": "المريض",
+      "physicianLabel": "الطبيب المعالج",
+      "timestampLabel": "وقت الكشف"
+    },
+    "thresholds": {
+      "title": "حدود القيم الحرجة",
+      "col": {
+        "analyte": "المحلل",
+        "testName": "اسم الفحص",
+        "criticalLow": "منخفض حرج",
+        "criticalHigh": "مرتفع حرج",
+        "unit": "الوحدة",
+        "active": "نشط"
+      },
+      "addButton": "إضافة حد",
+      "resetButton": "إعادة إلى الافتراضي",
+      "toggleError": "فشل تحديث الحد — يرجى المحاولة مجدداً.",
+      "saveSuccess": "تم الحفظ"
+    },
+    "contacts": {
+      "title": "جهات التصعيد",
+      "medicalDirector": "المدير الطبي",
+      "districtOfficer": "مسؤول صحة المنطقة",
+      "name": "الاسم",
+      "phone": "رقم الهاتف",
+      "saveButton": "حفظ",
+      "saved": "تم الحفظ",
+      "phoneInvalid": "صيغة رقم الهاتف غير صحيحة"
+    },
+    "status": {
+      "title": "حالة التصعيد",
+      "activeTab": "نشط",
+      "historyTab": "السجل",
+      "step": "الخطوة",
+      "analyte": "المحلل",
+      "direction": {
+        "high": "مرتفع حرج",
+        "low": "منخفض حرج"
+      },
+      "patientRef": "المريض",
+      "currentStep": "الخطوة الحالية",
+      "timeAgo": "الوقت المنقضي",
+      "acknowledgeButton": "إقرار الاستلام",
+      "acknowledging": "جاري الإقرار...",
+      "noActiveEscalations": "لا توجد تصعيدات نشطة",
+      "noHistory": "لا يوجد سجل تصعيد",
+      "stepTypes": {
+        "tech_alert": "تنبيه الفني",
+        "inapp_notification": "إشعار الطبيب",
+        "sms_physician": "رسالة نصية للطبيب",
+        "sms_director": "رسالة نصية للمدير الطبي",
+        "flag_district": "تنبيه مسؤول المنطقة"
+      }
     }
   }
 }

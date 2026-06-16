@@ -45,6 +45,10 @@ import { NavLabUser } from '@/components/sidebar/NavLabUser'
 import { LabHeader } from '@/components/sidebar/LabHeader'
 import type { LabNavGroup } from '@/components/sidebar/nav-config'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { clearPhiTables, purgeSyncedQueueEntries } from '@/lib/phi-cleanup'
+import { clearSessionEncryptionKey } from '@/lib/consent-crypto'
+import { stopUploadDrain } from '@/lib/upload-drain-init'
+import { stopAuditDrain } from '@/lib/audit-client'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { getDb } from '@/lib/db'
 import { LabRole } from '@ultranos/shared-types'
@@ -152,9 +156,17 @@ export function AppSidebar() {
   }, [])
 
   const handleSignOut = useCallback(async () => {
+    // PHI cleanup order: tables → key → stop workers → auth → redirect
+    await Promise.all([clearPhiTables(), purgeSyncedQueueEntries()])
+    clearSessionEncryptionKey()
+    stopUploadDrain()
+    stopAuditDrain()
     useAuthSessionStore.getState().clearSession()
-    await getSupabaseBrowserClient().auth.signOut()
-    window.location.href = '/login'
+    try {
+      await getSupabaseBrowserClient().auth.signOut()
+    } finally {
+      window.location.href = '/login'
+    }
   }, [])
 
   const canAccessNetwork =
@@ -219,6 +231,7 @@ export function AppSidebar() {
           items: [
             { title: t('qualityDashboard'), url: '/quality', icon: TrendingUp },
             { title: t('safetyReporting'), url: '/safety-reporting', icon: AlertTriangle },
+            { title: t('escalations'), url: '/escalations', icon: AlertTriangle },
             { title: t('equipment'), url: '/equipment', icon: Wrench },
             { title: t('sops'), url: '/sops', icon: BookOpen },
             { title: t('visualAtlas'), url: '/atlas', icon: Microscope },
