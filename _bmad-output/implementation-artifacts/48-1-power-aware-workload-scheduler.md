@@ -1,6 +1,6 @@
 # Story 48.1: Power-Aware Workload Scheduler
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -251,6 +251,45 @@ Output:
 - `apps/lab-lite/messages/prs.json` — Added `scheduler.*` translation keys (Dari)
 - `apps/lab-lite/messages/ps.json` — Added `scheduler.*` translation keys (Pashto)
 
+## Review Findings
+
+### Decision Needed
+
+- [x] [Review][Decision] **F07 — Greedy packer urgent-overflow priority** — When an urgent test group is too large to fit in the remaining power budget, the packer marks it `overflow` and continues scheduling smaller non-urgent groups as `power`. Result: UI shows non-urgent tests in the power-phase list while urgent tests appear in the red overflow section. Options: (A) Keep current behavior — smaller tests that fit are still scheduled during power hours regardless of urgency. (B) Stop packing once the first urgent group overflows — treat any remaining budget as reserved for the urgent group, deferring all non-urgent tests to overflow too. Spec doesn't address this case explicitly.
+- [x] [Review][Decision] **F17 — `power_schedules.id`: UUID string vs spec's `++id` auto-increment** — Spec Task 1 says `id (auto-increment)` (implied integer, Dexie `++id`). Implementation uses UUID string (`&id`, no auto-increment). Options: (A) Change to `++id` auto-increment per spec. (B) Keep UUID string — UUID is more portable and avoids auto-increment counter issues in IndexedDB; accept the spec deviation and update the test fixtures to use string ids.
+
+### Patches
+
+- [x] [Review][Patch] **F01 — BudgetBar red state unreachable** [`WorkloadScheduleCard.tsx` BudgetBar] — `Math.min((used/total)*100, 100)` caps pct at 100, so `pct > 100` is always false. Red bar never renders even when analyzer time far exceeds power budget. Fix: separate the clamped display value from the color threshold check.
+- [x] [Review][Patch] **F02 — Six db helper functions missing from db.ts** [`PowerScheduleForm.tsx:7-9`, `TestTimeConfigPanel.tsx:7-9`] — `getPowerSchedules`, `putPowerSchedule`, `deletePowerSchedule`, `getTestTimeEstimates`, `putTestTimeEstimate`, `resetTestTimeEstimates` are imported by components but not exported from `db.ts`. Build-breaking compile error.
+- [x] [Review][Patch] **F03 — Default schedule (`dayOfWeek: null`) never returned by `getActiveScheduleForDay`** [`db.ts:3603-3617`] — `getActiveScheduleForDay` queries `.where('dayOfWeek').equals(dayOfWeek)` only. If user saves a default schedule (`dayOfWeek: null`), it is never found. Scheduler always returns null for users who pick "all days" default. Add fallback: if no day-specific schedule found, query for `dayOfWeek === null`.
+- [x] [Review][Patch] **F04 — `PowerScheduleEntry.id` omitted on save → Dexie DataError** [`PowerScheduleForm.tsx:62-68`] — `putPowerSchedule` call omits `id` field. Since `&id` is the primary key (not auto-incremented), Dexie throws a `DataError` on every save attempt. Also: `handleDelete(id: number)` is typed `number` while `id` is `string`. Fix depends on F17 decision.
+- [x] [Review][Patch] **F05 — Midnight-crossover bug in `calculatePowerBudget`** [`workload-scheduler.ts:144-152`] — Power windows spanning midnight (e.g., 22:00–02:00) calculate `endTime = '02:00'` (120 min). At 23:00, `currentMinutes (1380) >= endMinutes (120)` → "power window already ended" → `remainingMinutes = 0`. Fix: detect when endMinutes < startMinutes and add 1440 to endMinutes before comparison.
+- [x] [Review][Patch] **F06 — Default LOINC seed data never written to `test_time_estimates`** [`db.ts`] — No `populate` hook or `db.on('ready')` callback seeds the 8 default LOINC estimates (CBC, Lipid Panel, etc.). Fresh installs always hit the 15-min fallback for every test type. Also: `resetTestTimeEstimates` is called by `TestTimeConfigPanel` but doesn't exist in `db.ts`.
+- [x] [Review][Patch] **F08 — `detectTimeWarnings` message wording inverted** [`workload-scheduler.ts:326`] — `waitMinutes = currentMinutes - latestStart` is the number of minutes ALREADY elapsed past the latest safe start, not the time the tech can still wait. Message "If you wait X more minutes…" is backwards — X means they're already X minutes late.
+- [x] [Review][Patch] **F09 — `cancelledRef` cancellation guards too late in `useWorkloadSchedule`** [`useWorkloadSchedule.ts:57-81`] — `setHasSchedule(true)` and `setBudget(powerBudget)` fire before the cancelled check at line 74. `refresh()` also doesn't reset `cancelledRef.current = false`. Guard all state setters or wrap state updates in a single post-check block.
+- [x] [Review][Patch] **F10 — `handleSave` swallows Dexie write errors** [`PowerScheduleForm.tsx:57`] — `try/finally` has no `catch`. If `putPowerSchedule` throws (quota exceeded, IndexedDB locked), user sees no error — no error message, and success message was never set. Add catch block.
+- [x] [Review][Patch] **F11 — `console.warn` logs raw LOINC code** [`workload-scheduler.ts:106`] — LOINC codes are clinically identifying (rare/institution-specific tests can identify a patient). Per CLAUDE.md Rule #1, PHI-adjacent data must not appear in logs. Omit the code value: `'[workload-scheduler] Unknown LOINC code — using conservative defaults'`.
+- [x] [Review][Patch] **F13 — Manual test time ignores `batchSize`** [`workload-scheduler.ts:274`] — Manual groups use `g.estimatedMinutes * g.count` (linear). Should use `Math.ceil(g.count / g.batchSize) * g.estimatedMinutes` for consistency. Track `batchSize` in `manualGroupMap`.
+- [x] [Review][Patch] **F14 — Overlap check ignores `isActive`** [`PowerScheduleForm.tsx:52-58`] — `schedules.find(s => s.dayOfWeek === dayOfWeek)` blocks any new schedule for a day even if the existing entry is inactive. Change check to `s.dayOfWeek === dayOfWeek && s.isActive`.
+- [x] [Review][Patch] **F15 — AC4 warning text mismatch** [`workload-scheduler.ts:285`] — Ends "Prioritize urgent tests." but spec mandates "Here is what to prioritize." Fix the string.
+- [x] [Review][Patch] **F16 — `GroupRow` renders no test-type icon** [`WorkloadScheduleCard.tsx` GroupRow] — Spec Task 4 requires "test type icon" per group row. No icon is rendered. Add a mapped icon per LOINC code or test type category using `@ultranos/ui-kit/icons`.
+- [x] [Review][Patch] **F18 — RTL snapshot tests absent** [`apps/lab-lite/src/__tests__/`] — Spec Task 9 requires RTL snapshot tests for `WorkloadScheduleCard`, `PowerScheduleForm`, and `TestTimeConfigPanel`. None are present in the committed test files.
+- [x] [Review][Patch] **F19 — `parseTimeToMinutes` silently treats malformed input as midnight** [`workload-scheduler.ts:110-112`] — `(h || 0)` collapses `NaN` to `0`. An empty or corrupt `startTime` from Dexie computes as 00:00 with no error. Add NaN guard: `if (isNaN(h) || isNaN(m)) throw new Error('Invalid time format')`.
+- [x] [Review][Patch] **F20 — `WarningBanner` uses array index as React key** [`WorkloadScheduleCard.tsx:1447`] — `warnings.map((w, i) => <div key={i}>)` causes incorrect reconciliation on refresh. Use `key={w.severity + w.message}` or a hash.
+- [x] [Review][Patch] **F21 — `handleDelete` in `PowerScheduleForm` has no confirmation** [`PowerScheduleForm.tsx:118-124`] — Deletes schedule immediately on click with no confirm dialog. `TestTimeConfigPanel` uses `window.confirm` for reset — same pattern needed here.
+- [x] [Review][Patch] **F22 — `Link` hrefs locale-unaware** [`WorkloadScheduleCard.tsx`] — `href="/settings/power-schedule"` is hardcoded without locale prefix. In `[locale]` routing this breaks navigation for all locales. Use `next-intl`'s locale-aware `Link` or `usePathname`+`useLocale` to prefix.
+- [x] [Review][Patch] **F23 — Hardcoded Tailwind color utilities violate oklch token rule** [`WorkloadScheduleCard.tsx`, `PowerScheduleForm.tsx`] — Uses `text-blue-600`, `bg-amber-50 border-amber-200 text-amber-800`, `bg-red-50`, `bg-blue-50`, `bg-green-50`, `text-neutral-*`, `text-red-600`, `text-green-700`. CLAUDE.md requires semantic tokens (`text-destructive`, `bg-destructive/10`, `text-muted-foreground`, etc.).
+- [x] [Review][Patch] **F26 — Test description typo** [`workload-scheduler.test.ts:970`] — `it('correctly identifies overflow correctly', ...)` tests empty-input path (`generateSchedule([], budget)`), not overflow. Fix description.
+- [x] [Review][Patch] **F27 — `estimatedMinutes = 0` bypassable in `TestTimeConfigPanel`** [`TestTimeConfigPanel.tsx:103-107`] — HTML `min={1}` is bypassed by JS. If 0 is saved, all tests fit in any budget and warnings are suppressed. Add `Math.max(1, value)` guard in `handleUpdate` for `estimatedMinutes`.
+
+### Deferred
+
+- [x] [Review][Defer] **F12 — `business-days.ts` misattributed to 48-1** [`apps/lab-lite/src/lib/business-days.ts`] — deferred, file comment says "Story 45.5 — Task 7"; already committed; not imported by any 48.1 code; attribution error only
+- [x] [Review][Defer] **F24 — Duplicate warning banners on overflow** [`WorkloadScheduleCard.tsx`] — deferred, pre-existing UX polish; budget warning + per-group time warnings can stack redundantly
+- [x] [Review][Defer] **F25 — `TestTimeConfigPanel` write-per-keystroke pattern** [`TestTimeConfigPanel.tsx:103-107`] — deferred, pre-existing UX improvement; debounce or `onBlur` write needed but not a correctness issue
+
 ## Change Log
 
 - 2026-05-30: Implemented Story 48.1 — Power-Aware Workload Scheduler (all 9 tasks, 29 tests)
+- 2026-06-13: Code review — 2 decision_needed, 22 patch, 3 defer, 4 dismissed

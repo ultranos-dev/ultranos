@@ -54,6 +54,9 @@ export function useWorkloadSchedule(): UseWorkloadScheduleResult {
       const today = new Date()
       const powerBudget = await calculatePowerBudget(today)
 
+      // F09: check cancellation after every async boundary before touching state
+      if (cancelledRef.current) return
+
       if (!powerBudget) {
         setHasSchedule(false)
         setSchedule(null)
@@ -63,21 +66,22 @@ export function useWorkloadSchedule(): UseWorkloadScheduleResult {
         return
       }
 
-      setHasSchedule(true)
-      setBudget(powerBudget)
-
       // Get pending orders from Dexie
       const orders = await getOrders()
-      const pending = ordersToPending(orders)
-      const tagged = await tagPendingTests(pending)
-
       if (cancelledRef.current) return
 
+      const pending = ordersToPending(orders)
+      const tagged = await tagPendingTests(pending)
+      if (cancelledRef.current) return
+
+      // All async work done — safe to batch state updates
       const workloadSchedule = generateSchedule(tagged, powerBudget)
+      const tw = detectTimeWarnings(workloadSchedule, powerBudget)
+
+      setHasSchedule(true)
+      setBudget(powerBudget)
       setSchedule(workloadSchedule)
       setWarnings(workloadSchedule.warnings)
-
-      const tw = detectTimeWarnings(workloadSchedule, powerBudget)
       setTimeWarnings(tw)
     } finally {
       if (!cancelledRef.current) {
@@ -95,6 +99,8 @@ export function useWorkloadSchedule(): UseWorkloadScheduleResult {
   }, [compute])
 
   const refresh = useCallback(() => {
+    // F09: reset cancellation flag so state updates aren't silently blocked after an unmount/remount
+    cancelledRef.current = false
     compute()
   }, [compute])
 

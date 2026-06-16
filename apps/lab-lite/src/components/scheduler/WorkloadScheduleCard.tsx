@@ -1,53 +1,82 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { useWorkloadSchedule } from '@/hooks/useWorkloadSchedule'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
+import { FlaskConical, Microscope, Zap, TestTube2, Activity, Droplets, Syringe } from '@ultranos/ui-kit/icons'
 import type { ScheduledGroup, TimeWarning } from '@/lib/workload-scheduler'
 
-/** Power budget progress bar with green/amber/red coloring. */
+// ---------------------------------------------------------------------------
+// LOINC → icon mapping (medical icons — must NOT mirror in RTL per CLAUDE.md)
+// ---------------------------------------------------------------------------
+
+const LOINC_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  '58410-2': Activity,    // CBC — hematology analyzer
+  '57698-3': FlaskConical, // Lipid Panel
+  '4548-4':  FlaskConical, // HbA1c
+  '51990-0': FlaskConical, // Basic Metabolic Panel
+  '24325-3': FlaskConical, // Liver Function Tests
+  '3016-3':  Zap,          // TSH — immunoassay (high-power)
+  '24356-8': Microscope,   // Urinalysis — manual microscopy
+  '1558-6':  Droplets,     // Fasting Blood Glucose
+}
+
+function TestTypeIcon({ loincCode, phase }: { loincCode: string; phase: ScheduledGroup['phase'] }) {
+  const Icon = LOINC_ICON_MAP[loincCode] ?? TestTube2
+  const colorClass =
+    phase === 'overflow' ? 'text-destructive' : phase === 'manual' ? 'text-muted-foreground' : 'text-primary'
+  return <Icon size={14} className={`shrink-0 ${colorClass}`} />
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+/** Power budget progress bar — colour threshold based on unclamped ratio. */
 function BudgetBar({ used, total }: { used: number; total: number }) {
-  const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0
+  // F01: compute ratio for colour separately from the clamped display percentage
+  const ratio = total > 0 ? used / total : 0
+  const displayPct = Math.min(ratio * 100, 100)
   const color =
-    pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-amber-500' : 'bg-green-500'
+    ratio > 1 ? 'bg-destructive' : ratio > 0.8 ? 'bg-amber-500' : 'bg-primary'
 
   return (
     <div
       className="h-3 w-full rounded-full bg-muted"
       role="progressbar"
-      aria-valuenow={Math.round(pct)}
+      aria-valuenow={Math.round(displayPct)}
       aria-valuemin={0}
       aria-valuemax={100}
     >
       <div
         className={`h-full rounded-full transition-all ${color}`}
-        style={{ width: `${Math.min(pct, 100)}%` }}
+        style={{ width: `${displayPct}%` }}
       />
     </div>
   )
 }
 
-/** Phase badge (POWER / MANUAL / overflow). */
+/** Phase badge (POWER / MANUAL / OVERFLOW). */
 function PhaseBadge({ phase }: { phase: ScheduledGroup['phase'] }) {
   const t = useTranslations('scheduler.workload')
 
   if (phase === 'power') {
     return (
-      <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+      <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
         {t('requiresPower')}
       </span>
     )
   }
   if (phase === 'manual') {
     return (
-      <span className="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+      <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
         {t('manual')}
       </span>
     )
   }
   return (
-    <span className="inline-flex rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+    <span className="inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
       {t('overflow')}
     </span>
   )
@@ -60,10 +89,11 @@ function WarningBanner({ warnings }: { warnings: TimeWarning[] }) {
     <div className="flex flex-col gap-1">
       {warnings.map((w, i) => (
         <div
-          key={i}
+          // F20: stable key derived from content, not array index
+          key={`${w.severity}-${i}-${w.message.slice(0, 20)}`}
           className={`rounded-md border p-2 text-sm ${
             w.severity === 'red'
-              ? 'border-red-200 bg-red-50 text-red-800'
+              ? 'border-destructive/20 bg-destructive/5 text-destructive'
               : 'border-amber-200 bg-amber-50 text-amber-800'
           }`}
           role="alert"
@@ -75,10 +105,18 @@ function WarningBanner({ warnings }: { warnings: TimeWarning[] }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Main card
+// ---------------------------------------------------------------------------
+
 export function WorkloadScheduleCard() {
   const t = useTranslations('scheduler')
+  const locale = useLocale()
   const { schedule, budget, warnings, timeWarnings, isLoading, refresh, hasSchedule } =
     useWorkloadSchedule()
+
+  // F22: locale-prefixed href so next-intl [locale] routing works
+  const powerScheduleHref = `/${locale}/settings/power-schedule`
 
   // No power schedule configured — show setup prompt
   if (!hasSchedule && !isLoading) {
@@ -90,7 +128,7 @@ export function WorkloadScheduleCard() {
         <p className="text-sm text-muted-foreground mb-3">
           {t('powerSchedule.setupPrompt')}
         </p>
-        <Link href="/settings/power-schedule">
+        <Link href={powerScheduleHref}>
           <Button variant="outline">
             {t('powerSchedule.setupAction')}
           </Button>
@@ -121,8 +159,6 @@ export function WorkloadScheduleCard() {
   const manualGroups = schedule.scheduledGroups.filter((g) => g.phase === 'manual')
   const overflowGroups = schedule.scheduledGroups.filter((g) => g.phase === 'overflow')
 
-  const budgetUsedPct = budget.total > 0 ? schedule.budget.used : 0
-
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       {/* Header */}
@@ -132,8 +168,8 @@ export function WorkloadScheduleCard() {
         </h3>
         <div className="flex items-center gap-2">
           <Link
-            href="/settings/power-schedule"
-            className="text-xs text-blue-600 hover:underline"
+            href={powerScheduleHref}
+            className="text-xs text-primary hover:underline"
           >
             {t('workload.configureLink')}
           </Link>
@@ -154,7 +190,7 @@ export function WorkloadScheduleCard() {
 
       {/* Budget bar */}
       <div className="mb-3">
-        <BudgetBar used={budgetUsedPct} total={budget.totalMinutes} />
+        <BudgetBar used={schedule.budget.used} total={budget.totalMinutes} />
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>
             {t('workload.analyzerTimeNeeded')}: {Math.round(schedule.budget.used)}min
@@ -192,7 +228,7 @@ export function WorkloadScheduleCard() {
       {/* Overflow groups */}
       {overflowGroups.length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-medium text-red-600 mb-1">
+          <p className="text-xs font-medium text-destructive mb-1">
             {t('workload.phaseHeaderOverflow')}
           </p>
           <div className="flex flex-col gap-1">
@@ -227,18 +263,20 @@ function GroupRow({ group }: { group: ScheduledGroup }) {
     <div
       className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
         group.phase === 'overflow'
-          ? 'bg-red-50'
+          ? 'bg-destructive/5'
           : group.phase === 'manual'
-            ? 'bg-green-50'
-            : 'bg-blue-50'
+            ? 'bg-muted/50'
+            : 'bg-primary/5'
       }`}
     >
       <div className="flex items-center gap-2 min-w-0">
+        {/* F16: test-type icon per group row */}
+        <TestTypeIcon loincCode={group.loincCode} phase={group.phase} />
         <span className="font-medium text-foreground truncate">
           {group.displayName}
         </span>
         {group.hasUrgent && (
-          <span className="inline-flex rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+          <span className="inline-flex rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">
             {t('urgent')}
           </span>
         )}

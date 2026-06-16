@@ -248,7 +248,7 @@ describe('generateSchedule', () => {
     expect(result.warnings[0].severity).toBe('red')
   })
 
-  it('correctly identifies overflow correctly', () => {
+  it('returns empty schedule with zero budget used when no tests are provided', () => {
     const result = generateSchedule([], budget)
     expect(result.scheduledGroups).toHaveLength(0)
     expect(result.warnings).toHaveLength(0)

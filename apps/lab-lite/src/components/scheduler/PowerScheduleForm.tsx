@@ -10,6 +10,9 @@ import {
   type PowerScheduleEntry,
 } from '@/lib/db'
 
+// PowerScheduleEntry.id is auto-increment number (F17:A — ++id schema)
+type ScheduleId = number
+
 const DAY_KEYS = [
   'sunday', 'monday', 'tuesday', 'wednesday',
   'thursday', 'friday', 'saturday',
@@ -48,9 +51,9 @@ export function PowerScheduleForm() {
       return
     }
 
-    // Check for overlap
+    // F14: only active schedules block the same dayOfWeek slot
     const existing = schedules.find(
-      (s) => s.dayOfWeek === dayOfWeek,
+      (s) => s.dayOfWeek === dayOfWeek && s.isActive,
     )
     if (existing) {
       setError(t('validationOverlap'))
@@ -70,13 +73,18 @@ export function PowerScheduleForm() {
       await loadSchedules()
       // Reset form for next entry
       setDayOfWeek(null)
+    } catch {
+      // F10: surface Dexie write errors (quota exceeded, DB locked, etc.)
+      setError(t('saveError'))
     } finally {
       setSaving(false)
     }
   }, [startTime, durationHours, dayOfWeek, isActive, schedules, t, loadSchedules])
 
   const handleDelete = useCallback(
-    async (id: number) => {
+    async (id: ScheduleId) => {
+      // F21: confirm before destructive delete (consistent with TestTimeConfigPanel reset)
+      if (!window.confirm(t('deleteConfirm'))) return
       await deletePowerSchedule(id)
       setSuccessMsg(t('deleted'))
       await loadSchedules()
@@ -103,13 +111,13 @@ export function PowerScheduleForm() {
                 <span className="text-xs text-muted-foreground">
                   {s.startTime} — {Math.round(s.durationMinutes / 60 * 10) / 10}h
                   {!s.isActive && (
-                    <span className="ms-2 text-amber-600">({t('active')}: off)</span>
+                    <span className="ms-2 text-muted-foreground">({t('active')}: off)</span>
                   )}
                 </span>
               </div>
               <Button
                 variant="danger"
-                onClick={() => s.id != null && handleDelete(s.id)}
+                onClick={() => s.id != null && handleDelete(s.id as ScheduleId)}
               >
                 {t('delete')}
               </Button>
@@ -176,10 +184,10 @@ export function PowerScheduleForm() {
           </label>
 
           {error && (
-            <p className="text-sm text-red-600" role="alert">{error}</p>
+            <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
           {successMsg && (
-            <p className="text-sm text-green-700" role="status">{successMsg}</p>
+            <p className="text-sm text-primary" role="status">{successMsg}</p>
           )}
 
           <Button

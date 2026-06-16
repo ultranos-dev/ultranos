@@ -39,7 +39,11 @@ export function TestTimeConfigPanel() {
         updatedAt: new Date().toISOString(),
       }
 
-      // Guard batch size
+      // F27: guard estimatedMinutes against 0/negative (HTML min is bypassable via JS)
+      if (field === 'estimatedMinutes' && typeof value === 'number') {
+        updated.estimatedMinutes = Math.max(1, value)
+      }
+      // Guard batch size against 0/negative
       if (field === 'batchSize' && typeof value === 'number') {
         updated.batchSize = Math.max(1, value)
       }
@@ -70,7 +74,7 @@ export function TestTimeConfigPanel() {
       </div>
 
       {successMsg && (
-        <p className="text-sm text-green-700" role="status">{successMsg}</p>
+        <p className="text-sm text-primary" role="status">{successMsg}</p>
       )}
 
       <div className="overflow-x-auto">

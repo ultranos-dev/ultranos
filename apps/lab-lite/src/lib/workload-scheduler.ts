@@ -83,7 +83,8 @@ export async function getTestPowerRequirement(
 ): Promise<TestTimeEstimate> {
   const estimate = await getTestTimeEstimate(loincCode)
   if (estimate) return estimate
-  console.warn(`[workload-scheduler] Unknown LOINC code: ${loincCode} — using conservative defaults`)
+  // F11: Do not log the LOINC code — it is PHI-adjacent per CLAUDE.md Rule #1.
+  console.warn('[workload-scheduler] Unknown LOINC code — using conservative defaults (15 min, requires-power, batch 1)')
   return { ...FALLBACK_ESTIMATE, loincCode }
 }
 
@@ -105,10 +106,11 @@ export async function tagPendingTests(
   return results
 }
 
-/** Parse HH:mm time string to total minutes since midnight. */
+/** Parse HH:mm time string to total minutes since midnight. Throws on malformed input. */
 export function parseTimeToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number)
-  return (h || 0) * 60 + (m || 0)
+  if (isNaN(h) || isNaN(m)) throw new Error(`Invalid time format: expected HH:mm`)
+  return h * 60 + m
 }
 
 /** Add minutes to HH:mm time string, returning new HH:mm. */
@@ -142,14 +144,22 @@ export async function calculatePowerBudget(
   if (isSameDay) {
     const currentMinutes = now.getHours() * 60 + now.getMinutes()
     const startMinutes = parseTimeToMinutes(schedule.startTime)
+    // Add 1440 when window spans midnight (e.g. 22:00 + 240 min → endMinutes = 1560, not 120)
     const endMinutes = startMinutes + schedule.durationMinutes
 
-    if (currentMinutes >= endMinutes) {
+    // Normalise currentMinutes for midnight-spanning windows: if current wall-clock is before
+    // midnight but the window ends after midnight, shift current forward by 1440.
+    const normCurrent =
+      endMinutes > 1440 && currentMinutes < startMinutes
+        ? currentMinutes + 1440
+        : currentMinutes
+
+    if (normCurrent >= endMinutes) {
       // Power window already ended
       remainingMinutes = 0
-    } else if (currentMinutes > startMinutes) {
+    } else if (normCurrent > startMinutes) {
       // Power window partially elapsed
-      remainingMinutes = endMinutes - currentMinutes
+      remainingMinutes = endMinutes - normCurrent
     }
     // else: power window hasn't started yet, full duration available
   }
@@ -251,8 +261,8 @@ export function generateSchedule(
     }
   }
 
-  // Group manual tests by loincCode
-  const manualGroupMap = new Map<string, { count: number; displayName: string; estimatedMinutes: number }>()
+  // Group manual tests by loincCode — apply batch formula for consistency (F13)
+  const manualGroupMap = new Map<string, { count: number; displayName: string; estimatedMinutes: number; batchSize: number }>()
   for (const test of manualTests) {
     const existing = manualGroupMap.get(test.loincCode)
     if (existing) {
@@ -262,6 +272,7 @@ export function generateSchedule(
         count: 1,
         displayName: test.displayName,
         estimatedMinutes: test.estimatedMinutes,
+        batchSize: Math.max(1, test.batchSize),
       })
     }
   }
@@ -271,7 +282,7 @@ export function generateSchedule(
       loincCode,
       displayName: g.displayName,
       testCount: g.count,
-      estimatedMinutes: g.estimatedMinutes * g.count,
+      estimatedMinutes: Math.ceil(g.count / g.batchSize) * g.estimatedMinutes,
       phase: 'manual',
       hasUrgent: false,
     })
@@ -282,7 +293,7 @@ export function generateSchedule(
   const warnings: TimeWarning[] = []
   if (totalAnalyzerTime > budget.remainingMinutes) {
     warnings.push({
-      message: `You have ${Math.round(budget.remainingMinutes / 60 * 10) / 10} hours of power. Your pending queue needs ~${Math.round(totalAnalyzerTime / 60 * 10) / 10} hours of analyzer time. Prioritize urgent tests.`,
+      message: `You have ${Math.round(budget.remainingMinutes / 60 * 10) / 10} hours of power. Your pending queue needs ~${Math.round(totalAnalyzerTime / 60 * 10) / 10} hours of analyzer time. Here is what to prioritize.`,
       severity: 'red',
     })
   } else if (totalAnalyzerTime > budget.remainingMinutes * 0.8) {
@@ -311,20 +322,27 @@ export function detectTimeWarnings(
   const warnings: TimeWarning[] = []
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const endMinutes = parseTimeToMinutes(budget.endTime)
+  // Normalise end time to handle midnight-spanning windows
+  const endMinutesRaw = parseTimeToMinutes(budget.endTime)
+  const startMinutes = parseTimeToMinutes(budget.startTime)
+  const endMinutes = endMinutesRaw <= startMinutes ? endMinutesRaw + 1440 : endMinutesRaw
+  const normCurrent =
+    endMinutes > 1440 && currentMinutes < startMinutes ? currentMinutes + 1440 : currentMinutes
 
-  // Check if each power-phase group can still complete
+  // Each power-phase group must start no later than (endMinutes - cumulativeTime) to finish.
+  // cumulativeTime grows as groups are processed in schedule order.
   let cumulativeTime = 0
   for (const group of schedule.scheduledGroups) {
     if (group.phase !== 'power') continue
     cumulativeTime += group.estimatedMinutes
     const latestStart = endMinutes - cumulativeTime
+    const minutesPastDeadline = normCurrent - latestStart
 
-    if (currentMinutes > latestStart && currentMinutes < endMinutes) {
-      const waitMinutes = currentMinutes - latestStart
+    if (minutesPastDeadline > 0 && normCurrent < endMinutes) {
+      // F08: X is the minutes ALREADY elapsed past the latest safe start, not "minutes left to wait"
       warnings.push({
-        message: `If you wait ${waitMinutes} more minutes, ${group.displayName} batch will not finish before shutdown.`,
-        severity: currentMinutes > latestStart + 15 ? 'red' : 'amber',
+        message: `Start ${group.displayName} now — you are ${minutesPastDeadline} minute${minutesPastDeadline === 1 ? '' : 's'} past the latest safe start time to finish before shutdown.`,
+        severity: minutesPastDeadline > 15 ? 'red' : 'amber',
       })
     }
   }

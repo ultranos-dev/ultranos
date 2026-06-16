@@ -111,6 +111,9 @@ describe('PowerScheduleForm', () => {
       { id: 1, dayOfWeek: null, startTime: '08:00', durationMinutes: 300, isActive: true, updatedAt: '2026-01-01T00:00:00Z' },
     ])
 
+    // F21: confirm dialog must be accepted for delete to proceed
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
     render(<PowerScheduleForm />)
 
     await waitFor(() => {
@@ -124,6 +127,28 @@ describe('PowerScheduleForm', () => {
     await waitFor(() => {
       expect(mockDeletePowerSchedule).toHaveBeenCalledWith(1)
     })
+
+    vi.restoreAllMocks()
+  })
+
+  it('cancels deletion when user dismisses confirm dialog', async () => {
+    mockGetPowerSchedules.mockResolvedValue([
+      { id: 1, dayOfWeek: null, startTime: '08:00', durationMinutes: 300, isActive: true, updatedAt: '2026-01-01T00:00:00Z' },
+    ])
+
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+    render(<PowerScheduleForm />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Default (all days)')).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByText('Delete'))
+
+    expect(mockDeletePowerSchedule).not.toHaveBeenCalled()
+
+    vi.restoreAllMocks()
   })
 
   it('rejects overlapping schedules for the same day', async () => {
