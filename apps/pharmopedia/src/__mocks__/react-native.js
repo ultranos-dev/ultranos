@@ -123,7 +123,7 @@ module.exports = {
   AccessibilityInfo,
   Image: View,
   ImageBackground: View,
-  Modal: View,
+  Modal: function Modal({ children, visible, ...rest }) { return visible ? React.createElement('View', rest, children) : null },
   KeyboardAvoidingView: View,
   ActivityIndicator: View,
   Switch: View,

@@ -9,6 +9,7 @@ export default defineConfig({
     globals: false,
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['./vitest.setup.ts'],
   },
   resolve: {
     alias: {
@@ -30,6 +31,7 @@ export default defineConfig({
       'expo-secure-store': path.resolve(__dirname, 'src/__mocks__/expo-secure-store.js'),
       'expo-router': path.resolve(__dirname, 'src/__mocks__/expo-router.js'),
       'expo-haptics': path.resolve(__dirname, 'src/__mocks__/expo-haptics.js'),
+      'expo-image-picker': path.resolve(__dirname, 'src/__mocks__/expo-image-picker.js'),
       'expo-location': path.resolve(__dirname, 'src/__mocks__/expo-location.js'),
       'expo-updates': path.resolve(__dirname, 'src/__mocks__/expo-updates.js'),
       'expo-status-bar': path.resolve(__dirname, 'src/__mocks__/expo-status-bar.js'),

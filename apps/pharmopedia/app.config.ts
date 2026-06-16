@@ -13,6 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     'expo-secure-store',
     ['expo-location', { locationAlwaysAndWhenInUsePermission: 'Allow Pharmopedia to use your location to find nearby pharmacies.' }],
+    ['expo-image-picker', { photosPermission: 'Allow Pharmopedia to use your photos for your profile picture.', cameraPermission: 'Allow Pharmopedia to use your camera for your profile picture.' }],
   ],
   experiments: { typedRoutes: true },
 })

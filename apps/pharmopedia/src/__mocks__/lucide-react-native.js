@@ -65,6 +65,9 @@ const Home = createIconMock('Home')
 const Folder = createIconMock('Folder')
 const Building2 = createIconMock('Building2')
 const UserPlus = createIconMock('UserPlus')
+const ChevronDown = createIconMock('ChevronDown')
+const Camera = createIconMock('Camera')
+const ImagePlus = createIconMock('ImagePlus')
 
 module.exports = {
   Heart,
@@ -117,4 +120,7 @@ module.exports = {
   Folder,
   Building2,
   UserPlus,
+  ChevronDown,
+  Camera,
+  ImagePlus,
 }

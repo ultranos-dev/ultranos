@@ -287,8 +287,21 @@ const fireEvent = {
     // mirroring how real RNTL bubbles press events up through the tree.
     let node = element
     while (node && node.props) {
-      if (node.props.onPress) { node.props.onPress(); return }
-      if (node.props.onClick) { node.props.onClick(); return }
+      if (node.props.onPress) {
+        ReactTestRenderer.act(() => { node.props.onPress() })
+        // Rebuild parent map after state update flushes
+        const updatedJson = _currentInstance && _currentInstance.toJSON()
+        if (updatedJson) {
+          _parentMap = new WeakMap()
+          if (Array.isArray(updatedJson)) { updatedJson.forEach((n) => buildParentMap(n, null)) }
+          else { buildParentMap(updatedJson, null) }
+        }
+        return
+      }
+      if (node.props.onClick) {
+        ReactTestRenderer.act(() => { node.props.onClick() })
+        return
+      }
       node = _parentMap.get(node) ?? null
     }
     // No handler up the chain: no-op. This mirrors a disabled Pressable (whose
@@ -296,11 +309,24 @@ const fireEvent = {
     // the "blocks press when disabled" Button tests rely on.
   },
   changeText: (element, text) => {
-    if (element && element.props && element.props.onChange) {
-      element.props.onChange({ target: { value: text }, nativeEvent: { text } })
-    }
-    if (element && element.props && element.props.onChangeText) {
-      element.props.onChangeText(text)
+    // Wrap in act so React flushes the state update synchronously before the
+    // next query. Without this, React 18 batches the setState call outside of
+    // act and the component may not have re-rendered by the time a subsequent
+    // fireEvent.press queries the tree.
+    ReactTestRenderer.act(() => {
+      if (element && element.props && element.props.onChange) {
+        element.props.onChange({ target: { value: text }, nativeEvent: { text } })
+      }
+      if (element && element.props && element.props.onChangeText) {
+        element.props.onChangeText(text)
+      }
+    })
+    // Rebuild parent map after state flush
+    const updatedJson = _currentInstance && _currentInstance.toJSON()
+    if (updatedJson) {
+      _parentMap = new WeakMap()
+      if (Array.isArray(updatedJson)) { updatedJson.forEach((n) => buildParentMap(n, null)) }
+      else { buildParentMap(updatedJson, null) }
     }
   },
 }
