@@ -1,5 +1,32 @@
 # Deferred Work
 
+## Deferred from: code review of 48-1-power-aware-workload-scheduler (2026-06-13)
+
+- **F12: `business-days.ts` committed in 48-1 but belongs to Story 45.5** — File comment says "Story 45.5 — Task 7"; already committed; not imported by any 48.1 code; attribution error only. [`apps/lab-lite/src/lib/business-days.ts`]
+- **F24: Duplicate warning banners on budget overflow** — Global budget warning + per-group time warnings can stack redundantly in `WorkloadScheduleCard`. UX polish — merge into a single warning pass. [`apps/lab-lite/src/components/scheduler/WorkloadScheduleCard.tsx`]
+- **F25: `TestTimeConfigPanel` fires Dexie write + full reload on every keystroke** — Debounce or `onBlur` write pattern needed to avoid write storm on number inputs. [`apps/lab-lite/src/components/scheduler/TestTimeConfigPanel.tsx`]
+
+## Deferred from: code review of 48-2-predictive-reagent-burndown (2026-06-13)
+
+- **D1: `BurndownProjection.confidenceLevel` uses `'moderate'` not `'medium'` in stub type** — Resolved by P1 engine rewrite; `confidenceLevel` now uses `'high' | 'medium' | 'low'`.
+- **P9: Notification panel integration** — `evaluateAllReagentAlerts()` and `getCachedAlerts()` are implemented and the alert cache is populated. The remaining work is wiring `ReagentAlert` entries into the existing notification components at `apps/lab-lite/src/components/notifications/`. The `useReagentBurndown().cachedAlerts` hook already surfaces all data the panel needs. [`apps/lab-lite/src/components/notifications/`]
+
+## Deferred from: code review of 28-2-comprehensive-phi-cleanup-on-session-end (2026-06-13)
+
+- **W1: `clearPhiTables()` async in `beforeunload` — browser limitation, spec-acknowledged** — Browsers do not wait for promises in beforeunload; table clear may not complete before tab closes. Spec explicitly accepts this tradeoff: key wipe (synchronous) is the primary defence. [`apps/pharmacy-lite/src/components/PhiCleanupGuard.tsx`, `apps/lab-lite/src/components/PhiCleanupGuard.tsx`]
+- **W2: Sync queue pending/failed PHI payload purge not implemented** — Retained `pending`/`failed` syncQueue entries carry PHI payloads but are encrypted and unreadable without the wiped key. Full payload encryption deferred to Story 28.3 per design.
+- **W3: Key-lifecycle-hooks module-scope subscription never unsubscribed** — Zustand subscribe() return value is discarded. HMR in development could stack duplicate subscriptions. Not a production concern. [`apps/pharmacy-lite/src/lib/key-lifecycle-hooks.ts`, `apps/lab-lite/src/lib/key-lifecycle-hooks.ts`]
+- **W4: `payments` table in Lab-Lite PHI_TABLES — financial record retention concern** — Lab-Lite payments contain patientRef; clearing is correct for PHI minimization but financial regulations may require retention. Data syncs to Hub before clear. Assess in a compliance review.
+- **W5: Lab-Lite `key-lifecycle-hooks.ts` missing `restoreAwaitingKeyEntries`** — Not applicable to push-only Lab-Lite architecture (no `awaiting-key` queue status). Confirm during 28.3 sync queue work.
+- **W6: `syncMeta` wipe destroys OPD-Lite sync checkpoint state on session end** — `syncMeta` has patientId as PK (PHI), so clearing is correct per Task 10 audit. Next session triggers full re-sync. Monitor for unexpected re-sync load.
+
+## Deferred from: code review of 28-3-sync-queue-phi-payload-encryption (2026-06-13)
+
+- **W1: `enc:v1:` prefix as sentinel not cryptographically robust** — A FHIR payload could theoretically begin with `enc:v1:` causing the encryption proxy to skip encryption. Very low probability with real FHIR JSON. Revisit if payload schema changes bring this closer to plausible. [`apps/opd-lite/src/lib/sync-queue.ts:enqueue`]
+- **W2: Migration excludes 'syncing' status entries** — Intentional design: `syncing` entries at startup are handled by `recoverStale()` which reverts them to `pending`, after which they will be encrypted on next drain cycle (drain handles legacy plaintext). [`apps/opd-lite/src/lib/sync-queue-migration.ts`]
+- **W3: awaiting-key entries have no max-age eviction or escalation** — If the encryption key becomes permanently unavailable, awaiting-key entries accumulate indefinitely with no error surfaced to the user or operator. Track in Epic 30 (queue lifecycle). [`packages/sync-engine/src/queue.ts:recoverStale`]
+- **W4: restoreAwaitingKeyEntries ordering before migrateUnencryptedQueueEntries** — Secondary consequence of Patch #3 (migration not wired up). Once the migration is called before the lifecycle hook fires, the ordering concern disappears. [`apps/opd-lite/src/lib/key-lifecycle-hooks.ts`]
+
 ## Deferred from: code review of 55-8-surveillance-alert-configuration (2026-06-12)
 
 - **W1: `enrollChw` silently stores plaintext PHI when encryption fails** — When `getCachedEncryptionKey()` throws, the catch block falls through and inserts raw `givenName`/`familyName` into the DB with no error or audit event. CLAUDE.md Rule 1 + Rule 6 violation. Story 54-2 code; must be fixed before CHW enrollment goes to production. [`apps/hub-api/src/trpc/routers/admin.ts:enrollChw`]
@@ -984,6 +1011,31 @@
 
 - **W1: Dead-letter records with no `failed` status** [`provenance-drain-worker.ts:953–955`] — Permanently-rejected provenance records stay `pending` forever and retry on every online event. Pre-existing pattern from AuditDrainWorker; requires Hub API to return a `failed` record status before this can be fixed client-side. Revisit when /ai-provenance.sync Hub endpoint is implemented.
 
+## Deferred from: code review of 48-3-pre-shift-readiness-forecast Group 3 (2026-06-14)
+
+- **W9: `vi.hoisted()` pattern in readiness-engine.test.ts is unexplained** — `mockOrdersToArray` requires `vi.hoisted()` to be accessible inside `vi.mock()` factory due to Vitest hoisting semantics. The pattern is correct but non-obvious; a comment would prevent future contributors from accidentally removing it and reintroducing the hoisting bug. [`apps/lab-lite/src/__tests__/readiness-engine.test.ts`]
+- **W10: No test for dimension row click-to-expand toggle** — `DimensionRow` expand/collapse state is exercised only implicitly (amber/red rows render expanded by default). A `fireEvent.click` test on a green row (no-op) and an amber row with details (toggles) would close the coverage gap. [`apps/lab-lite/src/__tests__/readiness-briefing-card.test.tsx`]
+- **W11: No smoke test for unknown dimension in `generateRecommendations`** — `generateRecommendations('unknownDim', 'red', {})` falls through to an empty return; a one-line test would guard against a future switch refactor accidentally throwing. [`apps/lab-lite/src/__tests__/readiness-recommendations.test.ts`]
+
+## Deferred from: code review of 48-3-pre-shift-readiness-forecast Group 2 (2026-06-14)
+
+- **W4/W5: Planner page handlers without try/catch + revokeObjectURL race** — Both were in the misattributed Story 54.6 planner page that was removed during this review. Will need addressing when 54.6 is properly implemented. [`apps/lab-lite/src/app/[locale]/planner/page.tsx` — DELETED]
+- **W6: `reportPlannerEvent` fire-and-forget audit pattern** — Consistent with the codebase's `emitClientAudit` fire-and-forget pattern. Low-frequency manager actions (plan finalization, export) may warrant confirmation of audit persistence. Revisit in audit reliability sprint. [`apps/lab-lite/src/lib/audit-client.ts`]
+- **W8: `useReadinessBriefing` reactive refresh on equipment-status/reagent changes** — Spec says hook should refresh on equipment-status or reagent changes. Current implementation only fires on mount + manual refresh. Dexie `liveQuery` integration needed. [`apps/lab-lite/src/hooks/useReadinessBriefing.ts`]
+
+## Deferred from: code review of 48-3-pre-shift-readiness-forecast Group 1 (2026-06-13)
+
+- **W1: `worstStatus([])` returns 'green' on empty statuses array** — Not a current bug (all five evaluators always push ≥1 status), but a defensive improvement: an empty array should default to `'amber'` in a healthcare context where unknown ≠ safe. [`apps/lab-lite/src/lib/readiness-engine.ts:worstStatus`]
+- **W2: `Promise.all` in `generateReadinessBriefing()` — switch to `Promise.allSettled` for resilience** — Each evaluator currently catches its own errors, but `Promise.allSettled` would prevent a future evaluator that forgets try/catch from killing the entire briefing. [`apps/lab-lite/src/lib/readiness-engine.ts:generateReadinessBriefing`]
+- **W3: "N more..." overflow link — engine provides no overflow count** — Engine truncates recommendations to 3 but doesn't emit a count of truncated items; the component cannot render "N more..." without it. Pending Group 2 component review to determine whether it's handled at that layer. [`apps/lab-lite/src/lib/readiness-engine.ts:evaluateReagents`]
+
+## Deferred from: code review of 28-1-encrypt-all-opd-lite-dexie-tables-via-crypto-proxy (2026-06-13)
+
+- **W1: Error class name `EncryptionKeyNotAvailableError` vs spec's `DecryptionKeyMissingError`** — spec used a placeholder name; implementation is consistent with Story 7.1 naming; pre-existing; no functional impact currently but could diverge if future error-boundary code targets the spec name. [`apps/opd-lite/src/lib/dexie-encryption-middleware.ts`]
+- **W2: v22 `.upgrade()` `modify()` handler is a no-op for already-encrypted records** — `record['_ultranos']` is undefined on encrypted blobs; the delete is a harmless no-op for all existing encrypted records; intentional and safe. [`apps/opd-lite/src/lib/db.ts`]
+- **W3: `appointments` table encrypted but not in spec's AC1 table enumeration** — encrypting more tables is defensively correct; spec list was non-exhaustive; no regression risk.
+- **W4: No regression test evidence cited in story 28.1 completion notes** — "21/21 tests pass, no regressions" stated but no CI run reference; process concern, no code issue.
+
 ## Deferred from: code review of 55-7-lab-network-outbreak-management (2026-06-12)
 
 - **D1: `getSurveillanceConfig` / `listSurveillanceAlerts` use `labs.name` instead of `labs.lab_name`** — Column mismatch causes lab names to always return null/Unknown; in 55.8 code bundled in the same diff; review when 55.8 is formally reviewed.
@@ -992,3 +1044,32 @@
 - **D4: `getMentorshipStats` `avgPairingDurationDays` mixes elapsed-active and final-dissolved duration** — Produces a meaningless average for orgs with mixed active/closed pairings. 55.4 code; review when 55.4 review runs.
 - **D5: `createCertificationPathway` resolves org_id via a secondary practitioner query** — If `ctx.user.sub` matches a practitioner from a different org, the pathway is created in that org. 55.5 code, story is `done`.
 - **D6: `getCachedEncryptionKey` called without `await` in `getEmployeeHealth` / `updateEmployeeHealth`** — If the function is async, the key is a Promise passed to `encryptField`/`decryptField`, producing garbled ciphertext. 55.3 code, story is `done`.
+
+## Deferred from: code review of 28-5-key-rotation-with-version-prefixed-payloads (2026-06-13)
+
+- **F9: `tablesCompleted.length === phiTableNames.length` completion check drifts if PHI table list changes between sessions** — If a table is removed from the PHI list between rotation start and resume, `complete` is never `true` and the v1 key can never be retired. Operational edge case; address when re-encryption job is operationalized. [`apps/opd-lite/src/lib/re-encryption.ts:146`]
+- **F10: `markAwaitingKey` silently no-ops when drain-worker race moves entry from `syncing` to `pending` before `markAwaitingKey` runs** — Existing `recoverStale` logic bounds damage to `maxRetries` failures. Address when `awaiting-key` drain path is formally integrated. [`packages/sync-engine/src/queue.ts:153`]
+- **F11: `VERSION_PREFIX_RE` regex accepts unbounded version digit counts** — Corrupted payload with oversized version number (`v99999:`) produces a verbose `UnknownKeyVersionError` rather than a fast fail. No PHI exposure; purely defensive hardening. Cap digits to `\d{1,3}` in a follow-up. [`packages/crypto/src/browser-crypto.ts:5`]
+
+## Deferred from: code review of 28-4-key-derivation-from-supabase-jwt-pbkdf2 (2026-06-13)
+
+- **W1: PBKDF2 iteration count (100k) below current OWASP 2023 recommendation (600k)** — Spec was written citing 100k as minimum; OWASP 2023 Password Storage Cheat Sheet now recommends 600k for PBKDF2-SHA256. Change requires spec update and performance re-validation on target hardware. [`packages/crypto/src/browser-crypto.ts:55`]
+- **W2: 28.5 sub-concerns (pending scope decision D1)** — If 28.5 code is kept bundled with 28.4: `deriveKeyForVersion` salt concatenation has no length prefix (collision risk for short version strings); `console.error` in `decryptPayload` logs from a crypto path; `syncQueue.enqueue` in OPD-Lite always calls `encryptPayload` without version arg (always v1 even after rotation); Lab-Lite `setKey()` resets keyMap to `{v1}` discarding rotated keys on re-auth. [`packages/crypto/src/browser-crypto.ts`, `apps/opd-lite/src/lib/sync-queue.ts`, `apps/lab-lite/src/lib/encryption-key-store.ts`]
+- **W3: Device salt XSS threat model** — XSS can exfiltrate `ultranos:device-salt` + JWT sub to reconstruct AES key offline. Spec-approved design; non-extractable CryptoKey prevents JS export. Revisit in security review. [`apps/opd-lite/src/lib/encryption-key-store.ts:11`]
+- **W4: Race condition — concurrent auth events can double-derive and race-set the key** — Low probability; Supabase auth events serialize in practice. Add derivation mutex if observed in production. [`apps/opd-lite/src/components/AuthGuard.tsx:66`]
+- **W5: No test for `clearPhiTables()` failure path on sign-out** — Gap in sign-out coverage; deferred alongside P1 fix in this story. [`apps/opd-lite/src/components/AuthGuard.tsx:handleSignOut`]
+- **W6: Cross-app `'ultranos:device-salt'` localStorage key — shared if apps co-locate on same origin** — All three apps use the same constant. Verify production deployment topology; if apps ever share an origin, add app-specific prefixes. [`apps/opd-lite/src/lib/encryption-key-store.ts:11`, `apps/pharmacy-lite/src/lib/encryption-key-store.ts:11`, `apps/lab-lite/src/lib/encryption-key-store.ts:16`]
+
+## Deferred from: code review of 28-6-search-encryption-strategy-for-indexed-patient-names (2026-06-13)
+
+- **D1: Hub Phase-2 errors silently swallowed with no user feedback on auth failure** — `catch {}` in `performSearch` discards Hub 401/500 errors; consistent with offline-first design intent but auth failures are invisible to clinicians. Revisit when Hub error surfacing is systematically addressed. [`apps/pharmacy-lite/src/hooks/usePatientSearch.ts:73`]
+- **D2: `runPendingEncryptionMigrations` has no retry scheduling if IDB is not open at call time** — If called before Dexie has opened, `db.encryptionMigrations.toArray()` throws and the migration is silently skipped until the next app startup. Caller-side retry is outside this story's scope. [`apps/opd-lite/src/lib/db.ts:909`]
+- **D3: Hub search results not persisted to local DB — disappear on next search** — Hub patients returned by Phase 2 are merged into React state only; not written to IndexedDB. Patients found only on Hub vanish after component unmount. Architectural decision; Hub-sync path handles persistence separately. [`apps/pharmacy-lite/src/hooks/usePatientSearch.ts:65-67`]
+- **D4: Hub merge overwrites local results unconditionally without timestamp comparison** — `merged.set(p.id, hubPatient)` overwrites local copy on ID collision. Hub may return a stale version if replication lag exists. Affects search result display only; stored clinical data is unaffected. Consistent with Hub-is-authoritative pattern. [`apps/pharmacy-lite/src/hooks/usePatientSearch.ts:65-67`]
+- **D5: OPD-Lite has no minimum query length vs Pharmacy-Lite requiring 2 chars** — A single Arabic character in OPD-Lite triggers a full in-memory decrypt of all patients. Within budget for ≤1000 records but creates a performance cliff if Hub sync limit is raised. [`apps/opd-lite/src/lib/use-patient-search.ts:68`, `apps/pharmacy-lite/src/lib/patient-search.ts:22`]
+
+
+## Deferred from: code review of 48-4-critical-value-escalation-chain (2026-06-13)
+
+- **W1: Test gap — L/H flags (vs LL/HH) in `deriveCriticalsFromFlags`** — No test covering the case where a result has standard `L`/`H` flags (not `LL`/`HH`); a one-character rename in the flag naming convention could silently disable critical detection. Add boundary test for `deriveCriticalsFromFlags` with standard abnormality flags. [`apps/lab-lite/src/lib/escalation-integration.ts`]
+- **W2: `resumeActiveEscalations` SSR guard untested** — `typeof window === 'undefined'` guard never fires in jsdom tests; no coverage that the function is a no-op during SSR. Mock `window` as undefined in a dedicated SSR test context. [`apps/lab-lite/src/__tests__/escalation-timer.test.ts:111`]

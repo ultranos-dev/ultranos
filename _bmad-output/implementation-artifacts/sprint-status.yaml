@@ -1,5 +1,5 @@
 # generated: 2026-04-29T03:34:34.691026
-# last_updated: '2026-06-12T00:00:00.000000'
+# last_updated: '2026-06-13T20:00:00.000000'
 # project: Ultranos
 # project_key: NOKEY
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 #
 
 generated: '2026-04-29T03:34:34.691026'
-last_updated: '2026-06-12T00:00:00.000000'
+last_updated: '2026-06-13T18:00:00.000000'
 project: Ultranos
 project_key: NOKEY
 tracking_system: file-system
@@ -343,12 +343,12 @@ development_status:
 
   # Priority: HIGH (regulatory)
   epic-28: in-progress
-  28-1-encrypt-all-opd-lite-dexie-tables-via-crypto-proxy: ready-for-dev
-  28-2-comprehensive-phi-cleanup-on-session-end: ready-for-dev
-  28-3-sync-queue-phi-payload-encryption: ready-for-dev
-  28-4-key-derivation-from-supabase-jwt-pbkdf2: ready-for-dev
-  28-5-key-rotation-with-version-prefixed-payloads: ready-for-dev
-  28-6-search-encryption-strategy-for-indexed-patient-names: ready-for-dev
+  28-1-encrypt-all-opd-lite-dexie-tables-via-crypto-proxy: done
+  28-2-comprehensive-phi-cleanup-on-session-end: in-progress
+  28-3-sync-queue-phi-payload-encryption: in-progress
+  28-4-key-derivation-from-supabase-jwt-pbkdf2: done
+  28-5-key-rotation-with-version-prefixed-payloads: done
+  28-6-search-encryption-strategy-for-indexed-patient-names: done
   epic-28-retrospective: optional
 
   # Priority: HIGH (compliance)
@@ -613,9 +613,10 @@ development_status:
   # Power-aware scheduling, workload estimation for low-resource labs
   # ============================================================
   epic-48: in-progress
-  48-1-power-aware-workload-scheduler: review
-  48-3-pre-shift-readiness-forecast: review
-  48-4-critical-value-escalation-chain: review
+  48-1-power-aware-workload-scheduler: in-progress
+  48-2-predictive-reagent-burndown: done
+  48-3-pre-shift-readiness-forecast: done
+  48-4-critical-value-escalation-chain: in-progress
   epic-48-retrospective: optional
 
   # ============================================================
