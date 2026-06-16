@@ -1,5 +1,12 @@
 # Deferred Work
 
+## Deferred from: code review of pharmopedia-o3-account-discovery-claim (2026-06-16)
+
+- **O3-1: `profile-photos` Supabase Storage bucket is public; patient profile photos are PHI** — Patient photos are uploaded to a public bucket and served via `getPublicUrl()`, so `photo_url` is a publicly-resolvable URL with no access control. Introduced in O2 (signup wizard photo upload), surfaced in the O3 code review. Fix: make the bucket private and serve via short-lived signed URLs; spans O2's upload path (`apps/pharmopedia/src/lib/profile-photo.ts`) and any profile read path. **→ Track for E4 (Profile refactor).** [`apps/pharmopedia/src/lib/profile-photo.ts`, Supabase bucket `profile-photos`]
+- **O3-2: `registerFromSession` stores patient current address (province/district/village) as plaintext** — Matches the established patient-schema design (all patient-create/read paths store address plaintext; no `address_*_enc` columns; address not in crypto `randomizedFields`). Accepted for O3 to avoid non-uniform encryption. If address-at-rest encryption is desired, it should be a dedicated cross-cutting story covering every patient create/read path + `randomizedFields`, not bolted onto one procedure. [`apps/hub-api/src/trpc/routers/patient-registration.ts:registerFromSession`, `packages/crypto/src/server-crypto.ts`]
+- **O3-3: Backfill `practitioners.telecom_phone_index` not yet run** — The migration column + `enrollChw` write-path + idempotent backfill script all ship, but the one-time backfill (`apps/hub-api/scripts/backfill-practitioner-phone-index.ts`) requires the field-encryption env keys and has not been executed. Existing practitioners will not match staff-discovery-by-phone until it runs. Run server-side once with keys available. [`apps/hub-api/scripts/backfill-practitioner-phone-index.ts`]
+- **O3-4: Wizard does not surface MPI `{ blocked: true }` from `registerFromSession`** — On an MPI BLOCK the finish handler still routes to `/(tabs)` without telling the user no record was created. Spec §3.4 only required the no-match happy path, so this is a UX gap, not a deviation. Surface a blocked/duplicate-review state when MPI blocks self-registration. [`apps/pharmopedia/app/(auth)/register.tsx:handleFinish`]
+
 ## Deferred from: code review of 48-1-power-aware-workload-scheduler (2026-06-13)
 
 - **F12: `business-days.ts` committed in 48-1 but belongs to Story 45.5** — File comment says "Story 45.5 — Task 7"; already committed; not imported by any 48.1 code; attribution error only. [`apps/lab-lite/src/lib/business-days.ts`]

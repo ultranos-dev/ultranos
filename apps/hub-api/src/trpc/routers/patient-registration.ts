@@ -1,11 +1,12 @@
 import { z } from 'zod'
 import { createHash } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
-import { baseProcedure, createTRPCRouter } from '../init'
+import { baseProcedure, protectedProcedure, createTRPCRouter } from '../init'
 import { rateLimitMiddleware, checkRateLimit } from '../middleware/rateLimit'
 import { AuditLogger } from '@ultranos/audit-logger'
-import { encryptField } from '@ultranos/crypto/server'
+import { encryptField, generateBlindIndex } from '@ultranos/crypto/server'
 import { db } from '@/lib/supabase'
+import { getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { computeMpiResult } from '@ultranos/mpi-engine'
 import { fetchMpiCandidates } from '@/lib/mpi-candidate-query'
 
@@ -21,6 +22,62 @@ const SUPPORTED_LOCALES = ['en', 'ar', 'prs', 'ps'] as const
 /** Hash phone for per-phone rate limiting without storing raw phone in Redis. */
 function hashPhone(phone: string): string {
   return createHash('sha256').update(phone).digest('hex')
+}
+
+/**
+ * Normalize a phone to E.164-ish digits for comparison: strip everything except
+ * the leading "+" and digits. Supabase stores the verified phone without a leading
+ * "+" (e.g. "93701234567"), while our inputs are validated as "+<digits>", so we
+ * compare on digits only.
+ */
+function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/[^\d]/g, '')
+}
+
+/**
+ * Security guard: ensure the caller's request phone matches the OTP-verified phone
+ * bound to their authenticated session. The verified phone is NOT on ctx.user, so we
+ * resolve it authoritatively via the Auth admin API (supabase.auth.admin.getUserById).
+ *
+ * On mismatch (or if the verified phone cannot be resolved) we throw FORBIDDEN — the
+ * message is deliberately generic so it does not reveal whether the target phone exists
+ * or which phone is bound. A SECURITY_VIOLATION / DENIED audit is emitted with the
+ * opaque actorId only (never a phone number) — consistent with the other anomaly audits.
+ */
+async function assertSessionPhone(
+  ctx: { user: { sub: string }; supabase: { auth: { admin: { getUserById: (id: string) => Promise<{ data: { user: { phone?: string | null } | null } | null }> } } } },
+  requestPhone: string,
+  audit: AuditLogger,
+  operation: 'discover' | 'claim',
+): Promise<void> {
+  let verifiedPhone: string | null = null
+  try {
+    const { data } = await ctx.supabase.auth.admin.getUserById(ctx.user.sub)
+    verifiedPhone = data?.user?.phone ?? null
+  } catch {
+    verifiedPhone = null
+  }
+
+  const matches =
+    verifiedPhone != null &&
+    normalizePhoneDigits(verifiedPhone) === normalizePhoneDigits(requestPhone)
+
+  if (!matches) {
+    await audit
+      .emit({
+        action: 'SECURITY_VIOLATION',
+        resourceType: 'PATIENT',
+        resourceId: ctx.user.sub,
+        actorId: ctx.user.sub,
+        actorRole: 'PATIENT',
+        outcome: 'DENIED',
+        denialReason: 'session phone mismatch',
+        sessionId: `${operation}:${ctx.user.sub}`,
+        metadata: { operation },
+      })
+      .catch(() => {})
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'This action is not permitted.' })
+  }
 }
 
 /** Validate that a date string is a real calendar date and not in the future. */
@@ -270,5 +327,350 @@ export const patientRegistrationRouter = createTRPCRouter({
           expiresAt: otpData.session.expires_at,
         },
       }
+    }),
+
+  /**
+   * O3 Task 3: Post-OTP phone discovery.
+   * Checks if the authenticated user's phone matches a staff (practitioner) record
+   * or an unclaimed patient record. Returns matchType and a safe opaque candidate ref.
+   * No PHI returned — masked name only; ref is a blind index of patient ID.
+   */
+  discover: protectedProcedure
+    .input(z.object({ phone: z.string().min(7).max(20).regex(/^\+\d+$/) }))
+    .mutation(async ({ ctx, input }) => {
+      const { hmacKey } = getFieldEncryptionKeys()
+      const audit = new AuditLogger(ctx.supabase)
+
+      // Step 0: bind to the session's OTP-verified phone (prevents discovering phone B
+      // while authed for phone A). FORBIDDEN on mismatch without leaking which phone.
+      await assertSessionPhone(ctx, input.phone, audit, 'discover')
+
+      // Staff check (blind index over encrypted practitioner phone)
+      const phoneIdx = generateBlindIndex(input.phone, hmacKey)
+      const { data: staff } = await ctx.supabase
+        .from('practitioners')
+        .select('id')
+        .eq('telecom_phone_index', phoneIdx)
+        .maybeSingle()
+      if (staff) {
+        await audit
+          .emit({
+            action: 'READ',
+            resourceType: 'PRACTITIONER',
+            resourceId: String((staff as { id: string }).id),
+            actorId: ctx.user.sub,
+            actorRole: 'PATIENT',
+            outcome: 'SUCCESS',
+            sessionId: `discover:${ctx.user.sub}`,
+            metadata: { operation: 'discover', matchType: 'staff' },
+          })
+          .catch(() => {})
+        return { matchType: 'staff' as const }
+      }
+
+      // Patient check (plaintext unique phone)
+      const { data: patient } = await ctx.supabase
+        .from('patients')
+        .select('id, name_local, birth_date, birth_year, auth_user_id')
+        .eq('telecom_phone', input.phone)
+        .maybeSingle()
+      const p = patient as {
+        id: string
+        name_local: string | null
+        birth_date: string | null
+        birth_year: number | null
+        auth_user_id: string | null
+      } | null
+
+      if (p && (p.auth_user_id == null || p.auth_user_id === ctx.user.sub)) {
+        const ref = generateBlindIndex(p.id, hmacKey)
+        // name_local is the PLAINTEXT ILIKE-search column (the encrypted copy lives in
+        // name_local_enc). Use it directly — do NOT decryptField a plaintext value, and
+        // emit only the first given token (no family name) for data minimization.
+        const maskedName = p.name_local ? (p.name_local.trim().split(/\s+/)[0] ?? '') : ''
+        const birthYear = p.birth_year ?? (p.birth_date ? Number(p.birth_date.slice(0, 4)) : null)
+        await audit
+          .emit({
+            action: 'READ',
+            resourceType: 'PATIENT',
+            resourceId: p.id,
+            actorId: ctx.user.sub,
+            actorRole: 'PATIENT',
+            outcome: 'SUCCESS',
+            sessionId: `discover:${ctx.user.sub}`,
+            metadata: { operation: 'discover', matchType: 'patient' },
+          })
+          .catch(() => {})
+        return { matchType: 'patient' as const, candidate: { ref, maskedName, birthYear } }
+      }
+
+      if (p && p.auth_user_id && p.auth_user_id !== ctx.user.sub) {
+        await audit
+          .emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'PATIENT',
+            resourceId: p.id,
+            actorId: ctx.user.sub,
+            actorRole: 'PATIENT',
+            outcome: 'DENIED',
+            denialReason: 'phone record claimed by another user',
+            sessionId: `discover:${ctx.user.sub}`,
+            metadata: { operation: 'discover' },
+          })
+          .catch(() => {})
+      }
+      return { matchType: 'none' as const }
+    }),
+
+  /**
+   * O3 Task 4: Claim an existing patient record post-OTP.
+   * The caller must provide the opaque ref from discover + their phone (re-resolves match)
+   * + a birth year factor. On success, sets auth_user_id on the patient row.
+   */
+  claim: protectedProcedure
+    .input(
+      z.object({
+        ref: z.string().length(64),
+        phone: z.string().min(7).max(20).regex(/^\+\d+$/),
+        birthYear: z.number().int().gte(1900).lte(2100),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { hmacKey } = getFieldEncryptionKeys()
+      const audit = new AuditLogger(ctx.supabase)
+
+      // Bind to the session's OTP-verified phone before resolving any patient by phone.
+      await assertSessionPhone(ctx, input.phone, audit, 'claim')
+
+      const { data: patient } = await ctx.supabase
+        .from('patients')
+        .select('id, birth_date, birth_year, auth_user_id')
+        .eq('telecom_phone', input.phone)
+        .maybeSingle()
+      const p = patient as {
+        id: string
+        birth_date: string | null
+        birth_year: number | null
+        auth_user_id: string | null
+      } | null
+
+      // ref must re-derive from the caller's own phone-matched patient (prevents arbitrary-id claims)
+      if (!p || generateBlindIndex(p.id, hmacKey) !== input.ref) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'No matching record.' })
+      }
+
+      if (p.auth_user_id && p.auth_user_id !== ctx.user.sub) {
+        await audit
+          .emit({
+            action: 'SECURITY_VIOLATION',
+            resourceType: 'PATIENT',
+            resourceId: p.id,
+            actorId: ctx.user.sub,
+            actorRole: 'PATIENT',
+            outcome: 'DENIED',
+            denialReason: 'already claimed',
+            sessionId: `claim:${ctx.user.sub}`,
+            metadata: { operation: 'claim' },
+          })
+          .catch(() => {})
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'This record cannot be claimed.' })
+      }
+
+      const recordYear = p.birth_year ?? (p.birth_date ? Number(p.birth_date.slice(0, 4)) : null)
+      if (recordYear !== input.birthYear) {
+        await audit
+          .emit({
+            action: 'UPDATE',
+            resourceType: 'PATIENT',
+            resourceId: p.id,
+            actorId: ctx.user.sub,
+            actorRole: 'PATIENT',
+            outcome: 'DENIED',
+            denialReason: 'birth year mismatch',
+            sessionId: `claim:${ctx.user.sub}`,
+            metadata: { operation: 'claim' },
+          })
+          .catch(() => {})
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'The details did not match.' })
+      }
+
+      const { error } = await ctx.supabase
+        .from('patients')
+        .update({ auth_user_id: ctx.user.sub })
+        .eq('id', p.id)
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Could not link your account.' })
+      }
+
+      try {
+        await ctx.supabase.auth.admin.updateUserById(ctx.user.sub, {
+          user_metadata: { role: 'PATIENT', patient_id: p.id },
+        })
+      } catch {
+        /* non-fatal: link row is set */
+      }
+
+      await audit
+        .emit({
+          action: 'UPDATE',
+          resourceType: 'PATIENT',
+          resourceId: p.id,
+          actorId: ctx.user.sub,
+          actorRole: 'PATIENT',
+          outcome: 'SUCCESS',
+          sessionId: `claim:${ctx.user.sub}`,
+          metadata: { operation: 'claim' },
+        })
+        .catch(() => {})
+
+      return { ok: true as const }
+    }),
+
+  /**
+   * O3 Task 5: Self-register from an authenticated session (no OTP verify step).
+   * Mirrors register() minus OTP verify, sources userId from ctx.user.sub,
+   * and persists auth_user_id, photoUrl, and address fields on the patient row.
+   * MPI deduplication gates the creation (BLOCK → { blocked: true }, WARN → mpi_warn flag).
+   */
+  registerFromSession: protectedProcedure
+    .input(
+      z.object({
+        firstName: z.string().min(1).max(200).transform((s) => s.trim()),
+        nameFather: z
+          .string()
+          .min(1)
+          .max(200)
+          .transform((s) => s.trim())
+          .optional(),
+        gender: z.enum(['male', 'female', 'other', 'unknown']).optional(),
+        dateOfBirth: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .refine(isValidCalendarDate, 'invalid date'),
+        preferredLanguage: z.enum(SUPPORTED_LOCALES),
+        addressProvinceCurrent: z.string().max(100).optional(),
+        addressDistrictCurrent: z.string().max(100).optional(),
+        addressVillageCurrent: z.string().max(200).optional(),
+        photoUrl: z.string().url().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const encKey = process.env.FIELD_ENCRYPTION_KEY
+      if (!encKey) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Registration failed.',
+        })
+      }
+
+      const userId = ctx.user.sub
+      const birthYear = Number(input.dateOfBirth.split('-')[0])
+
+      const mpiCandidates = await fetchMpiCandidates(ctx.supabase, {
+        nameGiven: input.firstName,
+        nameFather: input.nameFather,
+        birthYear,
+      })
+
+      const mpiResult = computeMpiResult(mpiCandidates, {
+        nameGiven: input.firstName,
+        nameFather: input.nameFather,
+        birthYear,
+        gender: input.gender,
+      })
+
+      if (mpiResult.decision === 'BLOCK') {
+        return { blocked: true as const }
+      }
+
+      const mpiWarn = mpiResult.decision === 'WARN'
+      const now = new Date().toISOString()
+      const patientId = crypto.randomUUID()
+
+      // db.toRow applies camelToSnake:
+      //   authUserId → auth_user_id
+      //   photoUrl → photo_url
+      //   addressProvinceCurrent → address_province_current
+      //   addressDistrictCurrent → address_district_current
+      //   addressVillageCurrent → address_village_current
+      const patientRow = db.toRow({
+        id: patientId,
+        nameLocal: input.firstName,
+        nameLocalEnc: encryptField(input.firstName, encKey),
+        nameFather: input.nameFather ?? null,
+        gender: input.gender ?? null,
+        birthDate: input.dateOfBirth,
+        birthDateEnc: encryptField(input.dateOfBirth, encKey),
+        birthYearOnly: false,
+        isActive: true,
+        patientTier: 'FREE',
+        preferredLanguage: input.preferredLanguage,
+        mpi_warn: mpiWarn,
+        authUserId: userId,
+        photoUrl: input.photoUrl ?? null,
+        addressProvinceCurrent: input.addressProvinceCurrent ?? null,
+        addressDistrictCurrent: input.addressDistrictCurrent ?? null,
+        addressVillageCurrent: input.addressVillageCurrent ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+
+      const consentRow = {
+        consent_method: 'SELF_REGISTERED' as const,
+        grantor_id: userId,
+        grantor_role: 'PATIENT' as const,
+      }
+
+      const { data: rpcData, error: rpcError } = await ctx.supabase.rpc('create_patient_with_consent', {
+        p_patient: patientRow,
+        p_consent: consentRow,
+      })
+
+      if (rpcError) {
+        console.error('[PATIENT_REGISTRATION_SESSION] RPC failed:', { code: rpcError.code })
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Registration failed.',
+        })
+      }
+
+      const createdPatientId: string = (rpcData as Record<string, string>)?.['patientId'] ?? patientId
+
+      try {
+        await ctx.supabase.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            role: 'PATIENT',
+            patient_id: createdPatientId,
+            preferred_language: input.preferredLanguage,
+          },
+        })
+      } catch {
+        /* link row already set via auth_user_id on patient row */
+      }
+
+      const audit = new AuditLogger(ctx.supabase)
+      const auditEvent = {
+        action: 'CREATE' as const,
+        resourceType: 'PATIENT' as const,
+        resourceId: createdPatientId,
+        actorId: userId,
+        actorRole: 'PATIENT' as const,
+        outcome: 'SUCCESS' as const,
+        sessionId: `self-reg:${createdPatientId}`,
+        metadata: { operation: 'self-registration' },
+      }
+      try {
+        await audit.emit(auditEvent)
+      } catch {
+        // Retry once before accepting failure
+        try {
+          await audit.emit(auditEvent)
+        } catch {
+          console.error('[AUDIT_FAILURE] dropped', { resourceId: createdPatientId })
+        }
+      }
+
+      const { hmacKey } = getFieldEncryptionKeys()
+      return { patientId: generateBlindIndex(createdPatientId, hmacKey) }
     }),
 })

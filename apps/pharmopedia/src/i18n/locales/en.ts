@@ -259,7 +259,17 @@ const en = {
     finish: 'Create account',
     nameRequired: 'Please enter your first and last name.',
     addressRequired: 'Please select your province and district.',
-    saveError: 'Couldn’t save your profile. Please try again.',
+    saveError: "Couldn’t save your profile. Please try again.",
+    foundAccountTitle: 'We found your record',
+    foundAccountBody: 'We found a record for {{name}}. Confirm your date of birth to link it to your account.',
+    confirmBirthYear: 'Confirm your birth year',
+    birthYear: 'Birth year (e.g. 1990)',
+    claim: 'Link my record',
+    claimMismatch: "The details didn’t match — try again.",
+    staffMatchTitle: 'Staff account detected',
+    staffMatchBody: 'This phone number is linked to an Ultranos staff account. Please sign in with your staff credentials.',
+    goToMemberLogin: 'Go to staff sign-in',
+    dob: 'Date of birth',
   },
 } as const
 

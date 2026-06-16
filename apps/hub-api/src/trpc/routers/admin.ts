@@ -6,8 +6,8 @@ import { AuditLogger } from '@ultranos/audit-logger'
 import { db } from '@/lib/supabase'
 import { ROLE_MODULE_MAP, MODULE_DISPLAY_NAMES, LabRole, AuditAction } from '@ultranos/shared-types'
 import crypto from 'crypto'
-import { encryptField, decryptField } from '@ultranos/crypto/server'
-import { getCachedEncryptionKey } from '@/lib/field-encryption'
+import { encryptField, decryptField, generateBlindIndex } from '@ultranos/crypto/server'
+import { getCachedEncryptionKey, getFieldEncryptionKeys } from '@/lib/field-encryption'
 import { computeScreeningReminders } from '@/lib/screening-reminders'
 
 /**
@@ -6915,6 +6915,7 @@ export const adminRouter = createTRPCRouter({
         })
       }
 
+      const { hmacKey } = getFieldEncryptionKeys()
       const chwId = crypto.randomUUID()
       const { error: insertError } = await ctx.supabase
         .from('practitioners')
@@ -6926,6 +6927,7 @@ export const adminRouter = createTRPCRouter({
           role: 'CHW',
           status: 'ACTIVE',
           telecom_phone: encryptedPhone,
+          telecom_phone_index: generateBlindIndex(input.phone, hmacKey),
           created_at: new Date().toISOString(),
         })
 
