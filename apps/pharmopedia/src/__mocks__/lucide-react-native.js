@@ -63,6 +63,8 @@ const MapPinOff = createIconMock('MapPinOff')
 const CheckCircle = createIconMock('CheckCircle')
 const Home = createIconMock('Home')
 const Folder = createIconMock('Folder')
+const Building2 = createIconMock('Building2')
+const UserPlus = createIconMock('UserPlus')
 
 module.exports = {
   Heart,
@@ -113,4 +115,6 @@ module.exports = {
   CheckCircle,
   Home,
   Folder,
+  Building2,
+  UserPlus,
 }

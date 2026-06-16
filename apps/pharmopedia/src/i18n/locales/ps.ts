@@ -121,6 +121,7 @@ const ps: Translations = {
     somethingWentWrong: 'یوه ستونزه رامنځته شوه',
     reload: 'بیا پورته کول',
     tabError: 'دا برخه له تېروتنې سره مخ شوه',
+    poweredBy: 'د اولټرانوس روغتیایی پلیټفارم',
   },
   net: {
     offline: 'تاسو آفلاین یاست — کیش شوی معلومات ښودل کیږي',
@@ -165,6 +166,8 @@ const ps: Translations = {
   },
   login: {
     title: 'فارماپیدیا',
+    memberTitle: 'اولټرانوس ته ننوتل',
+    memberSubtitle: 'د اولټرانوس د کارمند حساب وکاروئ',
     clinicalStaff: 'کلیني کارمندان',
     patient: 'ناروغ',
     email: 'برېښنالیک',
@@ -212,6 +215,14 @@ const ps: Translations = {
     otpFailed: 'Verification failed',
     resendCode: 'کوډ بیا ولیږئ',
     resendIn: 'بیا لیږل په {{seconds}} ثانیو کې',
+  },
+  onboarding: {
+    chooseTitle: 'فارموپیډیا ته ښه راغلاست',
+    chooseSubtitle: 'څنګه غواړئ دوام ورکړئ؟',
+    memberTitle: 'زه د اولټرانوس له یوې اپلیکیشن څخه کار اخلم',
+    memberSubtitle: 'د خپل OPD Lite، Pharmacy Lite، Lab Lite یا Admin حساب سره ننوځئ',
+    publicTitle: 'زه دلته نوی یم',
+    publicSubtitle: 'شخصي حساب جوړ کړئ',
   },
 }
 

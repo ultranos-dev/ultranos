@@ -121,6 +121,7 @@ const ar: Translations = {
     somethingWentWrong: 'حدث خطأ ما',
     reload: 'إعادة التحميل',
     tabError: 'واجه هذا القسم خطأ',
+    poweredBy: 'منصة أولترانوس الصحية',
   },
   net: {
     offline: 'أنت غير متصل — يتم عرض البيانات المحفوظة',
@@ -165,6 +166,8 @@ const ar: Translations = {
   },
   login: {
     title: 'فارموبيديا',
+    memberTitle: 'تسجيل الدخول إلى أولترانوس',
+    memberSubtitle: 'استخدم حساب موظفي أولترانوس',
     clinicalStaff: 'الكوادر السريرية',
     patient: 'المريض',
     email: 'البريد الإلكتروني',
@@ -212,6 +215,14 @@ const ar: Translations = {
     otpFailed: 'Verification failed',
     resendCode: 'إعادة إرسال الرمز',
     resendIn: 'إعادة إرسال في {{seconds}} ث',
+  },
+  onboarding: {
+    chooseTitle: 'مرحبًا بك في فارموبيديا',
+    chooseSubtitle: 'كيف ترغب في المتابعة؟',
+    memberTitle: 'أستخدم أحد تطبيقات أولترانوس',
+    memberSubtitle: 'سجّل الدخول بحساب OPD Lite أو Pharmacy Lite أو Lab Lite أو Admin',
+    publicTitle: 'أنا جديد هنا',
+    publicSubtitle: 'أنشئ حسابًا شخصيًا',
   },
 }
 

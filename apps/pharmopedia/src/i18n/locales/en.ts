@@ -142,6 +142,7 @@ const en = {
     somethingWentWrong: 'Something went wrong',
     reload: 'Reload',
     tabError: 'This section encountered an error',
+    poweredBy: 'Ultranos Healthcare Platform',
   },
   net: {
     offline: "You're offline — showing cached data",
@@ -186,6 +187,8 @@ const en = {
   },
   login: {
     title: 'Pharmopedia',
+    memberTitle: 'Sign in to Ultranos',
+    memberSubtitle: 'Use your Ultranos staff account',
     clinicalStaff: 'Clinical Staff',
     patient: 'Patient',
     email: 'Email',
@@ -222,6 +225,14 @@ const en = {
     otpFailed: 'Verification failed',
     resendCode: 'Resend Code',
     resendIn: 'Resend in {{seconds}}s',
+  },
+  onboarding: {
+    chooseTitle: 'Welcome to Pharmopedia',
+    chooseSubtitle: 'How would you like to continue?',
+    memberTitle: 'I use an Ultranos app',
+    memberSubtitle: 'Sign in with your OPD Lite, Pharmacy Lite, Lab Lite or Admin account',
+    publicTitle: "I'm new here",
+    publicSubtitle: 'Create a personal account',
   },
 } as const
 

@@ -238,8 +238,19 @@ function render(element) {
     throw lastError
   }
 
+  function rerender(nextElement) {
+    ReactTestRenderer.act(() => {
+      instance.update(nextElement)
+    })
+    _currentInstance = instance
+    _parentMap = new WeakMap()
+    const newJson = instance.toJSON()
+    if (Array.isArray(newJson)) { newJson.forEach((n) => buildParentMap(n, null)) } else { buildParentMap(newJson, null) }
+  }
+
   return {
     instance,
+    rerender,
     toJSON: () => instance.toJSON(),
     getByTestId: (testID) => {
       const result = queryByTestId(instance, testID)

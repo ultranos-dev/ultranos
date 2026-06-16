@@ -110,7 +110,7 @@ export default function RootLayout() {
         </ErrorBoundary>
       </UiKitProvider>
       {showWelcome && !isAuthenticated && <Redirect href="/welcome" />}
-      {!showWelcome && !isAuthenticated && <Redirect href="/(auth)/login" />}
+      {!showWelcome && !isAuthenticated && <Redirect href="/(auth)/onboarding" />}
     </>
   )
 }

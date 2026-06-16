@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
 
   async function handleGetStarted() {
     try { await SecureStore.setItemAsync(WELCOME_KEY, '1') } catch { /* proceed anyway */ }
-    router.replace('/(auth)/login')
+    router.replace('/(auth)/onboarding')
   }
 
   const features = [

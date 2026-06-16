@@ -38,7 +38,8 @@ vi.mock('@/components/LanguageChips', () => ({ LanguageChips: () => null }))
 vi.mock('@/lib/haptics', () => ({ hapticNotification: vi.fn(), hapticSelection: vi.fn() }))
 vi.mock('expo-haptics', () => ({ NotificationFeedbackType: { Error: 'error', Success: 'success' } }))
 
-import LoginScreen from '@/app/(auth)/login'
+// O1: the patient-OTP resend flow moved out of login into the public register screen.
+import RegisterScreen from '@/app/(auth)/register'
 
 describe('OTP Resend Cooldown', () => {
   beforeEach(() => {
@@ -51,11 +52,7 @@ describe('OTP Resend Cooldown', () => {
   })
 
   async function goToOtpCodeStep() {
-    render(<LoginScreen />)
-    // Switch to patient tab and flush state
-    await act(async () => {
-      fireEvent.press(screen.getByTestId('patient-tab'))
-    })
+    render(<RegisterScreen />)
     fireEvent.changeText(screen.getByTestId('phone-input'), '+93700000000')
     // Request OTP and flush async state (Promise resolves via microtasks, unaffected by fake timers)
     await act(async () => {
@@ -76,6 +73,6 @@ describe('OTP Resend Cooldown', () => {
         vi.advanceTimersByTime(1000)
       })
     }
-    expect(screen.getByText('login.resendCode')).toBeTruthy()
+    expect(screen.getByText('register.resendCode')).toBeTruthy()
   })
 })

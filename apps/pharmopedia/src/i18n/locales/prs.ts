@@ -121,6 +121,7 @@ const prs: Translations = {
     somethingWentWrong: 'مشکلی رخ داده است',
     reload: 'بارگذاری مجدد',
     tabError: 'این بخش با خطا مواجه شد',
+    poweredBy: 'پلتفرم صحی اولترانوس',
   },
   net: {
     offline: 'شما آفلاین هستید — داده‌های ذخیره شده نمایش داده می‌شود',
@@ -165,6 +166,8 @@ const prs: Translations = {
   },
   login: {
     title: 'فارماپدیا',
+    memberTitle: 'ورود به اولترانوس',
+    memberSubtitle: 'از حساب کارمندی اولترانوس خود استفاده کنید',
     clinicalStaff: 'کارکنان بالینی',
     patient: 'بیمار',
     email: 'ایمیل',
@@ -212,6 +215,14 @@ const prs: Translations = {
     otpFailed: 'Verification failed',
     resendCode: 'ارسال مجدد کد',
     resendIn: 'ارسال مجدد در {{seconds}} ثانیه',
+  },
+  onboarding: {
+    chooseTitle: 'به فارموپیدیا خوش آمدید',
+    chooseSubtitle: 'چگونه می‌خواهید ادامه دهید؟',
+    memberTitle: 'من از یک برنامه اولترانوس استفاده می‌کنم',
+    memberSubtitle: 'با حساب OPD Lite، Pharmacy Lite، Lab Lite یا Admin خود وارد شوید',
+    publicTitle: 'من تازه‌وارد هستم',
+    publicSubtitle: 'یک حساب شخصی بسازید',
   },
 }
 

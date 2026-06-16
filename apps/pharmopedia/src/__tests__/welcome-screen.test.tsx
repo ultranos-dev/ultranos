@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react-native'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react-native'
 
 vi.mock('expo-secure-store', () => ({
   getItemAsync: vi.fn(),
@@ -19,8 +19,9 @@ vi.mock('react-native', async () => {
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
+const replace = vi.fn()
 vi.mock('expo-router', () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace }),
 }))
 
 // Note: The welcome screen is at app/welcome.tsx but uses @/ path alias
@@ -37,5 +38,11 @@ describe('WelcomeScreen', () => {
   it('renders Get Started button', () => {
     render(<WelcomeScreen />)
     expect(screen.getByText('welcome.getStarted')).toBeTruthy()
+  })
+
+  it('routes Get Started to the onboarding chooser', async () => {
+    const { getByTestId } = render(<WelcomeScreen />)
+    fireEvent.press(getByTestId('get-started-button'))
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/(auth)/onboarding'))
   })
 })
