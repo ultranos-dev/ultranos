@@ -1,0 +1,144 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AnonymousReportForm > RTL snapshot — form layout mirrors correctly 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="mx-auto max-w-lg flex flex-col gap-4"
+    >
+      <div
+        class="rounded-lg border border-blue-200 bg-blue-50 p-4"
+      >
+        <div
+          class="flex items-start gap-3"
+        >
+          <span
+            class="text-xl"
+          >
+            🔒
+          </span>
+          <div>
+            <h3
+              class="text-sm font-semibold text-blue-800"
+            >
+              privacyNoticeTitle
+            </h3>
+            <p
+              class="mt-1 text-sm text-blue-700"
+            >
+              privacyNoticeBody
+            </p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label
+          class="mb-3 block text-sm font-medium text-foreground"
+        >
+          categoryLabel
+        </label>
+        <div
+          class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+        >
+          <button
+            class="flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors border-border hover:border-border"
+            type="button"
+          >
+            <span
+              class="text-2xl"
+            >
+              🧴
+            </span>
+            <span
+              class="text-sm font-medium"
+            >
+              category.HAND_HYGIENE
+            </span>
+          </button>
+          <button
+            class="flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors border-border hover:border-border"
+            type="button"
+          >
+            <span
+              class="text-2xl"
+            >
+              🧤
+            </span>
+            <span
+              class="text-sm font-medium"
+            >
+              category.PPE_NON_USE
+            </span>
+          </button>
+          <button
+            class="flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors border-border hover:border-border"
+            type="button"
+          >
+            <span
+              class="text-2xl"
+            >
+              🗑️
+            </span>
+            <span
+              class="text-sm font-medium"
+            >
+              category.IMPROPER_WASTE_DISPOSAL
+            </span>
+          </button>
+          <button
+            class="flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors border-border hover:border-border"
+            type="button"
+          >
+            <span
+              class="text-2xl"
+            >
+              ⚠️
+            </span>
+            <span
+              class="text-sm font-medium"
+            >
+              category.EQUIPMENT_MISUSE
+            </span>
+          </button>
+          <button
+            class="flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-colors border-border hover:border-border"
+            type="button"
+          >
+            <span
+              class="text-2xl"
+            >
+              📋
+            </span>
+            <span
+              class="text-sm font-medium"
+            >
+              category.OTHER
+            </span>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label
+          class="mb-2 block text-sm font-medium text-foreground"
+          for="safety-report-details"
+        >
+          detailsLabel
+        </label>
+        <textarea
+          class="w-full rounded-lg border border-border p-3 text-sm placeholder:text-muted-foreground focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-300"
+          id="safety-report-details"
+          placeholder="detailsPlaceholder"
+          rows="5"
+        />
+      </div>
+      <button
+        disabled=""
+      >
+        submitButton
+      </button>
+    </div>
+  </div>
+</div>
+`;

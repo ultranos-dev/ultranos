@@ -1,6 +1,6 @@
 # Story 47.3: Employee Health & Vaccination Registry
 
-Status: review
+Status: done
 
 ## Story
 

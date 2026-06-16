@@ -1,0 +1,363 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`9.4 DelegateRegistration > renders correctly in RTL direction 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="rounded-lg border bg-card p-6 shadow-sm"
+    >
+      <h2
+        class="mb-4 text-lg font-semibold text-foreground"
+      >
+        registerTitle
+      </h2>
+      <div
+        class="mb-4 rounded-md bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-300"
+      >
+        consentLinked
+      </div>
+      <div
+        class="mb-4 space-y-1.5"
+      >
+        <label
+          class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+          data-slot="label"
+          for="delegate-phone"
+        >
+          phone
+        </label>
+        <input
+          class="flex h-10 w-full rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+          data-slot="input"
+          dir="ltr"
+          id="delegate-phone"
+          placeholder="phonePlaceholder"
+          type="tel"
+          value=""
+        />
+      </div>
+      <div
+        class="mb-4 space-y-1.5"
+      >
+        <label
+          class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+          data-slot="label"
+          for="delegate-relationship"
+        >
+          relationshipLabel
+        </label>
+        <div
+          data-testid="select"
+          data-value=""
+        >
+          <select
+            aria-label="Relationship to Patient"
+          >
+            <option
+              value=""
+            >
+              —
+            </option>
+            <option
+              value="spouse"
+            >
+              relationship.spouse
+            </option>
+            <option
+              value="parent"
+            >
+              relationship.parent
+            </option>
+            <option
+              value="child"
+            >
+              relationship.child
+            </option>
+            <option
+              value="sibling"
+            >
+              relationship.sibling
+            </option>
+            <option
+              value="grandchild"
+            >
+              relationship.grandchild
+            </option>
+            <option
+              value="in-law"
+            >
+              relationship.inLaw
+            </option>
+            <option
+              value="other"
+            >
+              relationship.other
+            </option>
+          </select>
+          <option
+            value="spouse"
+          >
+            relationship.spouse
+          </option>
+          <option
+            value="parent"
+          >
+            relationship.parent
+          </option>
+          <option
+            value="child"
+          >
+            relationship.child
+          </option>
+          <option
+            value="sibling"
+          >
+            relationship.sibling
+          </option>
+          <option
+            value="grandchild"
+          >
+            relationship.grandchild
+          </option>
+          <option
+            value="in-law"
+          >
+            relationship.inLaw
+          </option>
+          <option
+            value="other"
+          >
+            relationship.other
+          </option>
+        </div>
+      </div>
+      <div
+        class="mb-6 space-y-1.5"
+      >
+        <label
+          class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+          data-slot="label"
+          for="delegate-name"
+        >
+          name
+        </label>
+        <input
+          class="flex h-10 w-full rounded-xl border border-border bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+          data-slot="input"
+          id="delegate-name"
+          placeholder="namePlaceholder"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="flex justify-end gap-3"
+      >
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4"
+          data-size="default"
+          data-slot="button"
+          data-variant="outline"
+          type="button"
+        >
+          cancel
+        </button>
+        <button
+          class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-9 gap-1.5 px-4"
+          data-size="default"
+          data-slot="button"
+          data-variant="default"
+          type="button"
+        >
+          register
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`9.4+ DelegateManagementSection > renders section correctly in RTL direction (snapshot) 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <section
+      aria-labelledby="delegates-section-title"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h3
+          class="text-base font-semibold text-foreground"
+          id="delegates-section-title"
+        >
+          sectionTitle
+        </h3>
+      </div>
+      <ul
+        class="mt-4 space-y-2"
+      >
+        <li
+          class="flex items-center justify-between rounded-lg border px-4 py-3"
+        >
+          <div
+            class="text-sm"
+          >
+            <span
+              class="font-medium text-foreground"
+            >
+              relationship.spouse
+            </span>
+            <span
+              class="ms-2 inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
+            >
+              activeLabel
+            </span>
+            <p
+              class="text-muted-foreground"
+            >
+              Invalid Date
+            </p>
+          </div>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 border-destructive text-destructive hover:bg-destructive/10"
+            data-size="sm"
+            data-slot="button"
+            data-variant="outline"
+            type="button"
+          >
+            revokeDelegate
+          </button>
+        </li>
+      </ul>
+    </section>
+  </div>
+</div>
+`;
+
+exports[`9.4+ DelegateManagementSection > renders section in LTR direction (snapshot) 1`] = `
+<div>
+  <div
+    dir="ltr"
+  >
+    <section
+      aria-labelledby="delegates-section-title"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <h3
+          class="text-base font-semibold text-foreground"
+          id="delegates-section-title"
+        >
+          sectionTitle
+        </h3>
+      </div>
+      <ul
+        class="mt-4 space-y-2"
+      >
+        <li
+          class="flex items-center justify-between rounded-lg border px-4 py-3"
+        >
+          <div
+            class="text-sm"
+          >
+            <span
+              class="font-medium text-foreground"
+            >
+              relationship.spouse
+            </span>
+            <span
+              class="ms-2 inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
+            >
+              activeLabel
+            </span>
+            <p
+              class="text-muted-foreground"
+            >
+              Invalid Date
+            </p>
+          </div>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-background hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-8 gap-1 px-3 border-destructive text-destructive hover:bg-destructive/10"
+            data-size="sm"
+            data-slot="button"
+            data-variant="outline"
+            type="button"
+          >
+            revokeDelegate
+          </button>
+        </li>
+      </ul>
+    </section>
+  </div>
+</div>
+`;
+
+exports[`9.5 RevokeDelegateDialog > renders correctly in RTL direction 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      data-testid="dialog"
+    >
+      <div>
+        <div>
+          <h2>
+            revokeDelegate
+          </h2>
+        </div>
+        <p
+          class="text-sm text-foreground"
+        >
+          revokeConfirm
+        </p>
+        <div
+          class="space-y-1.5"
+        >
+          <label
+            class="flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            data-slot="label"
+            for="revoke-reason"
+          >
+            revokeReason
+          </label>
+          <textarea
+            class="flex min-h-[80px] w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+            data-slot="textarea"
+            id="revoke-reason"
+            placeholder="revokeReasonPlaceholder"
+            rows="3"
+          />
+        </div>
+        <div
+          class="flex justify-end gap-3 pt-2"
+        >
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+            type="button"
+          >
+            cancel
+          </button>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 h-9 gap-1.5 px-4"
+            data-size="default"
+            data-slot="button"
+            data-variant="destructive"
+            type="button"
+          >
+            revokeSubmit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

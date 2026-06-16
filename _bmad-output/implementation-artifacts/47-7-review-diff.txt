@@ -1,0 +1,2733 @@
+diff --git a/apps/lab-lite/src/__tests__/audit-checklist-view.test.tsx b/apps/lab-lite/src/__tests__/audit-checklist-view.test.tsx
+new file mode 100644
+index 0000000..24e04cf
+--- /dev/null
++++ b/apps/lab-lite/src/__tests__/audit-checklist-view.test.tsx
+@@ -0,0 +1,223 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest'
++import { render, screen, waitFor } from '@testing-library/react'
++import userEvent from '@testing-library/user-event'
++import { AuditChecklistView } from '@/components/safety/AuditChecklistView'
++import type { InfectionControlAudit, ChecklistItemTemplate } from '@/types/infection-control-audit'
++import { ChecklistItemStatus, AuditStatus } from '@/types/infection-control-audit'
++
++vi.mock('next-intl', () => ({
++  useTranslations: () => (key: string) => key,
++}))
++
++vi.mock('@/lib/safety/default-checklist', () => ({
++  CHECKLIST_CATEGORIES: ['Hand Hygiene', 'PPE', 'General'],
++}))
++
++vi.mock('@/lib/safety/audit-checklist-service', () => ({
++  calculateComplianceScore: () => null,
++}))
++
++vi.mock('@/components/safety/PhotoCaptureButton', () => ({
++  PhotoCaptureButton: () => <div data-testid="photo-capture" />,
++}))
++
++// ── Test data ────────────────────────────────────────────────────────────────
++
++const testTemplates: ChecklistItemTemplate[] = [
++  {
++    id: 'ic-hh-01',
++    category: 'Hand Hygiene',
++    description: 'Hand hygiene stations stocked',
++    order: 1,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-ppe-01',
++    category: 'PPE',
++    description: 'PPE inventory adequate',
++    order: 4,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-sw-01',
++    category: 'General',
++    description: 'Sharps containers checked',
++    order: 7,
++    isDefault: true,
++    requiresPhoto: true,
++    isActive: true,
++  },
++]
++
++function makeAudit(overrides: Partial<InfectionControlAudit> = {}): InfectionControlAudit {
++  return {
++    id: 'audit-1',
++    auditDate: '2025-01-15',
++    auditMonth: '2025-01',
++    conductedBy: 'practitioner-123',
++    status: AuditStatus.IN_PROGRESS,
++    items: testTemplates.map((t) => ({
++      templateId: t.id,
++      status: ChecklistItemStatus.NOT_APPLICABLE,
++      notes: null,
++      photoEvidence: null,
++      photoFileName: null,
++      completedAt: null,
++      completedBy: 'practitioner-123',
++    })),
++    complianceScore: null,
++    completedAt: null,
++    notes: '',
++    hlcTimestamp: 'hlc-test',
++    ...overrides,
++  }
++}
++
++// ── Shared props ─────────────────────────────────────────────────────────────
++
++function defaultProps(overrides?: Partial<InfectionControlAudit>) {
++  return {
++    audit: makeAudit(overrides),
++    templates: testTemplates,
++    onItemUpdate: vi.fn().mockResolvedValue(undefined),
++    onComplete: vi.fn().mockResolvedValue(undefined),
++    isCompleting: false,
++  }
++}
++
++// ── Tests ────────────────────────────────────────────────────────────────────
++
++describe('AuditChecklistView', () => {
++  beforeEach(() => {
++    vi.clearAllMocks()
++  })
++
++  // ── Rendering ──────────────────────────────────────────────────────────────
++
++  it('renders all items grouped by category', () => {
++    render(<AuditChecklistView {...defaultProps()} />)
++    expect(screen.getByText('Hand Hygiene')).toBeInTheDocument()
++    expect(screen.getByText('PPE')).toBeInTheDocument()
++    expect(screen.getByText('General')).toBeInTheDocument()
++  })
++
++  it('renders each item description', () => {
++    render(<AuditChecklistView {...defaultProps()} />)
++    expect(screen.getByText('Hand hygiene stations stocked')).toBeInTheDocument()
++    expect(screen.getByText('PPE inventory adequate')).toBeInTheDocument()
++    expect(screen.getByText('Sharps containers checked')).toBeInTheDocument()
++  })
++
++  it('shows progress as 0 of 3 initially', () => {
++    render(<AuditChecklistView {...defaultProps()} />)
++    // The progress block renders assessedCount as a bold number alongside "/ totalCount"
++    // Both values should appear somewhere in the document
++    expect(screen.getByText(/\/ 3/)).toBeInTheDocument()
++    // assessedCount starts at 0 — present as standalone bold text
++    expect(screen.getByText(/itemsAssessed/)).toBeInTheDocument()
++  })
++
++  it('Complete Audit button is disabled when items are unassessed', () => {
++    render(<AuditChecklistView {...defaultProps()} />)
++    // Button text comes from the t() mock which returns the key
++    const btn = screen.getByRole('button', { name: /completeAudit/i })
++    expect(btn).toBeDisabled()
++  })
++
++  // ── Pass / Fail toggles ────────────────────────────────────────────────────
++
++  it('calls onItemUpdate when PASS is clicked', async () => {
++    const user = userEvent.setup()
++    const onItemUpdate = vi.fn().mockResolvedValue(undefined)
++    render(
++      <AuditChecklistView
++        {...defaultProps()}
++        onItemUpdate={onItemUpdate}
++      />,
++    )
++    // Each item row has three toggle buttons: statusPass, statusFail, statusNA
++    const [firstPassBtn] = screen.getAllByRole('button', { name: /statusPass/i })
++    await user.click(firstPassBtn!)
++    await waitFor(() => {
++      expect(onItemUpdate).toHaveBeenCalledWith(
++        'ic-hh-01',
++        expect.objectContaining({ status: ChecklistItemStatus.PASS }),
++      )
++    })
++  })
++
++  it('calls onItemUpdate when FAIL is clicked', async () => {
++    const user = userEvent.setup()
++    const onItemUpdate = vi.fn().mockResolvedValue(undefined)
++    render(
++      <AuditChecklistView
++        {...defaultProps()}
++        onItemUpdate={onItemUpdate}
++      />,
++    )
++    const [firstFailBtn] = screen.getAllByRole('button', { name: /statusFail/i })
++    await user.click(firstFailBtn!)
++    await waitFor(() => {
++      expect(onItemUpdate).toHaveBeenCalledWith(
++        'ic-hh-01',
++        expect.objectContaining({ status: ChecklistItemStatus.FAIL }),
++      )
++    })
++  })
++
++  it('calls onItemUpdate when NA is clicked', async () => {
++    const user = userEvent.setup()
++    const onItemUpdate = vi.fn().mockResolvedValue(undefined)
++    render(
++      <AuditChecklistView
++        {...defaultProps()}
++        onItemUpdate={onItemUpdate}
++      />,
++    )
++    const [firstNaBtn] = screen.getAllByRole('button', { name: /statusNA/i })
++    await user.click(firstNaBtn!)
++    await waitFor(() => {
++      expect(onItemUpdate).toHaveBeenCalledWith(
++        'ic-hh-01',
++        expect.objectContaining({ status: ChecklistItemStatus.NOT_APPLICABLE }),
++      )
++    })
++  })
++
++  // ── Completion gating ─────────────────────────────────────────────────────
++
++  it('Complete Audit button enabled when all items assessed', () => {
++    const auditWithAllAssessed = makeAudit({
++      items: testTemplates.map((t) => ({
++        templateId: t.id,
++        status: ChecklistItemStatus.PASS,
++        notes: null,
++        photoEvidence: null,
++        photoFileName: null,
++        // completedAt set means the item has been assessed
++        completedAt: '2025-01-15T10:00:00Z',
++        completedBy: 'practitioner-123',
++      })),
++    })
++    render(
++      <AuditChecklistView
++        audit={auditWithAllAssessed}
++        templates={testTemplates}
++        onItemUpdate={vi.fn().mockResolvedValue(undefined)}
++        onComplete={vi.fn().mockResolvedValue(undefined)}
++      />,
++    )
++    const btn = screen.getByRole('button', { name: /completeAudit/i })
++    expect(btn).not.toBeDisabled()
++  })
++
++  // ── Smoke / RTL ───────────────────────────────────────────────────────────
++
++  it('renders without crashing in default layout', () => {
++    expect(() => render(<AuditChecklistView {...defaultProps()} />)).not.toThrow()
++  })
++})
+diff --git a/apps/lab-lite/src/__tests__/compliance-trend-view.test.tsx b/apps/lab-lite/src/__tests__/compliance-trend-view.test.tsx
+new file mode 100644
+index 0000000..2b120a4
+--- /dev/null
++++ b/apps/lab-lite/src/__tests__/compliance-trend-view.test.tsx
+@@ -0,0 +1,176 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest'
++import { render, screen } from '@testing-library/react'
++import { ComplianceTrendView } from '@/components/safety/ComplianceTrendView'
++import type { ComplianceTrend, InfectionControlAudit, ChecklistItemTemplate } from '@/types/infection-control-audit'
++import { AuditStatus, ChecklistItemStatus } from '@/types/infection-control-audit'
++
++vi.mock('next-intl', () => ({
++  useTranslations: () => (key: string) => key,
++}))
++
++// ── Test data helpers ─────────────────────────────────────────────────────────
++
++const testTemplates: ChecklistItemTemplate[] = [
++  {
++    id: 'ic-hh-01',
++    category: 'Hand Hygiene',
++    description: 'Hand hygiene stations stocked',
++    order: 1,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-ppe-01',
++    category: 'PPE',
++    description: 'PPE inventory adequate',
++    order: 4,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++]
++
++function makeCompletedAudit(
++  complianceScore: number | null,
++  auditMonth = '2025-01',
++): InfectionControlAudit {
++  return {
++    id: 'audit-1',
++    auditDate: '2025-01-15',
++    auditMonth,
++    conductedBy: 'practitioner-123',
++    status: AuditStatus.COMPLETED,
++    items: testTemplates.map((t) => ({
++      templateId: t.id,
++      status: ChecklistItemStatus.PASS,
++      notes: null,
++      photoEvidence: null,
++      photoFileName: null,
++      completedAt: '2025-01-15T10:00:00Z',
++      completedBy: 'practitioner-123',
++    })),
++    complianceScore,
++    completedAt: '2025-01-15T10:00:00Z',
++    notes: '',
++    hlcTimestamp: 'hlc-test',
++  }
++}
++
++function makeTrend(month: string, score: number, failedItems: string[] = []): ComplianceTrend {
++  return {
++    month,
++    score,
++    totalItems: 2,
++    passedItems: 2 - failedItems.length,
++    failedItems,
++  }
++}
++
++// ── Tests ─────────────────────────────────────────────────────────────────────
++
++describe('ComplianceTrendView', () => {
++  beforeEach(() => {
++    vi.clearAllMocks()
++  })
++
++  it('shows no audits message when no latest audit', () => {
++    render(<ComplianceTrendView trends={[]} latestAudit={null} templates={[]} />)
++    // t('noAuditsCompleted') → 'noAuditsCompleted' via mock
++    expect(screen.getByText('noAuditsCompleted')).toBeInTheDocument()
++  })
++
++  it('shows compliance score from latest audit', () => {
++    const audit = makeCompletedAudit(85)
++    const trends = [makeTrend('2025-01', 85)]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // Score is rendered as "85%"
++    expect(screen.getByText('85%')).toBeInTheDocument()
++  })
++
++  it('shows N/A when compliance score is null', () => {
++    const audit = makeCompletedAudit(null)
++    const trends = [makeTrend('2025-01', 0)]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // t('scoreNA') → 'scoreNA' via mock
++    expect(screen.getByText('scoreNA')).toBeInTheDocument()
++  })
++
++  it('shows "not enough data" when fewer than 2 trend points', () => {
++    const audit = makeCompletedAudit(90)
++    const trends = [makeTrend('2025-01', 90)]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // t('notEnoughTrendData') → 'notEnoughTrendData' via mock
++    expect(screen.getByText('notEnoughTrendData')).toBeInTheDocument()
++  })
++
++  it('renders trend bars when 2+ data points exist', () => {
++    const audit = makeCompletedAudit(90, '2025-03')
++    const trends = [
++      makeTrend('2025-01', 75),
++      makeTrend('2025-02', 80),
++      makeTrend('2025-03', 90),
++    ]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // Chart renders as an img role with aria-label from t('trendChartAriaLabel')
++    expect(screen.getByRole('img', { name: 'trendChartAriaLabel' })).toBeInTheDocument()
++    // Each bar has a title attribute "month: score%"
++    expect(screen.getByTitle('2025-01: 75%')).toBeInTheDocument()
++    expect(screen.getByTitle('2025-02: 80%')).toBeInTheDocument()
++    expect(screen.getByTitle('2025-03: 90%')).toBeInTheDocument()
++  })
++
++  it('shows failed items from latest trend', () => {
++    const audit = makeCompletedAudit(50, '2025-01')
++    const trends = [makeTrend('2025-01', 50, ['ic-hh-01'])]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // The description of the failed template is rendered
++    expect(screen.getByText('Hand hygiene stations stocked')).toBeInTheDocument()
++  })
++
++  it('shows no failed items section when none failed', () => {
++    const audit = makeCompletedAudit(100, '2025-01')
++    const trends = [makeTrend('2025-01', 100, [])]
++    render(
++      <ComplianceTrendView
++        trends={trends}
++        latestAudit={audit}
++        templates={testTemplates}
++      />,
++    )
++    // The failed items heading should not be present
++    expect(screen.queryByText('failedItemsTitle')).not.toBeInTheDocument()
++    // Neither should any item descriptions from the failed list
++    expect(screen.queryByText('Hand hygiene stations stocked')).not.toBeInTheDocument()
++  })
++})
+diff --git a/apps/lab-lite/src/__tests__/default-checklist.test.ts b/apps/lab-lite/src/__tests__/default-checklist.test.ts
+new file mode 100644
+index 0000000..b12face
+--- /dev/null
++++ b/apps/lab-lite/src/__tests__/default-checklist.test.ts
+@@ -0,0 +1,97 @@
++import { describe, it, expect } from 'vitest'
++import {
++  DEFAULT_CHECKLIST_ITEMS,
++  CHECKLIST_CATEGORIES,
++} from '../lib/safety/default-checklist'
++
++// ---------------------------------------------------------------------------
++// DEFAULT_CHECKLIST_ITEMS
++// ---------------------------------------------------------------------------
++
++describe('DEFAULT_CHECKLIST_ITEMS', () => {
++  it('contains 20 items', () => {
++    expect(DEFAULT_CHECKLIST_ITEMS.length).toBe(20)
++  })
++
++  it('all items have isDefault: true', () => {
++    for (const item of DEFAULT_CHECKLIST_ITEMS) {
++      expect(item.isDefault).toBe(true)
++    }
++  })
++
++  it('all items have isActive: true', () => {
++    for (const item of DEFAULT_CHECKLIST_ITEMS) {
++      expect(item.isActive).toBe(true)
++    }
++  })
++
++  it('all items have unique IDs', () => {
++    const ids = DEFAULT_CHECKLIST_ITEMS.map((item) => item.id)
++    const uniqueIds = new Set(ids)
++    expect(uniqueIds.size).toBe(DEFAULT_CHECKLIST_ITEMS.length)
++  })
++
++  it('has items in all 6 categories', () => {
++    const presentCategories = new Set(
++      DEFAULT_CHECKLIST_ITEMS.map((item) => item.category),
++    )
++    for (const category of CHECKLIST_CATEGORIES) {
++      expect(presentCategories.has(category)).toBe(true)
++    }
++  })
++
++  it('orders are globally unique and all greater than 0', () => {
++    const orders = DEFAULT_CHECKLIST_ITEMS.map((item) => item.order)
++    const uniqueOrders = new Set(orders)
++    expect(uniqueOrders.size).toBe(DEFAULT_CHECKLIST_ITEMS.length)
++    for (const order of orders) {
++      expect(order).toBeGreaterThan(0)
++    }
++  })
++
++  it('sharps container item requires photo', () => {
++    const sharpItem = DEFAULT_CHECKLIST_ITEMS.find(
++      (item) => item.id === 'ic-sw-01',
++    )
++    expect(sharpItem).toBeDefined()
++    expect(sharpItem!.requiresPhoto).toBe(true)
++  })
++
++  it('Hand Hygiene has 3 items', () => {
++    const handHygieneItems = DEFAULT_CHECKLIST_ITEMS.filter(
++      (item) => item.category === 'Hand Hygiene',
++    )
++    expect(handHygieneItems.length).toBe(3)
++  })
++
++  it('General has 4 items', () => {
++    const generalItems = DEFAULT_CHECKLIST_ITEMS.filter(
++      (item) => item.category === 'General',
++    )
++    expect(generalItems.length).toBe(4)
++  })
++
++  it('descriptions are non-empty strings', () => {
++    for (const item of DEFAULT_CHECKLIST_ITEMS) {
++      expect(typeof item.description).toBe('string')
++      expect(item.description.length).toBeGreaterThan(0)
++    }
++  })
++})
++
++// ---------------------------------------------------------------------------
++// CHECKLIST_CATEGORIES
++// ---------------------------------------------------------------------------
++
++describe('CHECKLIST_CATEGORIES', () => {
++  it('contains all 6 categories in correct order', () => {
++    expect(CHECKLIST_CATEGORIES).toEqual([
++      'Hand Hygiene',
++      'PPE',
++      'Sharps & Waste',
++      'Surface Decontamination',
++      'Equipment',
++      'General',
++    ])
++  })
++})
+diff --git a/apps/lab-lite/src/__tests__/infection-control-audit-service.test.ts b/apps/lab-lite/src/__tests__/infection-control-audit-service.test.ts
+new file mode 100644
+index 0000000..bbbd7b8
+--- /dev/null
++++ b/apps/lab-lite/src/__tests__/infection-control-audit-service.test.ts
+@@ -0,0 +1,419 @@
++import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
++import 'fake-indexeddb/auto'
++import { getDb } from '../lib/db'
++import {
++  startAudit,
++  recordItemResult,
++  calculateComplianceScore,
++  completeAudit,
++  getComplianceTrends,
++} from '../lib/safety/audit-checklist-service'
++import {
++  ChecklistItemStatus,
++  AuditStatus,
++  type InfectionControlAudit,
++} from '../types/infection-control-audit'
++
++vi.mock('@/lib/audit-client', () => ({
++  reportInfectionControlAuditEvent: vi.fn(),
++}))
++
++vi.mock('@/lib/hlc', () => ({
++  hlc: { now: () => ({ wallMs: Date.now(), counter: 0, nodeId: 'test-node' }) },
++  serializeHlc: () => 'hlc-test-timestamp',
++}))
++
++import { reportInfectionControlAuditEvent } from '@/lib/audit-client'
++
++// ---------------------------------------------------------------------------
++// Helpers
++// ---------------------------------------------------------------------------
++
++function makeAudit(
++  itemStatuses: ChecklistItemStatus[],
++  overrides: Partial<InfectionControlAudit> = {},
++): InfectionControlAudit {
++  return {
++    id: 'audit-test-' + Math.random(),
++    auditDate: '2025-01-15',
++    auditMonth: '2025-01',
++    conductedBy: 'practitioner-123',
++    status: AuditStatus.IN_PROGRESS,
++    complianceScore: null,
++    completedAt: null,
++    notes: '',
++    hlcTimestamp: 'hlc-test',
++    items: itemStatuses.map((status, i) => ({
++      templateId: 'ic-test-0' + (i + 1),
++      status,
++      notes: null,
++      photoEvidence: null,
++      photoFileName: null,
++      completedAt:
++        status !== ChecklistItemStatus.NOT_APPLICABLE
++          ? new Date().toISOString()
++          : null,
++      completedBy: 'practitioner-123',
++    })),
++    ...overrides,
++  }
++}
++
++// ---------------------------------------------------------------------------
++// Setup
++// ---------------------------------------------------------------------------
++
++beforeEach(async () => {
++  vi.clearAllMocks()
++
++  const db = getDb()
++  await db.checklist_templates.clear()
++  await db.infection_control_audits.clear()
++
++  await db.checklist_templates.bulkPut([
++    {
++      id: 'ic-test-01',
++      category: 'Hand Hygiene',
++      description: 'Test item 1',
++      order: 1,
++      isDefault: true,
++      requiresPhoto: false,
++      isActive: true,
++    },
++    {
++      id: 'ic-test-02',
++      category: 'PPE',
++      description: 'Test item 2',
++      order: 2,
++      isDefault: false,
++      requiresPhoto: true,
++      isActive: true,
++    },
++    {
++      id: 'ic-test-03',
++      category: 'General',
++      description: 'Inactive item',
++      order: 3,
++      isDefault: false,
++      requiresPhoto: false,
++      isActive: false,
++    },
++  ])
++})
++
++afterEach(async () => {
++  const db = getDb()
++  await db.checklist_templates.clear()
++  await db.infection_control_audits.clear()
++})
++
++// ---------------------------------------------------------------------------
++// startAudit
++// ---------------------------------------------------------------------------
++
++describe('startAudit', () => {
++  it('creates audit with all active templates as NOT_APPLICABLE', async () => {
++    const audit = await startAudit('practitioner-123')
++
++    expect(audit.status).toBe(AuditStatus.IN_PROGRESS)
++    expect(audit.conductedBy).toBe('practitioner-123')
++    // Only 2 active templates (ic-test-03 is inactive)
++    expect(audit.items.length).toBe(2)
++    for (const item of audit.items) {
++      expect(item.status).toBe(ChecklistItemStatus.NOT_APPLICABLE)
++    }
++    expect(audit.completedAt).toBeNull()
++  })
++
++  it('saves audit to Dexie', async () => {
++    const audit = await startAudit('practitioner-123')
++
++    const db = getDb()
++    const saved = await db.infection_control_audits.get(audit.id)
++    expect(saved).not.toBeUndefined()
++    expect(saved!.id).toBe(audit.id)
++  })
++
++  it('emits IC_AUDIT_STARTED event', async () => {
++    await startAudit('practitioner-123')
++
++    expect(reportInfectionControlAuditEvent).toHaveBeenCalledWith(
++      expect.objectContaining({ action: 'IC_AUDIT_STARTED' }),
++    )
++  })
++})
++
++// ---------------------------------------------------------------------------
++// recordItemResult
++// ---------------------------------------------------------------------------
++
++describe('recordItemResult', () => {
++  it('updates matching item status to PASS', async () => {
++    const audit = await startAudit('practitioner-123')
++    await recordItemResult(audit.id, 'ic-test-01', {
++      status: ChecklistItemStatus.PASS,
++    })
++
++    const db = getDb()
++    const updated = await db.infection_control_audits.get(audit.id)
++    const item = updated!.items.find((i) => i.templateId === 'ic-test-01')
++    expect(item).toBeDefined()
++    expect(item!.status).toBe(ChecklistItemStatus.PASS)
++    expect(item!.completedAt).not.toBeNull()
++  })
++
++  it('stores notes on FAIL item', async () => {
++    const audit = await startAudit('practitioner-123')
++    await recordItemResult(audit.id, 'ic-test-01', {
++      status: ChecklistItemStatus.FAIL,
++      notes: 'Need to restock',
++    })
++
++    const db = getDb()
++    const updated = await db.infection_control_audits.get(audit.id)
++    const item = updated!.items.find((i) => i.templateId === 'ic-test-01')
++    expect(item!.status).toBe(ChecklistItemStatus.FAIL)
++    expect(item!.notes).toBe('Need to restock')
++  })
++
++  it('throws when audit not found', async () => {
++    await expect(
++      recordItemResult('non-existent-audit-id', 'ic-test-01', {
++        status: ChecklistItemStatus.PASS,
++      }),
++    ).rejects.toThrow('Audit not found')
++  })
++})
++
++// ---------------------------------------------------------------------------
++// calculateComplianceScore
++// ---------------------------------------------------------------------------
++
++describe('calculateComplianceScore', () => {
++  it('returns 100 when all items pass', () => {
++    const audit = makeAudit([
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.PASS,
++    ])
++    expect(calculateComplianceScore(audit)).toBe(100)
++  })
++
++  it('returns 0 when all items fail', () => {
++    const audit = makeAudit([
++      ChecklistItemStatus.FAIL,
++      ChecklistItemStatus.FAIL,
++      ChecklistItemStatus.FAIL,
++    ])
++    expect(calculateComplianceScore(audit)).toBe(0)
++  })
++
++  it('returns null when all items are NOT_APPLICABLE', () => {
++    const audit = makeAudit([
++      ChecklistItemStatus.NOT_APPLICABLE,
++      ChecklistItemStatus.NOT_APPLICABLE,
++      ChecklistItemStatus.NOT_APPLICABLE,
++    ])
++    expect(calculateComplianceScore(audit)).toBeNull()
++  })
++
++  it('excludes NOT_APPLICABLE items from calculation', () => {
++    // 2 PASS + 1 FAIL + 2 NOT_APPLICABLE = 5 items; score = (2/3)*100
++    const audit = makeAudit([
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.FAIL,
++      ChecklistItemStatus.NOT_APPLICABLE,
++      ChecklistItemStatus.NOT_APPLICABLE,
++    ])
++    const score = calculateComplianceScore(audit)
++    expect(score).not.toBeNull()
++    expect(score!).toBeCloseTo((2 / 3) * 100, 2)
++  })
++
++  it('returns 50 for mix of pass and fail', () => {
++    const audit = makeAudit([
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.PASS,
++      ChecklistItemStatus.FAIL,
++      ChecklistItemStatus.FAIL,
++    ])
++    expect(calculateComplianceScore(audit)).toBe(50)
++  })
++})
++
++// ---------------------------------------------------------------------------
++// completeAudit
++// ---------------------------------------------------------------------------
++
++describe('completeAudit', () => {
++  it('sets status to COMPLETED and calculates score', async () => {
++    const audit = await startAudit('practitioner-123')
++    await recordItemResult(audit.id, 'ic-test-01', {
++      status: ChecklistItemStatus.PASS,
++    })
++    await recordItemResult(audit.id, 'ic-test-02', {
++      status: ChecklistItemStatus.PASS,
++    })
++
++    const completed = await completeAudit(audit.id)
++    expect(completed.status).toBe(AuditStatus.COMPLETED)
++    expect(completed.complianceScore).toBe(100)
++    expect(typeof completed.completedAt).toBe('string')
++  })
++
++  it('saves completion to Dexie', async () => {
++    const audit = await startAudit('practitioner-123')
++    await completeAudit(audit.id)
++
++    const db = getDb()
++    const saved = await db.infection_control_audits.get(audit.id)
++    expect(saved!.status).toBe(AuditStatus.COMPLETED)
++  })
++
++  it('queues sync entry', async () => {
++    const audit = await startAudit('practitioner-123')
++    await completeAudit(audit.id)
++
++    const db = getDb()
++    const entries = await db.syncQueue
++      .filter(
++        (e) =>
++          e.resourceType === 'InfectionControlAudit' &&
++          e.resourceId === audit.id,
++      )
++      .toArray()
++    expect(entries.length).toBeGreaterThan(0)
++  })
++
++  it('strips Blob from sync payload', async () => {
++    const audit = await startAudit('practitioner-123')
++    // Record an item with a mock photo evidence Blob
++    await recordItemResult(audit.id, 'ic-test-02', {
++      status: ChecklistItemStatus.PASS,
++      photoEvidence: new Blob(['fake-image-data'], { type: 'image/jpeg' }),
++      photoFileName: 'photo.jpg',
++    })
++    await completeAudit(audit.id)
++
++    const db = getDb()
++    const entries = await db.syncQueue
++      .filter((e) => e.resourceId === audit.id)
++      .toArray()
++    expect(entries.length).toBeGreaterThan(0)
++
++    const payload = entries[0].payload as InfectionControlAudit
++    for (const item of payload.items) {
++      expect(item.photoEvidence).toBeNull()
++    }
++  })
++
++  it('emits IC_AUDIT_COMPLETED event with complianceScore', async () => {
++    const audit = await startAudit('practitioner-123')
++    await recordItemResult(audit.id, 'ic-test-01', {
++      status: ChecklistItemStatus.PASS,
++    })
++    await completeAudit(audit.id)
++
++    expect(reportInfectionControlAuditEvent).toHaveBeenCalledWith(
++      expect.objectContaining({
++        action: 'IC_AUDIT_COMPLETED',
++        complianceScore: expect.any(Number),
++      }),
++    )
++  })
++})
++
++// ---------------------------------------------------------------------------
++// getComplianceTrends
++// ---------------------------------------------------------------------------
++
++describe('getComplianceTrends', () => {
++  it('returns empty array when no audits', async () => {
++    const trends = await getComplianceTrends(6)
++    expect(trends).toEqual([])
++  })
++
++  it('returns one trend per month', async () => {
++    const db = getDb()
++    await db.infection_control_audits.bulkPut([
++      {
++        ...makeAudit([ChecklistItemStatus.PASS]),
++        id: 'audit-m1',
++        auditMonth: '2025-01',
++        status: AuditStatus.COMPLETED,
++        complianceScore: 100,
++        completedAt: '2025-01-15T10:00:00.000Z',
++      },
++      {
++        ...makeAudit([ChecklistItemStatus.FAIL]),
++        id: 'audit-m2',
++        auditMonth: '2025-02',
++        status: AuditStatus.COMPLETED,
++        complianceScore: 0,
++        completedAt: '2025-02-10T10:00:00.000Z',
++      },
++      {
++        ...makeAudit([ChecklistItemStatus.PASS, ChecklistItemStatus.FAIL]),
++        id: 'audit-m3',
++        auditMonth: '2025-03',
++        status: AuditStatus.COMPLETED,
++        complianceScore: 50,
++        completedAt: '2025-03-05T10:00:00.000Z',
++      },
++    ])
++
++    const trends = await getComplianceTrends(6)
++    expect(trends.length).toBe(3)
++    const months = trends.map((t) => t.month)
++    expect(months).toContain('2025-01')
++    expect(months).toContain('2025-02')
++    expect(months).toContain('2025-03')
++  })
++
++  it('uses most recent audit when multiple per month', async () => {
++    const db = getDb()
++    await db.infection_control_audits.bulkPut([
++      {
++        ...makeAudit([ChecklistItemStatus.FAIL]),
++        id: 'audit-jan-early',
++        auditMonth: '2025-01',
++        status: AuditStatus.COMPLETED,
++        complianceScore: 0,
++        completedAt: '2025-01-05T10:00:00.000Z',
++      },
++      {
++        ...makeAudit([ChecklistItemStatus.PASS]),
++        id: 'audit-jan-late',
++        auditMonth: '2025-01',
++        status: AuditStatus.COMPLETED,
++        complianceScore: 100,
++        completedAt: '2025-01-20T10:00:00.000Z',
++      },
++    ])
++
++    const trends = await getComplianceTrends(6)
++    expect(trends.length).toBe(1)
++    expect(trends[0].month).toBe('2025-01')
++    // The later audit has score 100
++    expect(trends[0].score).toBe(100)
++  })
++
++  it('limits to requested number of months', async () => {
++    const db = getDb()
++    const months = ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05']
++    await db.infection_control_audits.bulkPut(
++      months.map((auditMonth, i) => ({
++        ...makeAudit([ChecklistItemStatus.PASS]),
++        id: 'audit-limit-' + i,
++        auditMonth,
++        status: AuditStatus.COMPLETED,
++        complianceScore: 100,
++        completedAt: `${auditMonth}-15T10:00:00.000Z`,
++      })),
++    )
++
++    const trends = await getComplianceTrends(3)
++    expect(trends.length).toBe(3)
++  })
++})
+diff --git a/apps/lab-lite/src/components/safety/AuditChecklistView.tsx b/apps/lab-lite/src/components/safety/AuditChecklistView.tsx
+new file mode 100644
+index 0000000..f32b1fe
+--- /dev/null
++++ b/apps/lab-lite/src/components/safety/AuditChecklistView.tsx
+@@ -0,0 +1,388 @@
++'use client'
++
++import { useState } from 'react'
++import { useTranslations } from 'next-intl'
++import {
++  ChecklistItemStatus,
++  type InfectionControlAudit,
++  type ChecklistItemTemplate,
++  type ChecklistItemResult,
++} from '@/types/infection-control-audit'
++import { CHECKLIST_CATEGORIES } from '@/lib/safety/default-checklist'
++import { calculateComplianceScore } from '@/lib/safety/audit-checklist-service'
++import { PhotoCaptureButton } from './PhotoCaptureButton'
++
++interface AuditChecklistViewProps {
++  audit: InfectionControlAudit
++  templates: ChecklistItemTemplate[]
++  onItemUpdate: (
++    templateId: string,
++    result: {
++      status: ChecklistItemStatus
++      notes?: string
++      photoEvidence?: Blob
++      photoFileName?: string
++    },
++  ) => Promise<void>
++  onComplete: () => Promise<void>
++  isCompleting?: boolean
++}
++
++/** Tailwind classes per status for a checklist item row. */
++const ROW_CLASSES: Record<ChecklistItemStatus, string> = {
++  [ChecklistItemStatus.PASS]: 'bg-green-50 border-green-200',
++  [ChecklistItemStatus.FAIL]: 'bg-red-50 border-red-200',
++  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-gray-50 border-gray-200',
++}
++
++/** Tailwind classes for the active status toggle button. */
++const ACTIVE_TOGGLE: Record<ChecklistItemStatus, string> = {
++  [ChecklistItemStatus.PASS]: 'bg-green-500 text-white border-green-500',
++  [ChecklistItemStatus.FAIL]: 'bg-red-500 text-white border-red-500',
++  [ChecklistItemStatus.NOT_APPLICABLE]: 'bg-gray-400 text-white border-gray-400',
++}
++
++const INACTIVE_TOGGLE = 'bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50'
++
++export function AuditChecklistView({
++  audit,
++  templates,
++  onItemUpdate,
++  onComplete,
++  isCompleting = false,
++}: AuditChecklistViewProps) {
++  const t = useTranslations('safety.audit')
++
++  // Track which sections are expanded
++  const defaultExpanded = Object.fromEntries(
++    [...CHECKLIST_CATEGORIES, ...getCustomCategories(templates)].map((cat) => [cat, true]),
++  )
++  const [expanded, setExpanded] = useState<Record<string, boolean>>(defaultExpanded)
++
++  // Confirmation dialog visibility
++  const [showConfirm, setShowConfirm] = useState(false)
++
++  // Local notes state so textarea is controlled without waiting for async onItemUpdate
++  const [localNotes, setLocalNotes] = useState<Record<string, string>>(() => {
++    const map: Record<string, string> = {}
++    for (const item of audit.items) {
++      if (item.notes) map[item.templateId] = item.notes
++    }
++    return map
++  })
++
++  const activeItems = templates.filter((t) => t.isActive)
++
++  /** Map templateId → ChecklistItemResult for quick lookup */
++  const resultMap = new Map<string, ChecklistItemResult>(
++    audit.items.map((item) => [item.templateId, item]),
++  )
++
++  /** Progress: items where completedAt is not null */
++  const assessedCount = audit.items.filter((i) => i.completedAt !== null).length
++  const totalCount = activeItems.length
++
++  /** All items have been assessed (completedAt set) */
++  const allAssessed = totalCount > 0 && assessedCount === totalCount
++
++  /** Ordered categories: default first, then custom alphabetically */
++  const orderedCategories = buildCategoryOrder(templates)
++
++  /** Group active templates by category */
++  const byCategory = groupByCategory(activeItems, orderedCategories)
++
++  function toggleSection(category: string) {
++    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }))
++  }
++
++  async function handleStatusToggle(templateId: string, status: ChecklistItemStatus) {
++    const existing = resultMap.get(templateId)
++    await onItemUpdate(templateId, {
++      status,
++      notes: localNotes[templateId] ?? existing?.notes ?? undefined,
++      photoEvidence: existing?.photoEvidence ?? undefined,
++      photoFileName: existing?.photoFileName ?? undefined,
++    })
++  }
++
++  async function handleNotesBlur(templateId: string) {
++    const existing = resultMap.get(templateId)
++    if (!existing) return
++    await onItemUpdate(templateId, {
++      status: existing.status,
++      notes: localNotes[templateId] ?? '',
++      photoEvidence: existing.photoEvidence ?? undefined,
++      photoFileName: existing.photoFileName ?? undefined,
++    })
++  }
++
++  async function handlePhoto(templateId: string, blob: Blob, fileName: string) {
++    const existing = resultMap.get(templateId)
++    if (!existing) return
++    await onItemUpdate(templateId, {
++      status: existing.status,
++      notes: localNotes[templateId] ?? existing.notes ?? undefined,
++      photoEvidence: blob,
++      photoFileName: fileName,
++    })
++  }
++
++  async function handlePhotoRemove(templateId: string) {
++    const existing = resultMap.get(templateId)
++    if (!existing) return
++    await onItemUpdate(templateId, {
++      status: existing.status,
++      notes: localNotes[templateId] ?? existing.notes ?? undefined,
++      photoEvidence: undefined,
++      photoFileName: undefined,
++    })
++  }
++
++  function handleCompleteClick() {
++    setShowConfirm(true)
++  }
++
++  async function handleConfirmComplete() {
++    setShowConfirm(false)
++    await onComplete()
++  }
++
++  const previewScore = calculateComplianceScore(audit)
++
++  return (
++    <div className="mx-auto max-w-3xl space-y-4 p-4">
++      {/* Header */}
++      <div className="flex flex-wrap items-start justify-between gap-3">
++        <div>
++          <h2 className="text-lg font-semibold">{t('checklistTitle')}</h2>
++          <p className="text-sm text-neutral-500">
++            {t('auditDate')}: {audit.auditDate}
++          </p>
++          {/* Opaque manager ID — never expand to a name */}
++          <p className="text-xs text-neutral-400">
++            {t('conductedBy')}: {audit.conductedBy}
++          </p>
++        </div>
++
++        {/* Progress indicator */}
++        <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
++          <p className="text-lg font-bold">
++            {assessedCount}
++            <span className="text-sm font-normal text-neutral-500"> / {totalCount}</span>
++          </p>
++          <p className="text-xs text-neutral-500">{t('itemsAssessed')}</p>
++        </div>
++      </div>
++
++      {/* Progress bar */}
++      <div className="h-2 overflow-hidden rounded-full bg-neutral-100">
++        <div
++          className="h-full rounded-full bg-primary-500 transition-all"
++          style={{ width: totalCount > 0 ? `${(assessedCount / totalCount) * 100}%` : '0%' }}
++        />
++      </div>
++
++      {/* Category sections */}
++      {orderedCategories.map((category) => {
++        const items = byCategory[category]
++        if (!items || items.length === 0) return null
++        const isOpen = expanded[category] ?? true
++
++        return (
++          <section
++            key={category}
++            className="overflow-hidden rounded-lg border border-neutral-200"
++          >
++            {/* Section header */}
++            <button
++              type="button"
++              onClick={() => toggleSection(category)}
++              className="flex w-full items-center justify-between bg-neutral-50 px-4 py-3 text-start hover:bg-neutral-100"
++              aria-expanded={isOpen}
++            >
++              <span className="font-medium text-neutral-800">{category}</span>
++              <span className="text-neutral-400">{isOpen ? '▲' : '▼'}</span>
++            </button>
++
++            {/* Items */}
++            {isOpen && (
++              <div className="divide-y divide-neutral-100">
++                {items.map((template) => {
++                  const result = resultMap.get(template.id)
++                  const status = result?.status ?? null
++                  const rowClass =
++                    status !== null
++                      ? `${ROW_CLASSES[status]} border`
++                      : 'bg-white border border-neutral-200'
++                  const noteValue = localNotes[template.id] ?? ''
++                  const showNotes =
++                    status === ChecklistItemStatus.FAIL || noteValue.length > 0
++                  const showPhoto =
++                    template.requiresPhoto || status === ChecklistItemStatus.FAIL
++
++                  return (
++                    <div key={template.id} className={`p-4 ${rowClass} rounded-none`}>
++                      {/* Description + toggles */}
++                      <div className="flex flex-wrap items-start gap-3">
++                        <p className="flex-1 text-sm text-neutral-800">{template.description}</p>
++
++                        {/* Status toggles */}
++                        <div className="flex shrink-0 gap-1">
++                          {(
++                            [
++                              ChecklistItemStatus.PASS,
++                              ChecklistItemStatus.FAIL,
++                              ChecklistItemStatus.NOT_APPLICABLE,
++                            ] as const
++                          ).map((s) => (
++                            <button
++                              key={s}
++                              type="button"
++                              onClick={() => void handleStatusToggle(template.id, s)}
++                              aria-pressed={status === s}
++                              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
++                                status === s ? ACTIVE_TOGGLE[s] : INACTIVE_TOGGLE
++                              }`}
++                            >
++                              {s === ChecklistItemStatus.PASS
++                                ? t('statusPass')
++                                : s === ChecklistItemStatus.FAIL
++                                  ? t('statusFail')
++                                  : t('statusNA')}
++                            </button>
++                          ))}
++                        </div>
++                      </div>
++
++                      {/* Notes (shown when FAIL, or when notes already exist) */}
++                      {showNotes && (
++                        <textarea
++                          value={noteValue}
++                          onChange={(e) =>
++                            setLocalNotes((prev) => ({
++                              ...prev,
++                              [template.id]: e.target.value,
++                            }))
++                          }
++                          onBlur={() => void handleNotesBlur(template.id)}
++                          placeholder={t('notesPlaceholder')}
++                          rows={2}
++                          className="mt-2 w-full rounded-md border border-neutral-200 p-2 text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
++                        />
++                      )}
++
++                      {/* Photo capture */}
++                      {showPhoto && (
++                        <div className="mt-2">
++                          <PhotoCaptureButton
++                            existingPhoto={result?.photoEvidence ?? null}
++                            existingFileName={result?.photoFileName ?? null}
++                            onCapture={(blob, fileName) =>
++                              void handlePhoto(template.id, blob, fileName)
++                            }
++                            onRemove={() => void handlePhotoRemove(template.id)}
++                          />
++                        </div>
++                      )}
++                    </div>
++                  )
++                })}
++              </div>
++            )}
++          </section>
++        )
++      })}
++
++      {/* Complete button */}
++      <div className="flex justify-end pt-2">
++        <button
++          type="button"
++          onClick={handleCompleteClick}
++          disabled={!allAssessed || isCompleting}
++          className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-40"
++        >
++          {isCompleting ? t('completing') : t('completeAudit')}
++        </button>
++      </div>
++
++      {/* Confirmation dialog */}
++      {showConfirm && (
++        <div
++          role="dialog"
++          aria-modal="true"
++          aria-labelledby="confirm-complete-title"
++          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
++        >
++          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
++            <h3 id="confirm-complete-title" className="mb-2 text-base font-semibold">
++              {t('confirmCompleteTitle')}
++            </h3>
++
++            <p className="mb-4 text-sm text-neutral-600">
++              {t('confirmCompleteBody')}
++            </p>
++
++            {/* Compliance score preview */}
++            <div className="mb-5 rounded-lg bg-neutral-50 p-4 text-center">
++              <p className="text-3xl font-bold">
++                {previewScore !== null ? `${previewScore}%` : t('scoreNA')}
++              </p>
++              <p className="text-xs text-neutral-500">{t('complianceScore')}</p>
++            </div>
++
++            <div className="flex justify-end gap-3">
++              <button
++                type="button"
++                onClick={() => setShowConfirm(false)}
++                className="rounded-md border border-neutral-300 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
++              >
++                {t('cancel')}
++              </button>
++              <button
++                type="button"
++                onClick={() => void handleConfirmComplete()}
++                className="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
++              >
++                {t('confirmComplete')}
++              </button>
++            </div>
++          </div>
++        </div>
++      )}
++    </div>
++  )
++}
++
++// ── Helpers ───────────────────────────────────────────────────────────────────
++
++function getCustomCategories(templates: ChecklistItemTemplate[]): string[] {
++  const knownSet = new Set<string>(CHECKLIST_CATEGORIES)
++  const customSet = new Set<string>()
++  for (const t of templates) {
++    if (!knownSet.has(t.category)) customSet.add(t.category)
++  }
++  return [...customSet].sort()
++}
++
++function buildCategoryOrder(templates: ChecklistItemTemplate[]): string[] {
++  return [...CHECKLIST_CATEGORIES, ...getCustomCategories(templates)]
++}
++
++function groupByCategory(
++  templates: ChecklistItemTemplate[],
++  order: string[],
++): Record<string, ChecklistItemTemplate[]> {
++  const groups: Record<string, ChecklistItemTemplate[]> = {}
++  for (const cat of order) groups[cat] = []
++  for (const tmpl of templates) {
++    if (!groups[tmpl.category]) groups[tmpl.category] = []
++    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
++    groups[tmpl.category]!.push(tmpl)
++  }
++  // Sort each group by order field
++  for (const cat of Object.keys(groups)) {
++    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
++    groups[cat]!.sort((a, b) => a.order - b.order)
++  }
++  return groups
++}
+diff --git a/apps/lab-lite/src/components/safety/ChecklistTemplateEditor.tsx b/apps/lab-lite/src/components/safety/ChecklistTemplateEditor.tsx
+new file mode 100644
+index 0000000..4b91507
+--- /dev/null
++++ b/apps/lab-lite/src/components/safety/ChecklistTemplateEditor.tsx
+@@ -0,0 +1,482 @@
++'use client'
++
++import { useEffect, useState } from 'react'
++import { useTranslations } from 'next-intl'
++import { LabRole } from '@ultranos/shared-types'
++import { useAuthSessionStore } from '@/stores/auth-session-store'
++import {
++  getChecklistTemplates,
++  putChecklistTemplate,
++  deleteChecklistTemplate,
++  deactivateChecklistTemplate,
++  resetChecklistTemplatesToDefaults,
++} from '@/lib/db'
++import { CHECKLIST_CATEGORIES } from '@/lib/safety/default-checklist'
++import type { ChecklistItemTemplate } from '@/types/infection-control-audit'
++
++const NEW_CATEGORY_VALUE = '__new__'
++
++export function ChecklistTemplateEditor() {
++  const t = useTranslations('safety.audit')
++  const session = useAuthSessionStore((s) => s.session)
++
++  const [templates, setTemplates] = useState<ChecklistItemTemplate[]>([])
++  const [loading, setLoading] = useState(true)
++  const [showAddForm, setShowAddForm] = useState(false)
++  const [showResetConfirm, setShowResetConfirm] = useState(false)
++  const [editingId, setEditingId] = useState<string | null>(null)
++
++  // Add form state
++  const [addCategory, setAddCategory] = useState<string>(CHECKLIST_CATEGORIES[0])
++  const [addNewCategory, setAddNewCategory] = useState('')
++  const [addDescription, setAddDescription] = useState('')
++  const [addRequiresPhoto, setAddRequiresPhoto] = useState(false)
++  const [addOrder, setAddOrder] = useState(1)
++  const [addError, setAddError] = useState('')
++
++  // Edit form state
++  const [editDescription, setEditDescription] = useState('')
++  const [editCategory, setEditCategory] = useState('')
++  const [editNewCategory, setEditNewCategory] = useState('')
++  const [editRequiresPhoto, setEditRequiresPhoto] = useState(false)
++
++  const isManager = session?.labRole === LabRole.LAB_MANAGER
++
++  async function loadTemplates() {
++    setLoading(true)
++    const items = await getChecklistTemplates()
++    setTemplates(items)
++    setLoading(false)
++  }
++
++  useEffect(() => {
++    if (!isManager) return
++    void loadTemplates()
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [isManager])
++
++  if (!isManager) {
++    return (
++      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
++        {t('accessRestricted')}
++      </div>
++    )
++  }
++
++  function computeDefaultOrder(items: ChecklistItemTemplate[]) {
++    if (items.length === 0) return 1
++    return Math.max(...items.map((i) => i.order)) + 1
++  }
++
++  function openAddForm() {
++    setAddCategory(CHECKLIST_CATEGORIES[0])
++    setAddNewCategory('')
++    setAddDescription('')
++    setAddRequiresPhoto(false)
++    setAddOrder(computeDefaultOrder(templates))
++    setAddError('')
++    setShowAddForm(true)
++  }
++
++  async function handleAdd() {
++    const resolvedCategory =
++      addCategory === NEW_CATEGORY_VALUE ? addNewCategory.trim() : addCategory
++    if (!resolvedCategory) {
++      setAddError(t('errorCategoryRequired'))
++      return
++    }
++    if (!addDescription.trim()) {
++      setAddError(t('errorDescriptionRequired'))
++      return
++    }
++    const newItem: ChecklistItemTemplate = {
++      id: crypto.randomUUID(),
++      category: resolvedCategory,
++      description: addDescription.trim(),
++      order: addOrder,
++      isDefault: false,
++      requiresPhoto: addRequiresPhoto,
++      isActive: true,
++    }
++    await putChecklistTemplate(newItem)
++    setShowAddForm(false)
++    await loadTemplates()
++  }
++
++  function startEdit(item: ChecklistItemTemplate) {
++    setEditingId(item.id)
++    setEditDescription(item.description)
++    setEditCategory(item.category)
++    setEditNewCategory('')
++    setEditRequiresPhoto(item.requiresPhoto)
++  }
++
++  async function handleSaveEdit(item: ChecklistItemTemplate) {
++    const resolvedCategory =
++      editCategory === NEW_CATEGORY_VALUE ? editNewCategory.trim() : editCategory
++    if (!resolvedCategory || !editDescription.trim()) return
++    const updated: ChecklistItemTemplate = {
++      ...item,
++      description: editDescription.trim(),
++      category: resolvedCategory,
++      requiresPhoto: editRequiresPhoto,
++    }
++    await putChecklistTemplate(updated)
++    setEditingId(null)
++    await loadTemplates()
++  }
++
++  async function handleDelete(id: string) {
++    await deleteChecklistTemplate(id)
++    await loadTemplates()
++  }
++
++  async function handleToggleActive(item: ChecklistItemTemplate) {
++    if (item.isActive) {
++      await deactivateChecklistTemplate(item.id)
++    } else {
++      // Re-activate: put back with isActive: true
++      await putChecklistTemplate({ ...item, isActive: true })
++    }
++    await loadTemplates()
++  }
++
++  async function handleReset() {
++    await resetChecklistTemplatesToDefaults()
++    setShowResetConfirm(false)
++    await loadTemplates()
++  }
++
++  // Group by category
++  const allCategories = Array.from(new Set(templates.map((t) => t.category))).sort()
++  const grouped: Record<string, ChecklistItemTemplate[]> = {}
++  for (const cat of allCategories) {
++    grouped[cat] = templates
++      .filter((item) => item.category === cat)
++      .sort((a, b) => a.order - b.order)
++  }
++
++  const categoryOptions = [
++    ...CHECKLIST_CATEGORIES,
++    ...allCategories.filter((c) => !CHECKLIST_CATEGORIES.includes(c)),
++  ]
++
++  return (
++    <div className="flex flex-col gap-6">
++      {/* Header */}
++      <div className="flex items-center justify-between gap-4 flex-wrap">
++        <h2 className="text-lg font-semibold">{t('templateEditorTitle')}</h2>
++        <div className="flex gap-2">
++          <button
++            type="button"
++            onClick={openAddForm}
++            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
++          >
++            {t('addItem')}
++          </button>
++          <button
++            type="button"
++            onClick={() => setShowResetConfirm(true)}
++            className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400"
++          >
++            {t('resetToDefaults')}
++          </button>
++        </div>
++      </div>
++
++      {/* Reset confirmation dialog */}
++      {showResetConfirm && (
++        <div
++          role="dialog"
++          aria-modal="true"
++          aria-labelledby="reset-dialog-title"
++          className="rounded-lg border border-amber-300 bg-amber-50 p-4 flex flex-col gap-3"
++        >
++          <p id="reset-dialog-title" className="text-sm font-medium text-amber-800">
++            {t('resetConfirmMessage')}
++          </p>
++          <div className="flex gap-2">
++            <button
++              type="button"
++              onClick={handleReset}
++              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
++            >
++              {t('confirmReset')}
++            </button>
++            <button
++              type="button"
++              onClick={() => setShowResetConfirm(false)}
++              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
++            >
++              {t('cancel')}
++            </button>
++          </div>
++        </div>
++      )}
++
++      {/* Add item form */}
++      {showAddForm && (
++        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3">
++          <h3 className="text-sm font-semibold text-blue-800">{t('addItemTitle')}</h3>
++
++          {addError && (
++            <p className="text-xs text-red-600" role="alert">
++              {addError}
++            </p>
++          )}
++
++          <div className="flex flex-col gap-1">
++            <label className="text-xs font-medium text-gray-700">{t('fieldCategory')}</label>
++            <select
++              value={addCategory}
++              onChange={(e) => {
++                setAddCategory(e.target.value)
++                setAddError('')
++              }}
++              className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++            >
++              {categoryOptions.map((cat) => (
++                <option key={cat} value={cat}>
++                  {cat}
++                </option>
++              ))}
++              <option value={NEW_CATEGORY_VALUE}>{t('newCategory')}</option>
++            </select>
++            {addCategory === NEW_CATEGORY_VALUE && (
++              <input
++                type="text"
++                value={addNewCategory}
++                onChange={(e) => setAddNewCategory(e.target.value)}
++                placeholder={t('newCategoryPlaceholder')}
++                className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++              />
++            )}
++          </div>
++
++          <div className="flex flex-col gap-1">
++            <label className="text-xs font-medium text-gray-700">{t('fieldDescription')}</label>
++            <input
++              type="text"
++              value={addDescription}
++              onChange={(e) => {
++                setAddDescription(e.target.value)
++                setAddError('')
++              }}
++              className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++            />
++          </div>
++
++          <div className="flex items-center gap-2">
++            <input
++              id="add-requires-photo"
++              type="checkbox"
++              checked={addRequiresPhoto}
++              onChange={(e) => setAddRequiresPhoto(e.target.checked)}
++              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-400"
++            />
++            <label htmlFor="add-requires-photo" className="text-sm text-gray-700">
++              {t('fieldRequiresPhoto')}
++            </label>
++          </div>
++
++          <div className="flex flex-col gap-1">
++            <label className="text-xs font-medium text-gray-700">{t('fieldOrder')}</label>
++            <input
++              type="number"
++              value={addOrder}
++              onChange={(e) => setAddOrder(Number(e.target.value))}
++              min={1}
++              className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++            />
++          </div>
++
++          <div className="flex gap-2">
++            <button
++              type="button"
++              onClick={handleAdd}
++              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
++            >
++              {t('save')}
++            </button>
++            <button
++              type="button"
++              onClick={() => setShowAddForm(false)}
++              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
++            >
++              {t('cancel')}
++            </button>
++          </div>
++        </div>
++      )}
++
++      {/* Template list */}
++      {loading ? (
++        <div className="flex flex-col gap-3">
++          {Array.from({ length: 4 }).map((_, i) => (
++            <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-200" aria-busy="true" />
++          ))}
++        </div>
++      ) : templates.length === 0 ? (
++        <p className="text-sm text-gray-500">{t('noTemplates')}</p>
++      ) : (
++        <div className="flex flex-col gap-6">
++          {allCategories.map((category) => (
++            <section key={category} aria-labelledby={`cat-heading-${category}`}>
++              <h3
++                id={`cat-heading-${category}`}
++                className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500"
++              >
++                {category}
++              </h3>
++              <ul className="flex flex-col gap-2">
++                {(grouped[category] ?? []).map((item) => (
++                  <li
++                    key={item.id}
++                    className={`rounded-lg border p-3 ${
++                      item.isActive
++                        ? 'border-gray-200 bg-white'
++                        : 'border-gray-100 bg-gray-50 opacity-60'
++                    }`}
++                  >
++                    {editingId === item.id && !item.isDefault ? (
++                      /* Inline edit form for custom items */
++                      <div className="flex flex-col gap-2">
++                        <div className="flex flex-col gap-1">
++                          <label className="text-xs font-medium text-gray-600">
++                            {t('fieldCategory')}
++                          </label>
++                          <select
++                            value={editCategory}
++                            onChange={(e) => setEditCategory(e.target.value)}
++                            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++                          >
++                            {categoryOptions.map((cat) => (
++                              <option key={cat} value={cat}>
++                                {cat}
++                              </option>
++                            ))}
++                            <option value={NEW_CATEGORY_VALUE}>{t('newCategory')}</option>
++                          </select>
++                          {editCategory === NEW_CATEGORY_VALUE && (
++                            <input
++                              type="text"
++                              value={editNewCategory}
++                              onChange={(e) => setEditNewCategory(e.target.value)}
++                              placeholder={t('newCategoryPlaceholder')}
++                              className="mt-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++                            />
++                          )}
++                        </div>
++                        <div className="flex flex-col gap-1">
++                          <label className="text-xs font-medium text-gray-600">
++                            {t('fieldDescription')}
++                          </label>
++                          <input
++                            type="text"
++                            value={editDescription}
++                            onChange={(e) => setEditDescription(e.target.value)}
++                            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
++                          />
++                        </div>
++                        <div className="flex items-center gap-2">
++                          <input
++                            id={`edit-photo-${item.id}`}
++                            type="checkbox"
++                            checked={editRequiresPhoto}
++                            onChange={(e) => setEditRequiresPhoto(e.target.checked)}
++                            className="h-4 w-4 rounded border-gray-300 text-blue-600"
++                          />
++                          <label
++                            htmlFor={`edit-photo-${item.id}`}
++                            className="text-sm text-gray-700"
++                          >
++                            {t('fieldRequiresPhoto')}
++                          </label>
++                        </div>
++                        <div className="flex gap-2">
++                          <button
++                            type="button"
++                            onClick={() => handleSaveEdit(item)}
++                            className="rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
++                          >
++                            {t('save')}
++                          </button>
++                          <button
++                            type="button"
++                            onClick={() => setEditingId(null)}
++                            className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
++                          >
++                            {t('cancel')}
++                          </button>
++                        </div>
++                      </div>
++                    ) : (
++                      /* Read view */
++                      <div className="flex items-start justify-between gap-3">
++                        <div className="flex flex-col gap-1 min-w-0">
++                          <p className="text-sm text-gray-800 break-words">{item.description}</p>
++                          <div className="flex flex-wrap gap-1.5 mt-0.5">
++                            {item.requiresPhoto && (
++                              <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
++                                {t('badgeRequiresPhoto')}
++                              </span>
++                            )}
++                            {!item.isActive && (
++                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
++                                {t('badgeInactive')}
++                              </span>
++                            )}
++                            {item.isDefault && (
++                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
++                                {t('badgeDefault')}
++                              </span>
++                            )}
++                          </div>
++                        </div>
++
++                        <div className="flex shrink-0 gap-1.5">
++                          {item.isDefault ? (
++                            /* Default items: Deactivate / Activate only */
++                            <button
++                              type="button"
++                              onClick={() => handleToggleActive(item)}
++                              className={`rounded px-2 py-1 text-xs font-medium ${
++                                item.isActive
++                                  ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
++                                  : 'border border-green-300 text-green-700 hover:bg-green-50'
++                              }`}
++                            >
++                              {item.isActive ? t('deactivate') : t('activate')}
++                            </button>
++                          ) : (
++                            /* Custom items: Edit + Delete */
++                            <>
++                              <button
++                                type="button"
++                                onClick={() => startEdit(item)}
++                                className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
++                              >
++                                {t('edit')}
++                              </button>
++                              <button
++                                type="button"
++                                onClick={() => handleDelete(item.id)}
++                                className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
++                              >
++                                {t('delete')}
++                              </button>
++                            </>
++                          )}
++                        </div>
++                      </div>
++                    )}
++                  </li>
++                ))}
++              </ul>
++            </section>
++          ))}
++        </div>
++      )}
++    </div>
++  )
++}
+diff --git a/apps/lab-lite/src/components/safety/ComplianceTrendView.tsx b/apps/lab-lite/src/components/safety/ComplianceTrendView.tsx
+new file mode 100644
+index 0000000..9ac2624
+--- /dev/null
++++ b/apps/lab-lite/src/components/safety/ComplianceTrendView.tsx
+@@ -0,0 +1,188 @@
++'use client'
++
++import { useMemo } from 'react'
++import { useTranslations } from 'next-intl'
++import {
++  AuditStatus,
++  type ComplianceTrend,
++  type InfectionControlAudit,
++  type ChecklistItemTemplate,
++} from '@/types/infection-control-audit'
++
++interface ComplianceTrendViewProps {
++  trends: ComplianceTrend[]
++  latestAudit?: InfectionControlAudit | null
++  templates: ChecklistItemTemplate[]
++}
++
++const MAX_BARS = 12
++
++/** Returns Tailwind text colour class for a compliance score. */
++function scoreColorClass(score: number): string {
++  if (score >= 80) return 'text-green-600'
++  if (score >= 60) return 'text-yellow-500'
++  return 'text-red-600'
++}
++
++/** Returns Tailwind bg colour class for a compliance score. */
++function scoreBgClass(score: number): string {
++  if (score >= 80) return 'bg-green-500'
++  if (score >= 60) return 'bg-yellow-400'
++  return 'bg-red-500'
++}
++
++export function ComplianceTrendView({
++  trends,
++  latestAudit,
++  templates,
++}: ComplianceTrendViewProps) {
++  const t = useTranslations('safety.audit')
++
++  const templateMap = useMemo(
++    () => new Map(templates.map((tmpl) => [tmpl.id, tmpl])),
++    [templates],
++  )
++
++  /** Up to MAX_BARS most recent months, oldest-first for left→right chart rendering. */
++  const chartData = useMemo(
++    () =>
++      [...trends]
++        .sort((a, b) => a.month.localeCompare(b.month))
++        .slice(-MAX_BARS),
++    [trends],
++  )
++
++  const hasLatestCompleted =
++    latestAudit !== null &&
++    latestAudit !== undefined &&
++    latestAudit.status === AuditStatus.COMPLETED
++
++  const latestScore = hasLatestCompleted ? latestAudit!.complianceScore : null
++
++  /** Month-over-month delta */
++  const momDelta = useMemo(() => {
++    if (chartData.length < 2) return null
++    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
++    const prev = chartData[chartData.length - 2]!.score
++    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
++    const curr = chartData[chartData.length - 1]!.score
++    return curr - prev
++  }, [chartData])
++
++  /** Failed item descriptions from the latest completed audit */
++  const failedDescriptions = useMemo(() => {
++    if (!hasLatestCompleted || !latestAudit) return []
++    const latestTrend = trends.find((tr) => tr.month === latestAudit.auditMonth)
++    if (!latestTrend) return []
++    return latestTrend.failedItems
++      .map((id) => templateMap.get(id)?.description ?? id)
++  }, [hasLatestCompleted, latestAudit, trends, templateMap])
++
++  return (
++    <div className="mx-auto max-w-3xl space-y-6 p-4">
++      {/* ── Large score display ─────────────────────────────────────────────── */}
++      {hasLatestCompleted && latestAudit ? (
++        <div className="rounded-xl border border-neutral-200 p-6 text-center">
++          <p
++            className={`text-6xl font-bold ${
++              latestScore !== null ? scoreColorClass(latestScore) : 'text-neutral-400'
++            }`}
++          >
++            {latestScore !== null ? `${latestScore}%` : t('scoreNA')}
++          </p>
++          <p className="mt-1 text-sm font-medium text-neutral-600">
++            {t('complianceScore')}
++          </p>
++          <p className="mt-1 text-xs text-neutral-400">
++            {t('lastAudit')}: {latestAudit.auditDate}
++          </p>
++
++          {/* Month-over-month */}
++          {momDelta !== null && (
++            <div
++              className={`mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
++                momDelta > 0
++                  ? 'bg-green-100 text-green-700'
++                  : momDelta < 0
++                    ? 'bg-red-100 text-red-700'
++                    : 'bg-neutral-100 text-neutral-500'
++              }`}
++            >
++              {momDelta > 0 ? '↑' : momDelta < 0 ? '↓' : '—'}
++              {momDelta !== 0 ? (
++                <span>
++                  {Math.abs(momDelta)}% {t('vsLastMonth')}
++                </span>
++              ) : (
++                <span>{t('noChange')}</span>
++              )}
++            </div>
++          )}
++        </div>
++      ) : (
++        /* No audits completed yet */
++        <div className="rounded-xl border border-dashed border-neutral-300 p-8 text-center">
++          <p className="text-sm font-medium text-neutral-600">{t('noAuditsCompleted')}</p>
++          <p className="mt-1 text-xs text-neutral-400">{t('noAuditsCTA')}</p>
++        </div>
++      )}
++
++      {/* ── Trend bar chart ─────────────────────────────────────────────────── */}
++      <div className="rounded-xl border border-neutral-200 p-4">
++        <h2 className="mb-4 text-sm font-semibold text-neutral-700">
++          {t('trendChartTitle')}
++        </h2>
++
++        {chartData.length < 2 ? (
++          <p className="text-xs text-neutral-400">{t('notEnoughTrendData')}</p>
++        ) : (
++          <div className="flex h-32 items-end gap-1.5" role="img" aria-label={t('trendChartAriaLabel')}>
++            {chartData.map((point) => {
++              const heightPct = Math.max(2, point.score) // at least 2% visible
++              return (
++                <div
++                  key={point.month}
++                  className="flex flex-1 flex-col items-center gap-1"
++                >
++                  {/* Score label above bar */}
++                  <span className="text-[9px] font-medium text-neutral-500">
++                    {point.score}%
++                  </span>
++                  {/* Bar */}
++                  <div
++                    className={`w-full rounded-t-sm ${scoreBgClass(point.score)}`}
++                    style={{ height: `${heightPct}%` }}
++                    title={`${point.month}: ${point.score}%`}
++                  />
++                  {/* Month label */}
++                  <span className="text-[8px] text-neutral-400 truncate w-full text-center">
++                    {point.month}
++                  </span>
++                </div>
++              )
++            })}
++          </div>
++        )}
++      </div>
++
++      {/* ── Failed items from latest audit ─────────────────────────────────── */}
++      {failedDescriptions.length > 0 && (
++        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
++          <h2 className="mb-3 text-sm font-semibold text-red-800">
++            {t('failedItemsTitle')}
++          </h2>
++          <ul className="space-y-1">
++            {failedDescriptions.map((desc, idx) => (
++              <li key={idx} className="flex items-start gap-2 text-xs text-red-700">
++                <span className="mt-0.5 shrink-0 text-red-400" aria-hidden="true">
++                  ✕
++                </span>
++                {desc}
++              </li>
++            ))}
++          </ul>
++        </div>
++      )}
++    </div>
++  )
++}
+diff --git a/apps/lab-lite/src/lib/safety/audit-checklist-service.ts b/apps/lab-lite/src/lib/safety/audit-checklist-service.ts
+new file mode 100644
+index 0000000..42dd759
+--- /dev/null
++++ b/apps/lab-lite/src/lib/safety/audit-checklist-service.ts
+@@ -0,0 +1,232 @@
++import { hlc, serializeHlc } from '@/lib/hlc'
++import {
++  getChecklistTemplates,
++  createAudit,
++  updateAudit,
++  getAuditHistory,
++  getDb,
++} from '@/lib/db'
++import { reportInfectionControlAuditEvent } from '@/lib/audit-client'
++import {
++  ChecklistItemStatus,
++  AuditStatus,
++} from '@/types/infection-control-audit'
++import type {
++  ChecklistItemResult,
++  InfectionControlAudit,
++  ComplianceTrend,
++} from '@/types/infection-control-audit'
++
++// ---------------------------------------------------------------------------
++// Story 47.7 — Infection Control Self-Audit Service
++// Manages audit lifecycle: creation, item recording, completion, and trend reporting.
++// No PHI involved — conductedBy is an opaque practitioner ID.
++// ---------------------------------------------------------------------------
++
++/**
++ * Start a new infection control audit for today.
++ * Initialises all active checklist items as NOT_APPLICABLE so the auditor
++ * can explicitly mark each one rather than leaving gaps.
++ */
++export async function startAudit(conductedBy: string): Promise<InfectionControlAudit> {
++  const templates = await getChecklistTemplates()
++
++  const today = new Date()
++  const auditDate = today.toISOString().slice(0, 10) // YYYY-MM-DD
++  const auditMonth = today.toISOString().slice(0, 7) // YYYY-MM
++
++  const items: ChecklistItemResult[] = templates.map((t) => ({
++    templateId: t.id,
++    status: ChecklistItemStatus.NOT_APPLICABLE,
++    notes: null,
++    photoEvidence: null,
++    photoFileName: null,
++    completedAt: null,
++    completedBy: conductedBy,
++  }))
++
++  const audit: InfectionControlAudit = {
++    id: crypto.randomUUID(),
++    auditDate,
++    auditMonth,
++    conductedBy,
++    status: AuditStatus.IN_PROGRESS,
++    items,
++    complianceScore: null,
++    completedAt: null,
++    notes: '',
++    hlcTimestamp: serializeHlc(hlc.now()),
++  }
++
++  await createAudit(audit)
++
++  reportInfectionControlAuditEvent({
++    action: 'IC_AUDIT_STARTED',
++    auditId: audit.id,
++    auditMonth: audit.auditMonth,
++    conductedBy,
++  })
++
++  return audit
++}
++
++/**
++ * Record the result for a single checklist item within an in-progress audit.
++ * Blobs (photo evidence) are stored in IndexedDB alongside the item.
++ */
++export async function recordItemResult(
++  auditId: string,
++  templateId: string,
++  result: {
++    status: ChecklistItemStatus
++    notes?: string
++    photoEvidence?: Blob
++    photoFileName?: string
++  },
++): Promise<void> {
++  const db = getDb()
++  const audit = await db.infection_control_audits.get(auditId)
++
++  if (!audit) {
++    throw new Error('Audit not found')
++  }
++
++  const updatedItems: ChecklistItemResult[] = audit.items.map((item) => {
++    if (item.templateId !== templateId) return item
++    return {
++      ...item,
++      status: result.status,
++      notes: result.notes ?? null,
++      photoEvidence: result.photoEvidence ?? null,
++      photoFileName: result.photoFileName ?? null,
++      completedAt: new Date().toISOString(),
++      completedBy: item.completedBy,
++    }
++  })
++
++  await updateAudit(auditId, { items: updatedItems })
++
++  reportInfectionControlAuditEvent({
++    action: 'IC_AUDIT_ITEM_RECORDED',
++    auditId,
++    auditMonth: audit.auditMonth,
++    conductedBy: audit.conductedBy,
++  })
++}
++
++/**
++ * Calculate the compliance score for an audit.
++ * Only PASS and FAIL items are counted — NOT_APPLICABLE items are excluded.
++ * Returns null when every item is NOT_APPLICABLE (no data to score).
++ */
++export function calculateComplianceScore(audit: InfectionControlAudit): number | null {
++  const applicable = audit.items.filter(
++    (item) =>
++      item.status === ChecklistItemStatus.PASS ||
++      item.status === ChecklistItemStatus.FAIL,
++  )
++
++  if (applicable.length === 0) return null
++
++  const passedCount = applicable.filter(
++    (item) => item.status === ChecklistItemStatus.PASS,
++  ).length
++
++  return (passedCount / applicable.length) * 100
++}
++
++/**
++ * Mark an audit as completed, calculate its compliance score, and queue it
++ * for sync to the Hub.
++ * Blob fields are stripped from the sync payload (Blobs are not JSON-serialisable).
++ */
++export async function completeAudit(auditId: string): Promise<InfectionControlAudit> {
++  const db = getDb()
++  const audit = await db.infection_control_audits.get(auditId)
++
++  if (!audit) {
++    throw new Error('Audit not found')
++  }
++
++  const score = calculateComplianceScore(audit)
++
++  const completedAudit: InfectionControlAudit = {
++    ...audit,
++    status: AuditStatus.COMPLETED,
++    complianceScore: score,
++    completedAt: new Date().toISOString(),
++  }
++
++  await updateAudit(auditId, {
++    status: AuditStatus.COMPLETED,
++    complianceScore: score,
++    completedAt: completedAudit.completedAt,
++  })
++
++  // Queue for sync — strip Blob photo evidence before serialising to JSON
++  await db.syncQueue.add({
++    id: crypto.randomUUID(),
++    resourceType: 'InfectionControlAudit',
++    resourceId: auditId,
++    payload: JSON.parse(
++      JSON.stringify({
++        ...completedAudit,
++        items: completedAudit.items.map((item) => ({
++          ...item,
++          photoEvidence: null, // Blobs are not JSON-serialisable
++        })),
++      }),
++    ),
++    status: 'pending',
++    createdAt: new Date().toISOString(),
++  })
++
++  reportInfectionControlAuditEvent({
++    action: 'IC_AUDIT_COMPLETED',
++    auditId,
++    auditMonth: audit.auditMonth,
++    conductedBy: audit.conductedBy,
++    complianceScore: score,
++  })
++
++  return completedAudit
++}
++
++/**
++ * Return month-by-month compliance trends for the last `months` calendar months.
++ * When a month has multiple completed audits, the most recent one is used.
++ * Results are sorted ascending by month (oldest first).
++ */
++export async function getComplianceTrends(months: number): Promise<ComplianceTrend[]> {
++  const allAudits = await getAuditHistory()
++
++  // Group by auditMonth, keeping only the most recent completed audit per month
++  const byMonth = new Map<string, InfectionControlAudit>()
++  for (const audit of allAudits) {
++    const existing = byMonth.get(audit.auditMonth)
++    if (!existing || audit.completedAt! > existing.completedAt!) {
++      byMonth.set(audit.auditMonth, audit)
++    }
++  }
++
++  // Sort months descending, keep the last `months` entries, then re-sort ascending
++  const sortedMonths = Array.from(byMonth.keys()).sort().reverse().slice(0, months).sort()
++
++  return sortedMonths.map((month) => {
++    const audit = byMonth.get(month)!
++    const passedItems = audit.items.filter(
++      (item) => item.status === ChecklistItemStatus.PASS,
++    ).length
++    const failedItems = audit.items
++      .filter((item) => item.status === ChecklistItemStatus.FAIL)
++      .map((item) => item.templateId)
++
++    return {
++      month,
++      score: audit.complianceScore ?? 0,
++      totalItems: audit.items.length,
++      passedItems,
++      failedItems,
++    }
++  })
++}
+diff --git a/apps/lab-lite/src/lib/safety/default-checklist.ts b/apps/lab-lite/src/lib/safety/default-checklist.ts
+new file mode 100644
+index 0000000..467180d
+--- /dev/null
++++ b/apps/lab-lite/src/lib/safety/default-checklist.ts
+@@ -0,0 +1,217 @@
++/**
++ * Default infection control checklist items — Story 47.7
++ *
++ * 18 items across 6 categories, aligned with:
++ * - ISO 15189 (Medical Laboratories — Requirements for Quality and Competence)
++ * - WHO Laboratory Quality Management System Handbook
++ *
++ * These are seeded into `checklist_templates` on first database initialization.
++ * All items have isDefault: true and isActive: true.
++ * Default items cannot be deleted — only deactivated.
++ */
++
++import type { ChecklistItemTemplate } from '@/types/infection-control-audit'
++
++export const DEFAULT_CHECKLIST_ITEMS: ChecklistItemTemplate[] = [
++  // ── Hand Hygiene (order 1-3) ──────────────────────────────────────────────
++  {
++    id: 'ic-hh-01',
++    category: 'Hand Hygiene',
++    description: 'Hand hygiene stations stocked (soap, sanitizer, paper towels)',
++    order: 1,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-hh-02',
++    category: 'Hand Hygiene',
++    description: 'Hand hygiene signage posted and visible',
++    order: 2,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-hh-03',
++    category: 'Hand Hygiene',
++    description: 'Hand hygiene compliance observed',
++    order: 3,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++
++  // ── PPE (order 4-6) ───────────────────────────────────────────────────────
++  {
++    id: 'ic-ppe-01',
++    category: 'PPE',
++    description: 'PPE inventory adequate (gloves, gowns, face shields, N95 masks)',
++    order: 4,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-ppe-02',
++    category: 'PPE',
++    description: 'PPE in good condition (no tears, expiry checked)',
++    order: 5,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-ppe-03',
++    category: 'PPE',
++    description: 'PPE donning/doffing posters displayed',
++    order: 6,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++
++  // ── Sharps & Waste (order 7-10) ───────────────────────────────────────────
++  {
++    id: 'ic-sw-01',
++    category: 'Sharps & Waste',
++    description: 'Sharps containers not overfilled (below fill line)',
++    order: 7,
++    isDefault: true,
++    requiresPhoto: true,
++    isActive: true,
++  },
++  {
++    id: 'ic-sw-02',
++    category: 'Sharps & Waste',
++    description: 'Sharps containers properly labeled',
++    order: 8,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-sw-03',
++    category: 'Sharps & Waste',
++    description: 'Biohazard waste bags not overfilled',
++    order: 9,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-sw-04',
++    category: 'Sharps & Waste',
++    description: 'Waste segregation correct (sharps / infectious / chemical / general)',
++    order: 10,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++
++  // ── Surface Decontamination (order 11-13) ─────────────────────────────────
++  {
++    id: 'ic-sd-01',
++    category: 'Surface Decontamination',
++    description: 'Work surfaces decontaminated on schedule',
++    order: 11,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-sd-02',
++    category: 'Surface Decontamination',
++    description: 'Decontamination log current',
++    order: 12,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-sd-03',
++    category: 'Surface Decontamination',
++    description: 'Spill kit available and stocked',
++    order: 13,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++
++  // ── Equipment (order 14-16) ───────────────────────────────────────────────
++  {
++    id: 'ic-eq-01',
++    category: 'Equipment',
++    description: 'Autoclave validation current (last validation within 30 days)',
++    order: 14,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-eq-02',
++    category: 'Equipment',
++    description: 'Biosafety cabinet certification current',
++    order: 15,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-eq-03',
++    category: 'Equipment',
++    description: 'Centrifuge rotors inspected',
++    order: 16,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++
++  // ── General (order 17-20) ─────────────────────────────────────────────────
++  {
++    id: 'ic-gen-01',
++    category: 'General',
++    description: 'Fire extinguisher accessible and current',
++    order: 17,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-gen-02',
++    category: 'General',
++    description: 'Emergency eye wash station functional',
++    order: 18,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-gen-03',
++    category: 'General',
++    description: 'Emergency contact list posted and current',
++    order: 19,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++  {
++    id: 'ic-gen-04',
++    category: 'General',
++    description: 'SDS (Safety Data Sheets) accessible',
++    order: 20,
++    isDefault: true,
++    requiresPhoto: false,
++    isActive: true,
++  },
++]
++
++/** All category names in display order. */
++export const CHECKLIST_CATEGORIES = [
++  'Hand Hygiene',
++  'PPE',
++  'Sharps & Waste',
++  'Surface Decontamination',
++  'Equipment',
++  'General',
++] as const
+diff --git a/apps/lab-lite/src/lib/safety/inspection-readiness.ts b/apps/lab-lite/src/lib/safety/inspection-readiness.ts
+new file mode 100644
+index 0000000..0cbc622
+--- /dev/null
++++ b/apps/lab-lite/src/lib/safety/inspection-readiness.ts
+@@ -0,0 +1,170 @@
++import type { InfectionControlAudit, InspectionReadinessPack } from '@/types/infection-control-audit'
++import type { WasteSummary } from '@/types/waste-tracking'
++import { getAuditHistory } from '@/lib/db'
++import { reportInfectionControlAuditEvent } from '@/lib/audit-client'
++
++/**
++ * Collect all YYYY-MM month strings that fall within a start/end date range (inclusive).
++ * Both start and end are expected to be YYYY-MM-DD strings.
++ */
++function getMonthsInRange(start: string, end: string): Array<{ year: number; month: number }> {
++  const months: Array<{ year: number; month: number }> = []
++  const startDate = new Date(start)
++  const endDate = new Date(end)
++
++  // Clamp to the first of each month for iteration
++  const cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1))
++  const endMonth = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1))
++
++  while (cursor <= endMonth) {
++    months.push({ year: cursor.getUTCFullYear(), month: cursor.getUTCMonth() + 1 })
++    cursor.setUTCMonth(cursor.getUTCMonth() + 1)
++  }
++
++  return months
++}
++
++/**
++ * Generate an Inspection Readiness Pack covering a date range.
++ *
++ * Aggregates infection control audit results, waste summaries, temperature
++ * compliance, and spill incident data into a single exportable document.
++ *
++ * This function never throws — all data sources are collected with graceful
++ * degradation. Sections that fail or are not yet implemented are reported in
++ * `missingSections` rather than aborting the entire pack.
++ *
++ * No PHI is included — infection control audits contain only practitioner IDs
++ * and operational compliance scores (CLAUDE.md Rule #7).
++ */
++export async function generateInspectionPack(
++  dateRange: { start: string; end: string },
++): Promise<InspectionReadinessPack> {
++  const availableSections: string[] = []
++  const missingSections: string[] = []
++
++  // ------------------------------------------------------------------
++  // 1. Audit results — always available (same story, same db)
++  // ------------------------------------------------------------------
++  let auditResults: InfectionControlAudit[] = []
++  try {
++    const allAudits = await getAuditHistory(1000)
++    auditResults = allAudits.filter(
++      (a) => a.auditDate >= dateRange.start && a.auditDate <= dateRange.end,
++    )
++    availableSections.push('auditResults')
++  } catch {
++    // getAuditHistory should never throw in normal circumstances, but degrade safely
++    missingSections.push('auditResults')
++  }
++
++  // ------------------------------------------------------------------
++  // 2. Waste summaries — Story 47.2 (generateMonthlySummary exists)
++  // ------------------------------------------------------------------
++  let wasteSummaries: WasteSummary[] = []
++  try {
++    const { generateMonthlySummary } = await import('@/lib/safety/waste-summary')
++    const months = getMonthsInRange(dateRange.start, dateRange.end)
++    const results = await Promise.allSettled(
++      months.map(({ year, month }) => generateMonthlySummary(year, month)),
++    )
++    for (const result of results) {
++      if (result.status === 'fulfilled') {
++        wasteSummaries.push(result.value)
++      }
++    }
++    availableSections.push('wasteSummaries')
++  } catch {
++    missingSections.push('wasteSummaries')
++    wasteSummaries = []
++  }
++
++  // ------------------------------------------------------------------
++  // 3. Temperature compliance — Story 47.4
++  //    No temperature tables exist in Dexie (db.ts has no temperature_readings
++  //    or temperature_excursions tables), so degrade gracefully.
++  // ------------------------------------------------------------------
++  let temperatureCompliance = { totalReadings: 0, excursionCount: 0, excursionRate: 0 }
++  try {
++    // Dynamically attempt to import temperature service; if tables don't exist
++    // the query will throw, which we catch below.
++    const { getDb } = await import('@/lib/db')
++    const db = getDb()
++
++    // Type assertion needed: temperature tables are not in the typed schema.
++    // If they don't exist, accessing them will throw at runtime and we degrade.
++    const dbAny = db as unknown as Record<string, { toArray: () => Promise<Array<{ recordedAt?: string; startedAt?: string }>> }>
++
++    if (!('temperature_readings' in db) || !('temperature_excursions' in db)) {
++      throw new Error('temperature tables not available')
++    }
++
++    const allReadings = await dbAny['temperature_readings'].toArray()
++    const allExcursions = await dbAny['temperature_excursions'].toArray()
++
++    const readings = allReadings.filter(
++      (r) =>
++        r.recordedAt !== undefined &&
++        r.recordedAt >= dateRange.start &&
++        r.recordedAt <= dateRange.end + 'T23:59:59.999Z',
++    )
++
++    const excursions = allExcursions.filter(
++      (e) =>
++        e.startedAt !== undefined &&
++        e.startedAt >= dateRange.start &&
++        e.startedAt <= dateRange.end + 'T23:59:59.999Z',
++    )
++
++    const totalReadings = readings.length
++    const excursionCount = excursions.length
++    const excursionRate = totalReadings > 0 ? excursionCount / totalReadings : 0
++
++    temperatureCompliance = { totalReadings, excursionCount, excursionRate }
++    availableSections.push('temperatureCompliance')
++  } catch {
++    missingSections.push('temperatureCompliance')
++    temperatureCompliance = { totalReadings: 0, excursionCount: 0, excursionRate: 0 }
++  }
++
++  // ------------------------------------------------------------------
++  // 4. Spill incidents — Story 47.5 (NOT yet implemented)
++  // ------------------------------------------------------------------
++  missingSections.push('spillIncidents')
++  const spillIncidents: unknown[] = []
++
++  // ------------------------------------------------------------------
++  // 5. Overall compliance score — average of non-null audit scores
++  // ------------------------------------------------------------------
++  const scoredAudits = auditResults.filter((a) => a.complianceScore !== null)
++  const overallComplianceScore =
++    scoredAudits.length > 0
++      ? scoredAudits.reduce((sum, a) => sum + (a.complianceScore ?? 0), 0) / scoredAudits.length
++      : 0
++
++  // ------------------------------------------------------------------
++  // 6. Emit audit event — fire-and-forget, never blocks return
++  // ------------------------------------------------------------------
++  try {
++    reportInfectionControlAuditEvent({
++      action: 'INSPECTION_PACK_GENERATED',
++      auditId: 'inspection-pack',
++      auditMonth: dateRange.start.slice(0, 7),
++      conductedBy: 'system',
++    })
++  } catch {
++    // Audit emission must never throw or block the pack generation
++  }
++
++  return {
++    generatedAt: new Date().toISOString(),
++    dateRange,
++    auditResults,
++    wasteSummaries,
++    temperatureCompliance,
++    spillIncidents,
++    overallComplianceScore,
++    availableSections,
++    missingSections,
++  }
++}
+diff --git a/apps/lab-lite/src/types/infection-control-audit.ts b/apps/lab-lite/src/types/infection-control-audit.ts
+new file mode 100644
+index 0000000..5a4e29c
+--- /dev/null
++++ b/apps/lab-lite/src/types/infection-control-audit.ts
+@@ -0,0 +1,75 @@
++/**
++ * Infection Control Self-Audit types — Story 47.7
++ *
++ * No PHI involved. Audit records contain only:
++ * - conductedBy: practitioner ID (opaque)
++ * - item statuses, notes, photo blobs (non-clinical)
++ */
++
++export enum ChecklistItemStatus {
++  PASS = 'PASS',
++  FAIL = 'FAIL',
++  NOT_APPLICABLE = 'NOT_APPLICABLE',
++}
++
++export enum AuditStatus {
++  IN_PROGRESS = 'IN_PROGRESS',
++  COMPLETED = 'COMPLETED',
++}
++
++export interface ChecklistItemTemplate {
++  id: string
++  category: string
++  description: string
++  order: number
++  isDefault: boolean
++  requiresPhoto: boolean
++  isActive: boolean // default items can be deactivated but not deleted
++}
++
++export interface ChecklistItemResult {
++  templateId: string
++  status: ChecklistItemStatus
++  notes: string | null
++  photoEvidence: Blob | null
++  photoFileName: string | null
++  completedAt: string | null
++  completedBy: string
++}
++
++export interface InfectionControlAudit {
++  id: string
++  auditDate: string               // ISO date (YYYY-MM-DD)
++  auditMonth: string              // YYYY-MM (index key for trend queries)
++  conductedBy: string             // practitioner ID — opaque, never name
++  status: AuditStatus
++  items: ChecklistItemResult[]
++  complianceScore: number | null  // null if all items N/A
++  completedAt: string | null
++  notes: string
++  hlcTimestamp: string
++}
++
++export interface ComplianceTrend {
++  month: string                   // YYYY-MM
++  score: number
++  totalItems: number
++  passedItems: number
++  failedItems: string[]           // templateIds of failed items
++}
++
++export interface InspectionReadinessPack {
++  generatedAt: string
++  dateRange: { start: string; end: string }
++  auditResults: InfectionControlAudit[]
++  wasteSummaries: import('./waste-tracking').WasteSummary[]
++  temperatureCompliance: {
++    totalReadings: number
++    excursionCount: number
++    excursionRate: number
++  }
++  spillIncidents: unknown[]       // Story 47.5 not yet implemented
++  overallComplianceScore: number
++  availableSections: string[]     // sections included; missing sections noted by absence
++  missingSections: string[]       // e.g. ['wasteSummaries', 'spillIncidents']
++}

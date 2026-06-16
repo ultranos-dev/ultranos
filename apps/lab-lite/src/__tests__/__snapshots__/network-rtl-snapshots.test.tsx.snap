@@ -1,0 +1,640 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CollectionModeGate RTL snapshots > renders children in LTR when in full mode 1`] = `
+<div>
+  <span>
+    Restricted
+  </span>
+</div>
+`;
+
+exports[`CollectionModeGate RTL snapshots > renders fallback in RTL when in full mode 1`] = `
+<div>
+  <span>
+    Restricted
+  </span>
+</div>
+`;
+
+exports[`LocationCard RTL snapshots > renders in LTR 1`] = `
+<div>
+  <button
+    aria-label="Main Lab — online"
+    class="w-full rounded-lg border border-border bg-card p-4 text-start shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+    type="button"
+  >
+    <div
+      class="flex items-start justify-between gap-2"
+    >
+      <div
+        class="min-w-0 flex-1"
+      >
+        <p
+          class="truncate font-medium text-foreground"
+        >
+          Main Lab
+        </p>
+        <div
+          class="mt-0.5 flex items-center gap-1.5"
+        >
+          <span
+            aria-label="online"
+            class="inline-block h-2 w-2 rounded-full bg-green-500"
+          />
+          <span
+            class="text-xs text-muted-foreground capitalize"
+          >
+            online
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex shrink-0 flex-col items-end gap-1"
+      >
+        <span
+          class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize"
+        >
+          main
+        </span>
+        <span
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700"
+        >
+          Full
+        </span>
+      </div>
+    </div>
+    <div
+      class="mt-3 grid grid-cols-3 gap-2"
+    >
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          3
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Pending
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          0
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Alerts
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          2
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Staff
+        </p>
+      </div>
+    </div>
+    <div
+      class="mt-3 flex items-center gap-1.5"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-clock text-muted-foreground"
+        fill="none"
+        height="12"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M12 6v6l4 2"
+        />
+      </svg>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        2 min ago
+      </span>
+    </div>
+  </button>
+</div>
+`;
+
+exports[`LocationCard RTL snapshots > renders in RTL 1`] = `
+<div>
+  <button
+    aria-label="Main Lab — online"
+    class="w-full rounded-lg border border-border bg-card p-4 text-start shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+    type="button"
+  >
+    <div
+      class="flex items-start justify-between gap-2"
+    >
+      <div
+        class="min-w-0 flex-1"
+      >
+        <p
+          class="truncate font-medium text-foreground"
+        >
+          Main Lab
+        </p>
+        <div
+          class="mt-0.5 flex items-center gap-1.5"
+        >
+          <span
+            aria-label="online"
+            class="inline-block h-2 w-2 rounded-full bg-green-500"
+          />
+          <span
+            class="text-xs text-muted-foreground capitalize"
+          >
+            online
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex shrink-0 flex-col items-end gap-1"
+      >
+        <span
+          class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize"
+        >
+          main
+        </span>
+        <span
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700"
+        >
+          Full
+        </span>
+      </div>
+    </div>
+    <div
+      class="mt-3 grid grid-cols-3 gap-2"
+    >
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          3
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Pending
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          0
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Alerts
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          2
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Staff
+        </p>
+      </div>
+    </div>
+    <div
+      class="mt-3 flex items-center gap-1.5"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-clock text-muted-foreground"
+        fill="none"
+        height="12"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M12 6v6l4 2"
+        />
+      </svg>
+      <span
+        class="text-xs text-muted-foreground"
+      >
+        2 min ago
+      </span>
+    </div>
+  </button>
+</div>
+`;
+
+exports[`LocationCard RTL snapshots > renders inactive satellite in collection-only mode 1`] = `
+<div>
+  <button
+    aria-label="Satellite Point — offline"
+    class="w-full rounded-lg border border-border bg-card p-4 text-start shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+    type="button"
+  >
+    <div
+      class="flex items-start justify-between gap-2"
+    >
+      <div
+        class="min-w-0 flex-1"
+      >
+        <p
+          class="truncate font-medium text-foreground"
+        >
+          Satellite Point
+        </p>
+        <div
+          class="mt-0.5 flex items-center gap-1.5"
+        >
+          <span
+            aria-label="offline"
+            class="inline-block h-2 w-2 rounded-full bg-amber-500"
+          />
+          <span
+            class="text-xs text-muted-foreground capitalize"
+          >
+            offline
+          </span>
+        </div>
+      </div>
+      <div
+        class="flex shrink-0 flex-col items-end gap-1"
+      >
+        <span
+          class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize"
+        >
+          satellite
+        </span>
+        <span
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground"
+        >
+          Inactive
+        </span>
+      </div>
+    </div>
+    <div
+      class="mt-3 grid grid-cols-3 gap-2"
+    >
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          3
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Pending
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          0
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Alerts
+        </p>
+      </div>
+      <div
+        class="rounded-md bg-muted/30 p-2 text-center"
+      >
+        <p
+          class="text-lg font-semibold text-foreground"
+        >
+          2
+        </p>
+        <p
+          class="text-xs text-muted-foreground"
+        >
+          Staff
+        </p>
+      </div>
+    </div>
+    <div
+      class="mt-3 flex items-center gap-1.5"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-clock text-amber-500"
+        fill="none"
+        height="12"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+        />
+        <path
+          d="M12 6v6l4 2"
+        />
+      </svg>
+      <span
+        class="text-xs text-amber-600"
+      >
+        Never synced
+        <span
+          class="ms-1 font-medium"
+        >
+          — stale
+        </span>
+      </span>
+    </div>
+  </button>
+</div>
+`;
+
+exports[`LocationManagementModal RTL snapshots > renders add-mode in LTR 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;
+
+exports[`LocationManagementModal RTL snapshots > renders add-mode in RTL 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;
+
+exports[`LocationManagementModal RTL snapshots > renders edit-mode for existing location in LTR 1`] = `
+<div
+  aria-hidden="true"
+  data-aria-hidden="true"
+/>
+`;
+
+exports[`NetworkMetricsSummary RTL snapshots > highlights sync failures when count > 0 1`] = `
+<div>
+  <div
+    aria-label="Network Metrics"
+    class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    role="region"
+  >
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Samples Today
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        12
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Pending Results
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        4
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-amber-200 bg-amber-50"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Sync Failures
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-amber-700"
+      >
+        3
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`NetworkMetricsSummary RTL snapshots > renders in LTR 1`] = `
+<div>
+  <div
+    aria-label="Network Metrics"
+    class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    role="region"
+  >
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Samples Today
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        12
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Pending Results
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        4
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Sync Failures
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        0
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`NetworkMetricsSummary RTL snapshots > renders in RTL 1`] = `
+<div>
+  <div
+    aria-label="Network Metrics"
+    class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    role="region"
+  >
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Samples Today
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        12
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Pending Results
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        4
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+    <div
+      class="rounded-lg border p-4 border-border bg-card"
+    >
+      <p
+        class="text-sm text-muted-foreground"
+      >
+        Sync Failures
+      </p>
+      <p
+        class="mt-1 text-3xl font-bold text-foreground"
+      >
+        0
+      </p>
+      <p
+        aria-label="Data updated Just now"
+        class="mt-1 text-xs text-muted-foreground"
+      >
+        Updated Just now
+      </p>
+    </div>
+  </div>
+</div>
+`;

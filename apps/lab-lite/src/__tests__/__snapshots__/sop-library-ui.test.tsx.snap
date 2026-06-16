@@ -1,0 +1,241 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in LTR 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-4xl px-4 py-6"
+  >
+    <h1
+      class="text-2xl font-bold mb-6"
+    >
+      SOP Library
+    </h1>
+    <div
+      class="mb-4"
+    >
+      <input
+        aria-label="Search SOPs..."
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        placeholder="Search SOPs..."
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      aria-label="Filter by category"
+      class="mb-6 flex flex-wrap gap-2"
+      role="tablist"
+    >
+      <button
+        aria-selected="true"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-blue-600 text-white"
+        role="tab"
+      >
+        All
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Hematology
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Chemistry
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Microbiology
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        General Lab Safety
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Other
+      </button>
+    </div>
+    <div
+      class="space-y-3"
+      role="tabpanel"
+    >
+      <button
+        class="w-full rounded-lg border border-gray-200 bg-card p-4 text-start shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+      >
+        <div
+          class="flex items-start justify-between gap-3"
+        >
+          <div
+            class="min-w-0 flex-1"
+          >
+            <h3
+              class="text-base font-semibold text-gray-900 dark:text-gray-100"
+            >
+              Snap SOP
+            </h3>
+            <div
+              class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span
+                class="rounded bg-gray-100 px-2 py-0.5 font-medium dark:bg-gray-700"
+              >
+                Hematology
+              </span>
+              <span>
+                v
+                1.0.0
+              </span>
+              <span>
+                1/14/2026
+              </span>
+            </div>
+          </div>
+          <div
+            class="flex-shrink-0"
+          >
+            <span
+              class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+            >
+              Review Required
+            </span>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SOPLibrary RTL snapshots (P13) > renders SOPLibrary in RTL 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-4xl px-4 py-6"
+  >
+    <h1
+      class="text-2xl font-bold mb-6"
+    >
+      SOP Library
+    </h1>
+    <div
+      class="mb-4"
+    >
+      <input
+        aria-label="Search SOPs..."
+        class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        placeholder="Search SOPs..."
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      aria-label="Filter by category"
+      class="mb-6 flex flex-wrap gap-2"
+      role="tablist"
+    >
+      <button
+        aria-selected="true"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-blue-600 text-white"
+        role="tab"
+      >
+        All
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Hematology
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Chemistry
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Microbiology
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        General Lab Safety
+      </button>
+      <button
+        aria-selected="false"
+        class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+        role="tab"
+      >
+        Other
+      </button>
+    </div>
+    <div
+      class="space-y-3"
+      role="tabpanel"
+    >
+      <button
+        class="w-full rounded-lg border border-gray-200 bg-card p-4 text-start shadow-sm transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+      >
+        <div
+          class="flex items-start justify-between gap-3"
+        >
+          <div
+            class="min-w-0 flex-1"
+          >
+            <h3
+              class="text-base font-semibold text-gray-900 dark:text-gray-100"
+            >
+              Snap SOP
+            </h3>
+            <div
+              class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span
+                class="rounded bg-gray-100 px-2 py-0.5 font-medium dark:bg-gray-700"
+              >
+                Hematology
+              </span>
+              <span>
+                v
+                1.0.0
+              </span>
+              <span>
+                1/14/2026
+              </span>
+            </div>
+          </div>
+          <div
+            class="flex-shrink-0"
+          >
+            <span
+              class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+            >
+              Review Required
+            </span>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+`;
