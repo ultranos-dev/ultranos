@@ -6,6 +6,9 @@ import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
+import { deriveSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
+import { clearPhiTables } from '@/lib/phi-cleanup'
 import { getMyRole } from '@/lib/trpc'
 import { getPendingHandoverReports, type HandoverReport } from '@/lib/db'
 import { HandoverAcknowledgment } from '@/components/shift/HandoverAcknowledgment'
@@ -38,6 +41,18 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           const returnUrl = encodeURIComponent(window.location.pathname + window.location.search)
           window.location.href = `/login?returnUrl=${returnUrl}`
           return
+        }
+
+        // Derive or re-derive the encryption key from the JWT sub + device salt (Story 28.4).
+        if (!encryptionKeyStore.isReady()) {
+          try {
+            const derivedKey = await deriveSessionKey(data.session.user.id, getOrCreateDeviceSalt())
+            encryptionKeyStore.setKey(derivedKey)
+          } catch {
+            // Derivation failed — SubtleCrypto unavailable (app must be served over HTTPS)
+            console.error('[auth] Encryption key derivation failed — ensure app is served over HTTPS')
+            throw new Error('Key derivation unavailable')
+          }
         }
 
         if (!useAuthSessionStore.getState().isAuthenticated) {
@@ -114,11 +129,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   function handleSignOut() {
     const userId = useAuthSessionStore.getState().session?.userId
-    clearSession()
-    if (userId) {
-      try { localStorage.removeItem(`ultranos_lab_role_${userId}`) } catch { /* noop */ }
-    }
-    window.location.href = '/login'
+    clearPhiTables()
+      .catch(() => { /* Dexie unavailable — proceed with logout */ })
+      .finally(() => {
+        encryptionKeyStore.wipe()
+        clearSession()
+        if (userId) {
+          try { localStorage.removeItem(`ultranos_lab_role_${userId}`) } catch { /* noop */ }
+        }
+        window.location.href = '/login'
+      })
   }
 
   if (isPublicPage) return <>{children}</>

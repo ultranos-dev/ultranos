@@ -15,6 +15,7 @@ import { usePrescriptionStore } from '@/stores/prescription-store'
 import { useAllergyStore } from '@/stores/allergy-store'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { clearSigningKeys } from '@/lib/signing-key-store'
+import { clearSyncedQueueEntries } from '@/lib/phi-cleanup'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 export function SessionTimeoutWrapper({ children }: { children: ReactNode }) {
@@ -29,6 +30,9 @@ export function SessionTimeoutWrapper({ children }: { children: ReactNode }) {
     useSoapNoteStore.getState().clearPhiState()
     usePrescriptionStore.getState().clearPhiState()
     useAllergyStore.getState().clearPhiState()
+
+    // Delete synced queue entries (PHI surface reduction — encrypted pending/failed retained)
+    void clearSyncedQueueEntries()
 
     // Clear cryptographic keys
     encryptionKeyStore.wipe()

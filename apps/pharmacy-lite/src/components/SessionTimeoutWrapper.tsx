@@ -8,6 +8,7 @@ import {
 } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { clearPhiTables, purgeSyncedQueueEntries } from '@/lib/phi-cleanup'
 import { stopAuditDrain } from '@/lib/audit'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -16,14 +17,16 @@ export function SessionTimeoutWrapper({ children }: { children: ReactNode }) {
   const session = useAuthSessionStore((s) => s.session)
 
   const handleExpired = useCallback(async () => {
-    // 1. Wipe encryption key (prevents decryption of any cached data)
+    // 1. Clear PHI tables and purge synced queue entries
+    await Promise.all([clearPhiTables(), purgeSyncedQueueEntries()])
+    // 2. Wipe encryption key (prevents decryption of any residual cached data)
     encryptionKeyStore.wipe()
-    // 2. Stop audit drain (prevents further API calls with stale token)
+    // 3. Stop audit drain (prevents further API calls with stale token)
     stopAuditDrain()
-    // 3. Clear auth session (removes practitioner ref, isAuthenticated)
+    // 4. Clear auth session (removes practitioner ref, isAuthenticated)
     useAuthSessionStore.getState().clearSession()
-    // 4. Sign out of Supabase — await to ensure refresh token is revoked before redirect
-    // 5. Hard redirect to login (destroys all in-memory state) — in finally to guarantee redirect even if signOut throws
+    // 5. Sign out of Supabase — await to ensure refresh token is revoked before redirect
+    // 6. Hard redirect to login (destroys all in-memory state) — in finally to guarantee redirect even if signOut throws
     try {
       await getSupabaseBrowserClient().auth.signOut()
     } finally {

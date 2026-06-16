@@ -7,6 +7,8 @@ import {
   INACTIVITY_TIMEOUT,
 } from '@ultranos/ui-kit'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
+import { clearPhiTables, purgeSyncedQueueEntries } from '@/lib/phi-cleanup'
+import { clearSessionEncryptionKey } from '@/lib/consent-crypto'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 
 export function SessionTimeoutWrapper({ children }: { children: ReactNode }) {
@@ -14,7 +16,9 @@ export function SessionTimeoutWrapper({ children }: { children: ReactNode }) {
   const session = useAuthSessionStore((s) => s.session)
 
   const handleExpired = useCallback(async () => {
-    // Clear auth state
+    // PHI cleanup order: tables → key → auth → redirect
+    await Promise.all([clearPhiTables(), purgeSyncedQueueEntries()])
+    clearSessionEncryptionKey()
     useAuthSessionStore.getState().clearSession()
 
     // Sign out of Supabase — await to ensure refresh token is revoked before redirect

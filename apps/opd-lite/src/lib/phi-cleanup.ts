@@ -17,6 +17,8 @@ export const PHI_TABLES = [
   'interactionAuditLog',
   'practitionerKeys',
   'diagnosticReports',
+  'appointments', // Stores patient-linked appointment PHI (datetime, practitioner ref, reason)
+  'syncMeta',      // Stores last-pulled-at timestamps per patient — contains patient IDs as FK
 ] as const
 
 /**
@@ -40,7 +42,7 @@ type _SyncQueueSafe = AssertNotInPhi<'syncQueue'>
 /**
  * Clear all PHI tables from IndexedDB.
  * Fires all clears in parallel for speed (important for beforeunload).
- * Never throws — swallows errors to avoid blocking logout/tab-close.
+ * Never throws � swallows errors to avoid blocking logout/tab-close.
  */
 export async function clearPhiTables(): Promise<void> {
   await Promise.allSettled(
@@ -49,11 +51,33 @@ export async function clearPhiTables(): Promise<void> {
         const table = db.table(tableName)
         return table.clear()
       } catch {
-        // Table may not exist in this schema version — skip gracefully.
+        // Table may not exist in this schema version � skip gracefully.
         return Promise.resolve()
       }
     }),
   )
+}
+
+/**
+ * Delete 'synced' entries from the sync queue on session end.
+ *
+ * AC 28.3-4: entries with status 'pending', 'failed', or 'awaiting-key' are
+ * RETAINED — they are encrypted and unreadable without the session key.
+ * This provides defense-in-depth: even if someone accesses IndexedDB directly,
+ * the payloads are opaque ciphertext.
+ *
+ * 'synced' entries have already been delivered to the Hub and have no
+ * operational value — deleting them reduces PHI surface area.
+ *
+ * Never throws.
+ */
+export async function clearSyncedQueueEntries(): Promise<void> {
+  try {
+    const synced = await db.syncQueue.where('status').equals('synced').toArray()
+    await Promise.allSettled(synced.map((e) => db.syncQueue.delete(e.id)))
+  } catch {
+    // Swallow — must not block logout
+  }
 }
 
 /**
@@ -68,7 +92,7 @@ export async function verifyPhiCleanup(): Promise<boolean> {
     )
     return counts.every((c) => c === 0)
   } catch {
-    // If we can't verify, assume dirty — caller should force-clear
+    // If we cannot verify, assume dirty � caller should force-clear
     return false
   }
 }

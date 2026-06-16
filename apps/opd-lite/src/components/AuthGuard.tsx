@@ -3,8 +3,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
-import { generateSessionKey } from '@ultranos/crypto'
-import { encryptionKeyStore } from '@/lib/encryption-key-store'
+import { deriveSessionKey } from '@ultranos/crypto'
+import { encryptionKeyStore, getOrCreateDeviceSalt } from '@/lib/encryption-key-store'
+import { clearPhiTables, clearSyncedQueueEntries } from '@/lib/phi-cleanup'
+import { migrateUnencryptedQueueEntries } from '@/lib/sync-queue-migration'
 import { useEntitlementCheck } from '@/hooks/useEntitlementCheck'
 import { EntitlementGate } from '@ultranos/ui-kit'
 
@@ -65,10 +67,21 @@ export function AuthGuard({ children }: { children: ReactNode }) {
           }
         }
 
-        // Ensure encryption key exists (lost on page refresh since it's memory-only)
+        // Derive or re-derive the encryption key from the JWT sub + device salt.
+        // PBKDF2 (Story 28.4): same key is re-derived on page refresh while session is valid.
+        // Migration note: stale data from old random keys will fail to decrypt in the Dexie
+        // proxy (Story 28.1), which calls clearPhiTables() so data re-populates from Hub.
         if (!encryptionKeyStore.isReady()) {
-          const encKey = await generateSessionKey()
-          encryptionKeyStore.setKey(encKey)
+          try {
+            const derivedKey = await deriveSessionKey(data.session.user.id, getOrCreateDeviceSalt())
+            encryptionKeyStore.setKey(derivedKey)
+          } catch {
+            // Derivation failed — SubtleCrypto unavailable (app must be served over HTTPS)
+            console.error('[auth] Encryption key derivation failed — ensure app is served over HTTPS')
+            throw new Error('Key derivation unavailable')
+          }
+          // Encrypt any pre-existing plaintext queue entries from before Story 28.3
+          void migrateUnencryptedQueueEntries()
         }
 
         // Story 22.5 AC #8: Redirect PENDING_VERIFICATION/REJECTED/REQUEST_MORE_INFO to KYC page
@@ -108,8 +121,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const clearSession = useAuthSessionStore((s) => s.clearSession)
 
   function handleSignOut() {
-    clearSession()
-    window.location.href = '/login'
+    void clearSyncedQueueEntries() // fire-and-forget; PHI surface reduction before key wipe
+    clearPhiTables()
+      .catch(() => { /* Dexie unavailable — proceed with logout */ })
+      .finally(() => {
+        encryptionKeyStore.wipe()
+        clearSession()
+        window.location.href = '/login'
+      })
   }
 
   if (isPublicPage) return <>{children}</>

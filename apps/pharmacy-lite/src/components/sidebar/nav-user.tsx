@@ -7,6 +7,7 @@ import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { stopSyncDrain } from '@/lib/sync-drain-init'
 import { stopKrlSync } from '@/lib/krl-sync-worker'
 import { stopAuditDrain } from '@/lib/audit'
+import { clearPhiTables, purgeSyncedQueueEntries } from '@/lib/phi-cleanup'
 import { getSupabaseBrowserClient } from '@/lib/supabase'
 import {
   ChevronsUpDown,
@@ -52,6 +53,8 @@ export function NavUser() {
   const initials = getInitials(name)
 
   const handleSignOut = useCallback(async () => {
+    // PHI cleanup order: stores → tables → key → auth → redirect
+    await Promise.all([clearPhiTables(), purgeSyncedQueueEntries()])
     encryptionKeyStore.wipe()
     stopSyncDrain()
     stopKrlSync()

@@ -52,6 +52,8 @@ describe('phi-cleanup', () => {
         cachedAt: new Date().toISOString(),
       })
       await db.diagnosticReports.add({ id: seedId('dr', 1), resourceType: 'DiagnosticReport' } as never)
+      await db.appointments.add({ id: seedId('apt', 1), status: 'booked', start: new Date().toISOString() } as never)
+      await db.syncMeta.add({ patientId: 'p-1', lastSyncedAt: new Date().toISOString() } as never)
 
       // Verify all seeded
       expect(await db.patients.count()).toBe(1)
@@ -65,6 +67,8 @@ describe('phi-cleanup', () => {
       expect(await db.interactionAuditLog.count()).toBe(1)
       expect(await db.practitionerKeys.count()).toBe(1)
       expect(await db.diagnosticReports.count()).toBe(1)
+      expect(await db.appointments.count()).toBe(1)
+      expect(await db.syncMeta.count()).toBe(1)
 
       await clearPhiTables()
 
@@ -80,6 +84,8 @@ describe('phi-cleanup', () => {
       expect(await db.interactionAuditLog.count()).toBe(0)
       expect(await db.practitionerKeys.count()).toBe(0)
       expect(await db.diagnosticReports.count()).toBe(0)
+      expect(await db.appointments.count()).toBe(0)
+      expect(await db.syncMeta.count()).toBe(0)
     })
 
     it('preserves syncQueue entries', async () => {
