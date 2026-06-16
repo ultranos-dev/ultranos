@@ -61,6 +61,8 @@ const FolderOpen = createIconMock('FolderOpen')
 const BookmarkPlus = createIconMock('BookmarkPlus')
 const MapPinOff = createIconMock('MapPinOff')
 const CheckCircle = createIconMock('CheckCircle')
+const Home = createIconMock('Home')
+const Folder = createIconMock('Folder')
 
 module.exports = {
   Heart,
@@ -109,4 +111,6 @@ module.exports = {
   BookmarkPlus,
   MapPinOff,
   CheckCircle,
+  Home,
+  Folder,
 }

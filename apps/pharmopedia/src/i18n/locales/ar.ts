@@ -1,7 +1,19 @@
 import type { Translations } from './en'
 
 const ar: Translations = {
-  tabs: { search: 'بحث', profile: 'الملف الشخصي', browse: 'تصفح', saved: 'المحفوظة' },
+  tabs: { search: 'بحث', profile: 'الملف الشخصي', browse: 'تصفح', saved: 'المحفوظة', home: 'الرئيسية' },
+  home: {
+    greetingMorning: 'صباح الخير',
+    greetingAfternoon: 'مساء الخير',
+    greetingEvening: 'مساء الخير',
+    searchPlaceholder: 'ابحث عن الأدوية…',
+    safetyAlerts: 'تنبيهات السلامة',
+    recent: 'الأخيرة',
+    saved: 'المحفوظة',
+    seeAll: 'عرض الكل',
+    browseCta: 'تصفّح الأدوية',
+    savedEmpty: 'احفظ الأدوية للعثور عليها بسرعة.',
+  },
   search: {
     placeholder: 'ابحث عن الدواء\u2026',
     empty: 'ابحث باسم الدواء أو الاسم التجاري أو رمز ATC',

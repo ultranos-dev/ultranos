@@ -1,86 +1,116 @@
-import { useState, useCallback } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useTranslation } from 'react-i18next'
-import { Search, SearchX } from 'lucide-react-native'
+import { ChevronRight, Pill } from 'lucide-react-native'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
-import { CollapsibleList } from '@ultranos/ui-kit/native'
-import { SearchBar } from '@/components/SearchBar'
-import { SyncStatusBanner } from '@/components/SyncStatusBanner'
-import { NetStatusBanner } from '@/components/NetStatusBanner'
-import { DrugCard } from '@/components/DrugCard'
-import { SkeletonCard } from '@/components/SkeletonCard'
-import { searchDrugs } from '@/db/fts'
-import { searchDrugsApi } from '@/api/drug-catalog'
+import { CollapsibleScreen, Banner, Chip, ListRow, EmptyState, Card, useRtl } from '@ultranos/ui-kit/native'
+import { HomeSearchField } from '@/components/HomeSearchField'
+import { getActiveRecalls, type RecallSummary } from '@/db/recalls'
 import { getDatabase } from '@/db/migrations'
 import { useAuthStore } from '@/store/auth-store'
-import { useSyncStore } from '@/store/sync-store'
-import { useLangStore } from '@/store/lang-store'
+import { useBookmarkStore } from '@/store/bookmark-store'
+import { useRecentSearchStore } from '@/store/recent-search-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
-import type { DrugSearchResult } from '@ultranos/shared-types'
 
-export default function SearchTab() {
+const ROLE_LABELS: Record<string, string> = {
+  PATIENT: 'Patient', DOCTOR: 'Doctor', NURSE: 'Nurse', LAB_TECH: 'Lab technician', PHARMACIST: 'Pharmacist', ADMIN: 'Admin',
+}
+
+function greetingKey(hour: number): 'home.greetingMorning' | 'home.greetingAfternoon' | 'home.greetingEvening' {
+  if (hour < 12) return 'home.greetingMorning'
+  if (hour < 18) return 'home.greetingAfternoon'
+  return 'home.greetingEvening'
+}
+
+export default function HomeTab() {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const router = useRouter()
-  const token = useAuthStore((s) => s.token)
-  const lastVersion = useSyncStore((s) => s.lastVersion)
-  const lang = useLangStore((s) => s.lang)
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<DrugSearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
+  const user = useAuthStore((s) => s.user)
+  const bookmarks = useBookmarkStore((s) => s.bookmarks)
+  const recents = useRecentSearchStore((s) => s.recents)
+  const rtl = useRtl()
+  const role = user?.role ?? 'PATIENT'
+  const labelAlign = { textAlign: rtl ? ('right' as const) : ('left' as const) }
+  const [recalls, setRecalls] = useState<RecallSummary[]>([])
 
-  const handleSearch = useCallback(async (q: string) => {
-    setQuery(q)
-    if (!q.trim()) { setResults([]); return }
-    setLoading(true)
-    try {
-      if (lastVersion > 0) {
-        try { setResults(await searchDrugs(getDatabase(), q, lang, 50)) } catch { setResults([]) }
-      } else if (token) {
-        try { setResults(await searchDrugsApi(q, lang, 20, token)) } catch { setResults([]) }
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const r = await getActiveRecalls(getDatabase(), role)
+        if (!cancelled) setRecalls(r)
+      } catch {
+        if (!cancelled) setRecalls([])
       }
-    } finally { setLoading(false) }
-  }, [lastVersion, lang, token])
+    })()
+    return () => { cancelled = true }
+  }, [role])
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true)
-    try { if (query.trim()) await handleSearch(query) } finally { setRefreshing(false) }
-  }, [query, handleSearch])
-
-  const empty = loading ? (
-    <View>{[0, 1, 2, 3].map((i) => <SkeletonCard key={i} testID={`skeleton-${i}`} />)}</View>
-  ) : query.trim().length > 0 ? (
-    <View style={[styles.empty, { backgroundColor: colors.surface }]}>
-      <SearchX size={48} color={colors.textMuted} />
-      <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t('search.noResultsTitle')}</Text>
-      <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>{t('search.noResultsDescription')}</Text>
-    </View>
-  ) : (
-    <View style={[styles.empty, { backgroundColor: colors.surface }]}>
-      <Search size={48} color={colors.textMuted} />
-      <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>{t('search.emptyTitle')}</Text>
-      <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>{t('search.emptyDescription')}</Text>
-    </View>
-  )
+  const greeting = t(greetingKey(new Date().getHours()))
+  const subtitle = ROLE_LABELS[role] ?? role
+  const savedTop = bookmarks.slice(0, 5)
 
   return (
-    <CollapsibleList<DrugSearchResult>
-      title={t('tabs.search')}
-      subHeader={<View><SearchBar value={query} onSearch={handleSearch} /><SyncStatusBanner /><NetStatusBanner /></View>}
-      data={results}
-      keyExtractor={(item, index) => `${item.atcCode}-${index}`}
-      renderItem={({ item }) => <DrugCard result={item} lang={lang} onPress={() => router.push(`/drug/${item.atcCode}`)} />}
-      ListEmptyComponent={empty}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-    />
+    <CollapsibleScreen title={greeting} subtitle={subtitle}>
+      <HomeSearchField onPress={() => router.push('/search')} />
+
+      {recalls.length > 0 && (
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.safetyAlerts')}</Text>
+          <View style={styles.alerts}>
+            {recalls.map((r) => (
+              <Banner
+                key={r.atcCode}
+                variant="warning"
+                text={`${r.innName}${r.description ? ` — ${r.description}` : ''}`}
+                onPress={() => router.push(`/drug/${r.atcCode}`)}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {recents.length > 0 && (
+        <View style={styles.section}>
+          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.recent')}</Text>
+          <View style={styles.chips}>
+            {recents.map((q) => (
+              <Chip key={q} label={q} onPress={() => router.push({ pathname: '/search', params: { q } })} />
+            ))}
+          </View>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <View style={styles.savedHeader}>
+          <Text style={[styles.label, { color: colors.textMuted }, labelAlign]}>{t('home.saved')}</Text>
+          {bookmarks.length > 5 && (
+            <Pressable onPress={() => router.push('/(tabs)/saved')} accessibilityRole="button" accessibilityLabel={t('home.seeAll')}>
+              <Text style={[styles.seeAll, { color: colors.primary500 }]}>{t('home.seeAll')}</Text>
+            </Pressable>
+          )}
+        </View>
+        {savedTop.length > 0 ? (
+          <Card>
+            {savedTop.map((b) => (
+              <ListRow key={b.atcCode} icon={Pill} label={b.innName} trailing={<ChevronRight size={18} color={colors.textMuted} />} onPress={() => router.push(`/drug/${b.atcCode}`)} />
+            ))}
+          </Card>
+        ) : (
+          <EmptyState icon={Pill} title={t('home.savedEmpty')} action={{ label: t('home.browseCta'), onPress: () => router.push('/(tabs)/browse') }} />
+        )}
+      </View>
+    </CollapsibleScreen>
   )
 }
 
 const styles = StyleSheet.create({
-  empty: { alignItems: 'center', padding: Spacing[8], gap: Spacing[3], borderRadius: 12, margin: Spacing[4] },
-  emptyTitle: { fontSize: FontSize.md, fontFamily: FontFamily.sansSemibold, textAlign: 'center' },
-  emptyDesc: { fontSize: FontSize.sm, fontFamily: FontFamily.sans, textAlign: 'center' },
+  section: { gap: Spacing[2] },
+  label: { fontFamily: FontFamily.sansBold, fontSize: FontSize.xs, letterSpacing: 0.5, textTransform: 'uppercase', marginTop: Spacing[2] },
+  alerts: { gap: Spacing[2] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
+  savedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing[2] },
+  seeAll: { fontFamily: FontFamily.sansSemibold, fontSize: FontSize.sm },
 })

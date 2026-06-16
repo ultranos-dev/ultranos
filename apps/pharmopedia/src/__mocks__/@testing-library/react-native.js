@@ -60,8 +60,14 @@ function collectLeafText(node) {
 function queryByText(instance, text) {
   let found = null
   const json = instance.toJSON()
-  function deepSearch(node) {
+  // closestInteractive: the nearest ancestor (including self) that has onClick/onPress.
+  // Passed down the recursion so that when we find a text match on a non-interactive leaf
+  // we can return the interactive ancestor — mirroring how real RNTL surfaces pressable
+  // parents when pressing on a Text node inside a Pressable.
+  function deepSearch(node, closestInteractive) {
     if (!node || found) return
+    const isSelf = node.props && (node.props.onClick || node.props.onPress)
+    const nextInteractive = isSelf ? node : closestInteractive
     if (node.children) {
       // Check if this node's full leaf text matches
       const fullText = collectLeafText(node)
@@ -69,33 +75,34 @@ function queryByText(instance, text) {
         // Prefer the closest matching leaf node
         const isLeafMatch = node.children.some(child => matchesText(child, text))
         if (isLeafMatch) {
-          found = node
+          // Return the interactive ancestor if the matched node itself isn't interactive
+          found = isSelf ? node : (nextInteractive ?? node)
           return
         }
         // For regex, also accept if any child string matches
         if (text instanceof RegExp) {
           const directStringMatch = node.children.some(child => typeof child === 'string' && text.test(child))
-          if (directStringMatch) { found = node; return }
+          if (directStringMatch) { found = isSelf ? node : (nextInteractive ?? node); return }
         }
       }
       // Recurse into children
       node.children.forEach(child => {
         if (typeof child === 'string') {
-          if (matchesText(child, text)) { if (!found) found = node }
+          if (matchesText(child, text)) { if (!found) found = nextInteractive ?? node }
         } else {
-          deepSearch(child)
+          deepSearch(child, nextInteractive)
         }
       })
       // Fallback: if regex and full concatenated text matches, use this node
       if (!found && text instanceof RegExp && text.test(fullText)) {
-        found = node
+        found = isSelf ? node : (nextInteractive ?? node)
       }
     }
   }
   if (Array.isArray(json)) {
-    json.forEach(deepSearch)
+    json.forEach((n) => deepSearch(n, null))
   } else {
-    deepSearch(json)
+    deepSearch(json, null)
   }
   return found
 }
@@ -142,6 +149,23 @@ function queryByPlaceholderText(instance, placeholder) {
 }
 
 let _currentInstance = null
+let _parentMap = new WeakMap()
+
+/**
+ * Build a WeakMap from each node to its parent so that fireEvent.press can
+ * bubble up the tree when the directly-matched node has no handler — mirroring
+ * how the real @testing-library/react-native handles press events on Text nodes
+ * that live inside a Pressable.
+ */
+function buildParentMap(node, parent = null) {
+  if (!node || typeof node !== 'object') return
+  if (parent) _parentMap.set(node, parent)
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) {
+      if (child && typeof child === 'object') buildParentMap(child, node)
+    }
+  }
+}
 
 const screen = {
   getByTestId: (testID) => {
@@ -182,6 +206,9 @@ function render(element) {
     instance = ReactTestRenderer.create(element)
   })
   _currentInstance = instance
+  _parentMap = new WeakMap()
+  const json = instance.toJSON()
+  if (Array.isArray(json)) { json.forEach((n) => buildParentMap(n, null)) } else { buildParentMap(json, null) }
 
   async function findByTestId(testID, { timeout = 1000, interval = 50 } = {}) {
     const start = Date.now()
@@ -245,10 +272,17 @@ function render(element) {
 
 const fireEvent = {
   press: (element) => {
-    if (element && element.props) {
-      if (element.props.onPress) element.props.onPress()
-      else if (element.props.onClick) element.props.onClick()
+    // Walk up the ancestor chain to find the nearest node with onPress/onClick,
+    // mirroring how real RNTL bubbles press events up through the tree.
+    let node = element
+    while (node && node.props) {
+      if (node.props.onPress) { node.props.onPress(); return }
+      if (node.props.onClick) { node.props.onClick(); return }
+      node = _parentMap.get(node) ?? null
     }
+    // No handler up the chain: no-op. This mirrors a disabled Pressable (whose
+    // onPress is undefined) — real RNTL also fires nothing in that case, which
+    // the "blocks press when disabled" Button tests rely on.
   },
   changeText: (element, text) => {
     if (element && element.props && element.props.onChange) {

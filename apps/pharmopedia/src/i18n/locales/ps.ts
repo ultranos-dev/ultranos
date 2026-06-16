@@ -1,7 +1,19 @@
 import type { Translations } from './en'
 
 const ps: Translations = {
-  tabs: { search: 'لټون', profile: 'پروفایل', browse: 'ګرځول', saved: 'خوندي شوي' },
+  tabs: { search: 'لټون', profile: 'پروفایل', browse: 'ګرځول', saved: 'خوندي شوي', home: 'کور' },
+  home: {
+    greetingMorning: 'سهار مو پخیر',
+    greetingAfternoon: 'ماښام مو پخیر',
+    greetingEvening: 'شپه مو پخیره',
+    searchPlaceholder: 'درمل وپلټئ…',
+    safetyAlerts: 'د خوندیتوب خبرتیاوې',
+    recent: 'وروستي',
+    saved: 'خوندي شوي',
+    seeAll: 'ټول وګورئ',
+    browseCta: 'درمل وپلټئ',
+    savedEmpty: 'درمل نښه کړئ ترڅو ژر یې ومومئ.',
+  },
   search: {
     placeholder: 'دوا وپلټئ\u2026',
     empty: 'د دوا نوم، د تجارت نوم، یا د ATC کوډ له مخې وپلټئ',

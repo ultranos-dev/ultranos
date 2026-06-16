@@ -1,13 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render } from '@testing-library/react-native'
-import SearchTab from '@/app/(tabs)/index'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, waitFor } from '@testing-library/react-native'
 
+const sp = vi.hoisted(() => ({ q: undefined as string | undefined }))
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
+vi.mock('expo-router', () => ({ useRouter: () => ({ push: vi.fn() }), useLocalSearchParams: () => ({ q: sp.q }) }))
 vi.mock('@/store/auth-store', () => ({ useAuthStore: (s: (x: { token: null }) => unknown) => s({ token: null }) }))
-vi.mock('@/store/sync-store', () => ({ useSyncStore: (s: (x: { lastVersion: number }) => unknown) => s({ lastVersion: 0 }) }))
+vi.mock('@/store/sync-store', () => ({ useSyncStore: (s: (x: { lastVersion: number }) => unknown) => s({ lastVersion: 1 }) }))
 vi.mock('@/store/lang-store', () => ({ useLangStore: (s: (x: { lang: string }) => unknown) => s({ lang: 'en' }), isRtlLang: () => false }))
-vi.mock('@/db/fts', () => ({ searchDrugs: async () => [] }))
-vi.mock('@/api/drug-catalog', () => ({ searchDrugsApi: async () => [] }))
+vi.mock('@/store/recent-search-store', () => ({ useRecentSearchStore: Object.assign((sel: (s: { add: () => Promise<void> }) => unknown) => sel({ add: vi.fn() }), { getState: () => ({ add: vi.fn() }) }) }))
+vi.mock('@/db/fts', () => ({ searchDrugs: vi.fn(async () => []) }))
+vi.mock('@/api/drug-catalog', () => ({ searchDrugsApi: vi.fn(async () => []) }))
 vi.mock('@/db/migrations', () => ({ getDatabase: () => ({}) }))
 vi.mock('@/components/SearchBar', () => ({ SearchBar: () => null }))
 vi.mock('@/components/SyncStatusBanner', () => ({ SyncStatusBanner: () => null }))
@@ -21,10 +23,25 @@ vi.mock('@/hooks/useThemeColors', () => ({
   }),
 }))
 
+import SearchTab from '@/app/search'
+import { searchDrugs } from '@/db/fts'
+
 describe('SearchTab', () => {
+  beforeEach(() => {
+    sp.q = undefined
+    vi.mocked(searchDrugs).mockClear()
+  })
+
   it('renders the screen title and the empty prompt', () => {
     const { getByText } = render(<SearchTab />)
     expect(getByText('tabs.search')).toBeTruthy()
     expect(getByText('search.emptyTitle')).toBeTruthy()
+  })
+
+  it('seeds an initial search from the ?q= param', async () => {
+    sp.q = 'amox'
+    render(<SearchTab />)
+    await waitFor(() => expect(vi.mocked(searchDrugs)).toHaveBeenCalled())
+    expect(vi.mocked(searchDrugs).mock.calls[0][1]).toBe('amox')
   })
 })

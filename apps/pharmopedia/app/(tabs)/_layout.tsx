@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router'
-import { Search, Folder, Bookmark, User } from 'lucide-react-native'
+import { Home, Folder, Bookmark, User } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 import { useAutoSync } from '@/hooks/useAutoSync'
 import { FontFamily, FontSize, Shadow } from '@ultranos/ui-kit/tokens.native'
@@ -28,8 +28,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t('tabs.search'),
-          tabBarIcon: ({ color, size }) => <Search color={color} size={size} />,
+          title: t('tabs.home'),
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
         }}
       />
       <Tabs.Screen

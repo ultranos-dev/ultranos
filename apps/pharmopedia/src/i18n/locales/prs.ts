@@ -1,7 +1,19 @@
 import type { Translations } from './en'
 
 const prs: Translations = {
-  tabs: { search: 'جستجو', profile: 'پروفایل', browse: 'مرور', saved: 'ذخیره شده' },
+  tabs: { search: 'جستجو', profile: 'پروفایل', browse: 'مرور', saved: 'ذخیره شده', home: 'خانه' },
+  home: {
+    greetingMorning: 'صبح بخیر',
+    greetingAfternoon: 'ظهر بخیر',
+    greetingEvening: 'شب بخیر',
+    searchPlaceholder: 'جستجوی داروها…',
+    safetyAlerts: 'هشدارهای ایمنی',
+    recent: 'اخیر',
+    saved: 'ذخیره‌شده',
+    seeAll: 'مشاهده همه',
+    browseCta: 'مرور داروها',
+    savedEmpty: 'داروها را نشانه‌گذاری کنید تا سریع پیدا شوند.',
+  },
   search: {
     placeholder: 'دارو جستجو کنید\u2026',
     empty: 'به نام دارو، نام تجاری یا کد ATC جستجو کنید',

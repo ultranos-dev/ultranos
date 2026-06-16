@@ -27,6 +27,7 @@ import { useDeviceSecurityStore } from '@/stores/device-security-store'
 import { useLangStore } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { useCoachMarkStore } from '@/store/coach-mark-store'
+import { useRecentSearchStore } from '@/store/recent-search-store'
 import { useThemeStore } from '@/store/theme-store'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { initI18n } from '@/i18n'
@@ -66,6 +67,7 @@ export default function RootLayout() {
         initI18n(useLangStore.getState().lang)
         await useBookmarkStore.getState().init(getDatabase())
         await useCoachMarkStore.getState().init()
+        await useRecentSearchStore.getState().init()
         const seen = await hasSeenWelcome()
         setShowWelcome(!seen)
       } catch {
@@ -74,6 +76,7 @@ export default function RootLayout() {
         await themeInit()
         initI18n(useLangStore.getState().lang)
         await useCoachMarkStore.getState().init()
+        await useRecentSearchStore.getState().init()
         const seen = await hasSeenWelcome()
         setShowWelcome(!seen)
       } finally {
@@ -102,6 +105,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 250 }} />
             <Stack.Screen name="drug/[atcCode]" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
+            <Stack.Screen name="search" options={{ headerShown: true, title: '', animation: 'slide_from_bottom', animationDuration: 300 }} />
           </Stack>
         </ErrorBoundary>
       </UiKitProvider>
