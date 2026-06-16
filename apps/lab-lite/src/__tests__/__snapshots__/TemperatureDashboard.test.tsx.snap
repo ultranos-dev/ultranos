@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TemperatureDashboard > RTL snapshot — renders location cards correctly with dir="rtl" 1`] = `
+<div
+  dir="rtl"
+>
+  <div
+    class="mx-auto max-w-4xl px-4 py-6"
+  >
+    <h1
+      class="text-2xl font-bold text-foreground mb-6"
+    >
+      dashboardTitle
+    </h1>
+    <div
+      class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      <div
+        class="rounded-lg border bg-card p-4 border-green-200"
+      >
+        <div
+          class="flex items-center justify-between mb-3"
+        >
+          <h3
+            class="text-sm font-semibold text-foreground"
+          >
+            Reagent Fridge
+          </h3>
+          <span
+            aria-label="status.green"
+            class="inline-block h-3 w-3 rounded-full bg-green-500"
+          />
+        </div>
+        <div
+          class="text-center mb-3"
+        >
+          <span
+            class="text-3xl font-bold text-foreground"
+          >
+            5
+          </span>
+          <span
+            class="text-lg text-muted-foreground"
+          >
+            °C
+          </span>
+        </div>
+        <dl
+          class="space-y-1 text-xs text-muted-foreground mb-3"
+        >
+          <div
+            class="flex justify-between"
+          >
+            <dt>
+              lastReading
+            </dt>
+            <dd>
+              10:00:00 AM
+            </dd>
+          </div>
+          <div
+            class="flex justify-between"
+          >
+            <dt>
+              source
+            </dt>
+            <dd>
+              manual
+            </dd>
+          </div>
+          <div
+            class="flex justify-between"
+          >
+            <dt>
+              range
+            </dt>
+            <dd>
+              2
+              –
+              8
+              °C
+            </dd>
+          </div>
+        </dl>
+        <div
+          class="flex gap-2"
+        >
+          <button
+            class="group/button inline-flex items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground [data-theme=dark_&]:bg-transparent [data-theme=dark_&]:hover:bg-input/30 h-9 gap-1.5 px-4 flex-1 text-xs"
+            data-size="default"
+            data-slot="button"
+            data-variant="outline"
+          >
+            logReading
+          </button>
+          <button
+            class="group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-muted hover:text-foreground h-9 gap-1.5 px-4 text-xs"
+            data-size="default"
+            data-slot="button"
+            data-variant="ghost"
+          >
+            trend
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

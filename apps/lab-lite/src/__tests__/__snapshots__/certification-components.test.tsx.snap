@@ -1,0 +1,289 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CertificateViewer RTL snapshot > renders correctly in RTL layout 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="space-y-4"
+    >
+      <div
+        class="rounded-lg border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-6 text-center"
+      >
+        <div
+          class="flex justify-center mb-3"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-award text-yellow-500"
+            fill="none"
+            height="40"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="40"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"
+            />
+            <circle
+              cx="12"
+              cy="8"
+              r="6"
+            />
+          </svg>
+        </div>
+        <p
+          class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1"
+        >
+          certificateOf
+        </p>
+        <h3
+          class="text-lg font-bold text-gray-900 dark:text-white mb-1"
+        >
+          Ahmad Karimi
+        </h3>
+        <p
+          class="text-sm text-gray-600 dark:text-gray-300 mb-2"
+        >
+          hasCompletedMilestone
+        </p>
+        <p
+          class="text-base font-semibold text-blue-700 dark:text-blue-300 mb-3"
+        >
+          Complete 5 modules
+        </p>
+        <p
+          class="text-xs text-gray-500 dark:text-gray-400"
+        >
+          issuedOn
+          : 
+          15 March 2026
+        </p>
+      </div>
+      <div
+        class="flex items-center gap-3 rounded border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800/50"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-qr-code text-gray-400 shrink-0"
+          fill="none"
+          height="18"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="18"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            height="5"
+            rx="1"
+            width="5"
+            x="3"
+            y="3"
+          />
+          <rect
+            height="5"
+            rx="1"
+            width="5"
+            x="16"
+            y="3"
+          />
+          <rect
+            height="5"
+            rx="1"
+            width="5"
+            x="3"
+            y="16"
+          />
+          <path
+            d="M21 16h-3a2 2 0 0 0-2 2v3"
+          />
+          <path
+            d="M21 21v.01"
+          />
+          <path
+            d="M12 7v3a2 2 0 0 1-2 2H7"
+          />
+          <path
+            d="M3 12h.01"
+          />
+          <path
+            d="M12 3h.01"
+          />
+          <path
+            d="M12 16v.01"
+          />
+          <path
+            d="M16 12h1"
+          />
+          <path
+            d="M21 12v.01"
+          />
+          <path
+            d="M12 21v-1"
+          />
+        </svg>
+        <div
+          class="flex-1 min-w-0"
+        >
+          <p
+            class="text-xs text-gray-500 dark:text-gray-400"
+          >
+            verificationCode
+          </p>
+          <p
+            class="text-xs font-mono text-gray-700 dark:text-gray-300 truncate"
+          >
+            vc-abc-def-123
+          </p>
+        </div>
+        <button
+          class="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+        >
+          copy
+        </button>
+      </div>
+      <p
+        class="text-xs text-gray-400 dark:text-gray-500 text-center"
+      >
+        verifiableOnline
+      </p>
+      <div
+        class="flex gap-3"
+      >
+        <button
+          class="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled=""
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-download"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 15V3"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+            <path
+              d="m7 10 5 5 5-5"
+            />
+          </svg>
+          downloadPdf
+        </button>
+        <button
+          class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+          title="copyVerificationCode"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-share2 lucide-share-2"
+            fill="none"
+            height="16"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="18"
+              cy="5"
+              r="3"
+            />
+            <circle
+              cx="6"
+              cy="12"
+              r="3"
+            />
+            <circle
+              cx="18"
+              cy="19"
+              r="3"
+            />
+            <line
+              x1="8.59"
+              x2="15.42"
+              y1="13.51"
+              y2="17.49"
+            />
+            <line
+              x1="15.41"
+              x2="8.59"
+              y1="6.51"
+              y2="10.49"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`CertificationDashboard RTL snapshot > renders correctly in RTL layout 1`] = `
+<div>
+  <div
+    dir="rtl"
+  >
+    <div
+      class="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
+    >
+      <div
+        class="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-award size-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"
+          />
+          <circle
+            cx="12"
+            cy="8"
+            r="6"
+          />
+        </svg>
+      </div>
+      <p
+        class="text-sm font-semibold text-foreground"
+      >
+        noCertificationPaths
+      </p>
+      <p
+        class="max-w-xs text-xs text-muted-foreground"
+      >
+        noCertificationPathsHint
+      </p>
+    </div>
+  </div>
+</div>
+`;
