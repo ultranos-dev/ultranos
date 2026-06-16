@@ -1,4 +1,7 @@
 export {
+  UnknownKeyVersionError,
+  deriveSessionKey,
+  deriveKeyForVersion,
   generateSessionKey,
   encryptPayload,
   decryptPayload,

@@ -1,5 +1,5 @@
 /**
- * Memory-only encryption key store for the PWA.
+ * Memory-only encryption key store for the Lab Lite PWA.
  *
  * The AES-256-GCM session key lives exclusively in RAM — never persisted
  * to localStorage, sessionStorage, or IndexedDB.
@@ -47,13 +47,10 @@ export class EncryptionKeyNotAvailableError extends Error {
 }
 
 let sessionKey: CryptoKey | null = null
-let keyMap: Record<string, CryptoKey> = {}
-let currentWriteVersion = 'v1'
 
 export const encryptionKeyStore = {
   setKey(key: CryptoKey): void {
     sessionKey = key
-    keyMap = { [currentWriteVersion]: key }
   },
 
   getKey(): CryptoKey | null {
@@ -62,7 +59,7 @@ export const encryptionKeyStore = {
 
   /**
    * Returns the key or throws if unavailable.
-   * Use this in write paths that must not proceed without encryption.
+   * Use this in code paths that must not proceed without encryption.
    */
   requireKey(): CryptoKey {
     if (!sessionKey) {
@@ -71,60 +68,16 @@ export const encryptionKeyStore = {
     return sessionKey
   },
 
-  /**
-   * Returns the full key map (version → CryptoKey) for read/decrypt paths.
-   * Supports multi-version decryption during and after key rotation.
-   * Throws if no keys are available.
-   */
-  requireKeyMap(): Record<string, CryptoKey> {
-    if (Object.keys(keyMap).length === 0) {
-      throw new EncryptionKeyNotAvailableError()
-    }
-    return { ...keyMap }
-  },
-
-  /** Returns the version string for the current write key (e.g. 'v1', 'v2'). */
-  getCurrentWriteVersion(): string {
-    return currentWriteVersion
-  },
-
-  /**
-   * Add a new key version and promote it to the current write key.
-   * The old version remains in the map so encrypted data can still be decrypted
-   * during re-encryption and until retireVersion() is called.
-   */
-  rotateKey(newVersion: string, newKey: CryptoKey): void {
-    keyMap[newVersion] = newKey
-    sessionKey = newKey
-    currentWriteVersion = newVersion
-  },
-
-  /**
-   * Remove an old key version from the map once all data has been re-encrypted.
-   * Cannot retire the current write version.
-   */
-  retireVersion(version: string): void {
-    if (version === currentWriteVersion) {
-      throw new Error(`Cannot retire current write version "${version}"`)
-    }
-    delete keyMap[version]
-    if (version === 'v1') {
-      sessionKey = keyMap[currentWriteVersion] ?? null
-    }
-  },
-
   isReady(): boolean {
     return sessionKey !== null
   },
 
   /**
-   * Securely wipe all keys from memory.
+   * Securely wipe the key from memory.
    * Called on tab close, logout, and session expiry.
    */
   wipe(): void {
     sessionKey = null
-    keyMap = {}
-    currentWriteVersion = 'v1'
   },
 }
 
