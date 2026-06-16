@@ -1,6 +1,8 @@
 import Fuse, { type IFuseOptions, type FuseResultMatch } from 'fuse.js'
 import { db } from './db'
 import type { VocabMedicationEntry } from './db'
+import { searchDrugCatalog } from './trpc'
+import type { DrugSearchResult } from '@ultranos/shared-types'
 
 export interface MedicationItem {
   code: string
@@ -35,36 +37,55 @@ function toMedicationItem(entry: VocabMedicationEntry): MedicationItem {
   }
 }
 
-/**
- * Hybrid search: Dexie indexed prefix match → Fuse.js fuzzy ranking.
- * Maintains the same API as the previous static-JSON implementation.
- */
-export async function searchMedications(query: string): Promise<MedicationSearchResult[]> {
-  if (!query || query.trim().length < 2) return []
+function drugResultToMedicationItem(r: DrugSearchResult): MedicationItem {
+  return {
+    code: r.atcCode,
+    display: r.localName ?? r.innName,
+    form: r.doseForms[0] ?? '',
+    strength: '',
+  }
+}
 
-  const trimmed = query.trim()
-
-  // Stage 1: Dexie indexed prefix match on display name
+async function searchLocal(trimmed: string): Promise<MedicationSearchResult[]> {
   const prefixCandidates = await db.vocabularyMedications
     .where('display')
     .startsWithIgnoreCase(trimmed)
     .limit(200)
     .toArray()
 
-  // Stage 2: Also grab broader candidates if prefix match is thin
   let candidates: VocabMedicationEntry[]
   if (prefixCandidates.length < 10) {
-    // Fall back to full table scan for fuzzy matching on small datasets
-    // or when the prefix doesn't match well (e.g. typos, form searches)
     candidates = await db.vocabularyMedications.toArray()
   } else {
     candidates = prefixCandidates
   }
 
-  // Stage 3: Fuse.js fuzzy ranking on the candidate set
   const items = candidates.map(toMedicationItem)
   const fuse = new Fuse(items, fuseOptions)
-  const results = fuse.search(trimmed, { limit: 20 })
+  return fuse.search(trimmed, { limit: 20 }).map((r) => ({ item: r.item, matches: r.matches }))
+}
 
-  return results.map((r) => ({ item: r.item, matches: r.matches }))
+/**
+ * Hybrid search: Hub drug catalog API when online (ATC-keyed results),
+ * falls back to local Dexie + Fuse when offline or on Hub failure.
+ */
+export async function searchMedications(
+  query: string,
+  signal?: AbortSignal,
+): Promise<MedicationSearchResult[]> {
+  if (!query || query.trim().length < 2) return []
+
+  const trimmed = query.trim()
+
+  if (typeof window !== 'undefined' && navigator.onLine) {
+    try {
+      const results = await searchDrugCatalog(trimmed, 'en', signal)
+      return results.map((r) => ({ item: drugResultToMedicationItem(r), matches: undefined }))
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') throw err
+      // Network failure or Hub unavailable — fall through to local search
+    }
+  }
+
+  return searchLocal(trimmed)
 }

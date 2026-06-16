@@ -13,6 +13,8 @@ interface PatientState {
   results: FhirPatient[]
   selectedPatient: FhirPatient | null
   isSearching: boolean
+  /** Set to "Session required for patient search" when encryption key is unavailable. */
+  searchError: string | null
   syncStatus: SyncStatus
 
   setQuery: (query: string) => void
@@ -20,6 +22,7 @@ interface PatientState {
   selectPatient: (patient: FhirPatient) => void
   clearSearch: () => void
   setIsSearching: (isSearching: boolean) => void
+  setSearchError: (error: string | null) => void
   setSyncStatus: (status: SyncStatus) => void
 }
 
@@ -28,6 +31,7 @@ export const usePatientStore = create<PatientState>()((set) => ({
   results: [],
   selectedPatient: null,
   isSearching: false,
+  searchError: null,
   syncStatus: { isPending: false, isError: false, lastSyncedAt: null },
 
   setQuery: (query) => set({ query }),
@@ -48,7 +52,8 @@ export const usePatientStore = create<PatientState>()((set) => ({
       })
     }
   },
-  clearSearch: () => set({ query: '', results: [], isSearching: false }),
+  clearSearch: () => set({ query: '', results: [], isSearching: false, searchError: null }),
   setIsSearching: (isSearching) => set({ isSearching }),
+  setSearchError: (searchError) => set({ searchError }),
   setSyncStatus: (syncStatus) => set({ syncStatus }),
 }))

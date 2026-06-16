@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { searchPatientsLocal, searchPatientsHub } from '@/lib/patient-search'
+import { searchPatientsLocal, searchPatientsHub, SESSION_REQUIRED_ERROR } from '@/lib/patient-search'
+import { encryptionKeyStore } from '@/lib/encryption-key-store'
 import { useAuthSessionStore } from '@/stores/auth-session-store'
 import { getHubApiUrl } from '@/lib/trpc'
 import type { LocalPatient } from '@/lib/db'
@@ -12,6 +13,8 @@ interface UsePatientSearchReturn {
   results: LocalPatient[]
   isSearching: boolean
   hasSearched: boolean
+  /** Set to "Session required for patient search" when encryption key is unavailable. */
+  searchError: string | null
 }
 
 export function usePatientSearch(): UsePatientSearchReturn {
@@ -19,6 +22,7 @@ export function usePatientSearch(): UsePatientSearchReturn {
   const [results, setResults] = useState<LocalPatient[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -26,17 +30,30 @@ export function usePatientSearch(): UsePatientSearchReturn {
     if (q.trim().length < 2) {
       setResults([])
       setHasSearched(false)
+      setSearchError(null)
+      return
+    }
+
+    // Guard: encryption key must be available before any Dexie access.
+    if (!encryptionKeyStore.isReady()) {
+      setResults([])
+      setIsSearching(false)
+      setHasSearched(true)
+      setSearchError(SESSION_REQUIRED_ERROR)
       return
     }
 
     setIsSearching(true)
+    setSearchError(null)
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
 
     try {
-      // Phase 1: Fast local search
+      // Phase 1: Fast local in-memory decrypt-and-filter search
       const localResults = await searchPatientsLocal(q)
+      // Guard: a newer search may have aborted this one while Phase 1 was running.
+      if (controller.signal.aborted) return
       setResults(localResults)
       setHasSearched(true)
 
@@ -54,7 +71,7 @@ export function usePatientSearch(): UsePatientSearchReturn {
         }
       }
     } catch {
-      // Search failed — keep local results
+      // Search failed — keep local results; no PHI in error state
     } finally {
       if (!controller.signal.aborted) setIsSearching(false)
     }
@@ -70,5 +87,5 @@ export function usePatientSearch(): UsePatientSearchReturn {
     return () => { abortRef.current?.abort() }
   }, [])
 
-  return { query, setQuery, results, isSearching, hasSearched }
+  return { query, setQuery, results, isSearching, hasSearched, searchError }
 }
