@@ -72,4 +72,15 @@ describe('SafetyZone', () => {
     render(<SafetyZone entry={clinical} lang="en" isClinical />)
     expect(screen.getByTestId('safety-zone').props.accessibilityRole).toBe('alert')
   })
+
+  it('orders CONTRAINDICATED interactions before MAJOR', () => {
+    const clinical = { ...base, interactions: [
+      { drugAtcCode: 'X', drugName: 'MajorDrug', severity: 'MAJOR', mechanism: 'major mech' },
+      { drugAtcCode: 'Y', drugName: 'ContraDrug', severity: 'CONTRAINDICATED', mechanism: 'contra mech' },
+    ] } as unknown as import('@ultranos/shared-types').DrugEntryTier2
+    const { toJSON } = render(<SafetyZone entry={clinical} lang="en" isClinical />)
+    const out = JSON.stringify(toJSON())
+    expect(out.indexOf('ContraDrug')).toBeLessThan(out.indexOf('MajorDrug'))
+    expect(out.indexOf('ContraDrug')).toBeGreaterThan(-1)
+  })
 })

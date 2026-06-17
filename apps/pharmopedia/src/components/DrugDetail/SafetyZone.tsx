@@ -15,9 +15,11 @@ export function SafetyZone({ entry, lang, isClinical }: { entry: DrugEntryTier1;
   const seekHelp = resolveLocalized(entry.whenToSeekHelp, lang)
 
   const clinical = isClinical ? (entry as DrugEntryTier2) : undefined
-  const blocking: DrugInteraction[] = (clinical?.interactions ?? []).filter(
-    (i) => i.severity === 'CONTRAINDICATED' || i.severity === 'MAJOR',
-  )
+  const severityOrder: Record<string, number> = { CONTRAINDICATED: 0, MAJOR: 1 }
+  const blocking: DrugInteraction[] = (clinical?.interactions ?? [])
+    .filter((i) => i.severity === 'CONTRAINDICATED' || i.severity === 'MAJOR')
+    .slice()
+    .sort((a, b) => (severityOrder[a.severity] ?? 9) - (severityOrder[b.severity] ?? 9))
   const contraindications = clinical?.contraindications ?? []
 
   const hasAny = warnings.text || seekHelp.text || blocking.length > 0 || contraindications.length > 0

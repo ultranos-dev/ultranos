@@ -47,8 +47,8 @@ describe('buildDrugSections', () => {
     expect(secs.find((s) => s.id === 'formsBrands')!.defaultOpen).toBe(false)
   })
 
-  it('adds photos when images exist and clinical when isClinical', () => {
-    const withImg = { ...base, images: [{ url: 'https://x/a.jpg', brand: 'Advil' }] }
+  it('adds photos when images exist and clinical when isClinical has content', () => {
+    const withImg = { ...base, images: [{ url: 'https://x/a.jpg', brand: 'Advil' }], mechanismOfAction: 'Inhibits COX' }
     const secs = buildDrugSections({ entry: withImg, lang: 'en', t, isClinical: true, isPharmacist: false })
     const ids = secs.map((s) => s.id)
     expect(ids).toContain('photos')
@@ -89,7 +89,7 @@ describe('buildDrugSections', () => {
     // (presence of clinical section is sufficient; SectionCard is mocked, body is JSX)
   })
 
-  it('omits administrationNotes clinical section when all clinical fields are absent', () => {
+  it('omits clinical section when all clinical fields are absent', () => {
     const entry: DrugEntryTier2 = {
       ...base,
       mechanismOfAction: undefined,
@@ -104,9 +104,8 @@ describe('buildDrugSections', () => {
       pharmacokinetics: {},
       administrationNotes: {},
     }
-    // Clinical section is always added when isClinical=true (even if all fields are empty),
-    // because the builder does not gate on content for the clinical ID.
+    // Clinical section is omitted when isClinical=true but all content fields are empty.
     const secs = buildDrugSections({ entry, lang: 'en', t, isClinical: true, isPharmacist: false })
-    expect(secs.find((s) => s.id === 'clinical')).toBeTruthy()
+    expect(secs.find((s) => s.id === 'clinical')).toBeUndefined()
   })
 })
