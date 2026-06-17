@@ -6,7 +6,7 @@ import { Pill, ChevronLeft } from 'lucide-react-native'
 import { FontFamily, FontSize, Radius, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { useLangStore, isRtlLang } from '@/store/lang-store'
-import { LanguageChips } from '@/components/LanguageChips'
+import { LanguageMenu } from '@/components/LanguageMenu'
 
 interface Props {
   title: string
@@ -31,8 +31,9 @@ export function AuthShell({ title, subtitle, onBack, children }: Props) {
           ) : null}
           <View style={[styles.chip, { backgroundColor: colors.primary500 }]}><Pill size={16} color={colors.white} /></View>
           <Text style={[styles.wordmark, { color: colors.textPrimary }]}>Pharmopedia</Text>
+          <View style={styles.headerSpacer} />
+          <LanguageMenu />
         </View>
-        <LanguageChips />
         <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled">
           <View style={styles.content}>
             <Text style={[styles.title, { color: colors.textPrimary }, align, rtl && styles.arabic]}>{title}</Text>
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, paddingHorizontal: Spacing[6] },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], paddingTop: Spacing[2] },
   headerRtl: { flexDirection: 'row-reverse' },
+  headerSpacer: { flex: 1 },
   back: { padding: Spacing[1] },
   flip: { transform: [{ scaleX: -1 }] },
   chip: { width: 32, height: 32, borderRadius: Radius.lg, alignItems: 'center', justifyContent: 'center' },
