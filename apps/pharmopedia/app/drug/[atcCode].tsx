@@ -24,7 +24,7 @@ import { SkeletonCard } from '@/components/SkeletonCard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { CoachMark } from '@/components/CoachMark'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
-import { Chip } from '@ultranos/ui-kit/native'
+import { Chip, useReducedMotion } from '@ultranos/ui-kit/native'
 import type { DrugEntryTier1, DrugEntryTier2, DrugEntryTier3 } from '@ultranos/shared-types'
 
 const CLINICAL_ROLES = new Set(['DOCTOR', 'NURSE', 'LAB_TECH', 'PHARMACIST', 'ADMIN'])
@@ -43,6 +43,7 @@ export default function DrugDetailScreen() {
 
   const isBookmarked = useBookmarkStore((s) => s.isBookmarked)
   const toggleBookmark = useBookmarkStore((s) => s.toggle)
+  const reduced = useReducedMotion()
 
   const [entry, setEntry] = useState<DrugEntryTier1 | DrugEntryTier2 | DrugEntryTier3 | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,8 +95,13 @@ export default function DrugDetailScreen() {
     const tab = TABS[index]
     if (tab) setActiveTab(tab)
     if (tabLayouts[index]) {
-      indicatorX.value = withTiming(tabLayouts[index].x, { duration: 250 })
-      indicatorW.value = withTiming(tabLayouts[index].width, { duration: 250 })
+      if (reduced) {
+        indicatorX.value = tabLayouts[index].x
+        indicatorW.value = tabLayouts[index].width
+      } else {
+        indicatorX.value = withTiming(tabLayouts[index].x, { duration: 250 })
+        indicatorW.value = withTiming(tabLayouts[index].width, { duration: 250 })
+      }
     }
   }
 
@@ -107,9 +113,11 @@ export default function DrugDetailScreen() {
       therapeuticClass: entry!.therapeuticClass,
     })
     if (!wasBookmarked) {
-      heartScale.value = withSpring(1.3, { damping: 8 }, () => {
-        heartScale.value = withSpring(1)
-      })
+      if (!reduced) {
+        heartScale.value = withSpring(1.3, { damping: 8 }, () => {
+          heartScale.value = withSpring(1)
+        })
+      }
       void hapticImpact(ImpactFeedbackStyle.Light)
     }
   }
@@ -131,7 +139,7 @@ export default function DrugDetailScreen() {
       <View style={styles.center}>
         <Text style={[styles.notFound, { color: colors.textSecondary }]}>{t('drug.notFound')}</Text>
         <Text style={[styles.notFoundDesc, { color: colors.textMuted }]}>{t('drug.notFoundDescription')}</Text>
-        <Pressable onPress={() => router.replace('/(tabs)' as never)} accessibilityRole="button">
+        <Pressable onPress={() => router.replace('/(tabs)' as never)} accessibilityRole="button" accessibilityLabel={t('drug.searchInstead')}>
           <Text style={[styles.back, { color: colors.primary500 }]}>{t('drug.searchInstead')}</Text>
         </Pressable>
       </View>
@@ -152,7 +160,13 @@ export default function DrugDetailScreen() {
         </Text>
         <Chip label={entry.therapeuticClass} />
         <View style={styles.actionRow}>
-          <Pressable testID="bookmark-btn" onPress={() => void handleToggleBookmark()}>
+          <Pressable
+            testID="bookmark-btn"
+            onPress={() => void handleToggleBookmark()}
+            accessibilityRole="button"
+            accessibilityLabel={isBookmarked(entry.atcCode) ? t('drug.removeBookmark') : t('drug.addBookmark')}
+            hitSlop={8}
+          >
             <Animated.View style={heartAnimatedStyle}>
               <Heart
                 color={isBookmarked(entry.atcCode) ? colors.primary500 : colors.textMuted}
@@ -176,6 +190,9 @@ export default function DrugDetailScreen() {
             testID={`tab-${tab}`}
             style={styles.tab}
             onPress={() => onTabPress(i)}
+            accessibilityRole="tab"
+            accessibilityLabel={TAB_LABELS[tab]}
+            accessibilityState={{ selected: activeTab === tab }}
             onLayout={(e) => {
               const { x, width } = e.nativeEvent.layout
               setTabLayouts((prev) => {

@@ -109,7 +109,14 @@ export default function BrowseTab() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.surfaceSubtle }]}>
         <NetStatusBanner />
         <View style={[styles.classHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Pressable testID="browse-back-btn" onPress={handleBack} style={styles.backBtn}>
+          <Pressable
+            testID="browse-back-btn"
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            hitSlop={8}
+            style={styles.backBtn}
+          >
             <Text style={[styles.backText, { color: colors.primary500 }]}>{t('common.back')}</Text>
           </Pressable>
           <Text style={[styles.classTitle, { color: colors.textPrimary }]} numberOfLines={1}>{selectedClass}</Text>

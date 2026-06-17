@@ -38,11 +38,11 @@ export function PhotoPicker({ value, onChange }: { value: string | null; onChang
         ) : null}
       </View>
       <View style={styles.actions}>
-        <Pressable testID="photo-choose" onPress={() => void pick('library')} accessibilityRole="button" style={[styles.action, { borderColor: colors.primary500 }]}>
+        <Pressable testID="photo-choose" onPress={() => void pick('library')} accessibilityRole="button" accessibilityLabel={t('signup.choosePhoto')} style={[styles.action, { borderColor: colors.primary500 }]}>
           <ImagePlus size={16} color={colors.primary500} />
           <Text style={[styles.actionText, { color: colors.primary500 }]}>{t('signup.choosePhoto')}</Text>
         </Pressable>
-        <Pressable testID="photo-camera" onPress={() => void pick('camera')} accessibilityRole="button" style={[styles.action, { borderColor: colors.primary500 }]}>
+        <Pressable testID="photo-camera" onPress={() => void pick('camera')} accessibilityRole="button" accessibilityLabel={t('signup.takePhoto')} style={[styles.action, { borderColor: colors.primary500 }]}>
           <Camera size={16} color={colors.primary500} />
           <Text style={[styles.actionText, { color: colors.primary500 }]}>{t('signup.takePhoto')}</Text>
         </Pressable>

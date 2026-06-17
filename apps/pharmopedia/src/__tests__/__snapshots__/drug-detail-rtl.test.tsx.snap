@@ -110,6 +110,9 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       }
     >
       <Pressable
+        accessibilityLabel="drug.addBookmark"
+        accessibilityRole="button"
+        hitSlop={8}
         onClick={[Function]}
         testID="bookmark-btn"
       >
@@ -138,6 +141,13 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
     }
   >
     <Pressable
+      accessibilityLabel="Overview"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": true,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -168,6 +178,13 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Clinical"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -195,6 +212,13 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Pricing"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -222,6 +246,13 @@ exports[`DrugDetailScreen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Enrich"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -388,6 +419,9 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       }
     >
       <Pressable
+        accessibilityLabel="drug.addBookmark"
+        accessibilityRole="button"
+        hitSlop={8}
         onClick={[Function]}
         testID="bookmark-btn"
       >
@@ -416,6 +450,13 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
     }
   >
     <Pressable
+      accessibilityLabel="Overview"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": true,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -446,6 +487,13 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Clinical"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -473,6 +521,13 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Pricing"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={
@@ -500,6 +555,13 @@ exports[`DrugDetailScreen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
       </Text>
     </Pressable>
     <Pressable
+      accessibilityLabel="Enrich"
+      accessibilityRole="tab"
+      accessibilityState={
+        {
+          "selected": false,
+        }
+      }
       onClick={[Function]}
       onLayout={[Function]}
       style={

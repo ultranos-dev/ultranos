@@ -37,4 +37,15 @@ describe('ListRow', () => {
     )
     expect(flattenStyle(getByText('Delete').props.style).color).toBe('#dc2626')
   })
+
+  it('uses the explicit accessibilityLabel prop when provided, overriding auto-derived label', () => {
+    const onPress = vi.fn()
+    const { getByRole } = render(
+      <UiKitProvider mode="light">
+        <ListRow label="Category" value="12 drugs" accessibilityLabel="Custom, 12 drugs" onPress={onPress} />
+      </UiKitProvider>,
+    )
+    const row = getByRole('button')
+    expect(row.props.accessibilityLabel).toBe('Custom, 12 drugs')
+  })
 })

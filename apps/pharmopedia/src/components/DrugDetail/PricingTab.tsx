@@ -53,10 +53,13 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.sortRow, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.sortRow, { backgroundColor: colors.surface, borderBottomColor: colors.border }]} accessibilityRole="radiogroup">
         <Pressable
           style={[styles.sortBtn, { borderColor: colors.border }, sort === 'distance' && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
           onPress={() => setSort('distance')}
+          accessibilityRole="radio"
+          accessibilityLabel={t('pricing.byDistance')}
+          accessibilityState={{ selected: sort === 'distance' }}
         >
           <Text style={[styles.sortText, { color: colors.textSecondary }, sort === 'distance' && { color: colors.white }]}>
             {t('pricing.byDistance')}
@@ -65,6 +68,9 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
         <Pressable
           style={[styles.sortBtn, { borderColor: colors.border }, sort === 'price' && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
           onPress={() => setSort('price')}
+          accessibilityRole="radio"
+          accessibilityLabel={t('pricing.byPrice')}
+          accessibilityState={{ selected: sort === 'price' }}
         >
           <Text style={[styles.sortText, { color: colors.textSecondary }, sort === 'price' && { color: colors.white }]}>
             {t('pricing.byPrice')}
@@ -77,7 +83,7 @@ export function PricingTab({ atcCode }: { atcCode: string }) {
       {!loading && error && (
         <View style={styles.errorBox} testID="pricing-error">
           <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
-          <Pressable onPress={() => { coordsRef.current = null; loadPrices() }} style={[styles.retryBtn, { backgroundColor: colors.primary500 }]}>
+          <Pressable onPress={() => { coordsRef.current = null; loadPrices() }} style={[styles.retryBtn, { backgroundColor: colors.primary500 }]} accessibilityRole="button" accessibilityLabel={t('pricing.retry')}>
             <Text style={[styles.retryText, { color: colors.white }]}>{t('pricing.retry')}</Text>
           </Pressable>
         </View>

@@ -782,6 +782,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           profile.language
         </Text>
         <View
+          accessibilityRole="radiogroup"
           style={
             {
               "flexDirection": "row",
@@ -791,6 +792,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           }
         >
           <Pressable
+            accessibilityLabel="EN"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -832,6 +840,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="دری"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -867,6 +882,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="پښتو"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -902,6 +924,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="عربي"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -955,6 +984,7 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           profile.appearance
         </Text>
         <View
+          accessibilityRole="radiogroup"
           style={
             {
               "flexDirection": "row",
@@ -963,6 +993,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           }
         >
           <Pressable
+            accessibilityLabel="profile.themeLight"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -1004,6 +1041,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="profile.themeDark"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -1040,6 +1084,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="profile.themeSystem"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -1142,6 +1193,13 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           profile.version
         </Text>
         <Pressable
+          accessibilityLabel="profile.syncNow"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "disabled": false,
+            }
+          }
           disabled={false}
           onClick={[Function]}
           style={
@@ -1177,6 +1235,8 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
           </Text>
         </Pressable>
         <Pressable
+          accessibilityLabel="profile.showTips"
+          accessibilityRole="button"
           onClick={[Function]}
           style={
             [
@@ -1221,6 +1281,8 @@ exports[`Profile screen — RTL snapshots > LTR snapshot (lang=en) 1`] = `
         }
       >
         <Pressable
+          accessibilityLabel="profile.logout"
+          accessibilityRole="button"
           onClick={[Function]}
           style={
             [
@@ -2084,6 +2146,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           profile.language
         </Text>
         <View
+          accessibilityRole="radiogroup"
           style={
             {
               "flexDirection": "row",
@@ -2093,6 +2156,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           }
         >
           <Pressable
+            accessibilityLabel="EN"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2128,6 +2198,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="دری"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2163,6 +2240,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="پښتو"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2198,6 +2282,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="عربي"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2257,6 +2348,7 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           profile.appearance
         </Text>
         <View
+          accessibilityRole="radiogroup"
           style={
             {
               "flexDirection": "row",
@@ -2265,6 +2357,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           }
         >
           <Pressable
+            accessibilityLabel="profile.themeLight"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": true,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2306,6 +2405,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="profile.themeDark"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2342,6 +2448,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
             </Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="profile.themeSystem"
+            accessibilityRole="radio"
+            accessibilityState={
+              {
+                "selected": false,
+              }
+            }
             onClick={[Function]}
             style={
               [
@@ -2444,6 +2557,13 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           profile.version
         </Text>
         <Pressable
+          accessibilityLabel="profile.syncNow"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "disabled": false,
+            }
+          }
           disabled={false}
           onClick={[Function]}
           style={
@@ -2479,6 +2599,8 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
           </Text>
         </Pressable>
         <Pressable
+          accessibilityLabel="profile.showTips"
+          accessibilityRole="button"
           onClick={[Function]}
           style={
             [
@@ -2523,6 +2645,8 @@ exports[`Profile screen — RTL snapshots > RTL snapshot (lang=ar) 1`] = `
         }
       >
         <Pressable
+          accessibilityLabel="profile.logout"
+          accessibilityRole="button"
           onClick={[Function]}
           style={
             [

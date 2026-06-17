@@ -5,10 +5,12 @@ import { useTranslation } from 'react-i18next'
 import type { PharmacyPrice } from '@ultranos/shared-types'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useReducedMotion } from '@ultranos/ui-kit/native'
 
 export function PriceCard({ price, index }: { price: PharmacyPrice; index?: number }) {
   const { t } = useTranslation()
   const colors = useThemeColors()
+  const reduced = useReducedMotion()
   const enterDelay = Math.min((index ?? 0) * 50, 500)
 
   const stockBorderColor = {
@@ -30,7 +32,7 @@ export function PriceCard({ price, index }: { price: PharmacyPrice; index?: numb
   }[price.stockSignal]
 
   return (
-    <Animated.View entering={FadeInUp.delay(enterDelay).duration(300)}>
+    <Animated.View entering={reduced ? undefined : FadeInUp.delay(enterDelay).duration(300)}>
       <View
         style={[styles.card, { backgroundColor: colors.surface, borderColor: stockBorderColor }]}
         testID={`price-card-${price.facilityId}`}

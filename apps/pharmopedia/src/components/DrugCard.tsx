@@ -5,6 +5,7 @@ import { isRtlLang, type Lang } from '@/store/lang-store'
 import { useBookmarkStore } from '@/store/bookmark-store'
 import { FontFamily, FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { Card } from '@ultranos/ui-kit/native'
 
 interface Props {
   result: DrugSearchResult
@@ -23,48 +24,50 @@ export function DrugCard({ result, lang, onPress }: Props) {
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: pressed ? colors.surfaceSubtle : colors.surface, borderBottomColor: colors.borderSubtle },
+        styles.pressable,
+        { opacity: pressed ? 0.85 : 1 },
       ]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${result.innName}, ${result.therapeuticClass}`}
       testID={`drug-card-${result.atcCode}`}
     >
-      <View style={styles.body}>
-        <View style={styles.topRow}>
-          <Text
-            testID="drug-primary-name"
-            style={[styles.primaryName, { color: colors.textPrimary }, isRtl && styles.rtlText]}
-            numberOfLines={1}
-          >
-            {primaryName}
-          </Text>
-          {bookmarked && (
-            <Heart size={14} color={colors.primary500} fill={colors.primary500} />
+      <Card>
+        <View style={[styles.body, { backgroundColor: colors.surface }]}>
+          <View style={styles.topRow}>
+            <Text
+              testID="drug-primary-name"
+              style={[styles.primaryName, { color: colors.textPrimary }, isRtl && styles.rtlText]}
+              numberOfLines={1}
+            >
+              {primaryName}
+            </Text>
+            {bookmarked && (
+              <Heart size={14} color={colors.primary500} fill={colors.primary500} />
+            )}
+          </View>
+          {secondaryName && (
+            <Text testID="drug-secondary-name" style={[styles.secondaryName, { color: colors.textSecondary }]}>
+              {secondaryName}
+            </Text>
           )}
-        </View>
-        {secondaryName && (
-          <Text testID="drug-secondary-name" style={[styles.secondaryName, { color: colors.textSecondary }]}>
-            {secondaryName}
+          <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
+            {result.atcCode} · {result.therapeuticClass}
+            {result.doseForms.length > 0 ? ` · ${result.doseForms.join(', ')}` : ''}
           </Text>
-        )}
-        <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
-          {result.atcCode} · {result.therapeuticClass}
-          {result.doseForms.length > 0 ? ` · ${result.doseForms.join(', ')}` : ''}
-        </Text>
-      </View>
+        </View>
+      </Card>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  card: {
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  pressable: {
+    marginBottom: Spacing[3],
   },
   body: {
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
     gap: 2,
   },
   topRow: {

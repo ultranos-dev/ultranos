@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useReducedMotion } from '@ultranos/ui-kit/native'
 
 interface Props {
   testID?: string
@@ -17,19 +18,46 @@ interface Props {
 
 export function SkeletonCard({ testID, lines = 2 }: Props) {
   const colors = useThemeColors()
+  const reduced = useReducedMotion()
   const shimmer = useSharedValue(0)
 
   useEffect(() => {
+    if (reduced) return
     shimmer.value = withRepeat(
       withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     )
-  }, [shimmer])
+  }, [shimmer, reduced])
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: 0.4 + shimmer.value * 0.6,
   }))
+
+  // When reduce-motion is active, render static placeholder bars at fixed opacity
+  if (reduced) {
+    return (
+      <View
+        testID={testID}
+        style={[styles.card, { backgroundColor: colors.surface, borderBottomColor: colors.borderSubtle }]}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <View
+          testID="skel-static"
+          style={[styles.titleLine, { backgroundColor: colors.surfaceSubtle, opacity: 0.5 }]}
+        />
+        {Array.from({ length: lines - 1 }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.bodyLine,
+              { backgroundColor: colors.surfaceSubtle, width: i === lines - 2 ? '60%' : '85%', opacity: 0.5 },
+            ]}
+          />
+        ))}
+      </View>
+    )
+  }
 
   return (
     <View

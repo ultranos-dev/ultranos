@@ -17,7 +17,7 @@ export function LanguageChips() {
   const setLang = useLangStore((s) => s.setLang)
 
   return (
-    <View style={styles.row}>
+    <View style={styles.row} accessibilityRole="radiogroup">
       {CHIPS.map((chip) => {
         const active = lang === chip.value
         return (
@@ -25,6 +25,7 @@ export function LanguageChips() {
             key={chip.value}
             testID={`lang-chip-${chip.value}`}
             accessibilityRole="radio"
+            accessibilityLabel={chip.label}
             accessibilityState={{ selected: lang === chip.value }}
             style={[
               styles.chip,

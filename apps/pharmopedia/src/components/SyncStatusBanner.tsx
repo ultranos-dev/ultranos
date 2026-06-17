@@ -5,19 +5,25 @@ import { useTranslation } from 'react-i18next'
 import { useSyncStore } from '@/store/sync-store'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { FontSize, Spacing } from '@ultranos/ui-kit/tokens.native'
+import { useReducedMotion } from '@ultranos/ui-kit/native'
 
 export function SyncStatusBanner() {
   const { t } = useTranslation()
   const { status, lastSyncAt, syncedCount } = useSyncStore()
   const colors = useThemeColors()
+  const reduced = useReducedMotion()
   const countOpacity = useSharedValue(1)
 
   useEffect(() => {
     if (syncedCount > 0) {
-      countOpacity.value = 0.3
-      countOpacity.value = withTiming(1, { duration: 400 })
+      if (reduced) {
+        countOpacity.value = 1
+      } else {
+        countOpacity.value = 0.3
+        countOpacity.value = withTiming(1, { duration: 400 })
+      }
     }
-  }, [syncedCount, countOpacity])
+  }, [syncedCount, countOpacity, reduced])
 
   const countAnimatedStyle = useAnimatedStyle(() => ({
     opacity: countOpacity.value,

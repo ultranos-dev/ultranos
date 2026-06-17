@@ -4,19 +4,21 @@ import { useNetInfo } from '@react-native-community/netinfo'
 import { useTranslation } from 'react-i18next'
 import { FontFamily, Spacing } from '@ultranos/ui-kit/tokens.native'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { useReducedMotion } from '@ultranos/ui-kit/native'
 
 export function NetStatusBanner() {
   const { t } = useTranslation()
   const colors = useThemeColors()
   const { isConnected } = useNetInfo()
+  const reduced = useReducedMotion()
 
   // Don't show during initial check (isConnected === null) or when connected
   if (isConnected !== false) return null
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(200)}
-      exiting={FadeOutUp.duration(200)}
+      entering={reduced ? undefined : FadeInDown.duration(200)}
+      exiting={reduced ? undefined : FadeOutUp.duration(200)}
       style={[styles.banner, { backgroundColor: colors.warningLight }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"

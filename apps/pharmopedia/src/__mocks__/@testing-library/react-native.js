@@ -367,19 +367,26 @@ async function act(callback) {
 /**
  * renderHook — renders a hook inside a minimal wrapper component and
  * exposes the hook's return value via `result.current`.
+ * Also exposes `unmount()` so cleanup tests can verify teardown logic.
  */
 function renderHook(renderCallback) {
   let hookResult
+  let instance
   function TestComponent() {
     hookResult = renderCallback()
     return null
   }
   ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(React.createElement(TestComponent))
+    instance = ReactTestRenderer.create(React.createElement(TestComponent))
   })
   return {
     get result() {
       return { get current() { return hookResult } }
+    },
+    unmount() {
+      ReactTestRenderer.act(() => {
+        instance.unmount()
+      })
     },
   }
 }

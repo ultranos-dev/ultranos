@@ -277,13 +277,16 @@ export default function ProfileTab() {
         <Text style={[styles.label, { color: colors.textSecondary }]}>{t('profile.preferences')}</Text>
 
         <Text style={[styles.sublabel, { color: colors.textSecondary }]}>{t('profile.language')}</Text>
-        <View style={styles.langRow}>
+        <View style={styles.langRow} accessibilityRole="radiogroup">
           {LANG_OPTIONS.map(({ value, label }) => (
             <Pressable
               key={value}
               testID={`lang-btn-${value}`}
               style={[styles.langBtn, { borderColor: colors.border }, lang === value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
               onPress={() => handleLangPress(value)}
+              accessibilityRole="radio"
+              accessibilityLabel={label}
+              accessibilityState={{ selected: lang === value }}
             >
               <Text style={[styles.langText, { color: colors.textSecondary }, lang === value && { color: colors.white, fontFamily: FontFamily.sansSemibold }]}>
                 {label}
@@ -293,13 +296,16 @@ export default function ProfileTab() {
         </View>
 
         <Text style={[styles.sublabel, { color: colors.textSecondary, marginTop: Spacing[3] }]}>{t('profile.appearance')}</Text>
-        <View style={styles.themeRow}>
+        <View style={styles.themeRow} accessibilityRole="radiogroup">
           {THEME_OPTIONS.map((opt) => (
             <Pressable
               key={opt.value}
               testID={`theme-${opt.value}`}
               style={[styles.themeBtn, { borderColor: colors.border }, themeMode === opt.value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
               onPress={() => { void setThemeMode(opt.value); void hapticSelection() }}
+              accessibilityRole="radio"
+              accessibilityLabel={t(opt.labelKey)}
+              accessibilityState={{ selected: themeMode === opt.value }}
             >
               <Text style={[styles.themeText, { color: colors.textSecondary }, themeMode === opt.value && { color: colors.white }]}>
                 {t(opt.labelKey)}
@@ -321,6 +327,9 @@ export default function ProfileTab() {
           style={[styles.button, { backgroundColor: colors.primary500 }, status === 'syncing' && styles.buttonDisabled]}
           onPress={handleSyncNow}
           disabled={status === 'syncing'}
+          accessibilityRole="button"
+          accessibilityLabel={status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
+          accessibilityState={{ disabled: status === 'syncing' }}
         >
           <Text style={[styles.buttonText, { color: colors.white }]}>
             {status === 'syncing' ? t('profile.syncing') : t('profile.syncNow')}
@@ -330,6 +339,8 @@ export default function ProfileTab() {
           testID="show-tips-button"
           style={[styles.tipsButton]}
           onPress={() => { void useCoachMarkStore.getState().reset(); void hapticSelection() }}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.showTips')}
         >
           <Text style={[styles.tipsText, { color: colors.primary500 }]}>{t('profile.showTips')}</Text>
         </Pressable>
@@ -341,6 +352,8 @@ export default function ProfileTab() {
           testID="logout-button"
           style={[styles.button, { backgroundColor: colors.dangerLight }]}
           onPress={confirmLogout}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.logout')}
         >
           <Text style={[styles.buttonText, { color: colors.dangerDark }]}>{t('profile.logout')}</Text>
         </Pressable>

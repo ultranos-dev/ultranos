@@ -1,0 +1,196 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DrugCard — restyle snapshots > LTR snapshot (lang=en, no bookmark) 1`] = `
+<Pressable
+  accessibilityLabel="Amoxicillin, Antibacterials"
+  accessibilityRole="button"
+  onClick={[MockFunction spy]}
+  style={
+    [
+      {
+        "marginBottom": 12,
+      },
+      {
+        "opacity": 1,
+      },
+    ]
+  }
+  testID="drug-card-J01CA04"
+>
+  <View
+    accessibilityRole="none"
+  >
+    <View
+      style={
+        [
+          {
+            "gap": 2,
+            "paddingHorizontal": 16,
+            "paddingVertical": 12,
+          },
+          {
+            "backgroundColor": "#ffffff",
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "flex": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 16,
+              },
+              {
+                "color": "#111827",
+              },
+              false,
+            ]
+          }
+          testID="drug-primary-name"
+        >
+          Amoxicillin
+        </Text>
+      </View>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontFamily": "Manrope",
+              "fontSize": 12,
+              "marginTop": 1,
+            },
+            {
+              "color": "#9ca3af",
+            },
+          ]
+        }
+      >
+        J01CA04
+         · 
+        Antibacterials
+         · Capsule 500mg, Suspension 250mg/5ml
+      </Text>
+    </View>
+  </View>
+</Pressable>
+`;
+
+exports[`DrugCard — restyle snapshots > RTL snapshot (lang=ar, with localName) 1`] = `
+<Pressable
+  accessibilityLabel="Simvastatin, Lipid-modifying agents"
+  accessibilityRole="button"
+  onClick={[MockFunction spy]}
+  style={
+    [
+      {
+        "marginBottom": 12,
+      },
+      {
+        "opacity": 1,
+      },
+    ]
+  }
+  testID="drug-card-C10AA01"
+>
+  <View
+    accessibilityRole="none"
+  >
+    <View
+      style={
+        [
+          {
+            "gap": 2,
+            "paddingHorizontal": 16,
+            "paddingVertical": 12,
+          },
+          {
+            "backgroundColor": "#ffffff",
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 8,
+          }
+        }
+      >
+        <Text
+          numberOfLines={1}
+          style={
+            [
+              {
+                "flex": 1,
+                "fontFamily": "Manrope-SemiBold",
+                "fontSize": 16,
+              },
+              {
+                "color": "#111827",
+              },
+              {
+                "fontFamily": "NotoNaskhArabic",
+                "textAlign": "right",
+              },
+            ]
+          }
+          testID="drug-primary-name"
+        >
+          سيمفاستاتين
+        </Text>
+      </View>
+      <Text
+        style={
+          [
+            {
+              "fontFamily": "Manrope",
+              "fontSize": 14,
+            },
+            {
+              "color": "#6b7280",
+            },
+          ]
+        }
+        testID="drug-secondary-name"
+      >
+        Simvastatin
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={
+          [
+            {
+              "fontFamily": "Manrope",
+              "fontSize": 12,
+              "marginTop": 1,
+            },
+            {
+              "color": "#9ca3af",
+            },
+          ]
+        }
+      >
+        C10AA01
+         · 
+        Lipid-modifying agents
+         · Tablet 20mg
+      </Text>
+    </View>
+  </View>
+</Pressable>
+`;

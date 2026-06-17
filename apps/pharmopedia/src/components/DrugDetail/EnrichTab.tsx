@@ -85,13 +85,16 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
           <TextInput testID="dispensing-notes" style={[styles.input, styles.multiline, { borderColor: colors.border, color: colors.textPrimary }]} placeholder={t('enrich.dispensingNotes')} placeholderTextColor={colors.textMuted} value={dispensingNotes} onChangeText={setDispensingNotes} multiline maxLength={500} accessibilityLabel={t('enrich.dispensingNotes')} />
 
           <Text style={[styles.label, { color: colors.textSecondary }]}>{t('enrich.formularyStatus')}</Text>
-          <View style={styles.formularyRow}>
+          <View style={styles.formularyRow} accessibilityRole="radiogroup">
             {formularyOptions.map(({ value, labelKey }) => (
               <Pressable
                 key={value}
                 testID={`formulary-${value}`}
                 style={[styles.formularyBtn, { borderColor: colors.border }, formularyStatus === value && { backgroundColor: colors.primary500, borderColor: colors.primary500 }]}
                 onPress={() => setFormularyStatus(value)}
+                accessibilityRole="radio"
+                accessibilityLabel={t(labelKey)}
+                accessibilityState={{ selected: formularyStatus === value }}
               >
                 <Text style={[styles.formularyText, { color: colors.textSecondary }, formularyStatus === value && { color: colors.white }]}>
                   {t(labelKey)}
@@ -107,7 +110,7 @@ export function EnrichTab({ atcCode }: { atcCode: string }) {
       {error && <Text style={[styles.error, { color: colors.danger }]} accessibilityRole="alert">{error}</Text>}
       {success && <Text style={[styles.successText, { color: colors.successDark }]}>{t('enrich.saveSuccess')}</Text>}
 
-      <Pressable testID="enrich-submit" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleSubmit} disabled={loading} accessibilityRole="button">
+      <Pressable testID="enrich-submit" style={[styles.button, { backgroundColor: colors.primary500 }]} onPress={handleSubmit} disabled={loading} accessibilityRole="button" accessibilityLabel={t('enrich.save')} accessibilityState={{ disabled: loading, busy: loading }}>
         {loading ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.buttonText, { color: colors.white }]}>{t('enrich.save')}</Text>}
       </Pressable>
     </ScrollView>

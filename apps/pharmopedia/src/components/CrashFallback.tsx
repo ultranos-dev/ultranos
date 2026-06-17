@@ -36,6 +36,8 @@ export function CrashFallback({ inline }: Props) {
         onPress={() => {
           try { void Updates.reloadAsync() } catch { /* Expo Go fallback */ }
         }}
+        accessibilityRole="button"
+        accessibilityLabel={t('common.reload')}
       >
         <Text style={styles.buttonText}>{t('common.reload')}</Text>
       </Pressable>

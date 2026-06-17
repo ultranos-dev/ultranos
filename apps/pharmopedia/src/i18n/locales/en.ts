@@ -39,6 +39,8 @@ const en = {
     notFoundDescription: 'This drug may not be in the catalog yet. Try searching instead.',
     searchInstead: 'Search',
     back: 'Go back',
+    addBookmark: 'Save drug',
+    removeBookmark: 'Remove saved drug',
     tabs: {
       overview: 'Overview',
       clinical: 'Clinical',
@@ -128,6 +130,7 @@ const en = {
     emptyTitle: 'No categories yet',
     emptyDescription: 'Sync your catalog to browse by class',
     noDrugs: 'No drugs in this category',
+    drugsCountLabel: 'drugs',
   },
   saved: {
     empty: 'No saved drugs yet — tap the bookmark icon on any drug to save it',

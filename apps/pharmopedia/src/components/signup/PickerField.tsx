@@ -29,6 +29,7 @@ export function PickerField({ label, placeholder, value, options, onSelect, disa
         testID={testID ? `${testID}-trigger` : undefined}
         onPress={() => { if (!disabled) setOpen(true) }}
         accessibilityRole="button"
+        accessibilityLabel={label}
         accessibilityState={{ disabled: !!disabled }}
         style={[styles.trigger, { backgroundColor: colors.surfaceSubtle, borderColor: colors.border }, disabled && styles.disabled]}
       >

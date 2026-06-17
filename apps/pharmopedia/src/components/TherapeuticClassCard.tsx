@@ -1,12 +1,13 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import Animated, { FadeInUp } from 'react-native-reanimated'
-import {
-  Heart, Pill, Shield, Brain, Bone, Eye, Baby, Droplets, Flame, Activity, ChevronRight,
-} from 'lucide-react-native'
+import type { LucideIcon } from 'lucide-react-native'
+import { ChevronRight, Heart, Pill, Shield, Brain, Bone, Eye, Baby, Droplets, Flame, Activity } from 'lucide-react-native'
+import { useTranslation } from 'react-i18next'
 import { FontFamily, FontSize, Spacing, Radius } from '@ultranos/ui-kit/tokens.native'
+import { ListRow, useReducedMotion } from '@ultranos/ui-kit/native'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
-const CLASS_ICONS: Record<string, React.ComponentType<{ size: number; color: string }>> = {
+const CLASS_ICONS: Record<string, LucideIcon> = {
   cardiovascular: Heart,
   analgesic: Pill,
   'anti-infective': Shield,
@@ -34,66 +35,36 @@ interface Props {
 }
 
 export function TherapeuticClassCard({ name, count, onPress, index }: Props) {
+  const { t } = useTranslation()
   const colors = useThemeColors()
-  const enterDelay = Math.min((index ?? 0) * 50, 500)
+  const reduced = useReducedMotion()
   const Icon = getClassIcon(name)
+  const enterDelay = Math.min((index ?? 0) * 50, 500)
 
-  return (
-    <Animated.View entering={FadeInUp.delay(enterDelay).duration(300)}>
-      <Pressable
-        testID={`class-card-${name}`}
-        accessibilityRole="button"
-        style={({ pressed }) => [
-          styles.card,
-          { backgroundColor: pressed ? colors.surfaceSubtle : colors.surface, borderBottomColor: colors.borderSubtle },
-        ]}
-        onPress={onPress}
-      >
-        <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSubtle }]}>
-          <Icon size={20} color={colors.primary500} />
+  const row = (
+    <ListRow
+      testID={`class-card-${name}`}
+      icon={Icon}
+      label={name}
+      accessibilityLabel={`${name}, ${count} ${t('browse.drugsCountLabel')}`}
+      onPress={onPress}
+      trailing={
+        <View style={styles.trailing}>
+          <View style={[styles.countBadge, { backgroundColor: colors.primary50 }]}>
+            <Text style={[styles.countText, { color: colors.primary600 }]}>{count}</Text>
+          </View>
+          <ChevronRight size={16} color={colors.textMuted} />
         </View>
-        <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>
-          {name}
-        </Text>
-        <View style={[styles.countBadge, { backgroundColor: colors.primary50 }]}>
-          <Text style={[styles.countText, { color: colors.primary600 }]}>{count}</Text>
-        </View>
-        <ChevronRight size={16} color={colors.textMuted} />
-      </Pressable>
-    </Animated.View>
+      }
+    />
   )
+
+  if (reduced) return row
+  return <Animated.View entering={FadeInUp.delay(enterDelay).duration(300)}>{row}</Animated.View>
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    borderBottomWidth: 1,
-    gap: Spacing[3],
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  name: {
-    fontSize: FontSize.base,
-    fontFamily: FontFamily.sansMedium,
-    flex: 1,
-  },
-  countBadge: {
-    paddingHorizontal: Spacing[2],
-    paddingVertical: Spacing[1],
-    borderRadius: Radius.full,
-    minWidth: 28,
-    alignItems: 'center',
-  },
-  countText: {
-    fontSize: FontSize.sm,
-    fontFamily: FontFamily.sansSemibold,
-  },
+  trailing: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2] },
+  countBadge: { paddingHorizontal: Spacing[2], paddingVertical: Spacing[1], borderRadius: Radius.full, minWidth: 28, alignItems: 'center' },
+  countText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansSemibold },
 })

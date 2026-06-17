@@ -12,6 +12,7 @@ interface ListRowProps {
   trailing?: ReactNode
   onPress?: () => void
   destructive?: boolean
+  accessibilityLabel?: string
   accessibilityHint?: string
   testID?: string
 }
@@ -23,6 +24,7 @@ export function ListRow({
   trailing,
   onPress,
   destructive,
+  accessibilityLabel,
   accessibilityHint,
   testID,
 }: ListRowProps) {
@@ -52,7 +54,7 @@ export function ListRow({
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={value ? `${label}, ${value}` : label}
+      accessibilityLabel={accessibilityLabel ?? (value ? `${label}, ${value}` : label)}
       accessibilityHint={accessibilityHint}
       hitSlop={8}
       style={({ pressed }) => [pressed && { backgroundColor: colors.surfaceSubtle }]}

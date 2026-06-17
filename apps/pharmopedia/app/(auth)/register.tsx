@@ -216,7 +216,7 @@ export default function RegisterScreen() {
         <>
           <TextInput testID="otp-input" style={[styles.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.surfaceSubtle }]} placeholder={t('register.sixDigitCode')} placeholderTextColor={colors.textMuted} value={otp} onChangeText={(x) => setOtp(x.replace(/[^0-9]/g, ''))} keyboardType="number-pad" maxLength={6} />
           <Button testID="wizard-continue" label={t('signup.continue')} variant="primary" loading={loading} onPress={handleVerifyOtp} />
-          <Pressable testID="wizard-resend" onPress={handleResendOtp} disabled={cooldown > 0} accessibilityRole="button" style={styles.skip}>
+          <Pressable testID="wizard-resend" onPress={handleResendOtp} disabled={cooldown > 0} accessibilityRole="button" accessibilityLabel={cooldown > 0 ? t('register.resendIn', { seconds: cooldown }) : t('register.resendCode')} style={styles.skip}>
             <Text style={[styles.skipText, { color: cooldown > 0 ? colors.textMuted : colors.primary500 }]}>
               {cooldown > 0 ? t('register.resendIn', { seconds: cooldown }) : t('register.resendCode')}
             </Text>
@@ -284,7 +284,7 @@ export default function RegisterScreen() {
         <>
           <PhotoPicker value={photoUri} onChange={setPhotoUri} />
           <Button testID="wizard-continue" label={t('signup.continue')} variant="primary" onPress={() => setStep('address')} />
-          <Pressable testID="wizard-skip" onPress={() => setStep('address')} accessibilityRole="button" style={styles.skip}>
+          <Pressable testID="wizard-skip" onPress={() => setStep('address')} accessibilityRole="button" accessibilityLabel={t('signup.skip')} style={styles.skip}>
             <Text style={[styles.skipText, { color: colors.textMuted }]}>{t('signup.skip')}</Text>
           </Pressable>
         </>
