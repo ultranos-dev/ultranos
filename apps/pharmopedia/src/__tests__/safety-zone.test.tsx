@@ -44,4 +44,32 @@ describe('SafetyZone', () => {
     render(<SafetyZone entry={empty} lang="en" isClinical={false} />)
     expect(screen.queryByTestId('safety-zone')).toBeNull()
   })
+
+  // Migrated from safety-banner.test.tsx: MAJOR interactions coverage
+  it('renders MAJOR interactions for clinical roles', () => {
+    const clinical = { ...base, interactions: [
+      { drugAtcCode: 'C09AA01', drugName: 'Enalapril', severity: 'MAJOR', mechanism: 'Hyperkalaemia' },
+    ] } as unknown as DrugEntryTier2
+    render(<SafetyZone entry={clinical} lang="en" isClinical />)
+    expect(screen.getByText(/Enalapril/)).toBeTruthy()
+    expect(screen.getByText(/Hyperkalaemia/)).toBeTruthy()
+  })
+
+  // Migrated from safety-banner.test.tsx: MODERATE interactions must NOT appear in safety zone
+  it('does not render MODERATE interactions (below threshold)', () => {
+    const clinical = { ...base, whenToSeekHelp: {}, warningsSummaryPlain: {}, interactions: [
+      { drugAtcCode: 'N02BA01', drugName: 'Aspirin', severity: 'MODERATE', mechanism: 'Minor risk' },
+    ] } as unknown as DrugEntryTier2
+    render(<SafetyZone entry={clinical} lang="en" isClinical />)
+    expect(screen.queryByTestId('safety-zone')).toBeNull()
+  })
+
+  // Migrated from safety-banner.test.tsx: accessibilityRole alert on safety content
+  it('has accessibilityRole alert when safety content is present', () => {
+    const clinical = { ...base, interactions: [
+      { drugAtcCode: 'L04AX03', drugName: 'Methotrexate', severity: 'CONTRAINDICATED', mechanism: 'Toxic' },
+    ] } as unknown as DrugEntryTier2
+    render(<SafetyZone entry={clinical} lang="en" isClinical />)
+    expect(screen.getByTestId('safety-zone').props.accessibilityRole).toBe('alert')
+  })
 })
