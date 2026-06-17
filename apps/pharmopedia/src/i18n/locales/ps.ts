@@ -74,6 +74,9 @@ const ps: Translations = {
         MINOR: 'خفیف',
       },
     },
+    photos: { title: 'انځورونه', disclaimer: 'یوازې د نمونې لپاره — اصلي بسته‌بندي تایید کړئ.', generic: 'عمومي', unavailableOffline: 'انځورونه آفلاین شتون نلري.' },
+    sections: { dispensing: 'وېش او درمل لیست' },
+    noDetail: 'د دې درمل لپاره تفصيلي معلومات تر اوسه شتون نلري.',
   },
   pricing: {
     byDistance: 'د فاصلې له مخې',

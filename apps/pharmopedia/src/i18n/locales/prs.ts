@@ -74,6 +74,9 @@ const prs: Translations = {
         MINOR: 'خفیف',
       },
     },
+    photos: { title: 'تصاویر', disclaimer: 'فقط برای نمایش — بسته‌بندی واقعی را تأیید کنید.', generic: 'عمومی', unavailableOffline: 'تصاویر در حالت آفلاین در دسترس نیستند.' },
+    sections: { dispensing: 'توزیع و فهرست دارویی' },
+    noDetail: 'معلومات تفصیلی برای این دارو هنوز موجود نیست.',
   },
   pricing: {
     byDistance: 'بر اساس فاصله',

@@ -84,6 +84,14 @@ const en = {
         MINOR: 'Minor',
       },
     },
+    photos: {
+      title: 'Photos',
+      disclaimer: 'Illustrative only — verify the actual packaging.',
+      generic: 'Generic',
+      unavailableOffline: 'Photos are unavailable offline.',
+    },
+    sections: { dispensing: 'Dispensing & formulary' },
+    noDetail: 'Detailed information isn\'t available yet for this medicine.',
   },
   pricing: {
     byDistance: 'By distance',

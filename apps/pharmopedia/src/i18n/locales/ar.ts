@@ -74,6 +74,9 @@ const ar: Translations = {
         MINOR: 'خفيف',
       },
     },
+    photos: { title: 'الصور', disclaimer: 'للتوضيح فقط — تحقق من العبوة الفعلية.', generic: 'عام', unavailableOffline: 'الصور غير متوفرة دون اتصال.' },
+    sections: { dispensing: 'الصرف والقائمة الدوائية' },
+    noDetail: 'المعلومات التفصيلية غير متوفرة لهذا الدواء بعد.',
   },
   pricing: {
     byDistance: 'حسب المسافة',
