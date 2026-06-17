@@ -48,6 +48,14 @@ export interface RecallAlert {
   status: string
 }
 
+/** A representative product image for a drug entry. URLs only — never blobs in the synced catalog. */
+export interface DrugImage {
+  url: string
+  brand?: string         // brand depicted; undefined = generic/representative
+  caption?: string
+  isPrimary?: boolean     // shown as the header "profile" image
+}
+
 /** Tier 1 — all authenticated users */
 export interface DrugEntryTier1 {
   atcCode: string
@@ -57,6 +65,7 @@ export interface DrugEntryTier1 {
   doseForms: string[]
   therapeuticClass: string
   localNames: DrugLocalNames
+  images?: DrugImage[]
   summaryPlain: DrugLocalizedText
   usedFor: DrugLocalizedText[]
   commonSideEffects: DrugLocalizedText[]
